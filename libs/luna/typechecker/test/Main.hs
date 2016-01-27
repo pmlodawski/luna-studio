@@ -1,7 +1,8 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE UndecidableInstances      #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE PartialTypeSignatures     #-}
+{-# LANGUAGE RecursiveDo               #-}
 
 module Main where
 
@@ -241,36 +242,13 @@ type instance RefOf (Targetting a t)   = RefOf a
 
 instance HasRef (Unwrapped (Targetting a t))   => HasRef (Targetting a t)   where ref = wrapped' ∘ ref
 
---class IsEdge e 
---connection src tgt = do 
---    g <- Graph.get
 
---    return ()
-
-
---type family Derefd a
---class Deref a where deref :: a -> Derefd a
-
---instance Deref (Layer l t a) where deref = 
-
---data AST = AST  deriving (Show)
-
---class TypeResolver t m a | t m -> a where resolveType :: Proxy t -> a -> m a
-
---tst :: _ => _
---tst = do
---    a1 <- resolveType (Proxy :: Proxy AST) =<< constructCover star
---    a2 <- resolveType (Proxy :: Proxy AST) =<< constructCover star
---    a3 <- resolveType (Proxy :: Proxy AST) =<< constructCover star
---    return ()
-
---instance TypeResolver AST (Graph.GraphBuilderT (t a) e m) 
 
 
 
 newtype TypeConstraint t tp m a = TypeConstraint (m a) 
 
-constrainType :: Proxy t -> Proxy tp -> TypeConstraint t tp m a -> m a
+constrainType :: t -> Proxy tp -> TypeConstraint t tp m a -> m a
 constrainType _ _ (TypeConstraint ma) = ma
 
 constrainType' (TypeConstraint ma) = ma
@@ -295,20 +273,23 @@ instance MonadTrans (TypeConstraint t tp) where
 instance MonadIO m => MonadIO (TypeConstraint t tp m) where
     liftIO = TypeConstraint ∘ liftIO
 
---mfix :: (a -> m a) -> m a
-
---instance Applicative (TypeConstraint)
-
---t (a p)
 
 instance {-# OVERLAPPABLE #-} (Monad m, Builder t a m, tp ~ a) => Builder t a (TypeConstraint t  tp m) where register = lift ∘∘ register
 instance {-# OVERLAPPABLE #-} (Monad m, Builder t a m)         => Builder t a (TypeConstraint t' tp m) where register = lift ∘∘ register
 
-constrainNodeType = constrainType (Proxy :: Proxy Node)
-constrainEdgeType = constrainType (Proxy :: Proxy Edge)
-constrainCoverType (Proxy :: Proxy tp) = constrainNodeType (Proxy :: Proxy (tp k))
+
+type family Proxified p where
+    Proxified (Proxy p) = Proxy p
+    Proxified a         = Proxy a
 
 
+class Proxify p where proxify :: p -> Proxified p
+
+instance {-# OVERLAPABLE #-}                          Proxify (Proxy p) where proxify = id
+instance {-# OVERLAPABLE #-} Proxified a ~ Proxy a => Proxify a         where proxify = valProxy
+
+valProxy :: a -> Proxy a
+valProxy _ = Proxy
 
 ------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------
@@ -319,20 +300,29 @@ constrainCoverType (Proxy :: Proxy tp) = constrainNodeType (Proxy :: Proxy (tp k
 --type NetRef     tp tgt = Ref tp tgt Int
 --type NetFreeRef tp     = NetRef tp 'Nothing
 
-type Network        = Graph (NetNodeWrapper Data) NetArc
-type NetNodeWrapper = Attached' String Cover
-type NetArc         = Arc (Ref Node Int) (Ref Node Int)
-type NetRef r       = Ref r Int
+type Network    = Graph (NetWrapper Data) NetArc
+type NetWrapper = Attached' String Cover
+type NetArc     = Arc (Ref Node Int) (Ref Node Int)
+type NetRef r   = Ref r Int
 
 type Attached' t = Layer (Attached t)
 
 
--- === Construction === ---
+type NodeRef w n = TargetRef Node w (n (TargetRef Edge w))
+type EdgeRef w n = TargetRef Edge w (n (TargetRef Edge w))
 
-buildNetwork = rebuildNetwork def
-rebuildNetwork (net :: Network) = constrainNodeType (Proxy :: Proxy (TargetRef Node NetNodeWrapper k))
-                                ∘ constrainEdgeType (Proxy :: Proxy (NetRef NetArc))
-                                ∘ flip Graph.execT net
+type NetNodeRef n = NodeRef NetWrapper n
+type NetEdgeRef e = EdgeRef NetWrapper e
+
+-- === Construction === ---
+buildNetwork :: _ => _
+buildNetwork  = runIdentity ∘ buildNetworkM
+buildNetworkM = rebuildNetworkM def
+rebuildNetworkM (net :: Network) = constrainType Node (Proxy :: Proxy (NetNodeRef n))
+                                 ∘ constrainType Edge (Proxy :: Proxy (NetEdgeRef e))
+                                 ∘ flip Graph.execT net
+{-# INLINE   buildNetworkM #-}
+{-# INLINE rebuildNetworkM #-}
 
 
 
@@ -340,7 +330,7 @@ rebuildNetwork (net :: Network) = constrainNodeType (Proxy :: Proxy (TargetRef N
 -- === TargetRef === --
 -----------------------
 
-newtype TargetRef r t a = TargetRef (PhantomLayer (Ref (Targetting r (t a)) Int) t a)
+newtype TargetRef r t a = TargetRef (PhantomLayer (Ref (Targetting r (t a)) Int) t a) deriving (Show)
 
 type instance RefOf  (TargetRef r t a) = RefOf (Unwrapped (TargetRef r t a))
 instance      HasRef (TargetRef r t a) where ref = wrapped' ∘ ref
@@ -377,6 +367,7 @@ class Monad m => Builder t a m where
 instance Builder t a m => Builder t a (Graph.GraphBuilderT n e m) where register = lift ∘∘ register
 instance Builder t a m => Builder t a (StateT                s m) where register = lift ∘∘ register
 instance                  Builder t a IO                          where register _ _ = return ()
+instance                  Builder t a Identity                    where register _ _ = return ()
 
 registerOverM :: Builder t a m => Proxy t -> m a -> m a
 registerOverM p ma = do
@@ -403,12 +394,24 @@ registerEdge = registerOver (Proxy :: Proxy Edge)
 star :: Lit t
 star = cons Star
 
-
 star' :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Lit t) => m a
 star' = registerNode =<< constructCoverFix star
 
 
+starx :: Static Draft t
+starx = cons star
 
+starx' :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Static Draft t) => m a
+starx' = registerNode =<< constructCoverFix starx
+
+unifyx :: t (Static Draft t) -> t (Static Draft t) -> Static Draft t
+unifyx a b = cons $ Unify a b
+
+unifyx' a b = mdo
+    ca  <- connection a out
+    cb  <- connection b out
+    out <- registerNode =<< constructCoverFix (unifyx ca cb)
+    return out
 -------------------------------------------------------------------------------------------------------------------
 -- TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST --
 -------------------------------------------------------------------------------------------------------------------
@@ -422,8 +425,14 @@ class EdgeBuilder src tgt m e where edge :: src -> tgt -> m e
 instance (MonadGraphBuilder n e m, Convertible (Arc (RefOf src) (RefOf tgt)) e, HaveRef '[src,tgt], a ~ Int) => EdgeBuilder src tgt m (Ref r a) where
     edge src tgt = Ref <$> Graph.modify (edges $ swap ∘ ixed add (convert $ arc src tgt))
 
+instance (EdgeBuilder src tgt m (Ref (Targetting r (t a)) Int), Functor m) => EdgeBuilder src tgt m (TargetRef r t a) where edge = (TargetRef ∘ PhantomLayer) <∘∘> edge
+
 instance (Convertible src src', Convertible tgt tgt') => Convertible (Arc src tgt) (Arc src' tgt') where convert = bimap convert convert
+
+
 instance Convertible a a' => Convertible (Ref r a) (Ref r' a') where convert (Ref a) = Ref $ convert a
+--instance 
+
 
 connection :: (EdgeBuilder src tgt m e, Builder Edge e m) => src -> tgt -> m e
 connection src tgt = registerEdge =<< edge src tgt
@@ -435,26 +444,22 @@ main = do
     --g <- flip evalStateT (0 :: Int) $ flip Graph.execT (def :: Network) $ do
        -- $ constrainCoverType (Proxy :: Proxy (Ref' Node (Attached' String Cover)))
 
-    g <- buildNetwork $ do
+    g <- buildNetworkM $ do
         --x <- constructCoverFix star :: _ (TargetRef Node (Attached' String Cover) (Lit (TargetRef Edge  (Attached' String Cover))))
 
-        s1 <- star'
+        s1 <- starx'
 
-        s2 <- star'
+        s2 <- starx'
 
-        a <- readRef s1
+        a <- readRef (s1 :: _)
 
-        c <- connection s1 s2
-        c <- connection s1 s2
-        c <- connection s1 s2
-        c <- connection s1 s2
-        c <- connection s1 s2
-        c <- connection s1 s2
-        c <- connection s1 s2
-        c <- connection s1 s2
-        c <- connection s1 s2
+        --c <- connection s1 s2
 
-        print c
+
+        u <- unifyx' s1 s2
+
+        --print c
+        print u
 
         return ()
 
@@ -498,6 +503,20 @@ main = do
     return ()
 
 
+-- time est  -  description
+-------------------------------------------
+--      30  [ ] readRef dla Edge
+--      30  [ ] types
+--      30  [ ] destructors
+--      30  [ ] successors
+--      30  [ ] predecessors
+--      30  [ ] attach accessors
+--      30  [ ] nice connect / reconnect
+--      30  [ ] term construction methods
+--
+-- [ ] magic monad builder
+-- [ ] pretty TH case
+-- [ ] 
 
 
 -------------------------
