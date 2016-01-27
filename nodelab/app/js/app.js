@@ -58,9 +58,11 @@ function initializeGl() {
 
 
     $('body').append('<div id="htmlcanvas-pan"><div id="htmlcanvas"></div></div>');
+    $('body').append('<div id="interface-canvas"></div>');
 
-    $$.htmlCanvasPan = $("#htmlcanvas-pan");
-    $$.htmlCanvas    = $("#htmlcanvas");
+    $$.htmlCanvasPan   = $("#htmlcanvas-pan");
+    $$.htmlCanvas      = $("#htmlcanvas");
+    $$.interfaceCanvas = $("#interfaceCanvas");
 
     $$.renderer.setClearColor(config.backgroundColor, 1);
     $$.rendererMap.setClearColor(new THREE.Color("black"), 1);
@@ -84,12 +86,6 @@ function initializeGl() {
 
     initTerminal();
     initUserInfo();
-    // $(document).unbind('keydown').bind('keydown', function (event) {
-    //   if (event.keyCode === 8) {
-    //     event.preventDefault();
-    //     // event.stopPropagation();
-    //   }
-    // });
 }
 
 function initUserInfo() {
