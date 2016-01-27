@@ -31,6 +31,9 @@ class Group extends BaseWidget
       side:           THREE.DoubleSide
       derivatives:    true
 
+    @bg.scale.x = @width
+    @bg.scale.y = @height
+
     @mesh.add @bg
 
   setBgColor: (r, g, b) -> @bgUniforms.color.value.set(r, g, b)

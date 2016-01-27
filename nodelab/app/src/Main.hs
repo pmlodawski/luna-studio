@@ -28,28 +28,29 @@ module Main where
 
 import           Utils.PreludePlus
 
-import           Reactive.Banana                (Moment, compile)
-import           Reactive.Banana.Frameworks     (Frameworks, actuate)
-import qualified Reactive.Plugins.Core.Network  as CoreNetwork
-import qualified Reactive.Plugins.Loader.Loader as Loader
-import           JS.UI                          (initializeGl, render, triggerWindowResize)
-import           JS.WebSocket                   (WebSocket, getWebSocket, connect)
-import           JS.Config                      (isLoggerEnabled, getBackendAddress)
-import qualified BatchConnector.Commands        as BatchCmd
-import           Batch.Workspace                (Workspace)
-import           Utils.URIParser                (getProjectName)
-import           FakeMock                       (fakeWorkspace)
+import           Batch.Workspace                   (Workspace)
+import qualified BatchConnector.Commands           as BatchCmd
+import           JS.Config                         (getBackendAddress, isLoggerEnabled)
+import           JS.UI                             (initializeGl, render, triggerWindowResize)
+import           JS.WebSocket                      (WebSocket, connect, getWebSocket)
+import           Reactive.Banana                   (Moment, compile)
+import           Reactive.Banana.Frameworks        (Frameworks, actuate)
+import           Reactive.Commands.Command         (Command, execCommand)
+import qualified Reactive.Plugins.Core.Action.Init as Init
+import qualified Reactive.Plugins.Core.Network     as CoreNetwork
+import qualified Reactive.Plugins.Loader.Loader    as Loader
+import           Reactive.State.Global             (State, initialState)
+import           Utils.URIParser                   (getProjectName)
 
 
-makeNetworkDescription :: forall t. Frameworks t => WebSocket -> Bool -> Workspace -> Moment t ()
-makeNetworkDescription = CoreNetwork.makeNetworkDescription
-
-runMainNetwork :: Workspace -> WebSocket -> IO ()
-runMainNetwork workspace socket = do
+runMainNetwork :: WebSocket -> IO ()
+runMainNetwork socket = do
     initializeGl
     render
     enableLogging <- isLoggerEnabled
-    eventNetwork  <- compile $ makeNetworkDescription socket enableLogging workspace
+    let (initActions, initState) = execCommand Init.initialize $ initialState
+    initActions
+    eventNetwork  <- compile $ CoreNetwork.makeNetworkDescription socket enableLogging initState
     actuate eventNetwork
     triggerWindowResize
     BatchCmd.listProjects
@@ -58,5 +59,5 @@ main :: IO ()
 main = do
     maybeProjectName <- getProjectName
     let projectName = maybe "myFirstProject" id maybeProjectName
-    Loader.withActiveConnection $ runMainNetwork fakeWorkspace
+    Loader.withActiveConnection $ runMainNetwork
 

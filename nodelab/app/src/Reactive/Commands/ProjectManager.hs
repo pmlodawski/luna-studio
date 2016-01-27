@@ -41,16 +41,18 @@ loadProject projId = do
         displayProjectList
 
 projectChooserId :: Command State WidgetId
-projectChooserId = do
-    projectChooser <- use $ Global.uiElements . UIElements.projectChooser
-    case projectChooser of
-        0 -> do
-            let group = Group.createWithBg (0.3, 0.0, 0.5)
-            projectChooser <- inRegistry $ UICmd.register sceneInterfaceId group (Layout.verticalLayoutHandler (Vector2 5.0 5.0) 5.0)
-            Global.uiElements . UIElements.projectChooser .= projectChooser
-            return projectChooser
-        _ -> return projectChooser
+projectChooserId = use $ Global.uiElements . UIElements.projectChooser
 
+initProjectChooser :: WidgetId -> Command State WidgetId
+initProjectChooser container = do
+    let button = Button.create (Vector2 210 20) "Create project" & Button.position .~ Vector2 5.0 5.0
+    inRegistry $ UICmd.register container button (handle $ ClickedHandler $ const openAddProjectDialog)
+
+    let group = Group.createWithBg (0.14, 0.42, 0.37)  & Group.position .~ Vector2 5.0 40.0
+    projectChooser <- inRegistry $ UICmd.register container group (Layout.verticalLayoutHandler (Vector2 5.0 5.0) 5.0)
+    Global.uiElements . UIElements.projectChooser .= projectChooser
+
+    return projectChooser
 
 emptyProjectChooser :: WidgetId -> Command UIRegistry.State ()
 emptyProjectChooser pc = do
@@ -85,10 +87,6 @@ displayProjectList = do
     inRegistry $ emptyProjectChooser groupId
 
     currentProjectId <- use $ Global.workspace . Workspace.currentLocation . GraphLocation.projectId
-
-    let button = Button.create (Vector2 200 20) "Create project"
-    inRegistry $ UICmd.register groupId button (handle $ ClickedHandler $ const openAddProjectDialog)
-
 
     projects <- use $ Global.workspace . Workspace.projects
     forM_ (IntMap.toList projects) $ \(id, project) -> do

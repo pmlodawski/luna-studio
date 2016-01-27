@@ -32,8 +32,8 @@ instance ToJSON State
 
 makeLenses ''State
 
-initialState :: Workspace -> State
-initialState workspace = State def def def def def def def def workspace def
+initialState :: State
+initialState = State def def def def def def def def def def
 
 inRegistry :: Command UIRegistry.State a -> Command State a
 inRegistry = zoom uiRegistry

@@ -28,7 +28,7 @@ import qualified Reactive.Plugins.Core.Action.Debug                  as Debug
 import qualified Reactive.Plugins.Core.Action.Sandbox                as Sandbox
 
 import           Reactive.Commands.Command (Command, execCommand)
-import           Reactive.State.Global     (State, initialState)
+import           Reactive.State.Global     (State)
 
 import           Batch.Workspace           (Workspace)
 import           JS.WebSocket              (WebSocket)
@@ -37,8 +37,8 @@ import qualified JS.UI                     as UI
 toTransformer :: Command a () -> (IO (), a) -> (IO (), a)
 toTransformer cmd (_, a) = execCommand cmd a
 
-makeNetworkDescription :: forall t. Frameworks t => WebSocket -> Bool -> Workspace -> Moment t ()
-makeNetworkDescription conn logging workspace = do
+makeNetworkDescription :: forall t. Frameworks t => WebSocket -> Bool -> State -> Moment t ()
+makeNetworkDescription conn logging initialState = do
     let handlers = [ Handlers.resizeHandler
                    , Handlers.mouseDownHandler
                    , Handlers.mouseUpHandler
@@ -87,6 +87,6 @@ makeNetworkDescription conn logging workspace = do
         transformers =  toTransformer <$> commands
 
         reactions :: Event t (IO (), State)
-        reactions =  RB.accumE (return (), initialState workspace) transformers
+        reactions =  RB.accumE (return (), initialState) transformers
 
     reactimate $ (>> UI.shouldRender) . fst <$> reactions
