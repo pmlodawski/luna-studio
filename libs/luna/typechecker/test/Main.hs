@@ -130,9 +130,9 @@ instance {-# OVERLAPPABLE #-} (Default d, Monad m) => CoatConstructor a m (Attac
 
 instance {-# OVERLAPPABLE #-} 
          ( CoverConstructorFix m t, Builder Node t m, Uncovered t ~ Static Draft x
-         , MonadTypeBuilder t m, MonadFix m
-         , Typeable d --x
-         ) => CoatConstructor a m (Attached Type d) where 
+         , MonadTypeBuilder t m
+         , MonadFix m
+         ) => CoatConstructor a m (Attached Type t) where 
     constructCoat a = flip Attached a <$> do
         Type.ask >>= \case
             Just t  -> return t
@@ -141,9 +141,12 @@ instance {-# OVERLAPPABLE #-}
                 t <- starx' :: m t
                 return t
 
-        error (show $ typeOf (Proxy :: Proxy d))
-        ----return ∘ Attached def
-        --undefined
+
+instance {-# OVERLAPPABLE #-} 
+         ( Monad m
+         ) => CoatConstructor a m (Attached Type String) where 
+    constructCoat a = flip Attached a <$> do
+        return ""
 
 
 ------------------
@@ -345,16 +348,16 @@ valProxy _ = Proxy
 
 -- === Structures === --
 
-data family Netref   (t :: *)                   (ast :: (* -> *) -> *)
-data family RefCover (t :: *) (cover :: * -> *) (ast :: (* -> *) -> *) (a :: *)
+data family Netref   (t :: *)                   (base :: (* -> *) -> *)
+data family RefCover (t :: *) (cover :: * -> *) (base :: (* -> *) -> *) (a :: *)
 
 newtype instance Netref Node n = Netref_Node (Unlayered (Netref Node n)) deriving (Show)
 newtype instance Netref Edge n = Netref_Edge (Unlayered (Netref Edge n)) deriving (Show)
 type    instance Unlayered (Netref Node n) = (RefCover Node NetCover n) (n (RefCover Edge NetCover n))
 type    instance Unlayered (Netref Edge n) = (RefCover Edge NetCover n) (n (RefCover Edge NetCover n))
 
-newtype instance RefCover Node cover ast a = RefCover_Node (Unlayered (RefCover Node cover ast a)) deriving (Show)
-newtype instance RefCover Edge cover ast a = RefCover_Edge (Unlayered (RefCover Edge cover ast a)) deriving (Show)
+newtype instance RefCover Node cover base a = RefCover_Node (Unlayered (RefCover Node cover base a)) deriving (Show)
+newtype instance RefCover Edge cover base a = RefCover_Edge (Unlayered (RefCover Edge cover base a)) deriving (Show)
 type instance    Unlayered (RefCover Node cover n a) = TargetGenRef Node (cover   a) cover a
 type instance    Unlayered (RefCover Edge cover n a) = TargetGenRef Edge (NetArcT n) cover a
 
@@ -408,18 +411,6 @@ instance Monad m => LayerConstructor m (RefCover Edge cover n a) where construct
 
 
 ------------------------------------------------------------------------------------------------------------------------------------
--- =============== --
--- === Network === --
--- =============== --
-
-
-type Network  = Graph (NetCover Data) NetArc
-type NetArc   = Arc (Ref Node Int) (Ref Node Int)
-type NetCover = Cover
-
-
-
-
 
 
 
@@ -433,16 +424,7 @@ type Attached' t d = Layer (Attached t d)
 
 
 
--- === Construction === ---
-buildNetwork :: _ => _
-buildNetwork  = runIdentity ∘ buildNetworkM
-buildNetworkM = rebuildNetworkM def
-rebuildNetworkM (net :: Network) = flip Type.evalT Nothing
-                                 ∘ constrainType Node (Proxy :: Proxy (Netref Node n))
-                                 ∘ constrainType Edge (Proxy :: Proxy (Netref Edge e))
-                                 ∘ flip Graph.execT net
-{-# INLINE   buildNetworkM #-}
-{-# INLINE rebuildNetworkM #-}
+
 
 
 --newtype TargetGenRef r x t a = TargetGenRef (PhantomLayer (Ref (Targetting r (x a)) Int) t a) deriving (Show)
@@ -514,47 +496,8 @@ registerEdge = registerOver (Proxy :: Proxy Edge)
 
 ------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------
--- ========================== --
--- === AST building utils === --
--- ========================== --
-
-star :: Lit t
-star = cons Star
-
-star' :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Lit t) => m a
-star' = registerNode =<< constructCoverFix star
 
 
-starx :: Static Draft t
-starx = cons star
-
-starx' :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Static Draft t) => m a
-starx' = registerNode =<< constructCoverFix starx
-
-starx'2 :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Lit t) => m a
-starx'2 = registerNode =<< constructCoverFix star
-
---starx2' :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Static Draft t, a ~ Netref Node (Static Draft)) => m a
---starx2' :: (CoverConstructorFix m a, a ~ Netref Node (Static Draft)) => m a
-
-
-
-unifyx :: t (Static Draft t) -> t (Static Draft t) -> Static Draft t
-unifyx a b = cons $ Unify a b
-
-unifyx2 :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Static Draft t) => t (Static Draft t) -> t (Static Draft t) -> m a
-unifyx2 a b = registerNode =<< constructCoverFix (unifyx a b)
- 
-unifyx' a b = mdo
-    ca  <- connection a out
-    cb  <- connection b out
-    out <- registerNode =<< constructCoverFix (unifyx (convert ca) (convert cb))
-    return out
-
-
--------------------------------------------------------------------------------------------------------------------
--- TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST --
--------------------------------------------------------------------------------------------------------------------
 
 
 
@@ -621,6 +564,72 @@ instance (a' ~ n (RefCover Edge cover n), n ~ n', cover ~ NetCover) => Convertib
 --data instance Foo Int = FooInt Int deriving (Show)
 
 
+-- ========================== --
+-- === AST building utils === --
+-- ========================== --
+
+star :: Lit t
+star = cons Star
+
+star' :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Lit t) => m a
+star' = registerNode =<< constructCoverFix star
+
+
+starx :: Static Draft t
+starx = cons star
+
+starx' :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Static Draft t) => m a
+starx' = registerNode =<< constructCoverFix starx
+
+starx'2 :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Lit t) => m a
+starx'2 = registerNode =<< constructCoverFix star
+
+
+
+unifyx :: t (Static Draft t) -> t (Static Draft t) -> Static Draft t
+unifyx a b = cons $ Unify a b
+
+unifyx2 :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Static Draft t) => t (Static Draft t) -> t (Static Draft t) -> m a
+unifyx2 a b = registerNode =<< constructCoverFix (unifyx a b)
+ 
+unifyx' a b = mdo
+    ca  <- connection a out
+    cb  <- connection b out
+    out <- registerNode =<< constructCoverFix (unifyx (convert ca) (convert cb))
+    return out
+
+
+
+-- =============== --
+-- === Network === --
+-- =============== --
+
+
+type Network  = Graph (NetCover Data) NetArc
+type NetArc   = Arc (Ref Node Int) (Ref Node Int)
+type NetCover = Attached' Type (Netref Node (Static Draft)) Cover
+
+-- === Construction === ---
+
+buildNetwork :: _ => _
+buildNetwork  = runIdentity ∘ buildNetworkM
+buildNetworkM = rebuildNetworkM def
+rebuildNetworkM (net :: Network) = flip Type.evalT Nothing
+                                 ∘ constrainType Node (Proxy :: Proxy (Netref Node n))
+                                 ∘ constrainType Edge (Proxy :: Proxy (Netref Edge e))
+                                 ∘ flip Graph.execT net
+{-# INLINE   buildNetworkM #-}
+{-# INLINE rebuildNetworkM #-}
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------
+-- TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST --
+-------------------------------------------------------------------------------------------------------------------
+
+ucase = caseTest ∘ uncover
+
 main :: IO ()
 main = do
 
@@ -657,13 +666,10 @@ main = do
         --u <- unifyx' s1 s2
 
 
+        --print $ ucase s1_v $ do
+        --    match $ \(Lit _) -> "Its a Lit!"
+        --    match $ \ANY     -> "Something else"
 
-
-        --s1' <- readRef s1
-        --c'  <- readRef c
-
-        --print s1'
-        --print c'
 
         return ()
 
@@ -711,7 +717,7 @@ main = do
 -----------------------------------------------------
 --           [+] readRef dla Edge               
 -- 0:35  30  [+] automatic constructed connection type
--- 2:18  30  [ ] types
+-- 2:18  30  [?] types
 --       30  [ ] destructors
 --       30  [ ] successors
 --       30  [ ] predecessors
