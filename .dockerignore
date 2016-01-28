@@ -1,8 +1,6 @@
 build_7.10
-!dist/bin
 nodelab
 !nodelab/www
-dist
 docs
 get-stack.sh
 init_repo.py
