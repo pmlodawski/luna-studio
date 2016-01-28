@@ -14,7 +14,7 @@ import           Object.Widget                (WidgetFile, objectId)
 import           Object.Widget.Connection     (Connection)
 import           Object.Widget.Node           (Node)
 import           Reactive.Commands.UIRegistry (removeWidget)
-import           UI.Widget.Node               ()
+import           UI.Instances                 ()
 
 unrender :: Command State ()
 unrender = do

@@ -54,7 +54,7 @@ selectRadioButton id val = inRegistry $ UICmd.update_ id $ Choice.value .~ val
 instance CompositeWidget Choice where
     createWidget id model = do
         groupId <- UICmd.register id Group.create def
-        labelId <- UICmd.register id (Label.create (model ^. Choice.label)) def
+        labelId <- UICmd.register id (Label.create (Vector2 100.0 20.0)(model ^. Choice.label)) def
 
         UICmd.moveX groupId 90
 

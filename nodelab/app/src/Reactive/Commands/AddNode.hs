@@ -8,66 +8,67 @@ module Reactive.Commands.AddNode
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import qualified Data.Text.Lazy        as Text
-import qualified Data.Map.Lazy         as Map
-import           Control.Monad.State   hiding (State)
-import           GHC.Float             (double2Float)
+import           Control.Monad.State             hiding (State)
+import qualified Data.Map.Lazy                   as Map
+import qualified Data.Text.Lazy                  as Text
+import           GHC.Float                       (double2Float)
 
-import           Object.Widget         ()
-import           Object.UITypes        (WidgetId)
-import qualified Object.Widget.Node    as Model
-import qualified Object.Widget.Button  as Button
-import qualified Object.Widget.Label   as Label
-import qualified Object.Widget.Port    as PortModel
-import qualified Object.Widget.Group   as Group
-import           Object.Widget.Number.Discrete     (DiscreteNumber(..))
-import qualified Object.Widget.Number.Discrete     as DiscreteNumber
-import qualified UI.Handlers.Number.Discrete       as DiscreteNumber
-import           Object.Widget.Number.Continuous   (ContinuousNumber(..))
-import qualified Object.Widget.Number.Continuous   as ContinuousNumber
-import qualified UI.Handlers.Number.Continuous     as ContinuousNumber
-import           Object.Widget.LabeledTextBox      (LabeledTextBox(..))
-import qualified Object.Widget.LabeledTextBox      as LabeledTextBox
-import qualified UI.Handlers.LabeledTextBox        as LabeledTextBox
-import           Object.Widget.Toggle              (Toggle(..))
-import qualified Object.Widget.Toggle              as Toggle
-import qualified UI.Handlers.Toggle                as Toggle
-import qualified UI.Handlers.Button                as Button
+import           Object.UITypes                  (WidgetId)
+import           Object.Widget                   ()
+import qualified Object.Widget.Button            as Button
+import qualified Object.Widget.Group             as Group
+import qualified Object.Widget.Label             as Label
+import           Object.Widget.LabeledTextBox    (LabeledTextBox (..))
+import qualified Object.Widget.LabeledTextBox    as LabeledTextBox
+import qualified Object.Widget.Node              as Model
+import           Object.Widget.Number.Continuous (ContinuousNumber (..))
+import qualified Object.Widget.Number.Continuous as ContinuousNumber
+import           Object.Widget.Number.Discrete   (DiscreteNumber (..))
+import qualified Object.Widget.Number.Discrete   as DiscreteNumber
+import qualified Object.Widget.Port              as PortModel
+import           Object.Widget.Toggle            (Toggle (..))
+import qualified Object.Widget.Toggle            as Toggle
+import qualified UI.Handlers.Button              as Button
+import qualified UI.Handlers.LabeledTextBox      as LabeledTextBox
+import qualified UI.Handlers.Number.Continuous   as ContinuousNumber
+import qualified UI.Handlers.Number.Discrete     as DiscreteNumber
+import qualified UI.Handlers.Toggle              as Toggle
 
-import qualified Reactive.State.Global         as Global
-import           Reactive.State.Global         (State, inRegistry)
-import qualified Reactive.State.Graph          as Graph
-import           Reactive.State.UIRegistry     (sceneGraphId, addHandler)
-import qualified Reactive.State.UIRegistry     as UIRegistry
-import           Reactive.Commands.EnterNode   (enterNode)
-import           Reactive.Commands.Graph       (focusNode, updatePortAngles, portDefaultAngle, nodeIdToWidgetId, updateNodeMeta)
-import           Reactive.Commands.RemoveNode  (removeSelectedNodes)
-import           Reactive.Commands.Command     (Command, performIO)
-import           Reactive.Commands.PendingNode (unrenderPending)
-import qualified Reactive.Commands.UIRegistry  as UICmd
+import           Reactive.Commands.Command       (Command, performIO)
+import           Reactive.Commands.EnterNode     (enterNode)
+import           Reactive.Commands.Graph         (focusNode, nodeIdToWidgetId, portDefaultAngle, updateNodeMeta,
+                                                  updatePortAngles)
+import           Reactive.Commands.PendingNode   (unrenderPending)
+import           Reactive.Commands.RemoveNode    (removeSelectedNodes)
+import qualified Reactive.Commands.UIRegistry    as UICmd
+import           Reactive.State.Global           (State, inRegistry)
+import qualified Reactive.State.Global           as Global
+import qualified Reactive.State.Graph            as Graph
+import           Reactive.State.UIRegistry       (addHandler, sceneGraphId)
+import qualified Reactive.State.UIRegistry       as UIRegistry
 
-import qualified BatchConnector.Commands as BatchCmd
-import qualified JS.NodeGraph            as UI
+import qualified BatchConnector.Commands         as BatchCmd
+import qualified JS.NodeGraph                    as UI
 
-import qualified UI.Widget.Node   as UINode
-import qualified UI.Registry      as UIR
-import qualified UI.Widget        as UIT
+import           Data.HMap.Lazy                  (HTMap)
+import qualified Data.HMap.Lazy                  as HMap
+import           Data.Map.Lazy                   (Map)
+import qualified Data.Map.Lazy                   as Map
+import           UI.Handlers.Generic             (ValueChangedHandler (..), triggerValueChanged)
+import qualified UI.Handlers.Node                as UINode
+import           UI.Layout                       as Layout
+import qualified UI.Registry                     as UIR
 import qualified UI.Scene
-import qualified Data.HMap.Lazy   as HMap
-import           Data.HMap.Lazy   (HTMap)
-import qualified Data.Map.Lazy    as Map
-import           Data.Map.Lazy    (Map)
-import           UI.Handlers.Generic (triggerValueChanged, ValueChangedHandler(..))
-import           UI.Layout                        as Layout
+import qualified UI.Widget                       as UIT
 
-import           Empire.API.Data.Node (Node, NodeId)
-import qualified Empire.API.Data.Node as Node
-import           Empire.API.Data.Port (Port(..), PortId(..), InPort(..))
-import qualified Empire.API.Data.Port as Port
-import qualified Empire.API.Data.DefaultValue as DefaultValue
-import           Empire.API.Data.ValueType (ValueType(..))
-import qualified Empire.API.Data.ValueType as ValueType
-import           Empire.API.Data.PortRef (AnyPortRef(..), toAnyPortRef, InPortRef(..))
+import qualified Empire.API.Data.DefaultValue    as DefaultValue
+import           Empire.API.Data.Node            (Node, NodeId)
+import qualified Empire.API.Data.Node            as Node
+import           Empire.API.Data.Port            (InPort (..), Port (..), PortId (..))
+import qualified Empire.API.Data.Port            as Port
+import           Empire.API.Data.PortRef         (AnyPortRef (..), InPortRef (..), toAnyPortRef)
+import           Empire.API.Data.ValueType       (ValueType (..))
+import qualified Empire.API.Data.ValueType       as ValueType
 
 addNode :: Node -> Command State ()
 addNode node = do
@@ -155,7 +156,7 @@ makeInPortControl :: WidgetId -> NodeId -> InPort -> Port -> Command UIRegistry.
 makeInPortControl parent nodeId inPort port = case port ^. Port.state of
     Port.NotConnected    -> do
         groupId <- UICmd.register parent Group.create (Layout.horizontalLayoutHandler def 10)
-        let label  = Label.Label def (Vector2 140 20) (Text.pack $ show inPort)
+        let label  = Label.create (Vector2 140 20) (Text.pack $ show inPort)
             button = Button.create (Vector2 50 20) ("Set")
             handlers = addHandler (Button.ClickedHandler $ \_ -> do
                 workspace <- use Global.workspace
@@ -165,7 +166,7 @@ makeInPortControl parent nodeId inPort port = case port ^. Port.state of
         UICmd.register_ groupId label def
         UICmd.register_ groupId button handlers
     Port.Connected       -> do
-        let widget = Label.create (Text.pack $ show inPort <> " (connected)")
+        let widget = Label.create (Vector2 200 20) (Text.pack $ show inPort <> " (connected)")
         void $ UICmd.register parent widget def
     Port.WithDefault def -> void $ case port ^. Port.valueType . ValueType.toEnum of
         ValueType.DiscreteNumber -> do
@@ -201,7 +202,7 @@ makeInPortControl parent nodeId inPort port = case port ^. Port.state of
                     performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.BoolValue val)
             UICmd.register parent widget handlers
         ValueType.Other -> do
-            let widget = Label.create (Text.pack $ show inPort <> " :: " <> (show $ port ^. Port.valueType) )
+            let widget = Label.create (Vector2 200 20) (Text.pack $ show inPort <> " :: " <> (show $ port ^. Port.valueType) )
             UICmd.register parent widget mempty
 
 updateNodeValue :: NodeId -> Int -> Command State ()

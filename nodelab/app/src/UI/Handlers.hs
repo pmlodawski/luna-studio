@@ -38,6 +38,7 @@ import qualified UI.Widget.TextBox                as TextBox
 import qualified UI.Widget.Toggle                 as Toggle
 
 import qualified UI.Handlers.Button               as Button
+import qualified UI.Handlers.Node                 as Node
 import qualified UI.Handlers.Choice               as Choice
 import qualified UI.Handlers.Choice.RadioButton   as RadioButton
 import qualified UI.Handlers.LabeledTextBox       as LabeledTextBox

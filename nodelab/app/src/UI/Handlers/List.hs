@@ -112,7 +112,7 @@ removeElement listId groupId idx = do
 
 instance CompositeWidget List where
     createWidget id model = do
-        let label        = Label.create "Param of list:"
+        let label        = Label.create (Vector2 100.0 20.0) "Param of list:"
             addButton    = Button.createIcon (Vector2 20 20) "shaders/icon.plus.frag"
             width        = model ^. List.size . x
             padding      = 10
