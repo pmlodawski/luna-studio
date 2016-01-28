@@ -94,7 +94,7 @@ testNodeUpdate = do
     void $ Bus.runBus endPoints $ do
         let meta    = NodeMeta.NodeMeta (20.0, 30.0)
             request = AddNode.Request (gl 0 0) "dupa123" meta 1235
-            node    = Node.Node 123 "dupa123" mempty meta
+            node    = Node.Node 123 "dupa123" "node0" mempty meta
             result  = AddNode.Result node
             update  = Update.Update request result
         Bus.send Flag.Enable $ Message.Message Topic.addNodeUpdate $ toStrict $ Bin.encode update
