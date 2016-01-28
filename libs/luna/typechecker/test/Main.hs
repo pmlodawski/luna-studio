@@ -584,26 +584,41 @@ unifyx2 a b = registerNode =<< constructCoverFix (unifyx a b)
 unifyx' a b = mdo
     ca  <- connection a out
     cb  <- connection b out
-    out <- registerNode =<< constructCoverFix (unifyx ca cb)
+    out <- registerNode =<< constructCoverFix (unifyx (convert ca) (convert cb))
     return out
+
+
 -------------------------------------------------------------------------------------------------------------------
 -- TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST --
 -------------------------------------------------------------------------------------------------------------------
 
-newtype IDT a = IDT a deriving (Show, Functor, Traversable, Foldable)
 
 
--- TODO[WD]: Extend polymorphism, we can do exactly the same way as with AST elements
---           returning `m a`, where `a` can be either a connection in the graph
 
-class EdgeBuilder src tgt m e  where edge :: src -> tgt -> m e
+type family EdgeBetween src tgt
+class EdgeBuilder src tgt m where edge :: src -> tgt -> m (EdgeBetween src tgt)
 
-instance (MonadGraphBuilder n e m, Convertible (Arc (RefOf src) (RefOf tgt)) e, HaveRef '[src,tgt], a ~ Int) => EdgeBuilder src tgt m (Ref r a) where
-    edge src tgt = Ref <$> Graph.modify (edges $ swap ∘ ixed add (convert $ arc src tgt))
+type instance EdgeBetween (XNetNodeRef n) (XNetNodeRef n) = XNetEdgeRef n
+instance (EdgeBuilder' (XNetNodeRef n) (XNetNodeRef n) m (Unwrapped (XNetEdgeRef n)), Functor m) => EdgeBuilder (XNetNodeRef n) (XNetNodeRef n) m where edge = XNetEdgeRef <∘∘> edge'
 
-instance (EdgeBuilder src tgt m (Ref (Targetting r (t a)) Int), Functor m) => EdgeBuilder src tgt m (TargetRef r t a) where edge = (TargetRef ∘ PhantomLayer) <∘∘> edge
-instance (EdgeBuilder src tgt m (Unwrapped (Unwrapped (EdgeRefPfx n a))), Functor m) => EdgeBuilder src tgt m (EdgeRefPfx n a) where edge = (EdgeRefPfx ∘ PhantomLayer) <∘∘> edge
-instance (EdgeBuilder src tgt m (Unwrapped (XNetEdgeRef n)), Functor m) => EdgeBuilder src tgt m (XNetEdgeRef n) where edge = XNetEdgeRef <∘∘> edge
+
+-- Helpers
+-- TODO[WD]: Refactor the `EdgeBuilder'` class. It is just a helper one and should be removed or cleaned.
+--           It does not preserve the type dependenices set by `EdgeBuilder`
+
+class EdgeBuilder' src tgt m e  where edge' :: src -> tgt -> m e
+
+instance (MonadGraphBuilder n e m, Convertible (Arc (RefOf src) (RefOf tgt)) e, HaveRef '[src,tgt], a ~ Int) => EdgeBuilder' src tgt m (Ref r a) where
+    edge' src tgt = Ref <$> Graph.modify (edges $ swap ∘ ixed add (convert $ arc src tgt))
+
+instance (Functor m, EdgeBuilder' src tgt m (Ref (Targetting r (t a)) Int))           => EdgeBuilder' src tgt m (TargetRef r t a) where edge' = (TargetRef  ∘ PhantomLayer) <∘∘> edge'
+instance (Functor m, EdgeBuilder' src tgt m (Unwrapped (Unwrapped (EdgeRefPfx n a)))) => EdgeBuilder' src tgt m (EdgeRefPfx n a)  where edge' = (EdgeRefPfx ∘ PhantomLayer) <∘∘> edge'
+
+
+
+
+
+
 
 instance (Convertible src src', Convertible tgt tgt') => Convertible (Arc src tgt) (Arc src' tgt') where convert = bimap convert convert
 
@@ -612,11 +627,9 @@ instance Convertible a a' => Convertible (Ref r a) (Ref r' a') where convert (Re
 --instance 
 
 
-connection :: (EdgeBuilder src tgt m e, Builder Edge e m) => src -> tgt -> m e
+connection :: (EdgeBuilder src tgt m, Builder Edge e m, e ~ EdgeBetween src tgt) => src -> tgt -> m e
 connection src tgt = registerEdge =<< edge src tgt
 
-connection2 :: (EdgeBuilder src tgt m e) => src -> tgt -> m e
-connection2 src tgt = edge src tgt
 
 
 
@@ -651,7 +664,7 @@ main = do
         s3 <- starx'2 :: _
 
 
-        c <- connection s1 s2 :: _ (XNetEdgeRef (Static Draft))
+        c <- connection s1 s2 :: _ 
 
         --let tn = s1 :: XRef Node (Static Draft)
 
@@ -666,7 +679,7 @@ main = do
 
         print (c_v :: _)
 
-        uu <- unifyx2 (convert c) (convert c)
+        uu <- unifyx' s1 s2
 
         --u <- unifyx' s1 s2
 
