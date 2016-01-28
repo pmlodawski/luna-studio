@@ -43,6 +43,8 @@ import qualified Luna.Syntax.AST.Lit         as Lit
 
 import qualified Luna.Interpreter.Session    as Session
 
+import qualified Luna.StdLib.Int             as StdLibInt
+
 type NodeType a       = (Coated a, Uncoated a ~ (Draft (Ref Edge)))
 type GraphBuilder m a = (Coated a, Uncoated a ~ (Draft (Ref Edge)), BuilderMonad (Graph a DoubleArc) m)
 

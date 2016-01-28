@@ -179,9 +179,10 @@ arrow p n' r = mdo
 --cons :: forall name m t. (ToMuM' name m t, LayeredASTCons (Cons (Mu t)) m t) => name -> m (Mu t)
 --cons n = layeredASTCons . flip Cons [] =<< (toMuM' n :: m (Mu t))
 cons c = mdo
-    i <- modify2 . nodes $ swap . ixed add a
-    a <- NodeBuilder.with (Ref $ Node i) $ do
-        cc <- connect c
+    c' <- monadic c
+    i  <- modify2 . nodes $ swap . ixed add a
+    a  <- NodeBuilder.with (Ref $ Node i) $ do
+        cc <- connect c'
         constructCoat $ specificCons (flip Cons [] cc)
     return $ Ref $ Node i
 
@@ -206,6 +207,17 @@ var name = mdo
     a <- NodeBuilder.with (Ref $ Node i) $ do
         nc <- connect name'
         constructCoat $ specificCons $ Var nc
+    return $ Ref $ Node i
+
+native fun args = mdo
+    fun'  <- monadic fun
+    args' <- mapM monadic args
+    i <- modify2 . nodes $ swap . ixed add a
+    a <- NodeBuilder.with (Ref $ Node i ) $ do
+        fc <- connect fun'
+        let connectArg (Arg n a) = Arg n <$> connect a
+        argsc <- mapM connectArg args'
+        constructCoat $ specificCons $ Native fc argsc
     return $ Ref $ Node i
 
 app acc args = mdo

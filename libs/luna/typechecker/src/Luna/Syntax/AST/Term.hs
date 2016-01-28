@@ -43,6 +43,7 @@ data    App      t = App        t [Arg t]       deriving (Show, Eq, Ord, Functor
 newtype Var      t = Var      t                 deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 data    Unify    t = Unify      t t             deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 data    Blank      = Blank                      deriving (Show, Eq, Ord)
+data    Native   t = Native   t   [Arg t]       deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 
 -- Type sets
 
@@ -59,6 +60,7 @@ type ThunkElems t = Accessor t
 
 type ValElems   t = Star
                  ': Lit
+                 ': Native t
                  ': Cons t
                  ': Arrow t
                  ': '[]
@@ -150,6 +152,7 @@ instance Repr s t => Repr s (Unify    t) where repr (Unify    n t) = "Unify"    
 instance Repr s t => Repr s (Cons     t) where repr (Cons     n t) = "Cons"     <+> repr n <+> repr t
 instance Repr s t => Repr s (Accessor t) where repr (Accessor n t) = "Accessor" <+> repr n <+> repr t
 instance Repr s t => Repr s (App      t) where repr (App      n t) = "App"      <+> repr n <+> repr t
+instance Repr s t => Repr s (Native   t) where repr (Native   n t) = "Native"   <+> repr n <+> repr t
 
 instance {-# OVERLAPPING #-} VariantReprs s (Val   t) => Repr s (Val   t) where repr (Val   t) = "Val"   <+> repr t
 instance {-# OVERLAPPING #-} VariantReprs s (Thunk t) => Repr s (Thunk t) where repr (Thunk t) = "Thunk" <+> repr t
@@ -171,6 +174,7 @@ instance {-# OVERLAPPING #-} Repr HeaderOnly (Var      t) where repr a = "Var"
 instance {-# OVERLAPPING #-} Repr HeaderOnly (Unify    t) where repr a = "Unify"
 instance {-# OVERLAPPING #-} Repr HeaderOnly (Cons     t) where repr a = "Cons"
 instance {-# OVERLAPPING #-} Repr HeaderOnly (Accessor t) where repr a = "Accessor"
+instance {-# OVERLAPPING #-} Repr HeaderOnly (Native   t) where repr a = "Native"
 
 
 -- === Inputs ===

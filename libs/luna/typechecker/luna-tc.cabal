@@ -63,6 +63,7 @@ Library
         Luna.Interpreter.NodeRunner,
         Luna.Interpreter.Session,
         Luna.Repr.Styles,
+        Luna.StdLib.Int,
         Luna.Syntax.AST,
         Luna.Syntax.AST.Arg,
         Luna.Syntax.AST.Decl,
