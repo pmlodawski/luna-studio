@@ -337,79 +337,115 @@ valProxy :: a -> Proxy a
 valProxy _ = Proxy
 
 ------------------------------------------------------------------------------------------------------------------------------------
+
+
+------------------------------
+-- === Graph references === --
+------------------------------
+
+-- === Structures === --
+
+data family Netref   (t :: *)                   (ast :: (* -> *) -> *)
+data family RefCover (t :: *) (cover :: * -> *) (ast :: (* -> *) -> *) (a :: *)
+
+newtype instance Netref Node n = Netref_Node (Unlayered (Netref Node n)) deriving (Show)
+newtype instance Netref Edge n = Netref_Edge (Unlayered (Netref Edge n)) deriving (Show)
+type    instance Unlayered (Netref Node n) = (RefCover Node NetCover n) (n (RefCover Edge NetCover n))
+type    instance Unlayered (Netref Edge n) = (RefCover Edge NetCover n) (n (RefCover Edge NetCover n))
+
+newtype instance RefCover Node cover ast a = RefCover_Node (Unlayered (RefCover Node cover ast a)) deriving (Show)
+newtype instance RefCover Edge cover ast a = RefCover_Edge (Unlayered (RefCover Edge cover ast a)) deriving (Show)
+type instance    Unlayered (RefCover Node cover n a) = TargetGenRef Node (cover   a) cover a
+type instance    Unlayered (RefCover Edge cover n a) = TargetGenRef Edge (NetArcT n) cover a
+
+type NetArcT      n       = Arc (Netref Node n) (Netref Node n)
+type TargetGenRef r x t a = PhantomLayer (Ref (Targetting r x) Int) t a
+
+
+-- === Instances === --
+
+-- Wrappers
+
+instance Rewrapped (Netref Node n) (Netref Node n')
+instance Wrapped   (Netref Node n) where
+    type Unwrapped (Netref Node n) = Unlayered (Netref Node n)
+    _Wrapped' = iso (\(Netref_Node a) -> a) Netref_Node
+
+instance Rewrapped (Netref Edge n) (Netref Edge n')
+instance Wrapped   (Netref Edge n) where
+    type Unwrapped (Netref Edge n) = Unlayered (Netref Edge n)
+    _Wrapped' = iso (\(Netref_Edge a) -> a) Netref_Edge
+
+instance Rewrapped (RefCover Node cover n a) (RefCover Node cover' n' a')
+instance Wrapped   (RefCover Node cover n a) where
+    type Unwrapped (RefCover Node cover n a) = Unlayered (RefCover Node cover n a)
+    _Wrapped' = iso (\(RefCover_Node a) -> a) RefCover_Node
+
+instance Rewrapped (RefCover Edge cover n a) (RefCover Edge cover' n' a')
+instance Wrapped   (RefCover Edge cover n a) where
+    type Unwrapped (RefCover Edge cover n a) = Unlayered (RefCover Edge cover n a)
+    _Wrapped' = iso (\(RefCover_Edge a) -> a) RefCover_Edge
+
+-- References
+
+type instance RefOf  (Netref   Node       n)   = RefOf (Unwrapped (Netref Node n))
+type instance RefOf  (Netref   Edge       n)   = RefOf (Unwrapped (Netref Edge n))
+type instance RefOf  (RefCover Node cover n a) = RefOf (Unwrapped (RefCover Node cover n a))
+type instance RefOf  (RefCover Edge cover n a) = RefOf (Unwrapped (RefCover Edge cover n a))
+instance      HasRef (Netref   Node       n)   where ref = wrapped' ∘ ref
+instance      HasRef (Netref   Edge       n)   where ref = wrapped' ∘ ref
+instance      HasRef (RefCover Node cover n a) where ref = wrapped' ∘ ref
+instance      HasRef (RefCover Edge cover n a) where ref = wrapped' ∘ ref
+
+-- Construction
+
+instance Monad m => LayerConstructor m (Netref   Node       n)   where constructLayer = return ∘ Netref_Node
+instance Monad m => LayerConstructor m (Netref   Edge       n)   where constructLayer = return ∘ Netref_Edge
+instance Monad m => LayerConstructor m (RefCover Node cover n a) where constructLayer = return ∘ RefCover_Node
+instance Monad m => LayerConstructor m (RefCover Edge cover n a) where constructLayer = return ∘ RefCover_Edge
+
+
+
+
 ------------------------------------------------------------------------------------------------------------------------------------
 -- =============== --
 -- === Network === --
 -- =============== --
 
---type NetRef     tp tgt = Ref tp tgt Int
---type NetFreeRef tp     = NetRef tp 'Nothing
 
-type NetNodeRef n = TargetRef Node (Attached' Type Char Cover) (n (TargetRef Edge (Attached' Type Char Cover)))
-type NetEdgeRef n = TargetRef Edge (Attached' Type Char Cover) (n (TargetRef Edge (Attached' Type Char Cover)))
-
-type NetNodeRefTst n = TargetRef Node Cover (n (TargetRef Edge Cover))
-
-
---newtype XNetNodeRef (n :: (* -> *) -> *) = XNetNodeRef ( (NodeRefPfx n) (n (NodeRefPfx n)) )
---newtype XNetEdgeRef (n :: (* -> *) -> *) = XNetEdgeRef ( (EdgeRefPfx n) (n (EdgeRefPfx n)) )
-
---type    NodeRefPfx  (n :: (* -> *) -> *) = TargetRef Node (NetCover n)
---type    EdgeRefPfx  (n :: (* -> *) -> *) = TargetGenRef (NetArcT n) Edge (NetCover n)
-
---type    NetCover    (n :: (* -> *) -> *) = Attached' Type (XNetNodeRef n) Cover
-
---type NetArcT  (n :: (* -> *) -> *) = Arc (XNetNodeRef n) (XNetNodeRef n)
-
-
-
-newtype XNetNodeRef (n :: (* -> *) -> *) = XNetNodeRef ( (NodeRefPfx n) (n (EdgeRefPfx n)) ) deriving (Show)
-newtype XNetEdgeRef (n :: (* -> *) -> *) = XNetEdgeRef ( (EdgeRefPfx n) (n (EdgeRefPfx n)) ) deriving (Show)
-
-newtype NodeRefPfx  (n :: (* -> *) -> *) a = NodeRefPfx ( TargetGenRef2 Node (NetCover n a) (NetCover n) a ) deriving (Show)
-newtype EdgeRefPfx  (n :: (* -> *) -> *) a = EdgeRefPfx ( TargetGenRef2 Edge (NetArcT  n  ) (NetCover n) a ) deriving (Show)
-
-type NodeRefPfx' a =  TargetGenRef2 Node (Cover a) Cover a
-
---type    NetCover    (n :: (* -> *) -> *) = Attached' Type (XNetNodeRef n) Cover
-type    NetCover    (n :: (* -> *) -> *) = Cover
-
-type NetArcT  (n :: (* -> *) -> *) = Arc (XNetNodeRef n) (XNetNodeRef n)
-
-type TargetGenRef2 r x t a = PhantomLayer (Ref (Targetting r x) Int) t a
+type Network  = Graph (NetCover Data) NetArc
+type NetArc   = Arc (Ref Node Int) (Ref Node Int)
+type NetCover = Cover
 
 
 
 
 
-type Network    = Graph (NetWrapper Data) NetArc
-type NetWrapper = Cover
-type NetArc     = Arc (Ref Node Int) (Ref Node Int)
-type NetRef r   = Ref r Int
+
+
+
+
+
+
+
 
 type Attached' t d = Layer (Attached t d)
 
 
-type NodeRef w n = TargetRef Node w (n (TargetRef Edge w))
-type EdgeRef w e = TargetRef Edge w (e (TargetRef Edge w))
-
---type NetNodeRef n = NodeRef NetWrapper n
---type NetEdgeRef e = EdgeRef NetWrapper e
 
 -- === Construction === ---
 buildNetwork :: _ => _
 buildNetwork  = runIdentity ∘ buildNetworkM
 buildNetworkM = rebuildNetworkM def
 rebuildNetworkM (net :: Network) = flip Type.evalT Nothing
-                                 ∘ constrainType Node (Proxy :: Proxy (XNetNodeRef n))
-                                 --constrainType Node (Proxy :: Proxy (XNetNodeRef))
-                                 ∘ constrainType Edge (Proxy :: Proxy (XNetEdgeRef e))
+                                 ∘ constrainType Node (Proxy :: Proxy (Netref Node n))
+                                 ∘ constrainType Edge (Proxy :: Proxy (Netref Edge e))
                                  ∘ flip Graph.execT net
 {-# INLINE   buildNetworkM #-}
 {-# INLINE rebuildNetworkM #-}
 
 
---newtype TargetGenRef2 r x t a = TargetGenRef2 (PhantomLayer (Ref (Targetting r (x a)) Int) t a) deriving (Show)
+--newtype TargetGenRef r x t a = TargetGenRef (PhantomLayer (Ref (Targetting r (x a)) Int) t a) deriving (Show)
 
 
 
@@ -428,58 +464,6 @@ instance      HasRef (TargetRef r t a) where ref = wrapped' ∘ ref
 
 
 -- Wrappers
-type instance Unlayered (XNetNodeRef n) = Unwrapped (XNetNodeRef n)
-instance      Rewrapped (XNetNodeRef n) (XNetNodeRef n')
-instance      Wrapped   (XNetNodeRef n) where
-    type      Unwrapped (XNetNodeRef n) = (NodeRefPfx n) (n (EdgeRefPfx n))
-    _Wrapped' = iso (\(XNetNodeRef a) -> a) XNetNodeRef
-
-instance Monad m => LayerConstructor m (XNetNodeRef n) where constructLayer = return ∘ XNetNodeRef
-
-type instance RefOf  (XNetNodeRef n) = RefOf (Unwrapped (XNetNodeRef n))
-instance      HasRef (XNetNodeRef n) where ref = wrapped' ∘ ref
-
-
-type instance Unlayered (XNetEdgeRef n) = Unwrapped (XNetEdgeRef n)
-instance      Rewrapped (XNetEdgeRef n) (XNetEdgeRef n')
-instance      Wrapped   (XNetEdgeRef n) where
-    type      Unwrapped (XNetEdgeRef n) = (EdgeRefPfx n) (n (EdgeRefPfx n))
-    _Wrapped' = iso (\(XNetEdgeRef a) -> a) XNetEdgeRef
-
-instance Monad m => LayerConstructor m (XNetEdgeRef n) where constructLayer = return ∘ XNetEdgeRef
-
-type instance RefOf  (XNetEdgeRef n) = RefOf (Unwrapped (XNetEdgeRef n))
-instance      HasRef (XNetEdgeRef n) where ref = wrapped' ∘ ref
-
-
-
-type instance Unlayered (NodeRefPfx n a) = Unwrapped (NodeRefPfx n a)
-instance      Rewrapped (NodeRefPfx n a) (NodeRefPfx n' a')
-instance      Wrapped   (NodeRefPfx n a) where
-    type      Unwrapped (NodeRefPfx n a) = TargetGenRef2 Node (NetCover n a) (NetCover n) a
-    _Wrapped' = iso (\(NodeRefPfx a) -> a) NodeRefPfx
-
-instance Monad m => LayerConstructor m (NodeRefPfx n a) where constructLayer = return ∘ NodeRefPfx
-
-type instance RefOf  (NodeRefPfx n a) = RefOf (Unwrapped (NodeRefPfx n a))
-instance      HasRef (NodeRefPfx n a) where ref = wrapped' ∘ ref
-
-
-
-type instance Unlayered (EdgeRefPfx n a) = Unwrapped (EdgeRefPfx n a)
-instance      Rewrapped (EdgeRefPfx n a) (EdgeRefPfx n' a')
-instance      Wrapped   (EdgeRefPfx n a) where
-    type      Unwrapped (EdgeRefPfx n a) = TargetGenRef2 Edge (NetArcT  n  ) (NetCover n) a
-    _Wrapped' = iso (\(EdgeRefPfx a) -> a) EdgeRefPfx
-
-instance Monad m => LayerConstructor m (EdgeRefPfx n a) where constructLayer = return ∘ EdgeRefPfx
-
-type instance RefOf  (EdgeRefPfx n a) = RefOf (Unwrapped (EdgeRefPfx n a))
-instance      HasRef (EdgeRefPfx n a) where ref = wrapped' ∘ ref
-
-
-
--- Wrappers
 type instance Unlayered (TargetRef r t a) = Unwrapped (TargetRef r t a)
 instance      Rewrapped (TargetRef r t a) (TargetRef r' t' a')
 instance      Wrapped   (TargetRef r t a) where
@@ -489,26 +473,6 @@ instance      Wrapped   (TargetRef r t a) where
 -- Layers
 instance Monad m => LayerConstructor m (TargetRef r t a) where constructLayer = return ∘ TargetRef
 
-
----------------------------------
-
-newtype TargetGenRef r x t a = TargetGenRef (PhantomLayer (Ref (Targetting r x) Int) t a) deriving (Show)
-
-
-type instance RefOf  (TargetGenRef r x t a) = RefOf (Unwrapped (TargetGenRef r x t a))
-instance      HasRef (TargetGenRef r x t a) where ref = wrapped' ∘ ref
-
--- === Instances === --
-
--- Wrappers
-type instance Unlayered (TargetGenRef r x t a) = Unwrapped (TargetGenRef r x t a)
-instance      Rewrapped (TargetGenRef r x t a) (TargetGenRef r' x' t' a')
-instance      Wrapped   (TargetGenRef r x t a) where
-    type      Unwrapped (TargetGenRef r x t a) = PhantomLayer (Ref (Targetting r x) Int) t a
-    _Wrapped' = iso (\(TargetGenRef a) -> a) TargetGenRef
-
--- Layers
-instance Monad m => LayerConstructor m (TargetGenRef r x t a) where constructLayer = return ∘ TargetGenRef
 
 
 ------------------------------------------------------------------------------------------------------------------------------------
@@ -570,8 +534,8 @@ starx' = registerNode =<< constructCoverFix starx
 starx'2 :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Lit t) => m a
 starx'2 = registerNode =<< constructCoverFix star
 
---starx2' :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Static Draft t, a ~ XNetNodeRef (Static Draft)) => m a
---starx2' :: (CoverConstructorFix m a, a ~ XNetNodeRef (Static Draft)) => m a
+--starx2' :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Static Draft t, a ~ Netref Node (Static Draft)) => m a
+--starx2' :: (CoverConstructorFix m a, a ~ Netref Node (Static Draft)) => m a
 
 
 
@@ -598,8 +562,8 @@ unifyx' a b = mdo
 type family EdgeBetween src tgt
 class EdgeBuilder src tgt m where edge :: src -> tgt -> m (EdgeBetween src tgt)
 
-type instance EdgeBetween (XNetNodeRef n) (XNetNodeRef n) = XNetEdgeRef n
-instance (EdgeBuilder' (XNetNodeRef n) (XNetNodeRef n) m (Unwrapped (XNetEdgeRef n)), Functor m) => EdgeBuilder (XNetNodeRef n) (XNetNodeRef n) m where edge = XNetEdgeRef <∘∘> edge'
+type instance EdgeBetween (Netref Node n) (Netref Node n) = Netref Edge n
+instance (EdgeBuilder' (Netref Node n) (Netref Node n) m (Unwrapped (Netref Edge n)), Functor m) => EdgeBuilder (Netref Node n) (Netref Node n) m where edge = Netref_Edge <∘∘> edge'
 
 
 -- Helpers
@@ -612,7 +576,7 @@ instance (MonadGraphBuilder n e m, Convertible (Arc (RefOf src) (RefOf tgt)) e, 
     edge' src tgt = Ref <$> Graph.modify (edges $ swap ∘ ixed add (convert $ arc src tgt))
 
 instance (Functor m, EdgeBuilder' src tgt m (Ref (Targetting r (t a)) Int))           => EdgeBuilder' src tgt m (TargetRef r t a) where edge' = (TargetRef  ∘ PhantomLayer) <∘∘> edge'
-instance (Functor m, EdgeBuilder' src tgt m (Unwrapped (Unwrapped (EdgeRefPfx n a)))) => EdgeBuilder' src tgt m (EdgeRefPfx n a)  where edge' = (EdgeRefPfx ∘ PhantomLayer) <∘∘> edge'
+instance (Functor m, EdgeBuilder' src tgt m (Unwrapped (Unwrapped (RefCover Edge cover n a)))) => EdgeBuilder' src tgt m (RefCover Edge cover n a)  where edge' = (RefCover_Edge ∘ PhantomLayer) <∘∘> edge'
 
 
 
@@ -635,18 +599,27 @@ connection src tgt = registerEdge =<< edge src tgt
 
 instance (Castable src src', Castable tgt tgt') => Castable (Arc src tgt) (Arc src' tgt') where cast = bimap cast cast
 
-instance Castable (Ref r a) (Unwrapped (Unwrapped (Unwrapped (XNetEdgeRef n)))) => Castable (Ref r a) (XNetEdgeRef n) where cast = wrap' ∘ wrap' ∘ wrap' ∘ cast
-instance Castable (Ref r a) (Unwrapped (Unwrapped (Unwrapped (XNetNodeRef n)))) => Castable (Ref r a) (XNetNodeRef n) where cast = wrap' ∘ wrap' ∘ wrap' ∘ cast
+instance Castable (Ref r a) (Unwrapped (Unwrapped (Unwrapped (Netref Edge n)))) => Castable (Ref r a) (Netref Edge n) where cast = wrap' ∘ wrap' ∘ wrap' ∘ cast
+instance Castable (Ref r a) (Unwrapped (Unwrapped (Unwrapped (Netref Node n)))) => Castable (Ref r a) (Netref Node n) where cast = wrap' ∘ wrap' ∘ wrap' ∘ cast
 
 instance Castable (Ref r a) (Ref r' a) where cast = rewrap
 
-type family XRef t (n :: (* -> *) -> *) :: *
+--type family Netref t (n :: (* -> *) -> *) :: *
 
-type instance XRef Node n = XNetNodeRef n
-type instance XRef Edge n = XNetEdgeRef n
+--type instance Netref Node n = Netref Node n
+--type instance Netref Edge n = Netref Edge n
 
 
-instance (a' ~ n (EdgeRefPfx n), n ~ n') => Convertible (XNetEdgeRef n) (EdgeRefPfx n' a') where convert = unwrap'
+-- FIXME[WD]: remove the hardcoded `NetCover`
+instance (a' ~ n (RefCover Edge cover n), n ~ n', cover ~ NetCover) => Convertible (Netref Edge n) (RefCover Edge cover n' a') where convert = unwrap'
+
+
+
+
+--data family Foo a 
+
+--data instance Foo Int = FooInt Int deriving (Show)
+
 
 main :: IO ()
 main = do
@@ -666,9 +639,9 @@ main = do
 
         c <- connection s1 s2 :: _ 
 
-        --let tn = s1 :: XRef Node (Static Draft)
+        --let tn = s1 :: Netref Node (Static Draft)
 
-        --    tc = c  :: XRef Edge (Static Draft)
+        --    tc = c  :: Netref Edge (Static Draft)
 
         --print s2
         --print c
@@ -737,8 +710,8 @@ main = do
 -- time  take  -  description                    FIXME
 -----------------------------------------------------
 --           [+] readRef dla Edge               
--- 0:35  30  [ ] automatic constructed connection type
---       30  [ ] types
+-- 0:35  30  [+] automatic constructed connection type
+-- 2:18  30  [ ] types
 --       30  [ ] destructors
 --       30  [ ] successors
 --       30  [ ] predecessors
