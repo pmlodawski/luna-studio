@@ -5,6 +5,16 @@ echo "Gzipping build..."
 set -e
 
 s3_path=s3://nodelab-gui/build/$DRONE_COMMIT/
+latest_s3_path=s3://nodelab-gui/build/branch/$DRONE_BRANCH.tar.xz
+
+echo "Uploading GUI bundle to S3..."
+
+tar czvf latest.tar.xz www
+
+aws s3 cp                          \
+  --acl=public-read                \
+  latest.tar.xz latest_s3_path     \
+  --region eu-west-1
 
 tmp=$(mktemp -d)
 for i in $(find www -type f \( -name '*.html' -o -name '*.css' -o -name '*.woff' -o -name '*.ttf' -o -name '*.eot' -o -name '*.js' \))

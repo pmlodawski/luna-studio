@@ -10,14 +10,14 @@ build:
     - cd $DRONE_DIR/build_7.10/backend
     - stack build --copy-bins
     - cd $DRONE_DIR
-    - "if [ $DRONE_BRANCH -eq production ]; then ./upload_backend.sh; fi"
+    - "if [ $DRONE_BRANCH -eq production ] || [ $DRONE_BRANCH -eq fogger ]; then ./upload_backend.sh; fi"
     - cd $DRONE_DIR/nodelab
     - npm install
     - bower install --allow-root
     - mkdir -p .stack-work/install/x86_64-osx/custom-nbo-gui-20160122/ghcjs-0.2.0.20151020_ghc-7.10.2/bin/nodelab.jsexe/
     - touch .stack-work/install/x86_64-osx/custom-nbo-gui-20160122/ghcjs-0.2.0.20151020_ghc-7.10.2/bin/nodelab.jsexe/all.js
-    - brunch build --env production
-    - "if [ $DRONE_BRANCH -eq production ]; then ./upload_dist.sh; fi"
+    - brunch build # --env production
+    - "if [ $DRONE_BRANCH -eq production ] || [ $DRONE_BRANCH -eq fogger ]; then ./upload_dist.sh; fi"
 
 notify:
   slack:
@@ -42,4 +42,4 @@ publish:
     insecure: false
     storage_driver: aufs
     when:
-      branch: production
+      branch: [production, fogger]
