@@ -133,11 +133,17 @@ function render() {
   if (shouldRender) {
     $$.commonUniforms.objectMap.value = 0;
     $$.commonUniforms.antialias.value = 1;
+    var oldCf = $$.commonUniforms.zoomScaling.camFactor;
 
     $$.renderer.clear();
+
     $$.renderer.render($$.scene, $$.camera);
     $$.renderer.clearDepth();
+
+    $$.commonUniforms.camFactor.value = 1;
     $$.renderer.render($$.sceneHUD, $$.cameraHUD);
+
+    $$.commonUniforms.camFactor.value = oldCf;
 
     raycaster.renderMap();
     raycaster.cacheMap();
