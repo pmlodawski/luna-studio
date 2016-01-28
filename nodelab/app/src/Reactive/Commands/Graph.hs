@@ -268,3 +268,13 @@ updateNodeMeta nodeId meta = do
     updateConnections
 
 
+renameNode :: NodeId -> Text -> Command Global.State ()
+renameNode nodeId name = do
+    Global.graph . Graph.nodesMap . ix nodeId . Node.name .= name
+
+    inRegistry $ do
+        widgetId <- nodeIdToWidgetId nodeId
+
+        forM_ widgetId $ flip UICmd.update_ $ Model.name .~ name
+
+

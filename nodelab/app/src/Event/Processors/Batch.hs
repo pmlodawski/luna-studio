@@ -26,6 +26,7 @@ processMessage (WebMessage topic bytes)
     | topic == Topic.nodeResultUpdate     = NodeResultUpdated $ decode bytes
     | topic == Topic.listProjectsStatus   = ProjectList       $ decode bytes
     | topic == Topic.createProjectUpdate  = ProjectCreated    $ decode bytes
+    | topic == Topic.renameNodeUpdate     = NodeRenamed       $ decode bytes
     | otherwise                           = UnknownEvent topic
     -- "project.open.update"                                          -> ProjectOpened <$> parseProjectOpenUpdate bytes
     -- "project.open.error"                                           -> Just $ ProjectDoesNotExist

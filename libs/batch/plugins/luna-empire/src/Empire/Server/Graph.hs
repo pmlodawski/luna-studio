@@ -16,6 +16,7 @@ import           Empire.Env                        (Env)
 import qualified Empire.API.Graph.AddNode          as AddNode
 import qualified Empire.API.Graph.RemoveNode       as RemoveNode
 import qualified Empire.API.Graph.UpdateNodeMeta   as UpdateNodeMeta
+import qualified Empire.API.Graph.RenameNode       as RenameNode
 import qualified Empire.API.Graph.Connect          as Connect
 import qualified Empire.API.Graph.Disconnect       as Disconnect
 import qualified Empire.API.Graph.SetDefaultValue  as SetDefaultValue
@@ -114,6 +115,23 @@ handleUpdateNodeMeta content = do
             Env.empireEnv .= newEmpireEnv
             let update = Update.Update request $ UpdateNodeMeta.Result nodeMeta
             sendToBus Topic.updateNodeMetaUpdate update
+
+handleRenameNode :: ByteString -> StateT Env BusT ()
+handleRenameNode content = do
+    let request  = Bin.decode . fromStrict $ content :: RenameNode.Request
+        location = request ^. RenameNode.location
+    currentEmpireEnv <- use Env.empireEnv
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ withGraphLocation Graph.renameNode
+        (request ^. RenameNode.location)
+        (request ^. RenameNode.nodeId)
+        (request ^. RenameNode.name)
+    case result of
+        Left err -> logger Logger.error $ errorMessage <> err
+        Right _ -> do
+            Env.empireEnv .= newEmpireEnv
+            let update = Update.Update request $ Update.Ok
+            sendToBus Topic.renameNodeUpdate update
+            notifyCodeUpdate location
 
 handleConnect :: ByteString -> StateT Env BusT ()
 handleConnect content = do

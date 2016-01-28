@@ -9,6 +9,9 @@ removeNodeUpdate       = "empire.graph.node.remove.update"
 updateNodeMetaRequest  = "empire.graph.node.updateMeta.request"
 updateNodeMetaUpdate   = "empire.graph.node.updateMeta.update"
 
+renameNodeRequest      = "empire.graph.node.rename.request"
+renameNodeUpdate       = "empire.graph.node.rename.update"
+
 connectRequest         = "empire.graph.connect.request"
 connectUpdate          = "empire.graph.connect.update"
 

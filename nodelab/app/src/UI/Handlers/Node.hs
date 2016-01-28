@@ -36,9 +36,10 @@ import           UI.Handlers.Generic          (ValueChangedHandler (..), trigger
 import           UI.Layout                    as Layout
 import           UI.Widget.Group              ()
 import           UI.Widget.Label              ()
-import           UI.Widget.TextBox            ()
 import           UI.Widget.Node               ()
+import           UI.Widget.TextBox            ()
 
+import           Empire.API.Data.Node         (NodeId)
 
 
 textHandlers :: WidgetId -> HTMap
@@ -47,16 +48,17 @@ textHandlers id = addHandler (ValueChangedHandler $ textValueChangedHandler id)
 
 textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
 textValueChangedHandler parent val tbId = do
-    inRegistry $ UICmd.update_ parent $ Model.name .~ val
-    triggerValueChanged val parent
-
-
+    model <- inRegistry $ UICmd.update parent $ Model.name .~ val
+    triggerRenameNodeHandler parent model
 
 newtype RemoveNodeHandler = RemoveNodeHandler (Command Global.State ())
 removeNodeHandler = TypeKey :: TypeKey RemoveNodeHandler
 
 newtype FocusNodeHandler = FocusNodeHandler (WidgetId -> Command Global.State ())
 focusNodeHandler = TypeKey :: TypeKey FocusNodeHandler
+
+newtype RenameNodeHandler = RenameNodeHandler (WidgetId -> NodeId -> Text -> Command Global.State ())
+renameNodeHandler = TypeKey :: TypeKey RenameNodeHandler
 
 triggerRemoveHandler :: WidgetId -> Command Global.State ()
 triggerRemoveHandler id = do
@@ -67,6 +69,11 @@ triggerFocusNodeHandler :: WidgetId -> Command Global.State ()
 triggerFocusNodeHandler id = do
     maybeHandler <- inRegistry $ UICmd.handler id focusNodeHandler
     forM_ maybeHandler $ \(FocusNodeHandler handler) -> handler id
+
+triggerRenameNodeHandler :: WidgetId -> Model.Node -> Command Global.State ()
+triggerRenameNodeHandler id model = do
+    maybeHandler <- inRegistry $ UICmd.handler id renameNodeHandler
+    forM_ maybeHandler $ \(RenameNodeHandler handler) -> handler id (model ^. Model.nodeId) (model ^. Model.name)
 
 keyDownHandler :: KeyPressedHandler Global.State
 keyDownHandler '\r'   _ _ id = inRegistry $ UICmd.update_ id (Model.isExpanded %~ not)
@@ -118,16 +125,12 @@ allNodes = UIRegistry.lookupAllM
 unselectNode :: WidgetId -> Command UIRegistry.State ()
 unselectNode = flip UICmd.update_ (Model.isSelected .~ False)
 
-
 instance ResizableWidget Model.Node
-
-
-
 instance CompositeWidget Model.Node where
     createWidget id model = do
-        let offset = Vector2 (-30.0) 70.0
-            grp    = Group.Group offset def True Nothing
-        UICmd.register id grp (Layout.verticalLayoutHandler def 5.0)
+        let offset = Vector2 (-30.0) 65.0
+            grp    = Group.Group offset def True $ Just (0.2, 0.2, 0.2)
+        UICmd.register id grp (Layout.verticalLayoutHandler (Vector2 5.0 5.0) 5.0)
 
         let offset = Vector2 (-50.0) (-50.0)
             label  = Label.Label offset (Vector2 100.0 20.0) Label.Center $ model ^. Model.expression

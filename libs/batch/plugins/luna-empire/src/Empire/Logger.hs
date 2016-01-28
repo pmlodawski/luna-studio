@@ -34,6 +34,7 @@ import qualified Empire.API.Topic                       as Topic
 import qualified Empire.API.Graph.AddNode               as AddNode
 import qualified Empire.API.Graph.RemoveNode            as RemoveNode
 import qualified Empire.API.Graph.UpdateNodeMeta        as UpdateNodeMeta
+import qualified Empire.API.Graph.RenameNode            as RenameNode
 import qualified Empire.API.Graph.Connect               as Connect
 import qualified Empire.API.Graph.Disconnect            as Disconnect
 import qualified Empire.API.Graph.GetProgram            as GetProgram
@@ -99,6 +100,8 @@ loggFormattersMap = Map.fromList
     , (Topic.removeNodeUpdate,       \display content -> display (Bin.decode . fromStrict $ content :: RemoveNode.Update))
     , (Topic.updateNodeMetaRequest,  \display content -> display (Bin.decode . fromStrict $ content :: UpdateNodeMeta.Request))
     , (Topic.updateNodeMetaUpdate,   \display content -> display (Bin.decode . fromStrict $ content :: UpdateNodeMeta.Update))
+    , (Topic.renameNodeRequest,      \display content -> display (Bin.decode . fromStrict $ content :: RenameNode.Request))
+    , (Topic.renameNodeUpdate,       \display content -> display (Bin.decode . fromStrict $ content :: RenameNode.Update))
     , (Topic.connectRequest,         \display content -> display (Bin.decode . fromStrict $ content :: Connect.Request))
     , (Topic.connectUpdate,          \display content -> display (Bin.decode . fromStrict $ content :: Connect.Update))
     , (Topic.disconnectRequest,      \display content -> display (Bin.decode . fromStrict $ content :: Disconnect.Request))

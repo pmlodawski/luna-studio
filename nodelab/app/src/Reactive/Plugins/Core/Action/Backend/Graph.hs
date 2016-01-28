@@ -8,7 +8,7 @@ import           Reactive.State.Global      (State)
 import qualified Reactive.State.Global      as Global
 import qualified Batch.Workspace            as Workspace
 import           Reactive.Commands.AddNode  (addNode, updateNode, updateNodeValue)
-import           Reactive.Commands.Graph    (localConnectNodes, updateNodeMeta)
+import           Reactive.Commands.Graph    (localConnectNodes, updateNodeMeta, renameNode)
 import           Reactive.Commands.DisconnectNodes (disconnect)
 import           Reactive.Commands.Command  (Command)
 import qualified Reactive.Commands.RemoveNode as RemoveNode
@@ -19,6 +19,7 @@ import qualified Empire.API.Graph.RemoveNode as RemoveNode
 import qualified Empire.API.Graph.Connect as Connect
 import qualified Empire.API.Graph.Disconnect as Disconnect
 import qualified Empire.API.Graph.NodeUpdate as NodeUpdate
+import qualified Empire.API.Graph.RenameNode as RenameNode
 import qualified Empire.API.Graph.NodeResultUpdate as NodeResultUpdate
 import qualified Empire.API.Data.Node as Node
 import           Empire.API.Data.GraphLocation (GraphLocation)
@@ -39,6 +40,9 @@ toAction (Batch (Batch.NodeMetaUpdated response)) = Just $ do
 toAction (Batch (Batch.NodeUpdated response)) = Just $ do
     shouldProcess <- isCurrentLocation (response ^. NodeUpdate.location)
     when shouldProcess $ updateNode $ response ^. NodeUpdate.node
+toAction (Batch (Batch.NodeRenamed response)) = Just $ do
+    shouldProcess <- isCurrentLocation (response ^. Update.request . RenameNode.location)
+    when shouldProcess $ renameNode (response ^. Update.request . RenameNode.nodeId) (response ^. Update.request . RenameNode.name)
 toAction (Batch (Batch.NodeRemoved response)) = Just $ do
     shouldProcess <- isCurrentLocation (response ^. Update.request . RemoveNode.location)
     when shouldProcess $ RemoveNode.localRemoveNodes $ response ^. Update.request . RemoveNode.nodeId

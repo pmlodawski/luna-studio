@@ -20,6 +20,7 @@ handlersMap = Map.fromList
     [ (Topic.addNodeRequest,         Graph.handleAddNode)
     , (Topic.removeNodeRequest,      Graph.handleRemoveNode)
     , (Topic.updateNodeMetaRequest,  Graph.handleUpdateNodeMeta)
+    , (Topic.renameNodeRequest,      Graph.handleRenameNode)
     , (Topic.connectRequest,         Graph.handleConnect)
     , (Topic.disconnectRequest,      Graph.handleDisconnect)
     , (Topic.setDefaultValueRequest, Graph.handleSetDefaultValue)

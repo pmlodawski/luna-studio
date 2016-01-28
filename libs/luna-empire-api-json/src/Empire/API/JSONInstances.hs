@@ -24,6 +24,7 @@ import           Empire.API.Graph.Connect          as Connect
 import           Empire.API.Graph.Disconnect       as Disconnect
 import           Empire.API.Graph.RemoveNode       as RemoveNode
 import           Empire.API.Graph.UpdateNodeMeta   as UpdateNodeMeta
+import           Empire.API.Graph.RenameNode       as RenameNode
 import           Empire.API.Graph.NodeUpdate       as NodeUpdate
 import           Empire.API.Graph.NodeResultUpdate as NodeResultUpdate
 import           Empire.API.Graph.CodeUpdate       as CodeUpdate
@@ -74,6 +75,8 @@ instance ToJSON Connect.Request
 instance ToJSON Disconnect.Request
 
 instance ToJSON RemoveNode.Request
+
+instance ToJSON RenameNode.Request
 
 instance ToJSON UpdateNodeMeta.Request
 instance ToJSON UpdateNodeMeta.Result

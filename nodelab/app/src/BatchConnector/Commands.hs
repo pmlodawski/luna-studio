@@ -37,17 +37,18 @@ import qualified Empire.API.Data.Library           as Library
 import qualified Empire.API.Data.DefaultValue      as DefaultValue
 import qualified Empire.API.Topic                  as Topic
 
-import           Empire.API.Graph.AddNode          as AddNode
-import           Empire.API.Graph.Connect          as Connect
-import           Empire.API.Graph.Disconnect       as Disconnect
-import           Empire.API.Graph.RemoveNode       as RemoveNode
-import           Empire.API.Graph.UpdateNodeMeta   as UpdateNodeMeta
-import           Empire.API.Graph.SetDefaultValue  as SetDefaultValue
-import           Empire.API.Graph.GetProgram       as GetProgram
-import           Empire.API.Project.CreateProject  as CreateProject
-import           Empire.API.Project.ListProjects   as ListProjects
-import           Empire.API.Library.CreateLibrary  as CreateLibrary
-import           Empire.API.Library.ListLibraries  as ListLibraries
+import qualified Empire.API.Graph.AddNode          as AddNode
+import qualified Empire.API.Graph.Connect          as Connect
+import qualified Empire.API.Graph.Disconnect       as Disconnect
+import qualified Empire.API.Graph.RemoveNode       as RemoveNode
+import qualified Empire.API.Graph.RenameNode       as RenameNode
+import qualified Empire.API.Graph.UpdateNodeMeta   as UpdateNodeMeta
+import qualified Empire.API.Graph.SetDefaultValue  as SetDefaultValue
+import qualified Empire.API.Graph.GetProgram       as GetProgram
+import qualified Empire.API.Project.CreateProject  as CreateProject
+import qualified Empire.API.Project.ListProjects   as ListProjects
+import qualified Empire.API.Library.CreateLibrary  as CreateLibrary
+import qualified Empire.API.Library.ListLibraries  as ListLibraries
 
 
 import Data.Binary (encode)
@@ -87,6 +88,9 @@ getProgram workspace = sendRequest Topic.programRequest $ withLibrary workspace 
 
 updateNodeMeta :: Workspace -> NodeId -> NodeMeta -> IO ()
 updateNodeMeta w nid nm = sendRequest Topic.updateNodeMetaRequest $ withLibrary w UpdateNodeMeta.Request nid nm
+
+renameNode :: Workspace -> NodeId -> Text -> IO ()
+renameNode w nid name = sendRequest Topic.renameNodeRequest $ withLibrary w RenameNode.Request nid name
 
 removeNode :: Workspace -> NodeId -> IO ()
 removeNode workspace nid = sendRequest topic body where

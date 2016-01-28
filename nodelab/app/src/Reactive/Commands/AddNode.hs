@@ -121,7 +121,10 @@ displayPorts id node = do
 
 nodeHandlers :: Node -> HTMap
 nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
-                  $ addHandler (UINode.FocusNodeHandler $ \id -> zoom Global.uiRegistry (focusNode id))
+                  $ addHandler (UINode.RenameNodeHandler $ \_ nodeId name -> do
+                      workspace <- use Global.workspace
+                      performIO $ BatchCmd.renameNode workspace nodeId name)
+                  $ addHandler (UINode.FocusNodeHandler  $ \id -> zoom Global.uiRegistry (focusNode id))
                   $ mempty
 
 updateNode :: Node -> Command State ()
