@@ -13,7 +13,7 @@ tar czvf latest.tar.xz www
 
 aws s3 cp                          \
   --acl=public-read                \
-  latest.tar.xz latest_s3_path     \
+  latest.tar.xz $latest_s3_path    \
   --region eu-west-1
 
 tmp=$(mktemp -d)
