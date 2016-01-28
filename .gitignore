@@ -63,8 +63,7 @@ tools/*/*/*.cabal
 tools/*/*/*/*.cabal
 
 #general builds
-dist/proto-timestamps
-dist/bin
+dist
 DllWrappers
 
 # cabal sandbox
