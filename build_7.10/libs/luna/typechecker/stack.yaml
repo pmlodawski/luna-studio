@@ -24,3 +24,5 @@ extra-deps:
 - string-qq-0.0.2
 - data-construction-1.0
 - error-util-0.0.1.1
+
+local-bin-path: ../../../../dist/bin

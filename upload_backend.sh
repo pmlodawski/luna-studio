@@ -7,7 +7,7 @@ set -e
 s3_path=s3://nodelab-gui/backend/$DRONE_COMMIT.tar.gz
 
 
-cd build_7.10/.bin
+cd dist/bin
 tar -czvf /tmp/artifacts.tar.gz --exclude "*.tar.gz" .
 echo "Uploading gzipped files to S3..."
 

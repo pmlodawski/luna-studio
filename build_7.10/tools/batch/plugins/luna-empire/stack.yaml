@@ -28,4 +28,4 @@ extra-deps:
 - error-util-0.0.1.1
 - docopt-0.7.0.4
 
-local-bin-path: ../../../../.bin
+local-bin-path: ../../../../../dist/bin

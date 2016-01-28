@@ -18,4 +18,4 @@ EXPOSE 80 8088 9001
 
 COPY nodelab/www /usr/share/nodelab/gui
 
-COPY build_7.10/.bin /usr/local/bin/nodelab
+COPY dist/bin /usr/local/bin/nodelab

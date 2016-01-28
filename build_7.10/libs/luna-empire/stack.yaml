@@ -8,7 +8,9 @@ packages:
 - ../../../libs/utils
 - ../../../libs/luna-empire-api
 - ../../../libs/luna/typechecker
+
 resolver: lts-3.14
+
 extra-deps:
 - prologue-1.0.6
 - container-1.0
@@ -23,3 +25,5 @@ extra-deps:
 - ghc-session-0.1.2.0
 - graphviz-2999.18.0.2
 - error-util-0.0.1.1
+
+local-bin-path: ../../../dist/bin

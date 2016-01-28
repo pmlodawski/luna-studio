@@ -17,4 +17,5 @@ extra-deps:
 - string-qq-0.0.2
 - data-construction-1.0
 - typelevel-1.0.2
-local-bin-path: ../../../../.bin
+
+local-bin-path: ../../../../../dist/bin
