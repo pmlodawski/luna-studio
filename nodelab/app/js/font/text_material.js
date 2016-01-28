@@ -18,7 +18,7 @@ var defaults = function (){
       width:     { type: 'f', value: 0 },
       objectMap: $$.commonUniforms.objectMap,
       camFactor: $$.commonUniforms.camFactor,
-      zoomScaling: $$.commonUniforms.zoomScaling,
+      zoomScaling: { type: 'i', value: 0 },
     },
     vertexShader:   vs,
     fragmentShader: fs,

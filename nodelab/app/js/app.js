@@ -133,7 +133,7 @@ function render() {
   if (shouldRender) {
     $$.commonUniforms.objectMap.value = 0;
     $$.commonUniforms.antialias.value = 1;
-    var oldCf = $$.commonUniforms.zoomScaling.camFactor;
+    var oldCf = $$.commonUniforms.camFactor.value;
 
     $$.renderer.clear();
 
