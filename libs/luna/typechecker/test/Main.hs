@@ -286,16 +286,10 @@ instance HasRef (Unwrapped (Targetting a t))   => HasRef (Targetting a t)   wher
 
 
 newtype TypeConstraint  t (tp :: *)      m a = TypeConstraint  (m a) 
-newtype TypeConstraintM t (tp :: * -> *) m a = TypeConstraintM (m a) 
 
 constrainType :: t -> Proxy tp -> TypeConstraint t tp m a -> m a
 constrainType _ _ (TypeConstraint ma) = ma
 
-constrainTypeM :: t -> Proxy tp -> TypeConstraintM t tp m a -> m a
-constrainTypeM _ _ (TypeConstraintM ma) = ma
-
---constrainTypec :: t -> Proxy tp -> TypeConstraint t (tp m a -> m a
---constrainTypec _ _ (TypeConstraint ma) = ma
 
 constrainType' (TypeConstraint ma) = ma
 
@@ -321,36 +315,9 @@ instance MonadIO m => MonadIO (TypeConstraint t tp m) where
 
 
 --instance {-# OVERLAPPABLE #-} (Monad m, Builder t (a x) m, (tp) ~ (a)) => Builder t (a x) (TypeConstraint t (tp y) m) where register = lift ∘∘ register
-instance {-# OVERLAPPABLE #-} (Monad m, Builder t (a x) m, b ~ a x, tp ~ tpa tpx, tpa ~ a) => Builder t b (TypeConstraint t tp m) where register = lift ∘∘ register
+instance {-# OVERLAPPABLE #-} (Monad m, Builder t (a x) m, b ~ a x, tp ~ tpa (tpx :: (* -> *) -> *), tpa ~ a) => Builder t b (TypeConstraint t tp m) where register = lift ∘∘ register
 instance {-# OVERLAPPABLE #-} (Monad m, Builder t a m)         => Builder t a (TypeConstraint t' tp m) where register = lift ∘∘ register
 
-
-
---constrainTypeM' (TypeConstraintM ma) = ma
-
---instance Functor m => Functor (TypeConstraintM t tp m) where
---    fmap f (TypeConstraintM ma) = TypeConstraintM $ fmap f ma
-
---instance Applicative m => Applicative (TypeConstraintM t tp m) where
---    pure = TypeConstraintM ∘ pure
---    TypeConstraintM f <*> TypeConstraintM ma = TypeConstraintM $ f <*> ma
-
---instance Monad m => Monad (TypeConstraintM t tp m) where
---    return = TypeConstraintM ∘ return
---    (TypeConstraintM a) >>= f = TypeConstraintM $ a >>= (fmap constrainTypeM' f)
-
---instance MonadFix m => MonadFix (TypeConstraintM t tp m) where
---    mfix f = TypeConstraintM $ mfix (fmap constrainTypeM' f)
-
---instance MonadTrans (TypeConstraintM t tp) where
---    lift = TypeConstraintM
-
---instance MonadIO m => MonadIO (TypeConstraintM t tp m) where
---    liftIO = TypeConstraintM ∘ liftIO
-
-
---instance {-# OVERLAPPABLE #-} (Monad m, Builder t a m, tp ~ p, a ~ p x) => Builder t a (TypeConstraintM t  tp m) where register = lift ∘∘ register
---instance {-# OVERLAPPABLE #-} (Monad m, Builder t a m)             => Builder t a (TypeConstraintM t' tp m) where register = lift ∘∘ register
 
 
 
@@ -396,8 +363,8 @@ type NetNodeRefTst n = TargetRef Node Cover (n (TargetRef Edge Cover))
 
 
 
-type    XNetNodeRef (n :: (* -> *) -> *) = (NodeRefPfx n) (n (EdgeRefPfx n))
-type    XNetEdgeRef (n :: (* -> *) -> *) = (EdgeRefPfx n) (n (EdgeRefPfx n))
+newtype XNetNodeRef (n :: (* -> *) -> *) = XNetNodeRef ( (NodeRefPfx n) (n (EdgeRefPfx n)) ) deriving (Show)
+newtype XNetEdgeRef (n :: (* -> *) -> *) = XNetEdgeRef ( (EdgeRefPfx n) (n (EdgeRefPfx n)) ) deriving (Show)
 
 newtype NodeRefPfx  (n :: (* -> *) -> *) a = NodeRefPfx ( TargetGenRef2 Node (NetCover n a) (NetCover n) a ) deriving (Show)
 newtype EdgeRefPfx  (n :: (* -> *) -> *) a = EdgeRefPfx ( TargetGenRef2 Edge (NetArcT  n  ) (NetCover n) a ) deriving (Show)
@@ -413,37 +380,7 @@ type TargetGenRef2 r x t a = PhantomLayer (Ref (Targetting r x) Int) t a
 
 
 
---starx2' :: NetNodeRefTst (Static Draft)
---starx2' = flip Graph.eval (def :: Network) $ constructCoverFix starxx
 
-
---starx3' :: XNetNodeRef (Static Draft)
-----starx3' :: (NodeRefPfx (Static Draft)) (Static Draft (EdgeRefPfx (Static Draft)))
-----starx3' :: NodeRefPfx' (Static Draft (EdgeRefPfx (Static Draft)))
-----starx3' :: NodeRefPfx' (Static Draft (EdgeRefPfx (Static Draft)))
----- ~
----- 
-----starx3' :: NodeRefPfx' (Static Draft (EdgeRefPfx (Static Draft)))
---starx3' = flip Graph.eval (def :: Network) $ constructCoverFix starxx3
-
-
-
---starxx :: Static Draft (TargetRef Edge Cover)
---starxx = cons star
-
---starxx3 :: Static Draft (EdgeRefPfx (Static Draft))
---starxx3 = cons star
-
-
-
-
---type NetNodeRef n = TargetRef Node         (Attached' Type (NetNodeRef n) Cover) (n (TargetRef Edge (Attached' Type (NetNodeRef n) Cover)))
---type NetEdgeRef n = TargetGenRef ( NetArcT (Attached' Type (NetNodeRef n) Cover) (n (TargetRef Edge (Attached' Type (NetNodeRef n) Cover))) ) 
---                  Edge (Attached' Type (NetNodeRef n) Cover) (n (TargetRef Edge (Attached' Type (NetNodeRef n) Cover)))
-
-
---type NetEdgeRef2 n = TargetGenRef Edge (...) 
---                   (Attached' Type Char Cover) (n (TargetRef Edge (Attached' Type Char Cover)))
 
 type Network    = Graph (NetWrapper Data) NetArc
 type NetWrapper = Cover
@@ -491,6 +428,31 @@ instance      HasRef (TargetRef r t a) where ref = wrapped' ∘ ref
 
 
 -- Wrappers
+type instance Unlayered (XNetNodeRef n) = Unwrapped (XNetNodeRef n)
+instance      Rewrapped (XNetNodeRef n) (XNetNodeRef n')
+instance      Wrapped   (XNetNodeRef n) where
+    type      Unwrapped (XNetNodeRef n) = (NodeRefPfx n) (n (EdgeRefPfx n))
+    _Wrapped' = iso (\(XNetNodeRef a) -> a) XNetNodeRef
+
+instance Monad m => LayerConstructor m (XNetNodeRef n) where constructLayer = return ∘ XNetNodeRef
+
+type instance RefOf  (XNetNodeRef n) = RefOf (Unwrapped (XNetNodeRef n))
+instance      HasRef (XNetNodeRef n) where ref = wrapped' ∘ ref
+
+
+type instance Unlayered (XNetEdgeRef n) = Unwrapped (XNetEdgeRef n)
+instance      Rewrapped (XNetEdgeRef n) (XNetEdgeRef n')
+instance      Wrapped   (XNetEdgeRef n) where
+    type      Unwrapped (XNetEdgeRef n) = (EdgeRefPfx n) (n (EdgeRefPfx n))
+    _Wrapped' = iso (\(XNetEdgeRef a) -> a) XNetEdgeRef
+
+instance Monad m => LayerConstructor m (XNetEdgeRef n) where constructLayer = return ∘ XNetEdgeRef
+
+type instance RefOf  (XNetEdgeRef n) = RefOf (Unwrapped (XNetEdgeRef n))
+instance      HasRef (XNetEdgeRef n) where ref = wrapped' ∘ ref
+
+
+
 type instance Unlayered (NodeRefPfx n a) = Unwrapped (NodeRefPfx n a)
 instance      Rewrapped (NodeRefPfx n a) (NodeRefPfx n' a')
 instance      Wrapped   (NodeRefPfx n a) where
@@ -616,6 +578,9 @@ starx'2 = registerNode =<< constructCoverFix star
 unifyx :: t (Static Draft t) -> t (Static Draft t) -> Static Draft t
 unifyx a b = cons $ Unify a b
 
+unifyx2 :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Static Draft t) => t (Static Draft t) -> t (Static Draft t) -> m a
+unifyx2 a b = registerNode =<< constructCoverFix (unifyx a b)
+ 
 unifyx' a b = mdo
     ca  <- connection a out
     cb  <- connection b out
@@ -631,13 +596,14 @@ newtype IDT a = IDT a deriving (Show, Functor, Traversable, Foldable)
 -- TODO[WD]: Extend polymorphism, we can do exactly the same way as with AST elements
 --           returning `m a`, where `a` can be either a connection in the graph
 
-class EdgeBuilder src tgt m e where edge :: src -> tgt -> m e
+class EdgeBuilder src tgt m e  where edge :: src -> tgt -> m e
 
 instance (MonadGraphBuilder n e m, Convertible (Arc (RefOf src) (RefOf tgt)) e, HaveRef '[src,tgt], a ~ Int) => EdgeBuilder src tgt m (Ref r a) where
     edge src tgt = Ref <$> Graph.modify (edges $ swap ∘ ixed add (convert $ arc src tgt))
 
 instance (EdgeBuilder src tgt m (Ref (Targetting r (t a)) Int), Functor m) => EdgeBuilder src tgt m (TargetRef r t a) where edge = (TargetRef ∘ PhantomLayer) <∘∘> edge
 instance (EdgeBuilder src tgt m (Unwrapped (Unwrapped (EdgeRefPfx n a))), Functor m) => EdgeBuilder src tgt m (EdgeRefPfx n a) where edge = (EdgeRefPfx ∘ PhantomLayer) <∘∘> edge
+instance (EdgeBuilder src tgt m (Unwrapped (XNetEdgeRef n)), Functor m) => EdgeBuilder src tgt m (XNetEdgeRef n) where edge = XNetEdgeRef <∘∘> edge
 
 instance (Convertible src src', Convertible tgt tgt') => Convertible (Arc src tgt) (Arc src' tgt') where convert = bimap convert convert
 
@@ -654,12 +620,20 @@ connection2 src tgt = edge src tgt
 
 
 
+instance (Castable src src', Castable tgt tgt') => Castable (Arc src tgt) (Arc src' tgt') where cast = bimap cast cast
 
+instance Castable (Ref r a) (Unwrapped (Unwrapped (Unwrapped (XNetEdgeRef n)))) => Castable (Ref r a) (XNetEdgeRef n) where cast = wrap' ∘ wrap' ∘ wrap' ∘ cast
+instance Castable (Ref r a) (Unwrapped (Unwrapped (Unwrapped (XNetNodeRef n)))) => Castable (Ref r a) (XNetNodeRef n) where cast = wrap' ∘ wrap' ∘ wrap' ∘ cast
+
+instance Castable (Ref r a) (Ref r' a) where cast = rewrap
 
 type family XRef t (n :: (* -> *) -> *) :: *
 
 type instance XRef Node n = XNetNodeRef n
 type instance XRef Edge n = XNetEdgeRef n
+
+
+instance (a' ~ n (EdgeRefPfx n), n ~ n') => Convertible (XNetEdgeRef n) (EdgeRefPfx n' a') where convert = unwrap'
 
 main :: IO ()
 main = do
@@ -672,12 +646,12 @@ main = do
         --x <- constructCoverFix star :: _ (TargetRef Node (Attached' String Cover) (Lit (TargetRef Edge  (Attached' String Cover))))
 
 
-        s1 <- starx'  :: _
+        s1 <- starx' :: _
         s2 <- starx'
         s3 <- starx'2 :: _
 
 
-        c <- connection s1 s2 :: _ -- :: _ (XNetEdgeRef (Static Draft))
+        c <- connection s1 s2 :: _ (XNetEdgeRef (Static Draft))
 
         --let tn = s1 :: XRef Node (Static Draft)
 
@@ -686,8 +660,13 @@ main = do
         --print s2
         --print c
 
-        --c' <- readRef c
+        s1_v <- readRef s1
 
+        c_v <- readRef c
+
+        print (c_v :: _)
+
+        uu <- unifyx2 (convert c) (convert c)
 
         --u <- unifyx' s1 s2
 
@@ -742,10 +721,11 @@ main = do
     return ()
 
 
--- time  est  -  description                    FIXME
+-- time  take  -  description                    FIXME
 -----------------------------------------------------
--- 5:30  30  [e] readRef dla Edge               TargetRef assumes that the target is (t a) which is incorrect when using Edges.
--- 6:30  30  [ ] types
+--           [+] readRef dla Edge               
+-- 0:35  30  [ ] automatic constructed connection type
+--       30  [ ] types
 --       30  [ ] destructors
 --       30  [ ] successors
 --       30  [ ] predecessors
