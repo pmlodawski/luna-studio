@@ -15,6 +15,7 @@ type NodeId = Int
 
 data Node = Node { _nodeId      :: NodeId
                  , _expression  :: Text
+                 , _name        :: Text
                  , _ports       :: Map PortId Port
                  , _nodeMeta    :: NodeMeta
                  } deriving (Generic, Typeable, Show, Eq)

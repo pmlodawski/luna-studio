@@ -13,7 +13,7 @@ import           Empire.Data.AST        (ASTNode)
 
 import qualified Luna.Syntax.Builder    as Builder
 import           Luna.Syntax.Repr.Graph (Ref(..), Node(..), Edge(..))
-import           Luna.Syntax.AST.Term   (Var(..), App(..), Blank(..), Accessor(..), Unify(..), Val)
+import           Luna.Syntax.AST.Term   (Var(..), App(..), Blank(..), Accessor(..), Unify(..), Val, Draft)
 import qualified Luna.Syntax.AST.Term   as Term
 import qualified Luna.Syntax.AST.Arg    as Arg
 import           Luna.Syntax.AST.Arg    (Arg)
@@ -152,3 +152,16 @@ rightUnifyOperand :: Lens' ASTNode (Ref Edge)
 rightUnifyOperand = coated . lens rightGetter rightSetter where
     rightGetter u   = case' u $ match $ \(Unify _ r) -> r
     rightSetter u r = case' u $ match $ \(Unify l _) -> specificCons $ Unify l r
+
+varName :: Lens' ASTNode (Ref Edge)
+varName = coated . lens nameGetter nameSetter where
+    nameGetter v   = case' v $ match $ \(Var n) -> n
+    nameSetter    :: Draft (Ref Edge) -> Ref Edge -> Draft (Ref Edge)
+    nameSetter v n = case' v $ match $ \(Var _) -> (specificCons $ Var n)
+
+renameVar :: Ref Node -> String -> ASTOp ()
+renameVar vref name = do
+    node    <- Builder.readRef vref
+    oldName <- Builder.follow $ node ^. varName
+    Builder._string name >>= Builder.reconnect vref varName
+    safeRemove oldName

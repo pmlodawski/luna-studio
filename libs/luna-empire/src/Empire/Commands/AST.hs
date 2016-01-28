@@ -39,6 +39,9 @@ writeMeta ref newMeta = runASTOp $ do
     node <- Builder.readRef ref
     Builder.writeRef ref (node & meta .~ newMeta)
 
+renameVar :: Ref Node -> String -> Command AST ()
+renameVar = runASTOp .: ASTBuilder.renameVar
+
 removeSubtree :: Ref Node -> Command AST ()
 removeSubtree = runASTOp . safeRemove
 

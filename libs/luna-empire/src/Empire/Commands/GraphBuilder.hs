@@ -56,9 +56,17 @@ buildNode' varMap nodeId = do
     uref  <- GraphUtils.getASTPointer nodeId
     expr  <- zoom Graph.ast $ runASTOp $ Print.printNodeExpression (Map.keys varMap) ref
     meta  <- zoom Graph.ast $ AST.readMeta uref
+    name  <- getNodeName nodeId
     ports <- buildPorts varMap ref
     let portMap = Map.fromList $ flip fmap ports $ \p@(Port id _ _) -> (id, p)
-    return $ API.Node nodeId (Text.pack expr) portMap $ fromMaybe def meta
+    return $ API.Node nodeId (Text.pack expr) (Text.pack name) portMap $ fromMaybe def meta
+
+getNodeName :: NodeId -> Command Graph String
+getNodeName nid = do
+    vref <- GraphUtils.getASTVar nid
+    zoom Graph.ast $ runASTOp $ do
+        vnode <- Builder.readRef vref
+        case' (uncoat vnode) $ match $ \(Var n) -> Builder.follow n >>= Print.printIdent
 
 getPortState :: VarMap -> Ref Node -> ASTOp PortState
 getPortState varMap ref

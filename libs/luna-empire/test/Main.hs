@@ -41,6 +41,7 @@ test = do
     np <- (view nodeId) <$> Graph.addNode pid lid "_.+ _"     (NodeMeta (3.0, 2.0))
     Graph.connect pid lid (OutPortRef n1 All) (InPortRef np Self)
     Graph.connect pid lid (OutPortRef n2 All) (InPortRef np (Arg 0))
+    Graph.renameNode pid lid n1 "dupcia"
 
     {-fstNode <- (view nodeId) <$> Graph.addNode pid lid "+"   (NodeMeta (3.14, 3.14))-}
     {-sndNode <- (view nodeId) <$> Graph.addNode pid lid "Int" (NodeMeta (4.14, 4.14))-}

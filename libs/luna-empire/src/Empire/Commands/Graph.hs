@@ -8,6 +8,7 @@ module Empire.Commands.Graph
     , getGraph
     , runGraph
     , setDefaultValue
+    , renameNode
     ) where
 
 import           Prologue
@@ -109,6 +110,11 @@ runGraph pid lid = withGraph pid lid $ do
         return (n, val)
 
     return $ IntMap.fromList $ catMaybes values
+
+renameNode :: ProjectId -> LibraryId -> NodeId -> Text -> Empire ()
+renameNode pid lid nid name = withGraph pid lid $ do
+    vref <- GraphUtils.getASTVar nid
+    zoom Graph.ast $ AST.renameVar vref (Text.unpack name)
 
 -- internal
 
