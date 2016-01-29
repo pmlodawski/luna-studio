@@ -176,8 +176,8 @@ Executable tci-test
                  , transformers
                  , vector
 
-Executable tclit-test
-    Main-Is:        LiteralsTest.hs
+Executable tcinf-test
+    Main-Is:        InferenceTest.hs
     Hs-Source-Dirs: test
 
     GHC-Options:    -Wall -O2

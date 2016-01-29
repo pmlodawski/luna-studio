@@ -30,6 +30,7 @@ import           Development.Placeholders
 
 import           Luna.Diagnostic.AST          as Diag (LabelAttrs (..), open, render, toGraphViz)
 import qualified Luna.Inference.Literals      as Literals
+import qualified Luna.Inference.Applications  as Applications
 import qualified Luna.Interpreter.Interpreter as Interpreter
 import           Luna.Interpreter.Label       (Label)
 import qualified Luna.Interpreter.Label       as Label
@@ -72,8 +73,8 @@ emptyArgList = []
 emptyNodeList :: [Ref Node]
 emptyNodeList = []
 
-sampleGraph :: ((Ref Node, SymbolMap (Network Label (Maybe Int))), Network Label (Maybe Int))
-sampleGraph = runIdentity
+sampleGraph1 :: ((Ref Node, SymbolMap (Network Label (Maybe Int))), Network Label (Maybe Int))
+sampleGraph1 = runIdentity
       $ flip StarBuilder.evalT Nothing
       $ flip Builder.runT def
       $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
@@ -119,6 +120,46 @@ sampleGraph = runIdentity
             return (appPlus1b, def)
             -- return (appPlus2, def)
 
+sampleGraph2 :: ((Ref Node, SymbolMap (Network Label (Maybe Int))), Network Label (Maybe Int))
+sampleGraph2 = runIdentity
+      $ flip StarBuilder.evalT Nothing
+      $ flip Builder.runT def
+      $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
+      $ do
+            -- nameInt       <- _string "Int"
+            -- nameString    <- _string "String"
+            namePlus      <- _string "+"
+            nameConc      <- _string "++"
+            nameLen       <- _string "len"
+
+            i1 <- _int 2
+            i2 <- _int 3
+            i3 <- _int 4
+            s1 <- _stringVal "abc"
+            s2 <- _stringVal "def"
+            s3 <- _stringVal "ghi"
+
+            accPlus1a  <- accessor namePlus i1
+            appPlus1a  <- app accPlus1a [arg i2]
+
+            accPlus1b  <- accessor namePlus i3
+            appPlus1b  <- app accPlus1b [arg appPlus1a]
+
+            accConc1a  <- accessor nameConc s2
+            appConc1a  <- app accConc1a [arg s1]
+
+            accConc1b  <- accessor nameConc appConc1a
+            appConc1b  <- app accConc1b [arg s3]
+
+            accLen    <- accessor nameLen appConc1b
+            appLen    <- app accLen emptyArgList
+
+            accPlus2  <- accessor namePlus appPlus1b
+            appPlus2  <- app accPlus2 [arg appLen]
+
+            return (appPlus1b, def)
+            -- return (appPlus2, def)
+
 runGraph gr sm = runIdentityT
             . flip SymbolBuilder.evalT sm
             . flip StarBuilder.evalT Nothing
@@ -130,11 +171,16 @@ literalsTest i sm gr = runGraph gr sm $ do
     Literals.assignLiteralTypes i
     return ()
 
+applicationsTest :: Ref Node -> SymbolMap (Network Label (Maybe Int)) -> Network Label (Maybe Int) -> IO ((), Network Label (Maybe Int))
+applicationsTest i sm gr = runGraph gr sm $ do
+    Applications.assignApplicationTypes i
+    return ()
+
 main :: IO ()
 main = do
-
-    let ((i, sm), g) = sampleGraph
-    ((), g')<- literalsTest i sm g
+    let ((i, sm), g) = sampleGraph1
+    ((), g') <- literalsTest i sm g
+    -- ((), g') <- applicationsTest i sm g
     -- pprint g'
     -- renderAndOpen [ ("g" , g)]
     renderAndOpen [ ("g" , g')]

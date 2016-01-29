@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs                     #-}
 
-module Luna.Inference.Literals
-    ( assignLiteralTypes
+module Luna.Inference.Applications
+    ( assignApplicationTypes
     ) where
 
 import           Control.Monad              (forM_)
@@ -13,7 +13,7 @@ import           Prologue                   hiding (pre, succ, cons)
 import qualified Data.Text.Lazy             as Text
 import           Data.Construction
 
-import           Luna.Syntax.AST.Term       (Draft, Star(..), Val(..))
+import           Luna.Syntax.AST.Term       (Draft, Star(..), App(..))
 import qualified Luna.Syntax.AST.Term       as Term
 import qualified Luna.Syntax.AST.Lit        as Lit
 import qualified Luna.Syntax.Builder        as Builder
@@ -40,6 +40,7 @@ type BuilderType m a = ( NodeType a
                        , NodeBuilder.MonadNodeBuilder (Ref Node) m
                        , BuilderMonad (Graph a DoubleArc) m
                        , MonadFix m
+                       , MonadIO m
                        , CoatConstructor m a
                        , Destructor m (Ref Node)
                        )
@@ -85,33 +86,42 @@ createConsString = do
     nameString <- Builder._string "String"
     Builder.cons nameString
 
-assignLiteralTypes :: BuilderType m a => Ref Node -> m ()
-assignLiteralTypes ref = do
+assignApplicationTypes :: BuilderType m a => Ref Node -> m ()
+assignApplicationTypes ref = do
     consIntTpe    <- createConsInt
     consStringTpe <- createConsString
-    assignLiteralTypesWithTypes consIntTpe consStringTpe ref
+    assignApplicationTypesWithTypes consIntTpe consStringTpe ref
     safeRemove consIntTpe
     safeRemove consStringTpe
 
-assignLiteralType :: BuilderType m a => Ref Node -> Ref Node -> m ()
-assignLiteralType ref tpe = do
-    node     <- Builder.readRef ref
-    tnodeRef <- Builder.follow $ node ^. Typed.tp
-    tnode    <- Builder.readRef tnodeRef
-    case' (uncoat tnode) $ do
-        match $ \Star -> do
-            destruct tnodeRef
-            void $ Builder.reconnect ref Typed.tp tpe
-        match $ \ANY -> return ()
+-- assignLiteralType :: BuilderType m a => Ref Node -> Ref Node -> m ()
+-- assignLiteralType ref tpe = do
+--     node     <- Builder.readRef ref
+--     tnodeRef <- Builder.follow $ node ^. Typed.tp
+--     tnode    <- Builder.readRef tnodeRef
+--     case' (uncoat tnode) $ do
+--         match $ \Star -> do
+--             destruct tnodeRef
+--             void $ Builder.reconnect ref Typed.tp tpe
+--         match $ \ANY -> return ()
 
-assignLiteralTypesWithTypes :: BuilderType m a => Ref Node -> Ref Node -> Ref Node -> m ()
-assignLiteralTypesWithTypes consIntTpe consStringTpe ref = do
+
+assignApplicationTypesWithTypes :: BuilderType m a => Ref Node -> Ref Node -> Ref Node -> m ()
+assignApplicationTypesWithTypes consIntTpe consStringTpe ref = do
     node <- Builder.readRef ref
     case' (uncoat node) $ do
-        match $ \(Val val) -> do
-            case' val $ match $ \lit -> assignLiteralType ref $ case lit of
-                Lit.Int    _ -> consIntTpe
-                Lit.String _ -> consStringTpe
+        match $ \(App f args) -> do
+            putStrLn $ "found app: " <> show f <> " args: " <> show args
+            -- funRep <- Builder.follow f >>= recur
+            -- unpackedArgs <- ASTBuilder.unpackArguments args
+            -- argsRep <- sequence $ recur <$> unpackedArgs
+            -- case argsRep of
+            --     [] -> putStrLn "Empty list"
+            --     _  -> putStrLn $ funRep <> " " <> (intercalate " " argsRep)
+
+            -- case' val $ match $ \lit -> assignLiteralType ref $ case lit of
+            --     Lit.Int    _ -> consIntTpe
+            --     Lit.String _ -> consStringTpe
         match $ \ANY -> return ()
-    mapM_ (assignLiteralTypesWithTypes consIntTpe consStringTpe) =<< pre ref
+    mapM_ (assignApplicationTypesWithTypes consIntTpe consStringTpe) =<< pre ref
 

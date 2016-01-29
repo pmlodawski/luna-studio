@@ -53,6 +53,7 @@ Library
 
     Exposed-modules: 
         Luna.Diagnostic.AST,
+        Luna.Inference.Applications,
         Luna.Inference.Literals,
         Luna.Interpreter.Dirty,
         Luna.Interpreter.Env,
@@ -214,8 +215,8 @@ Executable tci-test
                  , transformers
                  , vector
 
-Executable tclit-test
-    Main-Is:        LiteralsTest.hs
+Executable tcinf-test
+    Main-Is:        InferenceTest.hs
     Hs-Source-Dirs: test
 
     GHC-Options:    -Wall -O2
