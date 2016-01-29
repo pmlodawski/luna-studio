@@ -97,8 +97,8 @@ assignLiteralTypes ref = do
     assignLiteralTypesWithTypes consIntTpe consStringTpe ref
     assignedIntTpe    <- succ consIntTpe
     assignedStringTpe <- succ consStringTpe
-    when (null assignedIntTpe)    $ performSafeRemoval consIntTpe
-    when (null assignedStringTpe) $ performSafeRemoval consStringTpe
+    when (null assignedIntTpe)    $ safeRemove consIntTpe
+    when (null assignedStringTpe) $ safeRemove consStringTpe
 
 assignLiteralType :: BuilderType m a => Ref Node -> Ref Node -> m ()
 assignLiteralType ref tpe = do
