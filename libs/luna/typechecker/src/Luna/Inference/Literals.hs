@@ -95,10 +95,8 @@ assignLiteralTypes ref = do
     consIntTpe    <- createConsInt
     consStringTpe <- createConsString
     assignLiteralTypesWithTypes consIntTpe consStringTpe ref
-    assignedIntTpe    <- succ consIntTpe
-    assignedStringTpe <- succ consStringTpe
-    when (null assignedIntTpe)    $ safeRemove consIntTpe
-    when (null assignedStringTpe) $ safeRemove consStringTpe
+    safeRemove consIntTpe
+    safeRemove consStringTpe
 
 assignLiteralType :: BuilderType m a => Ref Node -> Ref Node -> m ()
 assignLiteralType ref tpe = do
@@ -114,7 +112,6 @@ assignLiteralType ref tpe = do
 assignLiteralTypesWithTypes :: BuilderType m a => Ref Node -> Ref Node -> Ref Node -> m ()
 assignLiteralTypesWithTypes consIntTpe consStringTpe ref = do
     node <- Builder.readRef ref
-    -- B.writeRef ref (node & label . Label.checked .~ True)
     case' (uncoat node) $ do
         match $ \(Val val) -> do
             case' val $ match $ \lit -> assignLiteralType ref $ case lit of
