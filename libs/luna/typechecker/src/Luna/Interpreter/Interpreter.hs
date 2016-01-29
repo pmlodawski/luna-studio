@@ -14,28 +14,28 @@ import           Luna.Syntax.Builder        (readRef, withRef)
 import           Luna.Syntax.Builder.Class  (BuilderMonad)
 import           Luna.Syntax.Layer.Labeled  (label)
 import           Luna.Syntax.Repr.Graph     (Node, Ref)
-import           Luna.Syntax.Symbol.Network (Network)
+import           Luna.Syntax.Network        (Network)
 import           Prologue
 
 
 
-execute :: (InterpreterMonad Env m, BuilderMonad (Network Label) m) => m ()
+execute :: (InterpreterMonad Env m, BuilderMonad (Network Label a) m) => m ()
 execute = do
     mapM_ Dirty.follow =<< Env.getReqNodes
     mapM_ run =<< topsort =<< Env.getReqNodes
     Env.clearReqNodes
 
-connect :: (InterpreterMonad Env m, BuilderMonad (Network Label) m) => Ref Node -> Ref Node -> m ()
+connect :: (InterpreterMonad Env m, BuilderMonad (Network Label a) m) => Ref Node -> Ref Node -> m ()
 connect prev next = do
     isPrevDirty <- view (label . Label.dirty) <$> readRef prev
     Dirty.markSuccessors $ if isPrevDirty
         then prev
         else next
 
-markModified :: (InterpreterMonad Env m, BuilderMonad (Network Label) m) => Ref Node -> m ()
+markModified :: (InterpreterMonad Env m, BuilderMonad (Network Label a) m) => Ref Node -> m ()
 markModified = Dirty.markSuccessors
 
-run :: BuilderMonad (Network Label) m => Ref Node -> m ()
+run :: BuilderMonad (Network Label a) m => Ref Node -> m ()
 run ref = do
     $(todo "inline node")
     $(todo "compute node")

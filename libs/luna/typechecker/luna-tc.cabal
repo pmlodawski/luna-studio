@@ -77,11 +77,12 @@ Library
         Luna.Syntax.Builder.Star,
         Luna.Syntax.Builder.Symbol,
         Luna.Syntax.Layer.Labeled,
+        Luna.Syntax.Layer.WithMeta,
         Luna.Syntax.Name,
         Luna.Syntax.Name.Pool,
+        Luna.Syntax.Network,
         Luna.Syntax.Repr.Graph,
         Luna.Syntax.Symbol.Map,
-        Luna.Syntax.Symbol.Network,
         Luna.Syntax.Symbol.QualPath
 
     Build-Depends: base

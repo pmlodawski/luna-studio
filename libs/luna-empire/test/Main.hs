@@ -29,8 +29,6 @@ import           Prologue
 
 
 
-instance LabelAttrs ASTNode where labelAttrs = const []
-
 test :: Empire AST
 test = do
     (pid, _) <- createProject (Just "dupa") "/no/elo"

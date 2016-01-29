@@ -30,6 +30,7 @@ import           Luna.Syntax.AST.Typed
 import qualified Luna.Syntax.AST.Lit                  as Lit
 import           Luna.Syntax.Name
 import           Luna.Syntax.Layer.Labeled
+import           Luna.Syntax.Layer.WithMeta
 import qualified Luna.Syntax.Builder                  as B
 import qualified Data.Variants                        as V
 
@@ -140,7 +141,10 @@ gStyle = [ GraphAttrs [ RankDir FromTop
 class LabelAttrs a where
     labelAttrs :: a -> [GV.Attribute]
 
-instance LabelAttrs (Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))) where
+instance LabelAttrs (WithMeta a (Labeled2 b (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) where
+    labelAttrs = const []
+
+instance LabelAttrs (Labeled2 b (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))) where
     labelAttrs = const []
 
 toGraphViz :: _ => Graph n DoubleArc -> DotGraph String
@@ -211,6 +215,8 @@ instance GenInEdges n DoubleArc (Draft (Ref Edge)) where
               xtt       = case' a $ do
                               match $ \(Val _) -> 11
 
+instance GenInEdges n e a => GenInEdges n e (WithMeta b a) where
+    genInEdges g = genInEdges g . view node
 
 
 class Displayable m a where

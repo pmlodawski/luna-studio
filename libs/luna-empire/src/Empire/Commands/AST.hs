@@ -10,7 +10,6 @@ import           Data.Layer.Coat     (uncoat, coated)
 
 import           Empire.Empire
 import           Empire.Data.AST              (AST, ASTNode)
-import           Empire.Data.WithMeta         (meta)
 import           Empire.API.Data.NodeMeta     (NodeMeta)
 import           Empire.API.Data.DefaultValue (PortDefault)
 
@@ -20,10 +19,11 @@ import qualified Empire.ASTOps.Print   as Printer
 import qualified Empire.ASTOps.Builder as ASTBuilder
 import           Empire.ASTOps.Remove  (safeRemove)
 
-import qualified Luna.Syntax.Builder       as Builder
-import           Luna.Syntax.Repr.Graph    (Ref(..), Node(..))
-import           Luna.Syntax.AST.Term      (Unify(..))
-import           Luna.Syntax.Layer.Labeled (HasLabel, label)
+import qualified Luna.Syntax.Builder        as Builder
+import           Luna.Syntax.Repr.Graph     (Ref(..), Node(..))
+import           Luna.Syntax.AST.Term       (Unify(..))
+import           Luna.Syntax.Layer.Labeled  (HasLabel, label)
+import           Luna.Syntax.Layer.WithMeta (meta)
 
 addNode :: String -> String -> Command AST (Ref Node)
 addNode name expr = runASTOp $ Parser.parseFragment expr >>= ASTBuilder.unifyWithName name

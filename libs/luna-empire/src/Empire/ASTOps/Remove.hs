@@ -4,12 +4,12 @@ import           Prologue
 import           Data.Construction      (destruct)
 import           Data.Layer.Coat        (uncoat)
 
-import           Empire.ASTOp           (ASTOp)
-import qualified Luna.Syntax.Repr.Graph as Graph
-import qualified Luna.Syntax.AST.Typed  as Typed
-import qualified Luna.Syntax.AST.Term   as Term
-import qualified Luna.Syntax.Builder    as Builder
-import           Luna.Syntax.Repr.Graph (Ref, Node)
+import           Empire.ASTOp               (ASTOp)
+import qualified Luna.Syntax.Repr.Graph     as Graph
+import qualified Luna.Syntax.AST.Typed      as Typed
+import qualified Luna.Syntax.AST.Term       as Term
+import qualified Luna.Syntax.Builder        as Builder
+import           Luna.Syntax.Repr.Graph     (Ref, Node)
 
 removeNode :: Ref Node -> ASTOp ()
 removeNode ref = do

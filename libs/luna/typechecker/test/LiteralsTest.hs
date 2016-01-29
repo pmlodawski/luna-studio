@@ -49,7 +49,7 @@ import           Luna.Syntax.Layer.Labeled    (Labeled2)
 import           Luna.Syntax.Repr.Graph
 import           Luna.Syntax.Symbol.Map       (SymbolMap)
 import qualified Luna.Syntax.Symbol.Map       as Symbol
-import           Luna.Syntax.Symbol.Network   (Network)
+import           Luna.Syntax.Network          (Network)
 
 -- ====================================
 
@@ -72,7 +72,7 @@ emptyArgList = []
 emptyNodeList :: [Ref Node]
 emptyNodeList = []
 
-sampleGraph :: ((Ref Node, SymbolMap (Network Label)), Network Label)
+sampleGraph :: ((Ref Node, SymbolMap (Network Label (Maybe Int))), Network Label (Maybe Int))
 sampleGraph = runIdentity
       $ flip StarBuilder.evalT Nothing
       $ flip Builder.runT def
@@ -125,7 +125,7 @@ runGraph gr sm = runIdentityT
             . flip Builder.runT gr
             . flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
 
-literalsTest :: Ref Node -> SymbolMap (Network Label) -> Network Label -> IO ((), Network Label)
+literalsTest :: Ref Node -> SymbolMap (Network Label (Maybe Int)) -> Network Label (Maybe Int) -> IO ((), Network Label (Maybe Int))
 literalsTest i sm gr = runGraph gr sm $ do
     Literals.assignLiteralTypes i
     return ()

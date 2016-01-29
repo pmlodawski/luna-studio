@@ -17,23 +17,23 @@ import           Luna.Syntax.Builder.Class  (BuilderMonad)
 import           Luna.Syntax.Layer.Labeled  (label)
 import           Luna.Syntax.Repr.Graph     (Edge (Edge), Node, Ref (Ref))
 import qualified Luna.Syntax.Repr.Graph     as G
-import           Luna.Syntax.Symbol.Network (Network)
+import           Luna.Syntax.Network        (Network)
 import qualified Luna.Syntax.Layer.Labeled as Labeled
 import qualified Luna.Syntax.AST.Typed as Typed
 
 
 
-pre :: BuilderMonad (Network Label) m => Ref Node -> m [Ref Node]
+pre :: BuilderMonad (Network Label a) m => Ref Node -> m [Ref Node]
 pre ref = do
     node <- B.readRef ref
     mapM (B.follow) $ inputs $ uncoat node
 
-succ :: BuilderMonad (Network Label) m => Ref Node -> m [Ref Node]
+succ :: BuilderMonad (Network Label a) m => Ref Node -> m [Ref Node]
 succ ref = do
     node <- B.readRef ref
     mapM (B.unfollow . Ref . Edge) $ IntSet.toList $ node ^. G.succs
 
-up :: BuilderMonad (Network Label) m => Ref Node -> m (Ref Node)
+up :: BuilderMonad (Network Label a) m => Ref Node -> m (Ref Node)
 up ref = do
     node <- B.readRef ref
     B.follow $ node ^. Typed.tp
@@ -45,7 +45,7 @@ isDirty node = node ^. label . Label.dirty
 isRequired :: Labeled.HasLabel Label s => s -> Bool
 isRequired node = node ^. label . Label.required
 
-follow :: (InterpreterMonad Env m,  BuilderMonad (Network Label) m) => Ref Node -> m ()
+follow :: (InterpreterMonad Env m,  BuilderMonad (Network Label a) m) => Ref Node -> m ()
 follow node = do
     Env.addReqNode node
     prevs <- pre node
@@ -53,7 +53,7 @@ follow node = do
         whenM (isDirty <$> B.readRef p) $
             follow p
 
-markSuccessors :: (InterpreterMonad Env m, BuilderMonad (Network Label) m) => Ref Node -> m ()
+markSuccessors :: (InterpreterMonad Env m, BuilderMonad (Network Label a) m) => Ref Node -> m ()
 markSuccessors ref = do
     node <- B.readRef ref
     unless (isDirty node) $ do

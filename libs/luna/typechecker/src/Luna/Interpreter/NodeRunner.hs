@@ -30,6 +30,7 @@ import qualified Data.Map                    as Map
 import           Data.Map                    (Map)
 
 import           Luna.Syntax.Builder.Class   (BuilderMonad)
+import qualified Luna.Syntax.Builder.Class   as Builder
 import qualified Luna.Syntax.Builder         as Builder
 import           Luna.Syntax.Repr.Graph      (Graph)
 
@@ -45,21 +46,28 @@ import qualified Luna.Interpreter.Session    as Session
 
 import qualified Luna.StdLib.Int             as StdLibInt
 
-type NodeType a       = (Coated a, Uncoated a ~ (Draft (Ref Edge)))
-type GraphBuilder m a = (Coated a, Uncoated a ~ (Draft (Ref Edge)), BuilderMonad (Graph a DoubleArc) m)
+import           Luna.Syntax.AST.Typed       (HasType)
+import           Luna.Inference.Literals     (assignLiteralTypes)
+import           Luna.Syntax.Network         (Network)
+
+type NodeType a       = (Coated a, Uncoated a ~ Draft (Ref Edge), HasType a (Ref Edge))
+type GraphBuilder m a = (NodeType a, BuilderMonad (Graph a DoubleArc) m)
 
 type Bindings         = Map (Ref Node) (Ref Node)
 
+runGraph gr = flip StarBuilder.evalT Nothing
+            . flip Builder.runT gr
+            . flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
+
 runInterpreterM gr = fmap fst
                    . Session.run
-                   . flip StarBuilder.evalT Nothing
-                   . flip Builder.runT gr
-                   . flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
+                   . runGraph gr
 
-getNodeValues :: NodeType a => [Ref Node] -> Graph a DoubleArc -> IO (Map (Ref Node) Int)
+getNodeValues :: [Ref Node] -> Network Int (Maybe a) -> IO (Map (Ref Node) Int)
 getNodeValues refs gr = runInterpreterM gr $ do
     bindings <- prepareBindings refs
     fmap (Map.fromList . catMaybes) $ forM refs $ \ref -> do
+        Builder.modify2 $ runIdentity . (flip runGraph $ assignLiteralTypes ref)
         val <- flip catchAll (\e -> print e >> return Nothing) $ evalNode bindings ref
         case val of
             Nothing -> return Nothing

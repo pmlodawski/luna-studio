@@ -1,12 +1,12 @@
-module Empire.Data.WithMeta where
+{-# LANGUAGE TypeFamilies #-}
+
+module Luna.Syntax.Layer.WithMeta where
 
 import Prologue
 
 import Data.Layer.Coat
 import Data.Construction
 import Data.Variants
-
-import Luna.Diagnostic.AST (GenInEdges, genInEdges)
 
 data WithMeta b a = WithMeta { _meta :: b
                              , _node :: a
@@ -22,6 +22,3 @@ instance (Monad m, Destroyer m b) => Destructor m (WithMeta b a) where destruct 
 
 instance Monad m => Destroyer m (Maybe a) where destroy _ = return ()
 
--- TODO: Remove once Wojtek resolves the crap in Diagnostic
-instance GenInEdges n e a => GenInEdges n e (WithMeta b a) where
-    genInEdges g = genInEdges g . view node

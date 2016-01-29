@@ -44,10 +44,11 @@ import qualified Luna.Syntax.Builder.Star     as StarBuilder
 import qualified Luna.Syntax.Builder.Symbol   as SymbolBuilder
 import           Luna.Syntax.Layer.Labeled    (label)
 import           Luna.Syntax.Layer.Labeled    (Labeled2)
+import           Luna.Syntax.Layer.WithMeta   (WithMeta)
 import           Luna.Syntax.Repr.Graph
 import           Luna.Syntax.Symbol.Map       (SymbolMap)
 import qualified Luna.Syntax.Symbol.Map       as Symbol
-import           Luna.Syntax.Symbol.Network   (Network)
+import           Luna.Syntax.Network          (Network)
 
 -- ====================================
 
@@ -57,14 +58,14 @@ renderAndOpen lst = do
     flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
     open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
 
-instance LabelAttrs (Labeled2 Label (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))) where
-    labelAttrs n = if n ^. label . Label.dirty
-        then [GV.color dirtyClr]
-        else []
+{-instance LabelAttrs (WithMeta (Maybe a) (Labeled2 Label (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) where-}
+    {-labelAttrs n = if n ^. label . Label.dirty-}
+        {-then [GV.color dirtyClr]-}
+        {-else []-}
 -- ====================================
 
 
-sampleGraph :: ((Ref Node, SymbolMap (Network Label)), Network Label)
+sampleGraph :: ((Ref Node, SymbolMap (Network Label (Maybe Int))), Network Label (Maybe Int))
 sampleGraph = runIdentity
       $ flip StarBuilder.evalT Nothing
       $ flip Builder.runT def
@@ -108,14 +109,14 @@ runGraph gr sm = runIdentityT
             . flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
 
 
-evaluateTest :: Ref Node -> SymbolMap (Network Label) -> Network Label -> IO ((), Network Label)
+evaluateTest :: Ref Node -> SymbolMap (Network Label (Maybe Int)) -> Network Label (Maybe Int) -> IO ((), Network Label (Maybe Int))
 evaluateTest i sm gr = Session.run $ runGraph gr sm $  do
     Just r <- NodeRunner.runNode def i
     putStrLn "RESULT IS:"
     print (Session.unsafeCast r :: Int)
 
 
-dirtyTest :: Ref Node -> SymbolMap (Network Label) -> Network Label -> IO ((), Network Label)
+dirtyTest :: Ref Node -> SymbolMap (Network Label (Maybe Int)) -> Network Label (Maybe Int) -> IO ((), Network Label (Maybe Int))
 dirtyTest i sm gr = flip InterpreterMonad.evalT def $  runGraph gr sm $ do
     Interpreter.markModified i
     print =<< Interpreter.getReqNodes
