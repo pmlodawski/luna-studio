@@ -28,6 +28,7 @@ import qualified Empire.API.Update                 as Update
 import qualified Empire.API.Topic                  as Topic
 import           Empire.API.Data.GraphLocation     (GraphLocation)
 import           Empire.API.Data.Node              (Node, NodeId)
+import           Empire.API.Data.DefaultValue      (Value(..))
 import qualified Empire.Commands.Graph             as Graph
 import qualified Empire.Empire                     as Empire
 import           Empire.Server.Server              (sendToBus, withGraphLocation, errorMessage)
@@ -62,7 +63,7 @@ notifyNodeResultUpdates location = do
 
 notifyNodeResultUpdate :: GraphLocation -> NodeId -> Int -> StateT Env BusT ()
 notifyNodeResultUpdate location nodeId value = do
-    let update = NodeResultUpdate.Update location nodeId value
+    let update = NodeResultUpdate.Update location nodeId (IntValue value)
     sendToBus Topic.nodeResultUpdate update
 
 handleAddNode :: ByteString -> StateT Env BusT ()

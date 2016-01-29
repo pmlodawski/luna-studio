@@ -62,6 +62,7 @@ import qualified UI.Scene
 import qualified UI.Widget                       as UIT
 
 import qualified Empire.API.Data.DefaultValue    as DefaultValue
+import           Empire.API.Data.DefaultValue    (Value(..))
 import           Empire.API.Data.Node            (Node, NodeId)
 import qualified Empire.API.Data.Node            as Node
 import           Empire.API.Data.Port            (InPort (..), Port (..), PortId (..))
@@ -208,7 +209,19 @@ makeInPortControl parent nodeId inPort port = case port ^. Port.state of
             let widget = Label.create (Vector2 200 20) (Text.pack $ show inPort <> " :: " <> (show $ port ^. Port.valueType) )
             UICmd.register parent widget mempty
 
-updateNodeValue :: NodeId -> Int -> Command State ()
+
+nodeValueToText :: Value -> Text
+nodeValueToText (IntValue    v) = Text.pack $ show v
+nodeValueToText (DoubleValue v) = Text.pack $ show v
+nodeValueToText (BoolValue   v) = Text.pack $ show v
+nodeValueToText (StringValue v) = Text.pack v
+nodeValueToText (IntList     v) = Text.pack $ show v
+nodeValueToText (DoubleList  v) = Text.pack $ show v
+nodeValueToText (BoolList    v) = Text.pack $ show v
+nodeValueToText (StringList  v) = Text.pack $ show v
+nodeValueToText v               = Text.pack $ show v
+
+updateNodeValue :: NodeId -> Value -> Command State ()
 updateNodeValue id val = inRegistry $ do
     widgetId <- nodeIdToWidgetId id
-    forM_ widgetId $ \widgetId -> UICmd.update_ widgetId $ Model.value .~ (Text.pack $ show val)
+    forM_ widgetId $ \widgetId -> UICmd.update_ widgetId $ Model.value .~ nodeValueToText val
