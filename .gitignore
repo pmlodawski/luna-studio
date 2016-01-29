@@ -97,3 +97,4 @@ stack
 supervisor/tmp/*
 **/.stack-work
 supervisord.log
+workspace
