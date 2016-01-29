@@ -1,9 +1,11 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE UndecidableInstances      #-}
 {-# LANGUAGE FunctionalDependencies    #-}
-{-# LANGUAGE PartialTypeSignatures     #-}
 {-# LANGUAGE RecursiveDo               #-}
 
+{-# LANGUAGE PartialTypeSignatures     #-}
+
+{-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
 import Prologue hiding (simple, empty, Indexable, Simple, cons, lookup, index, children, Cons, Ixed, Repr, repr, minBound, maxBound, (#), assert, Index)
@@ -13,7 +15,7 @@ import Data.Record
 
 
 
-import Luna.Syntax.AST.Term hiding (Arrow)
+import Luna.Syntax.AST.Term hiding (Arrow, Node)
 import Luna.Syntax.Model.Layer.Labeled
 
 
@@ -155,7 +157,8 @@ instance {-# OVERLAPPABLE #-}
 
 data Ref r a = Ref a deriving (Show, Functor, Traversable, Foldable)
 
-type family Target a
+-- FIXME[WD]: refactor `Target` from Term.hs:
+--type family Target a -- using the one defined in Term.hs
 type family RefOf  a
 class HasRef a where ref :: Lens' a (RefOf a)
  
@@ -166,7 +169,7 @@ readRef = getRef ∘ view ref
 
 -- === Instances === --
 
-type instance Target     (Ref r a)           = Target r
+type instance Target     (Ref r a)                = Target r
 type instance Destructed (Ref (Targetting r t) a) = t
 
 type instance RefOf  (Ref t a) = Ref t a
@@ -266,11 +269,9 @@ type l :< t = Layer l t
 
 
 
-cons' :: SmartCons (Cons n t) b => n -> [t] -> b
-cons' = cons ∘∘ Cons
+--cons' :: SmartCons (Cons n t) b => n -> [t] -> b
+--cons' = cons ∘∘ Cons
 
-caseTest = __case__ "tc-test" "test/Main.hs" 0
-{-# INLINE caseTest #-}
 
 data Test a b = Test !a !b  deriving (Show)
 
@@ -611,7 +612,7 @@ type NetCover = Attached' Type (Netref Node (Static Draft)) Cover
 
 -- === Construction === ---
 
-buildNetwork :: _ => _
+--buildNetwork :: _ => _
 buildNetwork  = runIdentity ∘ buildNetworkM
 buildNetworkM = rebuildNetworkM def
 rebuildNetworkM (net :: Network) = flip Type.evalT Nothing
@@ -630,6 +631,36 @@ rebuildNetworkM (net :: Network) = flip Type.evalT Nothing
 
 ucase = caseTest ∘ uncover
 
+class MyShow a b where myShow :: a -> b
+
+instance (Show a, b ~ String) => MyShow a b where myShow = show
+
+
+data IDT a = IDT a deriving (Show)
+
+
+--test :: forall x. x -> String
+--test _ = "ala" where
+--    a   = cons $ Var (Str "a") :: Static Draft IDT
+--    u   = cons $ Unify (IDT a) (IDT a) :: Static Draft IDT
+--    foo = withElement_ (p :: P (TFoldable x)) (foldrT ((:) :: x -> [x] -> [x]) []) u
+
+
+--class WithElement_ ctx rec where withElement_ :: Proxy ctx -> (forall v. ctx v => v -> a) -> rec -> a
+
+--main :: IO ()
+--main = do
+--    let a = cons $ Var (Str "a") :: Static Draft IDT
+--        u = cons $ Unify (IDT a) (IDT a) :: Static Draft IDT
+--        --v = (1 :: Int) :: x
+--        --out = withElement_ (p :: P (TFoldable x)) (foldrT ((:) :: x' -> [x'] -> [x']) []) u
+--    print a
+
+--    print $ test u
+
+--    return ()
+
+
 main :: IO ()
 main = do
 
@@ -641,12 +672,12 @@ main = do
         --x <- constructCoverFix star :: _ (TargetRef Node (Attached' String Cover) (Lit (TargetRef Edge  (Attached' String Cover))))
 
 
-        s1 <- starx' :: _
+        s1 <- starx'
         s2 <- starx'
-        s3 <- starx'2 :: _
+        s3 <- starx'2
 
 
-        c <- connection s1 s2 :: _ 
+        c <- connection s1 s2
 
         --let tn = s1 :: Netref Node (Static Draft)
 
@@ -659,12 +690,18 @@ main = do
 
         c_v <- readRef c
 
-        print (c_v :: _)
+        --print c_v
 
         uu <- unifyx' s1 s2
 
+        --print (withElement' (p :: P MyShow) myShow $ uncover s1_v)
+        uu_v <- readRef uu
+        --print (uncover uu_v :: Static Draft (RefCover Edge (Attached' Type (Netref Node (Static Draft)) Cover) (Static Draft)))
+        --print $ withElement_ (p :: P (TFoldable (Static Draft (RefCover Edge (Attached' Type (Netref Node (Static Draft)) Cover) (Static Draft))))) (foldrT (:) []) uu_v
         --u <- unifyx' s1 s2
+--class WithElement_ ctx rec where withElement_ :: Proxy ctx -> (forall v. ctx v => v -> a) -> rec -> a
 
+        print $ (inputs $ uncover uu_v)
 
         --print $ ucase s1_v $ do
         --    match $ \(Lit _) -> "Its a Lit!"
@@ -710,17 +747,17 @@ main = do
 
 
 
-    return ()
+--    return ()
 
 
--- time  take  -  description                    FIXME
------------------------------------------------------
+-- time  take  -  description                              FIXME
+----------------------------------------------------------------
 --           [+] readRef dla Edge               
 -- 0:35  30  [+] automatic constructed connection type
 -- 2:18  30  [?] types
+-- 4:11  30  [+] predecessors
 --       30  [ ] destructors
 --       30  [ ] successors
---       30  [ ] predecessors
 --       30  [ ] attach accessors
 --       30  [ ] nice connect / reconnect
 --       30  [ ] term construction methods
@@ -728,6 +765,7 @@ main = do
 -- [ ] magic monad builder
 -- [ ] pretty TH case
 -- [ ] 
+
 
 
 -------------------------

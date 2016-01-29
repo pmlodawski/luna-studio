@@ -70,9 +70,6 @@ instance (KnownNat n, KnownNats ns) => KnownNats (n ': ns)       where natVals _
 
 
 
-
-
-
 -----------------
 -- === NOP === --
 -----------------
@@ -140,32 +137,6 @@ instance Wrapped   Store where
 
 
 
-------------------------
----- === Modifier === --
-------------------------
-
---data Attached t d a = Attached !d !a deriving (Show, Functor, Traversable, Foldable)
-
---attached :: t -> d -> a -> Attached t d a
---attached _ = Attached
---{-# INLINE attached #-}
-
---(+>) :: a -> d -> Attached Value d a
---(+>) = flip $ attached Value
---{-# INLINE (+>) #-}
-
----- Instances
-
---type instance ValueOf   (Attached t d a) = If (t == Value) d (ValueOf a)
---type instance Unlayered (Attached t d a) = a
---instance      Layered   (Attached t d a) where layered = lens (\(Attached _ a) -> a) (\(Attached d _) a -> Attached d a)
-
---instance {-# OVERLAPPABLE #-} (ValueOf a ~ ValueOf (Attached t d a), HasValue a)
---                           => HasValue (Attached t     d a) where value = layered ∘ value                                                 ; {-# INLINE value #-}
---instance {-# OVERLAPPABLE #-} HasValue (Attached Value d a) where value = lens (\(Attached d _) -> d) (\(Attached _ a) d -> Attached d a) ; {-# INLINE value #-}
-
-
-
 --------------------
 -- === Record === --
 --------------------
@@ -183,6 +154,8 @@ type a ##. p = (RecordOf a) ## p
 type Variants a = Props Variant a
 type Groups   a = Props Group   a
 
+type family Layout2 t a :: [*]
+
 type family RecordOf  a :: *
 type family Layout    a :: [*]
 type family EncodeMap a :: Map * [Nat]
@@ -198,106 +171,6 @@ class Encoder t a m rec | t a rec -> m where encode :: Proxy t -> a -> m rec
 
 class UnsafeExtract t rec m a | t rec a -> m where unsafeExtract :: Proxy t -> rec -> m a
 class CheckMatch    t a rec where checkMatch :: Proxy t -> Proxy (a :: *) -> rec -> Bool
-
----------------------------------
--- === AST Data definition === --
----------------------------------
-
-newtype Mask = Mask Int64 deriving (Eq, Num, Bits, FiniteBits)
-
-instance Show Mask where 
-    show m = show (catMaybes (testBit' m <$> [0 .. finiteBitSize m - 1])) where
-        testBit' m b = if testBit m b then Just b else Nothing
-
-
--- === Types === --
-
-data Data = Data { _mask    :: !Mask
-                 , _variant :: !Store
-                 } deriving (Show)
-
-newtype ASTRecord (groups :: [*]) (variants :: [*]) (t :: * -> *) d = ASTRecord (Unlayered (ASTRecord groups variants t d)) deriving (Show)
-type instance Unlayered (ASTRecord gs vs t d) = d
-
--- === Instances === --
-
-type instance Props Variant (ASTRecord gs vs t d) = vs
-type instance Props Group   (ASTRecord gs vs t d) = gs
-
-type instance RecordOf (ASTRecord gs vs t d) = ASTRecord gs vs t d
-instance      IsRecord (ASTRecord gs vs t d) where asRecord = id ; {-# INLINE asRecord #-}
-
--- Wrappers
-
-instance Layered   (ASTRecord gs vs t d)
-instance Rewrapped (ASTRecord gs vs t d) (ASTRecord gs' vs' t' d')
-instance Wrapped   (ASTRecord gs vs t d) where
-    type Unwrapped (ASTRecord gs vs t d) = d
-    _Wrapped' = iso (\(ASTRecord a) -> a) ASTRecord
-    {-# INLINE _Wrapped' #-}
-
--- Conversions
-
-instance Castable    (ASTRecord gs vs t d) d
-instance Convertible (ASTRecord gs vs t d) d where convert = unwrap'
-
-instance Castable d (ASTRecord gs vs t d) where cast = wrap'
-
-
--- === AST Data encoder === --
-
-instance ( bits ~ MapLookup v emap
-         , emap ~ EncodeMap (rec Data)
-         , KnownNats bits
-         , Wrapped   (rec Data)
-         , Unwrapped (rec Data) ~ Data
-         ) => Encoder Variant v Ok (rec Data) where 
-    encode _ v = Ok $ wrap' $ Data mask $ unsafeStore v where
-        bits    = fromIntegral <$> natVals (p :: P bits)
-        mask    = foldl' setBit zeroBits bits
-    {-# INLINE encode #-}
-
--- FIXME - zalozenie RecordOf r ~ rec Data jest niedobre i za bardzo restrykcyjne
-instance ( MaskRebuilder layout layout'
-         , layout  ~ Layout (rec  Data)
-         , layout' ~ Layout (rec' Data)
-         , Unwrapped (rec  Data) ~ Data
-         , Unwrapped (rec' Data) ~ Data
-         , Wrapped   (rec  Data)
-         , Wrapped   (rec' Data)
-
-         , IsRecord r
-         , RecordOf r ~ rec Data
-         ) => Encoder Group r Ok (rec' Data) where 
-    encode _ r = Ok $ wrap' $ Data mask' var where
-        Data mask var = unwrap' $ view asRecord r
-        mask' = rebuildMask (p :: P layout) (p :: P layout') mask
-    {-# INLINE encode #-}
-
-
-
-class    MaskRebuilder oldLayout newLayout where rebuildMask :: LayoutProxy oldLayout -> LayoutProxy newLayout -> Mask -> Mask
-instance MaskRebuilder layout    layout    where rebuildMask _ _ = id ; {-# INLINE rebuildMask #-}
-
-
-
-instance UncheckedGroupCons rec m a                                                    => UnsafeExtract Group   rec      m  a where unsafeExtract _                       = uncheckedGroupCons        ; {-# INLINE unsafeExtract #-}
-instance {-# OVERLAPPABLE #-} (UnsafeExtract Variant (Unwrapped rec) m a, Wrapped rec) => UnsafeExtract Variant rec      m  a where unsafeExtract t                       = unsafeExtract t ∘ unwrap' ; {-# INLINE unsafeExtract #-}
-instance {-# OVERLAPPABLE #-} (Unwrapped (r Data) ~ Data, Wrapped (r Data))            => UnsafeExtract Variant (r Data) Ok a where unsafeExtract _ (unwrap' -> Data _ v) = Ok $ unsafeRestore v      ; {-# INLINE unsafeExtract #-}
-
-
-instance ( rec  ~ r Data
-         , dmap ~ DecodeMap rec
-         , nat  ~ MapLookup g dmap
-         , KnownNat  nat
-         , Wrapped   rec
-         , Unwrapped rec ~ Data
-         ) => CheckMatch t g (r Data) where
-    checkMatch _ _ (unwrap' -> Data mask _) = match where
-        bit   = fromIntegral $ natVal (p :: P nat)
-        match = testBit mask bit
-    {-# INLINE checkMatch #-}
-
 
 
 --------------------
@@ -410,9 +283,9 @@ cons = smartCons ; {-# INLINE cons #-}
 
 
 
--------------------------------------------------------------------
--- === Mapping over record elements (Variants, Groups, etc.) === --
--------------------------------------------------------------------
+------------------------------------------------------------------------
+-- === Mapping over matched record element (Variant, Group, etc.) === --
+------------------------------------------------------------------------
 
 -- === Mapping data types === --
 
@@ -427,6 +300,9 @@ class ElemMap       t v m rec |    t v rec -> m where elemMap  :: forall a.     
 class ElemMap'   ok t v m rec | ok t v rec -> m where elemMap' :: forall a. Proxy (ok :: Bool) -> Proxy t -> (v -> a) -> rec -> m (Maybe a)
 type  ElemMapped    t v   rec = ElemMap t v Ok rec
 
+type  UncheckedElemMap            = ElemMap' 'True
+type  UncheckedElemMapped t v rec = ElemMap' 'True t v Ok rec
+
 instance {-# OVERLAPPABLE #-} ( ok ~ (v `In` (r ##. t)) , ElemMap' ok t v m r ) 
                                      => ElemMap         t v   m r where elemMap          = elemMap' (p :: P ok) ; {-# INLINE elemMap  #-}
 instance {-# OVERLAPPABLE #-} m ~ Ok => ElemMap         t ANY m r where elemMap  _ f _   = Ok $ Just $ f ANY    ; {-# INLINE elemMap  #-}
@@ -437,25 +313,36 @@ instance ( UnsafeExtract t r m a
          , Monad m
          , CheckMatch t a (RecordOf r)
          ) => ElemMap' 'True t a m r where
-    elemMap' _ t f rec = if match then (Just ∘ (f $) <$> val) else return Nothing 
-        where match    = checkMatch t (p :: P a) $ view asRecord rec
-              val      = unsafeExtract t rec :: m a
+    elemMap' _ t f rec = if match then (Just ∘ (f $) <$> val) else return Nothing where
+        match    = checkMatch t (p :: P a) $ view asRecord rec
+        val      = unsafeExtract t rec :: m a
     {-# INLINE elemMap' #-}
 
 elemMapped :: ElemMapped t v rec => Proxy t -> (v -> a) -> rec -> Maybe a
 elemMapped = fromOk ∘∘∘ elemMap ; {-# INLINE elemMapped #-}
 
+uncheckedElemMap :: UncheckedElemMap t v m rec => Proxy t -> (v -> a) -> rec -> m (Maybe a)
+uncheckedElemMap = elemMap' (Proxy :: Proxy 'True) ; {-# INLINE uncheckedElemMap #-}
+
+uncheckedElemMapped :: UncheckedElemMapped t v rec => Proxy t -> (v -> a) -> rec -> Maybe a
+uncheckedElemMapped = fromOk ∘∘∘ uncheckedElemMap ; {-# INLINE uncheckedElemMapped #-}
 
 -- === VariantMap === --
 
-type VariantMap    v m rec = ElemMap    Variant v m rec
-type VariantMapped v   rec = ElemMapped Variant v   rec
+type          VariantMap    v m rec =          ElemMap    Variant v m rec
+type          VariantMapped v   rec =          ElemMapped Variant v   rec
+type UncheckedVariantMap    v m rec = UncheckedElemMap    Variant v m rec
+type UncheckedVariantMapped v   rec = UncheckedElemMapped Variant v   rec
 
-variantMap    :: VariantMap    v m rec => (v -> a) -> rec -> m (Maybe a)
-variantMapped :: VariantMapped v   rec => (v -> a) -> rec ->    Maybe a
-variantMap    = elemMap    (p :: P Variant) ; {-# INLINE variantMap    #-}
-variantMapped = elemMapped (p :: P Variant) ; {-# INLINE variantMapped #-}
+variantMap             ::          VariantMap    v m rec => (v -> a) -> rec -> m (Maybe a)
+variantMapped          ::          VariantMapped v   rec => (v -> a) -> rec ->    Maybe a
+uncheckedVariantMap    :: UncheckedVariantMap    v m rec => (v -> a) -> rec -> m (Maybe a)
+uncheckedVariantMapped :: UncheckedVariantMapped v   rec => (v -> a) -> rec ->    Maybe a
 
+variantMap             = elemMap             (p :: P Variant) ; {-# INLINE variantMap             #-}
+variantMapped          = elemMapped          (p :: P Variant) ; {-# INLINE variantMapped          #-}
+uncheckedVariantMap    = uncheckedElemMap    (p :: P Variant) ; {-# INLINE uncheckedVariantMap    #-}
+uncheckedVariantMapped = uncheckedElemMapped (p :: P Variant) ; {-# INLINE uncheckedVariantMapped #-}
 
 -- === GroupMap === --
 
@@ -467,6 +354,60 @@ groupMapped :: GroupMapped g   rec => (g -> a) -> rec ->    Maybe a
 groupMap    = elemMap    (p :: P Group) ; {-# INLINE groupMap    #-}
 groupMapped = elemMapped (p :: P Group) ; {-# INLINE groupMapped #-}
 
+
+
+
+------------------------------------------------------------------------
+-- === Mapping over current record element (Variant, Group, etc.) === --
+------------------------------------------------------------------------
+
+
+-- FIXME[WD]: poprawic ponizsze funkcje poniewaz sa bardzo zawezone - np WithElement_ dziala tylko na Variantach!
+
+--class MyVariantMap where myVariantMap :: Proxy ctx -> (forall )
+
+class WithElement' ctx rec a where withElement' :: Proxy ctx -> (forall v. ctx v a => v -> a) -> rec -> a
+instance (MapTryingElemList els ctx rec a, els ~ Layout2 Variant (RecordOf rec)) => WithElement' ctx rec a where withElement' = mapTryingElemList (p :: P els)
+
+class MapTryingElemList els ctx rec a where mapTryingElemList :: Proxy (els :: [*]) -> Proxy ctx -> (forall v. ctx v a => v -> a) -> rec -> a
+
+instance ( IsRecord rec
+         , CheckMatch Variant el (RecordOf rec)
+         , UnsafeExtract Variant rec Ok el
+         , ctx el a
+         , MapTryingElemList els ctx rec a
+         ) => MapTryingElemList (el ': els) ctx rec a where
+    mapTryingElemList _ ctx f rec = if match then f el else mapTryingElemList (p :: P els) ctx f rec where
+        t     = p :: P Variant
+        match = checkMatch t (p :: P el) $ view asRecord rec
+        Ok el = unsafeExtract t rec :: Ok el
+
+
+instance MapTryingElemList '[] ctx rec a where mapTryingElemList = undefined
+
+
+
+
+class WithElement_ ctx rec where withElement_ :: Proxy ctx -> (forall v. ctx v => v -> a) -> rec -> a
+instance (MapTryingElemList_ els ctx rec, els ~ (RecordOf rec ##. Variant)) => WithElement_ ctx rec where withElement_ = mapTryingElemList_ (p :: P els)
+
+class MapTryingElemList_ els ctx rec where mapTryingElemList_ :: Proxy (els :: [*]) -> Proxy ctx -> (forall v. ctx v => v -> a) -> rec -> a
+
+instance ( IsRecord rec
+         , CheckMatch Variant el (RecordOf rec)
+         , UnsafeExtract Variant rec Ok el
+         , ctx el
+         , MapTryingElemList_ els ctx rec
+         ) => MapTryingElemList_ (el ': els) ctx rec where
+    mapTryingElemList_ _ ctx f rec = if match then f el else mapTryingElemList_ (p :: P els) ctx f rec where
+        t     = p :: P Variant
+        match = checkMatch t (p :: P el) $ view asRecord rec
+        Ok el = unsafeExtract t rec :: Ok el
+
+
+instance MapTryingElemList_ '[] ctx rec where mapTryingElemList_ = undefined
+
+--class NFunctor n m a a' | n m a -> a' where fmapN :: (n -> m) -> a -> a'
 
 
 
@@ -489,6 +430,8 @@ groupMatch   :: GroupMapped   a rec => (a -> out) -> MatchSet rec out
 variantMatch f = MathState $ withMatchSet (variantMapped f:) ; {-# INLINE variantMatch #-}
 groupMatch   f = MathState $ withMatchSet (groupMapped   f:) ; {-# INLINE groupMatch   #-}
 
+uncheckedVariantMatch f = MathState $ withMatchSet (uncheckedVariantMapped f:) ; {-# INLINE uncheckedVariantMatch #-}
+
 -- Pattern match evaluation
 
 withMatchSet :: State.MonadState PM s m => (s -> s) -> m ()
@@ -506,6 +449,10 @@ __case__ lib file loc = fromJustNote err ∘∘ runMatches where
     err = lib <> ": " <> file <> ":" <> show loc <> ": Non-exhaustive patterns in case"
 {-# INLINE __case__ #-}
 
+-- FIXME [WD]: Remove caseTest
+caseTest = __case__ "tc-test" "test/Main.hs" 0
+{-# INLINE caseTest #-}
+
 
 -- === Auto matches === --
 
@@ -522,11 +469,14 @@ instance {-# OVERLAPPABLE #-} (m ~ InvalidPattern' a)                        => 
 
 -- === General matching interface === --
 
-class                                            Match a rec where match :: forall out. (a -> out) -> MatchSet rec out
-instance (Resolved a rec, AutoMatch a Ok rec) => Match a rec where match = fromOk ∘ autoMatch ; {-# INLINE match #-}
-instance                                         Match I rec where match = impossible         ; {-# INLINE match #-}
-instance                                         Match a I   where match = impossible         ; {-# INLINE match #-}
+class                                                                 Match a rec where match :: forall out. (a -> out) -> MatchSet rec out
+instance {-# OVERLAPPABLE #-} (Resolved a rec, AutoMatch a Ok rec) => Match a rec where match = fromOk ∘ autoMatch ; {-# INLINE match #-}
+instance {-# OVERLAPPABLE #-}                                         Match I rec where match = impossible         ; {-# INLINE match #-}
+instance {-# OVERLAPPABLE #-}                                         Match a I   where match = impossible         ; {-# INLINE match #-}
 
+type family Matches rec lst :: Constraint where
+    Matches rec '[]       = ()
+    Matches rec (l ': ls) = (Match l rec, Matches rec ls)
 
 -- === Static-AST matching === --
 
@@ -536,14 +486,109 @@ static = match
 
 
 -------------------------------------------------------------------------------------------------------------------
-
-
-
------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------
 
 
 
 
+---------------------------------
+-- === AST Data definition === --
+---------------------------------
+
+newtype Mask = Mask Int64 deriving (Eq, Num, Bits, FiniteBits)
+
+instance Show Mask where 
+    show m = show (catMaybes (testBit' m <$> [0 .. finiteBitSize m - 1])) where
+        testBit' m b = if testBit m b then Just b else Nothing
+
+
+-- === Types === --
+
+data Data = Data { _mask    :: !Mask
+                 , _variant :: !Store
+                 } deriving (Show)
+
+newtype ASTRecord (groups :: [*]) (variants :: [*]) (t :: * -> *) d = ASTRecord (Unlayered (ASTRecord groups variants t d)) deriving (Show)
+type instance Unlayered (ASTRecord gs vs t d) = d
+
+-- === Instances === --
+
+type instance Props Variant (ASTRecord gs vs t d) = vs
+type instance Props Group   (ASTRecord gs vs t d) = gs
+
+type instance RecordOf (ASTRecord gs vs t d) = ASTRecord gs vs t d
+instance      IsRecord (ASTRecord gs vs t d) where asRecord = id ; {-# INLINE asRecord #-}
+
+-- Wrappers
+
+instance Layered   (ASTRecord gs vs t d)
+instance Rewrapped (ASTRecord gs vs t d) (ASTRecord gs' vs' t' d')
+instance Wrapped   (ASTRecord gs vs t d) where
+    type Unwrapped (ASTRecord gs vs t d) = d
+    _Wrapped' = iso (\(ASTRecord a) -> a) ASTRecord
+    {-# INLINE _Wrapped' #-}
+
+-- Conversions
+
+instance Castable    (ASTRecord gs vs t d) d
+instance Convertible (ASTRecord gs vs t d) d where convert = unwrap'
+
+instance Castable d (ASTRecord gs vs t d) where cast = wrap'
+
+
+-- === AST Data encoder === --
+
+instance ( bits ~ MapLookup v emap
+         , emap ~ EncodeMap (rec Data)
+         , KnownNats bits
+         , Wrapped   (rec Data)
+         , Unwrapped (rec Data) ~ Data
+         ) => Encoder Variant v Ok (rec Data) where 
+    encode _ v = Ok $ wrap' $ Data mask $ unsafeStore v where
+        bits    = fromIntegral <$> natVals (p :: P bits)
+        mask    = foldl' setBit zeroBits bits
+    {-# INLINE encode #-}
+
+-- FIXME[WD] - zalozenie RecordOf r ~ rec Data jest niedobre i za bardzo restrykcyjne
+instance ( MaskRebuilder layout layout'
+         , layout  ~ Layout (rec  Data)
+         , layout' ~ Layout (rec' Data)
+         , Unwrapped (rec  Data) ~ Data
+         , Unwrapped (rec' Data) ~ Data
+         , Wrapped   (rec  Data)
+         , Wrapped   (rec' Data)
+
+         , IsRecord r
+         , RecordOf r ~ rec Data
+         ) => Encoder Group r Ok (rec' Data) where 
+    encode _ r = Ok $ wrap' $ Data mask' var where
+        Data mask var = unwrap' $ view asRecord r
+        mask' = rebuildMask (p :: P layout) (p :: P layout') mask
+    {-# INLINE encode #-}
+
+
+
+class    MaskRebuilder oldLayout newLayout where rebuildMask :: LayoutProxy oldLayout -> LayoutProxy newLayout -> Mask -> Mask
+instance MaskRebuilder layout    layout    where rebuildMask _ _ = id ; {-# INLINE rebuildMask #-}
+
+
+
+instance UncheckedGroupCons rec m a                                                    => UnsafeExtract Group   rec      m  a where unsafeExtract _                       = uncheckedGroupCons        ; {-# INLINE unsafeExtract #-}
+instance {-# OVERLAPPABLE #-} (UnsafeExtract Variant (Unwrapped rec) m a, Wrapped rec) => UnsafeExtract Variant rec      m  a where unsafeExtract t                       = unsafeExtract t ∘ unwrap' ; {-# INLINE unsafeExtract #-}
+instance {-# OVERLAPPABLE #-} (Unwrapped (r Data) ~ Data, Wrapped (r Data))            => UnsafeExtract Variant (r Data) Ok a where unsafeExtract _ (unwrap' -> Data _ v) = Ok $ unsafeRestore v      ; {-# INLINE unsafeExtract #-}
+
+
+instance ( rec  ~ r Data
+         , dmap ~ DecodeMap rec
+         , nat  ~ MapLookup g dmap
+         , KnownNat  nat
+         , Wrapped   rec
+         , Unwrapped rec ~ Data
+         ) => CheckMatch t g (r Data) where
+    checkMatch _ _ (unwrap' -> Data mask _) = match where
+        bit   = fromIntegral $ natVal (p :: P nat)
+        match = testBit mask bit
+    {-# INLINE checkMatch #-}
 
 
 
