@@ -2,6 +2,7 @@
 {-# LANGUAGE UndecidableInstances      #-}
 {-# LANGUAGE FunctionalDependencies    #-}
 {-# LANGUAGE RecursiveDo               #-}
+{-# LANGUAGE RankNTypes                #-}
 
 {-# LANGUAGE PartialTypeSignatures     #-}
 
@@ -37,9 +38,10 @@ import Control.Monad.Reader
 import qualified Luna.Syntax.Model.Builder.Type as Type
 import           Luna.Syntax.Model.Builder.Type (MonadTypeBuilder, TypeBuilder, TypeBuilderT)
 
+import Luna.Syntax.Model.Builder.Self (MonadSelfBuilder, SelfBuilderT, self, setSelf)
+import qualified Luna.Syntax.Model.Builder.Self as Self
 
-
-
+import Type.Bool
 
 
 
@@ -80,6 +82,11 @@ instance      Wrapped   (PhantomLayer l t a) where
     _Wrapped' = iso (\(PhantomLayer a) -> a) PhantomLayer
     {-# INLINE _Wrapped' #-}
 
+-- Properties
+
+type instance Attr p (Layer l t a) = Attr p (Unwrapped (Layer l t a))
+instance Accessor p (Unwrapped (Layer l t a)) => Accessor p (Layer l t a) where access a = wrapped' ∘ access a
+
 -- Refs
 
 type instance RefOf (Layer        l t a) = RefOf (Unwrapped (Layer        l t a))
@@ -101,6 +108,11 @@ data Note = Note deriving (Show)
 
 newtype Targetting   a t = Targetting a   deriving (Show, Functor, Traversable, Foldable)
 data    Attached   t d a = Attached   d a deriving (Show, Functor, Traversable, Foldable)
+
+
+type family Attr a t
+class Accessor a t where access :: a -> Lens' t (Attr a t)
+
 
 
 -- === Instances === --
@@ -131,24 +143,48 @@ instance (Castable d d', Castable a a') => Castable (Attached t d a) (Attached t
 instance {-# OVERLAPPABLE #-} (Default d, Monad m) => CoatConstructor a m (Attached Note d) where constructCoat = return ∘ Attached def
 
 instance {-# OVERLAPPABLE #-} 
-         ( CoverConstructorFix m t, Builder Node t m, Uncovered t ~ Static Draft x
+         ( 
+           MonadFix m
+         , Builder Node t m
+         , Uncovered t ~ Static Draft x
          , MonadTypeBuilder t m
-         , MonadFix m
-         ) => CoatConstructor a m (Attached Type t) where 
+         , EdgeBuilder t t m
+         , Builder Edge conn m
+         , EdgeBetween t t ~ conn
+         , (Uncovered (Unlayered t) ~ Static Draft x)
+         , t ~ Netref Node (Static Draft)
+         , MonadGraphBuilder n e m
+
+         , (Castable (Layer (Attached Type (Netref Edge (Static Draft))) Cover (Static Draft (RefCover Edge (Attached' Type (Netref Edge (Static Draft)) Cover) (Static Draft)))) n)
+         , conn ~ Netref Edge (Static Draft)
+         , MonadSelfBuilder t m
+         ) => CoatConstructor a m (Attached Type conn) where 
     constructCoat a = flip Attached a <$> do
+        s <- self
         Type.ask >>= \case
-            Just t  -> return t
+            Just t  -> do
+                c <- connection s t
+                return c
             Nothing -> mdo
                 Type.set t
-                t <- starx' :: m t
-                return t
+                t <- starx'
+                c <- connection s t
+                return c
+
+-- Attributes
+
+type instance Attr p (Attached t d a) = If (p == t) d (Attr p a)
+instance {-# OVERLAPPABLE #-}                                                       Accessor t (Attached t d a) where access _ = lens (\(Attached d _) -> d) (\(Attached _ a) d -> Attached d a)
+instance {-# OVERLAPPABLE #-} (Accessor p a, Attr p (Attached t d a) ~ Attr p a) => Accessor p (Attached t d a) where access a = coated ∘ access a
+
+--starx' :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Static Draft t) => m a
 
 
-instance {-# OVERLAPPABLE #-} 
-         ( Monad m
-         ) => CoatConstructor a m (Attached Type String) where 
-    constructCoat a = flip Attached a <$> do
-        return ""
+--instance {-# OVERLAPPABLE #-} 
+--         ( Monad m
+--         ) => CoatConstructor a m (Attached Type String) where 
+--    constructCoat a = flip Attached a <$> do
+--        return ""
 
 
 ------------------
@@ -476,6 +512,7 @@ class Monad m => Builder t a m where
 instance Builder t a m => Builder t a (Graph.GraphBuilderT n e m) where register = lift ∘∘ register
 instance Builder t a m => Builder t a (StateT                s m) where register = lift ∘∘ register
 instance Builder t a m => Builder t a (TypeBuilderT          s m) where register = lift ∘∘ register
+instance Builder t a m => Builder t a (SelfBuilderT          s m) where register = lift ∘∘ register
 instance                  Builder t a IO                          where register _ _ = return ()
 instance                  Builder t a Identity                    where register _ _ = return ()
 
@@ -569,6 +606,11 @@ instance (a' ~ n (RefCover Edge cover n), n ~ n', cover ~ NetCover) => Convertib
 -- === AST building utils === --
 -- ========================== --
 
+buildMe f = mdo
+    setSelf me
+    me <- f
+    return me
+
 star :: Lit t
 star = cons Star
 
@@ -579,24 +621,22 @@ star' = registerNode =<< constructCoverFix star
 starx :: Static Draft t
 starx = cons star
 
-starx' :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Static Draft t) => m a
-starx' = registerNode =<< constructCoverFix starx
+starx' :: (MonadFix m, MonadSelfBuilder a m, CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Static Draft t) => m a
+starx' = registerNode =<< buildMe (constructCoverFix starx)
 
-starx'2 :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Lit t) => m a
-starx'2 = registerNode =<< constructCoverFix star
 
 
 
 unifyx :: t (Static Draft t) -> t (Static Draft t) -> Static Draft t
 unifyx a b = cons $ Unify a b
 
-unifyx2 :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Static Draft t) => t (Static Draft t) -> t (Static Draft t) -> m a
-unifyx2 a b = registerNode =<< constructCoverFix (unifyx a b)
+--unifyx2 :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Static Draft t) => t (Static Draft t) -> t (Static Draft t) -> m a
+--unifyx2 a b = registerNode =<< constructCoverFix (unifyx a b)
  
 unifyx' a b = mdo
     ca  <- connection a out
     cb  <- connection b out
-    out <- registerNode =<< constructCoverFix (unifyx (convert ca) (convert cb))
+    out <- registerNode =<< buildMe (constructCoverFix (unifyx (convert ca) (convert cb)))
     return out
 
 
@@ -608,14 +648,15 @@ unifyx' a b = mdo
 
 type Network  = Graph (NetCover Data) NetArc
 type NetArc   = Arc (Ref Node Int) (Ref Node Int)
-type NetCover = Attached' Type (Netref Node (Static Draft)) Cover
+type NetCover = Attached' Type (Netref Edge (Static Draft)) Cover
 
 -- === Construction === ---
 
 --buildNetwork :: _ => _
 buildNetwork  = runIdentity ∘ buildNetworkM
 buildNetworkM = rebuildNetworkM def
-rebuildNetworkM (net :: Network) = flip Type.evalT Nothing
+rebuildNetworkM (net :: Network) = flip Self.evalT (undefined :: Netref Node (Static Draft))
+                                 ∘ flip Type.evalT (Nothing :: Maybe (Netref Node (Static Draft)))
                                  ∘ constrainType Node (Proxy :: Proxy (Netref Node n))
                                  ∘ constrainType Edge (Proxy :: Proxy (Netref Edge e))
                                  ∘ flip Graph.execT net
@@ -674,38 +715,36 @@ main = do
 
         s1 <- starx'
         s2 <- starx'
-        s3 <- starx'2
+        print s1
 
 
         c <- connection s1 s2
+        print c
 
-        --let tn = s1 :: Netref Node (Static Draft)
-
-        --    tc = c  :: Netref Edge (Static Draft)
-
-        --print s2
-        --print c
 
         s1_v <- readRef s1
-
         c_v <- readRef c
 
-        --print c_v
+        print s1_v
+        print c_v
 
         uu <- unifyx' s1 s2
 
-        --print (withElement' (p :: P MyShow) myShow $ uncover s1_v)
+--        --print (withElement' (p :: P MyShow) myShow $ uncover s1_v)
         uu_v <- readRef uu
-        --print (uncover uu_v :: Static Draft (RefCover Edge (Attached' Type (Netref Node (Static Draft)) Cover) (Static Draft)))
-        --print $ withElement_ (p :: P (TFoldable (Static Draft (RefCover Edge (Attached' Type (Netref Node (Static Draft)) Cover) (Static Draft))))) (foldrT (:) []) uu_v
-        --u <- unifyx' s1 s2
---class WithElement_ ctx rec where withElement_ :: Proxy ctx -> (forall v. ctx v => v -> a) -> rec -> a
+
+
+        print $ view (access Type) uu_v
+--        --print (uncover uu_v :: Static Draft (RefCover Edge (Attached' Type (Netref Node (Static Draft)) Cover) (Static Draft)))
+--        --print $ withElement_ (p :: P (TFoldable (Static Draft (RefCover Edge (Attached' Type (Netref Node (Static Draft)) Cover) (Static Draft))))) (foldrT (:) []) uu_v
+--        --u <- unifyx' s1 s2
+----class WithElement_ ctx rec where withElement_ :: Proxy ctx -> (forall v. ctx v => v -> a) -> rec -> a
 
         print $ (inputs $ uncover uu_v)
 
-        --print $ ucase s1_v $ do
-        --    match $ \(Lit _) -> "Its a Lit!"
-        --    match $ \ANY     -> "Something else"
+--        --print $ ucase s1_v $ do
+--        --    match $ \(Lit _) -> "Its a Lit!"
+--        --    match $ \ANY     -> "Something else"
 
 
         return ()
@@ -713,27 +752,7 @@ main = do
         --s' = s & coated %~ unwrap' ∘ unwrap'
 
     print $ (g :: Network)
-    --print $ s'
-    --print $ uncoat s
-    ----let x = 
-    ----let v  = star :: Lit Int IDT
-    --let v  = cons Star :: Lit IDT
-    --    v' = cons v    :: Dynamic Draft IDT
-    --    t1 = cons' (IDT v') [] :: Dynamic Draft IDT
-    ----let v  = checkedVariantCons Star :: Ok (Static Draft IDT)
-    ----let v  = checkedVariantCons (1 :: Int) :: Ok (Lit IDT)
-    --    --l  = checkedVariantCons v :: Static Thunk Int IDT
-    --    --l2 = checkedVariantCons l  :: Dynamic Val Int IDT
-    --    --l2 = checkedVariantCons l  :: Dynamic Thunk Int IDT
-
-    --print v
-    --print v'
-    --print t1
-
-
-
-    ----print l
-    ----print l2
+    return ()
 
     --print $ caseTest t1 $ do
     --    --match $ \Star    -> "star!"
@@ -756,11 +775,11 @@ main = do
 -- 0:35  30  [+] automatic constructed connection type
 -- 2:18  30  [?] types
 -- 4:11  30  [+] predecessors
---       30  [ ] destructors
+--       30  [+] attach accessors
 --       30  [ ] successors
---       30  [ ] attach accessors
---       30  [ ] nice connect / reconnect
+--       30  [ ] destructors
 --       30  [ ] term construction methods
+--       30  [ ] nice connect / reconnect
 --
 -- [ ] magic monad builder
 -- [ ] pretty TH case
