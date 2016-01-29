@@ -56,9 +56,10 @@ Library
 
     Exposed-modules: 
         Data.Record,
-        Luna.Diagnostic.AST,
         Luna.Lib.Symbol.Map,
         Luna.Lib.Symbol.QualPath,
+        Luna.Passes.Diagnostic.GraphViz,
+        Luna.Passes.Diagnostic.Monitor,
         Luna.Syntax.AST,
         Luna.Syntax.AST.Arg,
         Luna.Syntax.AST.Decl,
@@ -72,7 +73,8 @@ Library
         Luna.Syntax.Model.Layer.Labeled,
         Luna.Syntax.Model.Repr.Styles,
         Luna.Syntax.Name,
-        Luna.Syntax.Name.Pool
+        Luna.Syntax.Name.Pool,
+        Tmp
 
     Build-Depends: base
                  , bitmask
