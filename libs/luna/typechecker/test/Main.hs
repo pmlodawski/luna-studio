@@ -4,7 +4,7 @@
 {-# LANGUAGE RecursiveDo               #-}
 {-# LANGUAGE RankNTypes                #-}
 
--- {-# LANGUAGE PartialTypeSignatures     #-}
+{-# LANGUAGE PartialTypeSignatures     #-}
 
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main where
@@ -13,12 +13,13 @@ import Prologue
 import Luna.Syntax.AST.Term hiding (Arrow, Node)
 import Tmp
 import Luna.Passes.Diagnostic.GraphViz
-
+import Data.Layer.Cover
 
 
 renderAndOpen lst = do
     flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
     open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
+
 
 
 main :: IO ()
@@ -32,10 +33,44 @@ main = do
         --x <- constructCover star :: _ (TargetRef Node (Attached' String Cover) (Lit (TargetRef Edge  (Attached' String Cover))))
 
 
-        s1 <- starx' 
-        s1_v <- readRef s1
-        print (s1_v :: NetCover (Static Draft (RefCover Edge NetCover (Static Draft))))
-        starx'
+        --let x = undefined :: Node2 (Static Draft :> '[])
+        --let x = undefined :: AttachmentCover '[Type] (Static Draft IDT)
+
+
+        --print $ typeOf x
+        --print x
+
+        --(s1 :: Ref2 (Node2 (Static Draft :> '[]))) <- starx' 
+        (s1 :: _) <- starx' 
+        --s2 <- star' 
+        print s1
+        --print (s2 :: _)
+
+        ----s3 <- star'
+        (s1_v :: _) <- readRef s1
+        print (uncover s1_v :: _)
+
+        --caseTest s1_v $ do
+        --    match $ \()
+        --print (s1_v :: NetCover (Static Draft (RefCover Edge NetCover (Static Draft))))
+        --starx'
+        --print (s1 :: Netref Node (Static Draft))
+        return ()
+
+
+--Ref $ Node $ Static Draft :> '[Type, Succ]
+--Ref $ Link $ Static Draft :> '[Type, Succ]
+
+
+
+--Ref Node '[Type, Succ] (Static Draft (Ref Node '[Type, Succ]))
+
+--Node '[Type, Succ] (Static Draft (Ref Node '[Type, Succ]))
+
+
+--Ref Node (Layered '[Type, Succ] (Static Draft ))
+
+--MuRef Node '[Type,Succ] (Static Draft)
 
 --        s2 <- starx'
         --print (s1 :: Netref Node (Static Draft))
@@ -70,11 +105,11 @@ main = do
 ----        --    match $ \ANY     -> "Something else"
 
 
-        return ()
+        --return ()
 
         --s' = s & coated %~ unwrap' ∘ unwrap'
 
-    print $ (g :: Network)
+    --print $ (g :: Network)
     return ()
 
 

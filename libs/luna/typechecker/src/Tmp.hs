@@ -4,7 +4,7 @@
 {-# LANGUAGE RecursiveDo               #-}
 {-# LANGUAGE RankNTypes                #-}
 
-{-# LANGUAGE PartialTypeSignatures     #-}
+-- {-# LANGUAGE PartialTypeSignatures     #-}
 
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -53,6 +53,74 @@ import Type.Bool
 --star :: Lit (Labeled String (Labeled Int) Cover)
 
 
+data IDT a = IDT a deriving (Show)
+
+
+
+
+
+------------------------
+---- === Elements === --
+------------------------
+
+----newtype Ref2 a = Ref2 a deriving (Show, Functor, Traversable, Foldable)
+
+--data    Edge2 src tgt = Edge2 {- todo -} deriving (Show)
+--data    Link t        = Link  {- todo -} deriving (Show)
+
+
+--data Node2 a -- = Node2 (NetCover (TheBase a (RefCover Edge NetCover (TheBase a)))) -- deriving (Show, Functor, Traversable, Foldable)
+--newtype Ref2 a = Ref2 (RefDef a)
+
+--type family RefDef a where RefDef (Node2 a) = Netref Node (TheBase a)
+
+
+----Ref2 (Node2 (Static Draft :> '[]))
+
+--deriving instance Show (RefDef a) => Show (Ref2 a)
+
+
+
+
+
+
+
+----type family NodeType a where NodeType (Node2 a) = a
+
+--type family AssociatedValue t a
+
+--type instance AssociatedValue Type a = Ref2 $ Link $ Static Draft :> '[]
+
+
+
+--data Annotated (ts :: [*]) (a :: (* -> *) -> *) -- = Annotated (AttachmentCover ts (a (RefCover Edge NetCover a))) -- = Annotated a deriving (Show, Functor, Traversable, Foldable) 
+
+--type family LayerTypes a where LayerTypes (Annotated ts a) = ts
+--type family TheBase    a where TheBase    (Annotated ts a) = a
+
+--type a :> lst = Annotated lst a
+
+
+
+
+--type family Attachment a
+--data Attached2 t a = Attached2 (Attachment (Attached2 t a)) a
+--type instance Attachment (Attached2 t a) = AssociatedValue t (Uncovered a)
+
+--type AttachmentLayer t = Layer (Attached2 t)
+
+--type family AttachmentCover ts where
+--    AttachmentCover '[]       = Cover
+--    AttachmentCover (t ': ts) = AttachmentLayer t (AttachmentCover ts)
+
+
+
+
+
+--deriving instance (Show (Attachment (Attached2 t a)), Show a) => Show (Attached2 t a)
+
+
+
 
 
 
@@ -64,6 +132,7 @@ import Type.Bool
 
 newtype Layer        l (t :: * -> *) a = Layer        (l (t a)) deriving (Show)
 newtype PhantomLayer l (t :: * -> *) a = PhantomLayer l         deriving (Show, Functor, Traversable, Foldable)
+
 
 -- === Instances === --
 
@@ -101,6 +170,8 @@ instance HasRef (Unwrapped (PhantomLayer l t a)) => HasRef (PhantomLayer l t a) 
 
 
 
+
+
 ------------------------
 -- === Properties === --
 ------------------------
@@ -114,6 +185,11 @@ data Successors = Successors deriving (Show)
 
 newtype Targetting   a t = Targetting a   deriving (Show, Functor, Traversable, Foldable)
 data    Attached   t d a = Attached   d a deriving (Show, Functor, Traversable, Foldable)
+
+
+
+
+
 
 
 type family Attr a t
@@ -191,6 +267,7 @@ type instance Attr p (Attached t d a) = If (p == t) d (Attr p a)
 instance {-# OVERLAPPABLE #-}                                                       Accessor t (Attached t d a) where access _ = lens (\(Attached d _) -> d) (\(Attached _ a) d -> Attached d a)
 instance {-# OVERLAPPABLE #-} (Accessor p a, Attr p (Attached t d a) ~ Attr p a) => Accessor p (Attached t d a) where access a = coated ∘ access a
 
+
 --starx' :: (MonadFix m, MonadSelfBuilder a m, CoverConstructor m a, Builder Node a m, Uncovered a ~ Static Draft t) => m a
 
 
@@ -215,7 +292,13 @@ class HasRef a where ref :: Lens' a (RefOf a)
 class RefGetter ref m where getRef :: ref -> m (Target ref)
 class RefPutter ref m where putRef :: ref -> Target ref -> m ()
 
+--readRef2 :: (MonadReader s f, RefGetter (RefOf s) m, HasRef s) => f (m (Target (RefOf s)))
+--readRef2 = readRef
+
+readRef :: (HasRef r, RefGetter ref m, ref ~ RefOf r) => r -> m (Target ref)
 readRef  = getRef ∘ view ref
+
+writeRef :: (HasRef r, RefPutter ref m, ref ~ RefOf r) => r -> Target ref -> m ()
 writeRef r = putRef (r ^. ref) 
 
 
@@ -610,33 +693,21 @@ connection2 src tgt = do
 
 class OutputRegister n conn m where registerOutput :: n -> conn -> m ()
 
-instance ( MonadGraphBuilder n e m
-         , RefGetter (RefOf (Netref Node a)) m
-         , a ~ Static Draft
-         , (Castable
-                            (Layer
-                               (Attached
-                                  Successors [Netref Edge a])
-                               (Attached'
-                                  Type (Netref Edge a) Cover)
-                               (a
-                                  (RefCover
-                                     Edge
-                                     (Attached'
-                                        Successors
-                                        [Netref Edge a]
-                                        (Attached'
-                                           Type
-                                           (Netref Edge a)
-                                           Cover))
-                                     a)))
-                            n)
+instance ( rn   ~ Netref Node a
+         , rc   ~ Netref Edge a
+         , refn ~ RefOf rn
+         , Monad m
+         , HasRef rn
+         , RefGetter refn m
+         , RefPutter refn m
+         , Accessor Successors (Target refn)
+         , Attr Successors (Target refn) ~ [rc]
          ) => OutputRegister (Netref Node a) (Netref Edge a) m where
     registerOutput rn rc = do
         n <- readRef rn
         let x = n & (access Successors) %~ (rc:)
         writeRef rn x
-        return ()
+
 
 
 
@@ -716,8 +787,10 @@ type NetCover = Attached' Successors [Netref Edge (Static Draft)] (Attached' Typ
 type Attached' t d = Layer (Attached t d)
 
 
---type family AttahcedLayers ls where
-  
+
+
+
+
 --type NetCover = Attached' Type (Netref Edge (Static Draft)) Cover
 
 -- === Construction === ---
@@ -747,7 +820,6 @@ class MyShow a b where myShow :: a -> b
 instance (Show a, b ~ String) => MyShow a b where myShow = show
 
 
-data IDT a = IDT a deriving (Show)
 
 
 --test :: forall x. x -> String

@@ -271,6 +271,42 @@ instance           TFunctor t r (Cons  n   ) (Cons  n  ) where fmapT = flip cons
 instance           TFunctor t r Blank        Blank       where fmapT = flip const              ; {-# INLINE fmapT #-}
 
 
+-----------------------------
+-- === Term groups v 2 === --
+-----------------------------
+
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
+-- TODO: Rethink the following AST definition. It allows for custom data layouts,
+--       that could be of any form, not only something like `t (ast t)`, which would
+--       help create much more readable and user-friendly type system on top of AST.
+--       Additional it owuld be much more feasible for flat AST layouts as well as
+--       breadcrumbs definitions.
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
+
+--data family AST t term runtime -- `t` could be something like `Graph` or `Breadcrumb`
+
+--data Lit'   = Lit'   deriving (Show)
+--data Val'   = Val'   deriving (Show)
+--data Thunk' = Thunk' deriving (Show)
+--data Term'  = Term'  deriving (Show)
+--data Draft' = Draft' deriving (Show)
+
+--newtype instance AST t Lit'   rt = AST_Lit   (Unlayered (AST t Lit'   rt))
+--newtype instance AST t Val'   rt = AST_Val   (Unlayered (AST t Val'   rt))
+--newtype instance AST t Thunk' rt = AST_Thunk (Unlayered (AST t Thunk' rt))
+--newtype instance AST t Term'  rt = AST_Term  (Unlayered (AST t Term'  rt))
+--newtype instance AST t Draft' rt = AST_Draft (Unlayered (AST t Draft' rt))
+
+---- ...
+
+---- | Data layout for a particular `t` like `Graph` or `Breadcrumb`
+--type family Layout' t ast
+
+
+--type LitVariants2       = LitElems
+--type ValVariants2   l t = ValElems   (NameByRuntime rt (Layout t (AST )) (ValRepr t l))
+
+
 
 -------------------------
 -- === Term groups === --
