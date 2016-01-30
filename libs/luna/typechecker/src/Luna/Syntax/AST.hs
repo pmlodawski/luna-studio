@@ -4,8 +4,8 @@ import Prologue hiding (cons)
 
 --import Luna.Syntax.AST.Term 
 
-import           Data.Variant.Cons (cons)
-import qualified Data.Variant as Variant
+--import           Data.Variant.Cons (cons)
+--import qualified Data.Variant as Variant
 
 --str :: Variant.Cons Str t => String -> t
 --str  = cons ∘ Str

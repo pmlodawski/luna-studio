@@ -77,7 +77,6 @@ Library
         Tmp
 
     Build-Depends: base
-                 , bitmask
                  , constraints
                  , container
                  , containers >= 0.5.6.2
@@ -85,8 +84,6 @@ Library
                  , data-base
                  , data-construction
                  , data-layer
-                 , data-tagged
-                 , data-path
                  , error-util
                  , errors
                  , exceptions
@@ -102,13 +99,10 @@ Library
                  , placeholders
                  , process
                  , prologue
-                 , relations
                  , text
                  , transformers
                  , type-cache
-                 , type-regex
                  , typelevel
-                 , variants
                  , vector
                  , data-result
                  , split
@@ -153,7 +147,6 @@ Executable tc-test
 
     Build-Depends: luna-tc
                  , base
-                 , bitmask
                  , constraints
                  , container
                  , containers >= 0.5.6.2
@@ -161,8 +154,6 @@ Executable tc-test
                  , data-base
                  , data-construction
                  , data-layer
-                 , data-tagged
-                 , data-path
                  , error-util
                  , errors
                  , exceptions
@@ -178,13 +169,10 @@ Executable tc-test
                  , placeholders
                  , process
                  , prologue
-                 , relations
                  , text
                  , transformers
                  , type-cache
-                 , type-regex
                  , typelevel
-                 , variants
                  , vector
                  , data-result
                  , split

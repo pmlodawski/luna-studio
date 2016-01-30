@@ -27,8 +27,6 @@ import GHC.Prim            (Any, unsafeCoerce#)
 import Data.Int            (Int64)
 
 import Unsafe.Coerce (unsafeCoerce)
-import Data.Relation.Binary
-import qualified Data.Relation.Binary as Rel
 import Data.Result
 
 import Data.Bits (Bits, FiniteBits, setBit, testBit, zeroBits, finiteBitSize)

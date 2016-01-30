@@ -2,29 +2,6 @@ resolver: lts-4.1
 packages:
     - ../../../../libs/luna/typechecker
     - ../../../../libs/utils
-    - /Users/wdanilo/work/hs/libs/bitmask
-    - /Users/wdanilo/work/hs/libs/container
-    - /Users/wdanilo/work/hs/libs/convert
-    - /Users/wdanilo/work/hs/libs/data-base
-    - /Users/wdanilo/work/hs/libs/data-construction
-    - /Users/wdanilo/work/hs/libs/data-layer
-    - /Users/wdanilo/work/hs/libs/data-path
-    - /Users/wdanilo/work/hs/libs/data-repr
-    - /Users/wdanilo/work/hs/libs/data-result
-    - /Users/wdanilo/work/hs/libs/data-rtuple
-    - /Users/wdanilo/work/hs/libs/data-tagged
-    - /Users/wdanilo/work/hs/libs/dependent-state
-    - /Users/wdanilo/work/hs/libs/functor-utils
-    - /Users/wdanilo/work/hs/libs/impossible
-    - /Users/wdanilo/work/hs/libs/lens-utils
-    - /Users/wdanilo/work/hs/libs/poly-control
-    - /Users/wdanilo/work/hs/libs/prologue
-    - /Users/wdanilo/work/hs/libs/relations
-    - /Users/wdanilo/work/hs/libs/type-cache
-    - /Users/wdanilo/work/hs/libs/type-regex
-    - /Users/wdanilo/work/hs/libs/typelevel
-    - /Users/wdanilo/work/hs/libs/typelevel
-    - /Users/wdanilo/work/hs/libs/variants
 
 extra-deps:
     - ghc-session-0.1.2.0
@@ -45,8 +22,6 @@ extra-deps:
     - tuple-0.3.0.2
     - OneTuple-0.2.1
 
-    - poly-control-1.0
-    - impossible-1.0
 
 ghc-options:
     "*": -DFastCompilation -threaded -O -j8 
