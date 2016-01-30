@@ -130,8 +130,8 @@ data IDT a = IDT a deriving (Show)
 -- === Layers === --
 --------------------
 
-newtype Layer        l (t :: * -> *) a = Layer        (l (t a)) deriving (Show)
-newtype PhantomLayer l (t :: * -> *) a = PhantomLayer l         deriving (Show, Functor, Traversable, Foldable)
+newtype Layer        l (t :: * -> *) a = Layer        (l (t a)) deriving (Show, Eq)
+newtype PhantomLayer l (t :: * -> *) a = PhantomLayer l         deriving (Show, Eq, Functor, Traversable, Foldable)
 
 
 -- === Instances === --
@@ -183,8 +183,8 @@ data Note = Note deriving (Show)
 
 data Successors = Successors deriving (Show)
 
-newtype Targetting   a t = Targetting a   deriving (Show, Functor, Traversable, Foldable)
-data    Attached   t d a = Attached   d a deriving (Show, Functor, Traversable, Foldable)
+newtype Targetting   a t = Targetting a   deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
+data    Attached   t d a = Attached   d a deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
 
 
 
@@ -248,7 +248,7 @@ instance {-# OVERLAPPABLE #-}
                 return c
             Nothing -> mdo
                 Type.set t
-                t <- starx'
+                t <- star
                 c <- connection t s
 
                 tv <- readRef t
@@ -268,7 +268,7 @@ instance {-# OVERLAPPABLE #-}                                                   
 instance {-# OVERLAPPABLE #-} (Accessor p a, Attr p (Attached t d a) ~ Attr p a) => Accessor p (Attached t d a) where access a = coated ∘ access a
 
 
---starx' :: (MonadFix m, MonadSelfBuilder a m, CoverConstructor m a, Builder Node a m, Uncovered a ~ Static Draft t) => m a
+--star :: (MonadFix m, MonadSelfBuilder a m, CoverConstructor m a, Builder Node a m, Uncovered a ~ Static Draft t) => m a
 
 
 --instance {-# OVERLAPPABLE #-} 
@@ -282,7 +282,7 @@ instance {-# OVERLAPPABLE #-} (Accessor p a, Attr p (Attached t d a) ~ Attr p a)
 -- === Refs === --
 ------------------
 
-data Ref r a = Ref a deriving (Show, Functor, Traversable, Foldable)
+data Ref r a = Ref a deriving (Show, Eq, Functor, Traversable, Foldable)
 
 -- FIXME[WD]: refactor `Target` from Term.hs:
 --type family Target a -- using the one defined in Term.hs
@@ -292,14 +292,13 @@ class HasRef a where ref :: Lens' a (RefOf a)
 class RefGetter ref m where getRef :: ref -> m (Target ref)
 class RefPutter ref m where putRef :: ref -> Target ref -> m ()
 
---readRef2 :: (MonadReader s f, RefGetter (RefOf s) m, HasRef s) => f (m (Target (RefOf s)))
---readRef2 = readRef
-
 readRef :: (HasRef r, RefGetter ref m, ref ~ RefOf r) => r -> m (Target ref)
 readRef  = getRef ∘ view ref
 
 writeRef :: (HasRef r, RefPutter ref m, ref ~ RefOf r) => r -> Target ref -> m ()
 writeRef r = putRef (r ^. ref) 
+
+follow (Arc src tgt) = readRef tgt
 
 
 -- === Instances === --
@@ -496,13 +495,13 @@ valProxy _ = Proxy
 data family Netref   (t :: *)                   (base :: (* -> *) -> *)
 data family RefCover (t :: *) (cover :: * -> *) (base :: (* -> *) -> *) (a :: *)
 
-newtype instance Netref Node n = Netref_Node (Unlayered (Netref Node n)) deriving (Show)
-newtype instance Netref Edge n = Netref_Edge (Unlayered (Netref Edge n)) deriving (Show)
+newtype instance Netref Node n = Netref_Node (Unlayered (Netref Node n)) deriving (Show, Eq)
+newtype instance Netref Edge n = Netref_Edge (Unlayered (Netref Edge n)) deriving (Show, Eq)
 type    instance Unlayered (Netref Node n) = (RefCover Node NetCover n) (n (RefCover Edge NetCover n))
 type    instance Unlayered (Netref Edge n) = (RefCover Edge NetCover n) (n (RefCover Edge NetCover n))
 
-newtype instance RefCover Node cover base a = RefCover_Node (Unlayered (RefCover Node cover base a)) deriving (Show)
-newtype instance RefCover Edge cover base a = RefCover_Edge (Unlayered (RefCover Edge cover base a)) deriving (Show)
+newtype instance RefCover Node cover base a = RefCover_Node (Unlayered (RefCover Node cover base a)) deriving (Show, Eq)
+newtype instance RefCover Edge cover base a = RefCover_Edge (Unlayered (RefCover Edge cover base a)) deriving (Show, Eq)
 type instance    Unlayered (RefCover Node cover n a) = TargetGenRef Node (cover   a) cover a
 type instance    Unlayered (RefCover Edge cover n a) = TargetGenRef Edge (NetArcT n) cover a
 
@@ -744,19 +743,19 @@ buildMe f = mdo
     me <- f
     return me
 
-star :: Lit t
-star = cons Star
+starLit :: Lit t
+starLit = cons Star
 
-star' :: (CoverConstructor m a, Builder Node a m, Uncovered a ~ Lit t) => m a
-star' = registerNode =<< constructCover star
+--star' :: (CoverConstructor m a, Builder Node a m, Uncovered a ~ Lit t) => m a
+--star' = registerNode =<< constructCover star
 
 
-starx :: Static Draft t
-starx = cons star
+starDraft :: Static Draft t
+starDraft = cons starLit
 
---starx' :: (MonadFix m, MonadSelfBuilder a m, CoverConstructor m a, Builder Node a m, Uncovered a ~ Static Draft t) => m a
-starx' = registerNode =<< buildMe (constructCover starx)
---starx' = registerNode =<< constructCover starx
+--star :: (MonadFix m, MonadSelfBuilder a m, CoverConstructor m a, Builder Node a m, Uncovered a ~ Static Draft t) => m a
+star = registerNode =<< buildMe (constructCover starDraft)
+--star = registerNode =<< constructCover starx
 
 
 
@@ -767,7 +766,7 @@ unifyx a b = cons $ Unify a b
 --unifyx2 :: (CoverConstructor m a, Builder Node a m, Uncovered a ~ Static Draft t) => t (Static Draft t) -> t (Static Draft t) -> m a
 --unifyx2 a b = registerNode =<< constructCover (unifyx a b)
  
-unifyx' a b = mdo
+unify a b = mdo
     ca  <- connection a out
     cb  <- connection b out
     out <- registerNode =<< buildMe (constructCover (unifyx (convert ca) (convert cb)))

@@ -14,6 +14,7 @@ import Luna.Syntax.AST.Term hiding (Arrow, Node)
 import Tmp
 import Luna.Passes.Diagnostic.GraphViz
 import Data.Layer.Cover
+import Data.Record
 
 
 renderAndOpen lst = do
@@ -21,130 +22,63 @@ renderAndOpen lst = do
     open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
 
 
+title s = putStrLn $ "\n" <> "-- " <> s <> " --"
 
 main :: IO ()
 main = do
 
-        --s = star
-    --g <- flip evalStateT (0 :: Int) $ flip Graph.execT (def :: Network) $ do
-       -- $ constrainCoverType (Proxy :: Proxy (Ref' Node (Attached' String Cover)))
-
     g <- buildNetworkM $ do
-        --x <- constructCover star :: _ (TargetRef Node (Attached' String Cover) (Lit (TargetRef Edge  (Attached' String Cover))))
-
-
-        --let x = undefined :: Node2 (Static Draft :> '[])
-        --let x = undefined :: AttachmentCover '[Type] (Static Draft IDT)
-
-
-        --print $ typeOf x
-        --print x
-
-        --(s1 :: Ref2 (Node2 (Static Draft :> '[]))) <- starx' 
-        (s1 :: _) <- starx' 
-        --s2 <- star' 
+        title "basic element building"
+        (s1 :: _) <- star
+        (s2 :: _) <- star
         print s1
-        --print (s2 :: _)
 
-        ----s3 <- star'
+        title "reading node references"
         (s1_v :: _) <- readRef s1
+        (s2_v :: _) <- readRef s2
         print (uncover s1_v :: _)
 
-        --caseTest s1_v $ do
-        --    match $ \()
-        --print (s1_v :: NetCover (Static Draft (RefCover Edge NetCover (Static Draft))))
-        --starx'
-        --print (s1 :: Netref Node (Static Draft))
+        title "manual connection builing"
+        (c1 :: _) <- connection s1 s2
+        print c1
+
+        title "reading connection references"
+        c1_v <- readRef c1
+        print c1_v
+
+        title "edge following"
+        c1_tgt <- follow c1_v
+        when (c1_tgt /= s2_v) $ fail "reading is broken!"
+
+        title "pattern matching"
+        print $ caseTest (uncover s1_v) $ do
+            match $ \(Lit l)  -> caseTest l $ do
+                match $ \Star -> "its a star! <3"
+                match $ \ANY  -> "some literal"
+            match $ \ANY      -> "something else!"
+
+        title "complex element building"
+        u1 <- unify s1 s2
+        print u1
+        u1_v <- readRef u1
+
+        title "inputs reading"
+        let u1_ins = inputs (uncover u1_v)
+        print u1_ins
+
+        title "params reading"
+        let s1t = s1_v ^. (access Type)
+            s1s = s1_v ^. (access Successors)
+        print s1t
+        print s1s
+
+
         return ()
 
-
---Ref $ Node $ Static Draft :> '[Type, Succ]
---Ref $ Link $ Static Draft :> '[Type, Succ]
-
-
-
---Ref Node '[Type, Succ] (Static Draft (Ref Node '[Type, Succ]))
-
---Node '[Type, Succ] (Static Draft (Ref Node '[Type, Succ]))
-
-
---Ref Node (Layered '[Type, Succ] (Static Draft ))
-
---MuRef Node '[Type,Succ] (Static Draft)
-
---        s2 <- starx'
-        --print (s1 :: Netref Node (Static Draft))
-
-
---        c <- connection s1 s2
---        print c
-
-
---        s1_v <- readRef s1
---        c_v <- readRef c
-
---        print s1_v
---        print c_v
-
---        uu <- unifyx' s1 s2
-
-----        --print (withElement' (p :: P MyShow) myShow $ uncover s1_v)
---        uu_v <- readRef uu
-
-
---        print $ view (access Type) uu_v
-----        --print (uncover uu_v :: Static Draft (RefCover Edge (Attached' Type (Netref Node (Static Draft)) Cover) (Static Draft)))
-----        --print $ withElement_ (p :: P (TFoldable (Static Draft (RefCover Edge (Attached' Type (Netref Node (Static Draft)) Cover) (Static Draft))))) (foldrT (:) []) uu_v
-----        --u <- unifyx' s1 s2
-------class WithElement_ ctx rec where withElement_ :: Proxy ctx -> (forall v. ctx v => v -> a) -> rec -> a
-
---        print $ (inputs $ uncover uu_v)
-
-----        --print $ ucase s1_v $ do
-----        --    match $ \(Lit _) -> "Its a Lit!"
-----        --    match $ \ANY     -> "Something else"
-
-
-        --return ()
-
-        --s' = s & coated %~ unwrap' ∘ unwrap'
-
-    --print $ (g :: Network)
     return ()
 
 
     renderAndOpen [("g", g)]
-
-    --print $ caseTest t1 $ do
-    --    --match $ \Star    -> "star!"
-    --    --dynamic $ \s -> "its dynamic! :O"
-    --    static $ \s -> "it is static!  :O"
-    --    match  $ \(Cons _ _) -> "its cons ..."
-    --    --match  $ \(Lit l) -> caseTest l $ do
-    --    --    match $ \Star -> "its star!"
-    --    match $ \ANY     -> "something else"
-    
-
-
-
---    return ()
-
-
--- time  take  -  description                              FIXME
-----------------------------------------------------------------
---           [+] readRef dla Edge               
--- 0:35  30  [+] automatic constructed connection type
--- 2:18  30  [?] types
--- 4:11  30  [+] predecessors
---       30  [+] attach accessors
---       30  [ ] successors
---       30  [ ] destructors
---       30  [ ] term construction methods
---       30  [ ] nice connect / reconnect
---
--- [ ] magic monad builder
--- [ ] pretty TH case
--- [ ] 
 
 
 

@@ -378,6 +378,14 @@ deriving instance Show (Thunk l t)
 deriving instance Show (Term  l t)
 deriving instance Show (Draft l t)
 
+-- Eq
+
+deriving instance Eq (Lit     t)
+deriving instance Eq (Val   l t)
+deriving instance Eq (Thunk l t)
+deriving instance Eq (Term  l t)
+deriving instance Eq (Draft l t)
+
 -- Bases
 
 type instance Base Star        = Proxy Star
