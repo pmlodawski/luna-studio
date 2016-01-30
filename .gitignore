@@ -93,7 +93,11 @@ build_*/**/.stack-work
 
 temp
 stack
-**/.bin/**
-!**/.bin/.keep_me
+!**/.gitkeep
 supervisor/tmp/*
 **/.stack-work
+supervisord.log
+workspace
+
+**/.bin/**
+!**/.bin/.keep_me
