@@ -51,6 +51,112 @@ newtype Tagged t a = Tagged a deriving (Show, Eq, Ord, Functor, Traversable, Fol
 
 makeWrapped ''Tagged
 
+
+
+----------------------------
+-- === TypeConstraint === --
+----------------------------
+
+-- === Definitions === --
+
+newtype TypeConstraint (ctx :: * -> * -> Constraint) t (tp :: *) m a = TypeConstraint (m a) deriving (Show)
+
+makeWrapped ''TypeConstraint
+
+
+class Equality_Full a b
+instance a ~ b => Equality_Full a b
+
+class Equality_M1 a b
+instance (a ~ ma pa, b ~ mb pb, ma ~ mb) => Equality_M1 a b
+
+class Equality_M2 a b
+instance (a ~ m1a (m2a pa), b ~ m1b (m2b pb), m1a ~ m1b, m2a ~ m2b) => Equality_M2 a b 
+
+class Equality_M3 a b
+instance (a ~ m1a (m2a (m3a pa)), b ~ m1b (m2b (m3b pb)), m1a ~ m1b, m2a ~ m2b, m3a ~ (m3b :: ([*] -> *) -> *)) => Equality_M3 a b 
+-- FIXME[WD]: remove the kind constraint above
+
+
+-- === Utils === ---
+
+constrainType :: Proxy ctx -> t -> Proxy tp -> TypeConstraint ctx t tp m a -> m a
+constrainType _ _ _ = unwrap'
+
+constrainTypeEq :: t -> Proxy tp -> TypeConstraint Equality_Full t tp m a -> m a
+constrainTypeM1 :: t -> Proxy tp -> TypeConstraint Equality_M1   t tp m a -> m a
+constrainTypeM2 :: t -> Proxy tp -> TypeConstraint Equality_M2   t tp m a -> m a
+constrainTypeM3 :: t -> Proxy tp -> TypeConstraint Equality_M3   t tp m a -> m a
+constrainTypeEq = constrainType (p :: P Equality_Full)
+constrainTypeM1 = constrainType (p :: P Equality_M1)
+constrainTypeM2 = constrainType (p :: P Equality_M2)
+constrainTypeM3 = constrainType (p :: P Equality_M3)
+
+
+-- === Instances === --
+
+instance Applicative m => Applicative (TypeConstraint ctx t tp m) where pure       = wrap' ∘ pure                         ; {-# INLINE pure   #-}
+                                                                        (<*>)  f a = wrap' $ unwrap' f <*> unwrap' a      ; {-# INLINE (<*>)  #-}
+instance Monad    m    => Monad       (TypeConstraint ctx t tp m) where (>>=) tc f = wrap' $ unwrap' tc >>= unwrap' <$> f ; {-# INLINE (>>=)  #-}
+instance Functor  m    => Functor     (TypeConstraint ctx t tp m) where fmap     f = wrapped %~ fmap f                    ; {-# INLINE fmap   #-}
+instance MonadFix m    => MonadFix    (TypeConstraint ctx t tp m) where mfix     f = wrap' $ mfix $ unwrap' <$> f         ; {-# INLINE mfix   #-}
+instance MonadIO  m    => MonadIO     (TypeConstraint ctx t tp m) where liftIO     = wrap' ∘ liftIO                       ; {-# INLINE liftIO #-}
+instance                  MonadTrans  (TypeConstraint ctx t tp)   where lift       = wrap'                                ; {-# INLINE lift   #-}
+
+
+----instance {-# OVERLAPPABLE #-} (Monad m, Builder t (a x) m, (tp) ~ (a)) => Builder t (a x) (TypeConstraint t (tp y) m) where register = lift ∘∘ register
+--instance {-# OVERLAPPABLE #-} (Monad m, Builder t (a x) m, b ~ a x, tp ~ tpa (tpx :: (* -> *) -> *), tpa ~ a) => Builder t b (TypeConstraint t tp m) where register = lift ∘∘ register
+
+
+-- Registration time type constraint
+
+instance {-# OVERLAPPABLE #-} (Monad m, Register t a m, ctx a tp) => Register t a (TypeConstraint ctx t  tp m) where register_ = lift ∘∘ register_
+instance {-# OVERLAPPABLE #-} (Monad m, Register t a m)           => Register t a (TypeConstraint ctx t' tp m) where register_ = lift ∘∘ register_
+
+
+
+----------------------
+-- === Register === --
+----------------------
+-- | The `register` function can be used to indicate that a particular element is "done".
+--   It does not provide any general special meaning. In general, this information can be lost when not used explicitly.
+--   For a specific usage look at the `Network` builder, where `register` is used to add type constrains on graph nodes and edges.
+--   The `t` parameter is the type of registration, like `Node` or `Edge`. Please keep in mind, that `Node` indicates a "kind" of a structure.
+--   It does not equals a graph-like node - it can be a "node" in flat AST representation, like just an ordinary term.
+
+
+data Element    = Element    deriving (Show)
+data Connection = Connection deriving (Show)
+
+class Monad m => Register t a m where 
+    register_ :: t -> a -> m ()
+
+
+-- === Utils === --
+
+registerM :: Register t a m => t -> m a -> m a
+registerM t ma = do
+    a <- ma
+    register_ t a
+    return a
+
+register :: Register t a m => t -> a -> m a
+register t a = a <$ register_ t a
+
+
+-- === Instances === --
+
+instance Register t a m => Register t a (Graph.GraphBuilderT n e m) where register_ = lift ∘∘ register_
+instance Register t a m => Register t a (StateT                s m) where register_ = lift ∘∘ register_
+--instance Register t a m => Register t a (TypeBuilderT          s m) where register_ = lift ∘∘ register_
+--instance Register t a m => Register t a (SelfBuilderT          s m) where register_ = lift ∘∘ register_
+instance                  Register t a IO                          where register_ _ _ = return ()
+instance                  Register t a Identity                    where register_ _ _ = return ()
+
+
+
+
+
 ----------------------------------
 -- === Network Declarations === --
 ----------------------------------
@@ -79,11 +185,7 @@ instance (MonadGraphBuilder n e m, Castable a n) => LayerConstructor m (Ref (Nod
         ast = unwrap' n :: a
 
 
---instance (a ~ Int, MonadGraphBuilder n e m, Castable t n)
---      => Constructor m (Ref (Targetting Node t) a) where
---    construct ast = Ref <$> Graph.modify (nodes $ swap ∘ ixed add (cast ast))
 
---Graph ('[Note] :< Raw) Int
 
 ---------------------------
 -- === Network Terms === --
@@ -171,6 +273,8 @@ instance (Castable a a', Castable (LayerData (Layer t a)) (LayerData (Layer t' a
       => Castable (Layer t a) (Layer t' a') where
     cast (Layer d a) = Layer (cast d) (cast a) ; {-# INLINE cast #-}
 
+
+
 --------------------------
 -- === Basic layers === --
 --------------------------
@@ -181,6 +285,7 @@ data Note = Note deriving (Show)
 type instance AttachedData Note t = String
 
 instance Monad m => Maker m (Tagged Note String) where make = return $ Tagged $ ""
+
 
 
 --------------------
@@ -222,10 +327,11 @@ type instance Layout (Network ls) term rt = Link (ls :< TermWrapper term rt)
 -- === Node constructors === --
 -------------------------------
 
-star :: Draft Static '[Note]
-star = cons Star
+star :: (Register Element a m, SmartCons Star (Uncovered a), CoverConstructor m a) => m a
+star = register Element =<< constructCover (cons Star)
 
-
+star_draft :: (Register Element a m, CoverConstructor m a, Uncovered a ~ Draft Static ls) => m a
+star_draft = star 
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
 -- TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST --
@@ -238,19 +344,22 @@ buildNetwork  = runIdentity ∘ buildNetworkM
 buildNetworkM = rebuildNetworkM def
 rebuildNetworkM (net :: NetGraph) = -- flip Self.evalT (undefined :: Netref Node (Static Draft))
                                    -- ∘ flip Type.evalT (Nothing :: Maybe (Netref Node (Static Draft)))
-                                   -- ∘ constrainType Node (Proxy :: Proxy (Netref Node n))
+                                  --constrainTypeEq Element (Proxy :: Proxy (Ref $ Node ('[Note] :< Draft Static)))
+                                  constrainTypeM3 Element (Proxy :: Proxy (Ref $ Node ('[Note] :< n)))
                                    -- ∘ constrainType Edge (Proxy :: Proxy (Netref Edge e))
-                                  flip Graph.runT net
+                                  ∘ flip Graph.runT net
 -- {-# INLINE   buildNetworkM #-}
 -- {-# INLINE rebuildNetworkM #-}
 
-
-
-
+foo :: (Ref $ Node ('[Note] :< Draft Static), NetGraph)
 foo = runIdentity
     $ rebuildNetworkM def
     $ do
-    constructCover star
+    star_draft
+    star_draft
+    star_draft
+    --star_draft
+
 
 mytest :: IO ()
 mytest = do 
@@ -263,7 +372,7 @@ mytest = do
            :: Draft Static '[Note]
         --u1 = cons $ Unify (Link (Ptr 0) (Ptr 1) :: Link ('[Note] :< (Draft Static))) (Link (Ptr 0) (Ptr 1) :: Link ('[Note] :< (Draft Static))) :: Draft Static
 
-        (s2, g) = foo :: (Ref $ Node ('[Note] :< Draft Static), NetGraph)
+        (s2, g) = foo
     print s2
     print g
 
