@@ -1,185 +1,150 @@
-
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE UndecidableInstances      #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE RecursiveDo               #-}
+{-# LANGUAGE RankNTypes                #-}
+
+{-# LANGUAGE PartialTypeSignatures     #-}
+
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE PartialTypeSignatures #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE RecursiveDo #-}
-{-# LANGUAGE NoOverloadedStrings #-}
-
---{-# LANGUAGE PolyKinds #-}
-
 module Main where
 
-import Prologue hiding (simple, empty, Indexable, Simple, cons, lookup, index, children, Cons, Ixed, when, set)
-import Data.Vector as V
-import Data.TypeLevel.Bool
-import Data.Typeable
-import GHC.Prim (Any)
-import Control.Monad.State
-
---data Result = Result deriving (Show)
---data Ixed = Ixed deriving (Show)
---data Ixed2 = Ixed2 deriving (Show)
---data MX = MX
-
---data Bundle  a b = Bundle a b deriving (Show)
---data Bundle' a b = Bundle' a b deriving (Show)
-
---b = flip Bundle undefined
-
---class Foom mods where
---    foom :: mods -> mods
+import Prologue             hiding (cons)
+import Luna.Syntax.AST.Term2
+import Tmp2
+import Luna.Passes.Diagnostic.GraphViz
+import Data.Layer.Cover
+import Data.Record hiding (Layout)
+import Luna.Syntax.AST.Layout (Static, Dynamic)
 
 
---t1 = foom (b Result, (b Ixed, (b MX, ())))
+renderAndOpen lst = do
+    flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
+    open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
 
 
---class SetMod mod query where setMod :: mod -> (ModVal mod query) -> query -> query
---instance {-# OVERLAPPABLE #-}                                                                    SetMod mod (Bundle mod  a, qs) where setMod mod v (_, qs) = (Bundle mod v,qs)
---instance {-# OVERLAPPABLE #-} (SetMod mod qs, ModVal mod qs ~ ModVal mod (Bundle mod' a, qs)) => SetMod mod (Bundle mod' a, qs) where setMod mod v (q, qs) = (q, setMod mod v qs)
+title s = putStrLn $ "\n" <> "-- " <> s <> " --"
+
+data IDT a = IDT a deriving (Show)
 
 
---class GetMod mod query where getMod :: mod -> query -> ModVal mod query
---instance {-# OVERLAPPABLE #-}                                                                    GetMod mod (Bundle mod  a, qs) where getMod _ (Bundle _ a, _ ) = a
---instance {-# OVERLAPPABLE #-} (GetMod mod qs, ModVal mod (Bundle mod' a, qs) ~ ModVal mod qs) => GetMod mod (Bundle mod' a, qs) where getMod m (_         , qs) = getMod m qs
+data MyGraph (t :: * -> *) = MyGraph deriving (Show)
 
---type family ContainsMod mod query where ContainsMod mod (Bundle mod  a, qs) = True
---                                        ContainsMod mod (Bundle mod' a, qs) = ContainsMod mod qs
---                                        ContainsMod mod (Bundle' mod a, qs) = False
---                                        ContainsMod mod (Bundle' mod' a, qs) = ContainsMod mod qs
---                                        ContainsMod mod ()                  = False
+type instance Layout (MyGraph t) term rt = t (Term (MyGraph t) term rt) 
 
---type family ModVal mod query where ModVal mod (Bundle mod  a, qs) = a
---                                   ModVal mod (Bundle mod' a, qs) = ModVal mod qs
---                                   ModVal mod (Bundle' mod  a, qs) = a
---                                   ModVal mod (Bundle' mod' a, qs) = ModVal mod qs
---                                   --ModVal mod ()                  = Any
-
-
-
-----class IfT (cond :: Bool) a b where ifT :: Proxy cond -> a -> b -> If cond a b
-----instance IfT True  a b where ifT _ = const
-----instance IfT False a b where ifT _ = flip const
-
---class IfT (cond :: Bool) where ifT :: Proxy cond -> a -> a -> a
---instance IfT True  where ifT _ = const
---instance IfT False where ifT _ = flip const
-
-----ifT' :: Proxy (cond :: Bool) -> a -> a -> a
-----ifT' = ifT
-----lookupMod
-
---with mod f q = setMod mod (f $ getMod mod q) q
-
---type HasMod     mod q = (GetMod mod q, SetMod mod q)
---type Mod      mod q r = (HasMod mod q, IfT (ContainsMod mod q), ModVal mod q ~ r)
-
-----when (mod :: mod) (q :: q) f = ifT (Proxy :: Proxy (ContainsMod mod q)) f id
---when (mod :: mod) f (q :: q) = ifT (Proxy :: Proxy (ContainsMod mod q)) f id q
---set = setMod
---get = getMod
-
---result :: GetMod Result query => query -> ModVal Result query
---result = get Result
-
-----test :: (Mod Result q (Vector a), Mod Ixed q Int) => a -> q -> q
---test :: (Num (ModVal Ixed r), IfT (ContainsMod Ixed r), GetMod Result r, SetMod Ixed r, SetMod Result r, ModVal Result r ~ Vector a) => a -> r -> r
---test a q = when Ixed (set Ixed 0) $ with Result (flip V.snoc a) q
-----test a q = when Ixed (set Ixed $ V.length $ result q) $ with Result (flip V.snoc a) q
-----test a (q :: q) = with R (flip V.snoc a) q --  ifT (Proxy :: Proxy (HasMod Ixed q)) (setMod (Bundle Ixed 1) q) q
-
-----test a (q :: q) = setMod R (V.snoc (getMod R q) a) q --  ifT (Proxy :: Proxy (HasMod Ixed q)) (setMod (Bundle Ixed 1) q) q
-----class Insertable el t where insert :: el -> t -> t
-
---c = mempty :: Vector Int
-
---main = do
---    let x = test (5 :: Int) (Bundle Result c, (Bundle' Ixed undefined, ())) :: _
---    --print $ test 5 (Bundle Result c, ())
---    return ()
-
-
-
-
-
---data Weak = Weak (q -> IO ())
-
-
-data Ixed   = Ixed   deriving (Show)
-data Result = Result deriving (Show)
-
-
-newtype RTup a = RTup { fromRTup :: a } deriving (Functor, Traversable, Foldable)
-
-
-class RTupShow t where rtupShow :: RTup t -> String
-instance RTupShow () where rtupShow _ = ">"
-instance (Show a, RTupShow as) => RTupShow (a,as) where rtupShow (split -> (a,ts)) = ", " <> show a <> rtupShow ts
-
-instance                          Show (RTup ())     where show _ = "<>"
-instance (Show a, RTupShow as) => Show (RTup (a,as)) where show (split -> (a,ts)) = "<" <> show a <> rtupShow ts
-
-prepend a (RTup t) = RTup (a,t)
-
-
-
-
-
-type family Appended a t
-type instance Appended a (RTup ())     = RTup (a,())
-type instance Appended a (RTup (t,ts)) = RTup (t, Appended a ts)
-
---type family Prepended a t
---type instance Prepended
-
-
---class Append a t where append :: a -> RTup t -> Appended a t
---instance Append a (RTup ()) where append a _ = RTup (a,())
---instance Append a (RTup (t,ts)) where append a (RTup (t,ts)) = RTup (t, fromRTup $ append a $ RTup ts)
-
-
-split (RTup (t,ts)) = (t, RTup ts)
-
---main = do
---  print $ RTup (1,(2,(3,())))
-
-type family RT t where RT '[]       = ()
-                       RT (t ': ts) = (t, RT ts)
-
-data ModRule mod m a = ModRule mod (m a) deriving (Show)
-
-newtype ModReceipt t = ModReceipt { fromModReceipt :: RTup t }
-
-type Receipt t = ModReceipt (RT t)
-
-deriving instance Show (RTup t) => Show (ModReceipt t)
-
-addRule mod rule (ModReceipt t) = ModReceipt $ prepend (ModRule mod rule) t
-
-instance t ~ () => Default (RTup t)       where def = RTup ()
-instance t ~ () => Default (ModReceipt t) where def = ModReceipt def
-
-
---appendV :: Monad m => a -> Vector a -> Receipt '[ModRule Result m (Vector a), ModRule Ixed m Int]
-appendV el v = addRule Result (return $ V.snoc v el)
-             $ addRule Ixed   (return $ V.length v )
-             $ def
-
-
---tst :: (Monad m, Num a) => Receipt '[ModRule Result m (Vector a), ModRule Ixed m Int]
---tst :: _ => _
-tst = appendV 5 mempty
-
---tst2 :: _ => _
---tst2 = fst . fromRTup . fromModReceipt $ tst
-
+main :: IO ()
 main = do
-  print "end"
+
+    --let a = cons Star :: Lit IDT
+    --print a
+
+    --let s1 = cons T2.Star :: T2.Term (MyGraph IDT) T2.Draft Runtime.Static
+    --let s2 = cons T2.Star :: T2.Term (MyGraph IDT) T2.Draft Runtime.Static
+    --let u1 = cons (T2.Unify (IDT s1) (IDT s2)) :: T2.Term (MyGraph IDT) T2.Draft Runtime.Static
+    --let u2 = cons (T2.Unify (IDT u1) (IDT u1)) :: T2.Term (MyGraph IDT) T2.Draft Runtime.Static
+
+    --print u2
+
+    --print $ caseTest u2 $ do
+    --    match $ \(T2.Unify a b) -> "unify!"
+    --    match $ \ANY            -> "Something else"
+
+    mytest
+    --let u1 = cons T2. :: T2.Term Graph T2.Lit Runtime.Static
+    --print a'
+
+    --g <- buildNetworkM $ do
+    --    title "basic element building"
+    --    (s1 :: _) <- star
+    --    (s2 :: _) <- star
+    --    print s1
+
+    --    title "reading node references"
+    --    (s1_v :: _) <- readRef s1
+    --    (s2_v :: _) <- readRef s2
+    --    print (uncover s1_v :: _)
+
+    --    title "manual connection builing"
+    --    (c1 :: _) <- connection s1 s2
+    --    print c1
+
+    --    title "reading connection references"
+    --    c1_v <- readRef c1
+    --    print c1_v
+
+    --    title "edge following"
+    --    c1_tgt <- follow c1_v
+    --    when (c1_tgt /= s2_v) $ fail "reading is broken!"
+
+    --    title "pattern matching"
+    --    print $ caseTest (uncover s1_v) $ do
+    --        match $ \(Lit l)  -> caseTest l $ do
+    --            match $ \Star -> "its a star! <3"
+    --            match $ \ANY  -> "some literal"
+    --        match $ \ANY      -> "something else!"
+
+    --    title "complex element building"
+    --    u1 <- unify s1 s2
+    --    print u1
+    --    u1_v <- readRef u1
+
+    --    title "inputs reading"
+    --    let u1_ins = inputs (uncover u1_v)
+    --    print u1_ins
+
+    --    title "params reading"
+    --    let s1t = s1_v ^. (access Type)
+    --        s1s = s1_v ^. (access Successors)
+    --    print s1t
+    --    print s1s
+
+
+    --    return ()
+
+
+
+    --renderAndOpen [("g", g)]
+
+    return ()
+
+
+-------------------------
+-- === Benchmarks === ---
+-------------------------
+
+
+--data Bench a = Bench1 a
+--             | Bench2
+--             deriving (Show)
+
+--main = do
+
+
+--    args <- getArgs
+--    let mode   = read (args !! 0) :: Int
+--        argnum = read (args !! 1) :: Int
+--        nums = [0..argnum]
+
+
+--    case mode of
+--        0 -> do
+--            let ls = const star . show <$> nums
+--                pattest l = caseTest l $ do
+--                    variantMatch (\Star -> (1 :: Int))
+--                getnum _ = 0
+--            print $ sum $ pattest <$> ls
+--            --print $ sum $ getnum <$> ls
+--        1 -> do
+--            let ls = const Bench2 . show <$> nums
+--                pattest l = case l of
+--                    Bench2 -> (1 :: Int)
+--                getnum _ = 0
+--            print $ sum $ pattest <$> ls
+--            --print $ sum $ getnum <$> ls
+
+
+-- === Performance notes === ---
+-- Performance drops observed:
+--     - using custom State class and a wrapper for pattern-matches causes drop
+--       probably because automatically derived methods in the State wrapper are not inlined (TBI).
+--     - using the `reverse` function in pattern match causes a drop, but it should be computed always during the compile time.

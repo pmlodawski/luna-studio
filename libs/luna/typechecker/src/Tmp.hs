@@ -18,6 +18,7 @@ import Data.Record
 
 
 import Luna.Syntax.AST.Term hiding (Arrow, Node)
+import qualified Luna.Syntax.AST.Term2 as T2
 import Luna.Syntax.Model.Layer.Labeled
 
 
@@ -53,7 +54,7 @@ import Type.Bool
 --star :: Lit (Labeled String (Labeled Int) Cover)
 
 
-data IDT a = IDT a deriving (Show)
+--data IDT a = IDT a deriving (Show)
 
 
 

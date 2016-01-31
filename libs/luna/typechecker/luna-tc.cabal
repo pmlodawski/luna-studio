@@ -66,6 +66,7 @@ Library
         Luna.Syntax.AST.Decl.Function,
         Luna.Syntax.AST.Layout,
         Luna.Syntax.AST.Term,
+        Luna.Syntax.AST.Term2,
         Luna.Syntax.AST.Typed,
         Luna.Syntax.Model.Builder.Self,
         Luna.Syntax.Model.Builder.Type,
@@ -74,7 +75,8 @@ Library
         Luna.Syntax.Model.Repr.Styles,
         Luna.Syntax.Name,
         Luna.Syntax.Name.Pool,
-        Tmp
+        Tmp,
+        Tmp2
 
     Build-Depends: base
                  , constraints
@@ -111,7 +113,7 @@ Library
 
 
 Executable tc-test
-    Main-Is:        Main.hs
+    Main-Is:        Main2.hs
     Hs-Source-Dirs: test
 
     GHC-Options:    

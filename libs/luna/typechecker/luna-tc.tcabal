@@ -85,7 +85,7 @@ Library
 
 
 Executable tc-test
-    Main-Is:        Main.hs
+    Main-Is:        Main2.hs
     Hs-Source-Dirs: test
 
     GHC-Options:    

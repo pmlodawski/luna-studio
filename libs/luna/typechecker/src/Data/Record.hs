@@ -486,13 +486,22 @@ static = match
 -------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------
 
+-- TODO[WD] refactor vvvvvvvvvvvvvvv
 
+-----------------------------
+-- === Data definition === --
+-----------------------------
+
+data Data = Data { _mask    :: !Mask
+                 , _variant :: !Store
+                 } deriving (Show)
+
+instance Eq Data where a == b = _mask a == _mask b
 
 
 ---------------------------------
 -- === AST Data definition === --
 ---------------------------------
-
 newtype Mask = Mask Int64 deriving (Eq, Num, Bits, FiniteBits)
 
 instance Show Mask where 
@@ -502,17 +511,12 @@ instance Show Mask where
 
 -- === Types === --
 
-data Data = Data { _mask    :: !Mask
-                 , _variant :: !Store
-                 } deriving (Show)
-
 
 newtype ASTRecord (groups :: [*]) (variants :: [*]) (t :: * -> *) d = ASTRecord (Unlayered (ASTRecord groups variants t d)) deriving (Show, Eq, Ord)
 type instance Unlayered (ASTRecord gs vs t d) = d
 
 -- === Instances === --
 
-instance Eq Data where a == b = _mask a == _mask b
 
 type instance Props Variant (ASTRecord gs vs t d) = vs
 type instance Props Group   (ASTRecord gs vs t d) = gs

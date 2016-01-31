@@ -9,12 +9,14 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
-import Prologue
+import Prologue             hiding (cons)
 import Luna.Syntax.AST.Term hiding (Arrow, Node)
+import qualified Luna.Syntax.AST.Term2 as T2
 import Tmp
 import Luna.Passes.Diagnostic.GraphViz
 import Data.Layer.Cover
 import Data.Record
+import qualified Luna.Syntax.AST.Layout as Runtime
 
 
 renderAndOpen lst = do
@@ -26,6 +28,7 @@ title s = putStrLn $ "\n" <> "-- " <> s <> " --"
 
 main :: IO ()
 main = do
+
 
     g <- buildNetworkM $ do
         title "basic element building"
@@ -75,11 +78,11 @@ main = do
 
         return ()
 
-    return ()
 
 
     renderAndOpen [("g", g)]
 
+    return ()
 
 
 -------------------------
