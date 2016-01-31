@@ -15,7 +15,7 @@ import Prologue hiding (simple, empty, Indexable, Simple, cons, lookup, index, c
 import Data.Record hiding (Layout)
 
 
-import Luna.Syntax.AST.Term2 hiding (Lit, Val, Thunk, Expr, Draft)
+import Luna.Syntax.AST.Term2 hiding (Lit, Val, Thunk, Expr, Draft, Target)
 import qualified Luna.Syntax.AST.Term2 as Term
 import Luna.Syntax.Model.Layer.Labeled
 
@@ -38,7 +38,7 @@ import Data.Construction
 import qualified Luna.Syntax.Model.Builder.Type as Type
 import           Luna.Syntax.Model.Builder.Type (MonadTypeBuilder, TypeBuilder, TypeBuilderT)
 
-import Luna.Syntax.Model.Builder.Self (MonadSelfBuilder, SelfBuilderT, self, setSelf)
+import Luna.Syntax.Model.Builder.Self (MonadSelfBuilder, SelfBuilderT, self, setSelf, buildMe, buildAbsMe)
 import qualified Luna.Syntax.Model.Builder.Self as Self
 
 import Type.Bool
@@ -50,6 +50,20 @@ import Luna.Syntax.AST.Layout (Static, Dynamic)
 newtype Tagged t a = Tagged a deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
 
 makeWrapped ''Tagged
+
+
+----------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
+
+
+
+class HasIdx a where idx :: Lens' a (Index a)
+
+
+----------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------
 
 
 
@@ -139,24 +153,20 @@ registerM t ma = do
     a <- ma
     register_ t a
     return a
+{-# INLINE registerM #-}
 
 register :: Register t a m => t -> a -> m a
-register t a = a <$ register_ t a
+register t a = a <$ register_ t a ; {-# INLINE register #-}
 
 
 -- === Instances === --
 
-instance Register t a m => Register t a (Graph.GraphBuilderT n e m) where register_ = lift ∘∘ register_
-instance Register t a m => Register t a (StateT                s m) where register_ = lift ∘∘ register_
---instance Register t a m => Register t a (TypeBuilderT          s m) where register_ = lift ∘∘ register_
---instance Register t a m => Register t a (SelfBuilderT          s m) where register_ = lift ∘∘ register_
-instance                  Register t a IO                          where register_ _ _ = return ()
-instance                  Register t a Identity                    where register_ _ _ = return ()
-
-
-
-
-
+instance Register t a m => Register t a (Graph.GraphBuilderT n e m) where register_     = lift ∘∘ register_ ; {-# INLINE register_ #-}
+instance Register t a m => Register t a (StateT                s m) where register_     = lift ∘∘ register_ ; {-# INLINE register_ #-}
+instance Register t a m => Register t a (TypeBuilderT          s m) where register_     = lift ∘∘ register_ ; {-# INLINE register_ #-}
+instance Register t a m => Register t a (SelfBuilderT          s m) where register_     = lift ∘∘ register_ ; {-# INLINE register_ #-}
+instance                   Register t a IO                          where register_ _ _ = return ()         ; {-# INLINE register_ #-}
+instance                   Register t a Identity                    where register_ _ _ = return ()         ; {-# INLINE register_ #-}
 
 
 
@@ -167,11 +177,16 @@ instance                  Register t a Identity                    where registe
 
 -- === Definitions === --
 
-data Ptr  i a = Ptr i           deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
-data Ref    a = Ref (Ptr Int a) deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
+data Ptr i = Ptr i         deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
+data Ref a = Ref (Ptr Int) deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
 
 makeWrapped ''Ptr
 makeWrapped ''Ref
+
+type family Target a
+
+class HasPtr   a where ptr   :: Lens' a (Ptr (Index  a))
+class HasRef   a where ref   :: Lens' a (Ref (Target a))
 
 class Reader m a where read  :: Ref a -> m a
 class Writer m a where write :: Ref a -> a -> m ()
@@ -179,46 +194,82 @@ class Writer m a where write :: Ref a -> a -> m ()
 
 -- === Instances === --
 
+-- Ptr type instances
+
+type instance Index  (Ptr i) = i
+instance      HasIdx (Ptr i) where idx = wrapped'
+instance      HasPtr (Ptr i) where ptr = id
+
+-- Ref type instances
+
+type instance Unlayered  (Ref a) = a
+type instance Destructed (Ref a) = a
+type instance Target     (Ref a) = a
+type instance Index      (Ref a) = Index (Unwrapped (Ref a))
+instance      HasRef     (Ref a) where ref = id
+instance      HasIdx     (Ref a) where idx = ptr ∘ idx
+instance      HasPtr     (Ref a) where ptr = wrapped'
+
+-- Ref construction
+
+instance (MonadGraphBuilder n e m, Castable a n) => Constructor m (Ref (Node a)) where 
+    construct n = Ref ∘ Ptr <$> Graph.modify (nodes $ swap ∘ ixed add (cast ast)) where
+        ast = unwrap' n :: a
+
+instance (MonadGraphBuilder n e m, Castable (Edge src tgt) e) => Constructor m (Ref (Edge src tgt)) where 
+    construct e = Ref ∘ Ptr <$> Graph.modify (edges $ swap ∘ ixed add (cast e)) where
+
+instance Constructor m (Ref ref) => LayerConstructor m (Ref ref) where
+    constructLayer = construct ; {-# INLINE constructLayer #-}
+
+-- Ref reading / writing
+
 instance (MonadGraphBuilder n e m, Castable n a) => Reader m (Node a) where
-    read ref = do
-        g <- Graph.get
-        let idx = unwrap' $ unwrap' ref
-            val = index_ idx $ g ^. nodes
-        return $ Node $ cast val
-    {-# INLINE read #-}
+    read ref = Node ∘ cast ∘ index_ (ref ^. idx) ∘ view nodes <$> Graph.get ; {-# INLINE read #-}
 
 instance (MonadGraphBuilder n e m, Castable a n) => Writer m (Node a) where
-    write ref val = do
-        let idx = unwrap' $ unwrap' ref
-        Graph.modify_ $ nodes %~ unchecked inplace insert_ idx (cast $ unwrap' val)
+    write ref val = Graph.modify_ $ nodes %~ unchecked inplace insert_ (ref ^. idx) (cast $ unwrap' val) ; {-# INLINE write #-}
+
+-- Conversions
+
+instance Castable a a' => Castable (Ref a) (Ref a') where cast = rewrap ; {-# INLINE cast #-}
 
 
-
-----------------------------------
--- === Network Declarations === --
-----------------------------------
+--------------------------------
+-- === Network Structures === --
+--------------------------------
 
 data Network (ls :: [*]) = Network
 
-data Link   a = Link (Ref a) (Ref a) deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
-data Node   a = Node a               deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
+newtype Node       a = Node a                   deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
+data    Edge src tgt = Edge (Ref src) (Ref tgt) deriving (Show, Eq, Ord)
+type    Link       a = Edge a a
+
+makeWrapped ''Node
+
+
+-- === Utils === --
+
+edge :: Ref (Node src) -> Ref (Node tgt) -> Edge src tgt
+edge src tgt = Edge (rewrap src) (rewrap tgt)
+
+connection :: (LayerConstructor m c, Register Connection c m, Unlayered c ~ Edge src tgt) => Ref (Node src) -> Ref (Node tgt) -> m c
+connection src tgt = register Connection =<< constructLayer (edge src tgt)
 
 
 -- === Instances === --
 
-makeWrapped ''Node
 type instance Unlayered (Node a) = a
 instance      Layered   (Node a)
 
 instance Monad m => LayerConstructor m (Node a) where
     constructLayer = return ∘ Node ; {-# INLINE constructLayer #-}
 
+instance (Castable (Ref src) (Ref src'), Castable (Ref tgt) (Ref tgt')) => Castable (Edge src tgt) (Edge src' tgt') where 
+    cast (Edge src tgt) = Edge (cast src) (cast tgt) ; {-# INLINE cast #-}
 
-type instance Unlayered (Ref a) = a
-instance (MonadGraphBuilder n e m, Castable a n) => LayerConstructor m (Ref (Node a)) where
-    constructLayer n = Ref ∘ Ptr <$> Graph.modify (nodes $ swap ∘ ixed add (cast ast)) where
-        ast = unwrap' n :: a
-
+instance Castable a a' => Castable (Node a) (Node a') where
+    cast = wrapped %~ cast
 
 
 ---------------------------
@@ -373,33 +424,38 @@ type instance Layout (Network ls) term rt = Link (ls :< TermWrapper term rt)
 -- === Node constructors === --
 -------------------------------
 
-star :: (Register Element a m, SmartCons Star (Uncovered a), CoverConstructor m a) => m a
-star = register Element =<< constructCover (cons Star)
+star :: (SmartCons Star (Uncovered a), Register Element a m, CoverConstructor m a, MonadSelfBuilder s m, Castable a s) => m a
+star = register Element =<< buildAbsMe (constructCover $ cons Star)
 
-star_draft :: (Register Element a m, CoverConstructor m a, Uncovered a ~ Draft Static ls) => m a
+star_draft :: (Uncovered a ~ Draft Static ls, Register Element a m, CoverConstructor m a, MonadSelfBuilder s m, Castable a s) => m a
 star_draft = star 
+
+--unify a b = do
+
+--    ca  <- connection a out
+--    cb  <- connection b out
+--    out <- registerNode =<< buildMe (constructCover (unifyx (convert ca) (convert cb)))
+--    return out
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
 -- TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST --
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-type NetGraph = Graph ('[Note] :< Raw) Int
+type NetGraph = Graph ('[Note] :< Raw) (Link ('[Note] :< Raw))
 
 buildNetwork  = runIdentity ∘ buildNetworkM
 buildNetworkM = rebuildNetworkM def
-rebuildNetworkM (net :: NetGraph) = -- flip Self.evalT (undefined :: Netref Node (Static Draft))
-                                   -- ∘ flip Type.evalT (Nothing :: Maybe (Netref Node (Static Draft)))
-                                  --constrainTypeEq Element (Proxy :: Proxy (Ref $ Node ('[Note] :< Draft Static)))
-                                  constrainTypeM3 Element (Proxy :: Proxy (Ref $ Node ('[Note] :< n)))
-                                   -- ∘ constrainType Edge (Proxy :: Proxy (Netref Edge e))
+rebuildNetworkM (net :: NetGraph) = flip Self.evalT (undefined ::        Ref $ Node ('[Note] :< Raw))
+                                  ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node ('[Note] :< Raw)))
+                                  ∘ constrainTypeM1 Connection (Proxy :: Proxy $ Ref c)
+                                  ∘ constrainTypeM3 Element    (Proxy :: Proxy $ Ref $ Node ('[Note] :< n))
                                   ∘ flip Graph.runT net
--- {-# INLINE   buildNetworkM #-}
--- {-# INLINE rebuildNetworkM #-}
+{-# INLINE   buildNetworkM #-}
+{-# INLINE rebuildNetworkM #-}
 
-foo :: (Ref $ Node ('[Note] :< Draft Static), NetGraph)
-foo = runIdentity
-    $ rebuildNetworkM def
+foo :: IO (Ref $ Node ('[Note] :< Draft Static), NetGraph)
+foo = rebuildNetworkM def
     $ do
     s <- star_draft
     sv <- read s
@@ -407,6 +463,9 @@ foo = runIdentity
 
     star_draft
     star_draft
+    c <- connection s s
+
+    return s
     --star_draft
 
 
@@ -416,12 +475,12 @@ mytest = do
 
         --s1' = Shell (Layer "oh" (Cover s1)) :: '[Note] :< (Term (Network '[Note]) Draft Static)
 
-        u1 = cons $ Unify (Link (Ref (Ptr 0)) (Ref (Ptr 1)) :: Link ('[Note] :< Draft Static)) 
-                          (Link (Ref (Ptr 0)) (Ref (Ptr 1)) :: Link ('[Note] :< Draft Static)) 
+        u1 = cons $ Unify (Edge (Ref (Ptr 0)) (Ref (Ptr 1)) :: Link ('[Note] :< Draft Static)) 
+                          (Edge (Ref (Ptr 0)) (Ref (Ptr 1)) :: Link ('[Note] :< Draft Static)) 
            :: Draft Static '[Note]
         --u1 = cons $ Unify (Link (Ptr 0) (Ptr 1) :: Link ('[Note] :< (Draft Static))) (Link (Ptr 0) (Ptr 1) :: Link ('[Note] :< (Draft Static))) :: Draft Static
 
-        (s2, g) = foo
+    (s2, g) <- foo
     print s2
     print g
 

@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP                    #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE UndecidableInstances   #-}
+{-# LANGUAGE RecursiveDo            #-}
 
 module Luna.Syntax.Model.Builder.Self where
 
@@ -23,7 +24,7 @@ newtype SelfBuilderT s m a = SelfBuilderT STATE_DEF(s,m,a)
                  , MonadFix, HS.GhcMonad, HS.ExceptionMonad, HS.HasDynFlags, Catch.MonadMask
                  , Catch.MonadCatch, Catch.MonadThrow)
 
-class Monad m => MonadSelfBuilder s m | m -> s where
+class MonadFix m => MonadSelfBuilder s m | m -> s where
     get :: m s
     put :: s -> m ()
 
@@ -77,7 +78,7 @@ instance Wrapped   (SelfBuilderT s m a) where
 
 -- Basic monads
 
-instance Monad m => MonadSelfBuilder s (SelfBuilderT s m) where
+instance MonadFix m => MonadSelfBuilder s (SelfBuilderT s m) where
     get = SelfBuilderT State.get
     put = SelfBuilderT . State.put
 
@@ -85,7 +86,7 @@ instance State.MonadState s m => State.MonadState s (SelfBuilderT s m) where
     get = SelfBuilderT (lift State.get)
     put = SelfBuilderT . lift . State.put
 
-instance {-# OVERLAPPABLE #-} (MonadSelfBuilder s m, MonadTrans t, Monad (t m)) => MonadSelfBuilder s (t m) where
+instance {-# OVERLAPPABLE #-} (MonadSelfBuilder s m, MonadTrans t, MonadFix (t m)) => MonadSelfBuilder s (t m) where
     get = lift get
     put = lift . put
 
@@ -97,3 +98,15 @@ self = get
 
 setSelf :: MonadSelfBuilder s m => s -> m ()
 setSelf = put
+
+buildMe :: MonadSelfBuilder a m => m a -> m a
+buildMe f = mdo
+    setSelf me
+    me <- f
+    return me
+
+buildAbsMe :: (Castable a s, MonadSelfBuilder s m) => m a -> m a
+buildAbsMe f = mdo
+    setSelf (cast me)
+    me <- f
+    return me
