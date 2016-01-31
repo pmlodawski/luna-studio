@@ -10,7 +10,7 @@
 
 module Tmp2 where
 
-import Prologue hiding (simple, empty, Indexable, Simple, cons, lookup, index, children, Cons, Ixed, Repr, repr, minBound, maxBound, (#), assert, Index)
+import Prologue hiding (simple, empty, Indexable, Simple, cons, lookup, index, children, Cons, Ixed, Repr, repr, minBound, maxBound, (#), assert, Index, read)
 
 import Data.Record hiding (Layout)
 
@@ -33,7 +33,7 @@ import qualified Luna.Syntax.Model.Graph as Graph
 
 import Data.Construction
 
-import Control.Monad.Reader
+--import Control.Monad.Reader
 
 import qualified Luna.Syntax.Model.Builder.Type as Type
 import           Luna.Syntax.Model.Builder.Type (MonadTypeBuilder, TypeBuilder, TypeBuilderT)
@@ -157,14 +157,49 @@ instance                  Register t a Identity                    where registe
 
 
 
+
+
+
+
+------------------------------
+-- === Graph references === --
+------------------------------
+
+-- === Definitions === --
+
+data Ptr  i a = Ptr i           deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
+data Ref    a = Ref (Ptr Int a) deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
+
+makeWrapped ''Ptr
+makeWrapped ''Ref
+
+class Reader m a where read  :: Ref a -> m a
+class Writer m a where write :: Ref a -> a -> m ()
+
+
+-- === Instances === --
+
+instance (MonadGraphBuilder n e m, Castable n a) => Reader m (Node a) where
+    read ref = do
+        g <- Graph.get
+        let idx = unwrap' $ unwrap' ref
+            val = index_ idx $ g ^. nodes
+        return $ Node $ cast val
+    {-# INLINE read #-}
+
+instance (MonadGraphBuilder n e m, Castable a n) => Writer m (Node a) where
+    write ref val = do
+        let idx = unwrap' $ unwrap' ref
+        Graph.modify_ $ nodes %~ unchecked inplace insert_ idx (cast $ unwrap' val)
+
+
+
 ----------------------------------
 -- === Network Declarations === --
 ----------------------------------
 
 data Network (ls :: [*]) = Network
 
-data Ptr  i a = Ptr i                deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
-data Ref    a = Ref  (Ptr Int a)     deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
 data Link   a = Link (Ref a) (Ref a) deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
 data Node   a = Node a               deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
 
@@ -183,7 +218,6 @@ type instance Unlayered (Ref a) = a
 instance (MonadGraphBuilder n e m, Castable a n) => LayerConstructor m (Ref (Node a)) where
     constructLayer n = Ref ∘ Ptr <$> Graph.modify (nodes $ swap ∘ ixed add (cast ast)) where
         ast = unwrap' n :: a
-
 
 
 
@@ -207,6 +241,8 @@ newtype Draft rt (ls :: [*]) = Draft (Term (Network ls) Term.Draft rt) deriving 
 -- === Instances === --
 
 -- Wrappers
+
+makeWrapped ''Raw
 
 makeWrapped ''Lit
 makeWrapped ''Val
@@ -238,7 +274,17 @@ instance IsRecord (Draft rt ls) where asRecord = wrapped' ∘ asRecord
 
 -- Conversions
 
-instance Castable (Draft rt ls) (Raw ls) where cast = Raw ∘ cast ∘ unwrap' ; {-# INLINE cast #-}
+instance Castable (Lit   rt ls) (Raw ls) where cast = wrap' ∘ cast ∘ unwrap' ; {-# INLINE cast #-}
+instance Castable (Val   rt ls) (Raw ls) where cast = wrap' ∘ cast ∘ unwrap' ; {-# INLINE cast #-}
+instance Castable (Thunk rt ls) (Raw ls) where cast = wrap' ∘ cast ∘ unwrap' ; {-# INLINE cast #-}
+instance Castable (Expr  rt ls) (Raw ls) where cast = wrap' ∘ cast ∘ unwrap' ; {-# INLINE cast #-}
+instance Castable (Draft rt ls) (Raw ls) where cast = wrap' ∘ cast ∘ unwrap' ; {-# INLINE cast #-}
+
+instance Castable (Raw ls) (Lit   rt ls) where cast = wrap' ∘ cast ∘ unwrap' ; {-# INLINE cast #-}
+instance Castable (Raw ls) (Val   rt ls) where cast = wrap' ∘ cast ∘ unwrap' ; {-# INLINE cast #-}
+instance Castable (Raw ls) (Thunk rt ls) where cast = wrap' ∘ cast ∘ unwrap' ; {-# INLINE cast #-}
+instance Castable (Raw ls) (Expr  rt ls) where cast = wrap' ∘ cast ∘ unwrap' ; {-# INLINE cast #-}
+instance Castable (Raw ls) (Draft rt ls) where cast = wrap' ∘ cast ∘ unwrap' ; {-# INLINE cast #-}
 
 
 
@@ -355,7 +401,10 @@ foo :: (Ref $ Node ('[Note] :< Draft Static), NetGraph)
 foo = runIdentity
     $ rebuildNetworkM def
     $ do
-    star_draft
+    s <- star_draft
+    sv <- read s
+    write s sv
+
     star_draft
     star_draft
     --star_draft
