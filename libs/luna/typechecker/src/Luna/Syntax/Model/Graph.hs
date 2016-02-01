@@ -132,9 +132,9 @@ instance State.MonadState s m => State.MonadState s (GraphBuilderT n e m) where
     get = GraphBuilderT (lift State.get)
     put = GraphBuilderT . lift . State.put
 
---instance {-# OVERLAPPABLE #-} (MonadGraphBuilder n e m, MonadTrans t, Monad (t m)) => MonadGraphBuilder n e (t m) where
---    get = lift get
---    put = lift . put
+instance {-# OVERLAPPABLE #-} (MonadGraphBuilder n e m, MonadTrans t, Monad (t m)) => MonadGraphBuilder n e (t m) where
+    get = lift get
+    put = lift . put
 
 runT  ::            GraphBuilderT n e m a -> Graph n e -> m (a, Graph n e)
 evalT :: Monad m => GraphBuilderT n e m a -> Graph n e -> m a

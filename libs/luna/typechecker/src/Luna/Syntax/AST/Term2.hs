@@ -9,7 +9,7 @@ import Prologue hiding (Cons, Swapped)
 import Data.Base
 import Data.Record            hiding (ASTRecord, Variants, Layout)
 import qualified Data.Record as Record
-import Luna.Syntax.AST.Layout (ToStatic, ToDynamic, ByLayout)
+import Luna.Syntax.AST.Layout (ToStatic, ToDynamic)
 import Type.Container
 import Type.Cache.TH          (cacheHelper, cacheType)
 import Type.Map
@@ -102,9 +102,6 @@ data    Blank     = Blank                deriving (Show, Eq, Ord)
 
 -- === Helpers === --
 
--- FIXME[WD]: poprawic typ oraz `WithElement_` (!)
-inputs :: forall r (t :: * -> *) a. WithElement_ (TFoldable (t (r t))) (r t) => r t -> [t (r t)]
-inputs r = withElement_ (p :: P (TFoldable (t (r t)))) (foldrT ((:) :: t (r t) -> [t (r t)] -> [t (r t)]) []) r
 
 
 -- NFunctor and TFunctor allow mapping components over the `n` and `t` param type respectively.
@@ -124,6 +121,10 @@ instance {-# OVERLAPPABLE #-} t ~ t' => TFoldable t (Arrow t') where foldrT = fo
 instance {-# OVERLAPPABLE #-} TFoldable t (Var  n) where foldrT _ = const
 instance {-# OVERLAPPABLE #-} TFoldable t (Cons n) where foldrT _ = const
 instance {-# OVERLAPPABLE #-} TFoldable t Blank    where foldrT _ = const
+
+instance {-# OVERLAPPABLE #-} TFoldable t Star   where foldrT _ = const
+instance {-# OVERLAPPABLE #-} TFoldable t Str    where foldrT _ = const
+instance {-# OVERLAPPABLE #-} TFoldable t Number where foldrT _ = const
 
 
 -- === Instances ===
@@ -190,16 +191,22 @@ instance           TFunctor t r (Cons  n   ) (Cons  n  ) where fmapT = flip cons
 instance           TFunctor t r Blank        Blank       where fmapT = flip const              ; {-# INLINE fmapT #-}
 
 
+
+
+
+type family LayoutType a
 ---------------------------
 ---------------------------
 
 
 
 
-newtype ASTRecord (groups :: [*]) (variants :: [*]) (t :: *) d = ASTRecord d deriving (Show, Eq, Ord)
+newtype ASTRecord (groups :: [*]) (variants :: [*]) t d = ASTRecord d deriving (Show, Eq, Ord)
+
 
 -- === Instances === --
 
+--type instance LayoutType (ASTRecord gs vs t d) = t
 
 type instance Props Variant (ASTRecord gs vs t d) = vs
 type instance Props Group   (ASTRecord gs vs t d) = gs
@@ -287,7 +294,7 @@ type family SubRuntimeGroups' rt t gs where
   SubRuntimeGroups' rt t '[g]      = ApplySubRuntimes     rt t g
   SubRuntimeGroups' rt t (g ': gs) = ApplySubSemiRuntimes rt t g <> SubRuntimeGroups' rt t gs
 
-type NameByRuntime rt d = ByLayout rt Str d
+type NameByRuntime rt d = Runtime.ByLayout rt Str d
 
 
 -- === Instances === --

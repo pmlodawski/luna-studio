@@ -9,8 +9,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
-import Prologue             hiding (cons)
-import Luna.Syntax.AST.Term2
+import Prologue              hiding (cons, read)
+import Luna.Syntax.AST.Term2 hiding (Lit, Val, Thunk, Expr, Draft, Target, Source, source, target)
+import qualified Luna.Syntax.AST.Term2 as Term
 import Tmp2
 import Luna.Passes.Diagnostic.GraphViz
 import Data.Layer.Cover
@@ -18,9 +19,9 @@ import Data.Record hiding (Layout)
 import Luna.Syntax.AST.Layout (Static, Dynamic)
 
 
-renderAndOpen lst = do
-    flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
-    open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
+--renderAndOpen lst = do
+--    flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
+--    open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
 
 
 title s = putStrLn $ "\n" <> "-- " <> s <> " --"
@@ -32,81 +33,94 @@ data MyGraph (t :: * -> *) = MyGraph deriving (Show)
 
 type instance Layout (MyGraph t) term rt = t (Term (MyGraph t) term rt) 
 
+
+foo :: IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
+foo = buildNetworkM
+    $ do
+    -- TODO[WD]: remove this hack
+    ----------------------------------------
+    -- !!! KEEP THIS ON THE BEGINNING !!! --
+    ----------------------------------------
+    --- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv ---
+    s <- star
+    --- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ---
+
+    title "basic element building"
+    s1 <- star
+    s2 <- star
+    print s1
+
+    title "reading node references"
+    s1_v <- read s1
+    s2_v <- read s2
+    print s1_v
+
+    title "manual connection builing"
+    c1 <- connection s1 s2
+
+    title "reading connection references"
+    c1_v <- read c1
+    print c1_v
+
+    title "edge following"
+    c1_tgt <- follow c1
+    when (c1_tgt /= s2) $ fail "reading is broken!"
+    print "ok!"
+
+    title "pattern matching"
+    print $ uncover s1_v
+    print $ caseTest (uncover s1_v) $ do
+        match $ \Star -> "its a star! <3"
+        match $ \ANY  -> "something else!"
+
+    title "complex element building"
+    u1 <- unify s1 s2
+    print u1
+    u1_v <- read u1
+
+    title "inputs reading"
+    let u1_ins = inputs (uncover u1_v)
+    print u1_ins
+
+    title "params reading"
+    let s1t = s1_v ^. attr Type
+        s1s = s1_v ^. attr Succs
+    print s1t
+    print s1s
+
+
+    return s
+
+
 main :: IO ()
 main = do
+    (s2, g) <- foo
+    print s2
+    print g
 
-    --let a = cons Star :: Lit IDT
-    --print a
+--data IDT a = IDT a deriving (Show)
 
-    --let s1 = cons T2.Star :: T2.Term (MyGraph IDT) T2.Draft Runtime.Static
-    --let s2 = cons T2.Star :: T2.Term (MyGraph IDT) T2.Draft Runtime.Static
-    --let u1 = cons (T2.Unify (IDT s1) (IDT s2)) :: T2.Term (MyGraph IDT) T2.Draft Runtime.Static
-    --let u2 = cons (T2.Unify (IDT u1) (IDT u1)) :: T2.Term (MyGraph IDT) T2.Draft Runtime.Static
+data G = G deriving (Show)
+type instance Layout G ast rt = IDT (Term G ast rt)
 
-    --print u2
+test :: forall inp x y. (inp ~ Term.Term G Term.Draft Static
+                        -- , y ~ '[]
+                        --, y ~ (RecordOf inp ##. Variant)
+                        , x ~ IDT (Term G Term.Draft Static)
+                        ) => x -> String
+test _ = "ala" where
+    a   = cons $ Star                  :: Term.Term G Term.Draft Static
+    u   = cons $ Unify (IDT a) (IDT a) :: Term.Term G Term.Draft Static
+    foo = withElement_ (p :: P (TFoldable x)) (foldrT ((:) :: x -> [x] -> [x]) []) u
 
-    --print $ caseTest u2 $ do
-    --    match $ \(T2.Unify a b) -> "unify!"
-    --    match $ \ANY            -> "Something else"
-
-    mytest
-    --let u1 = cons T2. :: T2.Term Graph T2.Lit Runtime.Static
-    --print a'
-
-    --g <- buildNetworkM $ do
-    --    title "basic element building"
-    --    (s1 :: _) <- star
-    --    (s2 :: _) <- star
-    --    print s1
-
-    --    title "reading node references"
-    --    (s1_v :: _) <- readRef s1
-    --    (s2_v :: _) <- readRef s2
-    --    print (uncover s1_v :: _)
-
-    --    title "manual connection builing"
-    --    (c1 :: _) <- connection s1 s2
-    --    print c1
-
-    --    title "reading connection references"
-    --    c1_v <- readRef c1
-    --    print c1_v
-
-    --    title "edge following"
-    --    c1_tgt <- follow c1_v
-    --    when (c1_tgt /= s2_v) $ fail "reading is broken!"
-
-    --    title "pattern matching"
-    --    print $ caseTest (uncover s1_v) $ do
-    --        match $ \(Lit l)  -> caseTest l $ do
-    --            match $ \Star -> "its a star! <3"
-    --            match $ \ANY  -> "some literal"
-    --        match $ \ANY      -> "something else!"
-
-    --    title "complex element building"
-    --    u1 <- unify s1 s2
-    --    print u1
-    --    u1_v <- readRef u1
-
-    --    title "inputs reading"
-    --    let u1_ins = inputs (uncover u1_v)
-    --    print u1_ins
-
-    --    title "params reading"
-    --    let s1t = s1_v ^. (access Type)
-    --        s1s = s1_v ^. (access Successors)
-    --    print s1t
-    --    print s1s
+--test2 :: forall x ls. x ~ Ref (Link (ls :< Draft Static)) => Draft Static ls -> [x]
 
 
-    --    return ()
-
-
-
-    --renderAndOpen [("g", g)]
-
-    return ()
-
+--test :: forall x. x -> String
+--test _ = "ala" where
+--    a   = cons $ Var (Str "a") :: Static Draft IDT
+--    u   = cons $ Unify (IDT a) (IDT a) :: Static Draft IDT
+--    foo = withElement_ (p :: P (TFoldable x)) (foldrT ((:) :: x -> [x] -> [x]) []) u
 
 -------------------------
 -- === Benchmarks === ---

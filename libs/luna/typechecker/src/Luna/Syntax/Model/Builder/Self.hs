@@ -110,3 +110,13 @@ buildAbsMe f = mdo
     setSelf (cast me)
     me <- f
     return me
+
+-- FIXME[WD]: refactor the name and use it while constructing graphs instead of buildMe and buildAbsMe
+buildMe2 :: MonadFix m => SelfBuilderT a m a -> m a
+buildMe2 = mfix ∘ evalT
+
+-- <=>
+
+--buildMe2 f = mdo
+--    me <- evalT f me
+--    return me
