@@ -432,22 +432,40 @@ type instance Layout (Network ls) term rt = Ref $ Link (ls :< TermWrapper term r
 
 
 
--------------------------------
--- === Node constructors === --
--------------------------------
+-----------------------------------------
+-- === Abstract building utilities === --
+-----------------------------------------
 
-class ElemBuilder el m a where buildElem :: el -> m a
+class    Builder t el m  a where build :: t -> el -> m a
+instance Builder I el m  a where build = impossible ; {-# INLINE build #-}
+instance Builder t I  m  a where build = impossible ; {-# INLINE build #-}
+instance Builder t el IM a where build = impossible ; {-# INLINE build #-}
+--instance Builder t el m  I where build = impossible ; {-# INLINE build #-} -- Commented out because it prevents from working the hack of star_draft etc constructors
+
+
+-- === Utils === --
+
+type ElemBuilder = Builder ELEMENT
+buildElem :: ElemBuilder el m a => el -> m a
+buildElem = build ELEMENT ; {-# INLINE buildElem #-}
+
+
+-- === Instances === --
 
 instance ( SmartCons el (Uncovered a)
          , CoverConstructor m a
          , Register ELEMENT a m
          , MonadSelfBuilder s m
          , Castable a s
-         ) => ElemBuilder el m  a where buildElem el = register ELEMENT =<< buildAbsMe (constructCover $ cons el) ; {-# INLINE buildElem #-}
-instance      ElemBuilder I  m  a where buildElem    = impossible                                                 ; {-# INLINE buildElem #-}
-instance      ElemBuilder el IM a where buildElem    = impossible                                                 ; {-# INLINE buildElem #-}
---instance      ElemBuilder el m  I where buildElem    = impossible                                                 ; {-# INLINE buildElem #-}
+         ) => Builder ELEMENT el m a where 
+    build _ el = register ELEMENT =<< buildAbsMe (constructCover $ cons el)
+    {-# INLINE build #-}
 
+
+
+-------------------------------
+-- === Node constructors === --
+-------------------------------
 
 star :: ElemBuilder Star m a => m a
 star = buildElem Star
