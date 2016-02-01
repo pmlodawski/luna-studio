@@ -32,9 +32,8 @@ import qualified Luna.Syntax.AST.Layout as Layout
 
 -- Cache related pragmas
 #define CACHE(n)       cacheHelper ''n Nothing              ; cacheType ''n Nothing
-#define CACHE_AS(n,cn) cacheHelper ''n (Just Quote cn Quote); cacheType ''n (Just Quote cn Quote)
+#define CACHE_AS(n,cn) cacheHelper ''n (Just cn); cacheType ''n (Just cn)
 #define CHECK_EQ(s,t)  assertTypesEq (Proxy :: Proxy (s)) (Proxy :: Proxy (t))
-#define Quote "
 
 
 -- TODO[WD]: move to issue tracker after releasing Luna to github
@@ -99,12 +98,12 @@ data    Blank     = Blank                deriving (Show, Eq, Ord)
 
 
 ----type family AppNT
-----newtype NT a n t = NT (a 
+----newtype NT a n t = NT (a
 
 --newtype Flipped a t1 t2 = Flipped (a t2 t1) deriving (Show, Eq, Ord)
 
 --instance Functor  (Flipped Acc t) where fmap  f   (Flipped (Acc n t)) = Flipped $ Acc (f n) t
---instance Foldable (Flipped Acc t) where foldr f b (Flipped (Acc n t)) = f n b 
+--instance Foldable (Flipped Acc t) where foldr f b (Flipped (Acc n t)) = f n b
 
 ----data family NT a n t
 ----newtype instance NT (Var   n  ) n t = NT_Var   (Var   n  ) deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
@@ -133,37 +132,37 @@ data    Blank     = Blank                deriving (Show, Eq, Ord)
 --instance Rewrapped (NT_Var   n t) (NT_Var   n' t')
 --instance Wrapped   (NT_Var   n t) where
 --    type Unwrapped (NT_Var   n t) = Var n
---    _Wrapped' = iso (\(NT_Var a) -> a) NT_Var         
+--    _Wrapped' = iso (\(NT_Var a) -> a) NT_Var
 
 --instance Rewrapped (NT_Cons  n t) (NT_Cons  n' t')
 --instance Wrapped   (NT_Cons  n t) where
 --    type Unwrapped (NT_Cons  n t) = Cons n
---    _Wrapped' = iso (\(NT_Cons a) -> a) NT_Cons        
+--    _Wrapped' = iso (\(NT_Cons a) -> a) NT_Cons
 
 --instance Rewrapped (NT_Arrow n t) (NT_Arrow n' t')
 --instance Wrapped   (NT_Arrow n t) where
 --    type Unwrapped (NT_Arrow n t) = Arrow t
---    _Wrapped' = iso (\(NT_Arrow a) -> a) NT_Arrow       
+--    _Wrapped' = iso (\(NT_Arrow a) -> a) NT_Arrow
 
 --instance Rewrapped (NT_Acc   n t) (NT_Acc   n' t')
 --instance Wrapped   (NT_Acc   n t) where
 --    type Unwrapped (NT_Acc   n t) = Acc n t
---    _Wrapped' = iso (\(NT_Acc a) -> a) NT_Acc         
+--    _Wrapped' = iso (\(NT_Acc a) -> a) NT_Acc
 
 --instance Rewrapped (NT_App   n t) (NT_App   n' t')
 --instance Wrapped   (NT_App   n t) where
 --    type Unwrapped (NT_App   n t) = App t
---    _Wrapped' = iso (\(NT_App a) -> a) NT_App         
+--    _Wrapped' = iso (\(NT_App a) -> a) NT_App
 
 --instance Rewrapped (NT_Unify n t) (NT_Unify n' t')
 --instance Wrapped   (NT_Unify n t) where
 --    type Unwrapped (NT_Unify n t) = Unify t
---    _Wrapped' = iso (\(NT_Unify a) -> a) NT_Unify       
+--    _Wrapped' = iso (\(NT_Unify a) -> a) NT_Unify
 
 --instance Rewrapped (NT_Blank n t) (NT_Blank n' t')
 --instance Wrapped   (NT_Blank n t) where
 --    type Unwrapped (NT_Blank n t) = Blank
---    _Wrapped' = iso (\(NT_Blank a) -> a) NT_Blank       
+--    _Wrapped' = iso (\(NT_Blank a) -> a) NT_Blank
 
 
 --class IsNT a b n t | a -> b, b n t -> a where nt :: Iso' a (b n t)
@@ -400,7 +399,7 @@ type instance Base (Var   n  ) = Proxy Var
 type instance Base (Unify   t) = Proxy Unify
 type instance Base Blank       = Proxy Blank
 
--- 
+--
 
 type instance Base (Lit     t) = Proxy Lit
 type instance Base (Val   l t) = Proxy Val
@@ -534,19 +533,19 @@ instance IsAbstract (Draft l t) where abstracted = iso cast cast
 -- | All possible groups and variants stored as single 64-bit mask:
 -- |   - 9  bits for groups
 -- |   - 36 bits for variants
--- |   - 19 bits free for further extensions  
+-- |   - 19 bits free for further extensions
 
 -- === VariantList === --
 
 type  GroupList t =              '[ {-  0 -} Lit           t
                                   , {-  1 -} Static  Val   t
-                                  , {-  2 -} Dynamic Val   t 
+                                  , {-  2 -} Dynamic Val   t
                                   , {-  3 -} Static  Thunk t
-                                  , {-  4 -} Dynamic Thunk t 
+                                  , {-  4 -} Dynamic Thunk t
                                   , {-  5 -} Static  Term  t
-                                  , {-  6 -} Dynamic Term  t 
+                                  , {-  6 -} Dynamic Term  t
                                   , {-  7 -} Static  Draft t
-                                  , {-  8 -} Dynamic Draft t 
+                                  , {-  8 -} Dynamic Draft t
                                   ]
 type VariantList_MANUAL_CACHE t = [ {-  9 -} Star
                                   , {- 10 -} Str
@@ -589,7 +588,7 @@ type VariantList_MANUAL_CACHE t = [ {-  9 -} Star
 #ifndef CachedTypeFamilies
 
 type VariantList_RULE t = Unique (GatherProps Variant (GroupList t))
-CACHE_AS(VariantList_RULE, VariantList_GEN_CACHE)
+CACHE_AS(VariantList_RULE, "VariantList_GEN_CACHE")
 CHECK_EQ(VariantList_GEN_CACHE IM, VariantList_MANUAL_CACHE IM)
 type VariantList_CACHE t = VariantList_GEN_CACHE t
 
@@ -604,7 +603,7 @@ type VariantList t = VariantList_CACHE t
 -- Layout
 
 type Layout_RULE t = GroupList t <> VariantList t
-CACHE_AS(Layout_RULE, Layout_CACHE)
+CACHE_AS(Layout_RULE, "Layout_CACHE")
 
 type instance Layout (ASTRecord gs vs t d) = Layout_CACHE t
 
@@ -663,7 +662,7 @@ type DecodeMap_MANUAL_CACHE t =
 #ifndef CachedTypeFamilies
 
 type DecodeMap_RULE t = 'Map $ Zip (Layout_CACHE t) (Enumerate (Size (Layout_CACHE t)))
-CACHE_AS(DecodeMap_RULE, DecodeMap_GEN_CACHE)
+CACHE_AS(DecodeMap_RULE, "DecodeMap_GEN_CACHE")
 CHECK_EQ(DecodeMap_GEN_CACHE IM, DecodeMap_MANUAL_CACHE IM)
 type DecodeMap_CACHE t = DecodeMap_GEN_CACHE t
 
@@ -722,7 +721,7 @@ type EncodeMap_MANUAL_CACHE t =
 -- SubGroupRelations
 
 type family MapIndex els (cont :: [*]) where MapIndex '[]       cont = '[]
-                                             MapIndex (e ': es) cont = UnsafeIndex e cont ': MapIndex es cont 
+                                             MapIndex (e ': es) cont = UnsafeIndex e cont ': MapIndex es cont
 
 type family SubGroups       g  where SubGroups       g         = (UniqueFix (SubGroups' g :: [*]) :: [*])
 type family SubGroups'      g  where SubGroups'      g         = GatherSubGroups (Groups g) <> Groups g
@@ -734,7 +733,7 @@ type family MapSubGroupRel gs where MapSubGroupRel '[]       = ('[] :: [(Nat, [N
                                     MapSubGroupRel (g ': gs) = SubGroupRel g ': MapSubGroupRel gs
 
 type SubGroupRelations_RULE = (MapSubGroupRel (GroupList IM) :: [(Nat, [Nat])])
-CACHE_AS(SubGroupRelations_RULE, SubGroupRelations)
+CACHE_AS(SubGroupRelations_RULE, "SubGroupRelations")
 
 -- SubGroupInvRelations
 
@@ -748,7 +747,7 @@ type family MapInverseRel args rels where
     MapInverseRel (a ': as) rels = InverseRel a rels ': MapInverseRel as rels
 
 type SubGroupInvRelations_RULE = (MapInverseRel (Enumerate (Size (GroupList IM))) SubGroupRelations :: [(Nat, [Nat])])
-CACHE_AS(SubGroupInvRelations_RULE, SubGroupInvRelations)
+CACHE_AS(SubGroupInvRelations_RULE, "SubGroupInvRelations")
 
 -- Relation expanders
 
@@ -778,7 +777,7 @@ type family MapEncodeMapRel as where
 -- Final rules
 
 type EncodeMap_RULE t = 'Map $ Zip (VariantList t) (MapEncodeMapRel (VariantList IM))
-CACHE_AS(EncodeMap_RULE, EncodeMap_GEN_CACHE)
+CACHE_AS(EncodeMap_RULE, "EncodeMap_GEN_CACHE")
 CHECK_EQ(EncodeMap_GEN_CACHE IM, EncodeMap_MANUAL_CACHE IM)
 type EncodeMap_CACHE t = EncodeMap_GEN_CACHE t
 

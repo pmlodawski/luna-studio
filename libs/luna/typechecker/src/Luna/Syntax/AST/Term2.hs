@@ -34,9 +34,8 @@ import           Luna.Syntax.AST.Layout (Static, Dynamic)
 
 -- Cache related pragmas
 #define CACHE(n)       cacheHelper ''n Nothing              ; cacheType ''n Nothing
-#define CACHE_AS(n,cn) cacheHelper ''n (Just Quote cn Quote); cacheType ''n (Just Quote cn Quote)
+#define CACHE_AS(n,cn) cacheHelper ''n (Just cn); cacheType ''n (Just cn)
 #define CHECK_EQ(s,t)  assertTypesEq (Proxy :: Proxy (s)) (Proxy :: Proxy (t))
-#define Quote "
 
 
 -- TODO[WD]: move to issue tracker after releasing Luna to github
@@ -327,7 +326,7 @@ type instance Props p (Term t term rt) = Props p (RecordOf (Term t term rt))
 -- Conversions
 instance (Unwrapped (Term t term rt) ~ ASTRecord gs vs t' d) => Convertible (Term t term rt) (ASTRecord gs vs t' d) where convert = unwrap'
 
-instance Convertible (Unwrapped (Term t term rt)) Data => Castable    (Term t term rt) Data 
+instance Convertible (Unwrapped (Term t term rt)) Data => Castable    (Term t term rt) Data
 instance Convertible (Unwrapped (Term t term rt)) Data => Convertible (Term t term rt) Data where convert = convert ∘ unwrap'
 instance Castable    Data (Unwrapped (Term t term rt)) => Castable    Data (Term t term rt) where cast    = wrap'   ∘ cast
 
@@ -348,7 +347,7 @@ instance BiCastable (Abstract (Term t term rt)) (Term t term rt) => HasAbstract 
 -- | All possible groups and variants stored as single 64-bit mask:
 -- |   - 9  bits for groups
 -- |   - 36 bits for variants
--- |   - 19 bits free for further extensions  
+-- |   - 19 bits free for further extensions
 
 -- === VariantList === --
 
@@ -419,7 +418,7 @@ type VariantList t = VariantList_CACHE t
 -- Layout
 
 type Layout_RULE t = GroupList t <> VariantList t
-CACHE_AS(Layout_RULE, Layout_CACHE)
+CACHE_AS(Layout_RULE, "Layout_CACHE")
 
 type instance Record.Layout (ASTRecord gs vs t d) = Layout_CACHE t
 
@@ -539,7 +538,7 @@ FIXME
 ---- SubGroupRelations
 
 --type family MapIndex els (cont :: [*]) where MapIndex '[]       cont = '[]
---                                             MapIndex (e ': es) cont = UnsafeIndex e cont ': MapIndex es cont 
+--                                             MapIndex (e ': es) cont = UnsafeIndex e cont ': MapIndex es cont
 
 --type family SubGroups       g  where SubGroups       g         = (UniqueFix (SubGroups' g :: [*]) :: [*])
 --type family SubGroups'      g  where SubGroups'      g         = GatherSubGroups (Groups g) <> Groups g
