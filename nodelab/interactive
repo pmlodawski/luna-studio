@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TODO: use `stack ghci`
+
 export PATH=`stack path --bin-path`
 
 ghcjs  -package-db $(stack path --snapshot-pkg-db) \

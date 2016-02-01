@@ -14,7 +14,7 @@
 module Data.Text.CodeBuilder.Doc where
 
 import Prelude ()
-import Flowbox.Prelude
+import Flowbox.Prelude hiding (Empty)
 
 import           GHC.Int (Int64)
 import           Control.Monad.State
@@ -26,7 +26,7 @@ import           Data.Text.Lazy.Builder   (toLazyText, fromLazyText)
 -- Indentation handling
 ------------------------------------------------------------------------
 
-data IndentState = IndentState { _indent :: !Int64 
+data IndentState = IndentState { _indent :: !Int64
                                , _col    :: !Int64
                                } deriving (Show)
 

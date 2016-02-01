@@ -1,4 +1,4 @@
-resolver: lts-3.14
+resolver: lts-4.1
 
 packages:
 - ../../libs/batch/plugins/luna-empire
@@ -34,5 +34,8 @@ extra-deps:
 - saltine-0.0.0.4
 - string-qq-0.0.2
 - typelevel-1.0.2
+- cond-0.4.1.1
+- tuple-0.3.0.2
+- OneTuple-0.2.1
 
 local-bin-path: ../../dist/bin

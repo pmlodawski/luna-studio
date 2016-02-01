@@ -1,12 +1,12 @@
 resolver:
-  name: nbo-gui-20160122
-  location: https://bitbucket.org/NewByteOrder/stack-snapshots/raw/master/nbo-gui-20160122.yaml
+  name: nbo-gui-20160201
+  location: https://bitbucket.org/NewByteOrder/stack-snapshots/raw/master/nbo-gui-20160201.yaml
 compiler-check: match-exact
 setup-info:
   ghcjs:
     source:
-      ghcjs-0.2.0.20151020_ghc-7.10.2:
-        url: "https://s3-eu-west-1.amazonaws.com/nbo-toolchain/ghcjs/ghcjs-0.2.0.20151020-dupa.tar.gz"
+      ghcjs-0.2.0.20160201_ghc-7.10.3:
+        url: "https://s3-eu-west-1.amazonaws.com/nbo-toolchain/ghcjs/ghcjs-0.2.0.20160201-dupa.tar.gz"
 ghc-options:
   nodelab: -DGHCJS_BROWSER
 packages:

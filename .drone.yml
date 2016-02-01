@@ -1,5 +1,5 @@
 build:
-  image: nbo/ghcjs-gui:20160122
+  image: nbo/ghcjs-gui:20160201
   environment:
     - AWS_ACCESS_KEY_ID=$$AWS_ACCESS_KEY_ID
     - AWS_SECRET_ACCESS_KEY=$$AWS_SECRET_ACCESS_KEY
@@ -14,8 +14,8 @@ build:
     - cd $DRONE_DIR/nodelab
     - npm install
     - bower install --allow-root
-    - mkdir -p .stack-work/install/x86_64-osx/custom-nbo-gui-20160122/ghcjs-0.2.0.20151020_ghc-7.10.2/bin/nodelab.jsexe/
-    - touch .stack-work/install/x86_64-osx/custom-nbo-gui-20160122/ghcjs-0.2.0.20151020_ghc-7.10.2/bin/nodelab.jsexe/all.js
+    - mkdir -p .stack-work/install/x86_64-osx/custom-nbo-gui-20160201/ghcjs-0.2.0.20151020_ghc-7.10.3/bin/nodelab.jsexe/
+    - touch .stack-work/install/x86_64-osx/custom-nbo-gui-20160201/ghcjs-0.2.0.20151020_ghc-7.10.3/bin/nodelab.jsexe/all.js
     - brunch build # --env production
     - 'if [ "$DRONE_BRANCH" = production -o "$DRONE_BRANCH" = fogger ]; then ./upload_dist.sh; fi'
 
