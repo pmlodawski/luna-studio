@@ -1,10 +1,12 @@
 module Object.Widget.Choice where
 
-import           Utils.PreludePlus hiding (Choice)
+import           Data.Aeson          (ToJSON)
+import           Utils.PreludePlus   hiding (Choice)
 import           Utils.Vector
-import           Object.Widget
+
 import           Object.UITypes
-import           Data.Aeson (ToJSON)
+import           Object.Widget
+import           Object.Widget.Group (Group (..))
 
 data Choice = Choice { _position :: Vector2 Double
                      , _size     :: Vector2 Double
@@ -22,3 +24,6 @@ instance ToJSON          Choice
 instance IsDisplayObject Choice where
     widgetPosition = position
     widgetSize     = size
+
+toGroup :: Choice -> Group
+toGroup c = Group (c ^. position) (c ^. size) True Nothing
