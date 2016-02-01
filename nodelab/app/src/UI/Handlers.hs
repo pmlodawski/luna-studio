@@ -23,6 +23,7 @@ import           Object.Widget.TextBox            (TextBox)
 import           Object.Widget.Toggle             (Toggle)
 import           Object.Widget.Scene              (Scene)
 import           Object.Widget.Label              (Label)
+import           Object.Widget.Plots.ScatterPlot  (ScatterPlot)
 
 import           UI.Widget                        (GenericWidget (..), UIContainer, UIWidget)
 import qualified UI.Widget.Button                 as Button
@@ -36,6 +37,7 @@ import qualified UI.Widget.Port                   as Port
 import qualified UI.Widget.Slider                 as Slider
 import qualified UI.Widget.TextBox                as TextBox
 import qualified UI.Widget.Toggle                 as Toggle
+import qualified UI.Widget.Plots.ScatterPlot      as ScatterPlot
 
 import qualified UI.Handlers.Button               as Button
 import qualified UI.Handlers.Node                 as Node
@@ -71,6 +73,7 @@ buttonType            = typeOf (undefined :: Button)
 listType              = typeOf (undefined :: List)
 sceneType             = typeOf (undefined :: Scene)
 labelType             = typeOf (undefined :: Label)
+scatterPlotType       = typeOf (undefined :: ScatterPlot)
 
 instance HasHandlers State where
     widgetHandlers (CtxDynamic tpe _)
@@ -93,5 +96,6 @@ instance HasHandlers State where
         | tpe ==             listType  = def
         | tpe ==            sceneType  = def
         | tpe ==            labelType  = def
+        | tpe ==      scatterPlotType  = def
 
         | otherwise                    = error $ "Unknown widget type " <> (show tpe)

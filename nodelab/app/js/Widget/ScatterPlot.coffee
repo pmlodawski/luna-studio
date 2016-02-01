@@ -54,11 +54,12 @@ class Group extends BaseWidget
       .attr("height", @height)
       .attr('fill', "#ffffff");
 
-    data = @data.map (val, ix) ->
-        {
-            Index: ix,
-            Value: val
-        };
+    data = @data
+    # .map (val, ix) ->
+#         {
+#             Index: ix,
+#             Value: val
+#    };
 
     myChart = new dimple.chart(svg, data)
     myChart.addCategoryAxis("x", "Index");

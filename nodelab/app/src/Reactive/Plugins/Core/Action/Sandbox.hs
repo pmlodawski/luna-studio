@@ -25,6 +25,7 @@ import qualified Object.Widget.Slider.Continuous  as ContinuousSlider
 import qualified Object.Widget.Slider.Discrete    as DiscreteSlider
 import qualified Object.Widget.TextBox            as TextBox
 import qualified Object.Widget.Toggle             as Toggle
+import qualified Object.Widget.Plots.ScatterPlot  as ScatterPlot
 
 import           Object.Widget.Choice.RadioButton (RadioButton (..))
 import qualified Object.Widget.Choice.RadioButton as RadioButton
@@ -79,6 +80,10 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     UICmd.register_ parent widget def
 
     let widget = Choice.create (Vector2 200 20) "Choice" ["Foo", "Bar", "Baz"] 0
+    UICmd.register parent widget def
+
+    let widget = ScatterPlot.create (Vector2 300 200)
+               & ScatterPlot.dataPoints .~ [(1, 5), (2, 7), (3, 1), (4, 10), (5, 0)]
     UICmd.register parent widget def
 
 
