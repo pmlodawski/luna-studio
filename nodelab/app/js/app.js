@@ -129,6 +129,13 @@ function initCommonWidgets() {
   $$.scene.add($$.selectionBox.mesh);
 }
 
+var redrawTextures = _.throttle(function() {
+  _($$.registry).each(function(e){
+    if (e.redrawTextures !== undefined) e.redrawTextures();
+  });
+  $$.lastFactor = $$.commonUniforms.camFactor.value;
+}, 100);
+
 function render() {
   if (shouldRender) {
     $$.commonUniforms.objectMap.value = 0;
@@ -149,6 +156,10 @@ function render() {
     raycaster.cacheMap();
     shouldRender = false;
   }
+  if($$.commonUniforms.camFactor.value !== $$.lastFactor) {
+    redrawTextures();
+  }
+
   connectionPen.fadeCanvas();
   requestAnimationFrame(render);
 }

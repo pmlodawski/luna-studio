@@ -19,6 +19,7 @@ module.exports = {
   htmlCanvas:     undefined,
   node_searcher:  undefined,
   websocket:      undefined,
+  lastFactor:     1.0,
   registry:       {}
 };
 

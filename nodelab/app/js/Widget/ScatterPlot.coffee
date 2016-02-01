@@ -4,6 +4,8 @@ DOMURL       = window.URL || window.webkitURL || window;
 
 loader = new THREE.TextureLoader();
 
+shouldRender = require('app').shouldRender
+
 class Group extends BaseWidget
   constructor: (widgetId, width, height) ->
     super widgetId, width, height
@@ -55,11 +57,6 @@ class Group extends BaseWidget
       .attr('fill', "#ffffff");
 
     data = @data
-    # .map (val, ix) ->
-#         {
-#             Index: ix,
-#             Value: val
-#    };
 
     myChart = new dimple.chart(svg, data)
     myChart.addCategoryAxis("x", "Index");
@@ -92,25 +89,22 @@ class Group extends BaseWidget
     svg.attr("width",  texWidth)
        .attr("height", texHeight);
     svg.select("g").attr("transform", "scale(" + cf + ")")
-    # console.log(svg[0][0].outerHTML)
 
     svgCode = new Blob([svg[0][0].outerHTML], {
         type: 'image/svg+xml;charset=utf-8'
     });
     url = DOMURL.createObjectURL(svgCode);
-    # console.log(svg[0][0].outerHTML)
     loader.load url, (tex) =>
-      console.log(tex)
       @plotUniforms.map.value = tex
       @plotUniforms.map.value.needsUpdate = true
-      console.log(cf, texWidth, texHeight, tex.image.width, tex.image.height)
       @plot.position.y = texHeight / cf
       @plot.scale.set texWidth / cf, -texHeight / cf , 1.0
-      require('app').shouldRender()
+      shouldRender()
       DOMURL.revokeObjectURL url
 
 
   relayout: ->
     @renderData()
+  redrawTextures: -> @renderData()
 
 module.exports = Group;

@@ -14,5 +14,6 @@ class BaseWidget
     @relayout()
 
   relayout: -> null
+  redrawTextures: -> null
 
 module.exports = BaseWidget
