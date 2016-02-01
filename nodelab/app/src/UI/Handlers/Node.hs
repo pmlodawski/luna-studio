@@ -141,8 +141,12 @@ instance CompositeWidget Model.Node where
         void $ UICmd.register id textBox $ textHandlers id
 
         let offset = Vector2 (-50.0) 35.0
-            label  = Label.Label offset (Vector2 100.0 20.0) Label.Center "?"
+            label  = Label.Label offset (Vector2 100.0 20.0) Label.Center "(pending)"
         void $ UICmd.register id label def
+
+        let offset = Vector2 (-50.0) 55.0
+            group  = Group.create & Group.position .~ offset
+        void $ UICmd.register id group (Layout.verticalLayoutHandler def 0.0)
 
     updateWidget id old model = do
         (controlsId:exprId:nameId:valueId:_) <- UICmd.children id

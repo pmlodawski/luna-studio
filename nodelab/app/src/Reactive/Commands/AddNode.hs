@@ -28,6 +28,7 @@ import qualified Object.Widget.Number.Discrete   as DiscreteNumber
 import qualified Object.Widget.Port              as PortModel
 import           Object.Widget.Toggle            (Toggle (..))
 import qualified Object.Widget.Toggle            as Toggle
+import qualified Object.Widget.Plots.ScatterPlot as ScatterPlot
 import qualified UI.Handlers.Button              as Button
 import qualified UI.Handlers.LabeledTextBox      as LabeledTextBox
 import qualified UI.Handlers.Number.Continuous   as ContinuousNumber
@@ -215,13 +216,42 @@ nodeValueToText (IntValue    v) = Text.pack $ show v
 nodeValueToText (DoubleValue v) = Text.pack $ show v
 nodeValueToText (BoolValue   v) = Text.pack $ show v
 nodeValueToText (StringValue v) = Text.pack v
-nodeValueToText (IntList     v) = Text.pack $ show v
-nodeValueToText (DoubleList  v) = Text.pack $ show v
-nodeValueToText (BoolList    v) = Text.pack $ show v
-nodeValueToText (StringList  v) = Text.pack $ show v
-nodeValueToText v               = Text.pack $ show v
+nodeValueToText (IntList     v) = Text.pack $ "Vector [" <> (show $ length v) <> "]"
+nodeValueToText (DoubleList  v) = Text.pack $ "Vector [" <> (show $ length v) <> "]"
+nodeValueToText (BoolList    v) = Text.pack $ "Vector [" <> (show $ length v) <> "]"
+nodeValueToText (StringList  v) = Text.pack $ "Vector [" <> (show $ length v) <> "]"
+
+removeVisualization :: WidgetId -> Command UIRegistry.State ()
+removeVisualization id = do
+    (_:_:_:_:groupId:_) <- UICmd.children id
+    widgets <- UICmd.children groupId
+    forM_ widgets UICmd.removeWidget
+
+visualizeNodeValue :: WidgetId -> Value -> Command UIRegistry.State ()
+visualizeNodeValue id (IntList     v) = do
+    (_:_:_:_:groupId:_) <- UICmd.children id
+
+    let dataPoints = (\(a,b) -> (fromIntegral a, fromIntegral b)) <$> (zip [1..] v)
+        widget = ScatterPlot.create (Vector2 300 200)
+               & ScatterPlot.dataPoints .~ dataPoints
+    UICmd.register_ groupId widget def
+
+visualizeNodeValue id (DoubleList     v) = do
+    (_:_:_:_:groupId:_) <- UICmd.children id
+
+    let dataPoints = zip [1..] v
+        widget = ScatterPlot.create (Vector2 300 200)
+               & ScatterPlot.dataPoints .~ dataPoints
+    UICmd.register_ groupId widget def
+
+visualizeNodeValue _ _ = return ()
+
+
 
 updateNodeValue :: NodeId -> Value -> Command State ()
 updateNodeValue id val = inRegistry $ do
     widgetId <- nodeIdToWidgetId id
-    forM_ widgetId $ \widgetId -> UICmd.update_ widgetId $ Model.value .~ nodeValueToText val
+    forM_ widgetId $ \widgetId -> do
+        UICmd.update_ widgetId $ Model.value .~ nodeValueToText val
+        removeVisualization widgetId
+        visualizeNodeValue widgetId val
