@@ -1,7 +1,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE PartialTypeSignatures #-}
+-- {-# LANGUAGE PartialTypeSignatures #-}
 
 module Luna.Passes.Diagnostic.GraphViz where
 
@@ -42,12 +42,12 @@ import           Data.Reprx
 
 
 import Luna.Syntax.Model.Graph
-import Tmp
-import Luna.Syntax.AST.Term hiding (Arrow, Node)
+import Tmp2
+import Luna.Syntax.AST.Term2 hiding (Arrow, Node)
 
 
-instance Repr HeaderOnly Data where repr _ = "Data"
-instance Repr HeaderOnly (Draft l v) where repr _ = "Draft"
+--instance Repr HeaderOnly Data where repr _ = "Data"
+--instance Repr HeaderOnly (Draft l v) where repr _ = "Draft"
 
 -- Skin definition
 
@@ -104,8 +104,8 @@ labelAttrs = const []
 --instance LabelAttrs (Labeled2 b (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))) where
 --    labelAttrs = const []
 
---toGraphViz :: _ => Network -> DotGraph String
---toGraphViz net = DotGraph { strictGraph     = False
+toGraphViz :: NetGraph -> DotGraph String
+toGraphViz net = undefined -- DotGraph { strictGraph     = False
 --                          , directedGraph   = True
 --                          , graphID         = Nothing
 --                          , graphStatements = DotStmts { attrStmts = gStyle
@@ -114,9 +114,9 @@ labelAttrs = const []
 --                                                       , edgeStmts = edgeStmts
 --                                                       }
 --                          }
---    where g               = net ^. nodes
---          edges'          = net ^. edges
---          nodesE          = elems g
+    where g               = net ^. nodes
+          edges'          = net ^. edges
+          nodesE          = elems g 
 --          nodes'          = cast <$> nodesE :: [NetCover (Static Draft (RefCover Edge NetCover (Static Draft)))]
 --          nodeIds         = usedIxes g
 --          nodeLabels      = fmap (reprStyled HeaderOnly . uncoat) nodes'

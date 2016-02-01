@@ -33,18 +33,16 @@ data MyGraph (t :: * -> *) = MyGraph deriving (Show)
 
 type instance Layout (MyGraph t) term rt = t (Term (MyGraph t) term rt) 
 
+-- --------------------------------------
+--  !!! KEEP THIS ON THE BEGINNING !!! --
+-- --------------------------------------
+-- - vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv ---
+prebuild :: IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
+prebuild = rebuildNetworkM def $ star
 
-foo :: IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
-foo = buildNetworkM
+foo :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
+foo g = rebuildNetworkM g
     $ do
-    -- TODO[WD]: remove this hack
-    ----------------------------------------
-    -- !!! KEEP THIS ON THE BEGINNING !!! --
-    ----------------------------------------
-    --- vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv ---
-    s <- star
-    --- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ---
-
     title "basic element building"
     s1 <- star
     s2 <- star
@@ -89,38 +87,18 @@ foo = buildNetworkM
     print s1s
 
 
-    return s
+    return s1
 
 
 main :: IO ()
 main = do
-    (s2, g) <- foo
-    print s2
+    (star, g) <- prebuild
+    print star
     print g
+    putStrLn "\n--------------\n"
+    (s,g') <- foo g
+    print g'
 
---data IDT a = IDT a deriving (Show)
-
-data G = G deriving (Show)
-type instance Layout G ast rt = IDT (Term G ast rt)
-
-test :: forall inp x y. (inp ~ Term.Term G Term.Draft Static
-                        -- , y ~ '[]
-                        --, y ~ (RecordOf inp ##. Variant)
-                        , x ~ IDT (Term G Term.Draft Static)
-                        ) => x -> String
-test _ = "ala" where
-    a   = cons $ Star                  :: Term.Term G Term.Draft Static
-    u   = cons $ Unify (IDT a) (IDT a) :: Term.Term G Term.Draft Static
-    foo = withElement_ (p :: P (TFoldable x)) (foldrT ((:) :: x -> [x] -> [x]) []) u
-
---test2 :: forall x ls. x ~ Ref (Link (ls :< Draft Static)) => Draft Static ls -> [x]
-
-
---test :: forall x. x -> String
---test _ = "ala" where
---    a   = cons $ Var (Str "a") :: Static Draft IDT
---    u   = cons $ Unify (IDT a) (IDT a) :: Static Draft IDT
---    foo = withElement_ (p :: P (TFoldable x)) (foldrT ((:) :: x -> [x] -> [x]) []) u
 
 -------------------------
 -- === Benchmarks === ---

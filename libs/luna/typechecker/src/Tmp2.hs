@@ -211,8 +211,19 @@ type family Target a
 class HasPtr   a where ptr   :: Lens' a (Ptr (Index  a))
 class HasRef   a where ref   :: Lens' a (Ref (Target a))
 
-class Reader m a where read  :: Ref a -> m a
-class Writer m a where write :: Ref a -> a -> m ()
+class Monad m => Reader m a where read  :: Ref a -> m a
+class Monad m => Writer m a where write :: Ref a -> a -> m ()
+
+type Modifier m a = (Reader m a, Writer m a)
+
+
+-- === Utils === --
+
+withM :: Modifier m a => Ref a -> (a -> m a) -> m ()
+withM ref f = read ref >>= f >>= write ref
+
+with :: Modifier m a => Ref a -> (a -> a) -> m ()
+with ref = withM ref ∘ (return <$>)
 
 
 -- === Instances === --
@@ -606,7 +617,7 @@ instance (MonadSelfBuilder s m, Ref (Link l) ~ Connection s (Ref $ Node l), Conn
     make = Tagged <$> do
         s <- self
         let tgt = Ref $ Ptr 0 :: Ref $ Node l -- FIXME[WD]: Pure magic. 0 is the ID of Star
-        connection s tgt
+        connection tgt s
 
 
 
@@ -634,17 +645,8 @@ instance ( Monad  m
          , HasAttr Succs src
          ) => Handler t SuccRegister m (Ref (Edge src tgt)) where 
     handler e = do
-        ve <- lift $ read e -- FIXME[WD]: remove the lift
-                            --            it could be handy to disable the magic trans-instance in Graph.hs
-        let Ref (Ptr i) = e
-            src = source ve
-            tgt = target ve
-            Edge _ (Ref (Ptr ii)) = ve
-        when (ii /= 0) $ do
-            vsrc <- lift $ read src
-            lift $ write src (vsrc & attr Succs %~ (e:)) 
-            return ()
-        return ()
+        ve <- lift $ read e -- FIXME[WD]: remove the lift (it could be handy to disable the magic trans-instance in Graph.hs)
+        lift $ with (source ve) $ attr Succs %~ (e:)
     {-# INLINE handler #-}
 
 
@@ -684,6 +686,13 @@ rebuildNetworkM (net :: NetGraph) = flip Self.evalT (undefined ::        Ref $ N
                                   ∘ registerSuccs   CONNECTION
 {-# INLINE   buildNetworkM #-}
 {-# INLINE rebuildNetworkM #-}
+
+rebuildNetworkM_NoSuccessors (net :: NetGraph) 
+    = flip Self.evalT (undefined ::        Ref $ Node NetType)
+    ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node NetType))
+    ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
+    ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref $ Node NetType)
+    ∘ flip Graph.runT net
 
 
 
