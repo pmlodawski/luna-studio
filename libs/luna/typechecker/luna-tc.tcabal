@@ -76,7 +76,7 @@ Library
 
 
 Executable tc-test
-    Main-Is:        Main.hs
+    Main-Is:        InterpreterTest.hs
     Hs-Source-Dirs: test
 
     GHC-Options:    -Wall -O2
@@ -113,6 +113,7 @@ Executable tc-test
                  , container
                  , data-construction
                  , data-layer
+                 , placeholders
                  , errors
                  , flowbox-utils
                  , ghc-prim

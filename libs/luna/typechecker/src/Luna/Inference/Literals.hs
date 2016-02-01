@@ -1,33 +1,29 @@
-{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE GADTs #-}
 
 module Luna.Inference.Literals
     ( assignLiteralTypes
     ) where
 
-import           Control.Monad              (forM_)
-import qualified Data.IntSet                as IntSet
-import           Data.Layer.Coat            (uncoat, Coat, Uncoated, Coated, CoatConstructor)
-import           Data.Variants              (match, case', ANY(..))
-import           Development.Placeholders
-import           Prologue                   hiding (pre, succ, cons)
-import qualified Data.Text.Lazy             as Text
 import           Data.Construction
+import qualified Data.IntSet       as IntSet
+import           Data.Layer.Coat   (CoatConstructor, Coated, Uncoated, uncoat)
+import           Data.Variants     (ANY (..), case', match)
+import           Prologue          hiding (cons, pre, succ)
 
-import           Luna.Syntax.AST.Term       (Draft, Star(..), Val(..))
-import qualified Luna.Syntax.AST.Term       as Term
-import qualified Luna.Syntax.AST.Lit        as Lit
-import qualified Luna.Syntax.Builder        as Builder
-import qualified Luna.Syntax.Repr.Graph     as Graph
-import           Luna.Syntax.Repr.Graph     (Graph, Ref(..), Node(..), Edge, DoubleArc)
+import qualified Luna.Syntax.AST.Lit    as Lit
+import           Luna.Syntax.AST.Term   (Draft, Star (..), Val (..))
+import qualified Luna.Syntax.AST.Term   as Term
+import qualified Luna.Syntax.Builder    as Builder
+import           Luna.Syntax.Repr.Graph (DoubleArc, Edge, Graph, Node (..), Ref (..))
+import qualified Luna.Syntax.Repr.Graph as Graph
 
-import           Luna.Syntax.Builder.Class  (BuilderMonad)
-import qualified Luna.Syntax.Builder.Node   as NodeBuilder
-import qualified Luna.Syntax.Builder.Star   as StarBuilder
-import qualified Luna.Syntax.Builder.Symbol as SymbolBuilder
-import           Luna.Syntax.Repr.Graph     (Edge (Edge), Node, Ref (Ref), TracksSuccs)
-import qualified Luna.Syntax.Repr.Graph     as G
-import qualified Luna.Syntax.AST.Typed      as Typed
-import           Luna.Syntax.AST.Typed      (HasType)
+import           Luna.Syntax.AST.Typed     (HasType)
+import qualified Luna.Syntax.AST.Typed     as Typed
+import           Luna.Syntax.Builder.Class (BuilderMonad)
+import qualified Luna.Syntax.Builder.Node  as NodeBuilder
+import qualified Luna.Syntax.Builder.Star  as StarBuilder
+import           Luna.Syntax.Repr.Graph    (Edge (Edge), TracksSuccs)
+import qualified Luna.Syntax.Repr.Graph    as G
 
 type NodeType a = ( Coated a
                   , Uncoated a ~ (Draft (Ref Edge))
@@ -114,4 +110,3 @@ assignLiteralTypesWithTypes consIntTpe consStringTpe ref = do
                 Lit.String _ -> consStringTpe
         match $ \ANY -> return ()
     mapM_ (assignLiteralTypesWithTypes consIntTpe consStringTpe) =<< pre ref
-
