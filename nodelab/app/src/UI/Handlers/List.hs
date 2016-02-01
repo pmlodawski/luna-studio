@@ -24,7 +24,7 @@ import           Reactive.State.UIRegistry     (addHandler)
 import qualified Reactive.State.UIRegistry     as UIRegistry
 
 import           UI.Generic                    (startDrag, takeFocus, defaultResize)
-import           UI.Handlers.Group             ()
+import           UI.Handlers.Group             (triggerWidgetResized)
 import qualified UI.Handlers.Button            as Button
 import           UI.Handlers.Generic           (ValueChangedHandler (..), triggerValueChanged)
 import qualified UI.Handlers.TextBox           as TextBox
@@ -121,7 +121,7 @@ instance CompositeWidget List where
 
         UICmd.register_ id label def
 
-        groupId     <- UICmd.register id Group.create def
+        groupId     <- UICmd.register id Group.create (Layout.verticalLayoutHandler def def)
         UICmd.moveX groupId padding
 
         addButtonId <- UICmd.register id addButton (addItemHandlers id groupId itemWidth)
@@ -134,6 +134,8 @@ instance CompositeWidget List where
 
     updateWidget id old model = return ()
 
-instance ResizableWidget List where resizeWidget = defaultResize
-
+instance ResizableWidget List where
+    resizeWidget id vec model = do
+        defaultResize id vec model
+        triggerWidgetResized id vec
 
