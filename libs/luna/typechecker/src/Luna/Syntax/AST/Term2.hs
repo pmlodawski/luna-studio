@@ -144,15 +144,8 @@ type instance Base Blank       = Proxy Blank
 
 -- Wrappers
 
-instance Rewrapped (Var n) (Var n')
-instance Wrapped   (Var n) where
-  type   Unwrapped (Var n) = n
-  _Wrapped' = iso (\(Var n) -> n) Var
-
-instance Rewrapped (Cons n) (Cons n')
-instance Wrapped   (Cons n) where
-  type   Unwrapped (Cons n) = n
-  _Wrapped' = iso (\(Cons n) -> n) Cons
+makeWrapped ''Var
+makeWrapped ''Cons
 
 -- Properties
 
@@ -203,8 +196,7 @@ instance           TFunctor t r Blank        Blank       where fmapT = flip cons
 
 
 
-newtype ASTRecord (groups :: [*]) (variants :: [*]) (t :: *) d = ASTRecord (Unlayered (ASTRecord groups variants t d)) deriving (Show, Eq, Ord)
-type instance Unlayered (ASTRecord gs vs t d) = d
+newtype ASTRecord (groups :: [*]) (variants :: [*]) (t :: *) d = ASTRecord d deriving (Show, Eq, Ord)
 
 -- === Instances === --
 
@@ -217,12 +209,9 @@ instance      IsRecord (ASTRecord gs vs t d) where asRecord = id ; {-# INLINE as
 
 -- Wrappers
 
-instance Layered   (ASTRecord gs vs t d)
-instance Rewrapped (ASTRecord gs vs t d) (ASTRecord gs' vs' t' d')
-instance Wrapped   (ASTRecord gs vs t d) where
-    type Unwrapped (ASTRecord gs vs t d) = d
-    _Wrapped' = iso (\(ASTRecord a) -> a) ASTRecord
-    {-# INLINE _Wrapped' #-}
+makeWrapped ''ASTRecord
+type instance Unlayered (ASTRecord gs vs t d) = Unwrapped (ASTRecord gs vs t d)
+instance      Layered   (ASTRecord gs vs t d)
 
 -- Conversions
 
@@ -239,7 +228,12 @@ instance Castable d (ASTRecord gs vs t d) where cast = wrap'
 -- === Term groups === --
 -------------------------
 
-newtype Term t term rt = Term (Unlayered (Term t term rt))
+-- | The following definitions are parameterized by the `t` type, which indicates which data `Layout` to choose.
+--   The `Layout` type family defines the recursive layout for AST structures.
+
+newtype     Term     t term rt = Term (ASTRecord (SubRuntimeGroups rt t term) (Variants t term rt) t Data)
+type        Variants t term rt = Elems term (NameByRuntime rt (Layout t term rt)) (Layout t term rt)
+type family Layout   t term rt
 
 data Lit   = Lit   deriving (Show)
 data Val   = Val   deriving (Show)
@@ -249,16 +243,9 @@ data Draft = Draft deriving (Show)
 type TermGroups = '[Lit, Val, Thunk, Expr, Draft]
 
 
--- | Data layout for a particular `t` like `Graph` or `Breadcrumb`
-type family Layout t term rt
-
-type instance Unlayered (Term t term rt) = ASTRecord (SubRuntimeGroups rt t term) (Variants t term rt) t Data
-type Variants t term rt = Elems term (NameByRuntime rt (Layout t term rt)) (Layout t term rt)
-
-
 -- === Elems === --
 
-type family Elems term n t :: [*]
+type family   Elems term  n t :: [*]
 
 type instance Elems Lit   n t = Star
                              ': Str
@@ -283,9 +270,6 @@ type instance Elems Draft n t = Blank
 
 
 ---- === Syntax Layouts === --
-
---type family Static  (a :: * -> (* -> *) -> *) :: ((* -> *) -> *) where Static  a = a Layout.Static
---type family Dynamic (a :: * -> (* -> *) -> *) :: ((* -> *) -> *) where Dynamic a = a Layout.Dynamic
 
 type family SubSemiTerms ts term where
     SubSemiTerms '[]       term = '[]
@@ -317,11 +301,10 @@ deriving instance Ord  (Unlayered (Term t term rt)) => Ord  (Term t term rt)
 type instance Base (Term t term rt) = Proxy term
 
 -- Wrappers & Layers
-instance Layered   (Term t term rt)
-instance Rewrapped (Term t term rt) (Term t' term' rt')
-instance Wrapped   (Term t term rt) where
-    type Unwrapped (Term t term rt) = Unlayered (Term t term rt)
-    _Wrapped' = iso (\(Term a) -> a) Term ; {-# INLINE _Wrapped' #-}
+makeWrapped ''Term
+type instance Unlayered (Term t term rt) = Unwrapped (Term t term rt)
+instance      Layered   (Term t term rt)
+instance      Rewrapped (Term t term rt) (Term t' term' rt')
 
 -- Record instances
 type instance RecordOf (Term t term rt) = RecordOf (Unlayered (Term t term rt))
@@ -342,8 +325,8 @@ instance Convertible (Unwrapped (Term t term rt)) Data => Convertible (Term t te
 instance Castable    Data (Unwrapped (Term t term rt)) => Castable    Data (Term t term rt) where cast    = wrap'   ∘ cast
 
 -- Abstractions
-type instance                                                     Abstract  (Term t term rt) = Data
-instance BiCastable (Abstract (Term t term rt)) (Term t term rt) => IsAbstract  (Term t term rt) where abstracted = iso cast cast -- cast cast
+type instance                                                       Abstract    (Term t term rt) = Data
+instance BiCastable (Abstract (Term t term rt)) (Term t term rt) => IsAbstract  (Term t term rt) where abstracted = iso cast cast
 instance BiCastable (Abstract (Term t term rt)) (Term t term rt) => HasAbstract (Term t term rt)
 
 

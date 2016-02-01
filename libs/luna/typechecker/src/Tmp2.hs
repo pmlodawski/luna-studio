@@ -26,7 +26,7 @@ import Data.Construction
 
 import Control.Monad.Identity
 import Control.Monad.State
-import Data.Container
+import Data.Container hiding (impossible)
 
 import           Luna.Syntax.Model.Graph (Graph, GraphBuilder, MonadGraphBuilder, nodes, edges)
 import qualified Luna.Syntax.Model.Graph as Graph
@@ -139,8 +139,8 @@ instance {-# OVERLAPPABLE #-} (Monad m, Register t a m)           => Register t 
 --   It does not equals a graph-like node - it can be a "node" in flat AST representation, like just an ordinary term.
 
 
-data Element    = Element    deriving (Show)
-data Connection = Connection deriving (Show)
+data ELEMENT    = ELEMENT    deriving (Show)
+data CONNECTION = CONNECTION deriving (Show)
 
 class Monad m => Register t a m where 
     register_ :: t -> a -> m ()
@@ -253,8 +253,20 @@ makeWrapped ''Node
 edge :: Ref (Node src) -> Ref (Node tgt) -> Edge src tgt
 edge src tgt = Edge (rewrap src) (rewrap tgt)
 
-connection :: (LayerConstructor m c, Register Connection c m, Unlayered c ~ Edge src tgt) => Ref (Node src) -> Ref (Node tgt) -> m c
-connection src tgt = register Connection =<< constructLayer (edge src tgt)
+
+type family Connection src dst
+class Connectible src dst m where connection :: src -> dst -> m (Connection src dst)
+
+
+type instance Connection (Ref a) (Ref b) = Ref (Connection a b)
+type instance Connection (Node a) (Node b) = Edge a b
+
+instance (LayerConstructor m c, Register CONNECTION c m, Unlayered c ~ Edge src tgt, c ~ Connection (Ref (Node src)) (Ref (Node src))) 
+      => Connectible (Ref (Node src)) (Ref (Node src)) m where
+         connection src tgt = register CONNECTION =<< constructLayer (edge src tgt)
+
+--connection :: (LayerConstructor m c, Register CONNECTION c m, Unlayered c ~ Edge src tgt) => Ref (Node src) -> Ref (Node tgt) -> m c
+--connection src tgt = register CONNECTION =<< constructLayer (edge src tgt)
 
 
 -- === Instances === --
@@ -416,7 +428,7 @@ instance Castable (Unwrapped (ls :< a)) (Unwrapped (ls' :< a')) => Castable (ls 
 -- === Network Implementation === --
 ------------------------------------
 
-type instance Layout (Network ls) term rt = Link (ls :< TermWrapper term rt)
+type instance Layout (Network ls) term rt = Ref $ Link (ls :< TermWrapper term rt)
 
 
 
@@ -424,37 +436,68 @@ type instance Layout (Network ls) term rt = Link (ls :< TermWrapper term rt)
 -- === Node constructors === --
 -------------------------------
 
-star :: (SmartCons Star (Uncovered a), Register Element a m, CoverConstructor m a, MonadSelfBuilder s m, Castable a s) => m a
-star = register Element =<< buildAbsMe (constructCover $ cons Star)
+class ElemBuilder el m a where buildElem :: el -> m a
 
-star_draft :: (Uncovered a ~ Draft Static ls, Register Element a m, CoverConstructor m a, MonadSelfBuilder s m, Castable a s) => m a
-star_draft = star 
+instance ( SmartCons el (Uncovered a)
+         , CoverConstructor m a
+         , Register ELEMENT a m
+         , MonadSelfBuilder s m
+         , Castable a s
+         ) => ElemBuilder el m  a where buildElem el = register ELEMENT =<< buildAbsMe (constructCover $ cons el) ; {-# INLINE buildElem #-}
+instance      ElemBuilder I  m  a where buildElem    = impossible                                                 ; {-# INLINE buildElem #-}
+instance      ElemBuilder el IM a where buildElem    = impossible                                                 ; {-# INLINE buildElem #-}
+--instance      ElemBuilder el m  I where buildElem    = impossible                                                 ; {-# INLINE buildElem #-}
 
---unify a b = do
 
---    ca  <- connection a out
---    cb  <- connection b out
---    out <- registerNode =<< buildMe (constructCover (unifyx (convert ca) (convert cb)))
---    return out
+star :: ElemBuilder Star m a => m a
+star = buildElem Star
+
+unify :: ( MonadFix m
+         , ElemBuilder (Unify (Connection b u)) m u
+         , Connectible a u m
+         , Connectible b u m
+         , Connection b u ~ Connection a u
+         ) => a -> b -> m u
+unify a b = mdo
+    ca  <- connection a out
+    cb  <- connection b out
+    out <- buildElem $ Unify ca cb
+    return out
+
+
+
+star_draft :: (ElemBuilder Star m a, Uncovered a ~ Draft Static ls) => m a
+star_draft = buildElem Star
+
+unify_draft :: ( MonadFix m
+               , ElemBuilder (Unify (Connection b u)) m u
+               , Connectible a u m
+               , Connectible b u m
+               , Connection b u ~ Connection a u
+               , Uncovered u ~ Draft Static ls
+               ) => a -> b -> m u
+unify_draft = unify 
+
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
 -- TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST --
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
+type NetLayers = '[Note]
 
-type NetGraph = Graph ('[Note] :< Raw) (Link ('[Note] :< Raw))
+type NetGraph = Graph (NetLayers :< Raw) (Link (NetLayers :< Raw))
 
 buildNetwork  = runIdentity ∘ buildNetworkM
 buildNetworkM = rebuildNetworkM def
-rebuildNetworkM (net :: NetGraph) = flip Self.evalT (undefined ::        Ref $ Node ('[Note] :< Raw))
-                                  ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node ('[Note] :< Raw)))
-                                  ∘ constrainTypeM1 Connection (Proxy :: Proxy $ Ref c)
-                                  ∘ constrainTypeM3 Element    (Proxy :: Proxy $ Ref $ Node ('[Note] :< n))
+rebuildNetworkM (net :: NetGraph) = flip Self.evalT (undefined ::        Ref $ Node (NetLayers :< Raw))
+                                  ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node (NetLayers :< Raw)))
+                                  ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
+                                  ∘ constrainTypeM3 ELEMENT    (Proxy :: Proxy $ Ref $ Node (NetLayers :< n))
                                   ∘ flip Graph.runT net
 {-# INLINE   buildNetworkM #-}
 {-# INLINE rebuildNetworkM #-}
 
-foo :: IO (Ref $ Node ('[Note] :< Draft Static), NetGraph)
+foo :: IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
 foo = rebuildNetworkM def
     $ do
     s <- star_draft
@@ -463,22 +506,31 @@ foo = rebuildNetworkM def
 
     star_draft
     star_draft
-    c <- connection s s
 
-    return s
+    u <- unify_draft s s
+
+    --(u :: Ref $ Node $ '[Note] :< Draft Static) <- unify s s
+            --c <- connection s s
+
+
+            --(s1 :: Ref $ Node $ '[Note] :< Draft Static) <- star_draft
+            --(s2 :: Ref $ Node $ '[Note] :< Draft Static) <- star_draft
+
+            --(cs :: Ref $ Link ('[Note] :< Draft Static)) <- connection s1 s2 
+
+            --let u = cons (Unify cs cs) :: Draft Static '[Note]
+
+
+
+
+
+
+    return u
     --star_draft
 
 
 mytest :: IO ()
 mytest = do 
-    let s1 = cons Star :: Draft Static '[Note]
-
-        --s1' = Shell (Layer "oh" (Cover s1)) :: '[Note] :< (Term (Network '[Note]) Draft Static)
-
-        u1 = cons $ Unify (Edge (Ref (Ptr 0)) (Ref (Ptr 1)) :: Link ('[Note] :< Draft Static)) 
-                          (Edge (Ref (Ptr 0)) (Ref (Ptr 1)) :: Link ('[Note] :< Draft Static)) 
-           :: Draft Static '[Note]
-        --u1 = cons $ Unify (Link (Ptr 0) (Ptr 1) :: Link ('[Note] :< (Draft Static))) (Link (Ptr 0) (Ptr 1) :: Link ('[Note] :< (Draft Static))) :: Draft Static
 
     (s2, g) <- foo
     print s2
