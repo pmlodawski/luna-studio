@@ -11,7 +11,7 @@ import Data.Record            hiding (ASTRecord, Variants, Layout)
 import qualified Data.Record as Record
 import Luna.Syntax.AST.Layout (ToStatic, ToDynamic)
 import Type.Container
-import Type.Cache.TH          (cacheHelper, cacheType)
+import Type.Cache.TH          (cacheHelper, cacheType, assertTypesEq)
 import Type.Map
 import Data.Abstract
 

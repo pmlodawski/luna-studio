@@ -10,7 +10,7 @@ import Data.Base
 import Data.Record
 import Luna.Syntax.AST.Layout (SubLayouts, SubSemiLayouts, ToStatic, ToDynamic, ByLayout)
 import Type.Container
-import Type.Cache.TH          (cacheHelper, cacheType)
+import Type.Cache.TH          (cacheHelper, cacheType, assertTypesEq)
 import Type.Map
 import Data.Abstract
 

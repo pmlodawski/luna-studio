@@ -7,8 +7,8 @@ packages:
       extra-dep: true
     - location: ../../libs/config
       extra-dep: true
-    - location: ../../libs/luna-empire
-      extra-dep: true
+    # - location: ../../libs/luna-empire
+    #   extra-dep: true
     - location: ../../libs/luna-empire-api
       extra-dep: true
     - location: ../../libs/luna-empire-api-json
@@ -28,7 +28,7 @@ packages:
     - location: ../../tools/batch/plugins/ws-connector
     - location: ../../tools/batch/plugins/broker
     - location: ../../tools/batch/plugins/bus-logger
-    - location: ../../tools/batch/plugins/luna-empire
+    # - location: ../../tools/batch/plugins/luna-empire
     - location:
           git: https://github.com/wdanilo/container.git
           commit: e9ecbe4faf286aa681de6df224d6d7aa2eff3791
@@ -104,5 +104,8 @@ extra-deps:
     - OneTuple-0.2.1
     - docopt-0.7.0.4
     - saltine-0.0.0.4
+
+ghc-options:
+    "*": -DFastCompilation -threaded -O
 
 local-bin-path: ../../dist/bin

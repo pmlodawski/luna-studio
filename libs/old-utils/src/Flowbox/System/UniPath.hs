@@ -21,7 +21,7 @@ import qualified System.Directory   as Directory
 import qualified System.Environment as Environment
 import qualified System.FilePath    as FilePath
 
-import           Flowbox.Prelude                    hiding (empty, fromList, toList)
+import           Flowbox.Prelude                    hiding (empty, fromList, toList, Empty)
 import qualified Flowbox.System.Directory.Locations as Directory
 
 
