@@ -1,12 +1,7 @@
 "use strict";
 
 var $$       = require('common');
-var config   = require('config');
 var features = require('features');
-
-var createText   = require('bmfont').render;
-var font         = require("font/default");
-var textMaterial = require('font/text_material').graph;
 
 var vs = require('shaders/node.vert')();
 var fs = require('shaders/node.frag')();
@@ -115,9 +110,6 @@ function Node(id, position, z, widgetId) {
   this.node.scale.x = this.collapsedNodeSize.x;
   this.node.scale.y = this.collapsedNodeSize.y;
 
-  if (features.node_labels) this.updateLabel();
-  this.updateValue();
-
   this.setExpandedState(0.0);
 }
 
@@ -136,7 +128,6 @@ Node.prototype.setExpandedState = function (expanded) {
   this.expandedUniforms.radiusBottom.value = radius;
   this.expandedNodeBkg.scale.x = nodeSize.x;
   this.expandedNodeBkg.scale.y = nodeSize.y;
-  this.repositionPlot();
 };
 
 Node.prototype.setPending = function () {
@@ -179,135 +170,8 @@ Node.prototype.setZPos = function (z) {
   this.mesh.position.z = z;
 };
 
-// Node.prototype.updateMouse = function (x, y) {
-//   var xd = (this.mesh.position.x - this.mesh.scale.x / 2.0) - x;
-//   var yd = (this.mesh.position.y - this.mesh.scale.y / 2.0) - y;
-//   var mouseDist = Math.sqrt(xd * xd + yd * yd);
-//   this.uniforms.mouseDist.value = mouseDist;
-//   this.inputPorts.forEach(function (port) {
-//     port.updateMouseDist(mouseDist);
-//   });
-//   this.outputPorts.forEach(function (port) {
-//     port.updateMouseDist(mouseDist);
-//   });
-// };
-
-Node.prototype.setLabel = function (text) {
-  this.labelText = text;
-  this.updateLabel();
-};
-
-Node.prototype.updateLabel = function () {
-  if (this.labelObject) this.mesh.remove(this.labelObject);
-
-  var size = 150 / config.fontSize;
-
-  var geometry = createText({
-    text:  this.labelText,
-    font:  font,
-    width: size,
-    align: 'center'
-  });
-  var material = textMaterial();
-  material.uniforms.width.value = size;
-  material.uniforms.opacity = this.uniforms.alpha;
-  this.labelObject = new THREE.Mesh(geometry, material);
-  this.labelObject.scale.multiplyScalar(config.fontSize);
-  this.labelObject.position.x = -45 - 30;
-  this.labelObject.position.y = -12 - 30;
-  this.labelObject.position.z =   0;
-
-  this.mesh.add(this.labelObject);
-};
-
-Node.prototype.setValue = function (text) {
-  this.valueText = text;
-  this.updateValue();
-  return this.valueText;
-};
-
-Node.prototype.updateValue = function () {}
-//   if (this.valueObject) this.mesh.remove(this.valueObject);
-//
-//   var size = 150 / config.fontSize;
-//
-//   var geometry = createText({
-//     text:  this.valueText,
-//     font:  font,
-//     width: size,
-//     align: 'center'
-//   });
-//   var material = textMaterial();
-//   material.uniforms.width.value = size;
-//   this.valueObject = new THREE.Mesh(geometry, material);
-//   this.valueObject.scale.multiplyScalar(config.fontSize);
-//   this.valueObject.position.x = -45 - 30;
-//   this.valueObject.position.y = 12 + 30 + 10;
-//   this.valueObject.position.z = 0;
-//
-//   this.mesh.add(this.valueObject);
-// };
-
-Node.prototype.showLabelEditor = function () {
-  if (this.htmlElements.labelEditor) return;
-  var editor = $('<input/>').css({left: -50, top: -52, width: 100, textAlign: 'center'});
-  editor.val(this.labelText);
-  this.htmlElements.labelEditor = editor;
-  this.htmlContainer.append(editor);
-
-  this.mesh.remove(this.labelObject);
-  this.labelObject = null;
-  var _this = this;
-  setTimeout(function (){
-    editor.focus();
-    editor.blur(function (){
-        _this.label(_this.hideLabelEditor());
-    });
-  }, 50);
-};
-
-Node.prototype.repositionPlot = function () {
-  var topPosition = this.expandedState > 0.0 ? 130 : 60;
-  var topCss = "top: " + topPosition + "px;";
-  d3.select(this.htmlContainer)
-    .select("svg")
-    .attr("style", "position: absolute; left: -30px;" + topCss);
-};
-
-Node.prototype.displayVector = function (values) {
-  $(this.htmlContainer).empty();
-
-  var svg = d3.select(this.htmlContainer)
-      .append("svg")
-      .attr("width", 250)
-      .attr("height", 180);
-  var data = values.map(function (val, ix) {
-    return {
-      Index: ix,
-      Value: val
-    };
-  });
-  var myChart = new dimple.chart(svg, data);
-  myChart.addCategoryAxis("x", "Index");
-  this.repositionPlot();
-  myChart.addMeasureAxis("y", "Value");
-  myChart.addSeries(null, dimple.plot.bubble);
-  // myChart.addLegend(180, 10, 360, 20, "right");
-  myChart.draw();
-};
-
 Node.prototype.destructor = function (){
   this.htmlContainer.parentNode.removeChild(this.htmlContainer);
-};
-
-Node.prototype.hideLabelEditor = function () {
-  var editor = this.htmlElements.labelEditor;
-  var value = editor[0].value;
-  console.log("Entered: " + value);
-  editor.off();
-  editor.remove();
-  this.htmlElements.labelEditor = null;
-  return value;
 };
 
 module.exports = Node;
