@@ -14,7 +14,7 @@ packages:
     - location: ../../libs/luna-empire-api-json
       extra-dep: true
     - location: ../../libs/luna/typechecker
-      extra-dep: true
+    #  extra-dep: true
     - location: ../../libs/old-utils
       extra-dep: true
     - location: ../../libs/rpc
