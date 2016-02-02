@@ -83,26 +83,6 @@ def main():
     args = parser.parse_args()
 
 
-    yamlPath = args.update_stack_conf[0]
-
-    with open(yamlPath, 'r') as stream:
-        conf = yaml.load(stream)
-
-    pkgs = conf['packages']
-    for pkg in pkgs:
-        loc = pkg['location']
-        if isinstance(loc, dict):
-            gitloc = loc['git']
-            print gitloc
-
-    a = []
-    for path in args.paths:
-        path = os.path.abspath(path)
-        cabalPaths = glob (path + "/**/*.tcabal")
-        a.append(1)
-
-    print a 
-    return 0
 
 
     if not args.no_hackage:
@@ -227,10 +207,47 @@ def main():
                     print "Uploading to Hackage"
                     sdist = subprocess.check_output('cabal upload -u%s -p%s %s' % (username, password, sdistPath), shell=True)
                     print sdist
-
             #updateStatus(version)
 
-                
+
+    if args.update_stack_conf:
+        print "Updating the yaml configuration file"
+
+        yamlPath = args.update_stack_conf[0]
+        with open(yamlPath, 'r') as stream:
+            conf = yaml.load(stream)
+
+        libRefs = {}
+        for path in args.paths:
+            path = os.path.abspath(path)
+            cabalConfs = glob (path + "/**/*.tcabal")
+            cabalPaths = [os.path.dirname(p) for p in cabalConfs]
+            for path in cabalPaths:
+                cwd = os.getcwd()
+                os.chdir(path)
+                (libName, _) = os.path.splitext(os.path.basename(path) )
+                try:
+                    headRef = subprocess.check_output("git rev-parse HEAD", shell=True)
+                    headRef = headRef.strip()
+                except subprocess.CalledProcessError:
+                    print "It seems the library is not a git repository, aborting."
+                    return 1
+                libRefs[libName] = headRef
+                os.chdir(cwd)
+
+        pkgs = conf['packages']
+        for pkg in pkgs:
+            loc = pkg['location']
+            if isinstance(loc, dict):
+                gitloc = loc['git']
+                (pkgname,_) = os.path.splitext(gitloc.split('/')[-1])
+                ref = libRefs[pkgname]
+                loc['commit'] = ref
+
+        with open(yamlPath, 'w') as file:
+            file.write(yaml.dump(conf))
+            
+    print "DONE!"
 
 
 def showVersion(v): return ".".join([str(i) for i in v])

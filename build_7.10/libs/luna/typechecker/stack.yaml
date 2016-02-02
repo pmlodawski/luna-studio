@@ -1,72 +1,39 @@
 resolver: lts-4.1
 packages:
-    - location: ../../../../libs/luna/typechecker
-    - location: ../../../../libs/utils
-      extra-dep: true
-    - location:
-          git: https://github.com/wdanilo/container.git
-          commit: e9ecbe4faf286aa681de6df224d6d7aa2eff3791
-      extra-dep: true
-    - location:
-          git: https://github.com/wdanilo/convert.git
-          commit: d0bb22989f58932c54c7c9c1e3922958c002d02e
-      extra-dep: true
-    - location:
-          git: https://github.com/wdanilo/data-base.git
-          commit: 51a583bc68d3ed8bdb867a58ec41014863121533
-      extra-dep: true
-    - location:
-          git: https://github.com/wdanilo/data-construction.git
-          commit: 29c97b37c8d23ee4345adaf7cb61609f1626641b
-      extra-dep: true
-    - location:
-          git: https://github.com/wdanilo/data-layer.git
-          commit: 4472a6e17911680561021bb4c932b1052f909f77
-      extra-dep: true
-    - location:
-          git: https://github.com/wdanilo/data-repr.git
-          commit: f8f3c0cc15b5cf7f76b94db9ddb2b4f326a4a26f
-      extra-dep: true
-    - location:
-          git: https://github.com/wdanilo/data-result.git
-          commit: a40ff30ee8b6f36c85b2890e8356ef0583cd5f2a
-      extra-dep: true
-    - location:
-          git: https://github.com/wdanilo/dependent-state.git
-          commit: 50ac8686bd5b5dbd5fb29aebb19d5e4d09487cfe
-      extra-dep: true
-    - location:
-          git: https://github.com/wdanilo/functor-utils.git
-          commit: aa37a38de3bd4c0b4b105773299a766a129062fb
-      extra-dep: true
-    - location:
-          git: https://github.com/wdanilo/impossible.git
-          commit: c5556018a7cd5cba9ecdc00c4898da0520a177d1
-      extra-dep: true
-    - location:
-          git: https://github.com/wdanilo/lens-utils.git
-          commit: 7e22132987ab75f6d5cb24e2f12b3dd7cfacc9be
-      extra-dep: true
-    - location:
-          git: https://github.com/wdanilo/poly-control.git
-          commit: 5df51c7846cca02082204bdfce18285d70f6cd32
-      extra-dep: true
-    - location:
-          git: https://github.com/wdanilo/prologue.git
-          commit: 6c2e784ececf85573973439162953c01554fe49e
-      extra-dep: true
-    - location:
-          git: https://github.com/wdanilo/type-cache.git
-          commit: eee76a96bdd1d442299cecdcd1e445d76eef3b1a
-      extra-dep: true
-    - location:
-          git: https://github.com/wdanilo/typelevel.git
-          commit: 701a299dc0232833756c8d71123c4c2d50d584d9
-      extra-dep: true
-    - location:
-          git: https://github.com/wdanilo/data-construction.git
-          commit: 29c97b37c8d23ee4345adaf7cb61609f1626641b
-      extra-dep: true
+- {location: ../../../../libs/luna/typechecker}
+- {extra-dep: true, location: ../../../../libs/utils}
+- extra-dep: true
+  location: {commit: 754cb68fd4b9ceea29f3b6d8aad21a1e5085ff52, git: 'https://github.com/wdanilo/container.git'}
+- extra-dep: true
+  location: {commit: b55500e95a422ec29b1dba4fc9c0b8092669350b, git: 'https://github.com/wdanilo/convert.git'}
+- extra-dep: true
+  location: {commit: 345c1cdf5bef30631d3eadd55c326086ea0b6f71, git: 'https://github.com/wdanilo/data-base.git'}
+- extra-dep: true
+  location: {commit: 7e0321fe226779d5873911e66d05fef669055504, git: 'https://github.com/wdanilo/data-construction.git'}
+- extra-dep: true
+  location: {commit: 9167ee932cf5dc719dea45800dbb62c9918b06c0, git: 'https://github.com/wdanilo/data-layer.git'}
+- extra-dep: true
+  location: {commit: 941777d7080fcb86fd50b982ed61eb040a5c03db, git: 'https://github.com/wdanilo/data-repr.git'}
+- extra-dep: true
+  location: {commit: a40ff30ee8b6f36c85b2890e8356ef0583cd5f2a, git: 'https://github.com/wdanilo/data-result.git'}
+- extra-dep: true
+  location: {commit: 8388cf190cb1c5d86fb8d3afc6ad8ad980e03dd5, git: 'https://github.com/wdanilo/dependent-state.git'}
+- extra-dep: true
+  location: {commit: a99e2bfc9bce86359a070c2b257cff9bde6b0106, git: 'https://github.com/wdanilo/functor-utils.git'}
+- extra-dep: true
+  location: {commit: 5dcae2746e6560dc4e8f8c8669bbedb87d2c5e74, git: 'https://github.com/wdanilo/impossible.git'}
+- extra-dep: true
+  location: {commit: 4b541f7d972b8a39e0cdf21ebe30cf55cdcb8069, git: 'https://github.com/wdanilo/lens-utils.git'}
+- extra-dep: true
+  location: {commit: 8cb9cbd7e87f5c5223dc171ae97762e2a535483b, git: 'https://github.com/wdanilo/poly-control.git'}
+- extra-dep: true
+  location: {commit: 1117e43e6cae076d69cf514b378d0c3ff621632d, git: 'https://github.com/wdanilo/prologue.git'}
+- extra-dep: true
+  location: {commit: eee76a96bdd1d442299cecdcd1e445d76eef3b1a, git: 'https://github.com/wdanilo/type-cache.git'}
+- extra-dep: true
+  location: {commit: 4b9d4f35634eefb721b0529cce91c9dbced6075f, git: 'https://github.com/wdanilo/typelevel.git'}
+- extra-dep: true
+  location: {commit: 7e0321fe226779d5873911e66d05fef669055504, git: 'https://github.com/wdanilo/data-construction.git'}
 
 extra-deps:
     - ghc-session-0.1.2.0
