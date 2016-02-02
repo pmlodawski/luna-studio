@@ -28,7 +28,7 @@ parser :: Opt.Parser Cmd
 parser = Opt.flag' Cmd.Version (short 'V' <> long "version" <> help "Version information")
        <|> Cmd.Run
            <$> Opt.many       (Opt.strOption (short 't' <> metavar "TOPIC" <> help "Topic to listen"))
-           <*> Opt.optIntFlag (Just "verbose") 'v' 2 3 "Verbosity level (0-5, default 3)"
+           <*> Opt.optIntFlag (Just "verbose") 'v' 2 5 "Verbosity level (0-5, default 3)"
 
 opts :: Opt.ParserInfo Cmd
 opts = Opt.info (Opt.helper <*> parser)
