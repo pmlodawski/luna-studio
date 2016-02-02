@@ -1,7 +1,6 @@
 module Batch.Workspace where
 
 import Utils.PreludePlus
-import Batch.Breadcrumbs
 import Data.Aeson (ToJSON)
 import Data.IntMap.Lazy (IntMap)
 

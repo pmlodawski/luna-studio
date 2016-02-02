@@ -2,7 +2,6 @@ module Event.Batch where
 
 import           Utils.PreludePlus
 
-import           Batch.Breadcrumbs
 import           Batch.RunStatus
 import           Batch.Value
 import           Empire.API.Data.Library           (Library, LibraryId)

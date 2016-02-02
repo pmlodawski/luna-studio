@@ -10,13 +10,9 @@ import qualified Data.Text.Lazy                    as Text
 import qualified Data.Text.Lazy                    as Text
 import           Utils.Vector                      (Vector2(..), x, y)
 
--- import           Text.ProtocolBuffers       (Utf8(..), messagePut)
--- import           Text.ProtocolBuffers.Basic (uFromString)
-
 import           Batch.Workspace                   (Workspace)
 import qualified Batch.Workspace                   as Workspace
 import           Batch.Expressions
-import           Batch.Breadcrumbs
 import           BatchConnector.Connection         (sendMessage, sendMany, sendRequest, WebMessage(..))
 import           Empire.API.Data.Node              (Node(..))
 import qualified Empire.API.Data.Node              as Node

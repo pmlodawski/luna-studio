@@ -4,7 +4,6 @@ import           Utils.PreludePlus
 import qualified Event.Event                as Event
 import           Event.Connection           as Connection
 import           Event.Batch                as Batch
-import           BatchConnector.Updates
 import           BatchConnector.Connection  (WebMessage(..), ControlCode(..))
 import           Data.Binary (decode)
 import           Empire.API.Topic as Topic
@@ -53,7 +52,3 @@ processMessage (WebMessage topic bytes)
     -- _                                                              -> UnknownEvent topic
 processMessage (ControlMessage ConnectionTakeover) = ConnectionDropped
 processMessage (ControlMessage Welcome)            = ConnectionOpened
---
--- rescueParseError :: String -> Maybe Batch.Event -> Batch.Event
--- rescueParseError _     (Just ev) = ev
--- rescueParseError topic Nothing   = ParseError topic
