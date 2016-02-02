@@ -43,6 +43,19 @@ test = do
     Graph.connect pid lid (OutPortRef n1 All) (InPortRef nt Self)
     {-Graph.renameNode pid lid n1 "dupcia"-}
 
+
+    npi <- (view nodeId) <$> Graph.addNode pid lid "zero2pi" def
+    nvs <- (view nodeId) <$> Graph.addNode pid lid "vsin _" def
+    Graph.connect pid lid (OutPortRef npi All) (InPortRef nvs (Arg 0))
+
+    nr1 <- (view nodeId) <$> Graph.addNode pid lid "1" def
+    nr2 <- (view nodeId) <$> Graph.addNode pid lid "_.toDouble" def
+    nr3 <- (view nodeId) <$> Graph.addNode pid lid "sin _" def
+
+    Graph.connect pid lid (OutPortRef nr1 All) (InPortRef nr2 Self)
+    Graph.connect pid lid (OutPortRef nr2 All) (InPortRef nr3 (Arg 0))
+
+
     {-fstNode <- (view nodeId) <$> Graph.addNode pid lid "+"   (NodeMeta (3.14, 3.14))-}
     {-sndNode <- (view nodeId) <$> Graph.addNode pid lid "Int" (NodeMeta (4.14, 4.14))-}
     {-trdNode <- (view nodeId) <$> Graph.addNode pid lid "2"   (NodeMeta (5.14, 5.14))-}
