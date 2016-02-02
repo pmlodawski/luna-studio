@@ -26,7 +26,8 @@ Library
   Extensions:     NoImplicitPrelude
 
   Exposed-modules: 
-        
+        Generated.Proto.Project,
+        Generated.Proto.Project.Project
 
   Build-Depends:  base,
                   luna-protobuf-old-gen,

@@ -72,6 +72,7 @@ Library
         Luna.Syntax.Model.Builder.Self,
         Luna.Syntax.Model.Builder.Type,
         Luna.Syntax.Model.Graph,
+        Luna.Syntax.Model.Graph.Sort,
         Luna.Syntax.Model.Layer.Labeled,
         Luna.Syntax.Model.Repr.Styles,
         Luna.Syntax.Name,

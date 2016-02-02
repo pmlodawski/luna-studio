@@ -13,7 +13,7 @@ import Data.Record            hiding (ASTRecord, Variants, Layout)
 import qualified Data.Record as Record
 import Luna.Syntax.AST.Layout (ToStatic, ToDynamic)
 import Type.Container
-import Type.Cache.TH          (cacheHelper, cacheType)
+import Type.Cache.TH          (cacheHelper, cacheType, assertTypesEq)
 import Type.Map
 import Data.Abstract
 
@@ -40,9 +40,8 @@ import           Luna.Syntax.Model.Repr.Styles
 
 -- Cache related pragmas
 #define CACHE(n)       cacheHelper ''n Nothing              ; cacheType ''n Nothing
-#define CACHE_AS(n,cn) cacheHelper ''n (Just Quote cn Quote); cacheType ''n (Just Quote cn Quote)
+#define CACHE_AS(n,cn) cacheHelper ''n (Just cn); cacheType ''n (Just cn)
 #define CHECK_EQ(s,t)  assertTypesEq (Proxy :: Proxy (s)) (Proxy :: Proxy (t))
-#define Quote "
 
 
 -- TODO[WD]: move to issue tracker after releasing Luna to github
@@ -373,6 +372,7 @@ instance Convertible (Unwrapped (Term t term rt)) Data => Castable    (Term t te
 instance Convertible (Unwrapped (Term t term rt)) Data => Convertible (Term t term rt) Data where convert = convert ∘ unwrap' ; {-# INLINE convert #-}
 instance Castable    Data (Unwrapped (Term t term rt)) => Castable    Data (Term t term rt) where cast    = wrap'   ∘ cast    ; {-# INLINE cast    #-}
 
+
 -- Abstractions
 type instance                                                       Abstract    (Term t term rt) = Data
 instance BiCastable (Abstract (Term t term rt)) (Term t term rt) => IsAbstract  (Term t term rt) where abstracted = iso cast cast
@@ -391,7 +391,7 @@ instance BiCastable (Abstract (Term t term rt)) (Term t term rt) => HasAbstract 
 -- | All possible groups and variants stored as single 64-bit mask:
 -- |   - 9  bits for groups
 -- |   - 36 bits for variants
--- |   - 19 bits free for further extensions  
+-- |   - 19 bits free for further extensions
 
 -- === VariantList === --
 
@@ -462,7 +462,7 @@ type VariantList t = VariantList_CACHE t
 -- Layout
 
 type Layout_RULE t = GroupList t <> VariantList t
-CACHE_AS(Layout_RULE, Layout_CACHE)
+CACHE_AS(Layout_RULE, "Layout_CACHE")
 
 type instance Record.Layout (ASTRecord gs vs t d) = Layout_CACHE t
 
@@ -582,7 +582,7 @@ FIXME
 ---- SubGroupRelations
 
 --type family MapIndex els (cont :: [*]) where MapIndex '[]       cont = '[]
---                                             MapIndex (e ': es) cont = UnsafeIndex e cont ': MapIndex es cont 
+--                                             MapIndex (e ': es) cont = UnsafeIndex e cont ': MapIndex es cont
 
 --type family SubGroups       g  where SubGroups       g         = (UniqueFix (SubGroups' g :: [*]) :: [*])
 --type family SubGroups'      g  where SubGroups'      g         = GatherSubGroups (Groups g) <> Groups g
