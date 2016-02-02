@@ -65,4 +65,5 @@ symbols = Map.fromList $ fmap (\(n, b) -> (QualPath.mk (n :: String), makeFuncti
     , ("vsin"        , makeNativeFun "(map sin)"   Nothing ["[Double]"] "[Double]")
     , ("sin"         , makeNativeFun "(sin)"   Nothing ["Double"] "Double")
     , ("range"       , makeNativeFun "enumFromTo" Nothing ["Int", "Int"] "[Int]")
+    , ("[Double]./"  , makeNativeFun "(flip $ map . flip (/))" (Just "[Double]") ["Double"] "[Double]")
     ]

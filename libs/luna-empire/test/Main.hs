@@ -50,11 +50,15 @@ test = do
 
     nr1 <- (view nodeId) <$> Graph.addNode pid lid "range 0 10" def
     nr2 <- (view nodeId) <$> Graph.addNode pid lid "_.toDouble" def
-    nr4 <- (view nodeId) <$> Graph.addNode pid lid "vsin _" def
+    nr3 <- (view nodeId) <$> Graph.addNode pid lid "10.toDouble" def
+    nr4 <- (view nodeId) <$> Graph.addNode pid lid "_./ _" def
+    nr5 <- (view nodeId) <$> Graph.addNode pid lid "vsin _" def
 
     Graph.connect pid lid (OutPortRef nr1 All) (InPortRef nr2 Self)
+    Graph.connect pid lid (OutPortRef nr2 All) (InPortRef nr4 Self)
+    Graph.connect pid lid (OutPortRef nr3 All) (InPortRef nr4 (Arg 0))
     {-Graph.connect pid lid (OutPortRef nr2 All) (InPortRef nr3 (Arg 1))-}
-    Graph.connect pid lid (OutPortRef nr2 All) (InPortRef nr4 (Arg 0))
+    Graph.connect pid lid (OutPortRef nr4 All) (InPortRef nr5 (Arg 0))
 
 
     {-fstNode <- (view nodeId) <$> Graph.addNode pid lid "+"   (NodeMeta (3.14, 3.14))-}
