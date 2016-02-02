@@ -109,11 +109,11 @@ runGraph gr sm = runIdentityT
             . flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
 
 
-evaluateTest :: Ref Node -> SymbolMap (Network Label (Maybe Int)) -> Network Label (Maybe Int) -> IO ((), Network Label (Maybe Int))
-evaluateTest i sm gr = Session.run $ runGraph gr sm $  do
-    Just r <- NodeRunner.runNode def i
-    putStrLn "RESULT IS:"
-    print (Session.unsafeCast r :: Int)
+{-evaluateTest :: Ref Node -> SymbolMap (Network Label (Maybe Int)) -> Network Label (Maybe Int) -> IO ((), Network Label (Maybe Int))-}
+{-evaluateTest i sm gr = Session.run $ runGraph gr sm $  do-}
+    {-Just r <- NodeRunner.runNode def i-}
+    {-putStrLn "RESULT IS:"-}
+    {-print (Session.unsafeCast r :: Int)-}
 
 
 dirtyTest :: Ref Node -> SymbolMap (Network Label (Maybe Int)) -> Network Label (Maybe Int) -> IO ((), Network Label (Maybe Int))

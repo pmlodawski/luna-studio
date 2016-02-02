@@ -61,9 +61,9 @@ notifyNodeResultUpdates location = do
             Env.empireEnv .= newEmpireEnv
             mapM_ (uncurry $ notifyNodeResultUpdate location) $ IntMap.assocs valuesMap
 
-notifyNodeResultUpdate :: GraphLocation -> NodeId -> Int -> StateT Env BusT ()
+notifyNodeResultUpdate :: GraphLocation -> NodeId -> Value -> StateT Env BusT ()
 notifyNodeResultUpdate location nodeId value = do
-    let update = NodeResultUpdate.Update location nodeId (IntValue value)
+    let update = NodeResultUpdate.Update location nodeId value
     sendToBus Topic.nodeResultUpdate update
 
 handleAddNode :: ByteString -> StateT Env BusT ()

@@ -13,6 +13,7 @@ module Empire.Commands.Graph
 
 import           Prologue
 import           Control.Monad.State
+import           Unsafe.Coerce           (unsafeCoerce)
 import           Control.Monad.Error     (throwError)
 import           Control.Monad           (forM)
 import           Data.IntMap             (IntMap)
@@ -35,7 +36,7 @@ import           Empire.API.Data.Node         (NodeId, Node(..))
 import qualified Empire.API.Data.Node         as Node
 import           Empire.API.Data.NodeMeta     (NodeMeta)
 import qualified Empire.API.Data.Graph        as APIGraph
-import           Empire.API.Data.DefaultValue (PortDefault)
+import           Empire.API.Data.DefaultValue (PortDefault, Value(..))
 
 import           Empire.Empire
 import           Empire.Commands.Library      (withLibrary)
@@ -98,7 +99,7 @@ getCode pid lid = withGraph pid lid $ do
 getGraph :: ProjectId -> LibraryId -> Empire APIGraph.Graph
 getGraph pid lid = withGraph pid lid GraphBuilder.buildGraph
 
-runGraph :: ProjectId -> LibraryId -> Empire (IntMap Int)
+runGraph :: ProjectId -> LibraryId -> Empire (IntMap Value)
 runGraph pid lid = withGraph pid lid $ do
     allNodes <- uses Graph.nodeMapping IntMap.keys
     astNodes <- mapM GraphUtils.getASTPointer allNodes
@@ -107,7 +108,11 @@ runGraph pid lid = withGraph pid lid $ do
 
     let values = flip fmap (zip allNodes astNodes) $ \(n, ref) -> do
         val <- Map.lookup ref astVals
-        return (n, val)
+        case val of
+            NodeRunner.HaskellVal v tp -> return $ (,) n $ case tp of
+                "Int" -> IntValue $ unsafeCoerce v
+                "String" -> StringValue $ unsafeCoerce v
+            _ -> Nothing
 
     return $ IntMap.fromList $ catMaybes values
 

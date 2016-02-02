@@ -37,9 +37,11 @@ test = do
     n1 <- (view nodeId) <$> Graph.addNode pid lid "1"     (NodeMeta (1.0, 4.0))
     n2 <- (view nodeId) <$> Graph.addNode pid lid "2"     (NodeMeta (2.0, 3.0))
     np <- (view nodeId) <$> Graph.addNode pid lid "_.+ _"     (NodeMeta (3.0, 2.0))
+    nt <- (view nodeId) <$> Graph.addNode pid lid "_.toString" def
     Graph.connect pid lid (OutPortRef n1 All) (InPortRef np Self)
     Graph.connect pid lid (OutPortRef n2 All) (InPortRef np (Arg 0))
-    Graph.renameNode pid lid n1 "dupcia"
+    Graph.connect pid lid (OutPortRef n1 All) (InPortRef nt Self)
+    {-Graph.renameNode pid lid n1 "dupcia"-}
 
     {-fstNode <- (view nodeId) <$> Graph.addNode pid lid "+"   (NodeMeta (3.14, 3.14))-}
     {-sndNode <- (view nodeId) <$> Graph.addNode pid lid "Int" (NodeMeta (4.14, 4.14))-}
@@ -59,13 +61,13 @@ test = do
 
     {-Graph.addNode pid lid "1.floor.toString" $ NodeMeta (0.0, 0.0)-}
 
-    rn  <- view nodeId <$> Graph.addNode pid lid "+ 7 34" (NodeMeta (3.3, 4.4))
-    rn1 <- view nodeId <$> Graph.addNode pid lid "7.* 4" (NodeMeta (3.3, 4.4))
+    {-rn  <- view nodeId <$> Graph.addNode pid lid "+ 7 34" (NodeMeta (3.3, 4.4))-}
+    {-rn1 <- view nodeId <$> Graph.addNode pid lid "7.* 4" (NodeMeta (3.3, 4.4))-}
 
-    nn <- view nodeId <$> Graph.addNode pid lid "13.+ _" def
-    nn2 <- view nodeId <$> Graph.addNode pid lid "_.+ 17" def
-    Graph.setDefaultValue pid lid (InPortRef nn (Arg 0)) (Constant $ IntValue 0)
-    Graph.setDefaultValue pid lid (InPortRef nn2 Self) (Constant $ IntValue 14)
+    {-nn <- view nodeId <$> Graph.addNode pid lid "13.+ _" def-}
+    {-nn2 <- view nodeId <$> Graph.addNode pid lid "_.+ 17" def-}
+    {-Graph.setDefaultValue pid lid (InPortRef nn (Arg 0)) (Constant $ IntValue 0)-}
+    {-Graph.setDefaultValue pid lid (InPortRef nn2 Self) (Constant $ IntValue 14)-}
     putStrLn "NOW RUNNING"
     putStrLn "------------------------"
 
