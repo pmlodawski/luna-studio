@@ -48,12 +48,13 @@ test = do
     nvs <- (view nodeId) <$> Graph.addNode pid lid "vsin _" def
     Graph.connect pid lid (OutPortRef npi All) (InPortRef nvs (Arg 0))
 
-    nr1 <- (view nodeId) <$> Graph.addNode pid lid "1" def
+    nr1 <- (view nodeId) <$> Graph.addNode pid lid "range 0 10" def
     nr2 <- (view nodeId) <$> Graph.addNode pid lid "_.toDouble" def
-    nr3 <- (view nodeId) <$> Graph.addNode pid lid "sin _" def
+    nr4 <- (view nodeId) <$> Graph.addNode pid lid "vsin _" def
 
     Graph.connect pid lid (OutPortRef nr1 All) (InPortRef nr2 Self)
-    Graph.connect pid lid (OutPortRef nr2 All) (InPortRef nr3 (Arg 0))
+    {-Graph.connect pid lid (OutPortRef nr2 All) (InPortRef nr3 (Arg 1))-}
+    Graph.connect pid lid (OutPortRef nr2 All) (InPortRef nr4 (Arg 0))
 
 
     {-fstNode <- (view nodeId) <$> Graph.addNode pid lid "+"   (NodeMeta (3.14, 3.14))-}
