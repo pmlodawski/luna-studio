@@ -58,4 +58,6 @@ symbols = Map.fromList $ fmap (\(n, b) -> (QualPath.mk (n :: String), makeFuncti
     [ ("Int.+",        makeNativeFun "(+)"  (Just "Int") ["Int"] "Int")
     , ("Int.*",        makeNativeFun "(*)"  (Just "Int") ["Int"] "Int")
     , ("Int.toString", makeNativeFun "show" (Just "Int") []      "String")
+    , ("replicate"   , makeNativeFun "replicate" Nothing ["Int", "Double"] "[Double]")
+    , ("Int.toDouble", makeNativeFun "fromIntegral" (Just "Int") [] "Double")
     ]

@@ -110,8 +110,12 @@ runGraph pid lid = withGraph pid lid $ do
         val <- Map.lookup ref astVals
         case val of
             NodeRunner.HaskellVal v tp -> return $ (,) n $ case tp of
-                "Int" -> IntValue $ unsafeCoerce v
+                "Int"    -> IntValue $ unsafeCoerce v
+                "Double" -> DoubleValue $ unsafeCoerce v
                 "String" -> StringValue $ unsafeCoerce v
+                "[Int]"  -> IntList $ unsafeCoerce v
+                "[Double]" -> DoubleList $ unsafeCoerce v
+
             _ -> Nothing
 
     return $ IntMap.fromList $ catMaybes values
