@@ -17,7 +17,7 @@ import           Object.Widget                (CompositeWidget, DblClickHandler,
                                                KeyPressedHandler, KeyUpHandler, MousePressedHandler, ResizableWidget,
                                                UIHandlers, WidgetFile, WidgetId, createWidget, currentPos, dblClick,
                                                dragEnd, dragMove, keyDown, keyMods, keyUp, mousePressed, objectId,
-                                               resizeWidget, startPos, updateWidget)
+                                               resizeWidget, startPos, updateWidget, click)
 
 import qualified Object.Widget.Group          as Group
 import qualified Object.Widget.Label          as Label
@@ -113,7 +113,7 @@ dblClickHandler _ _ id = do
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyDown      .~ keyDownHandler
-                     & mousePressed .~ (\evt _ id -> do
+                     & click        .~ (\evt _ id -> do
                          triggerFocusNodeHandler id
                          takeFocus evt id
                          handleSelection evt id)
