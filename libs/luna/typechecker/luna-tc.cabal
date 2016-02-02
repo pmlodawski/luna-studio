@@ -55,6 +55,7 @@ Library
                   ViewPatterns
 
     Exposed-modules: 
+        Data.Attribute,
         Data.Record,
         Luna.Lib.Symbol.Map,
         Luna.Lib.Symbol.QualPath,

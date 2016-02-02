@@ -2,9 +2,11 @@
 {-# LANGUAGE UndecidableInstances   #-}
 {-# LANGUAGE FunctionalDependencies #-}
 
+{-# LANGUAGE NoMonomorphismRestriction #-}
+
 module Luna.Syntax.AST.Term2 where
 
-import Prologue hiding (Cons, Swapped)
+import Prologue hiding (Cons, Swapped, Num)
 
 import Data.Base
 import Data.Record            hiding (ASTRecord, Variants, Layout)
@@ -15,9 +17,13 @@ import Type.Cache.TH          (cacheHelper, cacheType)
 import Type.Map
 import Data.Abstract
 
+import           Data.Reprx (Reprs, Repr, repr, (<+>))
+import qualified Data.Reprx as Repr
+
 import qualified Luna.Syntax.AST.Layout as Runtime
 import           Luna.Syntax.AST.Layout (Static, Dynamic)
-
+import           Data.Typeable (tyConName, typeRepTyCon, splitTyConApp)
+import           Luna.Syntax.Model.Repr.Styles
 
 -- | Options in this section should be used only for development purpose and should never be enabled in production ready code.
 -- | Their behaviour bases often on manually cached code, which could accidentaly get obsolete.
@@ -74,15 +80,27 @@ class HasTarget a where target :: Lens' a (Target a)
 class HasArgs   a where args   :: Lens' a (Args   a)
 
 
--------------------------------
----- === Component types === --
--------------------------------
+
+------------------
+-- === Args === --
+------------------
 
 newtype Arg a = Arg a deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 
+
+-- === Instances === --
+
+instance {-# OVERLAPPABLE #-} Repr s a => Repr s (Arg a) where repr (Arg a) = "Arg" <+> repr a
+
+
+-----------------------------
+-- === Component types === --
+-----------------------------
+
+
 data    Star   = Star          deriving (Show, Eq, Ord)
 newtype Str    = Str    String deriving (Show, Eq, Ord)
-newtype Number = Number Int    deriving (Show, Eq, Ord)
+newtype Num = Num Int    deriving (Show, Eq, Ord)
 
 
 -- LEGEND
@@ -100,40 +118,33 @@ data    Unify   t = Unify    !t !t       deriving (Show, Eq, Ord, Functor, Folda
 data    Blank     = Blank                deriving (Show, Eq, Ord)
 
 
--- === Helpers === --
+-- === N / T Folding === --
+-- | NFunctor and TFunctor allow mapping components over the `n` and `t` param type respectively.
 
-
-
--- NFunctor and TFunctor allow mapping components over the `n` and `t` param type respectively.
 class NFunctor n m a a' | n m a -> a' where fmapN :: (n -> m) -> a -> a'
 class TFunctor t r a a' | t r a -> a' where fmapT :: (t -> r) -> a -> a'
-
 
 class NFoldable a t where foldrN :: (a -> b -> b) -> b -> t -> b
 class TFoldable a t where foldrT :: (a -> b -> b) -> b -> t -> b
 
---instance n ~ n' => NFoldable n (Var n') where foldrN = foldr
-
-instance {-# OVERLAPPABLE #-} t ~ t' => TFoldable t (Acc n t') where foldrT = foldr
-instance {-# OVERLAPPABLE #-} t ~ t' => TFoldable t (App   t') where foldrT = foldr
-instance {-# OVERLAPPABLE #-} t ~ t' => TFoldable t (Unify t') where foldrT = foldr
-instance {-# OVERLAPPABLE #-} t ~ t' => TFoldable t (Arrow t') where foldrT = foldr
-instance {-# OVERLAPPABLE #-} TFoldable t (Var  n) where foldrT _ = const
-instance {-# OVERLAPPABLE #-} TFoldable t (Cons n) where foldrT _ = const
-instance {-# OVERLAPPABLE #-} TFoldable t Blank    where foldrT _ = const
-
-instance {-# OVERLAPPABLE #-} TFoldable t Star   where foldrT _ = const
-instance {-# OVERLAPPABLE #-} TFoldable t Str    where foldrT _ = const
-instance {-# OVERLAPPABLE #-} TFoldable t Number where foldrT _ = const
+instance {-# OVERLAPPABLE #-}           TFoldable t Star        where foldrT _ = const ; {-# INLINE foldrT #-}
+instance {-# OVERLAPPABLE #-}           TFoldable t Str         where foldrT _ = const ; {-# INLINE foldrT #-}
+instance {-# OVERLAPPABLE #-}           TFoldable t Num         where foldrT _ = const ; {-# INLINE foldrT #-}
+instance {-# OVERLAPPABLE #-}           TFoldable t Blank       where foldrT _ = const ; {-# INLINE foldrT #-}
+instance {-# OVERLAPPABLE #-}           TFoldable t (Var  n   ) where foldrT _ = const ; {-# INLINE foldrT #-}
+instance {-# OVERLAPPABLE #-}           TFoldable t (Cons n   ) where foldrT _ = const ; {-# INLINE foldrT #-}
+instance {-# OVERLAPPABLE #-} t ~ t' => TFoldable t (Acc  n t') where foldrT   = foldr ; {-# INLINE foldrT #-}
+instance {-# OVERLAPPABLE #-} t ~ t' => TFoldable t (App    t') where foldrT   = foldr ; {-# INLINE foldrT #-}
+instance {-# OVERLAPPABLE #-} t ~ t' => TFoldable t (Unify  t') where foldrT   = foldr ; {-# INLINE foldrT #-}
+instance {-# OVERLAPPABLE #-} t ~ t' => TFoldable t (Arrow  t') where foldrT   = foldr ; {-# INLINE foldrT #-}
 
 
 -- === Instances ===
 
 -- Bases
-
 type instance Base Star        = Proxy Star
 type instance Base Str         = Proxy Str
-type instance Base Number      = Proxy Number
+type instance Base Num         = Proxy Num
 
 type instance Base (Arrow   t) = Proxy Arrow
 type instance Base (Cons  n  ) = Proxy Cons
@@ -144,12 +155,10 @@ type instance Base (Unify   t) = Proxy Unify
 type instance Base Blank       = Proxy Blank
 
 -- Wrappers
-
 makeWrapped ''Var
 makeWrapped ''Cons
 
 -- Properties
-
 type instance Name   (Var   n  ) = n
 type instance Name   (Cons  n  ) = n
 type instance Name   (Acc   n t) = n
@@ -173,7 +182,6 @@ instance HasTarget (Unify   t) where target = lens (\(Unify _ t) -> t) (\(Unify 
 instance HasArgs   (App     t) where args   = lens (\(App   _ a) -> a) (\(App   s _) a -> App   s a) ; {-# INLINE args   #-}
 
 -- Mapping
-
 instance n ~ n' => NFunctor n m (Var   n'  ) (Var   m  ) where fmapN = (wrapped %~)            ; {-# INLINE fmapN #-}
 instance n ~ n' => NFunctor n m (Cons  n'  ) (Cons  m  ) where fmapN = (wrapped %~)            ; {-# INLINE fmapN #-}
 instance n ~ n' => NFunctor n m (Acc   n' t) (Acc   m t) where fmapN f (Acc n t) = Acc (f n) t ; {-# INLINE fmapN #-}
@@ -190,11 +198,32 @@ instance           TFunctor t r (Var   n   ) (Var   n  ) where fmapT = flip cons
 instance           TFunctor t r (Cons  n   ) (Cons  n  ) where fmapT = flip const              ; {-# INLINE fmapT #-}
 instance           TFunctor t r Blank        Blank       where fmapT = flip const              ; {-# INLINE fmapT #-}
 
+-- Representations
+
+-- Default
+instance {-# OVERLAPPABLE #-}                   Repr s Star        where repr _           = "*"
+instance {-# OVERLAPPABLE #-}                   Repr s Str         where repr (Str   s)   = "Str"   <+> repr s
+instance {-# OVERLAPPABLE #-}                   Repr s Num         where repr (Num   n)   = "Num"   <+> repr n
+instance {-# OVERLAPPABLE #-} Repr  s n      => Repr s (Var   n  ) where repr (Var   n)   = "Var"   <+> repr n
+instance {-# OVERLAPPABLE #-} Repr  s n      => Repr s (Cons  n  ) where repr (Cons  n)   = "Cons"  <+> repr n
+instance {-# OVERLAPPABLE #-} Repr  s t      => Repr s (Arrow   t) where repr (Arrow s t) = "Arrow" <+> repr s <+> repr t
+instance {-# OVERLAPPABLE #-} Reprs s '[n,t] => Repr s (Acc   n t) where repr (Acc   n s) = "Acc"   <+> repr n <+> repr s
+instance {-# OVERLAPPABLE #-} Repr  s t      => Repr s (App     t) where repr (App   s a) = "App"   <+> repr s <+> repr a
+instance {-# OVERLAPPABLE #-} Repr  s t      => Repr s (Unify   t) where repr (Unify s t) = "Unify" <+> repr s <+> repr t
+instance {-# OVERLAPPABLE #-}                   Repr s  Blank      where repr _           = "Blank"
+
+-- HeaderOnly
+instance Repr HeaderOnly (Var   n  ) where repr _ = "Var"
+instance Repr HeaderOnly (Cons  n  ) where repr _ = "Cons"
+instance Repr HeaderOnly (Arrow   t) where repr _ = "Arrow"
+instance Repr HeaderOnly (Acc   n t) where repr _ = "Acc"
+instance Repr HeaderOnly (App     t) where repr _ = "App"
+instance Repr HeaderOnly (Unify   t) where repr _ = "Unify"
 
 
 
 
-type family LayoutType a
+
 ---------------------------
 ---------------------------
 
@@ -206,8 +235,6 @@ newtype ASTRecord (groups :: [*]) (variants :: [*]) t d = ASTRecord d deriving (
 
 -- === Instances === --
 
---type instance LayoutType (ASTRecord gs vs t d) = t
-
 type instance Props Variant (ASTRecord gs vs t d) = vs
 type instance Props Group   (ASTRecord gs vs t d) = gs
 
@@ -215,19 +242,14 @@ type instance RecordOf (ASTRecord gs vs t d) = ASTRecord gs vs t d
 instance      IsRecord (ASTRecord gs vs t d) where asRecord = id ; {-# INLINE asRecord #-}
 
 -- Wrappers
-
 makeWrapped ''ASTRecord
 type instance Unlayered (ASTRecord gs vs t d) = Unwrapped (ASTRecord gs vs t d)
 instance      Layered   (ASTRecord gs vs t d)
 
 -- Conversions
-
 instance Castable    (ASTRecord gs vs t d) d
-instance Convertible (ASTRecord gs vs t d) d where convert = unwrap'
-
-instance Castable d (ASTRecord gs vs t d) where cast = wrap'
-
-
+instance Convertible (ASTRecord gs vs t d) d where convert = unwrap' ; {-# INLINE convert #-}
+instance Castable  d (ASTRecord gs vs t d)   where cast    = wrap'   ; {-# INLINE cast    #-}
 
 
 
@@ -256,12 +278,11 @@ type family   Elems term  n t :: [*]
 
 type instance Elems Lit   n t = Star
                              ': Str
-                             ': Number
+                             ': Num
                              ': '[]
 
 type instance Elems Val   n t = Cons        n
                              ': Arrow         t
-                             -- ': '[]
                              ': Elems Lit   n t
 
 type instance Elems Thunk n t = Acc         n t
@@ -297,6 +318,27 @@ type family SubRuntimeGroups' rt t gs where
 type NameByRuntime rt d = Runtime.ByLayout rt Str d
 
 
+-- === Variant repr === --
+
+type VariantRepr s rec = WithElement' ElemShow rec (Repr.Builder s Repr.Tok)
+
+class                                                 ElemShow a out where elemShow :: a -> out
+instance (Repr s a, Repr.Builder s Repr.Tok ~ out) => ElemShow a out where elemShow = repr
+
+instance {-# OVERLAPPABLE #-}  VariantRepr s (ASTRecord gs vs t d)                        => Repr s          (ASTRecord gs vs t d) where repr   = variantRepr                                      ; {-# INLINE repr #-}
+instance {-# OVERLAPPABLE #-} (VariantRepr s (Unwrapped (Term t term rt)), Typeable term) => Repr s          (Term      t term rt) where repr t = fromString (showTermType t) <+> repr (unwrap' t) ; {-# INLINE repr #-}
+instance                       VariantRepr HeaderOnly (Unwrapped (Term t term rt))        => Repr HeaderOnly (Term      t term rt) where repr   = repr ∘ unwrap'                                   ; {-# INLINE repr #-}
+
+variantRepr :: VariantRepr s rec => rec -> Repr.Builder s Repr.Tok
+variantRepr = withElement' (Proxy :: Proxy ElemShow) elemShow
+
+
+-- === Utils === --
+
+showTermType :: Typeable term => Term t term rt -> String
+showTermType (t :: Term t term rt) = tyConName $ typeRepTyCon $ head $ snd $ splitTyConApp $ typeOf (Proxy :: Proxy term)
+
+
 -- === Instances === --
 
 -- Basic instances
@@ -325,16 +367,17 @@ type instance ToDynamic (Term t term rt) = Term t term (ToDynamic rt)
 type instance Props p (Term t term rt) = Props p (RecordOf (Term t term rt))
 
 -- Conversions
-instance (Unwrapped (Term t term rt) ~ ASTRecord gs vs t' d) => Convertible (Term t term rt) (ASTRecord gs vs t' d) where convert = unwrap'
+instance Unwrapped (Term t term rt) ~ ASTRecord gs vs t' d => Convertible (Term t term rt) (ASTRecord gs vs t' d) where convert = unwrap' ; {-# INLINE convert #-}
 
 instance Convertible (Unwrapped (Term t term rt)) Data => Castable    (Term t term rt) Data 
-instance Convertible (Unwrapped (Term t term rt)) Data => Convertible (Term t term rt) Data where convert = convert ∘ unwrap'
-instance Castable    Data (Unwrapped (Term t term rt)) => Castable    Data (Term t term rt) where cast    = wrap'   ∘ cast
+instance Convertible (Unwrapped (Term t term rt)) Data => Convertible (Term t term rt) Data where convert = convert ∘ unwrap' ; {-# INLINE convert #-}
+instance Castable    Data (Unwrapped (Term t term rt)) => Castable    Data (Term t term rt) where cast    = wrap'   ∘ cast    ; {-# INLINE cast    #-}
 
 -- Abstractions
 type instance                                                       Abstract    (Term t term rt) = Data
 instance BiCastable (Abstract (Term t term rt)) (Term t term rt) => IsAbstract  (Term t term rt) where abstracted = iso cast cast
 instance BiCastable (Abstract (Term t term rt)) (Term t term rt) => HasAbstract (Term t term rt)
+
 
 
 ------------------------------------
@@ -364,7 +407,7 @@ type  GroupList t =              '[ {-  0 -} Term t Lit   Static
                                   ]
 type VariantList_MANUAL_CACHE t = [ {-  9 -} Star
                                   , {- 10 -} Str
-                                  , {- 11 -} Number
+                                  , {- 11 -} Num
                                   , {- 12 -} Cons  Str
                                   , {- 13 -} Arrow     (Layout t Val   Static )
                                   , {- 14 -} Cons      (Layout t Val   Dynamic)
@@ -423,7 +466,7 @@ CACHE_AS(Layout_RULE, Layout_CACHE)
 
 type instance Record.Layout (ASTRecord gs vs t d) = Layout_CACHE t
 
---type instance Layout2 Variant (ASTRecord gs vs t d) = VariantList t
+type instance Layout2 Variant (ASTRecord gs vs t d) = VariantList t
 
 -- === DecodeMap === --
 
@@ -439,7 +482,7 @@ type DecodeMap_MANUAL_CACHE t =
          , {-  8 -} '( Term t Draft Dynamic                                        ,  8 )
          , {-  9 -} '( Star                                                        ,  9 )
          , {- 10 -} '( Str                                                         , 10 )
-         , {- 11 -} '( Number                                                      , 11 )
+         , {- 11 -} '( Num                                                         , 11 )
          , {- 12 -} '( Cons  Str                                                   , 12 )
          , {- 13 -} '( Arrow     (Layout t Val   Static )                          , 13 )
          , {- 14 -} '( Cons      (Layout t Val   Dynamic)                          , 14 )
@@ -497,7 +540,7 @@ type instance DecodeMap (ASTRecord gs vs t d) = DecodeMap_CACHE t
 type EncodeMap_MANUAL_CACHE t =
     'Map [ {-  9 -} '( Star                                                        , '[  9 , 0,1,2,3,4,5,6,7,8 ] )
          , {- 10 -} '( Str                                                         , '[ 10 , 0,1,2,3,4,5,6,7,8 ] )
-         , {- 11 -} '( Number                                                      , '[ 11 , 0,1,2,3,4,5,6,7,8 ] )
+         , {- 11 -} '( Num                                                         , '[ 11 , 0,1,2,3,4,5,6,7,8 ] )
          , {- 12 -} '( Cons  Str                                                   , '[ 12 , 1,2,3,4,5,6,7,8   ] )
          , {- 13 -} '( Arrow     (Layout t Val   Static )                          , '[ 13 , 1,2,3,4,5,6,7,8   ] )
          , {- 14 -} '( Cons      (Layout t Val   Dynamic)                          , '[ 14 , 2,4,6,8           ] )

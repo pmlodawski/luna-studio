@@ -5,9 +5,10 @@
 {-# LANGUAGE RankNTypes                #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 
+{-# LANGUAGE CPP       #-}
+
 -- {-# LANGUAGE PartialTypeSignatures     #-}
 
-{-# LANGUAGE ScopedTypeVariables #-}
 
 module Tmp2 where
 
@@ -46,6 +47,10 @@ import Type.Bool
 
 import Luna.Syntax.AST.Layout (Static, Dynamic)
 
+import           Data.Reprx (Repr, repr)
+import qualified Data.Reprx as Repr
+
+import Data.Attribute
 
 
 newtype Tagged t a = Tagged a deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
@@ -67,13 +72,6 @@ class HasIdx a where idx :: Lens' a (Index a)
 ----------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------
 
-
-------------------------
--- === Attributes === --
-------------------------
-
-type family Attr a t
-class HasAttr a t where attr :: a -> Lens' t (Attr a t)
 
 
 ----------------------
@@ -219,6 +217,9 @@ type Modifier m a = (Reader m a, Writer m a)
 
 -- === Utils === --
 
+rawPtr :: HasPtr a => Lens' a (Index a)
+rawPtr = ptr ∘ wrapped'
+
 withM :: Modifier m a => Ref a -> (a -> m a) -> m ()
 withM ref f = read ref >>= f >>= write ref
 
@@ -297,14 +298,14 @@ class ( src ~ Conn_Source (Connection src tgt)
 edge :: Ref (Node src) -> Ref (Node tgt) -> Edge src tgt
 edge src tgt = Edge (rewrap src) (rewrap tgt)
 
-source :: Edge src tgt -> Ref (Node src)
-source (Edge src _) = rewrap src
+source :: Lens' (Edge src tgt) (Ref (Node src))
+source = lens (\(Edge src _) -> rewrap src) (\(Edge _ tgt) src -> Edge (rewrap src) tgt)
 
-target :: Edge src tgt -> Ref (Node tgt)
-target (Edge _ tgt) = rewrap tgt
+target :: Lens' (Edge src tgt) (Ref (Node tgt))
+target = lens (\(Edge _ tgt) -> rewrap tgt) (\(Edge src _) tgt -> Edge src (rewrap tgt))
 
 follow :: (Reader m (Edge src tgt), Functor m) => Ref (Edge src tgt) -> m (Ref $ Node tgt)
-follow ptr = target <$> read ptr
+follow ptr = view target <$> read ptr
 
 
 -- === Instances === --
@@ -346,8 +347,9 @@ instance Castable a a' => Castable (Node a) (Node a') where
 
 -- Attributes
 
-type instance Attr a (Node t) = Attr a t
-instance HasAttr a t => HasAttr a (Node t) where attr = wrapped' ∘∘ attr
+type instance                  Attr     a (Node t) = Attr a t
+instance HasAttr     a t => HasAttr     a (Node t) where attr      = wrapped' ∘∘  attr      ; {-# INLINE attr      #-}
+instance MayHaveAttr a t => MayHaveAttr a (Node t) where checkAttr = wrapped' ∘∘∘ checkAttr ; {-# INLINE checkAttr #-}
 
 
 
@@ -424,6 +426,15 @@ instance Castable (Raw ls) (Thunk rt ls) where cast = wrap' ∘ cast ∘ unwrap'
 instance Castable (Raw ls) (Expr  rt ls) where cast = wrap' ∘ cast ∘ unwrap' ; {-# INLINE cast #-}
 instance Castable (Raw ls) (Draft rt ls) where cast = wrap' ∘ cast ∘ unwrap' ; {-# INLINE cast #-}
 
+-- Representations
+
+instance {-# OVERLAPPABLE #-}                                     Repr s (Raw      ls) where repr = const "Raw"
+instance {-# OVERLAPPABLE #-} Repr s (Unwrapped (Lit   rt ls)) => Repr s (Lit   rt ls) where repr = repr ∘ unwrap'
+instance {-# OVERLAPPABLE #-} Repr s (Unwrapped (Val   rt ls)) => Repr s (Val   rt ls) where repr = repr ∘ unwrap'
+instance {-# OVERLAPPABLE #-} Repr s (Unwrapped (Thunk rt ls)) => Repr s (Thunk rt ls) where repr = repr ∘ unwrap'
+instance {-# OVERLAPPABLE #-} Repr s (Unwrapped (Expr  rt ls)) => Repr s (Expr  rt ls) where repr = repr ∘ unwrap'
+instance {-# OVERLAPPABLE #-} Repr s (Unwrapped (Draft rt ls)) => Repr s (Draft rt ls) where repr = repr ∘ unwrap'
+
 
 
 --------------------
@@ -460,9 +471,12 @@ instance (Castable a a', Castable (LayerData (Layer t a)) (LayerData (Layer t' a
 -- Attributes
 
 type instance Attr a (Layer t l) = If (a == t) (AttachedData t (Uncovered l)) (Attr a l)
-instance {-# OVERLAPPABLE #-} (Attr a (Layer t l) ~ Attr a (Unlayered (Layer t l)), HasAttr a l) 
-                           => HasAttr a (Layer t l) where attr   = layered ∘∘ attr                                                   ; {-# INLINE attr #-}
-instance {-# OVERLAPPABLE #-} HasAttr a (Layer a l) where attr _ = lens (\(Layer d _) -> d) (\(Layer _ a) d -> Layer d a) ∘ wrapped' ; {-# INLINE attr #-}
+instance {-# OVERLAPPABLE #-} (Attr a (Layer t l) ~ Attr a (Unlayered (Layer t l)), HasAttr     a l) => HasAttr     a (Layer t l) where attr      = layered ∘∘  attr      ; {-# INLINE attr      #-}
+instance {-# OVERLAPPABLE #-} (Attr a (Layer t l) ~ Attr a (Unlayered (Layer t l)), MayHaveAttr a l) => MayHaveAttr a (Layer t l) where checkAttr = layered ∘∘∘ checkAttr ; {-# INLINE checkAttr #-}
+instance {-# OVERLAPPABLE #-} HasAttr     a (Layer a l) where attr _ = lens (\(Layer d _) -> d) (\(Layer _ a) d -> Layer d a) ∘ wrapped'                                  ; {-# INLINE attr      #-}
+instance {-# OVERLAPPABLE #-} MayHaveAttr a (Layer a l)
+
+instance MayHaveAttr a (Cover t) where checkAttr _ = Nothing 
 
 
 --------------------
@@ -493,9 +507,9 @@ instance Castable (Unwrapped (ls :< a)) (Unwrapped (ls' :< a')) => Castable (ls 
 
 -- Attributes
 
-type instance Attr a (ls :< t) = Attr a (Unwrapped (ls :< t))
-instance HasAttr a (Unwrapped (ls :< t)) => HasAttr a (ls :< t) where attr = wrapped' ∘∘ attr
-
+type instance                                      Attr     a (ls :< t) = Attr a (Unwrapped (ls :< t))
+instance HasAttr     a (Unwrapped (ls :< t)) => HasAttr     a (ls :< t) where attr      = wrapped' ∘∘  attr      ; {-# INLINE attr      #-}
+instance MayHaveAttr a (Unwrapped (ls :< t)) => MayHaveAttr a (ls :< t) where checkAttr = wrapped' ∘∘∘ checkAttr ; {-# INLINE checkAttr #-}
 
 ------------------------------------
 -- === Network Implementation === --
@@ -646,7 +660,7 @@ instance ( Monad  m
          ) => Handler t SuccRegister m (Ref (Edge src tgt)) where 
     handler e = do
         ve <- lift $ read e -- FIXME[WD]: remove the lift (it could be handy to disable the magic trans-instance in Graph.hs)
-        lift $ with (source ve) $ attr Succs %~ (e:)
+        lift $ with (ve ^. source) $ attr Succs %~ (e:)
     {-# INLINE handler #-}
 
 

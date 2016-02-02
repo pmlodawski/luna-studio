@@ -24,14 +24,12 @@ header = '''\
 
 '''
 
-def main():
-    gencabal()
-
 def gencabal():
     tcabals_paths     = glob("**/*.tcabal")
     cabals_paths_orig = [dropext(path) for path in tcabals_paths]
     cabal_paths       = [path + '.cabal' for path in cabals_paths_orig]
     cabal_dirs        = [os.path.dirname(path) for path in cabal_paths]
+    cabal_dirs        = ['.' if d == '' else d for d in cabal_dirs]
 
     tcabals = []
     for path in tcabals_paths:
@@ -97,6 +95,3 @@ def runmatch(path):
 def process(path, config):
     match = re.compile(r'`[^`]*`')
     return match.sub(runmatch(path),config)
-
-
-main()

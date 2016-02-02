@@ -17,11 +17,12 @@ import Luna.Passes.Diagnostic.GraphViz
 import Data.Layer.Cover
 import Data.Record hiding (Layout)
 import Luna.Syntax.AST.Layout (Static, Dynamic)
+import Data.Attribute
 
 
---renderAndOpen lst = do
---    flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
---    open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
+renderAndOpen lst = do
+    flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
+    open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
 
 
 title s = putStrLn $ "\n" <> "-- " <> s <> " --"
@@ -39,6 +40,10 @@ type instance Layout (MyGraph t) term rt = t (Term (MyGraph t) term rt)
 -- - vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv ---
 prebuild :: IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
 prebuild = rebuildNetworkM def $ star
+
+
+data ImgAttr = ImgAttr deriving (Show)
+type instance Attr ImgAttr (Cover x) = String
 
 foo :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
 foo g = rebuildNetworkM g
@@ -83,8 +88,16 @@ foo g = rebuildNetworkM g
     title "params reading"
     let s1t = s1_v ^. attr Type
         s1s = s1_v ^. attr Succs
+        ca1 = case checkAttr Type of
+            Just t  -> show $ s1_v ^. t
+            Nothing -> "no type here!"
+        ca2 = case checkAttr ImgAttr of
+            Just t  -> s1_v ^. t
+            Nothing -> "no imagined attrib here!"
     print s1t
     print s1s
+    print ca1
+    print ca2
 
 
     return s1
@@ -99,6 +112,7 @@ main = do
     (s,g') <- foo g
     print g'
 
+    renderAndOpen [("g", g')]
 
 -------------------------
 -- === Benchmarks === ---

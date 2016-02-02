@@ -43,8 +43,10 @@ import           Data.Reprx
 
 import Luna.Syntax.Model.Graph
 import Tmp2
-import Luna.Syntax.AST.Term2 hiding (Arrow, Node)
-
+import qualified Luna.Syntax.AST.Term2 as Term
+import Luna.Syntax.AST.Layout (Static, Dynamic)
+import Data.Layer.Cover (uncover)
+import Data.Attribute
 
 --instance Repr HeaderOnly Data where repr _ = "Data"
 --instance Repr HeaderOnly (Draft l v) where repr _ = "Draft"
@@ -105,48 +107,71 @@ labelAttrs = const []
 --    labelAttrs = const []
 
 toGraphViz :: NetGraph -> DotGraph String
-toGraphViz net = undefined -- DotGraph { strictGraph     = False
---                          , directedGraph   = True
---                          , graphID         = Nothing
---                          , graphStatements = DotStmts { attrStmts = gStyle
---                                                       , subGraphs = []
---                                                       , nodeStmts = nodeStmts
---                                                       , edgeStmts = edgeStmts
---                                                       }
---                          }
-    where g               = net ^. nodes
-          edges'          = net ^. edges
-          nodesE          = elems g 
---          nodes'          = cast <$> nodesE :: [NetCover (Static Draft (RefCover Edge NetCover (Static Draft)))]
---          nodeIds         = usedIxes g
---          nodeLabels      = fmap (reprStyled HeaderOnly . uncoat) nodes'
---          labeledNode n s a = DotNode (nodeRef a) $ (GV.Label . StrLabel $ fromString s) : (nodeColorAttrs n) ++ labelAttrs n
---          nodeStmts       = fmap (uncurry labeledNode) $ zip3 nodes' nodeLabels nodeIds
---          --nodeInEdges   n = zip3 ([0..] :: [Int]) (genInEdges net $ index n g) (repeat n)
---          nodeInEdges   n = zip3 ([0..] :: [Int]) ([] :: [(Int, [GV.Attribute])]) (repeat n)
---          inEdges         = concat $ fmap nodeInEdges nodeIds
---          mkEdge  (n,(a,attrs),b) = DotEdge (nodeRef a) (nodeRef b) attrs -- (GV.edgeEnds Back : attrs)
---          edgeStmts       = fmap mkEdge inEdges -- <> allEdges
-            
-----          allEdges        = drawEdge <$> elems_ edges'
-            
-----          nodeColorAttrs n = case' (uncoat n) $ do
-----                                match $ \(Val val :: Val (Ref Edge)) ->
-----                                     case' val $ match $ \lit -> case lit of
-----                                        Lit.Int    i -> [GV.color valIntNodeClr]
-----                                        Lit.String s -> [GV.color valStrNodeClr]
-----                                        _            -> [GV.color valUnkNodeClr]
-----                                match $ \ANY         -> [GV.color nodeClr]
+toGraphViz net = DotGraph { strictGraph     = False
+                          , directedGraph   = True
+                          , graphID         = Nothing
+                          , graphStatements = DotStmts { attrStmts = gStyle
+                                                       , subGraphs = []
+                                                       , nodeStmts = nodeStmts
+                                                       , edgeStmts = edgeStmts
+                                                       }
+                          }
+    where g                 = net ^. nodes
+          edges'            = net ^. edges
+          nodesE            = elems g
+          nodes'            = cast <$> nodesE :: [NetLayers :< Draft Static]
+          nodeIds           = usedIxes g
+          nodeLabels        = reprStyled HeaderOnly . uncover <$> nodes'
+          nodeRef         i = "<node " <> show i <> ">"
+          labeledNode n s a = DotNode (nodeRef a) $ (GV.Label . StrLabel $ fromString s) : (nodeColorAttrs n) ++ labelAttrs n
+          nodeStmts         = fmap (uncurry labeledNode) $ zip3 nodes' nodeLabels nodeIds
 
---          nodeColorAttrs n = caseTest (uncoat n) $ do
---                                --match $ \(Val val :: Val (Ref Edge)) ->
---                                --     case' val $ match $ \lit -> case lit of
---                                --        Lit.Int    i -> [GV.color valIntNodeClr]
---                                --        Lit.String s -> [GV.color valStrNodeClr]
---                                --        _            -> [GV.color valUnkNodeClr]
---                                match $ \ANY         -> [GV.color nodeClr]
---          nodeRef        i = "<node " <> show i <> ">"
+          xx                = cast (index 0 g) :: NetLayers :< Draft Static
+          --xx2               = inputs (uncover xx) :: _
+          nodeInEdges   n = zip3 ([0..] :: [Int]) (genInEdges net $ (cast $ index n g :: NetLayers :< Draft Static)) (repeat n)
+          --nodeInEdges   n = zip3 ([0..] :: [Int]) ([] :: [(Int, [GV.Attribute])]) (repeat n)
+          inEdges         = concat $ fmap nodeInEdges nodeIds
+          mkEdge  (n,(a,attrs),b) = DotEdge (nodeRef a) (nodeRef b) attrs -- (GV.edgeEnds Back : attrs)
+          edgeStmts       = fmap mkEdge inEdges -- <> allEdges
             
+--          allEdges        = drawEdge <$> elems_ edges'
+            
+--          nodeColorAttrs n = case' (uncoat n) $ do
+--                                match $ \(Val val :: Val (Ref Edge)) ->
+--                                     case' val $ match $ \lit -> case lit of
+--                                        Lit.Int    i -> [GV.color valIntNodeClr]
+--                                        Lit.String s -> [GV.color valStrNodeClr]
+--                                        _            -> [GV.color valUnkNodeClr]
+--                                match $ \ANY         -> [GV.color nodeClr]
+
+          nodeColorAttrs n = caseTest (uncover n) $ do
+                                --match $ \(Val val :: Val (Ref Edge)) ->
+                                --     case' val $ match $ \lit -> case lit of
+                                --        Lit.Int    i -> [GV.color valIntNodeClr]
+                                --        Lit.String s -> [GV.color valStrNodeClr]
+                                --        _            -> [GV.color valUnkNodeClr]
+                                match $ \ANY         -> [GV.color nodeClr]
+            
+
+genInEdges (g :: NetGraph) (n :: NetLayers :< Draft Static) = tpEdge : fmap addColor inEdges  where
+    genLabel  = GV.Label . StrLabel . fromString . show
+    ins = inputs (uncover n)
+    getTgtIdx inp = view (source ∘ rawPtr) $ index (inp ^. rawPtr) es
+    inIdxs = getTgtIdx <$> ins
+    inEdges   = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) [0..]
+    es  = g ^. edges
+    a = (ins !! 0) 
+    idx = a ^. rawPtr
+
+    t = n ^. attr Type
+    tpEdge = (getTgtIdx t, [GV.color typedArrClr, ArrowHead dotArrow])
+
+    addColor (idx, attrs) = (idx, GV.color arrClr : attrs)
+
+    --getIdx  i = deref . view target $ index (deref i) edges'
+    --n = 
+
+
 ----          drawEdge (DoubleArc start end) = DotEdge (nodeRef $ deref start) (nodeRef $ deref end) []
 
 --class GenInEdges n e a where
@@ -186,33 +211,33 @@ toGraphViz net = undefined -- DotGraph { strictGraph     = False
 ----    genInEdges g = genInEdges g . view node
 
 
---class Displayable m a where
---    render  :: String -> a -> m ()
---    display :: a -> m ()
+class Displayable m a where
+    render  :: String -> a -> m ()
+    display :: a -> m ()
 
---class OpenUtility p where
---    openUtility :: MonadIO m => p -> [FilePath] -> m ()
+class OpenUtility p where
+    openUtility :: MonadIO m => p -> [FilePath] -> m ()
 
---instance OpenUtility Windows where openUtility = const $ singleProcess "start"
---instance OpenUtility Darwin  where openUtility = const $ singleProcess "open"
---instance OpenUtility Linux   where openUtility = const $ manyProcess   "xdg-open"
---instance OpenUtility GHCJS   where openUtility = const $ singleProcess "open"
+instance OpenUtility Windows where openUtility = const $ singleProcess "start"
+instance OpenUtility Darwin  where openUtility = const $ singleProcess "open"
+instance OpenUtility Linux   where openUtility = const $ manyProcess   "xdg-open"
+instance OpenUtility GHCJS   where openUtility = const $ singleProcess "open"
 
---singleProcess, manyProcess :: MonadIO m => String -> [FilePath] -> m ()
---singleProcess p args = liftIO $ void $ createProcess $ shell $ p <> " " <> intercalate " " args
---manyProcess   p = liftIO . mapM_ (\a -> createProcess $ shell $ p <> " " <> a)
+singleProcess, manyProcess :: MonadIO m => String -> [FilePath] -> m ()
+singleProcess p args = liftIO $ void $ createProcess $ shell $ p <> " " <> intercalate " " args
+manyProcess   p = liftIO . mapM_ (\a -> createProcess $ shell $ p <> " " <> a)
 
---open paths = openUtility platform paths
+open paths = openUtility platform paths
 
 
---instance (MonadIO m, Ord a, PrintDot a) => Displayable m (DotGraph a) where
---    render name gv = do
---        let path = "/tmp/" <> name <> ".png"
---        liftIO $ runGraphviz gv Png path
---        return ()
+instance (MonadIO m, Ord a, PrintDot a) => Displayable m (DotGraph a) where
+    render name gv = do
+        let path = "/tmp/" <> name <> ".png"
+        liftIO $ runGraphviz gv Png path
+        return ()
 
---    display gv = do
---        let path = "/tmp/out.png"
---        liftIO $ runGraphviz gv Png path
---        open [path]
---        return ()
+    display gv = do
+        let path = "/tmp/out.png"
+        liftIO $ runGraphviz gv Png path
+        open [path]
+        return ()

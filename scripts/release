@@ -6,6 +6,8 @@ import subprocess
 from   utils.glob2 import glob
 import re
 from   getpass     import getpass
+from   gencabal    import gencabal
+import yaml
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('paths'            , nargs='+'          , help='Libraries paths.')
@@ -13,6 +15,7 @@ parser.add_argument('--no-hackage'     , action="store_true", help='Do not uploa
 parser.add_argument('-m', '--msg'      , nargs="?"          , help='Unified commit message.')
 parser.add_argument('--upload-missing' , action="store_true", help='Try uploading missing packages to hackage.')
 parser.add_argument('--ask'            , action="store_true", help='Be more verbose before making any action.')
+parser.add_argument('--update-stack-conf' , nargs=1            , help='Update stack yaml config file.')
 
 
 def checkPublic():
@@ -35,15 +38,19 @@ def simpleRepl(definp=None):
             print "Error occurred, continuing."
 
 
-def readVersion(cabalPath):
-    with open(cabalPath, 'r') as conf:
-        cabal = conf.read()
-    prog = re.compile(r'(?P<header>^version:\W+)(?P<version>.*$)', re.MULTILINE)
-    match = prog.search(cabal)
+def readConf(cabalPath):
+    with open(cabalPath, 'r') as file:
+        conf = file.read()
+    prog  = re.compile(r'(?P<header>^version:\W+)(?P<version>.*$)', re.MULTILINE)
+    match = prog.search(conf)
     if not match:
         raise Exception ('Error when parsing cabal file')
-    version = [int(i) for i in match.group('version').split('.')]
-    return version
+    vstr    = match.group('version')
+    version = parseVersion(vstr)
+    if not version:
+        print "ERROR: cannot parse the package version: '%s'" % vstr
+        raise
+    return (version, conf, match)
 
 # def checkStatus(version):
 #     v = showVersion(version)
@@ -66,60 +73,108 @@ def readVersion(cabalPath):
 #     with open(name, 'w') as f:
 #         stat = f.write(v)
 
+def parseVersion(v):
+    try:
+        return [int(i) for i in v.split('.')]
+    except:
+        return None
+
 def main():
     args = parser.parse_args()
+
+
+    yamlPath = args.update_stack_conf[0]
+
+    with open(yamlPath, 'r') as stream:
+        conf = yaml.load(stream)
+
+    pkgs = conf['packages']
+    for pkg in pkgs:
+        loc = pkg['location']
+        if isinstance(loc, dict):
+            gitloc = loc['git']
+            print gitloc
+
+    a = []
+    for path in args.paths:
+        path = os.path.abspath(path)
+        cabalPaths = glob (path + "/**/*.tcabal")
+        a.append(1)
+
+    print a 
+    return 0
+
+
     if not args.no_hackage:
         username = nonEmptyInput("Hackage username: ")
         password = nonEmptyPass ("Hackage password: ")
+
     for path in args.paths:
+        print "--- %s ---" % path
+        print "Running global gencabal"
+        gencabal()
+        
         path = os.path.abspath(path)
         os.chdir(path)
-        cabalPaths = glob (path + "/**/*.cabal")
+        cabalPaths = glob (path + "/**/*.tcabal")
 
         total = len(cabalPaths)
         for i in range(total):
             cabalPath = cabalPaths[i]
             libPath = os.path.dirname(cabalPath)
-            version = readVersion(cabalPath)
+            (version, conf, match) = readConf(cabalPath)
             print "\n[%s/%s] >> " % (i + 1, total) + libPath + " (" + showVersion(version) + ")"
             
             os.chdir(libPath)
+            gencabal()
             if not checkPublic():
                 print "Library is not public, skipping."
                 continue
             try:
                 status = subprocess.check_output("git status --porcelain", shell=True)
             except subprocess.CalledProcessError:
-                print "ERROR"
-                raise
+                print "It seems the library is not a git repository, aborting."
+                return 1
 
-            if (not status): # and (checkStatus(version)) :
+
+            if (not status): # and checkStatus(version)) :
                 print "Everything up to date."
                 if not args.upload_missing: continue
 
             else:
-                print status
-
-                simpleRepl("git add -A")
+                if not status:
+                    print "It seems that git is up to date, but previous run of the script was not successful."
+                    print "Trying again ..."
+                else:
+                    print "Git status:"
+                    print status
             
-                # Updating cabal config
-                with open(cabalPath, 'r') as conf:
-                    cabal = conf.read()
-                prog = re.compile(r'(?P<header>^version:\W+)(?P<version>.*$)', re.MULTILINE)
-                match = prog.search(cabal)
-                if not match:
-                    raise Exception ('Error when parsing cabal file')
-                version = [int(i) for i in match.group('version').split('.')]
+                simpleRepl()
+
+
+
                 defNewVersion = version[:-1] + [version[-1] + 1]
 
-                newVersion = defaultInput("New package version (current: %s) [%s]: " % (showVersion(version), showVersion(defNewVersion)), showVersion(defNewVersion))
-                newCabal = cabal[:match.start()] + match.group("header") + newVersion + cabal[match.end():]
+                while True:
+                    newVersion = defaultInput("New package version (current: %s) [%s]: " % (showVersion(version), showVersion(defNewVersion)), showVersion(defNewVersion))
+                    if not (parseVersion (newVersion)):
+                        print "Incorrect version '%s'"
+                        continue
+                    break
+
+                print "Updating tcabal configuration"
+
+                newConf = conf[:match.start()] + match.group("header") + newVersion + conf[match.end():]
                 with open(cabalPath, 'w') as conf:
-                    conf.write(newCabal)
+                    conf.write(newConf)
+
+                print "Running gencabal"
+                gencabal()
 
                 # tracking new config
                 subprocess.check_output("git add %s" % cabalPath, shell=True)
 
+                simpleRepl("git add -A")
 
                 if checkAsk (args, 'Commit changes?'):
                     print "Commiting changes."
@@ -153,7 +208,7 @@ def main():
                         simpleRepl()
 
             
-            if checkAsk (args, 'Upload to hackage?'):
+            if ask ('Upload to hackage?'):
                 if (status or args.upload_missing) and not args.no_hackage:
                     while True:
                         print "Generating sdist"
@@ -165,6 +220,7 @@ def main():
                             print e.output
                             print "\nEnabling recovery shell access:"
                             simpleRepl()
+                            # todo - go back to pushing repo
 
                     sdistPath = sdist.split()[-1]
 
@@ -172,7 +228,7 @@ def main():
                     sdist = subprocess.check_output('cabal upload -u%s -p%s %s' % (username, password, sdistPath), shell=True)
                     print sdist
 
-            # updateStatus(version)
+            #updateStatus(version)
 
                 
 
@@ -203,12 +259,14 @@ def defaultInput(s, d):
 
 def checkAsk(args, s):
     if args.ask:
-        while True:
-            out = raw_input(s + ' [N/y]')
-            if not out: out = 'N'
-            if out == 'n' or out == 'N': return False
-            if out == 'y' or out == 'Y': return True
+        ask(s)
     return True
 
+def ask(s):
+    while True:
+        out = raw_input(s + ' [N/y]')
+        if not out: out = 'N'
+        if out == 'n' or out == 'N': return False
+        if out == 'y' or out == 'Y': return True
 
 main ()
