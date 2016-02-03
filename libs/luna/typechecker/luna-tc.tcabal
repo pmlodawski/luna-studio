@@ -55,6 +55,7 @@ Library
                  , container
                  , containers >= 0.5.6.2
                  , convert
+                 , data-attribute
                  , data-base
                  , data-construction
                  , data-layer
@@ -125,6 +126,7 @@ Executable tc-test
                  , container
                  , containers >= 0.5.6.2
                  , convert
+                 , data-attribute
                  , data-base
                  , data-construction
                  , data-layer

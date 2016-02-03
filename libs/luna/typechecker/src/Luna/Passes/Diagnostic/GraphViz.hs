@@ -33,6 +33,7 @@ import           Data.Container.Hetero
 --import qualified Luna.Syntax.Builder                  as B
 --import qualified Data.Variants                        as V
 
+import Luna.Syntax.Model.Graph.Class
 import Data.Record
 
 import           System.Platform
@@ -40,10 +41,10 @@ import           System.Process                       (createProcess, shell)
 import           Data.Container.Class
 import           Data.Reprx
 
-
+import Luna.Syntax.Model.Layer
 import Luna.Syntax.Model.Graph
 import Tmp2
-import qualified Luna.Syntax.AST.Term2 as Term
+import qualified Luna.Syntax.AST.Term as Term
 import Luna.Syntax.AST.Layout (Static, Dynamic)
 import Data.Layer.Cover (uncover)
 import Data.Attribute
@@ -122,17 +123,13 @@ toGraphViz net = DotGraph { strictGraph     = False
           nodes'            = cast <$> nodesE :: [NetLayers :< Draft Static]
           nodeIds           = usedIxes g
           nodeLabels        = reprStyled HeaderOnly . uncover <$> nodes'
+          nodeStmts         = fmap (uncurry labeledNode) $ zip3 nodes' nodeLabels nodeIds
+          inEdges           = concat $ fmap nodeInEdges nodeIds
+          edgeStmts         = fmap mkEdge inEdges
           nodeRef         i = "<node " <> show i <> ">"
           labeledNode n s a = DotNode (nodeRef a) $ (GV.Label . StrLabel $ fromString s) : (nodeColorAttrs n) ++ labelAttrs n
-          nodeStmts         = fmap (uncurry labeledNode) $ zip3 nodes' nodeLabels nodeIds
-
-          xx                = cast (index 0 g) :: NetLayers :< Draft Static
-          --xx2               = inputs (uncover xx) :: _
-          nodeInEdges   n = zip3 ([0..] :: [Int]) (genInEdges net $ (cast $ index n g :: NetLayers :< Draft Static)) (repeat n)
-          --nodeInEdges   n = zip3 ([0..] :: [Int]) ([] :: [(Int, [GV.Attribute])]) (repeat n)
-          inEdges         = concat $ fmap nodeInEdges nodeIds
+          nodeInEdges   n   = zip3 ([0..] :: [Int]) (genInEdges net $ (cast $ index n g :: NetLayers :< Draft Static)) (repeat n)
           mkEdge  (n,(a,attrs),b) = DotEdge (nodeRef a) (nodeRef b) attrs -- (GV.edgeEnds Back : attrs)
-          edgeStmts       = fmap mkEdge inEdges -- <> allEdges
             
 --          allEdges        = drawEdge <$> elems_ edges'
             
@@ -155,18 +152,15 @@ toGraphViz net = DotGraph { strictGraph     = False
 
 genInEdges (g :: NetGraph) (n :: NetLayers :< Draft Static) = tpEdge : fmap addColor inEdges  where
     genLabel  = GV.Label . StrLabel . fromString . show
-    ins = inputs (uncover n)
-    getTgtIdx inp = view (source ∘ rawPtr) $ index (inp ^. rawPtr) es
-    inIdxs = getTgtIdx <$> ins
+    ins       = inputs (uncover n)
+    inIdxs    = getTgtIdx <$> ins
     inEdges   = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) [0..]
-    es  = g ^. edges
-    a = (ins !! 0) 
-    idx = a ^. rawPtr
-
-    t = n ^. attr Type
-    tpEdge = (getTgtIdx t, [GV.color typedArrClr, ArrowHead dotArrow])
+    es        = g ^. edges
+    t         = n ^. attr Type
+    tpEdge    = (getTgtIdx t, [GV.color typedArrClr, ArrowHead dotArrow])
 
     addColor (idx, attrs) = (idx, GV.color arrClr : attrs)
+    getTgtIdx inp         = view (source ∘ rawPtr) $ index (inp ^. rawPtr) es
 
     --getIdx  i = deref . view target $ index (deref i) edges'
     --n = 

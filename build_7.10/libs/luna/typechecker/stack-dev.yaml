@@ -4,6 +4,7 @@ packages:
     - ../../../../libs/utils
     - ../../../../../../libs/container
     - ../../../../../../libs/convert
+    - ../../../../../../libs/data-attribute
     - ../../../../../../libs/data-base
     - ../../../../../../libs/data-construction
     - ../../../../../../libs/data-layer
