@@ -21,7 +21,7 @@ import qualified Luna.Syntax.Model.Graph.Builder as GraphBuilder
 
 import qualified Luna.Syntax.Model.Builder.Type as Type
 import qualified Luna.Syntax.Model.Builder.Self as Self
-import           Luna.Syntax.Model.Graph.Layers 
+import           Luna.Syntax.Model.Graph.Layers
 import           Luna.Syntax.AST.Layout
 
 import Data.Record (Variant, MapTryingElemList_, withElement_, Props)
@@ -210,11 +210,11 @@ type NetGraph = Graph (NetLayers :< Raw) (Link (NetLayers :< Raw))
 buildNetwork  = runIdentity ∘ buildNetworkM
 buildNetworkM = rebuildNetworkM' (def :: NetGraph)
 rebuildNetworkM' (net :: NetGraph) = flip Self.evalT (undefined ::        Ref $ Node NetType)
-                                  ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node NetType))
-                                  ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
-                                  ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref $ Node NetType)
-                                  ∘ flip GraphBuilder.runT net
-                                  ∘ registerSuccs   CONNECTION
+                                   ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node NetType))
+                                   ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
+                                   ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref $ Node NetType)
+                                   ∘ flip GraphBuilder.runT net
+                                   ∘ registerSuccs   CONNECTION
 {-# INLINE   buildNetworkM #-}
 {-# INLINE rebuildNetworkM' #-}
 
@@ -234,8 +234,8 @@ instance {-# OVERLAPPABLE #-}
     , net ~ Graph n e
     ) => NetworkBuilderT net m m'''''' where
     runNetworkBuilderT net = flip Self.evalT (undefined ::        Ref $ Node NetType)
-    	                     ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node NetType))
-    	                     ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
+                           ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node NetType))
+                           ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
                            ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref $ Node NetType)
                            ∘ flip GraphBuilder.runT net
                            ∘ registerSuccs   CONNECTION
@@ -245,7 +245,7 @@ instance {-# OVERLAPPABLE #-}
 
 -- FIXME[WD]: poprawic typ oraz `WithElement_` (!)
 -- FIXME[WD]: inputs should be more general and should be refactored out
-inputs :: forall x ast rt ls. 
+inputs :: forall x ast rt ls.
       ( x ~ Ref (Link (ls :< ast rt))
       , (MapTryingElemList_ (Props Variant (RecordOf (RecordOf (ast rt ls)))) (TFoldable (Ref (Link (ls :< ast rt)))) (ast rt ls))
       ) => ast rt ls -> [x]

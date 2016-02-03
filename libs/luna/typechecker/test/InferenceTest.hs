@@ -8,17 +8,17 @@
 
 module Main where
 
+import           Prologue                        hiding (cons, read)
 import           Data.Attribute
 import           Data.Layer.Cover
 import           Data.Record                     hiding (Layout)
-import           Luna.Passes.Diagnostic.GraphViz
 import           Luna.Syntax.AST.Layout          (Dynamic, Static)
 import           Luna.Syntax.AST.Term            hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
 import qualified Luna.Syntax.AST.Term            as Term
 import           Luna.Syntax.Model.Graph
 import           Luna.Syntax.Model.Layer
-import           Prologue                        hiding (cons, read)
---import           Tmp2
+import           Luna.Passes.Diagnostic.GraphViz
+import           Luna.Passes.Inference.Literals
 
 -- ====================================
 
@@ -130,6 +130,11 @@ prebuild = runNetworkBuilderT def $ star
 --     putStrLn "end"
 
 
+assignLiteralTypesTest :: (Ref $ Node (NetLayers :< Draft Static)) -> NetGraph -> IO ((), NetGraph)
+assignLiteralTypesTest ref g = runNetworkBuilderT g $ do
+    assignLiteralTypes ref
+    return ()
+
 sampleGraph2 :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
 sampleGraph2 g = runNetworkBuilderT g $ do
     i1 <- int 2
@@ -157,7 +162,6 @@ sampleGraph2 g = runNetworkBuilderT g $ do
     accPlus2   <- acc "+" appPlus1b
     appPlus2   <- app accPlus2 [arg appLen]
 
-
     print appPlus2
     return appPlus2
 
@@ -167,6 +171,10 @@ main = do
     -- print star
     -- putStrLn "\n--------------\n"
     -- print g
-    (s, g') <- sampleGraph2 g
+    (s1, g') <- sampleGraph2 g
+
+    ((), g'') <- assignLiteralTypesTest s1 g'
+
+
     -- print g'
-    renderAndOpen [("g", g')]
+    renderAndOpen [("g", g'')]
