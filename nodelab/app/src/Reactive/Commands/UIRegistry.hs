@@ -89,7 +89,7 @@ resize'CB cb id f = do
     widgetFile <- preuse $ UIRegistry.widgets . ix id
     forM_ widgetFile $ \widgetFile -> do
         let model   = widgetFile ^. widget
-            wParent = widgetFile ^. parent
+            wParent = widgetFile ^. Object.Widget.parent
         resizeWidget id (model ^. widgetSize) model
         when cb $ forM_ wParent $ flip triggerChildrenResized id
 
@@ -116,6 +116,12 @@ children id = do
     maybeFile <- UIRegistry.lookupM id
     let file   = fromMaybe (error "children: widget not exists") maybeFile
     return $ file ^. Object.Widget.children
+
+parent :: WidgetId -> Command UIRegistry.State WidgetId
+parent id = do
+    maybeFile <- UIRegistry.lookupM id
+    let file   = fromMaybe (error "parent: widget not exists") maybeFile
+    return $ fromMaybe (error "parent: called on scene") $ file ^. Object.Widget.parent
 
 handler :: Typeable k => WidgetId -> TypeKey k -> Command UIRegistry.State (Maybe k)
 handler id k = do
