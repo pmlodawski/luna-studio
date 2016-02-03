@@ -18,7 +18,7 @@ import qualified Luna.Syntax.AST.Term            as Term
 import           Luna.Syntax.Model.Graph
 import           Luna.Syntax.Model.Layer
 import           Prologue                        hiding (cons, read)
-import           Tmp2
+--import           Tmp2
 
 -- ====================================
 
