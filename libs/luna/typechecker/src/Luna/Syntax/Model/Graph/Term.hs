@@ -3,7 +3,7 @@
 
 module Luna.Syntax.Model.Graph.Term where
 
-import Prologue hiding (cons)
+import Prologue hiding (cons, Num)
 
 import           Control.Monad.Event
 import           Data.Layer.Cover
@@ -127,7 +127,7 @@ instance ( SmartCons el (Uncovered a)
          , Register ELEMENT a m
          , MonadSelfBuilder s m
          , Castable a s
-         ) => ElemBuilder el m a where 
+         ) => ElemBuilder el m a where
     -- TODO[WD]: change buildAbsMe to buildMe2
     --           and fire monad every time we construct an element, not once for the graph
     buildElem el = register ELEMENT =<< buildAbsMe (constructCover $ cons el) where
@@ -141,6 +141,12 @@ instance ( SmartCons el (Uncovered a)
 
 star :: ElemBuilder Star m a => m a
 star = buildElem Star
+
+string :: ElemBuilder Str m a => String -> m a
+string = buildElem . Str
+
+int :: ElemBuilder Num m a => Int -> m a
+int = buildElem . Num
 
 unify :: ( MonadFix m
          , ElemBuilder (Unify (Connection b u)) m u
