@@ -224,6 +224,42 @@ type instance Attr ImgAttr (Cover x) = String
 --     renderAndOpen [ ("g" , g')]
 --     putStrLn "end"
 
+app2 (f :: Ref $ Node $ NetLayers :< Draft Static) (args :: [Arg (Ref $ Node $ NetLayers :< Draft Static)]) = mdo
+    return undefined
+
+
+sampleGraph2 :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
+sampleGraph2 g = rebuildNetworkM g $ do
+    len <- string "len"
+    i1 <- int 2
+    i2 <- int 3
+    i3 <- int 4
+    s1 <- string "abc"
+    s2 <- string "def"
+    s3 <- string "ghi"
+    i1 <- int 7
+
+    accPlus1a  <- acc "+" i1
+    appPlus1a  <- app accPlus1a [arg i2]
+
+    print accPlus1a
+    return accPlus1a
+
+main :: IO ()
+main = do
+    (star, g) <- prebuild
+    -- print star
+    -- putStrLn "\n--------------\n"
+    -- print g
+    (s, g') <- sampleGraph2 g
+    -- print g'
+    renderAndOpen [("g", g')]
+
+
+
+
+
+
 
 
 -- foo :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
@@ -272,25 +308,4 @@ type instance Attr ImgAttr (Cover x) = String
 --         ca1 = case checkAttr Type of
 --             Just t  -> show $ s1_v ^. t
 --             Nothing -> "no type here!"
-
-
-sampleGraph2 :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
-sampleGraph2 g = rebuildNetworkM g $ do
-    title "basic element building"
-    s1 <- string "dupa"
-    s2 <- string "jasio"
-    i1 <- int 7
-    print s1
-    return s1
-
-main :: IO ()
-main = do
-    (star, g) <- prebuild
-    print star
-    print g
-    putStrLn "\n--------------\n"
-    (s,g') <- sampleGraph2 g
-    print g'
-
-    renderAndOpen [("g", g')]
 

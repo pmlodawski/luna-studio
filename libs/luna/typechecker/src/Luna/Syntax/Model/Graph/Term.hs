@@ -139,6 +139,12 @@ instance ( SmartCons el (Uncovered a)
 -- === Term constructors === --
 -------------------------------
 
+arg :: a -> Arg a
+arg = Arg Nothing
+
+fromArg :: Arg a -> a
+fromArg (Arg _ a) = a
+
 star :: ElemBuilder Star m a => m a
 star = buildElem Star
 
@@ -147,6 +153,25 @@ string = buildElem . Str
 
 int :: ElemBuilder Num m a => Int -> m a
 int = buildElem . Num
+
+acc :: ( MonadFix m
+       , ElemBuilder (Acc n (Connection a u)) m u
+       , Connectible a u m
+       ) => n -> a -> m u
+acc n a = mdo
+    out <- buildElem $ Acc n ca
+    ca  <- connection a out
+    return out
+
+app :: ( MonadFix m
+       , ElemBuilder (App (Connection a u)) m u
+       , Connectible a u m
+       ) => a -> [Arg a] -> m u
+app f args = mdo
+    out <- buildElem $ App cf cargs
+    cf  <- connection f out
+    cargs <- mapM (\(Arg n a) -> (Arg n) <$> (connection a out)) args
+    return out
 
 unify :: ( MonadFix m
          , ElemBuilder (Unify (Connection b u)) m u

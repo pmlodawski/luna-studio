@@ -6,24 +6,25 @@
 
 module Luna.Syntax.AST.Term (module Luna.Syntax.AST.Term, module X) where
 
-import Prologue hiding (Cons, Swapped, Num)
+import           Prologue                      hiding (Cons, Num, Swapped)
 
-import Data.Base
-import Data.Record            hiding (ASTRecord, Variants, Layout)
-import qualified Data.Record as Record
-import Luna.Syntax.AST.Layout (ToStatic, ToDynamic)
-import Type.Container
-import Type.Cache.TH          (cacheHelper, cacheType, assertTypesEq)
-import Type.Map
-import Data.Abstract
+import           Data.Abstract
+import           Data.Base
+import           Data.Record                   hiding (ASTRecord, Layout, Variants)
+import qualified Data.Record                   as Record
+import           Luna.Syntax.AST.Layout        (ToDynamic, ToStatic)
+import           Type.Cache.TH                 (assertTypesEq, cacheHelper, cacheType)
+import           Type.Container
+import           Type.Map
 
-import           Data.Reprx (Reprs, Repr, repr, (<+>))
-import qualified Data.Reprx as Repr
+import           Data.Reprx                    (Repr, Reprs, repr, (<+>))
+import qualified Data.Reprx                    as Repr
 
-import qualified Luna.Syntax.AST.Layout as Runtime
-import           Luna.Syntax.AST.Layout (Static, Dynamic)
-import           Data.Typeable (tyConName, typeRepTyCon, splitTyConApp)
+import           Data.Typeable                 (splitTyConApp, tyConName, typeRepTyCon)
+import           Luna.Syntax.AST.Layout        (Dynamic, Static)
+import qualified Luna.Syntax.AST.Layout        as Runtime
 import           Luna.Syntax.Model.Repr.Styles
+
 
 import Data.Record as X (Data)
 
@@ -86,12 +87,11 @@ class HasArgs   a where args   :: Lens' a (Args   a)
 -- === Args === --
 ------------------
 
-newtype Arg a = Arg a deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
-
+data Arg a = Arg (Maybe String) a deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 
 -- === Instances === --
 
-instance {-# OVERLAPPABLE #-} Repr s a => Repr s (Arg a) where repr (Arg a) = "Arg" <+> repr a
+instance {-# OVERLAPPABLE #-} Repr s a => Repr s (Arg a) where repr (Arg _ a) = "Arg" <+> repr a
 
 
 -----------------------------
@@ -221,9 +221,10 @@ instance Repr HeaderOnly (Acc   n t) where repr _ = "Acc"
 instance Repr HeaderOnly (App     t) where repr _ = "App"
 instance Repr HeaderOnly (Unify   t) where repr _ = "Unify"
 
+-- String
 
-
-
+instance IsString Str where fromString      str  = Str str
+instance ToString Str where   toString (Str str) =     str
 
 ---------------------------
 ---------------------------
