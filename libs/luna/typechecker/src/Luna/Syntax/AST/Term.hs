@@ -264,6 +264,7 @@ instance Castable  d (ASTRecord gs vs t d)   where cast    = wrap'   ; {-# INLIN
 newtype     Term     t term rt = Term (ASTRecord (SubRuntimeGroups rt t term) (Variants t term rt) t Data)
 type        Variants t term rt = Elems term (NameByRuntime rt (Layout t term rt)) (Layout t term rt)
 type family Layout   t term rt
+type family LayoutType a
 
 data Lit   = Lit   deriving (Show)
 data Val   = Val   deriving (Show)
@@ -298,7 +299,7 @@ type instance Elems Draft n t = Blank
                              ': Elems Expr  n t
 
 
----- === Syntax Layouts === --
+-- === Syntax Layouts === --
 
 type family SubSemiTerms ts term where
     SubSemiTerms '[]       term = '[]
@@ -343,6 +344,8 @@ showTermType (t :: Term t term rt) = tyConName $ typeRepTyCon $ head $ snd $ spl
 -- === Instances === --
 
 -- Basic instances
+type instance LayoutType (Term t term rt) = t
+
 deriving instance Show (Unlayered (Term t term rt)) => Show (Term t term rt)
 deriving instance Eq   (Unlayered (Term t term rt)) => Eq   (Term t term rt)
 deriving instance Ord  (Unlayered (Term t term rt)) => Ord  (Term t term rt)

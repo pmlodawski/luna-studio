@@ -19,7 +19,6 @@ import Data.Record hiding (Layout)
 
 import Luna.Syntax.AST.Term hiding (Lit, Val, Thunk, Expr, Draft, Target, Source, source, target)
 import qualified Luna.Syntax.AST.Term as Term
-import Luna.Syntax.Model.Layer.Labeled
 
 
 import Data.Layer.Cover
@@ -80,37 +79,10 @@ import Luna.Syntax.Model.Layer
 -- === Network Implementation === --
 ------------------------------------
 
-type instance Layout (Network ls) term rt = Ref $ Link (ls :< TermWrapper term rt)
 
 
 
------------------------------------------
--- === Abstract building utilities === --
------------------------------------------
 
-class    Builder t el m  a where build :: t -> el -> m a
-instance Builder t el IM a where build = impossible
-
-
--- === Utils === --
-
-type ElemBuilder = Builder ELEMENT
-buildElem :: ElemBuilder el m a => el -> m a
-buildElem = build ELEMENT ; {-# INLINE buildElem #-}
-
-
--- === Instances === --
-
-instance ( SmartCons el (Uncovered a)
-         , CoverConstructor m a
-         , Register ELEMENT a m
-         , MonadSelfBuilder s m
-         , Castable a s
-         ) => Builder ELEMENT el m a where 
-    -- TODO[WD]: change buildAbsMe to buildMe2
-    --           and fire monad every time we construct an element, not once for the graph
-    build _ el = register ELEMENT =<< buildAbsMe (constructCover $ cons el) where
-    {-# INLINE build #-}
 
 
 
@@ -118,20 +90,7 @@ instance ( SmartCons el (Uncovered a)
 -- === Node constructors === --
 -------------------------------
 
-star :: ElemBuilder Star m a => m a
-star = buildElem Star
 
-unify :: ( MonadFix m
-         , ElemBuilder (Unify (Connection b u)) m u
-         , Connectible a u m
-         , Connectible b u m
-         , Connection b u ~ Connection a u
-         ) => a -> b -> m u
-unify a b = mdo
-    out <- buildElem $ Unify ca cb
-    ca  <- connection a out
-    cb  <- connection b out
-    return out
 
 
 
@@ -155,20 +114,21 @@ unify a b = mdo
 
 -- === Note === --
 
-data Note = Note deriving (Show)
-type instance AttachedData Note t = String
+type instance LayerData (Network ls) Note t = String
 
 instance Monad m => Maker m (Tagged Note String) where make = return $ Tagged $ ""
 
 ---
 
-data Type = Type deriving (Show)
+data Note  = Note  deriving (Show)
+data Type  = Type  deriving (Show)
+data Succs = Succs deriving (Show)
 
-type instance AttachedData Type t = Ref $ Link (Shelled t)
 
-type family   Shelled a 
-type instance Shelled (Raw      ls) = ls :< Raw
-type instance Shelled (Draft rt ls) = ls :< Draft rt
+
+
+type instance LayerData (Network ls) Type t = Ref $ Link (Shelled t)
+
 
 --instance ( MonadSelfBuilder s m, MonadTypeBuilder t m, Connectible t s m, Graph.MonadBuilder n e m, x ~ s -- , ElemBuilder Star m x
 --         , (Castable x s), Castable w n, (Register ELEMENT x m)
@@ -202,10 +162,9 @@ instance (MonadSelfBuilder s m, Ref (Link l) ~ Connection s (Ref $ Node l), Conn
 
 ---
 
-data Succs = Succs deriving (Show)
-type instance AttachedData Succs t = [Ref $ Link (Shelled t)]
-
+type instance LayerData (Network ls) Succs t = [Ref $ Link (Shelled t)]
 instance Monad m => Maker m (Tagged Succs [s]) where make = return $ Tagged []
+
 
 
 -----------------------------

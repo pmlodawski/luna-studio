@@ -116,3 +116,5 @@ instance (MonadBuilder n e m, Castable a n) => Writer m (Node a) where
 
 instance (MonadBuilder n e m, Castable e (Edge src tgt)) => Reader m (Edge src tgt) where
     read ref = cast ∘ index_ (ref ^. idx) ∘ view edges <$> get ; {-# INLINE read #-}
+
+
