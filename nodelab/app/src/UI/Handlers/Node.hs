@@ -15,9 +15,9 @@ import           Event.Mouse                  (MouseButton (..))
 import qualified Event.Mouse                  as Mouse
 import           Object.Widget                (CompositeWidget, DblClickHandler, DragEndHandler, DragMoveHandler,
                                                KeyPressedHandler, KeyUpHandler, MousePressedHandler, ResizableWidget,
-                                               UIHandlers, WidgetFile, WidgetId, createWidget, currentPos, dblClick,
-                                               dragEnd, dragMove, keyDown, keyMods, keyUp, mousePressed, objectId,
-                                               resizeWidget, startPos, updateWidget, click)
+                                               UIHandlers, WidgetFile, WidgetId, click, createWidget, currentPos,
+                                               dblClick, dragEnd, dragMove, keyDown, keyMods, keyUp, mousePressed,
+                                               objectId, resizeWidget, startPos, updateWidget)
 
 import qualified Object.Widget.Group          as Group
 import qualified Object.Widget.Label          as Label
@@ -128,10 +128,6 @@ unselectNode = flip UICmd.update_ (Model.isSelected .~ False)
 instance ResizableWidget Model.Node
 instance CompositeWidget Model.Node where
     createWidget id model = do
-        let offset = Vector2 (-30.0) 65.0
-            grp    = Group.Group offset def True $ Just (0.2, 0.2, 0.2)
-        UICmd.register id grp (Layout.verticalLayoutHandler (Vector2 5.0 5.0) 5.0)
-
         let offset = Vector2 (-50.0) (-50.0)
             label  = Label.Label offset (Vector2 100.0 20.0) Label.Center $ model ^. Model.expression
         void $ UICmd.register id label def
@@ -140,18 +136,54 @@ instance CompositeWidget Model.Node where
                     & TextBox.position .~ Vector2 (-40.0) (-10.0)
         void $ UICmd.register id textBox $ textHandlers id
 
-        let offset = Vector2 (-50.0) 35.0
-            label  = Label.Label offset (Vector2 100.0 20.0) Label.Center "(pending)"
-        void $ UICmd.register id label def
-
-        let offset = Vector2 (-50.0) 55.0
+        let offset = Vector2 (-30.0) 50.0
             group  = Group.create & Group.position .~ offset
-        void $ UICmd.register id group (Layout.verticalLayoutHandler def 0.0)
+        controlGroups <- UICmd.register id group (Layout.verticalLayoutHandler def 5.0)
+
+        let grp    = Group.Group def def True $ Just (0.2, 0.2, 0.2)
+        UICmd.register controlGroups grp (Layout.verticalLayoutHandler (Vector2 5.0 5.0) 5.0)
+
+        let label  = Label.Label (Vector2 (-50.0) 0.0) (Vector2 100.0 20.0) Label.Center "(pending)"
+        UICmd.register controlGroups label def
+
+        let group  = Group.create & Group.background ?~ (0.2, 0.2, 0.2)
+        UICmd.register_ controlGroups group (Layout.verticalLayoutHandler def 0.0)
 
     updateWidget id old model = do
-        (controlsId:exprId:nameId:valueId:_) <- UICmd.children id
+        controlsId <- controlsGroupId id
+        exprId     <- expressionId id
+        nameId     <- nameId id
+        valueId    <- valueLabelId id
+
         UICmd.update_ controlsId $ Group.visible .~ (model ^. Model.isExpanded)
         UICmd.update_ exprId     $ Label.label   .~ (model ^. Model.expression)
         UICmd.update_ nameId     $ TextBox.value .~ (model ^. Model.name)
         UICmd.update_ valueId    $ Label.label   .~ (model ^. Model.value)
 
+controlsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
+controlsGroupId id = do
+    (_:_:groupId:_) <- UICmd.children id
+    (controlsId:_) <- UICmd.children groupId
+    return controlsId
+
+expressionId :: WidgetId -> Command UIRegistry.State WidgetId
+expressionId id = do
+    (exprId:_) <- UICmd.children id
+    return exprId
+
+nameId :: WidgetId -> Command UIRegistry.State WidgetId
+nameId id = do
+    (_:nameId:_) <- UICmd.children id
+    return nameId
+
+valueGroupId :: WidgetId -> Command UIRegistry.State WidgetId
+valueGroupId id = do
+    (_:_:groupId:_) <- UICmd.children id
+    (_:_:valGrpId:_) <- UICmd.children groupId
+    return valGrpId
+
+valueLabelId :: WidgetId -> Command UIRegistry.State WidgetId
+valueLabelId id = do
+    (_:_:groupId:_) <- UICmd.children id
+    (_:valLabelId:_) <- UICmd.children groupId
+    return valLabelId

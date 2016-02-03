@@ -34,6 +34,7 @@ import qualified UI.Handlers.LabeledTextBox      as LabeledTextBox
 import qualified UI.Handlers.Number.Continuous   as ContinuousNumber
 import qualified UI.Handlers.Number.Discrete     as DiscreteNumber
 import qualified UI.Handlers.Toggle              as Toggle
+import qualified UI.Handlers.Node                as Node
 
 import           Reactive.Commands.Command       (Command, performIO)
 import           Reactive.Commands.EnterNode     (enterNode)
@@ -111,15 +112,14 @@ displayPorts id node = do
     oldPorts <- nodePorts id
     mapM_ UICmd.removeWidget oldPorts
 
-    (groupId:_) <- UICmd.children id
+    groupId <- Node.controlsGroupId id
     portControls <- UICmd.children groupId
     mapM_ UICmd.removeWidget portControls
 
     let newPorts = makePorts node
 
-    gr <- nodeExpandedGroup id
     forM_ newPorts $ \p -> UICmd.register id p def
-    forM_ (node ^. Node.ports) $ \p -> makePortControl gr (node ^. Node.nodeId) p
+    forM_ (node ^. Node.ports) $ \p -> makePortControl groupId (node ^. Node.nodeId) p
 
 nodeHandlers :: Node -> HTMap
 nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
@@ -141,13 +141,6 @@ updateNode node = do
         updatePortAngles
         updateNodeMeta nodeId $ node ^. Node.nodeMeta
         -- TODO: obsluzyc to ze moga zniknac polaczenia
-
-nodeExpandedGroup :: WidgetId -> Command UIRegistry.State WidgetId
-nodeExpandedGroup id = do
-    children <- UICmd.children id
-    let isPort id = (UIRegistry.lookupTypedM id :: UIRegistry.LookupFor Group.Group) >>= return . isJust
-    groups <- filterM isPort children
-    return $ head groups
 
 onValueChanged :: Typeable a => (a -> WidgetId -> Command Global.State ()) -> HTMap
 onValueChanged h = addHandler (ValueChangedHandler h) mempty
@@ -223,13 +216,13 @@ nodeValueToText (StringList  v) = Text.pack $ "Vector [" <> (show $ length v) <>
 
 removeVisualization :: WidgetId -> Command UIRegistry.State ()
 removeVisualization id = do
-    (_:_:_:_:groupId:_) <- UICmd.children id
+    groupId <- Node.valueGroupId id
     widgets <- UICmd.children groupId
     forM_ widgets UICmd.removeWidget
 
 visualizeNodeValue :: WidgetId -> Value -> Command UIRegistry.State ()
 visualizeNodeValue id (IntList     v) = do
-    (_:_:_:_:groupId:_) <- UICmd.children id
+    groupId <- Node.valueGroupId id
 
     let dataPoints = (\(a,b) -> (fromIntegral a, fromIntegral b)) <$> (zip [1..] v)
         widget = ScatterPlot.create (Vector2 300 200)
@@ -237,7 +230,7 @@ visualizeNodeValue id (IntList     v) = do
     UICmd.register_ groupId widget def
 
 visualizeNodeValue id (DoubleList     v) = do
-    (_:_:_:_:groupId:_) <- UICmd.children id
+    groupId <- Node.valueGroupId id
 
     let dataPoints = zip [1..] v
         widget = ScatterPlot.create (Vector2 300 200)

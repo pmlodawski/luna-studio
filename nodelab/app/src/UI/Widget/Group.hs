@@ -11,6 +11,7 @@ import           Object.UITypes
 import           Object.Widget
 import qualified Object.Widget.Group           as Model
 import qualified Reactive.State.UIRegistry     as UIRegistry
+import qualified Reactive.Commands.UIRegistry as UICmd
 
 import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                    as UI
@@ -51,9 +52,12 @@ instance UIDisplayObject Model.Group where
     updateUI id old model = do
         group <- UI.lookup id :: IO Group
         let vis = model ^. Model.visible
-        setVisible' group (seq vis vis)
+        setVisible' group vis
         setBgColor group model
 
-instance CompositeWidget Model.Group
-
-
+instance CompositeWidget Model.Group where
+    updateWidget id old model = do
+        let vis = model ^. Model.visible
+        when (old ^. Model.visible /= vis) $ do
+            parent <- UICmd.parent id
+            UICmd.triggerChildrenResized parent id
