@@ -1,9 +1,10 @@
 module Object.Widget.Plots.ScatterPlot where
 
-import            Utils.PreludePlus
-import            Utils.Vector
-import            Object.Widget
-import Data.Aeson (ToJSON)
+import           Data.Aeson        (ToJSON)
+import           Utils.PreludePlus
+import           Utils.Vector
+
+import           Object.Widget
 
 data ScatterPlot = ScatterPlot { _position   :: Vector2 Double
                                , _size       :: Vector2 Double
