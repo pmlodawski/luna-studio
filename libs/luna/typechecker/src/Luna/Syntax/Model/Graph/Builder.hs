@@ -10,12 +10,16 @@ module Luna.Syntax.Model.Graph.Builder where
 
 import Prologue
 
-import           Control.Monad.Catch           (MonadMask, MonadCatch, MonadThrow)
+import           Control.Monad.Catch            (MonadMask, MonadCatch, MonadThrow)
 import           Data.Construction
 import           Data.Container
 import           Data.Index
 import           Luna.Syntax.Model.Graph.Class
-import qualified Control.Monad.State           as State
+import qualified Control.Monad.State            as State
+import           Luna.Syntax.Model.Graph.Layers
+
+
+
 
 ---- TODO: template haskellize
 ---- >->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->
@@ -116,5 +120,8 @@ instance (MonadBuilder n e m, Castable a n) => Writer m (Node a) where
 
 instance (MonadBuilder n e m, Castable e (Edge src tgt)) => Reader m (Edge src tgt) where
     read ref = cast ∘ index_ (ref ^. idx) ∘ view edges <$> get ; {-# INLINE read #-}
+
+
+
 
 

@@ -43,7 +43,6 @@ import           Data.Reprx
 
 import Luna.Syntax.Model.Layer
 import Luna.Syntax.Model.Graph
-import Tmp2
 import qualified Luna.Syntax.AST.Term as Term
 import Luna.Syntax.AST.Layout (Static, Dynamic)
 import Data.Layer.Cover (uncover)

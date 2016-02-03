@@ -12,7 +12,6 @@ module Main where
 import Prologue              hiding (cons, read)
 import Luna.Syntax.AST.Term  hiding (Lit, Val, Thunk, Expr, Draft, Target, Source, source, target)
 import qualified Luna.Syntax.AST.Term as Term
-import Tmp2
 import Luna.Passes.Diagnostic.GraphViz
 import Data.Layer.Cover
 import Data.Record hiding (Layout)
@@ -96,6 +95,7 @@ foo g = rebuildNetworkM g
         ca2 = case checkAttr ImgAttr of
             Just t  -> s1_v ^. t
             Nothing -> "no imagined attrib here!"
+
     print s1t
     print s1s
     print ca1

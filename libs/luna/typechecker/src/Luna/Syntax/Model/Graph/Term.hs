@@ -1,5 +1,7 @@
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE RecursiveDo          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE UndecidableInstances   #-}
+{-# LANGUAGE RecursiveDo            #-}
 
 module Luna.Syntax.Model.Graph.Term where
 
@@ -14,6 +16,15 @@ import           Luna.Syntax.AST.Term           hiding (Val, Lit, Thunk, Expr, D
 import           Luna.Syntax.Model.Builder.Self
 import           Luna.Syntax.Model.Graph.Class
 import           Luna.Syntax.Model.Layer
+import qualified Luna.Syntax.Model.Graph.Builder as GraphBuilder
+
+
+import qualified Luna.Syntax.Model.Builder.Type as Type
+import qualified Luna.Syntax.Model.Builder.Self as Self
+import           Luna.Syntax.Model.Graph.Layers 
+import           Luna.Syntax.AST.Layout
+
+import Data.Record (Variant, MapTryingElemList_, withElement_, Props)
 
 
 ---------------------------------------
@@ -153,6 +164,64 @@ unify a b = mdo
     ca  <- connection a out
     cb  <- connection b out
     return out
+
+
+
+------------------------------
+-- === Network Building === --
+------------------------------
+
+type NetLayers = '[Type, Succs]
+type NetType   = NetLayers :< Draft Static
+
+type NetGraph = Graph (NetLayers :< Raw) (Link (NetLayers :< Raw))
+
+buildNetwork  = runIdentity ∘ buildNetworkM
+buildNetworkM = rebuildNetworkM (def :: NetGraph)
+rebuildNetworkM' (net :: NetGraph) = flip Self.evalT (undefined ::        Ref $ Node NetType)
+                                  ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node NetType))
+                                  ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
+                                  ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref $ Node NetType)
+                                  ∘ flip GraphBuilder.runT net
+                                  ∘ registerSuccs   CONNECTION
+{-# INLINE   buildNetworkM #-}
+{-# INLINE rebuildNetworkM' #-}
+
+
+class NetworkBuilder net m a n | net m a -> n where rebuildNetworkM :: net -> m a -> n (a,net)
+
+instance {-# OVERLAPPABLE #-} NetworkBuilder I   m  a IM where rebuildNetworkM = impossible
+instance {-# OVERLAPPABLE #-} NetworkBuilder net IM a IM where rebuildNetworkM = impossible
+instance {-# OVERLAPPABLE #-} NetworkBuilder net m  I IM where rebuildNetworkM = impossible
+instance {-# OVERLAPPABLE #-}
+	( m      ~ Listener CONNECTION SuccRegister m'
+	, m'     ~ GraphBuilder.BuilderT n e m''
+	, m''    ~ Listener ELEMENT (TypeConstraint Equality_Full (Ref $ Node NetType)) m'''
+	, m'''   ~ Listener CONNECTION (TypeConstraint Equality_M1 (Ref c)) m''''
+	, m''''  ~ Type.TypeBuilderT (Ref $ Node NetType) m'''''
+	, m''''' ~ Self.SelfBuilderT (Ref $ Node NetType) m''''''
+	, Monad m'''''
+	, Monad m''''''
+    , net ~ Graph n e
+	) => NetworkBuilder net m a m'''''' where 
+	rebuildNetworkM net = flip Self.evalT (undefined ::        Ref $ Node NetType)
+		                 ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node NetType))
+		                 ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
+	                     ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref $ Node NetType)
+	                     ∘ flip GraphBuilder.runT net
+	                     ∘ registerSuccs   CONNECTION
+
+
+
+
+-- FIXME[WD]: poprawic typ oraz `WithElement_` (!)
+-- FIXME[WD]: inputs should be more general and should be refactored out
+inputs :: forall x ast rt ls. 
+      ( x ~ Ref (Link (ls :< ast rt))
+      , (MapTryingElemList_ (Props Variant (RecordOf (RecordOf (ast rt ls)))) (TFoldable (Ref (Link (ls :< ast rt)))) (ast rt ls))
+      ) => ast rt ls -> [x]
+inputs a = withElement_ (p :: P (TFoldable x)) (foldrT (:) []) a
+
 
 
 

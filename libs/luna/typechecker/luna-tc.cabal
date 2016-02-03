@@ -74,13 +74,13 @@ Library
         Luna.Syntax.Model.Graph,
         Luna.Syntax.Model.Graph.Builder,
         Luna.Syntax.Model.Graph.Class,
+        Luna.Syntax.Model.Graph.Layers,
         Luna.Syntax.Model.Graph.Term,
         Luna.Syntax.Model.Layer,
         Luna.Syntax.Model.Layer.Class,
         Luna.Syntax.Model.Repr.Styles,
         Luna.Syntax.Name,
-        Luna.Syntax.Name.Pool,
-        Tmp2
+        Luna.Syntax.Name.Pool
 
     Build-Depends: base
                  , constraints

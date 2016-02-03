@@ -12,8 +12,7 @@ import Data.Container.Auto      (Auto)
 import Data.Container.Resizable (Exponential)
 import Data.Index
 import Data.Vector              (Vector)
-
-
+	
 
 -------------------------
 -- === AutoVectors === --
@@ -195,4 +194,8 @@ instance Castable a a' => Castable (Node a) (Node a') where
 type instance                  Attr     a (Node t) = Attr a t
 instance HasAttr     a t => HasAttr     a (Node t) where attr      = wrapped' ∘∘  attr      ; {-# INLINE attr      #-}
 instance MayHaveAttr a t => MayHaveAttr a (Node t) where checkAttr = wrapped' ∘∘∘ checkAttr ; {-# INLINE checkAttr #-}
+
+
+
+
 
