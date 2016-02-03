@@ -26,6 +26,7 @@ create s l min max v = ContinuousSlider def s l True min max v def
 instance IsDisplayObject ContinuousSlider where
     widgetPosition = position
     widgetSize     = size
+    widgetVisible  = to $ const True
 
 displayValue' :: ContinuousSlider -> String
 displayValue' slider = showFFloat (Just $ precision) val "" where

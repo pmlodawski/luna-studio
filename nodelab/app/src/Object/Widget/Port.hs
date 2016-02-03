@@ -28,13 +28,4 @@ instance IsDisplayObject Port where
     widgetSize     = lens get set where
         get _      = Vector2 0.0 0.0
         set w _    = w
-
-
--- instance HandlesMouseOver Port where
---     onMouseOver file model = (action, toCtxDynamic model) where
---                   action   = UI.setWidgetFocused (file ^. objectId) True
---
--- instance HandlesMouseOut Port where
---     onMouseOut  file model = (action, toCtxDynamic model) where
---                   action   = UI.setWidgetFocused (file ^. objectId) False
---
+    widgetVisible  = to $ const True

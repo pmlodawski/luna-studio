@@ -6,7 +6,7 @@ import           Utils.PreludePlus
 import           Control.Monad                (foldM, forM)
 import           Utils.Vector
 
-import           Object.Widget                (WidgetId, widgetSize)
+import           Object.Widget                (WidgetId, widgetSize, widgetVisible)
 import           Reactive.Commands.Command    (Command, performIO)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import qualified Reactive.State.Global        as Global
@@ -18,19 +18,25 @@ import qualified UI.Handlers.Group            as Group
 
 getHeight id = do
     size <- UICmd.get' id widgetSize
-    return $ (id, size ^. y)
+    vis <- UICmd.get' id widgetVisible
+    return $ (id, size ^. y, vis)
 
 getWidth id = do
     size <- UICmd.get' id widgetSize
-    return $ (id, size ^. x)
+    vis <- UICmd.get' id widgetVisible
+    return $ (id, size ^. x, vis)
 
-moveY spacing offset (id, height) = do
+moveY spacing offset (id, height, True) = do
     UICmd.moveY id offset
     return $ offset + spacing + height
+moveY spacing offset (id, height, False) = do
+    return $ offset
 
-moveX spacing offset (id, width) = do
+moveX spacing offset (id, width, True) = do
     UICmd.moveX id offset
     return $ offset + spacing + width
+moveX spacing offset (id, width, False) = do
+    return $ offset
 
 verticalLayoutHandler padding spacing = addHandler (UICmd.ChildrenResizedHandler $ verticalLayoutHandler' padding spacing) mempty
 

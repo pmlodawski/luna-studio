@@ -39,6 +39,7 @@ instance IsDisplayObject Node where
     widgetSize     = lens get set where
         get _      = Vector2 60.0 60.0
         set w _    = w
+    widgetVisible  = to $ const True        
 
 data PendingNode = PendingNode { _pendingExpression :: Text
                                , _pendingPosition   :: Position
@@ -52,3 +53,4 @@ instance IsDisplayObject PendingNode where
     widgetSize     = lens get set where
         get _      = Vector2 60.0 60.0
         set w _    = w
+    widgetVisible  = to $ const True

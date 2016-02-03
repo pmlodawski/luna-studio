@@ -23,3 +23,4 @@ create size = Label def size Left
 instance IsDisplayObject Label where
     widgetPosition = position
     widgetSize     = size
+    widgetVisible  = to $ const True

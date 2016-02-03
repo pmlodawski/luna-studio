@@ -24,6 +24,7 @@ instance ToJSON          Choice
 instance IsDisplayObject Choice where
     widgetPosition = position
     widgetSize     = size
-
+    widgetVisible  = to $ const True
+    
 toGroup :: Choice -> Group
 toGroup c = Group (c ^. position) (c ^. size) True Nothing

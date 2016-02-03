@@ -19,3 +19,4 @@ create size = ScatterPlot def size def
 instance IsDisplayObject ScatterPlot where
     widgetPosition = position
     widgetSize     = size
+    widgetVisible  = to $ const True
