@@ -67,6 +67,7 @@ Library
                     QuickCheck,
                     unordered-containers,
                     vector
+                      -- < 0.11
                       -- Fix: this helps the cabal solver. The flowbox-utils
                       -- needs vector only indirectly (i.a. via lens), but
                       -- vector==0.11.0.0 is not compatible with older repa.

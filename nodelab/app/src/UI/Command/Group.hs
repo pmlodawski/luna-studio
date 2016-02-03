@@ -24,10 +24,10 @@ getFarEdge getter id = do
     size   <- UICmd.get' id $ widgetSize     . getter
     return $ offset + size
 
-updateSize :: WidgetId -> Command UIRegistry.State ()
-updateSize id = do
+updateSize :: Vector2 Double -> WidgetId -> Command UIRegistry.State ()
+updateSize (Vector2 padX padY) id = do
     widgets <- UICmd.children id
     widths  <- mapM (getFarEdge x) widgets
     heights <- mapM (getFarEdge y) widgets
 
-    UICmd.resize id $ Vector2 (maximum' widths) (maximum' heights)
+    UICmd.resize id $ Vector2 (padX + maximum' widths) (padY + maximum' heights)

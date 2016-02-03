@@ -93,6 +93,9 @@ packages:
           git: https://github.com/wdanilo/data-construction.git
           commit: 29c97b37c8d23ee4345adaf7cb61609f1626641b
       extra-dep: true
+    - location:
+          git: 'https://github.com/wdanilo/data-attribute.git'
+          commit: 00aa2a4fa10aaa283552c2c0a94aa3a012a8269a
 
 extra-deps:
     - ghc-session-0.1.2.0

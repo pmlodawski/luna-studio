@@ -1,33 +1,27 @@
 resolver:
-  name: nbo-gui-20151022
-  location: https://bitbucket.org/NewByteOrder/stack-snapshots/raw/master/nbo-gui-20151022.yaml
+  name: nbo-gui-20160201
+  location: https://bitbucket.org/NewByteOrder/stack-snapshots/raw/master/nbo-gui-20160201.yaml
 compiler-check: match-exact
 setup-info:
   ghcjs:
     source:
-      ghcjs-0.2.0.20151020_ghc-7.10.2:
-        url: "https://s3-eu-west-1.amazonaws.com/nbo-toolchain/ghcjs/ghcjs-0.2.0.20151020-dupa.tar.gz"
+      ghcjs-0.2.0.20160201_ghc-7.10.3:
+        url: "https://s3-eu-west-1.amazonaws.com/nbo-toolchain/ghcjs/ghcjs-0.2.0.20160201-dupa.tar.gz"
 ghc-options:
   nodelab: -DGHCJS_BROWSER
 packages:
   - .
-  - ../libs/luna-empire-api
-  - ../libs/luna-empire-api-json
-  - ../libs/utils
+  - location: ../libs/luna-empire-api
+    extra-dep: true
+  - location: ../libs/luna-empire-api-json
+    extra-dep: true
+  - location: ../libs/utils
+    extra-dep: true
   - location:
       git: https://github.com/wdanilo/prologue.git
       commit: 9ba882921b6e2527923bbb0f9ba54c41b43a8135
+    extra-dep: true
   - location:
       git: https://github.com/wdanilo/container.git
       commit: cd137cdfa6059cc267aa865d78bbbf0a17a4c657
-extra-deps:
-  - data-repr-1.0
-  - ghcjs-dom-0.2.3.0
-  - data-layer-1.0.3
-  - functor-utils-1.0
-  - lens-utils-1.0
-  - string-qq-0.0.2
-  - tuple-0.3.0.2
-  - typelevel-1.0.2
-  - OneTuple-0.2.1
-  - data-construction-1.0
+    extra-dep: true

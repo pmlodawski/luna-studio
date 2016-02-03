@@ -1,6 +1,11 @@
+function defaultBackend() {
+    var l = window.location;
+    return ((l.protocol === "https:") ? "wss://" : "ws://") + l.hostname + (((l.port !== 80) && (l.port !== 443)) ? ":" + l.port : "") + "/ws";
+}
+
 module.exports = {
   backend: true,
-  backendAddress: (window.backendAddress || "wss://demo.nodelab.io/backend"),
+  backendAddress: (window.backendAddress || defaultBackend()),
   logging:         false,
   exportState:     false,
   backgroundColor: 0x1a1a1a,

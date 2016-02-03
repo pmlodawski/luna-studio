@@ -17,23 +17,8 @@ import qualified UI.Registry                   as UI
 import           UI.Widget                     (UIWidget (..))
 import qualified UI.Widget                     as Widget
 
-newtype List = List JSVal deriving (PToJSVal, PFromJSVal)
-
-instance UIWidget List
-
-foreign import javascript unsafe "new Group($1)" create' :: Int    -> IO List
-
-create :: WidgetId -> Model.List -> IO List
-create oid model = do
-    toggle      <- create' oid
-    UI.setWidgetPosition (model ^. widgetPosition) toggle
-    return toggle
+import           UI.Widget.Group ()
 
 instance UIDisplayObject Model.List where
-    createUI parentId id model = do
-        list    <- create id model
-        parent   <- UI.lookup parentId :: IO Widget.GenericWidget
-        UI.register id list
-        Widget.add list parent
-
-    updateUI id old model = return ()
+    createUI parentId id model = createUI parentId id (Model.toGroup model)
+    updateUI id old model = updateUI id (Model.toGroup old) (Model.toGroup model)

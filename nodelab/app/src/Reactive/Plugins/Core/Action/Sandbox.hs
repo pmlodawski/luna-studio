@@ -25,6 +25,7 @@ import qualified Object.Widget.Slider.Continuous  as ContinuousSlider
 import qualified Object.Widget.Slider.Discrete    as DiscreteSlider
 import qualified Object.Widget.TextBox            as TextBox
 import qualified Object.Widget.Toggle             as Toggle
+import qualified Object.Widget.Plots.ScatterPlot  as ScatterPlot
 
 import           Object.Widget.Choice.RadioButton (RadioButton (..))
 import qualified Object.Widget.Choice.RadioButton as RadioButton
@@ -55,7 +56,7 @@ toAction :: Event -> Maybe (Command Global.State ())
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.inRegistry $ do
     performIO $ putStrLn "show sandbox"
     let widget = Group.create
-    parent <- UICmd.register sceneGraphId widget (Layout.verticalLayoutHandler 5.0)
+    parent <- UICmd.register sceneGraphId widget (Layout.verticalLayoutHandler def 5.0)
 
     let widget = DiscreteNumber.create (Vector2 200 20) "Discrete" 42
     UICmd.register parent widget def
@@ -81,6 +82,10 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     let widget = Choice.create (Vector2 200 20) "Choice" ["Foo", "Bar", "Baz"] 0
     UICmd.register parent widget def
 
+    let widget = ScatterPlot.create (Vector2 300 200)
+               & ScatterPlot.dataPoints .~ [(1, 5), (2, 7), (3, 1), (4, 10), (5, 0)]
+    UICmd.register parent widget def
+
 
     let values = (AnyLunaValue <$> ([1, 2, 3, 4, 5, 6, 7] :: [Int]))
               <> (AnyLunaValue <$> ([0.1, 0.2, 0.3] :: [Double]))
@@ -93,9 +98,9 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\113' _)) = Just $ Global.inRegistry $ do
     performIO $ putStrLn "show sandbox"
     let widget = Group.create
-    parent'       <- UICmd.register sceneGraphId widget (Layout.horizontalLayoutHandler 5.0)
-    parent        <- UICmd.register parent'      widget (Layout.verticalLayoutHandler 5.0)
-    resizedParent <- UICmd.register parent'      widget (Layout.verticalLayoutHandler 5.0)
+    parent'       <- UICmd.register sceneGraphId widget (Layout.horizontalLayoutHandler def 5.0)
+    parent        <- UICmd.register parent'      widget (Layout.verticalLayoutHandler def 5.0)
+    resizedParent <- UICmd.register parent'      widget (Layout.verticalLayoutHandler def 5.0)
     flexParent    <- UICmd.register parent'      widget (Layout.flexVerticalLayoutHandler 5.0)
 
     let widget = ContinuousSlider.create (Vector2 200 20) "ContinuousSlider" (-2.0) 5.0 3.0

@@ -5,6 +5,20 @@ textMaterial = require('font/text_material').hud
 layoutText   = require('bmfont').layout
 BaseWidget   = require ('Widget/BaseWidget')
 
+htmlCanvas = (mesh) ->
+  getTopParent = (w) ->
+    p = w;
+    while (p != undefined && p != null)
+      w = p
+      p = w.parent
+    return w
+
+  if getTopParent(mesh) != $$.sceneHUD
+    $('#htmlcanvas')
+  else
+    $('#interface-canvas')
+
+
 class TextBox extends BaseWidget
   constructor:  (widgetId, width, height) ->
     super widgetId, width, height
@@ -86,7 +100,7 @@ class TextBox extends BaseWidget
       saveChanges()
       ev.stopPropagation()
 
-    $('#htmlcanvas').append input
+    htmlCanvas(@mesh).append input
     setTimeout (-> input.focus()), 30
 
   doneEditing: ->

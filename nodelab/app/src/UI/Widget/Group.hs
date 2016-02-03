@@ -22,13 +22,24 @@ newtype Group = Group JSVal deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget Group
 
-foreign import javascript unsafe "new Group($1)" create' :: Int    -> IO Group
+foreign import javascript unsafe "new Group($1, $2, $3)"      create'       :: Int   -> Double -> Double -> IO Group
+foreign import javascript unsafe "$1.mesh.visible = $2"       setVisible'   :: Group -> Bool -> IO ()
+foreign import javascript unsafe "$1.setBgVisible($2)"        setBgVisible' :: Group -> Bool -> IO ()
+foreign import javascript unsafe "$1.setBgColor($2, $3, $4)"  setBgColor'   :: Group -> Double -> Double -> Double -> IO ()
+
+setBgColor :: Group -> Model.Group -> IO ()
+setBgColor group model = case model ^. Model.background of
+    Just (r, g, b) -> do
+        setBgColor' group r g b
+        setBgVisible' group True
+    Nothing -> setBgVisible' group False
 
 create :: WidgetId -> Model.Group -> IO Group
 create oid model = do
-    toggle      <- create' oid
-    UI.setWidgetPosition (model ^. widgetPosition) toggle
-    return toggle
+    group      <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
+    setBgColor group model
+    UI.setWidgetPosition (model ^. widgetPosition) group
+    return group
 
 instance UIDisplayObject Model.Group where
     createUI parentId id model = do
@@ -37,7 +48,12 @@ instance UIDisplayObject Model.Group where
         UI.register id group
         Widget.add group parent
 
-    updateUI id old model = return ()
+    updateUI id old model = do
+        group <- UI.lookup id :: IO Group
+        let vis = model ^. Model.visible
+        setVisible' group (seq vis vis)
+        setBgColor group model
+
 instance CompositeWidget Model.Group
 
 

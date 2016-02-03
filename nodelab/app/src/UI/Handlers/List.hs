@@ -24,7 +24,7 @@ import           Reactive.State.UIRegistry     (addHandler)
 import qualified Reactive.State.UIRegistry     as UIRegistry
 
 import           UI.Generic                    (startDrag, takeFocus, defaultResize)
-import           UI.Handlers.Group             ()
+import           UI.Handlers.Group             (triggerWidgetResized)
 import qualified UI.Handlers.Button            as Button
 import           UI.Handlers.Generic           (ValueChangedHandler (..), triggerValueChanged)
 import qualified UI.Handlers.TextBox           as TextBox
@@ -63,7 +63,7 @@ makeItem isTuple listId listGroupId width elem ix = do
     groupId <- UICmd.register listGroupId Group.create def
     createValueWidget groupId elem (Text.pack $ show ix) width (addHandler (ValueChangedHandler $ listItemHandler listId listGroupId groupId) mempty)
     when (not isTuple) $ UICmd.register_ groupId removeButton (removeItemHandlers listId listGroupId groupId)
-    Layout.horizontalLayout 0.0 groupId
+    Layout.horizontalLayout def 0.0 groupId
 
 makeListItem  = makeItem False
 makeTupleItem = makeItem True
@@ -81,6 +81,11 @@ makeTupleItem = makeItem True
 --
 --     return contId
 
+relayout :: WidgetId -> WidgetId -> Command UIRegistry.State ()
+relayout listId groupId = do
+    Layout.verticalLayout def 0.0 groupId
+    Layout.verticalLayout def 0.0 listId
+
 addNewElement :: WidgetId -> WidgetId -> Double -> Command UIRegistry.State ()
 addNewElement listId groupId width = do
     list   <- UICmd.get listId $ List.value
@@ -89,8 +94,7 @@ addNewElement listId groupId width = do
     UICmd.update listId $ List.value <>~ [elem]
     makeListItem listId groupId width elem ix
 
-    Layout.verticalLayout 0.0 groupId
-    Layout.verticalLayout 0.0 listId
+    relayout listId groupId
 
 removeElementByWidgetId :: WidgetId -> WidgetId -> WidgetId -> Command UIRegistry.State ()
 removeElementByWidgetId listId groupId id = do
@@ -104,13 +108,11 @@ removeElement listId groupId idx = do
     items <- UICmd.children groupId
     UICmd.removeWidget $ fromJust $ items ^? ix idx
 
-    Layout.verticalLayout 0.0 groupId
-    Layout.verticalLayout 0.0 listId
-
+    relayout listId groupId
 
 instance CompositeWidget List where
     createWidget id model = do
-        let label        = Label.create "Param of list:"
+        let label        = Label.create (Vector2 100.0 20.0) "Param of list:"
             addButton    = Button.createIcon (Vector2 20 20) "shaders/icon.plus.frag"
             width        = model ^. List.size . x
             padding      = 10
@@ -119,7 +121,7 @@ instance CompositeWidget List where
 
         UICmd.register_ id label def
 
-        groupId     <- UICmd.register id Group.create def
+        groupId     <- UICmd.register id Group.create (Layout.verticalLayoutHandler def def)
         UICmd.moveX groupId padding
 
         addButtonId <- UICmd.register id addButton (addItemHandlers id groupId itemWidth)
@@ -128,11 +130,12 @@ instance CompositeWidget List where
         let elems = (model ^. List.value) `zip` [0..]
         forM_ elems $ uncurry $ makeListItem id groupId itemWidth
 
-        Layout.verticalLayout 0.0 groupId
-        Layout.verticalLayout 0.0 id
+        relayout id groupId
 
     updateWidget id old model = return ()
 
-instance ResizableWidget List where resizeWidget = defaultResize
-
+instance ResizableWidget List where
+    resizeWidget id vec model = do
+        defaultResize id vec model
+        triggerWidgetResized id vec
 

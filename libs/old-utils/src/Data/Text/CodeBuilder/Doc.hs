@@ -13,6 +13,7 @@
 
 module Data.Text.CodeBuilder.Doc where
 
+import Prelude ()
 import Flowbox.Prelude hiding (Empty)
 
 import           GHC.Int (Int64)

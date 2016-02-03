@@ -69,9 +69,11 @@ dragEndHandler :: DragEndHandler Global.State
 dragEndHandler _ _ id = do
     enabled <- isEnabled id
     when enabled $ do
+        value      <- inRegistry $ UICmd.get id Model.value
+        startValue <- inRegistry $ UICmd.get id Model.dragStartValue
         inRegistry $ UICmd.update_ id $ Model.dragStartValue .~ Nothing
-        value <- inRegistry $ UICmd.get id Model.value
-        triggerValueChanged value id
+        let startVal = fromMaybe value startValue
+        when (startVal /= value) $ triggerValueChanged value id
 
 dblClickHandler :: DblClickHandler Global.State
 dblClickHandler _ _ id = do
@@ -102,8 +104,10 @@ textValueChangedHandler parent val tbId = do
             val <- UICmd.get parent Model.displayValue
             UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ val)
         Right (val', _) -> do
-            inRegistry $ UICmd.update_ parent $ Model.value .~ val'
-            triggerValueChanged val' parent
+            oldValue <- inRegistry $ UICmd.get parent Model.value
+            when (oldValue /= val') $ do
+                inRegistry $ UICmd.update_ parent $ Model.value .~ val'
+                triggerValueChanged val' parent
 
 
 instance CompositeWidget Model.ContinuousNumber where

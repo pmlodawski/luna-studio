@@ -1,22 +1,25 @@
 module Reactive.Commands.DisconnectNodes where
 
 import           Utils.PreludePlus
-import qualified Data.IntMap.Lazy as IntMap
 
-import           Reactive.State.Global     (State)
-import qualified Reactive.State.Global     as Global
-import qualified Reactive.State.Graph      as Graph
-import           Reactive.Commands.Command (Command, performIO)
-import qualified Reactive.State.UIRegistry as UIRegistry
-import           Reactive.Commands.Graph   (updateConnNodes, updateConnections, updatePortAngles, connectionIdToWidgetId)
+import qualified Data.IntMap.Lazy             as IntMap
+import qualified Data.Map.Lazy                as Map
+
+import           Reactive.Commands.Command    (Command, performIO)
+import           Reactive.Commands.Graph      (connectionIdToWidgetId, updateConnNodes, updateConnections,
+                                               updatePortAngles)
 import           Reactive.Commands.UIRegistry (removeWidget)
+import           Reactive.State.Global        (State)
+import qualified Reactive.State.Global        as Global
+import qualified Reactive.State.Graph         as Graph
+import qualified Reactive.State.UIRegistry    as UIRegistry
 
-import qualified BatchConnector.Commands as BatchCmd
-import           Control.Monad.State     hiding (State)
-import           Empire.API.Data.Connection (Connection, ConnectionId)
-import qualified Empire.API.Data.Connection as Connection
-import           Empire.API.Data.Node       (NodeId)
-import           Empire.API.Data.PortRef    (OutPortRef, InPortRef)
+import qualified BatchConnector.Commands      as BatchCmd
+import           Control.Monad.State          hiding (State)
+import           Empire.API.Data.Connection   (Connection, ConnectionId)
+import qualified Empire.API.Data.Connection   as Connection
+import           Empire.API.Data.Node         (NodeId)
+import           Empire.API.Data.PortRef      (InPortRef, OutPortRef)
 
 getChangedNodes :: Graph.State -> [ConnectionId] -> [NodeId]
 getChangedNodes graph connIds = nIds1 ++ nIds2
@@ -54,7 +57,7 @@ disconnectAll connectionIds = do
 
 disconnect :: InPortRef -> Command State ()
 disconnect port = do
-    connections <- uses (Global.graph . Graph.connectionsMap) IntMap.elems
+    connections <- uses (Global.graph . Graph.connectionsMap) Map.elems
     let shouldRemove c = (c ^. Connection.dst) == port
         found = filter shouldRemove connections
     localDisconnectAll $ (view Connection.connectionId) <$> found

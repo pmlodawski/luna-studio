@@ -18,30 +18,40 @@ printIdent nodeRef = do
     case' (uncoat node) $ match $ \(Lit.String n) -> return (Text.unpack . toText $ n)
 
 printVal :: Val a -> String
-printVal val = case' val $ do
-    match $ \(Lit.Int    i) -> show i
-    match $ \(Lit.String s) -> show s
+printVal val = case' val $ match $ \lit -> case lit of
+    Lit.String s -> show s
+    Lit.Int    i -> show i
 
-printExpression :: Ref Node -> ASTOp String
-printExpression nodeRef = do
+printExpression' :: [Ref Node] -> Ref Node -> ASTOp String
+printExpression' shadowVars nodeRef = do
+    let recur = printExpression' shadowVars
     node <- Builder.readRef nodeRef
     case' (uncoat node) $ do
         match $ \(Unify l r) -> do
-            leftRep  <- Builder.follow l >>= printExpression
-            rightRep <- Builder.follow r >>= printExpression
+            leftRep  <- Builder.follow l >>= recur
+            rightRep <- Builder.follow r >>= recur
             return $ leftRep ++ " = " ++ rightRep
-        match $ \(Var n) -> Builder.follow n >>= printIdent
+        match $ \(Var n) ->
+            if elem nodeRef shadowVars
+                then return "_"
+                else Builder.follow n >>= printIdent
         match $ \(Accessor n t) -> do
-            targetRep <- Builder.follow t >>= printExpression
+            targetRep <- Builder.follow t >>= recur
             nameRep   <- Builder.follow n >>= printIdent
             return $ targetRep ++ "." ++ nameRep
         match $ \(App f args) -> do
-            funRep <- Builder.follow f >>= printExpression
+            funRep <- Builder.follow f >>= recur
             unpackedArgs <- ASTBuilder.unpackArguments args
-            argsRep <- sequence $ printExpression <$> unpackedArgs
+            argsRep <- sequence $ recur <$> unpackedArgs
             case argsRep of
                 [] -> return funRep
                 _  -> return $ funRep ++ " " ++ (intercalate " " argsRep)
         match $ \Blank -> return "_"
         match $ return . printVal
         match $ \ANY -> return ""
+
+printExpression :: Ref Node -> ASTOp String
+printExpression = printExpression' []
+
+printNodeExpression :: [Ref Node] -> Ref Node -> ASTOp String
+printNodeExpression = printExpression'

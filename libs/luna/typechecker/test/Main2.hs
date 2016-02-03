@@ -33,7 +33,7 @@ data IDT a = IDT a deriving (Show)
 
 data MyGraph (t :: * -> *) = MyGraph deriving (Show)
 
-type instance Layout (MyGraph t) term rt = t (Term (MyGraph t) term rt) 
+type instance Layout (MyGraph t) term rt = t (Term (MyGraph t) term rt)
 
 -- --------------------------------------
 --  !!! KEEP THIS ON THE BEGINNING !!! --
@@ -92,14 +92,13 @@ foo g = rebuildNetworkM g
         ca1 = case checkAttr Type of
             Just t  -> show $ s1_v ^. t
             Nothing -> "no type here!"
-        ca2 = case checkAttr ImgAttr of
-            Just t  -> s1_v ^. t
-            Nothing -> "no imagined attrib here!"
-
+        --ca2 = case checkAttr ImgAttr of
+        --    Just t  -> s1_v ^. t
+        --    Nothing -> "no imagined attrib here!"
     print s1t
     print s1s
     print ca1
-    print ca2
+    -- print ca2
 
 
     return s1

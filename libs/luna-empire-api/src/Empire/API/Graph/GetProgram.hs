@@ -2,7 +2,7 @@ module Empire.API.Graph.GetProgram where
 
 import           Prologue
 import           Data.Binary                   (Binary)
-import           Data.Text.Lazy (Text)
+import           Data.Text.Lazy                (Text)
 
 import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.Graph         (Graph)

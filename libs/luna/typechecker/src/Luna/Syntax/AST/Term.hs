@@ -6,24 +6,25 @@
 
 module Luna.Syntax.AST.Term (module Luna.Syntax.AST.Term, module X) where
 
-import Prologue hiding (Cons, Swapped, Num)
+import           Prologue                      hiding (Cons, Num, Swapped)
 
-import Data.Base
-import Data.Record            hiding (ASTRecord, Variants, Layout)
-import qualified Data.Record as Record
-import Luna.Syntax.AST.Layout (ToStatic, ToDynamic)
-import Type.Container
-import Type.Cache.TH          (cacheHelper, cacheType, assertTypesEq)
-import Type.Map
-import Data.Abstract
+import           Data.Abstract
+import           Data.Base
+import           Data.Record                   hiding (ASTRecord, Layout, Variants)
+import qualified Data.Record                   as Record
+import           Luna.Syntax.AST.Layout        (ToDynamic, ToStatic)
+import           Type.Cache.TH                 (assertTypesEq, cacheHelper, cacheType)
+import           Type.Container
+import           Type.Map
 
-import           Data.Reprx (Reprs, Repr, repr, (<+>))
-import qualified Data.Reprx as Repr
+import           Data.Reprx                    (Repr, Reprs, repr, (<+>))
+import qualified Data.Reprx                    as Repr
 
-import qualified Luna.Syntax.AST.Layout as Runtime
-import           Luna.Syntax.AST.Layout (Static, Dynamic)
-import           Data.Typeable (tyConName, typeRepTyCon, splitTyConApp)
+import           Data.Typeable                 (splitTyConApp, tyConName, typeRepTyCon)
+import           Luna.Syntax.AST.Layout        (Dynamic, Static)
+import qualified Luna.Syntax.AST.Layout        as Runtime
 import           Luna.Syntax.Model.Repr.Styles
+
 
 import Data.Record as X (Data)
 
@@ -86,12 +87,11 @@ class HasArgs   a where args   :: Lens' a (Args   a)
 -- === Args === --
 ------------------
 
-newtype Arg a = Arg a deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
-
+data Arg a = Arg (Maybe String) a deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 
 -- === Instances === --
 
-instance {-# OVERLAPPABLE #-} Repr s a => Repr s (Arg a) where repr (Arg a) = "Arg" <+> repr a
+instance {-# OVERLAPPABLE #-} Repr s a => Repr s (Arg a) where repr (Arg _ a) = "Arg" <+> repr a
 
 
 -----------------------------
@@ -101,7 +101,7 @@ instance {-# OVERLAPPABLE #-} Repr s a => Repr s (Arg a) where repr (Arg a) = "A
 
 data    Star   = Star          deriving (Show, Eq, Ord)
 newtype Str    = Str    String deriving (Show, Eq, Ord)
-newtype Num = Num Int    deriving (Show, Eq, Ord)
+newtype Num    = Num    Int    deriving (Show, Eq, Ord)
 
 
 -- LEGEND
@@ -214,16 +214,18 @@ instance {-# OVERLAPPABLE #-} Repr  s t      => Repr s (Unify   t) where repr (U
 instance {-# OVERLAPPABLE #-}                   Repr s  Blank      where repr _           = "Blank"
 
 -- HeaderOnly
-instance Repr HeaderOnly (Var   n  ) where repr _ = "Var"
-instance Repr HeaderOnly (Cons  n  ) where repr _ = "Cons"
-instance Repr HeaderOnly (Arrow   t) where repr _ = "Arrow"
-instance Repr HeaderOnly (Acc   n t) where repr _ = "Acc"
-instance Repr HeaderOnly (App     t) where repr _ = "App"
-instance Repr HeaderOnly (Unify   t) where repr _ = "Unify"
+instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Var   n  ) where repr _ = "Var"
+instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Cons  n  ) where repr _ = "Cons"
+instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Arrow   t) where repr _ = "Arrow"
+instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Acc   n t) where repr _ = "Acc"
+instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Acc Str t) where repr (Acc (Str m) s) = fromString $ "Acc " <>  show m
+instance {-# OVERLAPPABLE #-} Repr HeaderOnly (App     t) where repr _ = "App"
+instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Unify   t) where repr _ = "Unify"
 
+-- String
 
-
-
+instance IsString Str where fromString      str  = Str str
+instance ToString Str where   toString (Str str) =     str
 
 ---------------------------
 ---------------------------
@@ -373,7 +375,7 @@ type instance Props p (Term t term rt) = Props p (RecordOf (Term t term rt))
 -- Conversions
 instance Unwrapped (Term t term rt) ~ ASTRecord gs vs t' d => Convertible (Term t term rt) (ASTRecord gs vs t' d) where convert = unwrap' ; {-# INLINE convert #-}
 
-instance Convertible (Unwrapped (Term t term rt)) Data => Castable    (Term t term rt) Data 
+instance Convertible (Unwrapped (Term t term rt)) Data => Castable    (Term t term rt) Data
 instance Convertible (Unwrapped (Term t term rt)) Data => Convertible (Term t term rt) Data where convert = convert ∘ unwrap' ; {-# INLINE convert #-}
 instance Castable    Data (Unwrapped (Term t term rt)) => Castable    Data (Term t term rt) where cast    = wrap'   ∘ cast    ; {-# INLINE cast    #-}
 

@@ -1,7 +1,6 @@
 module Batch.Workspace where
 
 import Utils.PreludePlus
-import Batch.Breadcrumbs
 import Data.Aeson (ToJSON)
 import Data.IntMap.Lazy (IntMap)
 
@@ -9,8 +8,9 @@ import           Empire.API.Data.Project (Project, ProjectId)
 import qualified Empire.API.Data.Project as Project
 import           Empire.API.Data.Library (Library, LibraryId)
 import qualified Empire.API.Data.Library as Library
-import           Empire.API.Data.GraphLocation (GraphLocation)
+import           Empire.API.Data.GraphLocation (GraphLocation(..))
 import qualified Empire.API.Data.GraphLocation as GraphLocation
+import           Empire.API.Data.Breadcrumb (Breadcrumb(..))
 import           Empire.API.JSONInstances ()
 
 data InterpreterState = Fresh
@@ -27,6 +27,9 @@ data Workspace = Workspace { _projects         :: IntMap Project
 
 instance ToJSON InterpreterState
 instance ToJSON Workspace
+
+instance Default Workspace where
+    def = Workspace def (GraphLocation 0 0 Breadcrumb) False Fresh False
 
 makeLenses ''Workspace
 

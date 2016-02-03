@@ -203,3 +203,6 @@ type LookupFor a = Command State (Maybe (WidgetFile a))
 
 addHandler :: Typeable v => v -> HTMap -> HTMap
 addHandler h m = HMap.insert (undefined :: HMap.TypeKey v) h m
+
+handle :: Typeable v => v -> HTMap
+handle h = HMap.insert (undefined :: HMap.TypeKey v) h mempty

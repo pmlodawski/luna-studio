@@ -5,7 +5,7 @@
 
 module Luna.Syntax.Model.Graph.Term where
 
-import Prologue hiding (cons)
+import Prologue hiding (cons, Num)
 
 import           Control.Monad.Event
 import           Data.Layer.Cover
@@ -138,7 +138,7 @@ instance ( SmartCons el (Uncovered a)
          , Register ELEMENT a m
          , MonadSelfBuilder s m
          , Castable a s
-         ) => ElemBuilder el m a where 
+         ) => ElemBuilder el m a where
     -- TODO[WD]: change buildAbsMe to buildMe2
     --           and fire monad every time we construct an element, not once for the graph
     buildElem el = register ELEMENT =<< buildAbsMe (constructCover $ cons el) where
@@ -150,8 +150,39 @@ instance ( SmartCons el (Uncovered a)
 -- === Term constructors === --
 -------------------------------
 
+arg :: a -> Arg a
+arg = Arg Nothing
+
+fromArg :: Arg a -> a
+fromArg (Arg _ a) = a
+
 star :: ElemBuilder Star m a => m a
 star = buildElem Star
+
+string :: ElemBuilder Str m a => String -> m a
+string = buildElem . Str
+
+int :: ElemBuilder Num m a => Int -> m a
+int = buildElem . Num
+
+acc :: ( MonadFix m
+       , ElemBuilder (Acc n (Connection a u)) m u
+       , Connectible a u m
+       ) => n -> a -> m u
+acc n a = mdo
+    out <- buildElem $ Acc n ca
+    ca  <- connection a out
+    return out
+
+app :: ( MonadFix m
+       , ElemBuilder (App (Connection a u)) m u
+       , Connectible a u m
+       ) => a -> [Arg a] -> m u
+app f args = mdo
+    out <- buildElem $ App cf cargs
+    cf  <- connection f out
+    cargs <- mapM (\(Arg n a) -> (Arg n) <$> (connection a out)) args
+    return out
 
 unify :: ( MonadFix m
          , ElemBuilder (Unify (Connection b u)) m u

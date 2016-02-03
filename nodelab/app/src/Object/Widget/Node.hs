@@ -1,19 +1,19 @@
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings         #-}
 
 module Object.Widget.Node where
 
-import Utils.PreludePlus
-import Utils.Vector
-import Object.UITypes
-import qualified Empire.API.Data.Node as N
+import           Data.Fixed
+import qualified Empire.API.Data.Node     as N
 import qualified Empire.API.Data.NodeMeta as NM
-import Data.Fixed
+import           Object.UITypes
+import           Utils.PreludePlus
+import           Utils.Vector
 
-import Object.Widget
-import Utils.CtxDynamic
-import Event.Mouse      (MouseButton(..))
-import Data.Aeson (ToJSON)
+import           Data.Aeson               (ToJSON)
+import           Event.Mouse              (MouseButton (..))
+import           Object.Widget
+import           Utils.CtxDynamic
 
 data Node = Node { _nodeId     :: Int
                  , _controls   :: [Maybe WidgetId]
@@ -21,6 +21,7 @@ data Node = Node { _nodeId     :: Int
                  , _position   :: Position
                  , _zPos       :: Double
                  , _expression :: Text
+                 , _name       :: Text
                  , _value      :: Text
                  , _isExpanded :: Bool
                  , _isSelected :: Bool
@@ -31,7 +32,7 @@ makeLenses ''Node
 instance ToJSON Node
 
 node :: N.Node -> Node
-node n = Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 (n ^. N.expression) "()" False False False
+node n = Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 (n ^. N.expression) (n ^. N.name) "()" False False False
 
 instance IsDisplayObject Node where
     widgetPosition = position
