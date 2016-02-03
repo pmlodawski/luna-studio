@@ -12,8 +12,8 @@ import           Empire.ASTOps.Builder   as ASTBuilder
 
 import           Empire.API.Data.DefaultValue (PortDefault(..), Value(..))
 
-import qualified Luna.Syntax.Builder     as Builder
-import           Luna.Syntax.Repr.Graph  (Ref, Node)
+import qualified Luna.Syntax.Model.Graph.Term as Builder
+import           Luna.Syntax.Model.Graph  (Ref)
 
 parsePortDefault :: PortDefault -> ASTOp (Ref Node)
 parsePortDefault (Expression expr)          = parseFragment expr

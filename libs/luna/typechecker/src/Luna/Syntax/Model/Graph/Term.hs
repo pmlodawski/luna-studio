@@ -208,7 +208,7 @@ type NetType   = NetLayers :< Draft Static
 type NetGraph = Graph (NetLayers :< Raw) (Link (NetLayers :< Raw))
 
 buildNetwork  = runIdentity ∘ buildNetworkM
-buildNetworkM = rebuildNetworkM (def :: NetGraph)
+buildNetworkM = rebuildNetworkM' (def :: NetGraph)
 rebuildNetworkM' (net :: NetGraph) = flip Self.evalT (undefined ::        Ref $ Node NetType)
                                   ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node NetType))
                                   ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
@@ -219,28 +219,26 @@ rebuildNetworkM' (net :: NetGraph) = flip Self.evalT (undefined ::        Ref $ 
 {-# INLINE rebuildNetworkM' #-}
 
 
-class NetworkBuilder net m a n | net m a -> n where rebuildNetworkM :: net -> m a -> n (a,net)
+class NetworkBuilderT net m n | m -> n, m -> net where runNetworkBuilderT :: net -> m a -> n (a, net)
 
-instance {-# OVERLAPPABLE #-} NetworkBuilder I   m  a IM where rebuildNetworkM = impossible
-instance {-# OVERLAPPABLE #-} NetworkBuilder net IM a IM where rebuildNetworkM = impossible
-instance {-# OVERLAPPABLE #-} NetworkBuilder net m  I IM where rebuildNetworkM = impossible
+instance {-# OVERLAPPABLE #-} NetworkBuilderT I IM IM where runNetworkBuilderT = impossible
 instance {-# OVERLAPPABLE #-}
-	( m      ~ Listener CONNECTION SuccRegister m'
-	, m'     ~ GraphBuilder.BuilderT n e m''
-	, m''    ~ Listener ELEMENT (TypeConstraint Equality_Full (Ref $ Node NetType)) m'''
-	, m'''   ~ Listener CONNECTION (TypeConstraint Equality_M1 (Ref c)) m''''
-	, m''''  ~ Type.TypeBuilderT (Ref $ Node NetType) m'''''
-	, m''''' ~ Self.SelfBuilderT (Ref $ Node NetType) m''''''
-	, Monad m'''''
-	, Monad m''''''
+    ( m      ~ Listener CONNECTION SuccRegister m'
+    , m'     ~ GraphBuilder.BuilderT n e m''
+    , m''    ~ Listener ELEMENT (TypeConstraint Equality_Full (Ref $ Node NetType)) m'''
+    , m'''   ~ Listener CONNECTION (TypeConstraint Equality_M1 (Ref c)) m''''
+    , m''''  ~ Type.TypeBuilderT (Ref $ Node NetType) m'''''
+    , m''''' ~ Self.SelfBuilderT (Ref $ Node NetType) m''''''
+    , Monad m'''''
+    , Monad m''''''
     , net ~ Graph n e
-	) => NetworkBuilder net m a m'''''' where 
-	rebuildNetworkM net = flip Self.evalT (undefined ::        Ref $ Node NetType)
-		                 ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node NetType))
-		                 ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
-	                     ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref $ Node NetType)
-	                     ∘ flip GraphBuilder.runT net
-	                     ∘ registerSuccs   CONNECTION
+    ) => NetworkBuilderT net m m'''''' where
+    runNetworkBuilderT net = flip Self.evalT (undefined ::        Ref $ Node NetType)
+    	                     ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node NetType))
+    	                     ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
+                           ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref $ Node NetType)
+                           ∘ flip GraphBuilder.runT net
+                           ∘ registerSuccs   CONNECTION
 
 
 

@@ -1,25 +1,30 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE ConstraintKinds #-}
+
 module Empire.ASTOp where
 
 import           Prologue
-import           Control.Monad.State
-import           Control.Monad.Error (ErrorT, runErrorT)
+import           Control.Monad.Error             (ErrorT, runErrorT, MonadError)
+import           Empire.Data.AST                 (AST, ASTNode, ASTEdge)
+import           Empire.Empire                   (Command, Error, empire)
+import           Luna.Syntax.Model.Graph.Term    (NetworkBuilderT, runNetworkBuilderT, NetLayers, Raw)
+import           Luna.Syntax.Model.Builder.Self        (MonadSelfBuilder)
+import           Luna.Syntax.Model.Builder.Type        (MonadTypeBuilder)
+import           Luna.Syntax.Model.Graph.Builder       (MonadBuilder)
+import           Luna.Syntax.Model.Layer.Class         ((:<))
 
-import           Luna.Syntax.Builder.Star  (StarBuilderT)
-import qualified Luna.Syntax.Builder.Star  as StarBuilder
-import           Luna.Syntax.Builder.Node  (NodeBuilderT)
-import qualified Luna.Syntax.Builder.Node  as NodeBuilder
-import           Luna.Syntax.Builder.Class (BuilderT)
-import qualified Luna.Syntax.Builder       as Builder
-import           Luna.Syntax.Repr.Graph    (Ref(..), Node(..))
+type ASTOp m = ( MonadIO m
+               ,  MonadError Error m
+               ,  MonadBuilder (NetLayers :< Raw) ASTEdge m
+               ,  MonadSelfBuilder ASTNode m
+               ,  MonadTypeBuilder ASTNode m
+               )
 
-import           Empire.Data.AST (AST)
-import           Empire.Empire   (Command, Error, empire)
+runGraph :: NetworkBuilderT AST m IO => ErrorT Error m a -> AST -> IO (Either Error a, AST)
+runGraph cmd g = runNetworkBuilderT g
+               $ runErrorT cmd
 
-type ASTOp = ErrorT Error (NodeBuilderT (Ref Node) (BuilderT AST (StarBuilderT (Maybe (Ref Node)) IO)))
-
-runASTOp :: ASTOp a -> Command AST a
-runASTOp cmd = empire $ \g -> flip StarBuilder.evalT Nothing
-             $ flip Builder.runT g
-             $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
-             $ runErrorT
-             $ cmd
+runASTOp :: NetworkBuilderT AST m IO => ErrorT Error m a -> Command AST a
+runASTOp = empire . runGraph

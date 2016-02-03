@@ -9,8 +9,8 @@ import qualified Data.IntMap             as IntMap
 import           Data.Maybe              (catMaybes, fromMaybe, maybeToList)
 import qualified Data.Text.Lazy          as Text
 
-import           Data.Variants           (match, case', ANY(..))
-import           Data.Layer.Coat         (uncoat, coated)
+import           Data.Record           (match, case', ANY(..))
+{-import           Data.Layer.Coat         (uncoat, coated)-}
 
 import qualified Empire.Data.Graph       as Graph
 import           Empire.Data.Graph       (Graph)
@@ -31,11 +31,9 @@ import qualified Empire.ASTOps.Print        as Print
 import qualified Empire.ASTOps.Builder      as ASTBuilder
 import qualified Empire.Commands.GraphUtils as GraphUtils
 
-import qualified Luna.Syntax.Builder        as Builder
-import           Luna.Syntax.Repr.Graph     (Ref, Node, Edge)
+import qualified Luna.Syntax.Model.Graph.Term as Builder
+import           Luna.Syntax.Model.Graph     (Ref, Node, Edge)
 import           Luna.Syntax.AST.Term       (Var(..), App(..), Blank(..), Accessor(..), Unify(..), Draft, Val)
-import qualified Luna.Syntax.AST.Lit        as Lit
-
 type VarMap = Map (Ref Node) NodeId
 
 buildGraph :: Command Graph API.Graph

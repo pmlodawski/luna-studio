@@ -44,7 +44,7 @@ import qualified Empire.Commands.AST          as AST
 import qualified Empire.Commands.GraphUtils   as GraphUtils
 import qualified Empire.Commands.GraphBuilder as GraphBuilder
 
-import qualified Luna.Interpreter.NodeRunner  as NodeRunner
+{-import qualified Luna.Interpreter.NodeRunner  as NodeRunner-}
 
 addNode :: ProjectId -> LibraryId -> Text -> NodeMeta -> Empire Node
 addNode pid lid expr meta = withGraph pid lid $ do

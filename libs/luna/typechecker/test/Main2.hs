@@ -40,14 +40,14 @@ type instance Layout (MyGraph t) term rt = t (Term (MyGraph t) term rt)
 -- --------------------------------------
 -- - vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv ---
 prebuild :: IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
-prebuild = rebuildNetworkM def $ star
+prebuild = runNetworkBuilderT def $ star
 
 
 data ImgAttr = ImgAttr deriving (Show)
 type instance Attr ImgAttr (Cover x) = String
 
 foo :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
-foo g = rebuildNetworkM g
+foo g = runNetworkBuilderT g
     $ do
     title "basic element building"
     s1 <- star

@@ -47,7 +47,7 @@ renderAndOpen lst = do
 -- type instance Layout (MyGraph t) term rt = t (Term (MyGraph t) term rt)
 
 prebuild :: IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
-prebuild = rebuildNetworkM def $ star
+prebuild = runNetworkBuilderT def $ star
 
 
 -- data ImgAttr = ImgAttr deriving (Show)
@@ -131,7 +131,7 @@ prebuild = rebuildNetworkM def $ star
 
 
 sampleGraph2 :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
-sampleGraph2 g = rebuildNetworkM g $ do
+sampleGraph2 g = runNetworkBuilderT g $ do
     i1 <- int 2
     i2 <- int 3
     i3 <- int 4
