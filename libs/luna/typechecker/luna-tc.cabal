@@ -25,7 +25,7 @@ Flag Debug
 
 Library
     Hs-Source-Dirs: src
-    GHC-Options:    
+    GHC-Options:
                     -- -dshow-passes
                     -- -F -pgmF ./util/preprocessors/imports.py
     Extensions:   ConstraintKinds
@@ -121,8 +121,78 @@ Executable tc-test
     Main-Is:        Main2.hs
     Hs-Source-Dirs: test
 
-    GHC-Options:    
-                  -- -dshow-passes 
+    GHC-Options:
+                  -- -dshow-passes
+
+    -- -ddump-simpl -ddump-to-file
+
+    Extensions:   ConstraintKinds
+                  DataKinds
+                  DefaultSignatures
+                  DeriveDataTypeable
+                  DeriveFoldable
+                  DeriveFunctor
+                  DeriveGeneric
+                  DeriveTraversable
+                  DoAndIfThenElse
+                  EmptyDataDecls
+                  FlexibleContexts
+                  FlexibleInstances
+                  GeneralizedNewtypeDeriving
+                  InstanceSigs
+                  LambdaCase
+                  MultiParamTypeClasses
+                  NoImplicitPrelude
+                  OverloadedStrings
+                  ScopedTypeVariables
+                  StandaloneDeriving
+                  TemplateHaskell
+                  TupleSections
+                  TypeFamilies
+                  TypeOperators
+                  ViewPatterns
+
+    Build-Depends: luna-tc
+                 , base
+                 , constraints
+                 , container
+                 , containers >= 0.5.6.2
+                 , convert
+                 , data-attribute
+                 , data-base
+                 , data-construction
+                 , data-layer
+                 , error-util
+                 , errors
+                 , exceptions
+                 , extra
+                 , flowbox-utils
+                 , ghc
+                 , ghc-prim
+                 , ghc-session >= 0.1.2.0
+                 , graphviz >= 2999.17.0.2.2
+                 , lens
+                 , MissingH
+                 , mtl
+                 , placeholders
+                 , process
+                 , prologue
+                 , text
+                 , transformers
+                 , type-cache
+                 , typelevel
+                 , vector
+                 , data-result
+                 , split
+                 , dependent-state
+
+
+Executable tcinf-test
+    Main-Is:        InferenceTest.hs
+    Hs-Source-Dirs: test
+
+    GHC-Options:
+                  -- -dshow-passes
 
     -- -ddump-simpl -ddump-to-file
 

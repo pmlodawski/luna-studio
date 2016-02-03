@@ -101,7 +101,7 @@ instance {-# OVERLAPPABLE #-} Repr s a => Repr s (Arg a) where repr (Arg a) = "A
 
 data    Star   = Star          deriving (Show, Eq, Ord)
 newtype Str    = Str    String deriving (Show, Eq, Ord)
-newtype Num = Num Int    deriving (Show, Eq, Ord)
+newtype Num    = Num    Int    deriving (Show, Eq, Ord)
 
 
 -- LEGEND
@@ -373,7 +373,7 @@ type instance Props p (Term t term rt) = Props p (RecordOf (Term t term rt))
 -- Conversions
 instance Unwrapped (Term t term rt) ~ ASTRecord gs vs t' d => Convertible (Term t term rt) (ASTRecord gs vs t' d) where convert = unwrap' ; {-# INLINE convert #-}
 
-instance Convertible (Unwrapped (Term t term rt)) Data => Castable    (Term t term rt) Data 
+instance Convertible (Unwrapped (Term t term rt)) Data => Castable    (Term t term rt) Data
 instance Convertible (Unwrapped (Term t term rt)) Data => Convertible (Term t term rt) Data where convert = convert ∘ unwrap' ; {-# INLINE convert #-}
 instance Castable    Data (Unwrapped (Term t term rt)) => Castable    Data (Term t term rt) where cast    = wrap'   ∘ cast    ; {-# INLINE cast    #-}
 
