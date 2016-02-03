@@ -38,18 +38,15 @@ class Group extends BaseWidget
     @plot.scale.x = @width
     @plot.scale.y = @height
     # @plot.rotation.x = Math.PI
+    @plot.visible = false
 
     @mesh.add @plot
 
 
   setData: (vector) ->
     @data = vector
-    @renderData()
 
-  renderData: ->
-    cf = $$.commonUniforms.camFactor.value
-
-    svg = d3.select("body")
+    @svg = d3.select("body")
       .append("svg")
       .attr("xmlns", "http://www.w3.org/2000/svg")
       .attr("width", @width)
@@ -58,7 +55,7 @@ class Group extends BaseWidget
 
     data = @data
 
-    myChart = new dimple.chart(svg, data)
+    myChart = new dimple.chart(@svg, data)
     myChart.addCategoryAxis("x", "Index");
     myChart.addMeasureAxis("y", "Value");
 
@@ -75,6 +72,12 @@ class Group extends BaseWidget
     ]
 
     myChart.draw();
+    @svg.remove()
+
+    @renderData()
+
+  renderData: ->
+    cf = $$.commonUniforms.camFactor.value
 
     texWidth  = Math.pow(2, Math.ceil(Math.log2(cf * @width)))
     texHeight = Math.pow(2, Math.ceil(Math.log2(cf * @height)))
@@ -86,19 +89,22 @@ class Group extends BaseWidget
     overHeight = texHeight / @height
 
 
-    svg.attr("width",  texWidth)
+    @svg.attr("width",  texWidth)
        .attr("height", texHeight);
-    svg.select("g").attr("transform", "scale(" + cf + ")")
+    @svg.select("g").attr("transform", "scale(" + cf + ")")
 
-    svgCode = new Blob([svg[0][0].outerHTML], {
+    svgCode = new Blob([@svg[0][0].outerHTML], {
         type: 'image/svg+xml;charset=utf-8'
     });
+
+
     url = DOMURL.createObjectURL(svgCode);
     loader.load url, (tex) =>
       @plotUniforms.map.value = tex
       @plotUniforms.map.value.needsUpdate = true
       @plot.position.y = texHeight / cf
       @plot.scale.set texWidth / cf, -texHeight / cf , 1.0
+      @plot.visible = true
       shouldRender()
       DOMURL.revokeObjectURL url
 

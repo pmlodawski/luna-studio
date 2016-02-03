@@ -129,11 +129,13 @@ function initCommonWidgets() {
   $$.scene.add($$.selectionBox.mesh);
 }
 
-var redrawTextures = _.throttle(function() {
+var redrawTextures = _.debounce(function() {
+  console.time('redrawTextures');
+
   _($$.registry).each(function(e){
     if (e.redrawTextures !== undefined) e.redrawTextures();
   });
-  $$.lastFactor = $$.commonUniforms.camFactor.value;
+  console.timeEnd('redrawTextures');
 }, 100);
 
 function render() {
@@ -158,6 +160,7 @@ function render() {
   }
   if($$.commonUniforms.camFactor.value !== $$.lastFactor) {
     redrawTextures();
+    $$.lastFactor = $$.commonUniforms.camFactor.value;
   }
 
   connectionPen.fadeCanvas();
