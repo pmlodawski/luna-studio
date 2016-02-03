@@ -1,20 +1,24 @@
 module Object.Widget.Label where
 
-import Utils.PreludePlus
-import Utils.Vector
-import Object.Widget
-import Data.Aeson (ToJSON)
+import           Data.Aeson        (ToJSON)
+import           Object.Widget
+import           Utils.PreludePlus hiding (Either(..))
+import           Utils.Vector
 
-data Label = Label { _position :: Vector2 Double
-                   , _size     :: Vector2 Double
-                   , _label    :: Text
+data TextAlignment = Left | Center | Right deriving (Eq, Show, Generic)
+instance ToJSON TextAlignment
+
+data Label = Label { _position  :: Vector2 Double
+                   , _size      :: Vector2 Double
+                   , _alignment :: TextAlignment
+                   , _label     :: Text
                    } deriving (Eq, Show, Typeable, Generic)
 
 makeLenses    ''Label
 instance ToJSON Label
 
-create :: Text -> Label
-create t = Label def (Vector2 20.0 20.0) t
+create :: Size -> Text -> Label
+create size = Label def size Left
 
 instance IsDisplayObject Label where
     widgetPosition = position

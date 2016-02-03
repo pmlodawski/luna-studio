@@ -56,7 +56,7 @@ instance CompositeWidget Model.LabeledTextBox where
         let tx      = (model ^. Model.size . x) / 2.0
             ty      = (model ^. Model.size . y)
             sx      = tx - (model ^. Model.size . y / 2.0)
-            textVal = Text.pack $ show $ model ^. Model.value
+            textVal = model ^. Model.value
             textBox = TextBox.create (Vector2 sx ty) textVal TextBox.Right
 
         tbId <- UICmd.register id textBox $ textHandlers id

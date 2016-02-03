@@ -77,17 +77,21 @@ autoZoom = do
     nodes             <- use $ Global.graph  . Graph.nodes
     screenSize'       <- use $ Global.camera . Camera.camera . Camera.screenSize
 
-    let padding        = Vector2 80.0 80.0
-        screenSize     = fromIntegral <$> screenSize'
-        minXY          = -padding + (Vector2 (minimum $ (^. Node.position . _1) <$> nodes) (minimum $ (^. Node.position . _2) <$> nodes))
-        maxXY          =  padding + (Vector2 (maximum $ (^. Node.position . _1) <$> nodes) (maximum $ (^. Node.position . _2) <$> nodes))
-        spanXY         = maxXY - minXY
-        zoomFactorXY   = Vector2 (screenSize ^. x / spanXY ^. x) (screenSize ^. y / spanXY ^. y)
-        zoomFactor     = min (zoomFactorXY ^. x) (zoomFactorXY ^. y)
-        zoomPan        = minXY + ((/2.0) <$> spanXY)
+    zoom Global.camera $ setZoom 1.0
+    Global.camera . Camera.camera . Camera.pan    .= Vector2 0.0 0.0
 
-    zoom Global.camera $ setZoom zoomFactor
-    Global.camera . Camera.camera . Camera.pan    .= zoomPan
+    when (length nodes > 0) $ do
+        let padding        = Vector2 80.0 80.0
+            screenSize     = fromIntegral <$> screenSize'
+            minXY          = -padding + (Vector2 (minimum $ (^. Node.position . _1) <$> nodes) (minimum $ (^. Node.position . _2) <$> nodes))
+            maxXY          =  padding + (Vector2 (maximum $ (^. Node.position . _1) <$> nodes) (maximum $ (^. Node.position . _2) <$> nodes))
+            spanXY         = maxXY - minXY
+            zoomFactorXY   = Vector2 (screenSize ^. x / spanXY ^. x) (screenSize ^. y / spanXY ^. y)
+            zoomFactor     = min (zoomFactorXY ^. x) (zoomFactorXY ^. y)
+            zoomPan        = minXY + ((/2.0) <$> spanXY)
+
+        zoom Global.camera $ setZoom zoomFactor
+        Global.camera . Camera.camera . Camera.pan    .= zoomPan
 
 zoomIn :: Command Camera.State ()
 zoomIn = do

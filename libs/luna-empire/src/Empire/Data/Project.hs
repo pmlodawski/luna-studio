@@ -1,10 +1,11 @@
 module Empire.Data.Project where
 
 import           Prologue
+import qualified Data.Text.Lazy          as Text
 import           Empire.Data.Library     (Library)
 import qualified Empire.Data.Library     as Library
 import qualified Empire.API.Data.Project as API
-import           System.Path             (Path)
+import           System.Path             (Path, native)
 import           Data.IntMap             (IntMap)
 import qualified Data.IntMap             as IntMap
 
@@ -19,4 +20,4 @@ make name path = Project name path IntMap.empty
 makeLenses ''Project
 
 toAPI :: Project -> API.Project
-toAPI (Project name path libs) = API.Project name (show path) (Library.toAPI <$> libs)
+toAPI (Project name path libs) = API.Project name (Text.unpack $ native path) (Library.toAPI <$> libs)

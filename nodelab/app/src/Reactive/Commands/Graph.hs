@@ -4,19 +4,19 @@ module Reactive.Commands.Graph where
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.Angle
-import qualified Utils.Nodes  as NodeUtils
+import qualified Utils.Nodes                   as NodeUtils
 
-import           Data.IntMap.Lazy (IntMap(..))
-import qualified Data.IntMap.Lazy as IntMap
-import           Data.Map (Map)
-import qualified Data.Map as Map
-import           Data.Ord (comparing)
-import           Data.Fixed (mod')
+import           Data.IntMap.Lazy              (IntMap(..))
+import qualified Data.IntMap.Lazy              as IntMap
+import           Data.Map                      (Map)
+import qualified Data.Map                      as Map
+import           Data.Ord                      (comparing)
+import           Data.Fixed                    (mod')
 import           Object.UITypes
 import           Object.Widget
-import qualified Object.Widget.Node       as Model
-import qualified Object.Widget.Connection as ConnectionModel
-import qualified Object.Widget.Port       as PortModel
+import qualified Object.Widget.Node            as Model
+import qualified Object.Widget.Connection      as ConnectionModel
+import qualified Object.Widget.Port            as PortModel
 
 import           Reactive.State.Graph
 import qualified Reactive.State.Connect        as Connect
@@ -33,22 +33,23 @@ import           Control.Monad.State
 
 import qualified BatchConnector.Commands       as BatchCmd
 
-import qualified UI.Widget.Node as UINode
-import qualified UI.Widget.Port as UIPort
-import qualified UI.Widget.Connection as UIConnection
-import qualified UI.Generic as UIGeneric
-import           Reactive.State.Camera (Camera, screenToWorkspace)
-import           UI.Instances ()
-import           Empire.API.Data.Node (Node, NodeId)
-import qualified Empire.API.Data.Node as Node
-import           Empire.API.Data.NodeMeta (NodeMeta)
-import qualified Empire.API.Data.NodeMeta as NodeMeta
-import           Empire.API.Data.PortRef (AnyPortRef(..), InPortRef(..), OutPortRef(..))
-import qualified Empire.API.Data.PortRef as PortRef
-import           Empire.API.Data.Connection (Connection, ConnectionId)
-import qualified Empire.API.Data.Connection as Connection
-import           Empire.API.Data.Port (ValueType, PortId(..))
-import qualified Empire.API.Data.Port as Port
+import qualified UI.Widget.Node                as UINode
+import qualified UI.Widget.Port                as UIPort
+import qualified UI.Widget.Connection          as UIConnection
+import qualified UI.Generic                    as UIGeneric
+import           Reactive.State.Camera         (Camera, screenToWorkspace)
+import           UI.Instances                  ()
+import           Empire.API.Data.Node          (Node, NodeId)
+import qualified Empire.API.Data.Node          as Node
+import           Empire.API.Data.NodeMeta      (NodeMeta)
+import qualified Empire.API.Data.NodeMeta      as NodeMeta
+import           Empire.API.Data.PortRef       (AnyPortRef(..), InPortRef(..), OutPortRef(..))
+import qualified Empire.API.Data.PortRef       as PortRef
+import           Empire.API.Data.Connection    (Connection, ConnectionId)
+import qualified Empire.API.Data.Connection    as Connection
+import           Empire.API.Data.ValueType     (ValueType)
+import           Empire.API.Data.Port          (PortId(..))
+import qualified Empire.API.Data.Port          as Port
 
 updateConnNodes :: [NodeId] -> Command Global.State ()
 updateConnNodes nodeIds = pureCommand $ \state -> let
@@ -73,7 +74,7 @@ updateConnections = do
 
     forM_ allConnections $ \widgetFile -> do
         let connectionId   = widgetFile ^. widget . ConnectionModel.connectionId
-            connection     = IntMap.lookup connectionId connectionsMap
+            connection     = Map.lookup connectionId connectionsMap
             connectionLine = (\conn -> getConnectionLine nodePositions portAngles portTypes (conn ^. Connection.src) (conn ^. Connection.dst)) <$> connection
         forM_ connectionLine $ \(posFrom, posTo, visible, color) -> do
             zoom Global.uiRegistry $ do
@@ -144,21 +145,23 @@ nodePositionMap = do
     return $ IntMap.fromList $ (\file -> (file ^. widget . Model.nodeId, file ^. widget . widgetPosition)) <$> nodes
 
 connectionVector :: IntMap (Vector2 Double) -> AnyPortRef -> AnyPortRef -> Vector2 Double
-connectionVector map src dst = (dstPos - srcPos) where
+connectionVector map src dst = dstPos - srcPos where
     srcPos = map IntMap.! (src ^. PortRef.nodeId)
     dstPos = map IntMap.! (dst ^. PortRef.nodeId)
 
+angleToDimVec :: Double -> Vector2 Double
+angleToDimVec angle = (/ 10.0) <$> Vector2 (cos angle) (-sin angle)
+
 portDefaultAngle :: Int -> PortId -> Vector2 Double
-portDefaultAngle numPorts (OutPortId _) = (/ 10.0) <$> Vector2 (cos angleMod) (sin angleMod) where
+portDefaultAngle numPorts (OutPortId _) = angleToDimVec angleMod where
     angleMod = 0.0 -- TODO: only one out port supported for now
-portDefaultAngle numPorts (InPortId portId) = (/ 10.0) <$> Vector2 (cos angleMod) (sin angleMod) where
+portDefaultAngle numPorts (InPortId portId) = angleToDimVec angleMod where
     angleMod = angle `mod'` (2.0 * pi)
     angle = (1 + fromIntegral portNum) * (pi / (fromIntegral $ numPorts + 1)) + delta
     portNum = case portId of
         Port.Self  -> 0
         Port.Arg i -> i + 1
     delta = pi / 2.0 -- TODO: OutputPort -> 3.0 * pi / 2.0
-
 
 defaultAngles :: Command Global.State (Map AnyPortRef (Vector2 Double))
 defaultAngles = do
@@ -190,7 +193,7 @@ updatePortAngles = do
                                          , (InPortRef'  $ conn ^. Connection.dst, OutPortRef' $ conn ^. Connection.src) ]
         connections                    = sortAndGroup . concat $ connectionTuples <$> connectionsMap
 
-    let calculateAngle portRef targets = sum $ connectionVector nodePositions portRef <$> targets
+    let calculateAngle portRef targets = sum $ fmap explode $ connectionVector nodePositions portRef <$> targets
         connectedAngles                = Map.mapWithKey calculateAngle connections
 
     defAngles <- defaultAngles
@@ -263,5 +266,15 @@ updateNodeMeta nodeId meta = do
 
     updatePortAngles
     updateConnections
+
+
+renameNode :: NodeId -> Text -> Command Global.State ()
+renameNode nodeId name = do
+    Global.graph . Graph.nodesMap . ix nodeId . Node.name .= name
+
+    inRegistry $ do
+        widgetId <- nodeIdToWidgetId nodeId
+
+        forM_ widgetId $ flip UICmd.update_ $ Model.name .~ name
 
 

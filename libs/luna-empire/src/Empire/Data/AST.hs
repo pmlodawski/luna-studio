@@ -7,9 +7,10 @@ import Luna.Syntax.Repr.Graph
 import Luna.Syntax.AST.Term
 import Luna.Syntax.AST.Typed
 import Luna.Syntax.Layer.Labeled
+import Luna.Syntax.Network        (Network, NetworkNode)
 
-import Empire.API.Data.NodeMeta (NodeMeta)
-import Empire.Data.WithMeta     (WithMeta)
+import Empire.API.Data.NodeMeta   (NodeMeta)
+import Luna.Syntax.Layer.WithMeta (WithMeta)
 
-type ASTNode = (WithMeta (Maybe NodeMeta) (Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))))
-type AST = Graph ASTNode DoubleArc
+type ASTNode = NetworkNode Int (Maybe NodeMeta)
+type AST = Network Int (Maybe NodeMeta)

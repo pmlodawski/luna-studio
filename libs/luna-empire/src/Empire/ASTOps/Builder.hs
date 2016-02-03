@@ -8,12 +8,12 @@ import           Data.Variants       (match, case', specificCons, ANY(..))
 import           Data.Layer.Coat     (uncoat, coated)
 
 import           Empire.ASTOp           (ASTOp)
-import           Empire.ASTOps.Remove   (removeNode)
+import           Empire.ASTOps.Remove   (removeNode, safeRemove)
 import           Empire.Data.AST        (ASTNode)
 
 import qualified Luna.Syntax.Builder    as Builder
 import           Luna.Syntax.Repr.Graph (Ref(..), Node(..), Edge(..))
-import           Luna.Syntax.AST.Term   (Var(..), App(..), Blank(..), Accessor(..), Unify(..), Val)
+import           Luna.Syntax.AST.Term   (Var(..), App(..), Blank(..), Accessor(..), Unify(..), Val, Draft)
 import qualified Luna.Syntax.AST.Term   as Term
 import qualified Luna.Syntax.AST.Arg    as Arg
 import           Luna.Syntax.AST.Arg    (Arg)
@@ -39,10 +39,7 @@ removeArg fun pos = do
     freshBlank <- Builder._blank
     let newArgs = args & ix pos .~ freshBlank
     allBlanks <- and <$> mapM isBlank newArgs
-
-    if allBlanks
-        then mapM removeNode newArgs >> return f
-        else Builder.app f (Builder.arg <$> newArgs)
+    Builder.app f (Builder.arg <$> newArgs)
 
 destructApp :: Ref Node -> ASTOp (Ref Node, [Ref Node])
 destructApp fun = do
@@ -113,10 +110,10 @@ makeAccessorRec targetNodeRef namingNodeRef seenApp = do
             return namingNodeRef
         match $ \(Accessor n t) -> do
             oldTargetRef <- Builder.follow t
-            finalNameRef <- Builder.follow n
+            nameRef <- Builder.follow n
             removeNode namingNodeRef
-            intermediateTargetRef <- makeAccessorRec targetNodeRef oldTargetRef False
-            makeAccessorRec intermediateTargetRef finalNameRef seenApp
+            safeRemove oldTargetRef
+            Builder.accessor nameRef targetNodeRef
         match $ \ANY -> throwError "Invalid node type"
 
 makeAccessor :: Ref Node -> Ref Node -> ASTOp (Ref Node)
@@ -128,8 +125,9 @@ unAcc ref = do
     case' (uncoat node) $ do
         match $ \(Accessor n t) -> do
             nameNode <- Builder.follow n
+            freshBlank <- Builder._blank
             removeNode ref
-            Builder.var nameNode
+            Builder.accessor nameNode freshBlank
         match $ \(App t args) -> do
             target <- Builder.follow t
             replacementRef <- unAcc target
@@ -154,3 +152,16 @@ rightUnifyOperand :: Lens' ASTNode (Ref Edge)
 rightUnifyOperand = coated . lens rightGetter rightSetter where
     rightGetter u   = case' u $ match $ \(Unify _ r) -> r
     rightSetter u r = case' u $ match $ \(Unify l _) -> specificCons $ Unify l r
+
+varName :: Lens' ASTNode (Ref Edge)
+varName = coated . lens nameGetter nameSetter where
+    nameGetter v   = case' v $ match $ \(Var n) -> n
+    nameSetter    :: Draft (Ref Edge) -> Ref Edge -> Draft (Ref Edge)
+    nameSetter v n = case' v $ match $ \(Var _) -> (specificCons $ Var n)
+
+renameVar :: Ref Node -> String -> ASTOp ()
+renameVar vref name = do
+    node    <- Builder.readRef vref
+    oldName <- Builder.follow $ node ^. varName
+    Builder._string name >>= Builder.reconnect vref varName
+    safeRemove oldName

@@ -10,24 +10,25 @@ import qualified Reactive.Handlers          as Handlers
 import qualified Event.Event                as Event
 import qualified Event.Processors.Batch     as BatchEventProcessor
 
-import qualified Reactive.Plugins.Core.Action.General               as General
-import qualified Reactive.Plugins.Core.Action.Camera                as Camera
-import qualified Reactive.Plugins.Core.Action.MultiSelection        as MultiSelection
-import qualified Reactive.Plugins.Core.Action.Drag                  as Drag
-import qualified Reactive.Plugins.Core.Action.Connect               as Connect
-import qualified Reactive.Plugins.Core.Action.NodeSearcher          as NodeSearcher
-import qualified Reactive.Plugins.Core.Action.Widget                as Widget
-import qualified Reactive.Plugins.Core.Action.Backend.Backend       as Backend
-import qualified Reactive.Plugins.Core.Action.Backend.Runner        as Runner
-import qualified Reactive.Plugins.Core.Action.Backend.GraphFetcher  as GraphFetcher
-import qualified Reactive.Plugins.Core.Action.Backend.AddNode       as AddNode
-import qualified Reactive.Plugins.Core.Action.ConnectionPen         as ConnectionPen
-import qualified Reactive.Plugins.Core.Action.TextEditor            as TextEditor
-import qualified Reactive.Plugins.Core.Action.Debug                 as Debug
-import qualified Reactive.Plugins.Core.Action.Sandbox               as Sandbox
+import qualified Reactive.Plugins.Core.Action.General                as General
+import qualified Reactive.Plugins.Core.Action.Camera                 as Camera
+import qualified Reactive.Plugins.Core.Action.MultiSelection         as MultiSelection
+import qualified Reactive.Plugins.Core.Action.Drag                   as Drag
+import qualified Reactive.Plugins.Core.Action.Connect                as Connect
+import qualified Reactive.Plugins.Core.Action.NodeSearcher           as NodeSearcher
+import qualified Reactive.Plugins.Core.Action.Widget                 as Widget
+import qualified Reactive.Plugins.Core.Action.Backend.Backend        as Backend
+import qualified Reactive.Plugins.Core.Action.Backend.Runner         as Runner
+import qualified Reactive.Plugins.Core.Action.Backend.GraphFetcher   as GraphFetcher
+import qualified Reactive.Plugins.Core.Action.Backend.Graph          as Graph
+import qualified Reactive.Plugins.Core.Action.Backend.ProjectManager as ProjectManager
+import qualified Reactive.Plugins.Core.Action.ConnectionPen          as ConnectionPen
+import qualified Reactive.Plugins.Core.Action.TextEditor             as TextEditor
+import qualified Reactive.Plugins.Core.Action.Debug                  as Debug
+import qualified Reactive.Plugins.Core.Action.Sandbox                as Sandbox
 
 import           Reactive.Commands.Command (Command, execCommand)
-import           Reactive.State.Global     (State, initialState)
+import           Reactive.State.Global     (State)
 
 import           Batch.Workspace           (Workspace)
 import           JS.WebSocket              (WebSocket)
@@ -36,8 +37,8 @@ import qualified JS.UI                     as UI
 toTransformer :: Command a () -> (IO (), a) -> (IO (), a)
 toTransformer cmd (_, a) = execCommand cmd a
 
-makeNetworkDescription :: forall t. Frameworks t => WebSocket -> Bool -> Workspace -> Moment t ()
-makeNetworkDescription conn logging workspace = do
+makeNetworkDescription :: forall t. Frameworks t => WebSocket -> Bool -> State -> Moment t ()
+makeNetworkDescription conn logging initialState = do
     let handlers = [ Handlers.resizeHandler
                    , Handlers.mouseDownHandler
                    , Handlers.mouseUpHandler
@@ -64,7 +65,7 @@ makeNetworkDescription conn logging workspace = do
         actions =  [ Widget.toAction
                    , General.toAction
                    , Camera.toAction
-                   , AddNode.toAction
+                   , Graph.toAction
                    , MultiSelection.toAction
                    , Drag.toAction
                    , Connect.toAction
@@ -72,6 +73,7 @@ makeNetworkDescription conn logging workspace = do
                    , Backend.toAction
                    , Runner.toAction
                    , GraphFetcher.toAction
+                   , ProjectManager.toAction
                    , ConnectionPen.toAction
                    , TextEditor.toAction
                    , Debug.toAction
@@ -85,6 +87,6 @@ makeNetworkDescription conn logging workspace = do
         transformers =  toTransformer <$> commands
 
         reactions :: Event t (IO (), State)
-        reactions =  RB.accumE (return (), initialState workspace) transformers
+        reactions =  RB.accumE (return (), initialState) transformers
 
     reactimate $ (>> UI.shouldRender) . fst <$> reactions

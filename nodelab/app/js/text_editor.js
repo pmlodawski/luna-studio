@@ -32,7 +32,7 @@ function init() {
 }
 
 function setText(text) {
-  editor.setValue(text);
+  editor.setValue(text, -1);
 }
 
 module.exports = {

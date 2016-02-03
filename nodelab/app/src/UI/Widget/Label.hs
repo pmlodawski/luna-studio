@@ -3,6 +3,7 @@ module UI.Widget.Label where
 import           Utils.PreludePlus
 
 import           Utils.Vector
+import qualified Data.JSString                 as JSString
 import           Data.JSString.Text            (lazyTextToJSString)
 import           GHCJS.Marshal.Pure            (PFromJSVal (..), PToJSVal (..))
 import           GHCJS.Types                   (JSString, JSVal)
@@ -22,18 +23,23 @@ newtype Label = Label JSVal deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget Label
 
-foreign import javascript unsafe "new Label($1)"   create'     :: Int   -> IO Label
-foreign import javascript unsafe "$1.setLabel($2)" setLabel'   :: Label -> JSString -> IO ()
+foreign import javascript unsafe "new Label($1, $2, $3)" create'       :: Int -> Double -> Double -> IO Label
+foreign import javascript unsafe "$1.setLabel($2)"       setLabel'     :: Label -> JSString -> IO ()
+foreign import javascript unsafe "$1.setAlignment($2)"   setAlignment' :: Label -> JSString -> IO ()
 
 create :: WidgetId -> Model.Label -> IO Label
 create oid model = do
-    widget      <- create' oid
+    widget      <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
     setLabel       model widget
+    setAlignment   model widget
     UI.setWidgetPosition (model ^. widgetPosition) widget
     return widget
 
 setLabel :: Model.Label -> Label -> IO ()
 setLabel model widget = setLabel' widget $ lazyTextToJSString $ model ^. Model.label
+
+setAlignment :: Model.Label -> Label -> IO ()
+setAlignment model label = setAlignment' label $ JSString.pack $ show $ model ^. Model.alignment
 
 instance UIDisplayObject Model.Label where
     createUI parentId id model = do
@@ -44,7 +50,8 @@ instance UIDisplayObject Model.Label where
 
     updateUI id old model = do
         widget <- UI.lookup id :: IO Label
-        setLabel   model widget
+        setLabel     model widget
+        setAlignment model widget
 
 instance CompositeWidget Model.Label
 instance ResizableWidget Model.Label where resizeWidget = UI.defaultResize

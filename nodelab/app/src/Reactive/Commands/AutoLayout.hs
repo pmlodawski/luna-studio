@@ -50,6 +50,6 @@ moveNodes = do
 
 updatePosition :: Map NodeId (Vector2 Double) -> Node -> Node
 updatePosition newPositions node = node & Node.position .~ (toTuple $ Map.findWithDefault (fromTuple $ node ^. Node.position)
-                                                                                         (node ^. Node.nodeId)
-                                                                                         newPositions)
+                                                                                          (node ^. Node.nodeId)
+                                                                                          newPositions)
 

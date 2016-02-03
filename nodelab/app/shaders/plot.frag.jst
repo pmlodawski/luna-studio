@@ -1,0 +1,17 @@
+#define SQRT2 1.4142135623730951
+
+uniform sampler2D map;
+uniform float camFactor;
+varying vec2 luv;
+
+uniform int objectMap;
+uniform vec3 objectId;
+
+
+void main() {
+    if (objectMap == 1) {
+        gl_FragColor = vec4(objectId, 1.0);
+        return;
+    }
+    gl_FragColor =  texture2D(map, luv);
+}

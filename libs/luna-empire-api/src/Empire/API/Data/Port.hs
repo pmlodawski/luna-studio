@@ -4,6 +4,7 @@ import Prologue
 import Data.Binary                  (Binary)
 
 import Empire.API.Data.DefaultValue (PortDefault)
+import Empire.API.Data.ValueType    (ValueType)
 
 data InPort  = Self | Arg Int        deriving (Generic, Show, Eq)
 data OutPort = All  | Projection Int deriving (Generic, Show, Eq)
@@ -31,15 +32,32 @@ instance Ord OutPort where
   (Projection _) `compare` All            = GT
   (Projection a) `compare` (Projection b) = a `compare` b
 
-newtype ValueType = ValueType { _unValueType :: String } deriving (Show, Eq, Generic)
+instance Read InPort where
+    readsPrec _ ('S':'e':'l':'f':rest) = [(Self, rest)]
+    readsPrec _ ('s':'e':'l':'f':rest) = [(Self, rest)]
+    readsPrec d r = do
+        (v, r') <- readsPrec d r
+        return (Arg v, r')
+    readsPrec _ _ = []
 
-data Port = Port { _portId       :: PortId
-                 , _valueType    :: ValueType
-                 , _defaultValue :: Maybe PortDefault
+instance Read OutPort where
+    readsPrec _ ('A':'l':'l':rest) = [(All, rest)]
+    readsPrec _ ('a':'l':'l':rest) = [(All, rest)]
+    readsPrec d r = do
+        (v, r') <- readsPrec d r
+        return (Projection v, r')
+    readsPrec _ _ = []
+
+data PortState = NotConnected | Connected | WithDefault PortDefault deriving (Show, Eq, Generic)
+
+data Port = Port { _portId     :: PortId
+                 , _valueType  :: ValueType
+                 , _state      :: PortState
                  } deriving (Show, Eq, Generic)
 
 makeLenses ''Port
-
-instance Binary ValueType
 instance Binary PortId
 instance Binary Port
+instance Binary PortState
+
+

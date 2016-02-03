@@ -2,28 +2,31 @@
 
 module Reactive.State.Graph where
 
-import           Utils.PreludePlus hiding ((.=))
+import           Utils.PreludePlus          hiding ((.=))
 import           Utils.Vector
 
-import           Data.IntMap.Lazy (IntMap)
-import qualified Data.IntMap.Lazy as IntMap
-import qualified Data.Text.Lazy   as Text
+import           Data.IntMap.Lazy           (IntMap)
+import qualified Data.IntMap.Lazy           as IntMap
+import           Data.Map.Lazy              (Map)
+import qualified Data.Map.Lazy              as Map
+import qualified Data.Text.Lazy             as Text
 import           Debug.Trace
 
 import           Data.Aeson
-import           Utils.Aeson (intMapToJSON)
-import           Empire.API.Data.Connection (Connection(..), ConnectionId)
-import           Empire.API.Data.PortRef    (OutPortRef, InPortRef, AnyPortRef)
+import           Empire.API.Data.Connection (Connection (..), ConnectionId)
 import qualified Empire.API.Data.Connection as Connection
-import qualified Empire.API.Data.PortRef    as PortRef
 import           Empire.API.Data.Node       (Node, NodeId)
 import qualified Empire.API.Data.Node       as Node
 import           Empire.API.Data.Port       (Port)
 import qualified Empire.API.Data.Port       as Port
-import qualified Empire.API.JSONInstances ()
+import           Empire.API.Data.PortRef    (AnyPortRef, InPortRef, OutPortRef)
+import           Empire.API.Data.PortRef    (InPortRef)
+import qualified Empire.API.Data.PortRef    as PortRef
+import qualified Empire.API.JSONInstances   ()
+import           Utils.Aeson                (intMapToJSON)
 
 type NodesMap       = IntMap Node
-type ConnectionsMap = IntMap Connection
+type ConnectionsMap = Map InPortRef Connection
 
 data State = State { _nodesMap       :: NodesMap       -- don't access it directly
                    , _connectionsMap :: ConnectionsMap -- don't access it directly
@@ -33,7 +36,7 @@ makeLenses ''State
 
 instance ToJSON State where
     toJSON st = object [ "_nodes"       .= (intMapToJSON $ st ^. nodesMap)
-                       , "_connections" .= (intMapToJSON $ st ^. connectionsMap)
+                       , "_connections" .= (toJSON $ st ^. connectionsMap)
                        ]
 
 instance Eq State where
@@ -53,9 +56,6 @@ genId intMap = if IntMap.null intMap then 0
 genNodeId :: State -> NodeId
 genNodeId state = genId $ state ^. nodesMap
 
-genConnectionId :: State -> NodeId
-genConnectionId state = genId $ state ^. connectionsMap
-
 getNode :: State -> NodeId -> Node
 getNode state nodeId = IntMap.findWithDefault (error $ "Node " <> show nodeId <> " not found") nodeId $ state ^. nodesMap
 
@@ -72,7 +72,7 @@ getNodesMap :: State -> NodesMap
 getNodesMap = (^. nodesMap)
 
 getConnections :: State -> [Connection]
-getConnections = IntMap.elems . getConnectionsMap
+getConnections = Map.elems . getConnectionsMap
 
 getConnectionsMap :: State -> ConnectionsMap
 getConnectionsMap = (^. connectionsMap)
@@ -97,18 +97,18 @@ removeNode remNodeId state = state & nodesMap %~ IntMap.delete remNodeId
 
 addConnection :: OutPortRef -> InPortRef -> State -> (Maybe ConnectionId, State) -- TODO: check if node/ports exist
 addConnection sourcePortRef destPortRef state = (Just newConnId, newState) where
-    newState      = state & connectionsMap %~ IntMap.insert (newConnection ^. Connection.connectionId) newConnection
-    newConnection = Connection newConnId sourcePortRef destPortRef
-    newConnId     = genConnectionId state
+    newState      = state & connectionsMap %~ Map.insert destPortRef newConnection
+    newConnection = Connection sourcePortRef destPortRef
+    newConnId     = destPortRef
 
 removeConnections :: [ConnectionId] -> State -> State
 removeConnections connIds state = foldr removeConnection state connIds
 
 removeConnection :: ConnectionId -> State -> State
-removeConnection connId state = state & connectionsMap %~ IntMap.delete connId
+removeConnection connId state = state & connectionsMap %~ Map.delete connId
 
 lookUpConnection :: State -> ConnectionId -> Maybe Connection
-lookUpConnection state connId = IntMap.lookup connId $ getConnectionsMap state
+lookUpConnection state connId = Map.lookup connId $ getConnectionsMap state
 
 containsNode :: NodeId -> Connection -> Bool
 containsNode id conn = (startsWithNode id conn)

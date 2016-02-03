@@ -58,9 +58,11 @@ function initializeGl() {
 
 
     $('body').append('<div id="htmlcanvas-pan"><div id="htmlcanvas"></div></div>');
+    $('body').append('<div id="interface-canvas"></div>');
 
-    $$.htmlCanvasPan = $("#htmlcanvas-pan");
-    $$.htmlCanvas    = $("#htmlcanvas");
+    $$.htmlCanvasPan   = $("#htmlcanvas-pan");
+    $$.htmlCanvas      = $("#htmlcanvas");
+    $$.interfaceCanvas = $("#interfaceCanvas");
 
     $$.renderer.setClearColor(config.backgroundColor, 1);
     $$.rendererMap.setClearColor(new THREE.Color("black"), 1);
@@ -84,12 +86,6 @@ function initializeGl() {
 
     initTerminal();
     initUserInfo();
-    // $(document).unbind('keydown').bind('keydown', function (event) {
-    //   if (event.keyCode === 8) {
-    //     event.preventDefault();
-    //     // event.stopPropagation();
-    //   }
-    // });
 }
 
 function initUserInfo() {
@@ -133,20 +129,37 @@ function initCommonWidgets() {
   $$.scene.add($$.selectionBox.mesh);
 }
 
+var redrawTextures = _.throttle(function() {
+  _($$.registry).each(function(e){
+    if (e.redrawTextures !== undefined) e.redrawTextures();
+  });
+  $$.lastFactor = $$.commonUniforms.camFactor.value;
+}, 100);
+
 function render() {
   if (shouldRender) {
     $$.commonUniforms.objectMap.value = 0;
     $$.commonUniforms.antialias.value = 1;
+    var oldCf = $$.commonUniforms.camFactor.value;
 
     $$.renderer.clear();
+
     $$.renderer.render($$.scene, $$.camera);
     $$.renderer.clearDepth();
+
+    $$.commonUniforms.camFactor.value = 1;
     $$.renderer.render($$.sceneHUD, $$.cameraHUD);
+
+    $$.commonUniforms.camFactor.value = oldCf;
 
     raycaster.renderMap();
     raycaster.cacheMap();
     shouldRender = false;
   }
+  if($$.commonUniforms.camFactor.value !== $$.lastFactor) {
+    redrawTextures();
+  }
+
   connectionPen.fadeCanvas();
   requestAnimationFrame(render);
 }

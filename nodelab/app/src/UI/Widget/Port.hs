@@ -23,7 +23,7 @@ import qualified Reactive.State.UIRegistry     as UIRegistry
 import qualified UI.Registry                   as UIR
 import           UI.Widget                     (UIContainer (..), UIWidget (..))
 import           UI.Widget                     (GenericWidget (..))
-import qualified UI.Widget                     as UIT
+import qualified UI.Widget                     as Widget
 
 newtype Port = Port { unPort :: JSVal } deriving (PToJSVal, PFromJSVal)
 
@@ -32,7 +32,6 @@ instance UIWidget Port
 foreign import javascript unsafe "new Port($1)"     create'  :: WidgetId         -> IO Port
 foreign import javascript unsafe "$1.setAngle($2)"  setAngle :: Port -> Double   -> IO ()
 foreign import javascript unsafe "$1.setColor($2)"  setColor :: Port -> Int      -> IO ()
-foreign import javascript unsafe "$1.mesh.add($2.mesh)"  addToNode :: GenericWidget -> Port      -> IO ()
 
 create :: WidgetId -> Model.Port -> IO Port
 create id model = do
@@ -46,7 +45,7 @@ instance UIDisplayObject Model.Port where
         widget  <- create id model
         parent  <- UIR.lookup parentId :: IO GenericWidget
         UIR.register id widget
-        addToNode parent widget
+        Widget.add widget  parent
 
     updateUI id old model = do
         port <- UIR.lookup id :: IO Port

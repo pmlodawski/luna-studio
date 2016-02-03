@@ -4,7 +4,6 @@ import           Utils.PreludePlus
 import qualified Event.Event                as Event
 import           Event.Connection           as Connection
 import           Event.Batch                as Batch
-import           BatchConnector.Updates
 import           BatchConnector.Connection  (WebMessage(..), ControlCode(..))
 import           Data.Binary (decode)
 import           Empire.API.Topic as Topic
@@ -23,12 +22,11 @@ processMessage (WebMessage topic bytes)
     | topic == Topic.nodeUpdate           = NodeUpdated       $ decode bytes
     | topic == Topic.programStatus        = ProgramFetched    $ decode bytes
     | topic == Topic.codeUpdate           = CodeUpdated       $ decode bytes
+    | topic == Topic.nodeResultUpdate     = NodeResultUpdated $ decode bytes
+    | topic == Topic.listProjectsStatus   = ProjectList       $ decode bytes
+    | topic == Topic.createProjectUpdate  = ProjectCreated    $ decode bytes
+    | topic == Topic.renameNodeUpdate     = NodeRenamed       $ decode bytes
     | otherwise                           = UnknownEvent topic
-    -- "project.library.ast.function.graph.connect.update"            -> Just NodesConnected
-    -- "project.library.ast.function.graph.disconnect.update"         -> Just NodesDisconnected
-
-    -- "project.list.status"                                          -> ProjectsList <$> parseProjectsListResponse bytes
-    -- "project.create.update"                                        -> ProjectCreated <$> parseProjectCreateUpdate bytes
     -- "project.open.update"                                          -> ProjectOpened <$> parseProjectOpenUpdate bytes
     -- "project.open.error"                                           -> Just $ ProjectDoesNotExist
     -- "project.library.list.status"                                  -> LibrariesList <$> parseLibrariesListResponse bytes
@@ -54,7 +52,3 @@ processMessage (WebMessage topic bytes)
     -- _                                                              -> UnknownEvent topic
 processMessage (ControlMessage ConnectionTakeover) = ConnectionDropped
 processMessage (ControlMessage Welcome)            = ConnectionOpened
---
--- rescueParseError :: String -> Maybe Batch.Event -> Batch.Event
--- rescueParseError _     (Just ev) = ev
--- rescueParseError topic Nothing   = ParseError topic

@@ -32,31 +32,33 @@ moveX spacing offset (id, width) = do
     UICmd.moveX id offset
     return $ offset + spacing + width
 
-verticalLayoutHandler spacing = addHandler (UICmd.ChildrenResizedHandler $ verticalLayoutHandler' spacing) mempty
+verticalLayoutHandler padding spacing = addHandler (UICmd.ChildrenResizedHandler $ verticalLayoutHandler' padding spacing) mempty
 
-verticalLayoutHandler' :: Double -> WidgetId -> WidgetId -> Command UIRegistry.State ()
-verticalLayoutHandler' spacing id _ = do
-    verticalLayout spacing id
-    Group.updateSize id
+verticalLayoutHandler' :: Vector2 Double -> Double -> WidgetId -> WidgetId -> Command UIRegistry.State ()
+verticalLayoutHandler' padding spacing id _ = do
+    verticalLayout (padding ^. y) spacing id
+    Group.updateSize padding id
 
-verticalLayout :: Double -> WidgetId -> Command UIRegistry.State ()
-verticalLayout spacing id = do
+verticalLayout :: Double -> Double -> WidgetId -> Command UIRegistry.State ()
+verticalLayout padding spacing id = do
     widgets <- UICmd.children id
     heights <- mapM getHeight widgets
-    void $ foldM (moveY spacing) 0.0 heights
+    void $ foldM (moveY spacing) padding heights
+    forM_ widgets $ flip UICmd.moveX padding
 
-horizontalLayoutHandler spacing = addHandler (UICmd.ChildrenResizedHandler $ horizontalLayoutHandler' spacing) mempty
+horizontalLayoutHandler padding spacing = addHandler (UICmd.ChildrenResizedHandler $ horizontalLayoutHandler' padding spacing) mempty
 
-horizontalLayoutHandler' :: Double -> WidgetId -> WidgetId -> Command UIRegistry.State ()
-horizontalLayoutHandler' spacing id _ = do
-    horizontalLayout spacing id
-    Group.updateSize id
+horizontalLayoutHandler' :: Vector2 Double -> Double -> WidgetId -> WidgetId -> Command UIRegistry.State ()
+horizontalLayoutHandler' padding spacing id _ = do
+    horizontalLayout (padding ^. x) spacing id
+    Group.updateSize padding id
 
-horizontalLayout :: Double -> WidgetId -> Command UIRegistry.State ()
-horizontalLayout spacing id = do
+horizontalLayout :: Double -> Double -> WidgetId -> Command UIRegistry.State ()
+horizontalLayout padding spacing id = do
     widgets <- UICmd.children id
     heights <- mapM getWidth widgets
     void $ foldM (moveX spacing) 0.0 heights
+    forM_ widgets $ flip UICmd.moveY padding
 
 flexVerticalLayoutHandler   spacing = addHandler (Group.WidgetResizedHandler $ flexVerticalLayout   spacing) mempty
 flexHorizontalLayoutHandler spacing = addHandler (Group.WidgetResizedHandler $ flexHorizontalLayout spacing) mempty
@@ -70,4 +72,4 @@ flexLayout lens spacing id size = do
     widgets <- UICmd.children id
     let newHeight = height / (fromIntegral $ length widgets)
     forM_ widgets $ \id -> UICmd.resizeNoCB id (lens .~ newHeight)
-    verticalLayout spacing id
+    verticalLayout def spacing id
