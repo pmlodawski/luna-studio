@@ -8,17 +8,24 @@
 
 module Main where
 
+import           Prologue                        hiding (cons, read)
+
+import           Control.Monad.Error             (MonadError)
 import           Data.Attribute
 import           Data.Layer.Cover
 import           Data.Record                     hiding (Layout)
+
 import           Luna.Passes.Diagnostic.GraphViz
+import           Luna.Passes.Inference.Literals
 import           Luna.Syntax.AST.Layout          (Dynamic, Static)
 import           Luna.Syntax.AST.Term            hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
 import qualified Luna.Syntax.AST.Term            as Term
+import           Luna.Syntax.Model.Builder.Self  (MonadSelfBuilder)
+import           Luna.Syntax.Model.Builder.Type  (MonadTypeBuilder)
 import           Luna.Syntax.Model.Graph
+import           Luna.Syntax.Model.Graph.Builder (MonadBuilder)
 import           Luna.Syntax.Model.Layer
-import           Prologue                        hiding (cons, read)
---import           Tmp2
+
 
 -- ====================================
 
@@ -47,7 +54,7 @@ renderAndOpen lst = do
 -- type instance Layout (MyGraph t) term rt = t (Term (MyGraph t) term rt)
 
 prebuild :: IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
-prebuild = rebuildNetworkM def $ star
+prebuild = runNetworkBuilderT def $ star
 
 
 -- data ImgAttr = ImgAttr deriving (Show)
@@ -130,8 +137,18 @@ prebuild = rebuildNetworkM def $ star
 --     putStrLn "end"
 
 
+-- assignLiteralTypes2 :: (Monad m, NetworkBuilderT net m n) => (Ref $ Node (NetLayers :< Draft Static)) -> m ()
+-- assignLiteralTypes2 ref = do
+--     i1 <- int 2
+--     return ()
+
+assignLiteralTypesTest :: (Ref $ Node (NetLayers :< Draft Static)) -> NetGraph -> IO ((), NetGraph)
+assignLiteralTypesTest ref g = runNetworkBuilderT g $ do
+    -- assignLiteralTypes ref
+    return ()
+
 sampleGraph2 :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
-sampleGraph2 g = rebuildNetworkM g $ do
+sampleGraph2 g = runNetworkBuilderT g $ do
     i1 <- int 2
     i2 <- int 3
     i3 <- int 4
@@ -157,7 +174,6 @@ sampleGraph2 g = rebuildNetworkM g $ do
     accPlus2   <- acc "+" appPlus1b
     appPlus2   <- app accPlus2 [arg appLen]
 
-
     print appPlus2
     return appPlus2
 
@@ -167,6 +183,10 @@ main = do
     -- print star
     -- putStrLn "\n--------------\n"
     -- print g
-    (s, g') <- sampleGraph2 g
+    (s1, g') <- sampleGraph2 g
+
+    ((), g'') <- assignLiteralTypes s1 g'
+
+
     -- print g'
-    renderAndOpen [("g", g')]
+    renderAndOpen [("g", g'')]

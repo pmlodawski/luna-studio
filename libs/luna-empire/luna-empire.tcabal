@@ -29,6 +29,7 @@ Library
   Build-Depends:  base,
                   bytestring,
                   containers,
+                  data-attribute,
                   data-construction,
                   data-layer,
                   either,
@@ -40,7 +41,8 @@ Library
                   luna-tc,
                   mtl,
                   prologue,
-                  text
+                  text,
+                  typelevel
 
 Executable luna-empire-lib-test
   Main-Is:        Main.hs

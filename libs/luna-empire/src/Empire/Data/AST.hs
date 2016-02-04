@@ -1,16 +1,23 @@
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DataKinds #-}
+
 module Empire.Data.AST where
 
 import Prologue
-import Data.Layer.Coat
 
-import Luna.Syntax.Repr.Graph
-import Luna.Syntax.AST.Term
-import Luna.Syntax.AST.Typed
-import Luna.Syntax.Layer.Labeled
-import Luna.Syntax.Network        (Network, NetworkNode)
+import Luna.Syntax.Model.Graph       (Node, Link, Ref)
+import Luna.Syntax.AST.Layout        (Static)
+import Luna.Syntax.Model.Layer.Class ((:<))
+import Luna.Syntax.Model.Graph.Term  (NetGraph, NetType)
+{-import Luna.Syntax.Layer.Labeled-}
+{-import Luna.Syntax.Network        (Network, NetworkNode)-}
 
-import Empire.API.Data.NodeMeta   (NodeMeta)
-import Luna.Syntax.Layer.WithMeta (WithMeta)
+{-import Empire.API.Data.NodeMeta   (NodeMeta)-}
+{-import Luna.Syntax.Layer.WithMeta (WithMeta)-}
 
-type ASTNode = NetworkNode Int (Maybe NodeMeta)
-type AST = Network Int (Maybe NodeMeta)
+type ASTNode       = Node NetType
+type ASTEdge       = Link NetType
+type AST           = NetGraph
+
+type NodeRef       = Ref ASTNode
+type EdgeRef       = Ref ASTEdge

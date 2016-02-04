@@ -4,67 +4,66 @@ module Empire.ASTOps.Builder where
 
 import           Prologue
 import           Control.Monad.Error (throwError)
-import           Data.Variants       (match, case', specificCons, ANY(..))
-import           Data.Layer.Coat     (uncoat, coated)
+import           Data.Record       (match, caseTest, autoCons, ANY(..))
+{-import           Data.Layer.Coat     (uncoat, coated)-}
 
 import           Empire.ASTOp           (ASTOp)
 import           Empire.ASTOps.Remove   (removeNode, safeRemove)
-import           Empire.Data.AST        (ASTNode)
+import           Empire.Data.AST        (ASTNode, ASTEdge, NodeRef, EdgeRef)
 
-import qualified Luna.Syntax.Builder    as Builder
-import           Luna.Syntax.Repr.Graph (Ref(..), Node(..), Edge(..))
-import           Luna.Syntax.AST.Term   (Var(..), App(..), Blank(..), Accessor(..), Unify(..), Val, Draft)
+import qualified Luna.Syntax.Model.Graph as Graph
+import           Luna.Syntax.AST.Term   (Var(..), App(..), Blank(..), Acc(..), Unify(..), Val, Draft)
 import qualified Luna.Syntax.AST.Term   as Term
 import qualified Luna.Syntax.AST.Arg    as Arg
 import           Luna.Syntax.AST.Arg    (Arg)
 
-functionApplicationNode :: Lens' ASTNode (Ref Edge)
+functionApplicationNode :: Lens' ASTNode (EdgeRef)
 functionApplicationNode = coated . lens getter setter where
-    getter a   = case' a $ match $ \(App f _   ) -> f
-    setter a f = case' a $ match $ \(App _ args) -> specificCons $ App f args
+    getter a   = caseTest a $ match $ \(App f _   ) -> f
+    setter a f = caseTest a $ match $ \(App _ args) -> autoCons $ App f args
 
-unpackArguments :: [Arg (Ref Edge)] -> ASTOp [Ref Node]
-unpackArguments args = mapM (Builder.follow . Arg.__arec) $ Term.inputs args
+unpackArguments :: [Arg (EdgeRef)] -> ASTOp [NodeRef]
+unpackArguments args = mapM (Graph.follow . Arg.__arec) $ Term.inputs args
 
-isBlank :: Ref Node -> ASTOp Bool
+isBlank :: NodeRef -> ASTOp Bool
 isBlank ref = do
-    node <- Builder.readRef ref
-    case' (uncoat node) $ do
+    node <- Graph.read ref
+    caseTest (uncoat node) $ do
         match $ \Blank -> return True
         match $ \ANY   -> return False
 
-removeArg :: Ref Node -> Int -> ASTOp (Ref Node)
+removeArg :: NodeRef -> Int -> ASTOp (NodeRef)
 removeArg fun pos = do
     (f, args)  <- destructApp fun
-    freshBlank <- Builder._blank
+    freshBlank <- Graph._blank
     let newArgs = args & ix pos .~ freshBlank
     allBlanks <- and <$> mapM isBlank newArgs
-    Builder.app f (Builder.arg <$> newArgs)
+    Graph.app f (Graph.arg <$> newArgs)
 
-destructApp :: Ref Node -> ASTOp (Ref Node, [Ref Node])
+destructApp :: NodeRef -> ASTOp (NodeRef, [NodeRef])
 destructApp fun = do
-    app    <- Builder.readRef fun
-    result <- case' (uncoat app) $ do
+    app    <- Graph.read fun
+    result <- caseTest (uncoat app) $ do
         match $ \(App tg args) -> do
             unpackedArgs <- unpackArguments args
-            target <- Builder.follow tg
+            target <- Graph.follow tg
             return (target, unpackedArgs)
         match $ \ANY -> throwError "Expected App node, got wrong type."
     removeNode fun
     return result
 
-newApplication :: Ref Node -> Ref Node -> Int -> ASTOp (Ref Node)
+newApplication :: NodeRef -> NodeRef -> Int -> ASTOp (NodeRef)
 newApplication fun arg pos = do
-    blanks <- sequence $ replicate pos Builder._blank
+    blanks <- sequence $ replicate pos Graph._blank
     let args = blanks ++ [arg]
-    Builder.app fun (Builder.arg <$> args)
+    Graph.app fun (Graph.arg <$> args)
 
-rewireApplication :: Ref Node -> Ref Node -> Int -> ASTOp (Ref Node)
+rewireApplication :: NodeRef -> NodeRef -> Int -> ASTOp (NodeRef)
 rewireApplication fun arg pos = do
     (target, oldArgs) <- destructApp fun
 
     let argsLength = max (pos + 1) (length oldArgs)
-        argsCmd    = take argsLength $ (return <$> oldArgs) ++ (repeat Builder._blank)
+        argsCmd    = take argsLength $ (return <$> oldArgs) ++ (repeat Graph._blank)
         oldArgCmd  = argsCmd !! pos
         withNewArg = argsCmd & ix pos .~ return arg
 
@@ -72,96 +71,96 @@ rewireApplication fun arg pos = do
     oldArg <- oldArgCmd
 
     whenM (isBlank oldArg) $ removeNode oldArg
-    Builder.app target (Builder.arg <$> args)
+    Graph.app target (Graph.arg <$> args)
 
-applyFunction :: Ref Node -> Ref Node -> Int -> ASTOp (Ref Node)
+applyFunction :: NodeRef -> NodeRef -> Int -> ASTOp (NodeRef)
 applyFunction fun arg pos = do
-    funNode <- Builder.readRef fun
-    case' (uncoat funNode) $ do
+    funNode <- Graph.read fun
+    caseTest (uncoat funNode) $ do
         match $ \(App _ _) -> rewireApplication fun arg pos
         match $ \ANY -> newApplication fun arg pos
 
-reapply :: Ref Node -> [Ref Node] -> ASTOp (Ref Node)
+reapply :: NodeRef -> [NodeRef] -> ASTOp (NodeRef)
 reapply funRef args = do
-    funNode <- Builder.readRef funRef
-    fun <- case' (uncoat funNode) $ do
+    funNode <- Graph.read funRef
+    fun <- caseTest (uncoat funNode) $ do
         match $ \(App t _) -> do
-            f <- Builder.follow t
+            f <- Graph.follow t
             removeNode funRef
             return f
         match $ \ANY -> return funRef
-    Builder.app fun $ Builder.arg <$> args
+    Graph.app fun $ Graph.arg <$> args
 
-makeAccessorRec :: Ref Node -> Ref Node -> Bool -> ASTOp (Ref Node)
+makeAccessorRec :: NodeRef -> NodeRef -> Bool -> ASTOp (NodeRef)
 makeAccessorRec targetNodeRef namingNodeRef seenApp = do
-    namingNode <- Builder.readRef namingNodeRef
-    case' (uncoat namingNode) $ do
+    namingNode <- Graph.read namingNodeRef
+    caseTest (uncoat namingNode) $ do
         match $ \(Var n) -> do
-            stringNodeRef <- Builder.follow n
+            stringNodeRef <- Graph.follow n
             removeNode namingNodeRef
-            accNode <- Builder.accessor stringNodeRef targetNodeRef
+            accNode <- Graph.accessor stringNodeRef targetNodeRef
             if seenApp
                 then return accNode
-                else Builder.app accNode ([] :: [Arg (Ref Node)])
+                else Graph.app accNode ([] :: [Arg (NodeRef)])
         match $ \(App t _) -> do
-            newNamingNodeRef <- Builder.follow t
+            newNamingNodeRef <- Graph.follow t
             replacementRef <- makeAccessorRec targetNodeRef newNamingNodeRef True
-            Builder.reconnect namingNodeRef functionApplicationNode replacementRef
+            Graph.reconnect namingNodeRef functionApplicationNode replacementRef
             return namingNodeRef
         match $ \(Accessor n t) -> do
-            oldTargetRef <- Builder.follow t
-            nameRef <- Builder.follow n
+            oldTargetRef <- Graph.follow t
+            nameRef <- Graph.follow n
             removeNode namingNodeRef
             safeRemove oldTargetRef
-            Builder.accessor nameRef targetNodeRef
+            Graph.accessor nameRef targetNodeRef
         match $ \ANY -> throwError "Invalid node type"
 
-makeAccessor :: Ref Node -> Ref Node -> ASTOp (Ref Node)
+makeAccessor :: NodeRef -> NodeRef -> ASTOp (NodeRef)
 makeAccessor targetNodeRef namingNodeRef = makeAccessorRec targetNodeRef namingNodeRef False
 
-unAcc :: Ref Node -> ASTOp (Ref Node)
+unAcc :: NodeRef -> ASTOp (NodeRef)
 unAcc ref = do
-    node <- Builder.readRef ref
-    case' (uncoat node) $ do
+    node <- Graph.read ref
+    caseTest (uncoat node) $ do
         match $ \(Accessor n t) -> do
-            nameNode <- Builder.follow n
-            freshBlank <- Builder._blank
+            nameNode <- Graph.follow n
+            freshBlank <- Graph._blank
             removeNode ref
-            Builder.accessor nameNode freshBlank
+            Graph.accessor nameNode freshBlank
         match $ \(App t args) -> do
-            target <- Builder.follow t
+            target <- Graph.follow t
             replacementRef <- unAcc target
             case args of
                 [] -> removeNode ref >> return replacementRef
-                as -> Builder.reconnect ref functionApplicationNode replacementRef >> return ref
+                as -> Graph.reconnect ref functionApplicationNode replacementRef >> return ref
         match $ \ANY -> throwError "Self port not connected"
 
-unifyWithName :: String -> Ref Node -> ASTOp (Ref Node)
+unifyWithName :: String -> NodeRef -> ASTOp (NodeRef)
 unifyWithName name node = do
-    nameVar <- Builder.var name
-    Builder.unify nameVar node
+    nameVar <- Graph.var name
+    Graph.unify nameVar node
 
-withUnifyNode :: Ref Node -> (Unify (Ref Edge) -> ASTOp a) -> ASTOp a
+withUnifyNode :: NodeRef -> (Unify (EdgeRef) -> ASTOp a) -> ASTOp a
 withUnifyNode nodeRef op = do
-    node <- Builder.readRef nodeRef
-    case' (uncoat node) $ do
-        match $ \x   -> op (x :: Unify (Ref Edge))
+    node <- Graph.read nodeRef
+    caseTest (uncoat node) $ do
+        match $ \x   -> op (x :: Unify (EdgeRef))
         match $ \ANY -> throwError "Not a unify node."
 
-rightUnifyOperand :: Lens' ASTNode (Ref Edge)
+rightUnifyOperand :: Lens' ASTNode (EdgeRef)
 rightUnifyOperand = coated . lens rightGetter rightSetter where
-    rightGetter u   = case' u $ match $ \(Unify _ r) -> r
-    rightSetter u r = case' u $ match $ \(Unify l _) -> specificCons $ Unify l r
+    rightGetter u   = caseTest u $ match $ \(Unify _ r) -> r
+    rightSetter u r = caseTest u $ match $ \(Unify l _) -> autoCons $ Unify l r
 
-varName :: Lens' ASTNode (Ref Edge)
+varName :: Lens' ASTNode (EdgeRef)
 varName = coated . lens nameGetter nameSetter where
-    nameGetter v   = case' v $ match $ \(Var n) -> n
-    nameSetter    :: Draft (Ref Edge) -> Ref Edge -> Draft (Ref Edge)
-    nameSetter v n = case' v $ match $ \(Var _) -> (specificCons $ Var n)
+    nameGetter v   = caseTest v $ match $ \(Var n) -> n
+    nameSetter    :: Draft (EdgeRef) -> Ref Edge -> Draft (Ref Edge)
+    nameSetter v n = caseTest v $ match $ \(Var _) -> (autoCons $ Var n)
 
-renameVar :: Ref Node -> String -> ASTOp ()
+renameVar :: NodeRef -> String -> ASTOp ()
 renameVar vref name = do
-    node    <- Builder.readRef vref
-    oldName <- Builder.follow $ node ^. varName
-    Builder._string name >>= Builder.reconnect vref varName
+    node    <- Graph.read vref
+    oldName <- Graph.follow $ node ^. varName
+    Graph._string name >>= Graph.reconnect vref varName
     safeRemove oldName

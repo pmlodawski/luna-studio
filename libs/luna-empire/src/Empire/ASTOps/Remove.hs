@@ -1,37 +1,39 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Empire.ASTOps.Remove where
 
 import           Prologue
-import           Data.Construction      (destruct)
-import           Data.Layer.Coat        (uncoat)
+import           Data.Construction             (destruct)
+import           Data.Attribute                (attr)
+import           Data.Layer.Cover              (uncover)
 
-import           Empire.ASTOp               (ASTOp)
-import qualified Luna.Syntax.Repr.Graph     as Graph
-import qualified Luna.Syntax.AST.Typed      as Typed
-import qualified Luna.Syntax.AST.Term       as Term
-import qualified Luna.Syntax.Builder        as Builder
-import           Luna.Syntax.Repr.Graph     (Ref, Node)
+import           Empire.ASTOp                  (ASTOp)
+import           Empire.Data.AST               (NodeRef)
+import qualified Luna.Syntax.AST.Typed         as Typed
+import qualified Luna.Syntax.Model.Graph       as Graph
+import           Luna.Syntax.Model.Layer.Class (Type(..), Succs(..))
 
-removeNode :: Ref Node -> ASTOp ()
+removeNode :: ASTOp m => NodeRef -> m ()
 removeNode ref = do
-    node     <- Builder.readRef ref
-    typeNode <- Builder.follow $ node ^. Typed.tp
-    destruct typeNode
-    destruct ref
+    node     <- Graph.read ref
+    typeNode <- Graph.follow $ node ^. attr Type
+    undefined typeNode
+    void $ undefined ref
 
-safeRemove :: Ref Node -> ASTOp ()
+safeRemove :: ASTOp m => NodeRef -> m ()
 safeRemove ref = do
     refCount <- getRefCount ref
     if refCount > 0
         then return ()
         else performSafeRemoval ref
 
-getRefCount :: Ref Node -> ASTOp Int
-getRefCount ref = (length . toList . view Graph.succs) <$> Builder.readRef ref
+getRefCount :: ASTOp m => NodeRef -> m Int
+getRefCount ref = (length . view (attr Succs)) <$> Graph.read ref
 
-performSafeRemoval :: Ref Node -> ASTOp ()
+performSafeRemoval :: ASTOp m => NodeRef -> m ()
 performSafeRemoval ref = do
-    node <- Builder.readRef ref
-    toRemove <- mapM Builder.follow (Term.inputs $ uncoat node)
+    node <- Graph.read ref
+    toRemove <- mapM Graph.follow (Graph.inputs $ uncover node)
     removeNode ref
     mapM_ safeRemove toRemove
 

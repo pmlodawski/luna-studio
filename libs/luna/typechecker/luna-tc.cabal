@@ -63,6 +63,7 @@ Library
         Luna.Lib.Symbol.QualPath,
         Luna.Passes.Diagnostic.GraphViz,
         Luna.Passes.Diagnostic.Monitor,
+        Luna.Passes.Inference.Literals,
         Luna.Syntax.AST,
         Luna.Syntax.AST.Arg,
         Luna.Syntax.AST.Decl,

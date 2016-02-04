@@ -214,13 +214,14 @@ instance {-# OVERLAPPABLE #-} Repr  s t      => Repr s (Unify   t) where repr (U
 instance {-# OVERLAPPABLE #-}                   Repr s  Blank      where repr _           = "Blank"
 
 -- HeaderOnly
-instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Var   n  ) where repr _ = "Var"
-instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Cons  n  ) where repr _ = "Cons"
-instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Arrow   t) where repr _ = "Arrow"
-instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Acc   n t) where repr _ = "Acc"
-instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Acc Str t) where repr (Acc (Str m) s) = fromString $ "Acc " <>  show m
-instance {-# OVERLAPPABLE #-} Repr HeaderOnly (App     t) where repr _ = "App"
-instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Unify   t) where repr _ = "Unify"
+instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Var   n    ) where repr _ = "Var"
+instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Cons  n    ) where repr _ = "Cons"
+instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Cons  Str  ) where repr (Cons (Str m)) = fromString $ "Cons " <>  show m
+instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Arrow     t) where repr _ = "Arrow"
+instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Acc   n   t) where repr _ = "Acc"
+instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Acc   Str t) where repr (Acc (Str m) s) = fromString $ "Acc " <>  show m
+instance {-# OVERLAPPABLE #-} Repr HeaderOnly (App       t) where repr _ = "App"
+instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Unify     t) where repr _ = "Unify"
 
 -- String
 
