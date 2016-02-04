@@ -3,6 +3,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TypeFamilies              #-}
 {-# LANGUAGE UndecidableInstances      #-}
+{-# LANGUAGE RankNTypes                #-}
 
 
 module Luna.Syntax.Model.Graph.Builder where
@@ -135,12 +136,13 @@ instance (MonadBuilder n e m, Reader m (Node node), Getter Inputs node, Unregist
     destroy ref = do
         n <- read ref
         mapM_ unregister $ n # Inputs
-        --let ins = n # Inputs
-        --let x = (n ^.) <$> inputs -- :: _
-        --let x = n ^# inputs :: _-- :: _
-            --y = view inputs n :: _
-        undefined
+        unregister ref
 
-
-
-
+reconnect :: (Reader m n1, Writer m n1, Connectible (Ref n1) (Ref n2) m, e ~ Connection (Ref n1) (Ref n2), Unregister m e)
+          => Ref n1 -> Lens' n1 e -> Ref n2 -> m e
+reconnect srcRef l tgtRef = do
+    src  <- read srcRef
+    unregister $ src ^. l
+    conn <- connection srcRef tgtRef
+    write srcRef $ src & l .~ conn
+    return conn
