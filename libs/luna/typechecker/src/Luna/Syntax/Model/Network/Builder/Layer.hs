@@ -10,11 +10,13 @@ import           Data.Construction
 import qualified Luna.Syntax.Model.Network.Builder.Type as Type
 import qualified Luna.Syntax.Model.Network.Builder.Self as Self
 import           Luna.Syntax.Model.Network.Builder.Self (MonadSelfBuilder, self)
-import           Luna.Syntax.Model.Network.Graph.Class
-import           Luna.Syntax.Model.Network.Builder
+import           Luna.Syntax.Model.Graph
+import           Luna.Syntax.Model.Graph.Builder.Class
 import           Luna.Syntax.Model.Layer
-import           Luna.Syntax.Model.Network.Builder.Ref
-import qualified Luna.Syntax.Model.Network.Builder.Ref as Ref
+import           Luna.Syntax.Model.Graph.Builder.Ref
+import qualified Luna.Syntax.Model.Graph.Builder.Ref as Ref
+import           Luna.Syntax.Model.Network.Class
+
 
 --------------------------------
 -- === Succs registration === --

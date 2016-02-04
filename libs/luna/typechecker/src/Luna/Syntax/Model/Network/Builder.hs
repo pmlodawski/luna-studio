@@ -11,18 +11,20 @@ module Luna.Syntax.Model.Network.Builder (module Luna.Syntax.Model.Network.Build
 
 import Prologue hiding (Getter, Setter, read, (#))
 
-import Luna.Syntax.Model.Network.Builder.Class as X
+import Luna.Syntax.Model.Graph.Builder.Class as X
+import Luna.Syntax.Model.Network.Builder.Term  as X
 
 import Data.Attribute
 import Control.Monad.Catch            (MonadMask, MonadCatch, MonadThrow)
 import Data.Construction
 import Data.Container
 import Data.Index
-import Luna.Syntax.Model.Network.Graph.Class
+import Luna.Syntax.Model.Graph
 import Data.Layer.Cover
-import Luna.Syntax.Model.Network.Builder.Ref
+import Luna.Syntax.Model.Graph.Builder.Ref
 
 import qualified Control.Monad.State as State
+
 
 
 

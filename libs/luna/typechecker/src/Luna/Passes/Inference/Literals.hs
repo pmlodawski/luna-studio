@@ -10,15 +10,18 @@ module Luna.Passes.Inference.Literals
     ( assignLiteralTypes
     ) where
 
-import           Prologue                        hiding (cons, read)
+import           Prelude.Luna
+
 import           Data.Attribute
 import           Data.Layer.Cover
 import           Data.Record                     hiding (cons, Layout)
 import           Luna.Runtime.Model              (Dynamic, Static)
 import           Luna.Syntax.AST.Term            hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
 import qualified Luna.Syntax.AST.Term            as Term
-import           Luna.Syntax.Model.Network.Graph
+import           Luna.Syntax.Model.Graph
 import           Luna.Syntax.Model.Layer
+import           Luna.Syntax.Model.Network.Builder
+import           Luna.Syntax.Model.Network.Term 
 
 -- import           Control.Monad              (forM_)
 -- import qualified Data.IntSet                as IntSet

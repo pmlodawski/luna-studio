@@ -17,8 +17,10 @@ import Data.Layer.Cover
 import Data.Record hiding (Layout)
 import Luna.Runtime.Model (Static, Dynamic)
 import Data.Attribute
-import Luna.Syntax.Model.Network.Graph
+import Luna.Syntax.Model.Graph
 import Luna.Syntax.Model.Layer
+import Luna.Syntax.Model.Network.Builder
+import Luna.Syntax.Model.Network.Term
 import Data.Construction
 
 renderAndOpen lst = do

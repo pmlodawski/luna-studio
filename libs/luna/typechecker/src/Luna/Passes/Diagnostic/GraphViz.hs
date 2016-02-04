@@ -5,7 +5,7 @@
 
 module Luna.Passes.Diagnostic.GraphViz where
 
-import Prologue  hiding (index)
+import Prelude.Luna hiding (index)
 
 import           Data.GraphViz
 import           Data.GraphViz.Types.Canonical
@@ -22,7 +22,8 @@ import           Luna.Syntax.Repr.Styles             (HeaderOnly(..), Simple(..)
 import           Data.Container
 import           Data.Container.Hetero
 
-import Luna.Syntax.Model.Network.Graph.Class
+import Luna.Syntax.Model.Graph
+import Luna.Syntax.Model.Network.Builder
 import Data.Record
 
 import           System.Platform
@@ -31,11 +32,13 @@ import           Data.Container.Class
 import           Data.Reprx
 
 import Luna.Syntax.Model.Layer
-import Luna.Syntax.Model.Network.Graph
+import Luna.Syntax.Model.Graph
 import qualified Luna.Syntax.AST.Term as Term
 import Luna.Runtime.Model (Static, Dynamic)
 import Data.Layer.Cover (uncover)
 import Data.Attribute
+import Luna.Syntax.Model.Network.Builder.Term
+import Luna.Syntax.Model.Network.Term
 
 --instance Repr HeaderOnly Data where repr _ = "Data"
 --instance Repr HeaderOnly (Draft l v) where repr _ = "Draft"
@@ -147,7 +150,7 @@ toGraphViz net = DotGraph { strictGraph     = False
 
 genInEdges (g :: NetGraph) (n :: NetLayers :< Draft Static) = tpEdge : fmap addColor inEdges  where
     genLabel  = GV.Label . StrLabel . fromString . show
-    ins       = inputsxxx (uncover n)
+    ins       = n # Inputs
     inIdxs    = getTgtIdx <$> ins
     inEdges   = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) [0..]
     es        = g ^. edges

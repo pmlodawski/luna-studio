@@ -4,7 +4,7 @@
 -- Use gencabal instead.                         --
 ---------------------------------------------------
 
-Name:           luna-tc
+Name:           luna
 Version:        0.1
 Cabal-Version:  >= 1.8
 --License-file:   LICENSE
@@ -86,9 +86,9 @@ Library
                  , lens-utils
 
 
-Executable tc-test
-    Main-Is:        Main2.hs
-    Hs-Source-Dirs: test
+Executable luna
+    Main-Is:        Main.hs
+    Hs-Source-Dirs: exe
 
     GHC-Options:
                   -- -dshow-passes
@@ -121,7 +121,7 @@ Executable tc-test
                   TypeOperators
                   ViewPatterns
 
-    Build-Depends: luna-tc
+    Build-Depends: luna
                  , base
                  , constraints
                  , container
@@ -156,7 +156,7 @@ Executable tc-test
                  , dependent-state
 
 
-Executable tcinf-test
+Executable luna-tcinf-test
     Main-Is:        InferenceTest.hs
     Hs-Source-Dirs: test
 
@@ -191,7 +191,7 @@ Executable tcinf-test
                   TypeOperators
                   ViewPatterns
 
-    Build-Depends: luna-tc
+    Build-Depends: luna
                  , base
                  , constraints
                  , container

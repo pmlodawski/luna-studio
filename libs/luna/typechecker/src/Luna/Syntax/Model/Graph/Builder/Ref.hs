@@ -1,8 +1,8 @@
-module Luna.Syntax.Model.Network.Builder.Ref where
+module Luna.Syntax.Model.Graph.Builder.Ref where
 
 import Prelude.Luna
 
-import Luna.Syntax.Model.Network.Graph.Class
+import Luna.Syntax.Model.Graph
 
 
 type RefHandler m a = (Reader m a, Writer m a)

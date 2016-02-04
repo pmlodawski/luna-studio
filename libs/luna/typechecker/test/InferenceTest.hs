@@ -22,7 +22,9 @@ import           Luna.Syntax.AST.Term            hiding (Draft, Expr, Lit, Sourc
 import qualified Luna.Syntax.AST.Term            as Term
 import           Luna.Syntax.Model.Network.Builder.Self  (MonadSelfBuilder)
 import           Luna.Syntax.Model.Network.Builder.Type  (MonadTypeBuilder)
-import           Luna.Syntax.Model.Network.Graph
+import           Luna.Syntax.Model.Network.Builder.Term
+import           Luna.Syntax.Model.Network.Term
+import           Luna.Syntax.Model.Graph
 import           Luna.Syntax.Model.Network.Builder (MonadBuilder)
 import           Luna.Syntax.Model.Layer
 

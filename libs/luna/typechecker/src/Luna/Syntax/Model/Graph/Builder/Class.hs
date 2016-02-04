@@ -1,7 +1,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 
-module Luna.Syntax.Model.Network.Builder.Class where
+module Luna.Syntax.Model.Graph.Builder.Class where
 
 import Prologue hiding (Getter, Setter, read, (#))
 
@@ -10,9 +10,8 @@ import           Control.Monad.Catch            (MonadMask, MonadCatch, MonadThr
 import           Data.Construction
 import           Data.Container
 import           Data.Index
-import           Luna.Syntax.Model.Network.Graph.Class
+import           Luna.Syntax.Model.Graph
 import qualified Control.Monad.State            as State
---import           Luna.Syntax.Model.Graph.Layers
 import           Data.Layer.Cover
 
 
