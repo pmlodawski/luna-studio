@@ -23,10 +23,10 @@ newtype Group = Group JSVal deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget Group
 
-foreign import javascript unsafe "new Group($1, $2, $3)"      create'       :: Int   -> Double -> Double -> IO Group
-foreign import javascript unsafe "$1.mesh.visible = $2"       setVisible'   :: Group -> Bool -> IO ()
-foreign import javascript unsafe "$1.setBgVisible($2)"        setBgVisible' :: Group -> Bool -> IO ()
-foreign import javascript unsafe "$1.setBgColor($2, $3, $4)"  setBgColor'   :: Group -> Double -> Double -> Double -> IO ()
+foreign import javascript safe "new Group($1, $2, $3)"      create'       :: Int   -> Double -> Double -> IO Group
+foreign import javascript safe "$1.mesh.visible = $2"       setVisible'   :: Group -> Bool -> IO ()
+foreign import javascript safe "$1.setBgVisible($2)"        setBgVisible' :: Group -> Bool -> IO ()
+foreign import javascript safe "$1.setBgColor($2, $3, $4)"  setBgColor'   :: Group -> Double -> Double -> Double -> IO ()
 
 setBgColor :: Group -> Model.Group -> IO ()
 setBgColor group model = case model ^. Model.background of

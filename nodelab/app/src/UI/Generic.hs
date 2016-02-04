@@ -22,13 +22,13 @@ import qualified Reactive.State.UIRegistry as UIRegistry
 import qualified UI.Registry               as UIR
 import           UI.Widget                 (GenericWidget (..), UIContainer, UIWidget)
 
-foreign import javascript unsafe "$1.mesh.position.x = $2; $1.mesh.position.y = $3"
+foreign import javascript safe "$1.mesh.position.x = $2; $1.mesh.position.y = $3"
     setWidgetPosition'      :: JSVal -> Double -> Double -> IO ()
 
-foreign import javascript unsafe "$1.setSize($2, $3)"
+foreign import javascript safe "$1.setSize($2, $3)"
     setSize'                :: GenericWidget -> Double -> Double -> IO ()
 
-foreign import javascript unsafe "app.removeWidget($1)"
+foreign import javascript safe "app.removeWidget($1)"
     removeWidget :: Int -> IO ()
 
 setWidgetPosition :: UIWidget a => Vector2 Double -> a -> IO ()

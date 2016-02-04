@@ -12,18 +12,18 @@ import Unsafe.Coerce
 
 
 
-foreign import javascript unsafe "textEditor.setText($1)" setText' :: JSString -> IO ()
+foreign import javascript safe "textEditor.setText($1)" setText' :: JSString -> IO ()
 
 setText :: Text -> IO ()
 setText = setText' . lazyTextToJSString
 
-foreign import javascript unsafe "textEditor.callback = $1"
+foreign import javascript safe "textEditor.callback = $1"
     registerCallback' :: Callback (JSRef () -> IO ()) -> IO ()
 
-foreign import javascript unsafe "textEditor.callback = function(){ return null; }"
+foreign import javascript safe "textEditor.callback = function(){ return null; }"
     unregisterCallback' :: Callback (JSRef () -> IO ()) -> IO ()
 
-foreign import javascript unsafe "$r = $1" toJSString :: JSRef () -> JSString
+foreign import javascript safe "$r = $1" toJSString :: JSRef () -> JSString
 
 registerCallback :: (JSRef () -> IO ()) -> IO (IO ())
 registerCallback callback = do

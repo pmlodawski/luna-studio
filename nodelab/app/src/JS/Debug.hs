@@ -9,6 +9,7 @@ import GHCJS.DOM.Types  (UIEvent, Window)
 getState :: EventName Window UIEvent
 getState = (unsafeEventName (pack "getState"))
 
-foreign import javascript unsafe "window.state = $1"          saveState :: JSVal -> IO ()
-foreign import javascript unsafe "console.log($1)"            clog      :: JSVal -> IO ()
-foreign import javascript unsafe "config.exportState" shouldExportState :: Bool
+foreign import javascript safe "window.state  = $1"         saveState :: JSVal -> IO ()
+foreign import javascript safe "window.lastEv = $1"         lastEv    :: JSVal -> IO ()
+foreign import javascript safe "console.log($1)"            clog      :: JSVal -> IO ()
+foreign import javascript safe "config.exportState" shouldExportState :: Bool

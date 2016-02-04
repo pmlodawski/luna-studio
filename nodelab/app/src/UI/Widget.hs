@@ -18,9 +18,9 @@ newtype Mesh      = Mesh      { unMesh :: JSVal } deriving (PFromJSVal, PToJSVal
 class (PFromJSVal a, PToJSVal a) => UIWidget a
 class (UIWidget a) => UIContainer a
 
-foreign import javascript unsafe "$1.mesh"      getMesh'      :: JSVal -> IO Mesh
-foreign import javascript unsafe "$1.container" getContainer' :: JSVal -> IO Container
-foreign import javascript unsafe "$2.add($1)"   add'          :: Mesh  -> Container -> IO ()
+foreign import javascript safe "$1.mesh"      getMesh'      :: JSVal -> IO Mesh
+foreign import javascript safe "$1.container" getContainer' :: JSVal -> IO Container
+foreign import javascript safe "$2.add($1)"   add'          :: Mesh  -> Container -> IO ()
 
 newtype GenericWidget = GenericWidget { unGenericWidget :: JSVal } deriving (PToJSVal, PFromJSVal)
 

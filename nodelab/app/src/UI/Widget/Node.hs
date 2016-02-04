@@ -34,10 +34,10 @@ newtype Node = Node { unNode :: JSVal } deriving (PToJSVal, PFromJSVal)
 instance UIWidget    Node
 instance UIContainer Node
 
-foreign import javascript unsafe "new GraphNode(-1, new THREE.Vector2($2, $3), 0, $1)" create'          :: WidgetId -> Double -> Double -> IO Node
-foreign import javascript unsafe "$1.setExpandedStateBool($2)"                         setExpandedState :: Node -> Bool     -> IO ()
-foreign import javascript unsafe "$1.setZPos($2)"                                      setZPos          :: Node -> Double -> IO ()
-foreign import javascript unsafe "$1.uniforms.selected.value = $2"                     setSelected      :: Node -> Int      -> IO ()
+foreign import javascript safe "new GraphNode(-1, new THREE.Vector2($2, $3), 0, $1)" create'          :: WidgetId -> Double -> Double -> IO Node
+foreign import javascript safe "$1.setExpandedStateBool($2)"                         setExpandedState :: Node -> Bool     -> IO ()
+foreign import javascript safe "$1.setZPos($2)"                                      setZPos          :: Node -> Double -> IO ()
+foreign import javascript safe "$1.uniforms.selected.value = $2"                     setSelected      :: Node -> Int      -> IO ()
 
 createNode :: WidgetId -> Model.Node -> IO Node
 createNode id model = do

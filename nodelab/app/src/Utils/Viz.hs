@@ -11,7 +11,7 @@ import           GHCJS.Types         (JSString)
 import           Data.JSString.Text  (lazyTextToJSString)
 
 
-foreign import javascript unsafe "window.open('data:image/svg+xml;base64,'+btoa(Viz($1, 'svg', 'dot')), 'graph')"
+foreign import javascript safe "window.open('data:image/svg+xml;base64,'+btoa(Viz($1, 'svg', 'dot')), 'graph')"
     displayGraphJS :: JSString -> IO ()
 
 displayGraph :: Text -> IO ()

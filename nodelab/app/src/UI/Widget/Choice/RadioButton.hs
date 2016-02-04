@@ -22,9 +22,9 @@ newtype RadioButton = RadioButton JSVal deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget RadioButton
 
-foreign import javascript unsafe "new RadioButton($1, $2, $3)" create'   :: Int         -> Double -> Double -> IO RadioButton
-foreign import javascript unsafe "$1.setValue($2)"             setValue' :: RadioButton -> Bool             -> IO ()
-foreign import javascript unsafe "$1.setLabel($2)"             setLabel' :: RadioButton -> JSString         -> IO ()
+foreign import javascript safe "new RadioButton($1, $2, $3)" create'   :: Int         -> Double -> Double -> IO RadioButton
+foreign import javascript safe "$1.setValue($2)"             setValue' :: RadioButton -> Bool             -> IO ()
+foreign import javascript safe "$1.setLabel($2)"             setLabel' :: RadioButton -> JSString         -> IO ()
 
 create :: WidgetId -> Model.RadioButton -> IO RadioButton
 create oid model = do
