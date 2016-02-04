@@ -12,9 +12,9 @@ packages:
 - extra-dep: true
   location: {commit: 345c1cdf5bef30631d3eadd55c326086ea0b6f71, git: 'https://github.com/wdanilo/data-base.git'}
 - extra-dep: true
-  location: {commit: e215274185721122ae740414a54126c3631bceae, git: 'https://github.com/wdanilo/data-construction.git'}
+  location: {commit: 091ee081abd26086f14481a29621bb1cc8346da6, git: 'https://github.com/wdanilo/data-construction.git'}
 - extra-dep: true
-  location: {commit: 0e80320f1d6fa98295240b0c5f319cf55041132a, git: 'https://github.com/wdanilo/data-layer.git'}
+  location: {commit: e20fe073368776a08dd461deeeb24d8baf0a28de, git: 'https://github.com/wdanilo/data-layer.git'}
 - extra-dep: true
   location: {commit: 941777d7080fcb86fd50b982ed61eb040a5c03db, git: 'https://github.com/wdanilo/data-repr.git'}
 - extra-dep: true
@@ -36,7 +36,7 @@ packages:
 - extra-dep: true
   location: {commit: 4b9d4f35634eefb721b0529cce91c9dbced6075f, git: 'https://github.com/wdanilo/typelevel.git'}
 - extra-dep: true
-  location: {commit: e215274185721122ae740414a54126c3631bceae, git: 'https://github.com/wdanilo/data-construction.git'}
+  location: {commit: 091ee081abd26086f14481a29621bb1cc8346da6, git: 'https://github.com/wdanilo/data-construction.git'}
 - extra-dep: true
   location: {commit: ade9273fee09b9eff0b3db17002c167fcef1f7f7, git: 'https://github.com/wdanilo/data-attribute.git'}
 resolver: lts-4.1

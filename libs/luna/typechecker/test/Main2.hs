@@ -92,10 +92,10 @@ foo g = runNetworkBuilderT g
 
     s1 <- star
     s2 <- star
-    c1 <- connection s1 s2
 
-    s1_v <- read s1
+    u <- unify s1 s2
 
+    destroy u
 
     --unregister s1
 

@@ -18,7 +18,7 @@ import           Data.Index
 import           Luna.Syntax.Model.Graph.Class
 import qualified Control.Monad.State            as State
 import           Luna.Syntax.Model.Graph.Layers
-
+import           Data.Layer.Cover
 
 
 
@@ -130,16 +130,18 @@ instance MonadBuilder n e m => Unregister m (Ref $ Node node)    where unregiste
 instance MonadBuilder n e m => Unregister m (Ref $ Edge src dst) where unregister ref = modify_ $ edges %~ free (ref ^. idx)
 
 
-instance (MonadBuilder n e m, Reader m (Node node), Getter Inputs node, Unregister m inp, Attr Inputs node ~ [inp] )
+instance (MonadBuilder n e m, Reader m (Node node), Getter Inputs node, Unregister m inp, Attr Inputs node ~ [inp], CoverDestructor m (Node node))
       => Destroyer m (Ref $ Node node) where
     destroy ref = do
         n <- read ref
         mapM_ unregister $ n # Inputs
+        destructCover n
         --let ins = n # Inputs
         --let x = (n ^.) <$> inputs -- :: _
         --let x = n ^# inputs :: _-- :: _
             --y = view inputs n :: _
-        undefined
+        unregister ref
+        --undefined
 
 
 

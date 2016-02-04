@@ -83,134 +83,134 @@ def main():
     args = parser.parse_args()
 
 
-    # root = os.getcwd ()
+    root = os.getcwd ()
 
 
-    # if not args.no_hackage:
-    #     username = nonEmptyInput("Hackage username: ")
-    #     password = nonEmptyPass ("Hackage password: ")
+    if not args.no_hackage:
+        username = nonEmptyInput("Hackage username: ")
+        password = nonEmptyPass ("Hackage password: ")
 
-    # for path in args.paths:
-    #     print "--- %s ---" % path
-    #     print "Running global gencabal"
-    #     gencabal()
+    for path in args.paths:
+        print "--- %s ---" % path
+        print "Running global gencabal"
+        gencabal()
         
-    #     path = os.path.abspath(path)
-    #     os.chdir(path)
-    #     cabalPaths = glob (path + "/**/*.tcabal")
+        path = os.path.abspath(path)
+        os.chdir(path)
+        cabalPaths = glob (path + "/**/*.tcabal")
 
-    #     total = len(cabalPaths)
-    #     for i in range(total):
-    #         cabalPath = cabalPaths[i]
-    #         libPath = os.path.dirname(cabalPath)
-    #         (version, conf, match) = readConf(cabalPath)
-    #         print "\n[%s/%s] >> " % (i + 1, total) + libPath + " (" + showVersion(version) + ")"
+        total = len(cabalPaths)
+        for i in range(total):
+            cabalPath = cabalPaths[i]
+            libPath = os.path.dirname(cabalPath)
+            (version, conf, match) = readConf(cabalPath)
+            print "\n[%s/%s] >> " % (i + 1, total) + libPath + " (" + showVersion(version) + ")"
             
-    #         os.chdir(libPath)
-    #         gencabal()
-    #         if not checkPublic():
-    #             print "Library is not public, skipping."
-    #             continue
-    #         try:
-    #             status = subprocess.check_output("git status --porcelain", shell=True)
-    #         except subprocess.CalledProcessError:
-    #             print "It seems the library is not a git repository, aborting."
-    #             return 1
+            os.chdir(libPath)
+            gencabal()
+            if not checkPublic():
+                print "Library is not public, skipping."
+                continue
+            try:
+                status = subprocess.check_output("git status --porcelain", shell=True)
+            except subprocess.CalledProcessError:
+                print "It seems the library is not a git repository, aborting."
+                return 1
 
 
-    #         if (not status): # and checkStatus(version)) :
-    #             print "Everything up to date."
-    #             if not args.upload_missing: continue
+            if (not status): # and checkStatus(version)) :
+                print "Everything up to date."
+                if not args.upload_missing: continue
 
-    #         else:
-    #             if not status:
-    #                 print "It seems that git is up to date, but previous run of the script was not successful."
-    #                 print "Trying again ..."
-    #             else:
-    #                 print "Git status:"
-    #                 print status
+            else:
+                if not status:
+                    print "It seems that git is up to date, but previous run of the script was not successful."
+                    print "Trying again ..."
+                else:
+                    print "Git status:"
+                    print status
             
-    #             simpleRepl()
+                simpleRepl()
 
 
 
-    #             defNewVersion = version[:-1] + [version[-1] + 1]
+                defNewVersion = version[:-1] + [version[-1] + 1]
 
-    #             while True:
-    #                 newVersion = defaultInput("New package version (current: %s) [%s]: " % (showVersion(version), showVersion(defNewVersion)), showVersion(defNewVersion))
-    #                 if not (parseVersion (newVersion)):
-    #                     print "Incorrect version '%s'"
-    #                     continue
-    #                 break
+                while True:
+                    newVersion = defaultInput("New package version (current: %s) [%s]: " % (showVersion(version), showVersion(defNewVersion)), showVersion(defNewVersion))
+                    if not (parseVersion (newVersion)):
+                        print "Incorrect version '%s'"
+                        continue
+                    break
 
-    #             print "Updating tcabal configuration"
+                print "Updating tcabal configuration"
 
-    #             newConf = conf[:match.start()] + match.group("header") + newVersion + conf[match.end():]
-    #             with open(cabalPath, 'w') as conf:
-    #                 conf.write(newConf)
+                newConf = conf[:match.start()] + match.group("header") + newVersion + conf[match.end():]
+                with open(cabalPath, 'w') as conf:
+                    conf.write(newConf)
 
-    #             print "Running gencabal"
-    #             gencabal()
+                print "Running gencabal"
+                gencabal()
 
-    #             # tracking new config
-    #             subprocess.check_output("git add %s" % cabalPath, shell=True)
+                # tracking new config
+                subprocess.check_output("git add %s" % cabalPath, shell=True)
 
-    #             simpleRepl("git add -A")
+                simpleRepl("git add -A")
 
-    #             if checkAsk (args, 'Commit changes?'):
-    #                 print "Commiting changes."
-    #                 msg = ''
-    #                 while not msg:
-    #                     pfix = '' if not args.msg else '[%s]' % args.msg
-    #                     msg = raw_input("Commit message%s: " % pfix)
-    #                     if not msg and args.msg: msg = args.msg
-    #                 subprocess.check_output('git commit -m "%s"' % msg, shell=True)
+                if checkAsk (args, 'Commit changes?'):
+                    print "Commiting changes."
+                    msg = ''
+                    while not msg:
+                        pfix = '' if not args.msg else '[%s]' % args.msg
+                        msg = raw_input("Commit message%s: " % pfix)
+                        if not msg and args.msg: msg = args.msg
+                    subprocess.check_output('git commit -m "%s"' % msg, shell=True)
 
-    #             if checkAsk (args, 'Pull changes?'):
-    #                 print "Pulling changes"
-    #                 try:
-    #                     subprocess.check_output('git pull', shell=True)
-    #                 except subprocess.CalledProcessError as e:
-    #                     print "\n** ERROR **\n"
-    #                     print e.output
-    #                     simpleRepl()
+                if checkAsk (args, 'Pull changes?'):
+                    print "Pulling changes"
+                    try:
+                        subprocess.check_output('git pull', shell=True)
+                    except subprocess.CalledProcessError as e:
+                        print "\n** ERROR **\n"
+                        print e.output
+                        simpleRepl()
 
 
 
-    #         if status:
-    #             if checkAsk (args, 'Push the repository?'):
-    #                 print "Pushing the repository"
-    #                 try:
-    #                     subprocess.check_output('git push', shell=True)
-    #                 except subprocess.CalledProcessError as e:
-    #                     print "\n** ERROR **\n"
-    #                     print e.output
-    #                     print "\nEnabling recovery shell access:"
-    #                     simpleRepl()
+            if status:
+                if checkAsk (args, 'Push the repository?'):
+                    print "Pushing the repository"
+                    try:
+                        subprocess.check_output('git push', shell=True)
+                    except subprocess.CalledProcessError as e:
+                        print "\n** ERROR **\n"
+                        print e.output
+                        print "\nEnabling recovery shell access:"
+                        simpleRepl()
 
             
-    #         if ask ('Upload to hackage?'):
-    #             if (status or args.upload_missing) and not args.no_hackage:
-    #                 while True:
-    #                     print "Generating sdist"
-    #                     try:
-    #                         sdist = subprocess.check_output('stack sdist --pvp-bounds lower', stderr=subprocess.STDOUT, shell=True)
-    #                         break
-    #                     except subprocess.CalledProcessError as e:
-    #                         print "\n** ERROR **\n"
-    #                         print e.output
-    #                         print "\nEnabling recovery shell access:"
-    #                         simpleRepl()
-    #                         # todo - go back to pushing repo
+            if ask ('Upload to hackage?'):
+                if (status or args.upload_missing) and not args.no_hackage:
+                    while True:
+                        print "Generating sdist"
+                        try:
+                            sdist = subprocess.check_output('stack sdist --pvp-bounds lower', stderr=subprocess.STDOUT, shell=True)
+                            break
+                        except subprocess.CalledProcessError as e:
+                            print "\n** ERROR **\n"
+                            print e.output
+                            print "\nEnabling recovery shell access:"
+                            simpleRepl()
+                            # todo - go back to pushing repo
 
-    #                 sdistPath = sdist.split()[-1]
+                    sdistPath = sdist.split()[-1]
 
-    #                 print "Uploading to Hackage"
-    #                 sdist = subprocess.check_output('cabal upload -u%s -p%s %s' % (username, password, sdistPath), shell=True)
-    #                 print sdist
-    #         #updateStatus(version)
+                    print "Uploading to Hackage"
+                    sdist = subprocess.check_output('cabal upload -u%s -p%s %s' % (username, password, sdistPath), shell=True)
+                    print sdist
+            #updateStatus(version)
 
-    # os.chdir(root)
+    os.chdir(root)
 
     if args.update_stack_conf:
         yamlPaths = args.update_stack_conf

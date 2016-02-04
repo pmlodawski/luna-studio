@@ -34,6 +34,8 @@ instance ( Monad  m
         lift $ with (ve ^. source) $ attr Succs %~ (e:)
     {-# INLINE handler #-}
 
+instance Monad m => Destroyer m (Layer (Network ls) Succs a) where
+    destroy _ = return ()
 
 -- === Utils === ---
 
@@ -62,3 +64,6 @@ instance (MonadSelfBuilder s m, Ref (Link l) ~ Connection s (Ref $ Node l), Conn
         s <- self
         let tgt = Ref $ Ptr 0 :: Ref $ Node l -- FIXME[WD]: Pure magic. 0 is the ID of Star
         connection tgt s
+
+instance (Monad m, Unregister m (LayerData (Network ls) Type a)) => Destroyer m (Layer (Network ls) Type a) where
+    destroy (Layer ref) = unregister ref

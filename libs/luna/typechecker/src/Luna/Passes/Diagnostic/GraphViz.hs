@@ -116,21 +116,28 @@ toGraphViz net = DotGraph { strictGraph     = False
                                                        , edgeStmts = edgeStmts
                                                        }
                           }
-    where g                 = net ^. nodes
-          edges'            = net ^. edges
-          nodesE            = elems g
+    where ng                = net ^. nodes
+          eg                = net ^. edges
+          nodesE            = elems ng
+          edgesE            = elems eg
           nodes'            = cast <$> nodesE :: [NetLayers :< Draft Static]
-          nodeIds           = usedIxes g
+          edges'            = cast <$> edgesE :: [Link (NetLayers :< Draft Static)]
+          nodeIds           = usedIxes ng
           nodeLabels        = reprStyled HeaderOnly . uncover <$> nodes'
           nodeStmts         = fmap (uncurry labeledNode) $ zip3 nodes' nodeLabels nodeIds
           inEdges           = concat $ fmap nodeInEdges nodeIds
+
+          mkEdgeDesc (Edge src dst) = DotEdge (nodeRef $ src ^. rawPtr) (nodeRef $ dst ^. rawPtr) [GV.color arrClr]
+
+          --edgeStmts         = mkEdgeDesc <$> edges'
+          --inEdges           = zip3 ([0..] :: [Int])
           edgeStmts         = fmap mkEdge inEdges
           nodeRef         i = "<node " <> show i <> ">"
           labeledNode n s a = DotNode (nodeRef a) $ (GV.Label . StrLabel $ fromString s) : (nodeColorAttrs n) ++ labelAttrs n
-          nodeInEdges   n   = zip3 ([0..] :: [Int]) (genInEdges net $ (cast $ index n g :: NetLayers :< Draft Static)) (repeat n)
+          nodeInEdges   n   = zip3 ([0..] :: [Int]) (genInEdges net $ (cast $ index n ng :: NetLayers :< Draft Static)) (repeat n)
           mkEdge  (n,(a,attrs),b) = DotEdge (nodeRef a) (nodeRef b) attrs -- (GV.edgeEnds Back : attrs)
 
---          allEdges        = drawEdge <$> elems_ edges'
+--          allEdges        = drawEdge <$> elems_ eg
 
 --          nodeColorAttrs n = case' (uncoat n) $ do
 --                                match $ \(Val val :: Val (Ref Edge)) ->
@@ -161,7 +168,7 @@ genInEdges (g :: NetGraph) (n :: NetLayers :< Draft Static) = tpEdge : fmap addC
     addColor (idx, attrs) = (idx, GV.color arrClr : attrs)
     getTgtIdx inp         = view (source ∘ rawPtr) $ index (inp ^. rawPtr) es
 
-    --getIdx  i = deref . view target $ index (deref i) edges'
+    --getIdx  i = deref . view target $ index (deref i) eg
     --n =
 
 

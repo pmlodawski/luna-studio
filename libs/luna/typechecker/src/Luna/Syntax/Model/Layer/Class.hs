@@ -39,8 +39,8 @@ instance      Layered   (Attached t a) where
 
 -- Construction
 
-instance (Maker m t, Functor m) => LayerConstructor m (Attached t a) where
-    constructLayer a = flip Attached a <$> make ; {-# INLINE constructLayer #-}
+instance (Monad m, Maker     m t) => LayerConstructor m (Attached t a) where constructLayer a = flip Attached a <$> make   ; {-# INLINE constructLayer #-}
+instance (Monad m, Destroyer m t) => LayerDestructor  m (Attached t a) where destructLayer (Attached t a) = a <$ destroy t ; {-# INLINE destructLayer  #-}
 
 -- Casting
 
@@ -89,8 +89,8 @@ makeWrapped ''(:<)
 type instance Unlayered (ls :< a) = Unwrapped (ls :< a)
 instance      Layered   (ls :< a)
 
-instance Monad m => LayerConstructor m (ls :< a) where
-    constructLayer = return ∘ wrap' ; {-# INLINE constructLayer #-}
+instance Monad m => LayerConstructor m (ls :< a) where constructLayer = return ∘ wrap'   ; {-# INLINE constructLayer #-}
+instance Monad m => LayerDestructor  m (ls :< a) where destructLayer  = return ∘ unwrap' ; {-# INLINE destructLayer  #-}
 
 instance Castable (Unwrapped (ls :< a)) (Unwrapped (ls' :< a')) => Castable (ls :< a) (ls' :< a') where
     cast = wrapped %~ cast ; {-# INLINE cast #-}

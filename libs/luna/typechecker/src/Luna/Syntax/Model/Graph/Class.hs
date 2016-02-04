@@ -184,8 +184,8 @@ instance (LayerConstructor m c, Dispatcher CONNECTION c m, Unlayered c ~ Edge sr
 
 -- Construction
 
-instance Monad m => LayerConstructor m (Node a) where
-    constructLayer = return ∘ Node ; {-# INLINE constructLayer #-}
+instance Monad m => LayerConstructor m (Node a) where constructLayer = return ∘ Node    ; {-# INLINE constructLayer #-}
+instance Monad m => LayerDestructor  m (Node a) where destructLayer  = return ∘ unwrap' ; {-# INLINE destructLayer #-}
 
 -- Conversions
 
