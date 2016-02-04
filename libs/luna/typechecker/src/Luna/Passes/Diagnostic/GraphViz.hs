@@ -151,7 +151,7 @@ toGraphViz net = DotGraph { strictGraph     = False
 
 genInEdges (g :: NetGraph) (n :: NetLayers :< Draft Static) = tpEdge : fmap addColor inEdges  where
     genLabel  = GV.Label . StrLabel . fromString . show
-    ins       = inputs (uncover n)
+    ins       = inputsxxx (uncover n)
     inIdxs    = getTgtIdx <$> ins
     inEdges   = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) [0..]
     es        = g ^. edges

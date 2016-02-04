@@ -115,7 +115,7 @@ Library
                  , data-result
                  , split
                  , dependent-state
-
+                 , lens-utils
 
 
 Executable tc-test

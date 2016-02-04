@@ -5,9 +5,10 @@
 
 module Luna.Syntax.Model.Graph.Term where
 
-import Prologue hiding (cons, Num)
+import Prologue hiding (Getter, Setter, cons, Num)
 
 import           Control.Monad.Event
+import           Data.Attribute
 import           Data.Layer.Cover
 import           Data.Record                    (cons, RecordOf, IsRecord, asRecord, SmartCons)
 import           Data.Reprx                     (Repr, repr)
@@ -24,8 +25,10 @@ import qualified Luna.Syntax.Model.Builder.Self as Self
 import           Luna.Syntax.Model.Graph.Layers 
 import           Luna.Syntax.AST.Layout
 
+
 import Data.Record (Variant, MapTryingElemList_, withElement_, Props)
 
+import Data.Attribute
 
 ---------------------------------------
 -- === Network layout definition === --
@@ -60,6 +63,20 @@ makeWrapped ''Val
 makeWrapped ''Thunk
 makeWrapped ''Expr
 makeWrapped ''Draft
+
+type instance Unlayered (Raw      ls) = Unwrapped (Raw      ls)
+type instance Unlayered (Lit   rt ls) = Unwrapped (Lit   rt ls)
+type instance Unlayered (Val   rt ls) = Unwrapped (Val   rt ls)
+type instance Unlayered (Thunk rt ls) = Unwrapped (Thunk rt ls)
+type instance Unlayered (Expr  rt ls) = Unwrapped (Expr  rt ls)
+type instance Unlayered (Draft rt ls) = Unwrapped (Draft rt ls)
+
+instance Layered (Raw      ls)
+instance Layered (Lit   rt ls)
+instance Layered (Val   rt ls)
+instance Layered (Thunk rt ls)
+instance Layered (Expr  rt ls)
+instance Layered (Draft rt ls)
 
 -- Layout types
 
@@ -122,6 +139,27 @@ instance {-# OVERLAPPABLE #-} Repr s (Unwrapped (Thunk rt ls)) => Repr s (Thunk 
 instance {-# OVERLAPPABLE #-} Repr s (Unwrapped (Expr  rt ls)) => Repr s (Expr  rt ls) where repr = repr ∘ unwrap'
 instance {-# OVERLAPPABLE #-} Repr s (Unwrapped (Draft rt ls)) => Repr s (Draft rt ls) where repr = repr ∘ unwrap'
 
+-- Attributes
+
+type instance Attr a (Lit   rt ls) = Attr a (Unwrapped (Lit   rt ls))
+type instance Attr a (Val   rt ls) = Attr a (Unwrapped (Val   rt ls))
+type instance Attr a (Thunk rt ls) = Attr a (Unwrapped (Thunk rt ls))
+type instance Attr a (Expr  rt ls) = Attr a (Unwrapped (Expr  rt ls))
+type instance Attr a (Draft rt ls) = Attr a (Unwrapped (Draft rt ls))
+
+instance SubGetter a (Lit   rt ls) => Getter a (Lit   rt ls)
+instance SubGetter a (Val   rt ls) => Getter a (Val   rt ls)
+instance SubGetter a (Thunk rt ls) => Getter a (Thunk rt ls)
+instance SubGetter a (Expr  rt ls) => Getter a (Expr  rt ls)
+instance SubGetter a (Draft rt ls) => Getter a (Draft rt ls)
+
+instance SubSetter a (Lit   rt ls) => Setter a (Lit   rt ls)
+instance SubSetter a (Val   rt ls) => Setter a (Val   rt ls)
+instance SubSetter a (Thunk rt ls) => Setter a (Thunk rt ls)
+instance SubSetter a (Expr  rt ls) => Setter a (Expr  rt ls)
+instance SubSetter a (Draft rt ls) => Setter a (Draft rt ls)
+
+
 
 -------------------------------------
 -- === Term building utilities === --
@@ -135,13 +173,13 @@ instance ElemBuilder el IM a where buildElem = impossible
 
 instance ( SmartCons el (Uncovered a)
          , CoverConstructor m a
-         , Register ELEMENT a m
+         , Dispatcher ELEMENT a m
          , MonadSelfBuilder s m
          , Castable a s
          ) => ElemBuilder el m a where
     -- TODO[WD]: change buildAbsMe to buildMe2
     --           and fire monad every time we construct an element, not once for the graph
-    buildElem el = register ELEMENT =<< buildAbsMe (constructCover $ cons el) where
+    buildElem el = dispatch ELEMENT =<< buildAbsMe (constructCover $ cons el) where
     {-# INLINE buildElem #-}
 
 
@@ -203,16 +241,16 @@ unify a b = mdo
 ------------------------------
 
 type NetLayers = '[Type, Succs]
-type NetType   = NetLayers :< Draft Static
+type NetNode   = NetLayers :< Draft Static
 
 type NetGraph = Graph (NetLayers :< Raw) (Link (NetLayers :< Raw))
 
 buildNetwork  = runIdentity ∘ buildNetworkM
 buildNetworkM = rebuildNetworkM (def :: NetGraph)
-rebuildNetworkM' (net :: NetGraph) = flip Self.evalT (undefined ::        Ref $ Node NetType)
-                                  ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node NetType))
+rebuildNetworkM' (net :: NetGraph) = flip Self.evalT (undefined ::        Ref $ Node NetNode)
+                                  ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node NetNode))
                                   ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
-                                  ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref $ Node NetType)
+                                  ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref $ Node NetNode)
                                   ∘ flip GraphBuilder.runT net
                                   ∘ registerSuccs   CONNECTION
 {-# INLINE   buildNetworkM #-}
@@ -227,32 +265,53 @@ instance {-# OVERLAPPABLE #-} NetworkBuilder net m  I IM where rebuildNetworkM =
 instance {-# OVERLAPPABLE #-}
 	( m      ~ Listener CONNECTION SuccRegister m'
 	, m'     ~ GraphBuilder.BuilderT n e m''
-	, m''    ~ Listener ELEMENT (TypeConstraint Equality_Full (Ref $ Node NetType)) m'''
+	, m''    ~ Listener ELEMENT (TypeConstraint Equality_Full (Ref $ Node NetNode)) m'''
 	, m'''   ~ Listener CONNECTION (TypeConstraint Equality_M1 (Ref c)) m''''
-	, m''''  ~ Type.TypeBuilderT (Ref $ Node NetType) m'''''
-	, m''''' ~ Self.SelfBuilderT (Ref $ Node NetType) m''''''
+	, m''''  ~ Type.TypeBuilderT (Ref $ Node NetNode) m'''''
+	, m''''' ~ Self.SelfBuilderT (Ref $ Node NetNode) m''''''
 	, Monad m'''''
 	, Monad m''''''
     , net ~ Graph n e
 	) => NetworkBuilder net m a m'''''' where 
-	rebuildNetworkM net = flip Self.evalT (undefined ::        Ref $ Node NetType)
-		                 ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node NetType))
+	rebuildNetworkM net = flip Self.evalT (undefined ::        Ref $ Node NetNode)
+		                 ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node NetNode))
 		                 ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
-	                     ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref $ Node NetType)
+	                     ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref $ Node NetNode)
 	                     ∘ flip GraphBuilder.runT net
 	                     ∘ registerSuccs   CONNECTION
 
 
 
 
+
 -- FIXME[WD]: poprawic typ oraz `WithElement_` (!)
 -- FIXME[WD]: inputs should be more general and should be refactored out
-inputs :: forall x ast rt ls. 
+inputsxxx :: forall x ast rt ls. 
       ( x ~ Ref (Link (ls :< ast rt))
       , (MapTryingElemList_ (Props Variant (RecordOf (RecordOf (ast rt ls)))) (TFoldable (Ref (Link (ls :< ast rt)))) (ast rt ls))
       ) => ast rt ls -> [x]
-inputs a = withElement_ (p :: P (TFoldable x)) (foldrT (:) []) a
+inputsxxx a = withElement_ (p :: P (TFoldable x)) (foldrT (:) []) a
 
 
 
+
+-- FIXME[WD]: poprawic typ oraz `WithElement_` (!)
+-- FIXME[WD]: inputs should be more general and should be refactored out
+inputsxxx2 :: forall layout term rt x. 
+      (MapTryingElemList_
+                            (Elems term (ByLayout rt Str x) x)
+                            (TFoldable x)
+                            (Term layout term rt), x ~ Layout layout term rt) => Term layout term rt -> [x]
+inputsxxx2 a = withElement_ (p :: P (TFoldable x)) (foldrT (:) []) a
+
+
+
+type instance Attr Inputs (Term layout term rt) = [Layout layout term rt]
+instance (MapTryingElemList_
+                           (Elems
+                              term
+                              (ByLayout rt Str (Layout layout term rt))
+                              (Layout layout term rt))
+                           (TFoldable (Layout layout term rt))
+                           (Term layout term rt)) => Getter Inputs (Term layout term rt) where getter _ = inputsxxx2
 

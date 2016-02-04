@@ -76,9 +76,7 @@ Library
         Flowbox.AWS.User.Session,
         Flowbox.AWS.User.User,
                      
-        Generated.Proto.Session,
-        Generated.Proto.Session.Policy,
-        Generated.Proto.Session.Session
+        
 
     Build-Depends:  aws     == 0.11.1,
                     aws-sdk >= 0.12.4,

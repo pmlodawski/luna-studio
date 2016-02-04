@@ -31,8 +31,8 @@ instance Applicative m => Applicative (Listener t cfg m) where pure       = wrap
 
 -- Registration time type constraint
 
-instance {-# OVERLAPPABLE #-} (Monad m, Register t a m)                    => Register t a (Listener t' cfg m) where register_     = lift ∘∘ register_
-instance {-# OVERLAPPABLE #-} (Monad m, Register t a m, Handler t cfg m a) => Register t a (Listener t  cfg m) where register_ t a = handler a *> (lift $ register_ t a)
+instance {-# OVERLAPPABLE #-} (Monad m, Dispatcher t a m)                    => Dispatcher t a (Listener t' cfg m) where dispatch_     = lift ∘∘ dispatch_
+instance {-# OVERLAPPABLE #-} (Monad m, Dispatcher t a m, Handler t cfg m a) => Dispatcher t a (Listener t  cfg m) where dispatch_ t a = handler a *> (lift $ dispatch_ t a)
 
 
 
@@ -83,39 +83,39 @@ constrainTypeM3 = constrainType (p :: P Equality_M3)
 
 
 ----------------------
--- === Register === --
+-- === Dispatcher === --
 ----------------------
--- | The `register` function can be used to indicate that a particular element is "done".
+-- | The `dispatch` function can be used to indicate that a particular element is "done".
 --   It does not provide any general special meaning. In general, this information can be lost when not used explicitly.
---   For a specific usage look at the `Network` builder, where `register` is used to add type constrains on graph nodes and edges.
+--   For a specific usage look at the `Network` builder, where `dispatch` is used to add type constrains on graph nodes and edges.
 --   The `t` parameter is the type of registration, like `Node` or `Edge`. Please keep in mind, that `Node` indicates a "kind" of a structure.
 --   It does not equals a graph-like node - it can be a "node" in flat AST representation, like just an ordinary term.
 
 
 
-class Monad m => Register t a m where 
-    register_ :: t -> a -> m ()
+class Monad m => Dispatcher t a m where 
+    dispatch_ :: t -> a -> m ()
 
 
 -- === Utils === --
 
-registerM :: Register t a m => t -> m a -> m a
-registerM t ma = do
+dispatchM :: Dispatcher t a m => t -> m a -> m a
+dispatchM t ma = do
     a <- ma
-    register_ t a
+    dispatch_ t a
     return a
-{-# INLINE registerM #-}
+{-# INLINE dispatchM #-}
 
-register :: Register t a m => t -> a -> m a
-register t a = a <$ register_ t a ; {-# INLINE register #-}
+dispatch :: Dispatcher t a m => t -> a -> m a
+dispatch t a = a <$ dispatch_ t a ; {-# INLINE dispatch #-}
 
 
 -- === Instances === --
 
 instance {-# OVERLAPPABLE #-}
-         (Register t a m, MonadTrans f, Monad m, Monad (f m)) => Register t a (f m)    where register_     = lift ∘∘ register_ ; {-# INLINE register_ #-}
-instance                                                         Register t a IO       where register_ _ _ = return ()         ; {-# INLINE register_ #-}
-instance                                                         Register t a Identity where register_ _ _ = return ()         ; {-# INLINE register_ #-}
+         (Dispatcher t a m, MonadTrans f, Monad m, Monad (f m)) => Dispatcher t a (f m)    where dispatch_     = lift ∘∘ dispatch_ ; {-# INLINE dispatch_ #-}
+instance                                                         Dispatcher t a IO       where dispatch_ _ _ = return ()         ; {-# INLINE dispatch_ #-}
+instance                                                         Dispatcher t a Identity where dispatch_ _ _ = return ()         ; {-# INLINE dispatch_ #-}
 
 
 

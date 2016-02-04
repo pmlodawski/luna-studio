@@ -1,8 +1,9 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Luna.Syntax.Model.Graph.Class where
 
-import Prologue hiding (read)
+import Prologue hiding (Getter, Setter, read)
 
 import Control.Monad.Event
 import Data.Attribute
@@ -12,7 +13,8 @@ import Data.Container.Auto      (Auto)
 import Data.Container.Resizable (Exponential)
 import Data.Index
 import Data.Vector              (Vector)
-	
+
+import qualified Control.Lens.MonoQual    as MQ	
 
 -------------------------
 -- === AutoVectors === --
@@ -123,6 +125,7 @@ instance Constructor m (Ref ref) => LayerConstructor m (Ref ref) where
 -- === Network Structures === --
 --------------------------------
 
+-- === Definitions === --
 
 newtype Node       a = Node a                   deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
 data    Edge src tgt = Edge (Ref src) (Ref tgt) deriving (Show, Eq, Ord)
@@ -135,6 +138,10 @@ type family Conn_Target a -- TODO[WD]: change name after refactoring
 class ( src ~ Conn_Source (Connection src tgt)
       , tgt ~ Conn_Target (Connection src tgt)
       ) => Connectible src tgt m where connection :: src -> tgt -> m (Connection src tgt)
+
+-- Properties
+data Inputs  = Inputs  deriving (Show)
+data Outputs = Outputs deriving (Show)
 
 
 -- === Utils === --
@@ -150,6 +157,7 @@ target = lens (\(Edge _ tgt) -> rewrap tgt) (\(Edge src _) tgt -> Edge src (rewr
 
 follow :: (Reader m (Edge src tgt), Functor m) => Ref (Edge src tgt) -> m (Ref $ Node tgt)
 follow ptr = view target <$> read ptr
+
 
 
 -- === Instances === --
@@ -172,9 +180,9 @@ instance      Layered   (Node a)
 type instance Connection (Ref  a) (Ref  b) = Ref (Connection a b)
 type instance Connection (Node a) (Node b) = Edge a b
 
-instance (LayerConstructor m c, Register CONNECTION c m, Unlayered c ~ Edge src tgt, c ~ Connection (Ref (Node src)) (Ref (Node tgt))) 
+instance (LayerConstructor m c, Dispatcher CONNECTION c m, Unlayered c ~ Edge src tgt, c ~ Connection (Ref (Node src)) (Ref (Node tgt))) 
       => Connectible (Ref (Node src)) (Ref (Node tgt)) m where
-         connection src tgt = register CONNECTION =<< constructLayer (edge src tgt)
+         connection src tgt = dispatch CONNECTION =<< constructLayer (edge src tgt)
 
 -- Construction
 
@@ -191,11 +199,6 @@ instance Castable a a' => Castable (Node a) (Node a') where
 
 -- Attributes
 
-type instance                  Attr     a (Node t) = Attr a t
-instance HasAttr     a t => HasAttr     a (Node t) where attr      = wrapped' ∘∘  attr      ; {-# INLINE attr      #-}
-instance MayHaveAttr a t => MayHaveAttr a (Node t) where checkAttr = wrapped' ∘∘∘ checkAttr ; {-# INLINE checkAttr #-}
-
-
-
-
-
+type instance            Attr a (Node t) = Attr a t
+instance Getter a t => Getter a (Node t) where getter a = getter a ∘ unwrap'      ; {-# INLINE getter #-}
+instance Setter a t => Setter a (Node t) where setter   = over wrapped' ∘∘ setter ; {-# INLINE setter #-}

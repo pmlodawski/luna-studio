@@ -2,7 +2,7 @@
 
 module Luna.Syntax.Model.Layer.Class where
 
-import Prologue
+import Prologue hiding (Getter, Setter)
 
 import Data.Attribute
 import Data.Construction
@@ -17,12 +17,10 @@ import Luna.Syntax.AST.Term (LayoutType)
 
 -- === Definitions === --
 
-newtype Layer layout t base = Layer (LayerData layout t base) -- deriving (Show) --, Eq, Ord, Functor, Traversable, Foldable)
+type family LayerData layout d base
+newtype     Layer     layout t base = Layer (LayerData layout t base) -- deriving (Show) --, Eq, Ord, Functor, Traversable, Foldable)
 
-
---newtype Layer layout t a = Layer a      deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
-data    Attached     t a = Attached t a deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
-type family LayerData t d a
+data Attached t a = Attached t a deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
 
 
 -- === Instances === --
@@ -34,11 +32,6 @@ deriving instance Show (Unwrapped (Layer l t a)) => Show (Layer l t a)
 makeWrapped ''Layer
 type instance Unlayered (Layer l t a) = Unwrapped (Layer l t a)
 instance      Layered   (Layer l t a)
-
-
---makeWrapped ''Layer
---type instance Unlayered (Layer l t a) = a
---instance      Layered   (Layer l t a)
 
 type instance Unlayered (Attached t a) = a
 instance      Layered   (Attached t a) where
@@ -57,25 +50,17 @@ instance (Castable a a', Castable t t') => Castable (Attached t a) (Attached t' 
 instance Castable (Unwrapped (Layer l t a)) (Unwrapped (Layer l' t' a')) => Castable (Layer l t a) (Layer l' t' a') where
     cast = wrapped %~ cast ; {-# INLINE cast #-}
 
---instance Castable a a' => Castable (Layer l t a) (Layer l' t a') where
---    cast = wrapped %~ cast ; {-# INLINE cast #-}
-
 -- Attributes
 
---type instance Attr a (Attached (Layer l t u) base) = If (a == t) u (Attr a base)
---instance {-# OVERLAPPABLE #-} (HasAttr     a base, Attr a (Attached (Layer l t u) base) ~ Attr a base) => HasAttr     a (Attached (Layer l t u) base) where attr      = layered ∘∘  attr                                                           ; {-# INLINE attr      #-}
---instance {-# OVERLAPPABLE #-}                                                                             HasAttr     a (Attached (Layer l a u) base) where attr _    = lens (\(Attached d _) -> d) (\(Attached _ a) d -> Attached d a) ∘ wrapped' ; {-# INLINE attr      #-}
---instance {-# OVERLAPPABLE #-} (MayHaveAttr a base, Attr a (Attached (Layer l t u) base) ~ Attr a base) => MayHaveAttr a (Attached (Layer l t u) base) where checkAttr = layered ∘∘∘ checkAttr                                                      ; {-# INLINE checkAttr #-}
---instance {-# OVERLAPPABLE #-}                                                                             MayHaveAttr a (Attached (Layer l a u) base)
+type instance Attr attr (Attached (Layer l t a) base) = If (attr == t) (Unwrapped (Layer l t a)) (Attr attr base)
 
+instance {-# OVERLAPPABLE #-} (Attr  a (Attached (Layer l a' t) base) ~ Attr a base, Getter a base) 
+                           => Getter a (Attached (Layer l a' t) base) where getter a (Attached _ t) = getter a t ; {-# INLINE getter #-}
+instance {-# OVERLAPPABLE #-} Getter a (Attached (Layer l a  t) base) where getter _ (Attached d _) = unwrap' d  ; {-# INLINE getter #-}
 
-type instance Attr a (Attached (Layer l t u) base) = If (a == t) (Unwrapped (Layer l t u)) 
-                                                                 (Attr a base)
-instance {-# OVERLAPPABLE #-} (HasAttr     a base, Attr a (Attached (Layer l t u) base) ~ Attr a base) => HasAttr     a (Attached (Layer l t u) base) where attr      = layered ∘∘  attr                                                           ; {-# INLINE attr      #-}
-instance {-# OVERLAPPABLE #-}                                                                              HasAttr     a (Attached (Layer l a u) base) where attr _    = lens (\(Attached d _) -> d) (\(Attached _ a) d -> Attached d a) ∘ wrapped' ; {-# INLINE attr      #-}
-instance {-# OVERLAPPABLE #-} (MayHaveAttr a base, Attr a (Attached (Layer l t u) base) ~ Attr a base) => MayHaveAttr a (Attached (Layer l t u) base) where checkAttr = layered ∘∘∘ checkAttr                                                      ; {-# INLINE checkAttr #-}
-instance {-# OVERLAPPABLE #-}                                                                              MayHaveAttr a (Attached (Layer l a u) base)
-
+instance {-# OVERLAPPABLE #-} (Attr  a (Attached (Layer l a' t) base) ~ Attr a base, Setter a base)
+                           => Setter a (Attached (Layer l a' t) base) where setter a v (Attached d t) = Attached d $ setter a v t ; {-# INLINE setter #-}
+instance {-# OVERLAPPABLE #-} Setter a (Attached (Layer l a  t) base) where setter _ v (Attached _ t) = Attached (Layer v) t      ; {-# INLINE setter #-}
 
 
 --------------------
@@ -113,10 +98,9 @@ instance Castable (Unwrapped (ls :< a)) (Unwrapped (ls' :< a')) => Castable (ls 
 
 -- Attributes
 
-type instance                                      Attr     a (ls :< t) = Attr a (Unwrapped (ls :< t))
-instance HasAttr     a (Unwrapped (ls :< t)) => HasAttr     a (ls :< t) where attr      = wrapped' ∘∘  attr      ; {-# INLINE attr      #-}
-instance MayHaveAttr a (Unwrapped (ls :< t)) => MayHaveAttr a (ls :< t) where checkAttr = wrapped' ∘∘∘ checkAttr ; {-# INLINE checkAttr #-}
-
+type instance                                Attr a (ls :< t) = Attr a (Unwrapped (ls :< t))
+instance Getter a (Unwrapped (ls :< t)) => Getter a (ls :< t) where getter a = getter a ∘ unwrap'      ; {-# INLINE getter #-}
+instance Setter a (Unwrapped (ls :< t)) => Setter a (ls :< t) where setter   = over wrapped' ∘∘ setter ; {-# INLINE setter #-}
 
 
 ---------------------------

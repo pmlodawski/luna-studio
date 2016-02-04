@@ -9,7 +9,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
-import Prologue              hiding (cons, read)
+import Prologue              hiding (cons, read, (#))
 import Luna.Syntax.AST.Term  hiding (Lit, Val, Thunk, Expr, Draft, Target, Source, source, target)
 import qualified Luna.Syntax.AST.Term as Term
 import Luna.Passes.Diagnostic.GraphViz
@@ -19,7 +19,7 @@ import Luna.Syntax.AST.Layout (Static, Dynamic)
 import Data.Attribute
 import Luna.Syntax.Model.Graph
 import Luna.Syntax.Model.Layer
-
+import Data.Construction
 
 renderAndOpen lst = do
     flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
@@ -43,65 +43,72 @@ prebuild :: IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
 prebuild = rebuildNetworkM def $ star
 
 
-data ImgAttr = ImgAttr deriving (Show)
-type instance Attr ImgAttr (Cover x) = String
-
-foo :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
+--foo :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
+foo :: NetGraph -> IO ((), NetGraph)
 foo g = rebuildNetworkM g
     $ do
-    title "basic element building"
+    --title "basic element building"
+    --s1 <- star
+    --s2 <- star
+    --print s1
+
+    --title "reading node references"
+    --s1_v <- read s1
+    --s2_v <- read s2
+    --print s1_v
+
+    --title "manual connection builing"
+    --c1 <- connection s1 s2
+
+    --title "reading connection references"
+    --c1_v <- read c1
+    --print c1_v
+
+    --title "edge following"
+    --c1_tgt <- follow c1
+    --when (c1_tgt /= s2) $ fail "reading is broken!"
+    --print "ok!"
+
+    --title "pattern matching"
+    --print $ uncover s1_v
+    --print $ caseTest (uncover s1_v) $ do
+    --    match $ \Star -> "its a star! <3"
+    --    match $ \ANY  -> "something else!"
+
+    --title "complex element building"
+    --u1 <- unify s1 s2
+    --print u1
+    --u1_v <- read u1
+
+    --title "inputs reading"
+    --let u1_ins = getAttr Inputs $ u1_v
+    --print u1_ins
+
+    --title "params reading"
+    --let s1t = s1_v ^. attr Type
+    --    s1s = s1_v ^. attr Succs
+    --print s1t
+    --print s1s
+
     s1 <- star
     s2 <- star
-    print s1
-
-    title "reading node references"
-    s1_v <- read s1
-    s2_v <- read s2
-    print s1_v
-
-    title "manual connection builing"
     c1 <- connection s1 s2
 
-    title "reading connection references"
-    c1_v <- read c1
-    print c1_v
-
-    title "edge following"
-    c1_tgt <- follow c1
-    when (c1_tgt /= s2) $ fail "reading is broken!"
-    print "ok!"
-
-    title "pattern matching"
-    print $ uncover s1_v
-    print $ caseTest (uncover s1_v) $ do
-        match $ \Star -> "its a star! <3"
-        match $ \ANY  -> "something else!"
-
-    title "complex element building"
-    u1 <- unify s1 s2
-    print u1
-    u1_v <- read u1
-
-    title "inputs reading"
-    let u1_ins = inputs (uncover u1_v)
-    print u1_ins
-
-    title "params reading"
-    let s1t = s1_v ^. attr Type
-        s1s = s1_v ^. attr Succs
-        ca1 = case checkAttr Type of
-            Just t  -> show $ s1_v ^. t
-            Nothing -> "no type here!"
-        --ca2 = case checkAttr ImgAttr of
-        --    Just t  -> s1_v ^. t
-        --    Nothing -> "no imagined attrib here!"
-    print s1t
-    print s1s
-    print ca1
-    -- print ca2
+    s1_v <- read s1
 
 
-    return s1
+    --unregister s1
+
+
+    --print $ getAttr Inputs s1_v
+
+    --let ins = inputs s1_v
+    --print ins
+
+    return ()
+
+
+
 
 
 main :: IO ()

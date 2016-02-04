@@ -8,8 +8,9 @@
 module Luna.Syntax.Model.Graph.Builder where
 
 
-import Prologue
+import Prologue hiding (Getter, Setter, read, (#))
 
+import           Data.Attribute
 import           Control.Monad.Catch            (MonadMask, MonadCatch, MonadThrow)
 import           Data.Construction
 import           Data.Container
@@ -103,11 +104,11 @@ instance {-# OVERLAPPABLE #-} (MonadBuilder n e m, MonadTrans t, Monad (t m)) =>
 
 -- Ref construction
 
-instance (MonadBuilder n e m, Castable a n) => Constructor m (Ref (Node a)) where 
+instance (MonadBuilder n e m, Castable a n) => Constructor m (Ref $ Node a) where 
     construct n = Ref ∘ Ptr <$> modify (nodes $ swap ∘ ixed add (cast ast)) where
         ast = unwrap' n :: a
 
-instance (MonadBuilder n e m, Castable (Edge src tgt) e) => Constructor m (Ref (Edge src tgt)) where 
+instance (MonadBuilder n e m, Castable (Edge src tgt) e) => Constructor m (Ref $ Edge src tgt) where 
     construct e = Ref ∘ Ptr <$> modify (edges $ swap ∘ ixed add (cast e)) where
 
 -- Ref reading / writing
@@ -121,6 +122,22 @@ instance (MonadBuilder n e m, Castable a n) => Writer m (Node a) where
 instance (MonadBuilder n e m, Castable e (Edge src tgt)) => Reader m (Edge src tgt) where
     read ref = cast ∘ index_ (ref ^. idx) ∘ view edges <$> get ; {-# INLINE read #-}
 
+
+
+
+
+instance MonadBuilder n e m => Unregister m (Ref $ Node node)    where unregister ref = modify_ $ nodes %~ free (ref ^. idx)
+instance MonadBuilder n e m => Unregister m (Ref $ Edge src dst) where unregister ref = modify_ $ edges %~ free (ref ^. idx)
+
+
+instance (MonadBuilder n e m, Reader m (Node node), Getter Inputs node) => Destroyer m (Ref $ Node node) where
+    destroy ref = do
+        n <- read ref
+        let ins = n # Inputs
+        --let x = (n ^.) <$> inputs -- :: _
+        --let x = n ^# inputs :: _-- :: _
+            --y = view inputs n :: _
+        undefined
 
 
 
