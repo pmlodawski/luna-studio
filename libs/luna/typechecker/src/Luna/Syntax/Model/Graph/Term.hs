@@ -189,11 +189,12 @@ instance ( SmartCons el (Uncovered a)
 -- === Term constructors === --
 -------------------------------
 
+-- Args
+
 arg :: a -> Arg a
 arg = Arg Nothing
 
-fromArg :: Arg a -> a
-fromArg (Arg _ a) = a
+-- Literals
 
 star :: ElemBuilder Star m u => m u
 star = buildElem Star
@@ -204,8 +205,7 @@ string = buildElem . Str
 int :: ElemBuilder Num m u => Int -> m u
 int = buildElem . Num
 
-var :: ElemBuilder (Var a) m u => a -> m u
-var = buildElem . Var
+-- Val
 
 cons :: ElemBuilder (Cons a) m u => a -> m u
 cons = buildElem . Cons
@@ -219,6 +219,9 @@ arr src dst = mdo
     csrc  <- connection src out
     cdst  <- connection dst out
     return out
+
+-- Thunk
+
 acc :: ( MonadFix m
        , ElemBuilder (Acc n (Connection a u)) m u
        , Connectible a u m
@@ -238,6 +241,11 @@ app f args = mdo
     cargs <- mapM (\(Arg n a) -> (Arg n) <$> (connection a out)) args
     return out
 
+-- Expr
+
+var :: ElemBuilder (Var a) m u => a -> m u
+var = buildElem . Var
+
 
 unify :: ( MonadFix m
          , ElemBuilder (Unify (Connection b u)) m u
@@ -251,8 +259,12 @@ unify a b = mdo
     cb  <- connection b out
     return out
 
+-- Draft
+
 blank :: ElemBuilder Blank m u => m u
 blank = buildElem Blank
+
+
 
 ------------------------------
 -- === Network Building === --

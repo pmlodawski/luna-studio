@@ -130,10 +130,12 @@ instance MonadBuilder n e m => Unregister m (Ref $ Node node)    where unregiste
 instance MonadBuilder n e m => Unregister m (Ref $ Edge src dst) where unregister ref = modify_ $ edges %~ free (ref ^. idx)
 
 
-instance (MonadBuilder n e m, Reader m (Node node), Getter Inputs node) => Destroyer m (Ref $ Node node) where
+instance (MonadBuilder n e m, Reader m (Node node), Getter Inputs node, Unregister m inp, Attr Inputs node ~ [inp] )
+      => Destroyer m (Ref $ Node node) where
     destroy ref = do
         n <- read ref
-        let ins = n # Inputs
+        mapM_ unregister $ n # Inputs
+        --let ins = n # Inputs
         --let x = (n ^.) <$> inputs -- :: _
         --let x = n ^# inputs :: _-- :: _
             --y = view inputs n :: _

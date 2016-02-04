@@ -83,6 +83,7 @@ def main():
     args = parser.parse_args()
 
 
+    root = os.getcwd ()
 
 
     if not args.no_hackage:
@@ -209,6 +210,7 @@ def main():
                     print sdist
             #updateStatus(version)
 
+    os.chdir(root)
 
     if args.update_stack_conf:
         print "Updating the yaml configuration file"

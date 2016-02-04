@@ -14,8 +14,6 @@ import Data.Container.Resizable (Exponential)
 import Data.Index
 import Data.Vector              (Vector)
 
-import qualified Control.Lens.MonoQual    as MQ	
-
 -------------------------
 -- === AutoVectors === --
 -------------------------

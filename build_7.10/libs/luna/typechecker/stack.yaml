@@ -1,4 +1,7 @@
-resolver: lts-4.1
+extra-deps: [ghc-session-0.1.2.0, graphviz-2999.18.0.2, string-qq-0.0.2, error-util-0.0.1.1,
+  cond-0.4.1.1, tuple-0.3.0.2, OneTuple-0.2.1]
+ghc-options: {'*': -DFastCompilation -threaded -O -j8}
+local-bin-path: ../../../../dist/bin
 packages:
 - {location: ../../../../libs/luna/typechecker}
 - {extra-dep: true, location: ../../../../libs/utils}
@@ -9,9 +12,9 @@ packages:
 - extra-dep: true
   location: {commit: 345c1cdf5bef30631d3eadd55c326086ea0b6f71, git: 'https://github.com/wdanilo/data-base.git'}
 - extra-dep: true
-  location: {commit: 7e0321fe226779d5873911e66d05fef669055504, git: 'https://github.com/wdanilo/data-construction.git'}
+  location: {commit: e215274185721122ae740414a54126c3631bceae, git: 'https://github.com/wdanilo/data-construction.git'}
 - extra-dep: true
-  location: {commit: 9167ee932cf5dc719dea45800dbb62c9918b06c0, git: 'https://github.com/wdanilo/data-layer.git'}
+  location: {commit: 0e80320f1d6fa98295240b0c5f319cf55041132a, git: 'https://github.com/wdanilo/data-layer.git'}
 - extra-dep: true
   location: {commit: 941777d7080fcb86fd50b982ed61eb040a5c03db, git: 'https://github.com/wdanilo/data-repr.git'}
 - extra-dep: true
@@ -33,20 +36,7 @@ packages:
 - extra-dep: true
   location: {commit: 4b9d4f35634eefb721b0529cce91c9dbced6075f, git: 'https://github.com/wdanilo/typelevel.git'}
 - extra-dep: true
-  location: {commit: 7e0321fe226779d5873911e66d05fef669055504, git: 'https://github.com/wdanilo/data-construction.git'}
+  location: {commit: e215274185721122ae740414a54126c3631bceae, git: 'https://github.com/wdanilo/data-construction.git'}
 - extra-dep: true
-  location: {commit: 00aa2a4fa10aaa283552c2c0a94aa3a012a8269a, git: 'https://github.com/wdanilo/data-attribute.git'}
-
-extra-deps:
-    - ghc-session-0.1.2.0
-    - graphviz-2999.18.0.2
-    - string-qq-0.0.2
-    - error-util-0.0.1.1
-    - cond-0.4.1.1
-    - tuple-0.3.0.2
-    - OneTuple-0.2.1
-
-ghc-options:
-    "*": -DFastCompilation -threaded -O -j8
-
-local-bin-path: ../../../../dist/bin
+  location: {commit: ade9273fee09b9eff0b3db17002c167fcef1f7f7, git: 'https://github.com/wdanilo/data-attribute.git'}
+resolver: lts-4.1
