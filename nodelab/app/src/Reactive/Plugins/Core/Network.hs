@@ -32,6 +32,7 @@ import qualified Reactive.Plugins.Core.Action.Sandbox                as Sandbox
 
 import           Reactive.Commands.Command (Command, execCommand)
 import           Reactive.State.Global     (State)
+import qualified Reactive.State.Global     as Global
 
 import           Batch.Workspace           (Workspace)
 import           JS.WebSocket              (WebSocket)
@@ -94,9 +95,9 @@ makeNetworkDescription conn logging initialState = do
         reactions =  RB.accumE (return (), initialState) transformers
 
 
-    let handleIOExcept act = catch (act >> UI.shouldRender) handleExcept
-    reactimate $ handleIOExcept . fst <$> reactions
+    let handleIOExcept (act, state) = catch (act >> UI.shouldRender) (handleExcept state)
+    reactimate $ handleIOExcept <$> reactions
 
-handleExcept :: JSException -> IO ()
-handleExcept except = do
-    putStrLn $ "JavaScriptException: " <> (show except)
+handleExcept :: State -> JSException  -> IO ()
+handleExcept state except = do
+    putStrLn $ "JavaScriptException: " <> (show except) <> "\n\n " <> (show $ state ^. Global.eventNum) <> " @ " <> (show $ state ^. Global.lastEvent)
