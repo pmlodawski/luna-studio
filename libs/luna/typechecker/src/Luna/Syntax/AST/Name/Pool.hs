@@ -3,7 +3,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TupleSections #-}
 
-module Luna.Syntax.Name.Pool where
+module Luna.Syntax.AST.Name.Pool where
 
 -- FIXME[wd]: fix Data.Pool implementation and update the code
 

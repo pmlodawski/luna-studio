@@ -1,4 +1,4 @@
-module Luna.Syntax.Model.Repr.Styles where
+module Luna.Syntax.Repr.Styles where
 
 import Prologue
 

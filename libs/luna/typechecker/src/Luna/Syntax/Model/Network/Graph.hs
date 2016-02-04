@@ -1,7 +1,7 @@
-module Luna.Syntax.Model.Graph (module Luna.Syntax.Model.Graph, module X) where
+module Luna.Syntax.Model.Network.Graph (module Luna.Syntax.Model.Network.Graph, module X) where
 
-import Luna.Syntax.Model.Graph.Class as X
-import Luna.Syntax.Model.Graph.Term  as X
+import Luna.Syntax.Model.Network.Graph.Class as X
+import Luna.Syntax.Model.Network.Graph.Term  as X
 --import Prologue hiding (Ixed, Repr, repr)
 
 --import Control.Monad.Fix

@@ -15,9 +15,9 @@ import qualified Luna.Syntax.AST.Term as Term
 import Luna.Passes.Diagnostic.GraphViz
 import Data.Layer.Cover
 import Data.Record hiding (Layout)
-import Luna.Syntax.AST.Layout (Static, Dynamic)
+import Luna.Runtime.Model (Static, Dynamic)
 import Data.Attribute
-import Luna.Syntax.Model.Graph
+import Luna.Syntax.Model.Network.Graph
 import Luna.Syntax.Model.Layer
 import Data.Construction
 

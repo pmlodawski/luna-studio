@@ -2,7 +2,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE UndecidableInstances   #-}
 
-module Luna.Syntax.Model.Builder.Type where
+module Luna.Syntax.Model.Network.Builder.Type where
 
 import qualified Control.Monad.Catch      as Catch
 import           Control.Monad.Fix

@@ -40,6 +40,7 @@ Library
                   EmptyDataDecls
                   FlexibleContexts
                   FlexibleInstances
+                  FunctionalDependencies
                   GeneralizedNewtypeDeriving
                   InstanceSigs
                   LambdaCase
@@ -64,25 +65,25 @@ Library
         Luna.Passes.Diagnostic.GraphViz,
         Luna.Passes.Diagnostic.Monitor,
         Luna.Passes.Inference.Literals,
+        Luna.Runtime.Model,
         Luna.Syntax.AST,
         Luna.Syntax.AST.Arg,
-        Luna.Syntax.AST.Decl,
-        Luna.Syntax.AST.Decl.Function,
-        Luna.Syntax.AST.Layout,
+        Luna.Syntax.AST.Core,
+        Luna.Syntax.AST.Name,
+        Luna.Syntax.AST.Name.Pool,
         Luna.Syntax.AST.Term,
-        Luna.Syntax.AST.Typed,
-        Luna.Syntax.Model.Builder.Self,
-        Luna.Syntax.Model.Builder.Type,
-        Luna.Syntax.Model.Graph,
-        Luna.Syntax.Model.Graph.Builder,
-        Luna.Syntax.Model.Graph.Class,
-        Luna.Syntax.Model.Graph.Layers,
-        Luna.Syntax.Model.Graph.Term,
         Luna.Syntax.Model.Layer,
-        Luna.Syntax.Model.Layer.Class,
-        Luna.Syntax.Model.Repr.Styles,
-        Luna.Syntax.Name,
-        Luna.Syntax.Name.Pool
+        Luna.Syntax.Model.Network.Builder,
+        Luna.Syntax.Model.Network.Builder.Class,
+        Luna.Syntax.Model.Network.Builder.Layer,
+        Luna.Syntax.Model.Network.Builder.Ref,
+        Luna.Syntax.Model.Network.Builder.Self,
+        Luna.Syntax.Model.Network.Builder.Type,
+        Luna.Syntax.Model.Network.Graph,
+        Luna.Syntax.Model.Network.Graph.Class,
+        Luna.Syntax.Model.Network.Graph.Term,
+        Luna.Syntax.Repr.Styles,
+        Prelude.Luna
 
     Build-Depends: base
                  , constraints

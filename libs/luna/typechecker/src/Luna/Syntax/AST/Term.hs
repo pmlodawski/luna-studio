@@ -6,25 +6,21 @@
 
 module Luna.Syntax.AST.Term (module Luna.Syntax.AST.Term, module X) where
 
-import           Prologue                      hiding (Cons, Num, Swapped)
+import           Prelude.Luna                  hiding (Num, Swapped)
 
 import           Data.Abstract
 import           Data.Base
 import           Data.Record                   hiding (ASTRecord, Layout, Variants)
 import qualified Data.Record                   as Record
-import           Luna.Syntax.AST.Layout        (ToDynamic, ToStatic)
 import           Type.Cache.TH                 (assertTypesEq, cacheHelper, cacheType)
 import           Type.Container
 import           Type.Map
 
-import           Data.Reprx                    (Repr, Reprs, repr, (<+>))
-import qualified Data.Reprx                    as Repr
-
 import           Data.Typeable                 (splitTyConApp, tyConName, typeRepTyCon)
-import           Luna.Syntax.AST.Layout        (Dynamic, Static)
-import qualified Luna.Syntax.AST.Layout        as Runtime
-import           Luna.Syntax.Model.Repr.Styles
-
+import           Luna.Runtime.Model            (Dynamic, Static, ToDynamic, ToStatic, SubRuntimes, SubSemiRuntimes, ByRuntime)
+import           Luna.Syntax.Repr.Styles
+import           Luna.Syntax.AST.Arg
+import qualified Data.Reprx                   as Repr
 
 import Data.Record as X (Data)
 
@@ -82,16 +78,6 @@ class HasTarget a where target :: Lens' a (Target a)
 class HasArgs   a where args   :: Lens' a (Args   a)
 
 
-
-------------------
--- === Args === --
-------------------
-
-data Arg a = Arg (Maybe String) a deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
-
--- === Instances === --
-
-instance {-# OVERLAPPABLE #-} Repr s a => Repr s (Arg a) where repr (Arg _ a) = "Arg" <+> repr a
 
 
 -----------------------------
@@ -309,8 +295,8 @@ type family SubSemiTerms ts term where
     SubSemiTerms (t ': ts) t    = '[t]
     SubSemiTerms (t ': ts) term = t ': SubSemiTerms ts term
 
-type ApplySubRuntimes     rt t a = ApplyLayouts (Runtime.SubLayouts     rt) t a
-type ApplySubSemiRuntimes rt t a = ApplyLayouts (Runtime.SubSemiLayouts rt) t a
+type ApplySubRuntimes     rt t a = ApplyLayouts (SubRuntimes     rt) t a
+type ApplySubSemiRuntimes rt t a = ApplyLayouts (SubSemiRuntimes rt) t a
 type family ApplyLayouts rts t a where ApplyLayouts '[]         t a = '[]
                                        ApplyLayouts (rt ': rts) t a = Term a t rt ': ApplyLayouts rts t a
 
@@ -320,7 +306,7 @@ type family SubRuntimeGroups' rt t gs where
   SubRuntimeGroups' rt t '[g]      = ApplySubRuntimes     rt t g
   SubRuntimeGroups' rt t (g ': gs) = ApplySubSemiRuntimes rt t g <> SubRuntimeGroups' rt t gs
 
-type NameByRuntime rt d = Runtime.ByLayout rt Str d
+type NameByRuntime rt d = ByRuntime rt Str d
 
 
 -- === Variant repr === --

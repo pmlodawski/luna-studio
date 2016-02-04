@@ -20,8 +20,8 @@ module Data.Record where
 import Prologue hiding (simple, empty, Indexable, Simple, cons, lookup, index, children, Cons, Ixed, Repr, repr, minBound, maxBound, (#), assert, Index)
 import Type.Container
 
-import Luna.Syntax.AST.Layout (ByLayout, SubLayouts, SubSemiLayouts, ToStatic, ToDynamic)
-import qualified Luna.Syntax.AST.Layout as Layout
+import Luna.Runtime.Model (ToStatic, ToDynamic)
+import qualified Luna.Runtime.Model as Runtime
 --import Data.Bits.Mask         (Mask)
 import GHC.Prim            (Any, unsafeCoerce#)
 import Data.Int            (Int64)

@@ -1,7 +1,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Luna.Syntax.Model.Graph.Class where
+module Luna.Syntax.Model.Network.Graph.Class where
 
 import Prologue hiding (Getter, Setter, read)
 
@@ -76,22 +76,17 @@ type family Target a
 class HasPtr   a where ptr   :: Lens' a (Ptr (Index  a))
 class HasRef   a where ref   :: Lens' a (Ref (Target a))
 
-class Monad m => Reader m a where read  :: Ref a -> m a
-class Monad m => Writer m a where write :: Ref a -> a -> m ()
 
-type Modifier m a = (Reader m a, Writer m a)
 
+--class Monad m => Reader m a where read  :: Ref a -> m a
+--class Monad m => Writer m a where write :: Ref a -> a -> m ()
 
 -- === Utils === --
 
 rawPtr :: HasPtr a => Lens' a (Index a)
 rawPtr = ptr ∘ wrapped'
 
-withM :: Modifier m a => Ref a -> (a -> m a) -> m ()
-withM ref f = read ref >>= f >>= write ref
 
-with :: Modifier m a => Ref a -> (a -> a) -> m ()
-with ref = withM ref ∘ (return <$>)
 
 
 -- === Instances === --
@@ -153,8 +148,7 @@ source = lens (\(Edge src _) -> rewrap src) (\(Edge _ tgt) src -> Edge (rewrap s
 target :: Lens' (Edge src tgt) (Ref (Node tgt))
 target = lens (\(Edge _ tgt) -> rewrap tgt) (\(Edge src _) tgt -> Edge src (rewrap tgt))
 
-follow :: (Reader m (Edge src tgt), Functor m) => Ref (Edge src tgt) -> m (Ref $ Node tgt)
-follow ptr = view target <$> read ptr
+
 
 
 

@@ -3,7 +3,7 @@
 {-# LANGUAGE UndecidableInstances   #-}
 {-# LANGUAGE RecursiveDo            #-}
 
-module Luna.Syntax.Model.Builder.Self where
+module Luna.Syntax.Model.Network.Builder.Self where
 
 import qualified Control.Monad.Catch      as Catch
 import           Control.Monad.Fix

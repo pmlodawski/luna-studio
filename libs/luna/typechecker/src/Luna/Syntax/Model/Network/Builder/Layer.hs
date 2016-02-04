@@ -1,18 +1,20 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Luna.Syntax.Model.Graph.Layers where
+module Luna.Syntax.Model.Network.Builder.Layer where
 
 import Prologue hiding (read)
 
 import           Control.Monad.Event
 import           Data.Attribute
 import           Data.Construction
-import qualified Luna.Syntax.Model.Builder.Type as Type
-import qualified Luna.Syntax.Model.Builder.Self as Self
-import           Luna.Syntax.Model.Builder.Self (MonadSelfBuilder, self)
-import           Luna.Syntax.Model.Graph.Class
+import qualified Luna.Syntax.Model.Network.Builder.Type as Type
+import qualified Luna.Syntax.Model.Network.Builder.Self as Self
+import           Luna.Syntax.Model.Network.Builder.Self (MonadSelfBuilder, self)
+import           Luna.Syntax.Model.Network.Graph.Class
+import           Luna.Syntax.Model.Network.Builder
 import           Luna.Syntax.Model.Layer
-
+import           Luna.Syntax.Model.Network.Builder.Ref
+import qualified Luna.Syntax.Model.Network.Builder.Ref as Ref
 
 --------------------------------
 -- === Succs registration === --
@@ -31,7 +33,7 @@ instance ( Monad  m
          ) => Handler t SuccRegister m (Ref (Edge src tgt)) where 
     handler e = do
         ve <- lift $ read e -- FIXME[WD]: remove the lift (it could be handy to disable the magic trans-instance in Graph.hs)
-        lift $ with (ve ^. source) $ attr Succs %~ (e:)
+        lift $ Ref.with (ve ^. source) $ attr Succs %~ (e:)
     {-# INLINE handler #-}
 
 instance Monad m => Destructor m (Layer (Network ls) Succs a) where

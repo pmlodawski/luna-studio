@@ -1,4 +1,4 @@
-module Luna.Syntax.Name where
+module Luna.Syntax.AST.Name where
 
 import Flowbox.Prelude
 import Data.Maybe      (isJust)

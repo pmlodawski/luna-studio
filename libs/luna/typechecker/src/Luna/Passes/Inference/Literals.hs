@@ -14,10 +14,10 @@ import           Prologue                        hiding (cons, read)
 import           Data.Attribute
 import           Data.Layer.Cover
 import           Data.Record                     hiding (cons, Layout)
-import           Luna.Syntax.AST.Layout          (Dynamic, Static)
+import           Luna.Runtime.Model              (Dynamic, Static)
 import           Luna.Syntax.AST.Term            hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
 import qualified Luna.Syntax.AST.Term            as Term
-import           Luna.Syntax.Model.Graph
+import           Luna.Syntax.Model.Network.Graph
 import           Luna.Syntax.Model.Layer
 
 -- import           Control.Monad              (forM_)

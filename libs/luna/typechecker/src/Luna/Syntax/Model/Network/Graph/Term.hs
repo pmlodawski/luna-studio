@@ -3,7 +3,7 @@
 {-# LANGUAGE UndecidableInstances   #-}
 {-# LANGUAGE RecursiveDo            #-}
 
-module Luna.Syntax.Model.Graph.Term where
+module Luna.Syntax.Model.Network.Graph.Term where
 
 import Prologue hiding (Getter, Setter, Cons, Num, cons)
 
@@ -15,16 +15,17 @@ import qualified Data.Record                    as Record
 import           Data.Reprx                     (Repr, repr)
 import qualified Luna.Syntax.AST.Term           as Term
 import           Luna.Syntax.AST.Term           hiding (Val, Lit, Thunk, Expr, Draft)
-import           Luna.Syntax.Model.Builder.Self
-import           Luna.Syntax.Model.Graph.Class
+import           Luna.Syntax.Model.Network.Builder.Self
+import           Luna.Syntax.Model.Network.Graph.Class
 import           Luna.Syntax.Model.Layer
-import qualified Luna.Syntax.Model.Graph.Builder as GraphBuilder
+import qualified Luna.Syntax.Model.Network.Builder as GraphBuilder
 
 
-import qualified Luna.Syntax.Model.Builder.Type as Type
-import qualified Luna.Syntax.Model.Builder.Self as Self
-import           Luna.Syntax.Model.Graph.Layers
-import           Luna.Syntax.AST.Layout
+import qualified Luna.Syntax.Model.Network.Builder.Type as Type
+import qualified Luna.Syntax.Model.Network.Builder.Self as Self
+import           Luna.Syntax.Model.Network.Builder.Layer
+import           Luna.Runtime.Model
+import           Luna.Syntax.AST.Arg
 
 
 import Data.Record (Variant, MapTryingElemList_, withElement_, Props)
@@ -327,7 +328,7 @@ inputsxxx a = withElement_ (p :: P (TFoldable x)) (foldrT (:) []) a
 -- FIXME[WD]: inputs should be more general and should be refactored out
 inputsxxx2 :: forall layout term rt x. 
       (MapTryingElemList_
-                            (Elems term (ByLayout rt Str x) x)
+                            (Elems term (ByRuntime rt Str x) x)
                             (TFoldable x)
                             (Term layout term rt), x ~ Layout layout term rt) => Term layout term rt -> [x]
 inputsxxx2 a = withElement_ (p :: P (TFoldable x)) (foldrT (:) []) a
@@ -338,7 +339,7 @@ type instance Attr Inputs (Term layout term rt) = [Layout layout term rt]
 instance (MapTryingElemList_
                            (Elems
                               term
-                              (ByLayout rt Str (Layout layout term rt))
+                              (ByRuntime rt Str (Layout layout term rt))
                               (Layout layout term rt))
                            (TFoldable (Layout layout term rt))
                            (Term layout term rt)) => Getter Inputs (Term layout term rt) where getter _ = inputsxxx2

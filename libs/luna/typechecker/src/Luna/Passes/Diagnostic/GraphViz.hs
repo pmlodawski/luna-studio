@@ -17,23 +17,12 @@ import           Data.GraphViz.Commands
 import qualified Data.GraphViz.Attributes.Colors     as GVC
 import qualified Data.GraphViz.Attributes.Colors.X11 as GVC
 import           Data.GraphViz.Printing              (PrintDot)
-import           Luna.Syntax.Model.Repr.Styles       (HeaderOnly(..), Simple(..))
+import           Luna.Syntax.Repr.Styles             (HeaderOnly(..), Simple(..))
 
 import           Data.Container
 import           Data.Container.Hetero
 
---import           Luna.Syntax.AST.Term
---import           Luna.Syntax.Repr.Graph
---import           Luna.Syntax.AST
---import           Luna.Syntax.AST.Typed
---import qualified Luna.Syntax.AST.Lit                  as Lit
---import           Luna.Syntax.Name
---import           Luna.Syntax.Layer.Labeled
---import           Luna.Syntax.Layer.WithMeta
---import qualified Luna.Syntax.Builder                  as B
---import qualified Data.Variants                        as V
-
-import Luna.Syntax.Model.Graph.Class
+import Luna.Syntax.Model.Network.Graph.Class
 import Data.Record
 
 import           System.Platform
@@ -42,9 +31,9 @@ import           Data.Container.Class
 import           Data.Reprx
 
 import Luna.Syntax.Model.Layer
-import Luna.Syntax.Model.Graph
+import Luna.Syntax.Model.Network.Graph
 import qualified Luna.Syntax.AST.Term as Term
-import Luna.Syntax.AST.Layout (Static, Dynamic)
+import Luna.Runtime.Model (Static, Dynamic)
 import Data.Layer.Cover (uncover)
 import Data.Attribute
 
