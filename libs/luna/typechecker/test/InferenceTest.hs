@@ -9,16 +9,23 @@
 module Main where
 
 import           Prologue                        hiding (cons, read)
+
+import           Control.Monad.Error             (MonadError)
 import           Data.Attribute
 import           Data.Layer.Cover
 import           Data.Record                     hiding (Layout)
+
+import           Luna.Passes.Diagnostic.GraphViz
+import           Luna.Passes.Inference.Literals
 import           Luna.Syntax.AST.Layout          (Dynamic, Static)
 import           Luna.Syntax.AST.Term            hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
 import qualified Luna.Syntax.AST.Term            as Term
+import           Luna.Syntax.Model.Builder.Self  (MonadSelfBuilder)
+import           Luna.Syntax.Model.Builder.Type  (MonadTypeBuilder)
 import           Luna.Syntax.Model.Graph
+import           Luna.Syntax.Model.Graph.Builder (MonadBuilder)
 import           Luna.Syntax.Model.Layer
-import           Luna.Passes.Diagnostic.GraphViz
-import           Luna.Passes.Inference.Literals
+
 
 -- ====================================
 
@@ -130,9 +137,14 @@ prebuild = runNetworkBuilderT def $ star
 --     putStrLn "end"
 
 
+-- assignLiteralTypes2 :: (Monad m, NetworkBuilderT net m n) => (Ref $ Node (NetLayers :< Draft Static)) -> m ()
+-- assignLiteralTypes2 ref = do
+--     i1 <- int 2
+--     return ()
+
 assignLiteralTypesTest :: (Ref $ Node (NetLayers :< Draft Static)) -> NetGraph -> IO ((), NetGraph)
 assignLiteralTypesTest ref g = runNetworkBuilderT g $ do
-    assignLiteralTypes ref
+    -- assignLiteralTypes ref
     return ()
 
 sampleGraph2 :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
@@ -173,7 +185,7 @@ main = do
     -- print g
     (s1, g') <- sampleGraph2 g
 
-    ((), g'') <- assignLiteralTypesTest s1 g'
+    ((), g'') <- assignLiteralTypes s1 g'
 
 
     -- print g'

@@ -98,7 +98,7 @@ labelAttrs = const []
 --class LabelAttrs a where
 --    labelAttrs :: a -> [GV.Attribute]
 
---instance 
+--instance
 
 --instance LabelAttrs (WithMeta a (Labeled2 b (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) where
 --    labelAttrs = const []
@@ -129,9 +129,9 @@ toGraphViz net = DotGraph { strictGraph     = False
           labeledNode n s a = DotNode (nodeRef a) $ (GV.Label . StrLabel $ fromString s) : (nodeColorAttrs n) ++ labelAttrs n
           nodeInEdges   n   = zip3 ([0..] :: [Int]) (genInEdges net $ (cast $ index n g :: NetLayers :< Draft Static)) (repeat n)
           mkEdge  (n,(a,attrs),b) = DotEdge (nodeRef a) (nodeRef b) attrs -- (GV.edgeEnds Back : attrs)
-            
+
 --          allEdges        = drawEdge <$> elems_ edges'
-            
+
 --          nodeColorAttrs n = case' (uncoat n) $ do
 --                                match $ \(Val val :: Val (Ref Edge)) ->
 --                                     case' val $ match $ \lit -> case lit of
@@ -147,7 +147,7 @@ toGraphViz net = DotGraph { strictGraph     = False
                                 --        Lit.String s -> [GV.color valStrNodeClr]
                                 --        _            -> [GV.color valUnkNodeClr]
                                 match $ \ANY         -> [GV.color nodeClr]
-            
+
 
 genInEdges (g :: NetGraph) (n :: NetLayers :< Draft Static) = tpEdge : fmap addColor inEdges  where
     genLabel  = GV.Label . StrLabel . fromString . show
@@ -162,7 +162,7 @@ genInEdges (g :: NetGraph) (n :: NetLayers :< Draft Static) = tpEdge : fmap addC
     getTgtIdx inp         = view (source ∘ rawPtr) $ index (inp ^. rawPtr) es
 
     --getIdx  i = deref . view target $ index (deref i) edges'
-    --n = 
+    --n =
 
 
 ----          drawEdge (DoubleArc start end) = DotEdge (nodeRef $ deref start) (nodeRef $ deref end) []

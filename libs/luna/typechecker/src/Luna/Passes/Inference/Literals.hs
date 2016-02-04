@@ -1,4 +1,10 @@
-{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE RecursiveDo               #-}
+{-# LANGUAGE UndecidableInstances      #-}
+{-# LANGUAGE PartialTypeSignatures     #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
 
 module Luna.Passes.Inference.Literals
     ( assignLiteralTypes
@@ -7,7 +13,7 @@ module Luna.Passes.Inference.Literals
 import           Prologue                        hiding (cons, read)
 import           Data.Attribute
 import           Data.Layer.Cover
-import           Data.Record                     hiding (Layout)
+import           Data.Record                     hiding (cons, Layout)
 import           Luna.Syntax.AST.Layout          (Dynamic, Static)
 import           Luna.Syntax.AST.Term            hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
 import qualified Luna.Syntax.AST.Term            as Term
@@ -103,9 +109,21 @@ import           Luna.Syntax.Model.Layer
 --     safeRemove consIntTpe
 --     safeRemove consStringTpe
 
--- assignLiteralTypes :: Monad m => (Ref $ Node (NetLayers :< Draft Static)) -> m ()
+-- assignLiteralTypes :: Monad m => (Ref $ Node (NetLayers :< Draft Static)) -> m () -- ?
 -- assignLiteralTypes :: _
-assignLiteralTypes ref = do
+assignLiteralTypes :: (Ref $ Node (NetLayers :< Draft Static)) -> NetGraph -> IO ((), NetGraph)
+assignLiteralTypes ref g = runNetworkBuilderT g $ do
+    consInt    <- cons "Int"
+    consString <- cons "String"
+    -- i1 <- int 2
+    -- i2 <- int 3
+    -- i3 <- int 4
+    -- s1 <- string "abc"
+    -- s2 <- string "def"
+    -- s3 <- string "ghi"
+
+    -- accPlus1a  <- acc "+" i1
+    -- appPlus1a  <- app accPlus1a [arg i2]
     return ()
 
 -- assignLiteralType :: BuilderType m a => Ref Node -> Ref Node -> m ()

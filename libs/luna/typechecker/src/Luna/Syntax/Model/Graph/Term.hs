@@ -5,11 +5,12 @@
 
 module Luna.Syntax.Model.Graph.Term where
 
-import Prologue hiding (cons, Num)
+import Prologue hiding (cons, Cons, Num)
 
 import           Control.Monad.Event
 import           Data.Layer.Cover
-import           Data.Record                    (cons, RecordOf, IsRecord, asRecord, SmartCons)
+import           Data.Record                    (RecordOf, IsRecord, asRecord, SmartCons)
+import qualified Data.Record                    as Record
 import           Data.Reprx                     (Repr, repr)
 import qualified Luna.Syntax.AST.Term           as Term
 import           Luna.Syntax.AST.Term           hiding (Val, Lit, Thunk, Expr, Draft)
@@ -141,7 +142,7 @@ instance ( SmartCons el (Uncovered a)
          ) => ElemBuilder el m a where
     -- TODO[WD]: change buildAbsMe to buildMe2
     --           and fire monad every time we construct an element, not once for the graph
-    buildElem el = register ELEMENT =<< buildAbsMe (constructCover $ cons el) where
+    buildElem el = register ELEMENT =<< buildAbsMe (constructCover $ Record.cons el) where
     {-# INLINE buildElem #-}
 
 
@@ -156,22 +157,37 @@ arg = Arg Nothing
 fromArg :: Arg a -> a
 fromArg (Arg _ a) = a
 
-star :: ElemBuilder Star m a => m a
+star :: ElemBuilder Star m u => m u
 star = buildElem Star
 
-string :: ElemBuilder Str m a => String -> m a
+string :: ElemBuilder Str m u => String -> m u
 string = buildElem . Str
 
-int :: ElemBuilder Num m a => Int -> m a
+int :: ElemBuilder Num m u => Int -> m u
 int = buildElem . Num
 
+var :: ElemBuilder (Var a) m u => a -> m u
+var = buildElem . Var
+
+cons :: ElemBuilder (Cons a) m u => a -> m u
+cons = buildElem . Cons
+
+arr :: ( MonadFix m
+       , ElemBuilder (Arrow (Connection a u)) m u
+       , Connectible a u m
+       ) => a -> a -> m u
+arr src dst = mdo
+    out <- buildElem $ Arrow csrc cdst
+    csrc  <- connection src out
+    cdst  <- connection dst out
+    return out
 acc :: ( MonadFix m
        , ElemBuilder (Acc n (Connection a u)) m u
        , Connectible a u m
        ) => n -> a -> m u
-acc n a = mdo
-    out <- buildElem $ Acc n ca
-    ca  <- connection a out
+acc name obj = mdo
+    out <- buildElem $ Acc name cobj
+    cobj  <- connection obj out
     return out
 
 app :: ( MonadFix m
@@ -183,6 +199,7 @@ app f args = mdo
     cf  <- connection f out
     cargs <- mapM (\(Arg n a) -> (Arg n) <$> (connection a out)) args
     return out
+
 
 unify :: ( MonadFix m
          , ElemBuilder (Unify (Connection b u)) m u
@@ -196,7 +213,8 @@ unify a b = mdo
     cb  <- connection b out
     return out
 
-
+blank :: ElemBuilder Blank m u => m u
+blank = buildElem Blank
 
 ------------------------------
 -- === Network Building === --
