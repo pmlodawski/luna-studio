@@ -49,7 +49,6 @@ executable nodelab
                      , ghcjs-base
                      , ghcjs-dom
                      , ghcjs-prim
-                     , reactive-banana
                      , text
                      , transformers
                      , fgl

@@ -33,15 +33,13 @@ import qualified BatchConnector.Commands           as BatchCmd
 import           JS.Config                         (getBackendAddress, isLoggerEnabled)
 import           JS.UI                             (initializeGl, render, triggerWindowResize)
 import           JS.WebSocket                      (WebSocket, connect, getWebSocket)
-import           Reactive.Banana                   (Moment, compile)
-import           Reactive.Banana.Frameworks        (Frameworks, actuate)
 import           Reactive.Commands.Command         (Command, execCommand)
 import qualified Reactive.Plugins.Core.Action.Init as Init
 import qualified Reactive.Plugins.Core.Network     as CoreNetwork
 import qualified Reactive.Plugins.Loader.Loader    as Loader
 import           Reactive.State.Global             (State, initialState)
 import           Utils.URIParser                   (getProjectName)
-
+import Control.Concurrent.MVar
 
 runMainNetwork :: WebSocket -> IO ()
 runMainNetwork socket = do
@@ -50,8 +48,9 @@ runMainNetwork socket = do
     enableLogging <- isLoggerEnabled
     let (initActions, initState) = execCommand Init.initialize $ initialState
     initActions
-    eventNetwork  <- compile $ CoreNetwork.makeNetworkDescription socket enableLogging initState
-    actuate eventNetwork
+
+    state <- newMVar initState
+    CoreNetwork.makeNetworkDescription socket enableLogging state
     triggerWindowResize
     BatchCmd.listProjects
 

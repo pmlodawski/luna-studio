@@ -19,8 +19,6 @@ import qualified JS.ConnectionPen        as ConnectionPen
 import qualified JS.TextEditor           as TextEditor
 import           JS.Debug                (getState)
 
-import           Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
-
 import           UI.Raycaster
 import           JS.NodeSearcher     ( getAction, getExpression, getNode, nsEvent )
 import qualified Object.Widget       as Widget
@@ -40,6 +38,9 @@ import qualified JavaScript.Array    as JSArray
 import           Data.JSString.Text ( lazyTextFromJSString, lazyTextToJSString )
 import qualified Data.JSString as JSString
 import qualified BatchConnector.Connection as Connection
+
+
+data AddHandler a = AddHandler ((a -> IO ()) -> IO (IO ()))
 
 foreign import javascript safe "app.getJSState()" getJSState :: IO JSState
 
