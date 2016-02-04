@@ -25,5 +25,5 @@ toAction (Batch      (Batch.CodeUpdated response)) = Just $ do
     when shouldProcess $
         performIO $ UI.setText $ response ^. CodeUpdate.code
 
-toAction (TextEditor (TextEditor.CodeModified code))  = Just $ zoom Global.workspace $ BatchCmd.setCode code
+-- toAction (TextEditor (TextEditor.CodeModified code))  = Just $ zoom Global.workspace $ BatchCmd.setCode code
 toAction _                                            = Nothing
