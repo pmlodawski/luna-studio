@@ -8,7 +8,7 @@ import           Object.Widget
 
 data ScatterPlot = ScatterPlot { _position   :: Vector2 Double
                                , _size       :: Vector2 Double
-                               , _dataPoints :: [(Double, Double)]
+                               , _dataPoints :: [Vector2 Double]
                                } deriving (Eq, Show, Typeable, Generic)
 
 makeLenses ''ScatterPlot

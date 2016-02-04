@@ -220,11 +220,21 @@ removeVisualization id = do
     widgets <- UICmd.children groupId
     forM_ widgets UICmd.removeWidget
 
+zipVector :: [Double] -> [Vector2 Double] -> [Vector2 Double]
+zipVector (ax:xs) [] = zipVector xs [Vector2 0 ax]
+zipVector (ax:xs) (acc:accs) = zipVector xs ((Vector2 (acc ^. x + 1.0) ax):acc:accs)
+zipVector [] accs = accs
+
+zipVectorInt :: [Int] -> [Vector2 Double] -> [Vector2 Double]
+zipVectorInt (ax:xs) [] = zipVectorInt xs [Vector2 0 (fromIntegral ax)]
+zipVectorInt (ax:xs) (acc:accs) = zipVectorInt xs ((Vector2 (acc ^. x + 1.0) (fromIntegral ax)):acc:accs)
+zipVectorInt [] accs = accs
+
 visualizeNodeValue :: WidgetId -> Value -> Command UIRegistry.State ()
 visualizeNodeValue id (IntList     v) = do
     groupId <- Node.valueGroupId id
 
-    let dataPoints = (\(a,b) -> (fromIntegral a, fromIntegral b)) <$> (zip [1..] v)
+    let dataPoints = zipVectorInt v []
         widget = ScatterPlot.create (Vector2 300 200)
                & ScatterPlot.dataPoints .~ dataPoints
     UICmd.register_ groupId widget def
@@ -232,7 +242,7 @@ visualizeNodeValue id (IntList     v) = do
 visualizeNodeValue id (DoubleList     v) = do
     groupId <- Node.valueGroupId id
 
-    let dataPoints = zip [1..] v
+    let dataPoints = zipVector v []
         widget = ScatterPlot.create (Vector2 300 200)
                & ScatterPlot.dataPoints .~ dataPoints
     UICmd.register_ groupId widget def
