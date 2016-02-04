@@ -133,13 +133,15 @@ blank = buildElem Blank
 -- === Network Building === --
 ------------------------------
 
-type NetLayers = '[Type, Succs]
+type NetLayers = '[Type, Succs, Markable]
 type NetNode   = NetLayers :< Draft Static
 
 type NetGraph = Graph (NetLayers :< Raw) (Link (NetLayers :< Raw))
 
 buildNetwork  = runIdentity ∘ buildNetworkM
 buildNetworkM = rebuildNetworkM' (def :: NetGraph)
+
+rebuildNetwork' = runIdentity .: rebuildNetworkM'
 rebuildNetworkM' (net :: NetGraph) = flip Self.evalT (undefined ::        Ref $ Node NetNode)
                                    ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node NetNode))
                                    ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
@@ -205,4 +207,3 @@ instance (MapTryingElemList_
                               (Layout layout term rt))
                            (TFoldable (Layout layout term rt))
                            (Term layout term rt)) => Getter Inputs (Term layout term rt) where getter _ = inputsxxx2
-

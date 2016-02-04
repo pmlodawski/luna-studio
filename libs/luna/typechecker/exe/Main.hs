@@ -21,8 +21,17 @@ import Luna.Syntax.Model.Layer
 import Luna.Syntax.Model.Network.Builder
 import Luna.Syntax.Model.Network.Term
 import Data.Construction
-import Luna.Syntax.Model.Graph.Builder.Ref
+import Luna.Syntax.Model.Graph.Builder.Ref as Ref
 import Data.Prop
+import Data.Graph.Sort hiding (Graph)
+import qualified Data.Graph.Sort as Sort
+import Development.Placeholders
+import Data.Container  (index_, elems)
+import Data.Index (idx)
+import Data.Container
+import           Data.Attr (attr)
+
+
 
 renderAndOpen lst = do
     flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
@@ -44,6 +53,26 @@ type instance Layout (MyGraph t) term rt = t (Term (MyGraph t) term rt)
 -- - vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv ---
 prebuild :: IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
 prebuild = runNetworkBuilderT def $ star
+
+
+type instance Item NetGraph = Ref $ Node (NetLayers :< Draft Static)
+
+instance Sort.CompleteGraph     (Graph (NetLayers :< Raw) (Link (NetLayers :< Raw)))
+
+instance Sort.MarkableGraph     (Graph (NetLayers :< Raw) (Link (NetLayers :< Raw))) where
+    markNode ref g = snd $ rebuildNetwork' g $ do
+        Ref.with ref $ prop Markable .~ True
+    isMarked ref g = fst $ rebuildNetwork' g $ do
+        node <- read ref
+        return $ node # Markable
+
+instance Sort.Graph             (Graph (NetLayers :< Raw) (Link (NetLayers :< Raw))) where
+    listNodes g = map (Ref . Ptr) $ (usedIxes $ g ^. nodeGraph)
+
+instance Sort.ForwardEdgedGraph (Graph (NetLayers :< Raw) (Link (NetLayers :< Raw))) where
+    successors ref g = fst $ rebuildNetwork' g $ do
+        node <- read ref
+        mapM (follow target) $ node ^. prop Succs
 
 
 foo :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
@@ -130,6 +159,7 @@ main = do
     putStrLn "\n--------------\n"
     (s,g') <- foo g
     print g'
+    print $ Sort.sortBy (const True) g'
 
     title "params reading"
     print $ g' # s

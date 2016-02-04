@@ -15,7 +15,7 @@ import           Prologue
 
 
 
-class (Graph g, ForwardEdgedGraph g, MarkableGraph g, Eq (Item g)) => CompleteGraph g
+class (Graph g, ForwardEdgedGraph g, MarkableGraph g) => CompleteGraph g
 
 class Graph g where
     listNodes :: g -> [Item g]
@@ -33,7 +33,7 @@ class MarkableGraph g where
 class SortBy g where
     sortBy :: (Item g -> Bool) -> g -> Either SortError [Item g]
 
-data SortError = GraphContainsCycle
+data SortError = GraphContainsCycle deriving Show
 
 
 data SortState g = SortState

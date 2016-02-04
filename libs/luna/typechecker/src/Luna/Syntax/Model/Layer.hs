@@ -54,7 +54,7 @@ instance Castable (Unwrapped (Layer l t a)) (Unwrapped (Layer l' t' a')) => Cast
 
 type instance Prop prop (Attached (Layer l t a) base) = If (prop == t) (Unwrapped (Layer l t a)) (Prop prop base)
 
-instance {-# OVERLAPPABLE #-} (Prop  a (Attached (Layer l a' t) base) ~ Prop a base, Getter a base) 
+instance {-# OVERLAPPABLE #-} (Prop  a (Attached (Layer l a' t) base) ~ Prop a base, Getter a base)
                            => Getter a (Attached (Layer l a' t) base) where getter a (Attached _ t) = getter a t ; {-# INLINE getter #-}
 instance {-# OVERLAPPABLE #-} Getter a (Attached (Layer l a  t) base) where getter _ (Attached d _) = unwrap' d  ; {-# INLINE getter #-}
 
@@ -69,7 +69,7 @@ instance {-# OVERLAPPABLE #-} Setter a (Attached (Layer l a  t) base) where sett
 
 data (layers :: [*]) :< (a :: [*] -> *) = Shell (ShellStrcture layers (a layers))
 
-type family ShellStrcture ls a where 
+type family ShellStrcture ls a where
     ShellStrcture '[]       a = Cover a
     ShellStrcture (l ': ls) a = AttachedLayer l (ShellStrcture ls a)
 
@@ -119,3 +119,9 @@ data Succs = Succs deriving (Show, Eq, Ord)
 data Note = Note deriving (Show, Eq, Ord)
 type instance LayerData layout Note t = String
 instance Monad m => Creator m (Layer layout Note a) where create = return $ Layer ""
+
+-- Markable layer
+data Markable = Markable deriving (Show, Eq, Ord)
+type instance LayerData layout Markable t = Bool
+instance Monad m => Creator m (Layer layout Markable a) where create = return $ Layer False
+instance Castable Bool Bool where cast = id
