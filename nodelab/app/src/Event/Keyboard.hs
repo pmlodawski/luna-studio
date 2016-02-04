@@ -3,7 +3,7 @@ module Event.Keyboard where
 import Utils.PreludePlus
 import Data.Aeson (ToJSON)
 
-data Type = Press | Down | Up deriving (Eq, Show)
+data Type = Press | Down | Up deriving (Eq, Show, Generic)
 
 data KeyMods = KeyMods { _shift :: Bool
                        , _ctrl  :: Bool
@@ -14,12 +14,14 @@ data KeyMods = KeyMods { _shift :: Bool
 data Event = Event { _tpe     :: Type
                    , _char    :: Char
                    , _keyMods :: KeyMods
-                   } deriving (Eq, Show)
+                   } deriving (Eq, Show, Generic)
 
 makeLenses ''Event
 makeLenses ''KeyMods
 
 instance ToJSON KeyMods
+instance ToJSON Type
+instance ToJSON Event
 
 instance PrettyPrinter Event where
     display (Event t c m) = show t <> " " <> show c <> " " <> show m
@@ -36,3 +38,4 @@ instance PrettyPrinter KeyMods where
                                                   , getString "alt"   $ keyMods ^. alt
                                                   , getString "meta"  $ keyMods ^. meta
                                                   ]
+

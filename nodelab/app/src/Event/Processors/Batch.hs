@@ -1,12 +1,14 @@
 module Event.Processors.Batch where
 
 import           Utils.PreludePlus
+import           Data.Binary (decode)
+
 import qualified Event.Event                as Event
 import           Event.Connection           as Connection
 import           Event.Batch                as Batch
 import           BatchConnector.Connection  (WebMessage(..), ControlCode(..))
-import           Data.Binary (decode)
 import           Empire.API.Topic as Topic
+
 
 process :: Event.Event -> Maybe Event.Event
 process (Event.Connection (Message msg)) = Just $ Event.Batch $ processMessage msg
@@ -52,3 +54,4 @@ processMessage (WebMessage topic bytes)
     -- _                                                              -> UnknownEvent topic
 processMessage (ControlMessage ConnectionTakeover) = ConnectionDropped
 processMessage (ControlMessage Welcome)            = ConnectionOpened
+

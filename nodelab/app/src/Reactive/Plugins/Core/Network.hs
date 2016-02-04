@@ -2,6 +2,9 @@ module Reactive.Plugins.Core.Network where
 
 import           Utils.PreludePlus
 
+import           Control.Exception (catch)
+import           GHCJS.Prim (JSException)
+
 import           Reactive.Banana            (Event, Moment)
 import qualified Reactive.Banana            as RB
 import           Reactive.Banana.Frameworks (Frameworks, reactimate, fromAddHandler)
@@ -62,7 +65,8 @@ makeNetworkDescription conn logging initialState = do
         anyE   = primitiveE `RB.union` batchE
 
         actions :: [Event.Event -> Maybe (Command State ())]
-        actions =  [ Widget.toAction
+        actions =  [ Debug.toActionEv
+                   , Widget.toAction
                    , General.toAction
                    , Camera.toAction
                    , Graph.toAction
@@ -76,8 +80,8 @@ makeNetworkDescription conn logging initialState = do
                    , ProjectManager.toAction
                    , ConnectionPen.toAction
                    , TextEditor.toAction
-                   , Debug.toAction
                    , Sandbox.toAction
+                   , Debug.toAction
                    ]
 
         commands :: Event t (Command State ())
@@ -89,4 +93,10 @@ makeNetworkDescription conn logging initialState = do
         reactions :: Event t (IO (), State)
         reactions =  RB.accumE (return (), initialState) transformers
 
-    reactimate $ (>> UI.shouldRender) . fst <$> reactions
+
+    let handleIOExcept act = catch (act >> UI.shouldRender) handleExcept
+    reactimate $ handleIOExcept . fst <$> reactions
+
+handleExcept :: JSException -> IO ()
+handleExcept except = do
+    putStrLn $ "JavaScriptException: " <> (show except)

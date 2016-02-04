@@ -3,7 +3,7 @@
 module Reactive.Plugins.Core.Action.Debug where
 
 import           Utils.PreludePlus
-import           JS.Debug (clog, saveState, shouldExportState)
+import           JS.Debug (clog, saveState, lastEv, shouldExportState)
 
 import qualified Event.Debug        as Debug
 import           Event.Event        (Event(..))
@@ -32,6 +32,13 @@ toAction ev = Just $ do
         performIO $ do
             val <- toJSVal json
             saveState val
+
+toActionEv :: Event -> Maybe (Command Global.State ())
+toActionEv ev = Just $ do
+    when shouldExportState $ do
+        performIO $ do
+            val <- toJSVal $ toJSON ev
+            lastEv val
 
 
 

@@ -3,6 +3,7 @@ module Event.Event where
 import           Utils.PreludePlus
 import           GHCJS.Types (JSVal)
 import           GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
+import           Data.Aeson (ToJSON, encode, toJSON)
 
 import qualified Event.Keyboard      as Keyboard
 import qualified Event.Mouse         as Mouse
@@ -26,8 +27,15 @@ data Event = Init
            | Batch                         Batch.Event
            | TextEditor               TextEditor.Event
            | Debug                         Debug.Event
+           deriving (Generic)
 
 makeLenses ''Event
 
 instance Default Event where
     def = Init
+
+instance ToJSON Event
+
+instance ToJSON JSState where
+    toJSON _ = toJSON "(..)"
+
