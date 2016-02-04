@@ -3,6 +3,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TypeFamilies              #-}
 {-# LANGUAGE UndecidableInstances      #-}
+{-# LANGUAGE RankNTypes                #-}
 
 
 module Luna.Syntax.Model.Graph.Builder where
@@ -100,6 +101,18 @@ instance {-# OVERLAPPABLE #-} (MonadBuilder n e m, MonadTrans t, Monad (t m)) =>
 -- <-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<
 
 
+-- === Utils === --
+
+reconnect :: (Reader m n1, Writer m n1, Connectible (Ref n1) (Ref n2) m, e ~ Connection (Ref n1) (Ref n2), Unregister m e)
+          => Ref n1 -> Lens' n1 e -> Ref n2 -> m e
+reconnect srcRef l tgtRef = do
+    src  <- read srcRef
+    unregister $ src ^. l
+    conn <- connection srcRef tgtRef
+    write srcRef $ src & l .~ conn
+    return conn
+
+
 -- === Instances === --
 
 -- Ref construction
@@ -123,9 +136,6 @@ instance (MonadBuilder n e m, Castable e (Edge src tgt)) => Reader m (Edge src t
     read ref = cast ∘ index_ (ref ^. idx) ∘ view edges <$> get ; {-# INLINE read #-}
 
 
-
-
-
 instance MonadBuilder n e m => Unregister m (Ref $ Node node)    where unregister ref = modify_ $ nodes %~ free (ref ^. idx)
 instance MonadBuilder n e m => Unregister m (Ref $ Edge src dst) where unregister ref = modify_ $ edges %~ free (ref ^. idx)
 
@@ -136,13 +146,7 @@ instance (MonadBuilder n e m, Reader m (Node node), Getter Inputs node, Unregist
         n <- read ref
         mapM_ unregister $ n # Inputs
         destructCover n
-        --let ins = n # Inputs
-        --let x = (n ^.) <$> inputs -- :: _
-        --let x = n ^# inputs :: _-- :: _
-            --y = view inputs n :: _
         unregister ref
-        --undefined
-
 
 
 
