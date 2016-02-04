@@ -102,4 +102,4 @@ makeNetworkDescription conn logging state = do
 
 handleExcept :: State -> Event.Event -> JSException  -> IO ()
 handleExcept state event except = do
-    putStrLn $ "JavaScriptException: " <> (show except) <> "\n\nwhile processing: " <> (show event) <> "\n\n " <> (show $ state ^. Global.eventNum) <> " @ " <> (show $ state ^. Global.lastEvent)
+    putStrLn $ "JavaScriptException: " <> (show except) <> "\n\nwhile processing: " <> (show event)

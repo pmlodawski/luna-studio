@@ -30,7 +30,7 @@ import qualified Reactive.State.Global        as Global
 import           Reactive.State.UIRegistry    (addHandler)
 import qualified Reactive.State.UIRegistry    as UIRegistry
 
-import           UI.Generic                   (defaultResize, startDrag, takeFocus)
+import           UI.Generic                   (defaultResize, startDrag)
 import           UI.Handlers.Generic          (triggerValueChanged)
 import           UI.Handlers.Generic          (ValueChangedHandler (..), triggerValueChanged)
 import           UI.Layout                    as Layout
@@ -44,6 +44,7 @@ import           Empire.API.Data.Node         (NodeId)
 
 textHandlers :: WidgetId -> HTMap
 textHandlers id = addHandler (ValueChangedHandler $ textValueChangedHandler id)
+                $ addHandler (UICmd.LostFocus $ inRegistry . flip UICmd.update_ (TextBox.isEditing .~ False))
                 $ mempty where
 
 textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
@@ -106,16 +107,19 @@ unselectAll = do
 
 dblClickHandler :: DblClickHandler Global.State
 dblClickHandler _ _ id = do
-    (controlsId:exprId:nameId:valueId:_) <- inRegistry $ UICmd.children id
-    takeFocus undefined nameId
-    inRegistry $ UICmd.update_ nameId $ TextBox.isEditing .~ True
+    tbId <- inRegistry $ nameId id
+    UICmd.takeFocus tbId
+    inRegistry $ UICmd.update_ tbId $ TextBox.isEditing .~ True
 
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyDown      .~ keyDownHandler
-                     & click        .~ (\evt _ id -> do
+                     & mousePressed .~ (\evt _ id -> do
+                         tbId <- inRegistry $ nameId id
+                         inRegistry $ UICmd.update_ tbId $ TextBox.isEditing .~ False
+
                          triggerFocusNodeHandler id
-                         takeFocus evt id
+                         UICmd.takeFocus id
                          handleSelection evt id)
                      & dblClick     .~ dblClickHandler
 

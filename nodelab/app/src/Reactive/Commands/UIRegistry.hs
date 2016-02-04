@@ -9,6 +9,7 @@ import           Object.Widget
 import           Utils.Vector
 
 import qualified Reactive.State.UIRegistry as UIRegistry
+import qualified Reactive.State.Global     as Global
 import           Reactive.Commands.Command (Command, performIO)
 import qualified UI.Generic as UI
 import qualified Data.HMap.Lazy as HMap
@@ -74,6 +75,7 @@ triggerChildrenResized id child = do
     maybeHandler <- handler id key
     forM_ maybeHandler $ \(ChildrenResizedHandler handler) -> handler id child
 
+
 resize :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
 resize id vec = resize' id (\_ -> vec)
 
@@ -134,3 +136,17 @@ removeWidget :: WidgetId -> Command UIRegistry.State ()
 removeWidget id = do
     widgets <- UIRegistry.unregisterM id
     forM_ widgets $ performIO . UI.removeWidget
+
+newtype LostFocus = LostFocus (WidgetId -> Command Global.State ())
+triggerLostFocus :: WidgetId -> Command Global.State ()
+triggerLostFocus id = do
+    let key = TypeKey :: (TypeKey LostFocus)
+    maybeHandler <- Global.inRegistry $ handler id key
+    forM_ maybeHandler $ \(LostFocus handler) -> handler id
+
+
+takeFocus :: WidgetId -> Command Global.State ()
+takeFocus id = do
+    currentFocused <- use $ Global.uiRegistry . UIRegistry.focusedWidget
+    forM_ currentFocused triggerLostFocus
+    Global.uiRegistry . UIRegistry.focusedWidget ?= id

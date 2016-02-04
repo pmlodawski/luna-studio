@@ -21,7 +21,7 @@ import qualified Reactive.State.Global         as Global
 import           Reactive.State.UIRegistry     (addHandler)
 import qualified Reactive.State.UIRegistry     as UIRegistry
 
-import           UI.Generic                    (startDrag, takeFocus)
+import           UI.Generic                    (startDrag)
 import           UI.Handlers.Generic           (ValueChangedHandler (..), triggerValueChanged)
 import qualified UI.Handlers.TextBox           as TextBox
 import           UI.Widget.Number              (keyModMult)
@@ -82,7 +82,7 @@ dragEndHandler _ _ id = do
 dblClickHandler :: DblClickHandler Global.State
 dblClickHandler _ _ id = do
     (tbId:_) <- inRegistry $ UICmd.children id
-    takeFocus undefined tbId
+    UICmd.takeFocus tbId
     inRegistry $ UICmd.update_ tbId $ TextBox.isEditing .~ True
 
 widgetHandlers :: UIHandlers Global.State

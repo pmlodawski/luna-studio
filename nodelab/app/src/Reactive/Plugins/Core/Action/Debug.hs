@@ -35,9 +35,9 @@ toAction ev = Just $ do
 
 toActionEv :: Event -> Maybe (Command Global.State ())
 toActionEv ev = Just $ do
+    Global.lastEvent ?= ev
+    Global.eventNum  += 1
     when shouldExportState $ do
-        Global.lastEvent ?= ev
-        Global.eventNum  += 1
         evN <- use $ Global.eventNum
         performIO $ do
             processedEvent evN

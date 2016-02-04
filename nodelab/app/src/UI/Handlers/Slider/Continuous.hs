@@ -23,7 +23,7 @@ import qualified Reactive.State.Global           as Global
 import           Reactive.State.UIRegistry       (addHandler)
 import qualified Reactive.State.UIRegistry       as UIRegistry
 
-import           UI.Generic                      (startDrag, takeFocus, whenChanged)
+import           UI.Generic                      (startDrag, whenChanged)
 import           UI.Handlers.Generic             (ValueChangedHandler (..), triggerValueChanged)
 import qualified UI.Handlers.TextBox             as TextBox
 import           UI.Widget.Number                (keyModMult)
@@ -82,7 +82,7 @@ dblClickHandler evt _ id = do
     let shiftDown = evt ^. Mouse.keyMods . shift
     when (enabled && not shiftDown) $ do
         (tbId:_) <- inRegistry $ UICmd.children id
-        takeFocus undefined tbId
+        UICmd.takeFocus tbId
         inRegistry $ UICmd.update_ tbId $ TextBox.isEditing .~ True
 
 clickHandler :: DblClickHandler Global.State

@@ -23,7 +23,7 @@ import qualified Reactive.State.Global         as Global
 import           Reactive.State.UIRegistry     (addHandler)
 import qualified Reactive.State.UIRegistry     as UIRegistry
 
-import           UI.Generic                    (startDrag, takeFocus, defaultResize)
+import           UI.Generic                    (startDrag, defaultResize)
 import           UI.Handlers.Group             (triggerWidgetResized)
 import qualified UI.Handlers.Button            as Button
 import           UI.Handlers.Generic           (ValueChangedHandler (..), triggerValueChanged)

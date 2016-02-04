@@ -23,7 +23,6 @@ import           Reactive.State.Global         (inRegistry)
 import qualified Reactive.State.Global         as Global
 import qualified Reactive.State.UIRegistry     as UIRegistry
 
-import           UI.Generic                    (takeFocus)
 import qualified UI.Registry                   as UIR
 import           UI.Widget                     (UIContainer (..), UIWidget (..))
 import           UI.Widget                     (GenericWidget (..))
