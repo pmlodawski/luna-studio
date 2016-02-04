@@ -14,7 +14,7 @@ import           JS.WebSocket
 
 data ControlCode = ConnectionTakeover
                  | Welcome
-                 deriving (Show, Generic)
+                 deriving (Eq, Show, Generic)
 
 instance Binary.Binary ControlCode
 
@@ -22,7 +22,7 @@ data WebMessage = WebMessage { _topic   :: String
                              , _message :: ByteString
                              }
                 | ControlMessage ControlCode
-                deriving (Show, Generic)
+                deriving (Eq, Show, Generic)
 
 makeLenses ''WebMessage
 instance Binary.Binary WebMessage
