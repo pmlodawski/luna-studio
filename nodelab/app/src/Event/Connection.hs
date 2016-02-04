@@ -8,7 +8,7 @@ data Event = Message { _message :: WebMessage }
            | Opened
            | Closed  { _code :: Int }
            | Error
-             deriving (Show, Typeable, Generic)
+             deriving (Eq, Show, Typeable, Generic)
 
 makeLenses ''Event
 

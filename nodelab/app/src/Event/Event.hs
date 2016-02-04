@@ -17,6 +17,12 @@ import qualified Event.Debug         as Debug
 
 newtype JSState = JSState JSVal deriving (PFromJSVal, PToJSVal)
 
+instance Eq JSState where
+    _ == _ = True
+
+instance Show JSState where
+    show _ = "JSState"
+
 data Event = Init
            | Window                       Window.Event
            | Keyboard      JSState      Keyboard.Event
@@ -27,7 +33,7 @@ data Event = Init
            | Batch                         Batch.Event
            | TextEditor               TextEditor.Event
            | Debug                         Debug.Event
-           deriving (Generic)
+           deriving (Generic, Eq, Show)
 
 makeLenses ''Event
 

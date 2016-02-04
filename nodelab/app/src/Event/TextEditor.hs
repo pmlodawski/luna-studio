@@ -5,7 +5,7 @@ import Utils.PreludePlus
 import Object.UITypes
 import Data.Aeson (ToJSON)
 
-data Event = CodeModified { _code :: Text } deriving (Show, Typeable, Generic)
+data Event = CodeModified { _code :: Text } deriving (Eq, Show, Typeable, Generic)
 
 makeLenses ''Event
 

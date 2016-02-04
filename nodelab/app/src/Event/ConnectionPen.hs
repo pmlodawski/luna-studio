@@ -6,7 +6,7 @@ import Object.UITypes
 import Data.Aeson (ToJSON)
 
 
-data Event = Segment { _widgets :: [WidgetId] } deriving (Show, Typeable, Generic)
+data Event = Segment { _widgets :: [WidgetId] } deriving (Eq, Show, Typeable, Generic)
 
 makeLenses ''Event
 
