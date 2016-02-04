@@ -102,13 +102,13 @@ instance      HasIdx (Ptr i) where idx = wrapped'
 instance      HasPtr (Ptr i) where ptr = id
 
 -- Ref primitive instances
-type instance Unlayered  (Ref a) = a
-type instance Destructed (Ref a) = a
-type instance Target     (Ref a) = a
-type instance Index      (Ref a) = Index (Unwrapped (Ref a))
-instance      HasRef     (Ref a) where ref = id
-instance      HasIdx     (Ref a) where idx = ptr ∘ idx
-instance      HasPtr     (Ref a) where ptr = wrapped'
+type instance Unlayered     (Ref a) = a
+type instance Deconstructed (Ref a) = a
+type instance Target        (Ref a) = a
+type instance Index         (Ref a) = Index (Unwrapped (Ref a))
+instance      HasRef        (Ref a) where ref = id
+instance      HasIdx        (Ref a) where idx = ptr ∘ idx
+instance      HasPtr        (Ref a) where ptr = wrapped'
 
 -- Conversions
 instance Castable a a' => Castable (Ref a) (Ref a') where cast = rewrap ; {-# INLINE cast #-}

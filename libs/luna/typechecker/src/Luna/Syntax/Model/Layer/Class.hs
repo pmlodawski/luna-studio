@@ -39,8 +39,8 @@ instance      Layered   (Attached t a) where
 
 -- Construction
 
-instance (Monad m, Maker     m t) => LayerConstructor m (Attached t a) where constructLayer a = flip Attached a <$> make   ; {-# INLINE constructLayer #-}
-instance (Monad m, Destroyer m t) => LayerDestructor  m (Attached t a) where destructLayer (Attached t a) = a <$ destroy t ; {-# INLINE destructLayer  #-}
+instance (Monad m, Creator    m t) => LayerConstructor m (Attached t a) where constructLayer a = flip Attached a <$> create  ; {-# INLINE constructLayer #-}
+instance (Monad m, Destructor m t) => LayerDestructor  m (Attached t a) where destructLayer (Attached t a) = a <$ destruct t ; {-# INLINE destructLayer  #-}
 
 -- Casting
 
@@ -118,4 +118,4 @@ data Succs = Succs deriving (Show, Eq, Ord)
 -- Note layer
 data Note = Note deriving (Show, Eq, Ord)
 type instance LayerData layout Note t = String
-instance Monad m => Maker m (Layer layout Note a) where make = return $ Layer ""
+instance Monad m => Creator m (Layer layout Note a) where create = return $ Layer ""

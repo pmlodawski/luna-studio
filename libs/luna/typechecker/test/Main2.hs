@@ -95,7 +95,7 @@ foo g = runNetworkBuilderT g
 
     u <- unify s1 s2
 
-    destroy u
+    destruct u
 
     --unregister s1
 
