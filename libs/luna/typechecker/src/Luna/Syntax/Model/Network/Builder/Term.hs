@@ -177,7 +177,7 @@ instance {-# OVERLAPPABLE #-}
 
 -- FIXME[WD]: poprawic typ oraz `WithElement_` (!)
 -- FIXME[WD]: inputs should be more general and should be refactored out
-inputsxxx :: forall x ast rt ls. 
+inputsxxx :: forall x ast rt ls.
       ( x ~ Ref (Link (ls :< ast rt))
       , (MapTryingElemList_ (Props Variant (RecordOf (RecordOf (ast rt ls)))) (TFoldable (Ref (Link (ls :< ast rt)))) (ast rt ls))
       ) => ast rt ls -> [x]
@@ -188,7 +188,7 @@ inputsxxx a = withElement_ (p :: P (TFoldable x)) (foldrT (:) []) a
 
 -- FIXME[WD]: poprawic typ oraz `WithElement_` (!)
 -- FIXME[WD]: inputs should be more general and should be refactored out
-inputsxxx2 :: forall layout term rt x. 
+inputsxxx2 :: forall layout term rt x.
       (MapTryingElemList_
                             (Elems term (ByRuntime rt Str x) x)
                             (TFoldable x)

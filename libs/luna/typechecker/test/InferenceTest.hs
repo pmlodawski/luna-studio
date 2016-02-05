@@ -1,10 +1,12 @@
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE FunctionalDependencies    #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE PartialTypeSignatures     #-}
 {-# LANGUAGE RankNTypes                #-}
 {-# LANGUAGE RecursiveDo               #-}
-{-# LANGUAGE UndecidableInstances      #-}
-{-# LANGUAGE PartialTypeSignatures     #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE UndecidableInstances      #-}
+
 
 module Main where
 
@@ -27,6 +29,9 @@ import           Luna.Syntax.Model.Network.Term
 import           Luna.Syntax.Model.Graph
 import           Luna.Syntax.Model.Network.Builder (MonadBuilder)
 import           Luna.Syntax.Model.Layer
+
+-- import           Luna.Syntax.Model.Graph.Term    (NetGraph, NetNode)
+-- import           Luna.Syntax.Model.Layer.Class   (Succs, Type)
 
 
 -- ====================================
@@ -128,27 +133,6 @@ prebuild = runNetworkBuilderT def $ star
 --     Applications.assignApplicationTypes i
 --     return ()
 
--- main :: IO ()
--- main = do
---     let ((i, sm), g) = sampleGraph1
---     ((), g') <- literalsTest i sm g
---     -- ((), g') <- applicationsTest i sm g
---     -- pprint g'
---     -- renderAndOpen [ ("g" , g)]
---     renderAndOpen [ ("g" , g')]
---     putStrLn "end"
-
-
--- assignLiteralTypes2 :: (Monad m, NetworkBuilderT net m n) => (Ref $ Node (NetLayers :< Draft Static)) -> m ()
--- assignLiteralTypes2 ref = do
---     i1 <- int 2
---     return ()
-
-assignLiteralTypesTest :: (Ref $ Node (NetLayers :< Draft Static)) -> NetGraph -> IO ((), NetGraph)
-assignLiteralTypesTest ref g = runNetworkBuilderT g $ do
-    -- assignLiteralTypes ref
-    return ()
-
 sampleGraph2 :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
 sampleGraph2 g = runNetworkBuilderT g $ do
     i1 <- int 2
@@ -176,8 +160,8 @@ sampleGraph2 g = runNetworkBuilderT g $ do
     accPlus2   <- acc "+" appPlus1b
     appPlus2   <- app accPlus2 [arg appLen]
 
-    print appPlus2
-    return appPlus2
+    -- print appPlus2
+    return i1
 
 main :: IO ()
 main = do
@@ -185,10 +169,7 @@ main = do
     -- print star
     -- putStrLn "\n--------------\n"
     -- print g
-    (s1, g') <- sampleGraph2 g
-
+    (s1, g' ) <- sampleGraph2 g
     ((), g'') <- assignLiteralTypes s1 g'
-
-
     -- print g'
     renderAndOpen [("g", g'')]

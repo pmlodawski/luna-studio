@@ -1,10 +1,10 @@
 {-# LANGUAGE FunctionalDependencies    #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE PartialTypeSignatures     #-}
 {-# LANGUAGE RankNTypes                #-}
 {-# LANGUAGE RecursiveDo               #-}
-{-# LANGUAGE UndecidableInstances      #-}
-{-# LANGUAGE PartialTypeSignatures     #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Luna.Passes.Inference.Literals
     ( assignLiteralTypes
@@ -13,15 +13,80 @@ module Luna.Passes.Inference.Literals
 import           Prelude.Luna
 
 import           Data.Attribute
+import           Data.Construction
 import           Data.Layer.Cover
-import           Data.Record                     hiding (cons, Layout)
-import           Luna.Runtime.Model              (Dynamic, Static)
-import           Luna.Syntax.AST.Term            hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
-import qualified Luna.Syntax.AST.Term            as Term
+
+import           Data.Record                         hiding (Layout, cons)
+import           Luna.Runtime.Model                  (Dynamic, Static)
+import           Luna.Syntax.AST.Term                hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
+import qualified Luna.Syntax.AST.Term                as Term
 import           Luna.Syntax.Model.Graph
+import           Luna.Syntax.Model.Graph.Builder.Ref
 import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Builder
-import           Luna.Syntax.Model.Network.Term 
+import           Luna.Syntax.Model.Network.Term
+
+
+-- TODO: ?
+-- pre :: BuilderType m a => Ref Node -> m [Ref Node]
+-- pre ref = do
+--     node <- Builder.readRef ref
+--     mapM (Builder.follow) $ Term.inputs $ uncoat node
+
+
+assignLiteralTypes :: (Ref $ Node (NetLayers :< Draft Static))
+                   -> NetGraph
+                   -> IO ((), NetGraph)
+assignLiteralTypes ref g = do
+    ((consIntRef, consStringRef), g'  ) <- createLiteralTypes          ref                          g
+    ((),                          g'' ) <- assignLiteralTypesWithTypes ref consIntRef consStringRef g'
+    ((),                          g''') <- cleanUpLiteralTypes             consIntRef consStringRef g''
+    return ((), g''')
+
+assignLiteralTypesWithTypes :: (Ref $ Node (NetLayers :< Draft Static))
+                            -> (Ref $ Node (NetLayers :< Draft Static))
+                            -> (Ref $ Node (NetLayers :< Draft Static))
+                            -> NetGraph
+                            -> IO ((), NetGraph)
+assignLiteralTypesWithTypes ref consIntRef consStringRef g = runNetworkBuilderT g $ do
+    putStrLn $ "assignLiteralTypesWithTypes " <> show ref
+    node <- read ref
+    caseTest (uncover node) $ do
+        match $ \(Str str) -> do
+            let tpeRef = node ^. attr Type
+            putStrLn $ "tpeRef " <> show tpeRef
+            reconnect ref (attr Type) consStringRef
+            return ()
+        match $ \(Num num) -> do
+            let tpeRef = node ^. attr Type
+            putStrLn $ "tpeRef " <> show tpeRef
+            -- destruct tpeRef -- TODO: ?
+            reconnect ref (attr Type) consIntRef
+            return ()
+        match $ \ANY -> return ()
+
+    -- mapM_ (assignLiteralTypesWithTypes consIntTpe consStringTpe) =<< pre ref  -- TODO: ?
+    return ()
+
+
+cleanUpLiteralTypes :: (Ref $ Node (NetLayers :< Draft Static))
+                    -> (Ref $ Node (NetLayers :< Draft Static))
+                    -> NetGraph
+                    -> IO ((), NetGraph)
+cleanUpLiteralTypes consIntRef consStringRef g = runNetworkBuilderT g $ do
+    putStrLn $ "cleanUpLiteralTypes"
+    return ()
+
+createLiteralTypes :: (Ref $ Node (NetLayers :< Draft Static))
+                   -> NetGraph
+                   -> IO ((Ref $ Node (NetLayers :< Draft Static), Ref $ Node (NetLayers :< Draft Static)), NetGraph)
+createLiteralTypes ref g = runNetworkBuilderT g $ do
+    putStrLn $ "createLiteralTypes"
+    consIntRef    <- cons "Int"
+    consStringRef <- cons "String"
+    return (consIntRef, consStringRef)
+
+
 
 -- import           Control.Monad              (forM_)
 -- import qualified Data.IntSet                as IntSet
@@ -94,16 +159,6 @@ import           Luna.Syntax.Model.Network.Term
 
 -- ---
 
--- createConsInt :: BuilderType m a => m (Ref Node)
--- createConsInt = do
---     nameInt <- Builder._string "Int"
---     Builder.cons nameInt
-
--- createConsString :: BuilderType m a => m (Ref Node)
--- createConsString = do
---     nameString <- Builder._string "String"
---     Builder.cons nameString
-
 -- assignLiteralTypes :: BuilderType m a => Ref Node -> m ()
 -- assignLiteralTypes ref = do
 --     consIntTpe    <- createConsInt
@@ -112,22 +167,16 @@ import           Luna.Syntax.Model.Network.Term
 --     safeRemove consIntTpe
 --     safeRemove consStringTpe
 
--- assignLiteralTypes :: Monad m => (Ref $ Node (NetLayers :< Draft Static)) -> m () -- ?
--- assignLiteralTypes :: _
-assignLiteralTypes :: (Ref $ Node (NetLayers :< Draft Static)) -> NetGraph -> IO ((), NetGraph)
-assignLiteralTypes ref g = runNetworkBuilderT g $ do
-    consInt    <- cons "Int"
-    consString <- cons "String"
-    -- i1 <- int 2
-    -- i2 <- int 3
-    -- i3 <- int 4
-    -- s1 <- string "abc"
-    -- s2 <- string "def"
-    -- s3 <- string "ghi"
-
-    -- accPlus1a  <- acc "+" i1
-    -- appPlus1a  <- app accPlus1a [arg i2]
-    return ()
+-- assignLiteralType :: BuilderType m a => Ref Node -> Ref Node -> m ()
+-- assignLiteralType ref tpe = do
+--     node     <- Builder.readRef ref
+--     tnodeRef <- Builder.follow $ node ^. Typed.tp
+--     tnode    <- Builder.readRef tnodeRef
+--     case' (uncoat tnode) $ do
+--         match $ \Star -> do
+--             destruct tnodeRef
+--             void $ Builder.reconnect ref Typed.tp tpe
+--         match $ \ANY -> return ()
 
 -- assignLiteralType :: BuilderType m a => Ref Node -> Ref Node -> m ()
 -- assignLiteralType ref tpe = do
