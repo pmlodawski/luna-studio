@@ -60,7 +60,7 @@ renderAndOpen lst = do
 
 -- type instance Layout (MyGraph t) term rt = t (Term (MyGraph t) term rt)
 
-prebuild :: IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
+prebuild :: Show a => IO (Ref $ Node (NetLayers a :< Draft Static), NetGraph a)
 prebuild = runNetworkBuilderT def $ star
 
 
@@ -133,15 +133,15 @@ prebuild = runNetworkBuilderT def $ star
 --     Applications.assignApplicationTypes i
 --     return ()
 
-proxy :: Proxy (Ref $ Node (NetLayers :< Draft Static))
+proxy :: Proxy (Ref $ Node (NetLayers () :< Draft Static))
 proxy = Proxy
 
-assignLiteralTypesTest :: (Ref $ Node (NetLayers :< Draft Static))
-                       -> NetGraph
-                       -> IO ((), NetGraph)
+assignLiteralTypesTest :: (Ref $ Node (NetLayers () :< Draft Static))
+                       -> NetGraph ()
+                       -> IO ((), NetGraph ())
 assignLiteralTypesTest ref g = runNetworkBuilderT g $ assignLiteralTypes proxy ref
 
-sampleGraph2 :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
+sampleGraph2 :: Show a => NetGraph a -> IO (Ref $ Node (NetLayers a :< Draft Static), NetGraph a)
 sampleGraph2 g = runNetworkBuilderT g $ do
     i1 <- int 2
     i2 <- int 3
@@ -173,7 +173,7 @@ sampleGraph2 g = runNetworkBuilderT g $ do
 
 main :: IO ()
 main = do
-    (star, g) <- prebuild
+    (star, g :: NetGraph ()) <- prebuild
     -- print star
     -- putStrLn "\n--------------\n"
     -- print g

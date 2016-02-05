@@ -104,18 +104,18 @@ import           Luna.Syntax.Model.Network.Term
 --                                        , Reader m (Node term)
 --                                        , Covered term
 --                                        , Matches (Uncovered term) '[ANY, Star])
-assignLiteralTypes :: forall m b . ( MonadIO m
-                                   , b ~ Ref (Node (NetLayers :< Draft Static))
-                                   , Monad m
-                                   , ElemBuilder Star       m b
-                                   , ElemBuilder Str        m b
-                                   , ElemBuilder Num        m b
-                                   , ElemBuilder (Cons Str) m b
-                                   , Reader m (Node (NetLayers :< Draft Static))
-                                   , Covered (NetLayers :< Draft Static)
-                                   , Matches (Uncovered (NetLayers :< Draft Static)) '[ANY, Star])
+assignLiteralTypes :: forall m b a . ( MonadIO m
+                                     , b ~ Ref (Node (NetLayers a :< Draft Static))
+                                     , Monad m
+                                     , ElemBuilder Star       m b
+                                     , ElemBuilder Str        m b
+                                     , ElemBuilder Num        m b
+                                     , ElemBuilder (Cons Str) m b
+                                     , Reader m (Node (NetLayers a :< Draft Static))
+                                     , Covered (NetLayers a :< Draft Static)
+                                     , Matches (Uncovered (NetLayers a :< Draft Static)) '[ANY, Star])
                    => Proxy b
-                   -> (Ref $ Node (NetLayers :< Draft Static))
+                   -> (Ref $ Node (NetLayers a :< Draft Static))
                    -> m ()
 assignLiteralTypes proxy ref = do
     consIntRef <- cons ("Int"    :: Str) :: m b
@@ -155,20 +155,20 @@ bar = do
         match $ \ANY  -> "something else!"
     return s1
 
-assignLiteralTypesWithTypes :: forall m b . ( MonadIO m
-                                            , b ~ Ref (Node (NetLayers :< Draft Static))
-                                            , Monad m
-                                            , ElemBuilder Star       m b
-                                            , ElemBuilder Str        m b
-                                            , ElemBuilder Num        m b
-                                            , ElemBuilder (Cons Str) m b
-                                            , Reader m (Node (NetLayers :< Draft Static))
-                                            , Covered (NetLayers :< Draft Static)
-                                            , Matches (Uncovered (NetLayers :< Draft Static)) '[ANY, Star])
+assignLiteralTypesWithTypes :: forall m a b . ( MonadIO m
+                                              , b ~ Ref (Node (NetLayers a :< Draft Static))
+                                              , Monad m
+                                              , ElemBuilder Star       m b
+                                              , ElemBuilder Str        m b
+                                              , ElemBuilder Num        m b
+                                              , ElemBuilder (Cons Str) m b
+                                              , Reader m (Node (NetLayers a :< Draft Static))
+                                              , Covered (NetLayers a :< Draft Static)
+                                              , Matches (Uncovered (NetLayers a :< Draft Static)) '[ANY, Star])
                             => Proxy b
-                            -> (Ref $ Node (NetLayers :< Draft Static))
-                            -> (Ref $ Node (NetLayers :< Draft Static))
-                            -> (Ref $ Node (NetLayers :< Draft Static))
+                            -> (Ref $ Node (NetLayers a :< Draft Static))
+                            -> (Ref $ Node (NetLayers a :< Draft Static))
+                            -> (Ref $ Node (NetLayers a :< Draft Static))
                             -> m ()
 assignLiteralTypesWithTypes proxy ref consIntRef consStrRef = do
     putStrLn $ "assignLiteralTypesWithTypes " <> show ref
@@ -191,17 +191,18 @@ assignLiteralTypesWithTypes proxy ref consIntRef consStrRef = do
     return ()
 
 
-cleanUpLiteralTypes :: (Ref $ Node (NetLayers :< Draft Static))
-                    -> (Ref $ Node (NetLayers :< Draft Static))
-                    -> NetGraph
-                    -> IO ((), NetGraph)
+cleanUpLiteralTypes :: (Ref $ Node (NetLayers a :< Draft Static))
+                    -> (Ref $ Node (NetLayers a :< Draft Static))
+                    -> NetGraph a
+                    -> IO ((), NetGraph a)
 cleanUpLiteralTypes consIntRef consStringRef g = runNetworkBuilderT g $ do
     putStrLn $ "cleanUpLiteralTypes"
     return ()
 
-createLiteralTypes :: (Ref $ Node (NetLayers :< Draft Static))
-                   -> NetGraph
-                   -> IO ((Ref $ Node (NetLayers :< Draft Static), Ref $ Node (NetLayers :< Draft Static)), NetGraph)
+createLiteralTypes :: Show a
+                   => (Ref $ Node (NetLayers a :< Draft Static))
+                   -> NetGraph a
+                   -> IO ((Ref $ Node (NetLayers a :< Draft Static), Ref $ Node (NetLayers a :< Draft Static)), NetGraph a)
 createLiteralTypes ref g = runNetworkBuilderT g $ do
     putStrLn $ "createLiteralTypes"
     consIntRef    <- cons "Int"

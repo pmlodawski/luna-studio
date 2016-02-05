@@ -98,7 +98,7 @@ labelAttrs = const []
 --instance LabelAttrs (Labeled2 b (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))) where
 --    labelAttrs = const []
 
-toGraphViz :: NetGraph -> DotGraph String
+toGraphViz :: forall a. Show a => NetGraph a -> DotGraph String
 toGraphViz net = DotGraph { strictGraph     = False
                           , directedGraph   = True
                           , graphID         = Nothing
@@ -112,8 +112,8 @@ toGraphViz net = DotGraph { strictGraph     = False
           eg                = net ^. edgeGraph
           nodesE            = elems ng
           edgesE            = elems eg
-          nodes'            = cast <$> nodesE :: [NetLayers :< Draft Static]
-          edges'            = cast <$> edgesE :: [Link (NetLayers :< Draft Static)]
+          nodes'            = cast <$> nodesE :: [NetLayers a :< Draft Static]
+          edges'            = cast <$> edgesE :: [Link (NetLayers a :< Draft Static)]
           nodeIds           = usedIxes ng
           nodeLabels        = reprStyled HeaderOnly . uncover <$> nodes'
           nodeStmts         = fmap (uncurry labeledNode) $ zip3 nodes' nodeLabels nodeIds
@@ -126,7 +126,7 @@ toGraphViz net = DotGraph { strictGraph     = False
           edgeStmts         = fmap mkEdge inEdges
           nodeRef         i = "<node " <> show i <> ">"
           labeledNode n s a = DotNode (nodeRef a) $ (GV.Label . StrLabel $ fromString s) : (nodeColorAttrs n) ++ labelAttrs n
-          nodeInEdges   n   = zip3 ([0..] :: [Int]) (genInEdges net $ (cast $ index n ng :: NetLayers :< Draft Static)) (repeat n)
+          nodeInEdges   n   = zip3 ([0..] :: [Int]) (genInEdges net $ (cast $ index n ng :: NetLayers a :< Draft Static)) (repeat n)
           mkEdge  (n,(a,attrs),b) = DotEdge (nodeRef a) (nodeRef b) attrs -- (GV.edgeEnds Back : attrs)
 
 --          allEdges        = drawEdge <$> elems_ eg
@@ -148,7 +148,7 @@ toGraphViz net = DotGraph { strictGraph     = False
                                 match $ \ANY         -> [GV.color nodeClr]
 
 
-genInEdges (g :: NetGraph) (n :: NetLayers :< Draft Static) = tpEdge : fmap addColor inEdges  where
+genInEdges (g :: NetGraph a) (n :: NetLayers a :< Draft Static) = tpEdge : fmap addColor inEdges  where
     genLabel  = GV.Label . StrLabel . fromString . show
     ins       = n # Inputs
     inIdxs    = getTgtIdx <$> ins
