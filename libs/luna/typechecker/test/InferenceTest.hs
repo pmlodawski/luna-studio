@@ -139,7 +139,7 @@ proxy = Proxy
 assignLiteralTypesTest :: (Ref $ Node (NetLayers :< Draft Static))
                        -> NetGraph
                        -> IO ((), NetGraph)
-assignLiteralTypesTest ref g = runNetworkBuilderT g $ assignLiteralTypes proxy
+assignLiteralTypesTest ref g = runNetworkBuilderT g $ assignLiteralTypes proxy ref
 
 sampleGraph2 :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
 sampleGraph2 g = runNetworkBuilderT g $ do
