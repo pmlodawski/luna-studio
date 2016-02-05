@@ -21,7 +21,7 @@ import           Empire.ASTOps.Remove         (safeRemove)
 
 import           Luna.Syntax.AST.Term         (Unify (..))
 import           Luna.Syntax.Model.Graph      (Node (..), Ref (..))
-import qualified Luna.Syntax.Model.Graph.Term as Builder
+{-import qualified Luna.Syntax.Model.Graph.Term as Builder-}
 {-import           Luna.Syntax.Layer.Labeled  (HasLabel, label)-}
 {-import           Luna.Syntax.Layer.WithMeta (meta)-}
 

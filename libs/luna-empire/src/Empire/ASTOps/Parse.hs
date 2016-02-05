@@ -13,7 +13,7 @@ import           Empire.Utils.ParserMock      as Parser
 import           Empire.API.Data.DefaultValue (PortDefault (..), Value (..))
 
 import           Luna.Syntax.Model.Graph      (Ref)
-import qualified Luna.Syntax.Model.Graph.Term as Builder
+{-import qualified Luna.Syntax.Model.Graph.Term as Builder-}
 
 parsePortDefault :: PortDefault -> ASTOp (Ref Node)
 parsePortDefault (Expression expr)          = parseFragment expr

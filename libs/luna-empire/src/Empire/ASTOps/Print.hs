@@ -9,7 +9,7 @@ import qualified Empire.ASTOps.Builder        as ASTBuilder
 
 import           Luna.Syntax.AST.Term         (Accessor (..), App (..), Blank (..), Unify (..), Val, Var (..))
 import           Luna.Syntax.Model.Graph      (Ref)
-import qualified Luna.Syntax.Model.Graph.Term as Builder
+{-import qualified Luna.Syntax.Model.Graph.Term as Builder-}
 
 printIdent :: Ref Node -> ASTOp String
 printIdent nodeRef = do

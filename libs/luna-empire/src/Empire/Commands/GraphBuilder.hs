@@ -33,7 +33,7 @@ import           Empire.Empire
 
 import           Luna.Syntax.AST.Term         (Accessor (..), App (..), Blank (..), Draft, Unify (..), Val, Var (..))
 import           Luna.Syntax.Model.Graph      (Edge, Node, Ref)
-import qualified Luna.Syntax.Model.Graph.Term as Builder
+{-import qualified Luna.Syntax.Model.Graph.Term as Builder-}
 type VarMap = Map (Ref Node) NodeId
 
 buildGraph :: Command Graph API.Graph
