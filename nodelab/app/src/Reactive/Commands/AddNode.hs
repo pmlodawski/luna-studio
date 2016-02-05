@@ -235,7 +235,7 @@ visualizeNodeValue id (IntList     v) = do
     groupId <- Node.valueGroupId id
 
     let dataPoints = zipVectorInt v []
-        widget = ScatterPlot.create (Vector2 300 200)
+        widget = ScatterPlot.create (Vector2 200 150)
                & ScatterPlot.dataPoints .~ dataPoints
     UICmd.register_ groupId widget def
 
@@ -243,7 +243,7 @@ visualizeNodeValue id (DoubleList     v) = do
     groupId <- Node.valueGroupId id
 
     let dataPoints = zipVector v []
-        widget = ScatterPlot.create (Vector2 300 200)
+        widget = ScatterPlot.create (Vector2 200 150)
                & ScatterPlot.dataPoints .~ dataPoints
     UICmd.register_ groupId widget def
 
