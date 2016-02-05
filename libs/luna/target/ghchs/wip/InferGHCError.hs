@@ -10,7 +10,7 @@
 
 module Main where
 
-import Data.Typeable
+import           Data.Typeable
 
 --------------------------------------------------------------------------------
 -- Type classes

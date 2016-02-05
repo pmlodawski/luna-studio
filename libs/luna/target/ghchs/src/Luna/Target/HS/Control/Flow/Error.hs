@@ -5,11 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 
@@ -18,8 +18,8 @@ module Luna.Target.HS.Control.Flow.Error (
     module X
 ) where
 
-import Luna.Target.HS.Control.Error   as X
-import Luna.Target.HS.Control.Context
+import           Luna.Target.HS.Control.Context
+import           Luna.Target.HS.Control.Error   as X
 
 ----------------------------------------------------------------------------------
 -- Instances

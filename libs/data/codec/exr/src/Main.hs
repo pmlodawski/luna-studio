@@ -1,8 +1,8 @@
 module Main where
 
-import System.Environment
+import           System.Environment
 
-import Flowbox.Codec.EXR
+import           Flowbox.Codec.EXR
 
 
 

@@ -10,10 +10,10 @@ module Luna.DEP.Data.SourceMap (
     module Data.Map
 )where
 
-import Data.Map
+import           Data.Map
 
-import Luna.DEP.AST.Common     (ID)
-import Luna.DEP.Data.SourcePos (SourceRange)
+import           Luna.DEP.AST.Common     (ID)
+import           Luna.DEP.Data.SourcePos (SourceRange)
 
 
 type SourceMap = Map ID SourceRange

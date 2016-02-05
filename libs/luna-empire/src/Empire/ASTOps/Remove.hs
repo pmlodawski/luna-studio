@@ -2,16 +2,16 @@
 
 module Empire.ASTOps.Remove where
 
-import           Prologue
-import           Data.Construction             (destruct)
 import           Data.Attribute                (attr)
+import           Data.Construction             (destruct)
 import           Data.Layer.Cover              (uncover)
+import           Prologue
 
 import           Empire.ASTOp                  (ASTOp)
 import           Empire.Data.AST               (NodeRef)
 import qualified Luna.Syntax.AST.Typed         as Typed
 import qualified Luna.Syntax.Model.Graph       as Graph
-import           Luna.Syntax.Model.Layer.Class (Type(..), Succs(..))
+import           Luna.Syntax.Model.Layer.Class (Succs (..), Type (..))
 
 removeNode :: ASTOp m => NodeRef -> m ()
 removeNode ref = do

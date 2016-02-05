@@ -11,12 +11,12 @@
 
 module Flowbox.Math.Function.Serialization where
 
-import Flowbox.Graphics.Prelude hiding (fromList)
+import           Flowbox.Graphics.Prelude         hiding (fromList)
 
-import Control.Monad
-import Data.Map      hiding (fromList)
-import Data.Maybe    (fromMaybe)
-import Data.Sequence (fromList)
+import           Control.Monad
+import           Data.Map                         hiding (fromList)
+import           Data.Maybe                       (fromMaybe)
+import           Data.Sequence                    (fromList)
 
 import           Flowbox.Data.Serialization       (Serializable (..), mkValue)
 import           Flowbox.Math.Function.Model

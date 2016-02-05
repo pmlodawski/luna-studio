@@ -7,7 +7,7 @@
 
 module Test.Luna.DEP.Parser.ParserSpec where
 
-import Control.Monad (forM_)
+import           Control.Monad           (forM_)
 
 import           Flowbox.Prelude
 import           Flowbox.Test.QuickCheck
@@ -17,9 +17,9 @@ import qualified Luna.DEP.Parser.Parser  as Parser
 
 --FIXME[wd]: following imports should be removed after moving to plugin based structure
 --           including all use cases. Nothing should modify Parser.State explicitly!
-import qualified Luna.DEP.Parser.Pragma as Pragma
-import qualified Luna.DEP.Parser.State  as ParserState
-import           Luna.DEP.Pragma.Pragma (Pragma)
+import qualified Luna.DEP.Parser.Pragma  as Pragma
+import qualified Luna.DEP.Parser.State   as ParserState
+import           Luna.DEP.Pragma.Pragma  (Pragma)
 
 
 

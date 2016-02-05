@@ -9,10 +9,10 @@
 
 module Data2 where
 
-import Bind2 (StateT (..), get, put)
+import           Bind2               (StateT (..), get, put)
 
-import Control.Applicative
-import Control.Monad.Trans
+import           Control.Applicative
+import           Control.Monad.Trans
 
 -------------------------------
 

@@ -11,7 +11,7 @@ module Luna.DEP.Pass.Transform.GraphView.Defaults (
     isGenerated,
 ) where
 
-import qualified Data.Map as Map
+import qualified Data.Map                           as Map
 
 import           Flowbox.Control.Error              ()
 import           Flowbox.Prelude                    hiding (empty)

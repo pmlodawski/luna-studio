@@ -7,7 +7,7 @@
 
 module Flowbox.System.Directory.Scanner where
 
-import Control.Applicative
+import           Control.Applicative
 
 import           Flowbox.Prelude
 import qualified Flowbox.System.Directory.Directory as Directory

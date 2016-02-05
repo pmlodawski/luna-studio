@@ -6,11 +6,11 @@
 ---------------------------------------------------------------------------
 module Flowbox.Graphics.Composition.Generator.Noise.Turbulence where
 
-import qualified Data.Array.Accelerate     as A
-import qualified Math.Coordinate.Cartesian as Cartesian
+import qualified Data.Array.Accelerate          as A
+import qualified Math.Coordinate.Cartesian      as Cartesian
 
-import Flowbox.Graphics.Shader.Shader
-import Flowbox.Prelude
+import           Flowbox.Graphics.Shader.Shader
+import           Flowbox.Prelude
 
 
 

@@ -13,8 +13,8 @@
 
 module Luna.DEP.Pass.Analysis.FuncPool.FuncPool where
 
-import Control.Applicative
-import Control.Monad.State hiding (mapM, mapM_)
+import           Control.Applicative
+import           Control.Monad.State                  hiding (mapM, mapM_)
 
 import           Flowbox.Prelude                      hiding (error, id, mod)
 import           Flowbox.System.Log.Logger

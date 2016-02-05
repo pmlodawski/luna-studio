@@ -5,16 +5,16 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE FlexibleInstances         #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeSynonymInstances      #-}
 
 module Luna.Parser.Char where
 
-import           Flowbox.Prelude         hiding (lex)
 import           Control.Applicative
-import           Text.Parser.Combinators
+import           Flowbox.Prelude         hiding (lex)
 import           Text.Parser.Char        hiding (spaces)
+import           Text.Parser.Combinators
 
 
 ----------------------------------------------------------------------

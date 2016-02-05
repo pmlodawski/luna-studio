@@ -7,10 +7,10 @@
 
 module Flowbox.Data.SetForest where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
-import           Data.Map (Map)
-import qualified Data.Map as Map
+import           Data.Map        (Map)
+import qualified Data.Map        as Map
 
 
 data SetTree a = SubForest (SetForest a)

@@ -9,13 +9,13 @@
 
 module Luna.Lib.Lib where
 
-import Data.Binary  (Binary)
-import Data.Version (Version)
+import           Data.Binary            (Binary)
+import           Data.Version           (Version)
 
-import Flowbox.Prelude
-import Flowbox.System.UniPath (UniPath)
-import Luna.Syntax.Module     (Module (Module))
-import Luna.Syntax.Name.Path  (QualPath)
+import           Flowbox.Prelude
+import           Flowbox.System.UniPath (UniPath)
+import           Luna.Syntax.Module     (Module (Module))
+import           Luna.Syntax.Name.Path  (QualPath)
 
 
 

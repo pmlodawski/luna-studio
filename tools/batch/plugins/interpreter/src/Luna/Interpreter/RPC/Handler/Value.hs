@@ -8,10 +8,10 @@
 
 module Luna.Interpreter.RPC.Handler.Value where
 
-import           Data.IORef       (IORef)
-import qualified Data.IORef       as IORef
-import qualified Data.Sequence    as Sequence
-import qualified Pipes.Concurrent as Pipes
+import           Data.IORef                                            (IORef)
+import qualified Data.IORef                                            as IORef
+import qualified Data.Sequence                                         as Sequence
+import qualified Pipes.Concurrent                                      as Pipes
 
 import           Flowbox.Bus.Data.Flag                                 (Flag)
 import qualified Flowbox.Bus.Data.Flag                                 as Flag

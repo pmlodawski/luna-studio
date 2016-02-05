@@ -1,11 +1,11 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances      #-}
 --{-# LANGUAGE IncoherentInstances #-}
-{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE OverlappingInstances      #-}
 
 
 class Pipe a b c | a b -> c where
@@ -19,8 +19,8 @@ class Pipe2 a b c where
 ----------------------------------------------
 
 instance Monad m => Pipe (a -> b) (m a) (m b) where
-    pipe f ma = do 
-        a <- ma 
+    pipe f ma = do
+        a <- ma
         return $ f a
 
 
@@ -39,14 +39,14 @@ instance Pipe (a -> b) a b where
 ----------------------------------------------
 
 instance (Monad m, out~(m b)) => Pipe2 (a -> b) (m a) out where
-    pipe2 f ma = do 
-        a <- ma 
+    pipe2 f ma = do
+        a <- ma
         return $ f a
 
 
 --instance (Monad m, out~(m b)) => Pipe2 (a -> b) (m a) out where
---    pipe2 f ma = do 
---        a <- ma 
+--    pipe2 f ma = do
+--        a <- ma
 --        return $ f a
 
 

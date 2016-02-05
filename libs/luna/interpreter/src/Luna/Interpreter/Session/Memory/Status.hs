@@ -8,8 +8,8 @@
 
 module Luna.Interpreter.Session.Memory.Status where
 
-import           Data.Int  (Int64)
-import qualified GHC.Stats as Stats
+import           Data.Int                                    (Int64)
+import qualified GHC.Stats                                   as Stats
 
 import           Flowbox.Control.Error                       (safeLiftIO')
 import           Flowbox.Prelude

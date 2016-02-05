@@ -7,13 +7,13 @@
 module Flowbox.Graphics.Composition.Generator.Shape where
 
 
-import Flowbox.Graphics.Shader.Shader
-import Flowbox.Math.Index             hiding (canvas)
-import Flowbox.Prelude                hiding (transform)
+import           Flowbox.Graphics.Shader.Shader
+import           Flowbox.Math.Index             hiding (canvas)
+import           Flowbox.Prelude                hiding (transform)
 
-import Data.Array.Accelerate     as A hiding (constant)
-import Math.Coordinate.Cartesian hiding (w, x, y)
-import Math.Space.Space
+import           Data.Array.Accelerate          as A hiding (constant)
+import           Math.Coordinate.Cartesian      hiding (w, x, y)
+import           Math.Space.Space
 
 
 

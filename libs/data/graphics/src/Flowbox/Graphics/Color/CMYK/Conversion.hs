@@ -5,8 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleContexts #-}
 
 module Flowbox.Graphics.Color.CMYK.Conversion where
 

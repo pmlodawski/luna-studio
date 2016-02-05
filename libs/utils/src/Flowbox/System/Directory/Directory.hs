@@ -11,12 +11,14 @@ module Flowbox.System.Directory.Directory (
 ) where
 
 import           Control.Applicative
-import qualified Data.List           as List
-import           System.Directory    hiding (copyFile, createDirectory, createDirectoryIfMissing, doesDirectoryExist, doesFileExist, getCurrentDirectory, getDirectoryContents, getTemporaryDirectory, removeDirectoryRecursive, removeFile, renameDirectory, renameFile, setCurrentDirectory)
-import qualified System.Directory    as Directory
-import qualified System.IO           as IO
+import qualified Data.List              as List
+import           System.Directory       hiding (copyFile, createDirectory, createDirectoryIfMissing, doesDirectoryExist, doesFileExist,
+                                         getCurrentDirectory, getDirectoryContents, getTemporaryDirectory, removeDirectoryRecursive,
+                                         removeFile, renameDirectory, renameFile, setCurrentDirectory)
+import qualified System.Directory       as Directory
+import qualified System.IO              as IO
 #ifdef mingw32_HOST_OS
-import qualified System.Win32 as Win32
+import qualified System.Win32           as Win32
 #endif
 
 import           Flowbox.Prelude        hiding (children)

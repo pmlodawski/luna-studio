@@ -11,7 +11,7 @@
 
 module Luna.Interpreter.RPC.Handler.Abort where
 
-import qualified Control.Monad.Catch as Catch
+import qualified Control.Monad.Catch                          as Catch
 
 import qualified Flowbox.Control.Concurrent                   as Concurrent
 import           Flowbox.Prelude                              hiding (Context, error)

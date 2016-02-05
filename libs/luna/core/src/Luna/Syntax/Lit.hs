@@ -8,12 +8,12 @@
 
 module Luna.Syntax.Lit where
 
-import Data.Binary            (Binary)
-import GHC.Generics
-import Luna.Syntax.Lit.Number (Number)
+import           Data.Binary            (Binary)
+import           GHC.Generics
+import           Luna.Syntax.Lit.Number (Number)
 
-import           Luna.Syntax.Label (Label)
-import           Prelude           (Eq, Ord, Read, Show)
+import           Luna.Syntax.Label      (Label)
+import           Prelude                (Eq, Ord, Read, Show)
 import qualified Prelude
 
 

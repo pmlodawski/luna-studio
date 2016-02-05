@@ -12,10 +12,10 @@
 
 module Luna.Pass.Transform.Graph.Parser.State where
 
-import           Control.Monad.State hiding (mapM)
-import           Data.Map            (Map)
-import qualified Data.Map            as Map
-import qualified Data.Maybe          as Maybe
+import           Control.Monad.State             hiding (mapM)
+import           Data.Map                        (Map)
+import qualified Data.Map                        as Map
+import qualified Data.Maybe                      as Maybe
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude

@@ -14,7 +14,7 @@
 module Luna.DEP.Pass.Source.File.Writer where
 
 import           Control.Monad.RWS
-import qualified System.IO         as IO
+import qualified System.IO                          as IO
 
 import           Flowbox.Prelude                    hiding (error, id)
 import qualified Flowbox.System.Directory.Directory as Directory

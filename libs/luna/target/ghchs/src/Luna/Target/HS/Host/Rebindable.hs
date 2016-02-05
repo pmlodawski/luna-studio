@@ -12,10 +12,10 @@ module Luna.Target.HS.Host.Rebindable (
     module Prelude
 ) where
 
-import           Prelude hiding ((>>=),(>>), return, fail)
+import           Prelude                             hiding (fail, return, (>>), (>>=))
 import qualified Prelude
 
-import Luna.Target.HS.Control.Context.Bind
+import           Luna.Target.HS.Control.Context.Bind
 
 (>>=)  = polyMonadCtxBind
 (>>)   = polyMonadCtxBind_

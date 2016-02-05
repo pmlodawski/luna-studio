@@ -13,8 +13,8 @@ module Luna.DEP.Pass.Transform.Graph.Parser.Parser where
 
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
-import qualified Data.IntSet                as IntSet
-import qualified Data.List                  as List
+import qualified Data.IntSet                                as IntSet
+import qualified Data.List                                  as List
 
 import           Flowbox.Prelude                            hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
@@ -46,9 +46,9 @@ import qualified Luna.DEP.Pass.Transform.Graph.Parser.State as State
 
 --FIXME[wd]: following imports should be removed after moving to plugin based structure
 --           including all use cases. Nothing should modify Parser.State explicitly!
-import qualified Luna.DEP.Parser.Pragma as Pragma
-import qualified Luna.DEP.Parser.State  as ParserState
-import           Luna.DEP.Pragma.Pragma (Pragma)
+import qualified Luna.DEP.Parser.Pragma                     as Pragma
+import qualified Luna.DEP.Parser.State                      as ParserState
+import           Luna.DEP.Pragma.Pragma                     (Pragma)
 
 
 

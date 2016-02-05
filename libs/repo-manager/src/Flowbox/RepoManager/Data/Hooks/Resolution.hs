@@ -7,14 +7,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.RepoManager.Data.Hooks.Resolution where
 
-import           Flowbox.Prelude
-import qualified Flowbox.RepoManager.Data.Package.Family  as Family
-import qualified Flowbox.RepoManager.Data.Package.Package as Package
-import qualified Flowbox.RepoManager.Data.Dependency      as Dependency
-import qualified Flowbox.RepoManager.Data.Repository      as Repository
-import qualified Flowbox.RepoManager.Data.Types           as Types
-import qualified Flowbox.RepoManager.Data.Version         as Version
-import qualified Flowbox.RepoManager.VCS.VCS              as VCS
 import qualified Data.Array                               as Array
 import           Data.Function                            (on)
 import qualified Data.Graph                               as Graph
@@ -23,6 +15,14 @@ import qualified Data.Map                                 as Map
 import qualified Data.Maybe                               as Maybe
 import qualified Data.Set                                 as Set
 import qualified Distribution.Version                     as CabalVersion
+import           Flowbox.Prelude
+import qualified Flowbox.RepoManager.Data.Dependency      as Dependency
+import qualified Flowbox.RepoManager.Data.Package.Family  as Family
+import qualified Flowbox.RepoManager.Data.Package.Package as Package
+import qualified Flowbox.RepoManager.Data.Repository      as Repository
+import qualified Flowbox.RepoManager.Data.Types           as Types
+import qualified Flowbox.RepoManager.Data.Version         as Version
+import qualified Flowbox.RepoManager.VCS.VCS              as VCS
 
 allPossibilities :: [[Package.Package]] -> [[Package.Package]]
 allPossibilities []         = return []
@@ -36,7 +36,7 @@ recursivelyAddDeps repo pkgs = go (Repository.packages repo) pkgs Set.empty
           go db (a:as) acc = let aDeps' = map Dependency.qualDepName $ a ^. Package.dependencies
                                  aDepsFamilies :: [Family.PackageFamily]
                                  aDepsFamilies = Maybe.mapMaybe (flip Map.lookup db) aDeps'
-                                 aDepsMaps :: [Map.Map Version.Version Package.Package] 
+                                 aDepsMaps :: [Map.Map Version.Version Package.Package]
                                  aDepsMaps = map Family.versions aDepsFamilies
                                  aDepsPackages :: [Package.Package]
                                  aDepsPackages = concat $ map Map.elems aDepsMaps
@@ -55,7 +55,7 @@ consistent :: [Package.Package] -> Bool
 consistent pkgs = and $ map (depsSatisfied pkgs) pkgs
     where depsSatisfied :: [Package.Package] -> Package.Package -> Bool
           depsSatisfied pkgs' package = and $ map (depSatisfied otherPkgs) $ deps
-              where deps = package ^. Package.dependencies 
+              where deps = package ^. Package.dependencies
                     otherPkgs = List.delete package pkgs'
 
           depSatisfied :: [Package.Package] -> Dependency.Dependency -> Bool

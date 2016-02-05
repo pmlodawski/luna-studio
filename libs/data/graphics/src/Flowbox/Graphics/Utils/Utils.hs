@@ -15,11 +15,11 @@
 
 module Flowbox.Graphics.Utils.Utils where
 
-import Data.Array.Accelerate as A
-import Data.Typeable
+import           Data.Array.Accelerate             as A
+import           Data.Typeable
 
-import Flowbox.Graphics.Utils.Accelerate
-import Flowbox.Prelude                   as P
+import           Flowbox.Graphics.Utils.Accelerate
+import           Flowbox.Prelude                   as P
 
 
 

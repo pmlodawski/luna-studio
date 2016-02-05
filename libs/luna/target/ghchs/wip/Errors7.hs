@@ -1,44 +1,43 @@
 
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
 
-{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE OverlappingInstances      #-}
 --{-# LANGUAGE IncoherentInstances #-}
 
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 
 
 
-import Control.Applicative  
-import Control.Monad.IO.Class
-import Control.Monad.Trans
-import Data.Typeable
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans
+import           Data.Typeable
 
-import Data.Default
+import           Data.Default
 
-import Test.Hspec
-import Test.QuickCheck
-import Control.Exception (evaluate)
-import Unsafe.Coerce
+import           Control.Exception      (evaluate)
+import           Test.Hspec
+import           Test.QuickCheck
+import           Unsafe.Coerce
 --import Control.Monad.State
 
 --import Bind2 (bind, bind2, MonadRebase(..), StateT(..), put,get)
 
 --import Data2
 
-import Utils
+import           Utils
 
 
 foo x y = x
@@ -120,7 +119,7 @@ instance TransMonad Safe (UnsafeBase base err) (UnsafeBase base err) where
 --        Error a -> Other . Other $ Error a
 --        Other o -> o >>=~ f
 
--- following implementation allows returning monadic values, in special cases. 
+-- following implementation allows returning monadic values, in special cases.
 -- as far it seems we do not nbeed the implementation, but it is straightforward to create,
 -- but we would need to create a lot of instances covering lots of cases, like:
 --    instance TransMonad (UnsafeBase base err1) (UnsafeBase (UnsafeBase base err1) err2) (UnsafeBase (UnsafeBase base err1) err2)
@@ -189,7 +188,7 @@ instance  (TransApplicative (UnsafeBase base err) base (UnsafeBase base err)) =>
 
 
 class Raise e a b | e a -> b where
-    raise :: e -> a -> b 
+    raise :: e -> a -> b
 
 
 instance Raise e (Safe a)               (UnsafeBase Safe e a)     where raise e (Safe a) = Error e
@@ -317,8 +316,8 @@ instance  Functor base =>LiftErr Safe (UnsafeBase base e) (UnsafeBase base e)  w
 --            --Error e -> Other $ liftErr (return f :: base1 (a->b)) sa
 --        --Error e -> Error e
 
---e12   = raise E2 e1   :: 
---e21   = raise E1 e2   :: 
+--e12   = raise E2 e1   ::
+--e21   = raise E1 e2   ::
 --                  UnsafeBase (UnsafeBase Safe E2) E1 Int ... UnsafeBase (UnsafeBase Safe E1) E2  Int  <= (LiftErr (UnsafeBase (UnsafeBase Safe E2) E1) (UnsafeBase Safe E2) rx, Functor rx, LiftErr rx (UnsafeBase Safe E1) out)
 instance  (LiftErr (UnsafeBase base1 e1) (UnsafeBase Safe e2) rx, Functor rx, LiftErr rx base2 out, Functor base1) =>LiftErr (UnsafeBase base1                e1)       (UnsafeBase base2                e2) out   where
     liftErr (sf :: UnsafeBase base1 e1 (a->b)) (sa :: UnsafeBase base2 e2 a) = case sa of
@@ -337,7 +336,7 @@ instance  (LiftErr (UnsafeBase base1 e1) (UnsafeBase Safe e2) rx, Functor rx, Li
 
 
 --instance  (InjectType base1 (UnsafeBase Safe e2) dstBase, InjectType (UnsafeBase dstBase e1) base2 out) =>InjectType (UnsafeBase base1 e1) (UnsafeBase base2 e2) out  where
---    injectType a (i :: UnsafeBase base2 e2 a) = injectType (injectType a (undefined :: UnsafeBase Safe e2 a)) (undefined :: base2 a) 
+--    injectType a (i :: UnsafeBase base2 e2 a) = injectType (injectType a (undefined :: UnsafeBase Safe e2 a)) (undefined :: base2 a)
 
 
 
@@ -449,7 +448,7 @@ instance  (LiftErr' base1 (UnsafeBase Safe e2) dstBase, LiftErr' (UnsafeBase dst
         --Other o -> liftErr' (liftErr' (fmap const sf) (undefined :: UnsafeBase Safe e2 a)) (o :: base2 a)
 
 --instance  (InjectType base1 (UnsafeBase Safe e2) dstBase, InjectType (UnsafeBase dstBase e1) base2 out) =>InjectType (UnsafeBase base1 e1) (UnsafeBase base2 e2) out  where
---    injectType a (i :: UnsafeBase base2 e2 a) = injectType (injectType a (undefined :: UnsafeBase Safe e2 a)) (undefined :: base2 a) 
+--    injectType a (i :: UnsafeBase base2 e2 a) = injectType (injectType a (undefined :: UnsafeBase Safe e2 a)) (undefined :: base2 a)
 
 
 liftErr2' f a b       = liftErr' (liftErr' f a) b
@@ -556,7 +555,7 @@ shouldBeT a b = maybe (typeOf a `shouldBe` typeOf b) (\b' -> b' `shouldBe` b) (c
 --        Other o -> Other $ injectType o (undefined :: base2 a)
 
 --instance  (InjectType base1 (UnsafeBase Safe e2) dstBase, InjectType (UnsafeBase dstBase e1) base2 out) =>InjectType (UnsafeBase base1 e1) (UnsafeBase base2 e2) out  where
---    injectType a (i :: UnsafeBase base2 e2 a) = injectType (injectType a (undefined :: UnsafeBase Safe e2 a)) (undefined :: base2 a) 
+--    injectType a (i :: UnsafeBase base2 e2 a) = injectType (injectType a (undefined :: UnsafeBase Safe e2 a)) (undefined :: base2 a)
 
 ----------------------------------------------------------------------------
 
@@ -610,37 +609,37 @@ main = do
             it "e1 e2"       $ (raise E2 . raise E1) v                       `shouldBeT` (Error E1 :: UnsafeBase (UnsafeBase Safe E2) E1 Int)
             it "e1 e2 e1"    $ (raise E1 . raise E2 . raise E1) v            `shouldBeT` (Error E1 :: UnsafeBase (UnsafeBase Safe E2) E1 Int)
             it "e3 e1 e2 e1" $ (raise E3 . raise E1 . raise E2 . raise E1) v `shouldBeT` (Error E1 :: UnsafeBase (UnsafeBase (UnsafeBase Safe E3) E2) E1 Int)
-      
+
         describe "LiftErr testing" $ do
             describe "[instance] LiftErr Safe Safe Safe" $ do
                 it "sum v v"     $ summe' v v     `shouldBeT` (Safe (2::Int))
-            
+
             describe "[instance] LiftErr Safe (UnsafeBase base e) (UnsafeBase base e)" $ do
                 it "sum v e1"    $ summe' v e1   `shouldBeT`  (Error E1 :: UnsafeBase Safe E1 Int)
                 it "sum v e123"  $ summe' v e123 `shouldBeT`  (Error E1 :: UnsafeBase (UnsafeBase (UnsafeBase Safe E3) E2) E1 Int)
                 it "sum v v1x1"  $ summe' v v1x1 `shouldBeT`  (Value 2  :: UnsafeBase Safe E1 Int)
                 it "sum v v2x12" $ summe' v v2x12 `shouldBeT` (Other (Value 2)  :: UnsafeBase (UnsafeBase Safe E2) E1 Int)
                 it "sum v v123"  $ summe' v v123 `shouldBeT`  (Value 2  :: UnsafeBase (UnsafeBase (UnsafeBase Safe E3) E2) E1 Int)
-            
+
             describe "[instance] LiftErr (UnsafeBase base e) Safe (UnsafeBase base e)" $ do
                 it "sum e1   v"  $ summe' e1    v `shouldBeT` (Error E1 :: UnsafeBase Safe E1 Int)
                 it "sum e123 v"  $ summe' e123  v `shouldBeT` (Error E1 :: UnsafeBase (UnsafeBase (UnsafeBase Safe E3) E2) E1 Int)
                 it "sum v1x1 v"  $ summe' v1x1  v `shouldBeT` (Value 2  :: UnsafeBase Safe E1 Int)
                 it "sum v2x12 v" $ summe' v2x12 v `shouldBeT` (Other (Value 2)  :: UnsafeBase (UnsafeBase Safe E2) E1 Int)
                 it "sum v123 v"  $ summe' v123  v `shouldBeT` (Value 2  :: UnsafeBase (UnsafeBase (UnsafeBase Safe E3) E2) E1 Int)
-            
+
             describe "[~] LiftErr (UnsafeBase base e) (UnsafeBase base e) (UnsafeBase base e)" $ do
                 it "sum e1 e1"     $ summe' e1 e1     `shouldBeT` (Error E1 :: UnsafeBase Safe E1 Int)
                 it "sum e123 e123" $ summe' e123 e123 `shouldBeT` (Error E1 :: UnsafeBase (UnsafeBase (UnsafeBase Safe E3) E2) E1 Int)
                 it "sum v1x1 v1x1" $ summe' v1x1 v1x1 `shouldBeT` (Value 2  :: UnsafeBase Safe E1 Int)
-            
+
             describe "[instance] LiftErr (UnsafeBase base1 e) (UnsafeBase base2 e) (UnsafeBase dstBase e)" $ do
                 it "sum e1 e1"       $ summe' e1 e1       `shouldBeT` (Error E1 :: UnsafeBase Safe E1 Int)
                 it "sum e34 e3"      $ summe' e34 e3      `shouldBeT` (Error E3 :: UnsafeBase (UnsafeBase Safe E4) E3 Int)
                 it "sum e3 e34"      $ summe' e3 e34      `shouldBeT` (Error E3 :: UnsafeBase (UnsafeBase Safe E4) E3 Int)
                 it "sum e34 e35"     $ summe' e34 e35     `shouldBeT` (Error E3 :: UnsafeBase (UnsafeBase (UnsafeBase Safe E5) E4) E3 Int)
                 it "sum v2x12 v3x13" $ summe' v2x12 v3x13 `shouldBeT` (Other (Value 2) :: UnsafeBase (UnsafeBase (UnsafeBase Safe E3) E2) E1 Int)
-        
+
             describe "[instance] LiftErr (UnsafeBase base1 e1) (UnsafeBase base2 e2) (UnsafeBase dstBase e1)" $ do
                 it "sum e23 e34"     $ summe' e23 e34                  `shouldBeT` (Error E2 :: UnsafeBase (UnsafeBase (UnsafeBase Safe E4) E3) E2 Int)
                 it "sum v2x12 v1x21" $ magicMerge (summe' v2x12 v1x21) `shouldBeT` (Other (Value 2) :: UnsafeBase (UnsafeBase Safe E1) E2 Int)
@@ -659,7 +658,7 @@ main = do
     --printTyped $ summe' e12 e1234
     --printTyped $ summe' v12 v4x1234
     --printTyped $ summe' e12 e13
-    
+
     putStrLn ""
 
 
@@ -721,7 +720,7 @@ v4x1234 = Other . Other . Other $ (Value 1) :: UnsafeBase (UnsafeBase (UnsafeBas
 --main = do
 --    printTyped $ summe' v2 e12
 --    let
-        
+
 
 --        --niepoprawna wartosc - OSTATNIA NIEODKOMENTOWANA INSTANCJA - niepprawne zalozenie, ze w wyniku mamy e1 ...
 
@@ -729,7 +728,7 @@ v4x1234 = Other . Other . Other $ (Value 1) :: UnsafeBase (UnsafeBase (UnsafeBas
 --        --tval = if (1<2) then matchSafe x ex1 else matchSafe ex1 x
 
 --        --tval = summe' ex1' ev1
---    --    tval = summe' ev1 ex1' 
+--    --    tval = summe' ev1 ex1'
 --        tval :: UnsafeBase (UnsafeBase Safe E1) E2 Int
 --        tval = magicMerge $ summe' ev1 ex4
 
@@ -744,8 +743,8 @@ v4x1234 = Other . Other . Other $ (Value 1) :: UnsafeBase (UnsafeBase (UnsafeBas
 
 --    print ex4
 --    print $ fmap (+10) ex4
-    
+
 --    print $ catch (\E1 -> Safe(0::Int)) $ ex2
---    print $ catch (\E1 -> Safe(0::Int)) 
---          . catch (\E2 -> Safe(0::Int)) 
+--    print $ catch (\E1 -> Safe(0::Int))
+--          . catch (\E2 -> Safe(0::Int))
 --          $ ex2

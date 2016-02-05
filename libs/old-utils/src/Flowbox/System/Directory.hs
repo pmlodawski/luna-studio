@@ -8,5 +8,5 @@ module Flowbox.System.Directory (
     module X
 ) where
 
-import Flowbox.System.Directory.Directory as X
-import Flowbox.System.Directory.Locations as X
+import           Flowbox.System.Directory.Directory as X
+import           Flowbox.System.Directory.Locations as X

@@ -1,9 +1,9 @@
 module Data.Convert.Instances.Map()
 where
 
-import Data.Convert.Base
+import           Data.Convert.Base
 
-import qualified Data.Map as Map
+import qualified Data.Map          as Map
 
 
 instance Ord k => Convertible [(k, a)] (Map.Map k a) where

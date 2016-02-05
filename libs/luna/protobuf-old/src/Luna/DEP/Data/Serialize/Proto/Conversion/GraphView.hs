@@ -12,7 +12,7 @@
 
 module Luna.DEP.Data.Serialize.Proto.Conversion.GraphView where
 
-import Control.Applicative
+import           Control.Applicative
 
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert

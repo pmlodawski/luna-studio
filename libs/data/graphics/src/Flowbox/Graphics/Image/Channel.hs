@@ -13,17 +13,17 @@
 
 module Flowbox.Graphics.Image.Channel where
 
-import           Data.Array.Accelerate (Boundary(..), constant)
-import qualified Data.Array.Accelerate as A
+import           Data.Array.Accelerate              (Boundary (..), constant)
+import qualified Data.Array.Accelerate              as A
 import           Data.Typeable
-import           Math.Space.Space (Grid(..))
+import           Math.Space.Space                   (Grid (..))
 
-import Flowbox.Graphics.Shader.Matrix
-import Flowbox.Graphics.Shader.Rasterizer
-import Flowbox.Graphics.Shader.Sampler
-import Flowbox.Graphics.Shader.Shader
-import Flowbox.Math.Matrix                as M hiding ((++))
-import Flowbox.Prelude
+import           Flowbox.Graphics.Shader.Matrix
+import           Flowbox.Graphics.Shader.Rasterizer
+import           Flowbox.Graphics.Shader.Sampler
+import           Flowbox.Graphics.Shader.Shader
+import           Flowbox.Math.Matrix                as M hiding ((++))
+import           Flowbox.Prelude
 
 
 

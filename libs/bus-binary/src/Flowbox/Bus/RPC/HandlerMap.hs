@@ -36,13 +36,13 @@ import           Data.Binary                (Binary)
 import           Data.Map                   as X
 import qualified Data.Map                   as Map
 
-import Flowbox.Bus.Data.Message  (CorrelationID)
-import Flowbox.Bus.RPC.RPC       (RPC)
-import Flowbox.Bus.RPC.Types
-import Flowbox.Control.Error
-import Flowbox.Prelude           hiding (error)
-import Flowbox.System.Log.Logger
-import Language.Haskell.TH
+import           Flowbox.Bus.Data.Message   (CorrelationID)
+import           Flowbox.Bus.RPC.RPC        (RPC)
+import           Flowbox.Bus.RPC.Types
+import           Flowbox.Control.Error
+import           Flowbox.Prelude            hiding (error)
+import           Flowbox.System.Log.Logger
+import           Language.Haskell.TH
 
 
 

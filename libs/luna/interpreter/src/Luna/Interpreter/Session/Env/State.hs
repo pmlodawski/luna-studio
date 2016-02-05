@@ -9,21 +9,21 @@
 
 module Luna.Interpreter.Session.Env.State where
 
-import qualified Control.Concurrent.MVar     as MVar
-import           Control.Monad.Catch         (bracket_)
+import qualified Control.Concurrent.MVar                       as MVar
+import           Control.Monad.Catch                           (bracket_)
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
-import           Data.HMap                   (HMap)
-import           Data.IntSet                 (IntSet)
-import qualified Data.IntSet                 as IntSet
-import           Data.Map                    (Map)
-import qualified Data.Map                    as Map
-import qualified Data.Maybe                  as Maybe
-import           Data.MultiSet               (MultiSet)
-import qualified Data.MultiSet               as MultiSet
-import           Data.Set                    (Set)
-import qualified Data.Set                    as Set
-import qualified Language.Preprocessor.Cpphs as Cpphs
+import           Data.HMap                                     (HMap)
+import           Data.IntSet                                   (IntSet)
+import qualified Data.IntSet                                   as IntSet
+import           Data.Map                                      (Map)
+import qualified Data.Map                                      as Map
+import qualified Data.Maybe                                    as Maybe
+import           Data.MultiSet                                 (MultiSet)
+import qualified Data.MultiSet                                 as MultiSet
+import           Data.Set                                      (Set)
+import qualified Data.Set                                      as Set
+import qualified Language.Preprocessor.Cpphs                   as Cpphs
 
 import qualified Flowbox.Batch.Project.Project                 as Project
 import           Flowbox.Control.Error                         hiding (err)

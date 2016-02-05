@@ -1,8 +1,7 @@
-{-# LANGUAGE   GADTs #-} 
-{-# LANGUAGE   DeriveDataTypeable #-} 
-{-# LANGUAGE   ScopedTypeVariables #-} 
-{-# LANGUAGE   ViewPatterns #-} 
-{-# LANGUAGE   FunctionalDependencies #-} 
+{-# LANGUAGE DeriveDataTypeable     #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE GADTs                  #-}
+{-# LANGUAGE ScopedTypeVariables    #-}
 
 
 
@@ -43,7 +42,7 @@ module Data.HMap.Weak where
 --lookupKey (toKey -> Key :: Key a) (HMap m) =  (fmap getVal (M.lookup key m) :: Maybe a) where
 --  key = typeOf (undefined :: a)
 --  -- we know it is alive, how else did we get the key?
---  getVal v = (keepAlive key unsafeFromHideType) -- keep key alive till unsafeFromHideType 
+--  getVal v = (keepAlive key unsafeFromHideType) -- keep key alive till unsafeFromHideType
 --             (unsafePerformIO (liftM fromJust (deRefWeak v)))
 
 --  -- this function keeps the key k alive until computing whnf of application of f to x
@@ -55,7 +54,7 @@ module Data.HMap.Weak where
 --insertKey _ = insert
 
 --insert :: Typeable a => a -> HMap -> HMap
---insert a (HMap m) = v `seq` HMap (M.insert key v m) 
+--insert a (HMap m) = v `seq` HMap (M.insert key v m)
 --    where key = typeOf a
 --          v   = unsafeMKWeak key (HideType a)
 --{- NOINLINE unsafeMKWeak -}
@@ -82,9 +81,9 @@ module Data.HMap.Weak where
 
 ----main = do
 ----    let m = HMap
-----        m2 = insertKey kA (A 10) 
-----           $ insert (A (11::Float)) 
-----           $ insertKey kC (C 12) 
+----        m2 = insertKey kA (A 10)
+----           $ insert (A (11::Float))
+----           $ insertKey kC (C 12)
 ----           $ mempty
 
 ----    print $ (lookup m2 :: Maybe (A Float))

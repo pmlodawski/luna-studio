@@ -10,9 +10,9 @@ module Luna.DEP.Data.HAST.Module (
         module Luna.DEP.Data.HAST.Expr
 )where
 
-import Flowbox.Prelude
-import Luna.DEP.Data.HAST.Expr
-import Luna.DEP.Data.HAST.Extension (Extension)
+import           Flowbox.Prelude
+import           Luna.DEP.Data.HAST.Expr
+import           Luna.DEP.Data.HAST.Extension (Extension)
 
 
 empty :: Expr

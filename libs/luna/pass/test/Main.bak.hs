@@ -14,14 +14,14 @@
 
 --module Luna.Build.Build where
 
-import Control.Monad.RWS hiding (mapM, mapM_, when)
+import           Control.Monad.RWS                          hiding (mapM, mapM_, when)
 
 import           Control.Monad.Trans.Either
 import           Data.String.Utils                          (replace)
 import           Data.Text.Lazy                             (pack, unpack)
-import           System.FilePath                            ((</>), splitDirectories)
-import           System.IO                                  (writeFile)
 import qualified System.Environment                         as Env
+import           System.FilePath                            (splitDirectories, (</>))
+import           System.IO                                  (writeFile)
 import           Text.Show.Pretty                           (ppShow)
 
 import           Flowbox.Control.Error
@@ -43,7 +43,6 @@ import qualified Luna.Parser.Parser                         as Parser
 import qualified Luna.Parser.Pragma                         as Pragma
 import qualified Luna.Pass                                  as Pass
 import qualified Luna.Pass.Analysis.Imports                 as Imports
-import qualified Luna.Pass.Transform.StdInsert              as StdInsert
 import qualified Luna.Pass.Analysis.Struct                  as SA
 import           Luna.Pass.Import                           (getImportPaths)
 import qualified Luna.Pass.Import                           as Import
@@ -55,15 +54,16 @@ import qualified Luna.Pass.Transform.Desugar.ImplicitSelf   as ImplSelf
 import qualified Luna.Pass.Transform.Parse.Stage1           as Stage1
 import qualified Luna.Pass.Transform.Parse.Stage2           as Stage2
 import qualified Luna.Pass.Transform.SSA                    as SSA
+import qualified Luna.Pass.Transform.StdInsert              as StdInsert
 import           Luna.Syntax.Name.Path                      (QualPath (QualPath))
 import qualified Luna.System.Pragma.Store                   as Pragma
 import           Luna.System.Session                        as Session
 
 
+import           Data.List.Utils                            (split)
+import           Data.String.Utils                          (replace)
 import qualified Luna.Data.ModuleInfo                       as ModInfo
 import qualified Luna.Syntax.Module                         as Module
-import           Data.String.Utils                          (replace)
-import           Data.List.Utils                            (split)
 
 
 
@@ -106,7 +106,7 @@ runSession inclStd s = do
         runEitherT s
     eitherStringToM $ out
 
-processCompilable rootSrc inclStd compilable  = do 
+processCompilable rootSrc inclStd compilable  = do
     let getBasePath = UniPath.toFilePath . UniPath.basePath . UniPath.fromFilePath
         rootPath    = getBasePath . getPath $ rootSrc ^. Source.src
         mkFile      = Source.File . pack . (rootPath </>) . (++ ".luna") . ModInfo.modPathToString
@@ -116,7 +116,7 @@ processCompilable rootSrc inclStd compilable  = do
 
 
 --processSource src = parseSourceWithFun src src False (\_ _ _ -> return [])
-    
+
 
 --parseSource' rootSrc src inclStd = parseSourceWithFun rootSrc src inclStd processCompilable
 
@@ -198,7 +198,7 @@ header txt = "\n-------- " <> txt <> " --------"
 printHeader :: (MonadIO m) => String -> m ()
 printHeader = putStrLn . header
 
-ppPrint :: (MonadIO m, Show a) => a -> m ()  
+ppPrint :: (MonadIO m, Show a) => a -> m ()
 ppPrint = putStrLn . ppShow
 
 

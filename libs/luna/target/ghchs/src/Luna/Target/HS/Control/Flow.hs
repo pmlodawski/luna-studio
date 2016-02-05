@@ -7,5 +7,5 @@
 
 module Luna.Target.HS.Control.Flow (module X) where
 
-import Luna.Target.HS.Control.Flow.Env   as X
-import Luna.Target.HS.Control.Flow.Error as X
+import           Luna.Target.HS.Control.Flow.Env   as X
+import           Luna.Target.HS.Control.Flow.Error as X

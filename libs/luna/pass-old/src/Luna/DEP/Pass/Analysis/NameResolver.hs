@@ -13,10 +13,10 @@
 module Luna.DEP.Pass.Analysis.NameResolver where
 
 import           Control.Applicative
-import           Control.Monad.State hiding (mapM, mapM_)
-import qualified Data.List           as List
-import           Data.List.Split     (splitOn)
-import qualified Data.Maybe          as Maybe
+import           Control.Monad.State         hiding (mapM, mapM_)
+import qualified Data.List                   as List
+import           Data.List.Split             (splitOn)
+import qualified Data.Maybe                  as Maybe
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude             hiding (elements, mod)

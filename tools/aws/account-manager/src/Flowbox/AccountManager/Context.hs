@@ -8,8 +8,8 @@
 
 module Flowbox.AccountManager.Context where
 
-import qualified AWS                        as AWS
-import qualified Database.PostgreSQL.Simple as PSQL
+import qualified AWS                           as AWS
+import qualified Database.PostgreSQL.Simple    as PSQL
 
 import           Flowbox.AWS.Database.Database (Database)
 import qualified Flowbox.AWS.Database.Database as Database

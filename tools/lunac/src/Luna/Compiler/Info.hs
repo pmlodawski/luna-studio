@@ -9,4 +9,4 @@ module Luna.Compiler.Info (
     module Paths_luna_compiler
 ) where
 
-import Paths_luna_compiler (version)
+import           Paths_luna_compiler (version)

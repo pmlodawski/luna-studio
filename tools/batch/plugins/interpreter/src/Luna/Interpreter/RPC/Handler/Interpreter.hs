@@ -8,11 +8,11 @@
 {-# LANGUAGE TupleSections   #-}
 module Luna.Interpreter.RPC.Handler.Interpreter where
 
-import           Control.Monad.Catch (bracket_)
-import qualified Data.Foldable       as Foldable
-import qualified Data.Maybe          as Maybe
-import qualified Data.MultiSet       as MultiSet
-import qualified Data.Sequence       as Sequence
+import           Control.Monad.Catch                                                         (bracket_)
+import qualified Data.Foldable                                                               as Foldable
+import qualified Data.Maybe                                                                  as Maybe
+import qualified Data.MultiSet                                                               as MultiSet
+import qualified Data.Sequence                                                               as Sequence
 
 import qualified Flowbox.Bus.Data.Message                                                    as Message
 import           Flowbox.Bus.RPC.RPC                                                         (RPC)

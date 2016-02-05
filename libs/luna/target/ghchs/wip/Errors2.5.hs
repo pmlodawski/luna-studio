@@ -11,16 +11,16 @@
 
 {-# LANGUAGE UndecidableInstances      #-}
 
-import Control.Applicative    hiding (pure)
-import Control.Monad.IO.Class
-import Control.Monad.Trans
+import           Control.Applicative    hiding (pure)
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans
 --import Control.Monad.State
 
 --import Bind2 (bind, bind2, MonadRebase(..), StateT(..), put,get)
 
 --import Data2
 
-import Utils
+import           Utils
 
 
 

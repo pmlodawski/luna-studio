@@ -12,7 +12,7 @@ module Flowbox.Control.Concurrent (
 import           Control.Concurrent
 import qualified Control.Exception  as Exception
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

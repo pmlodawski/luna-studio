@@ -7,7 +7,7 @@
 
 module Test.Flowbox.System.UniPathSpec where
 
-import Test.Hspec
+import           Test.Hspec
 
 import           Flowbox.Prelude
 import           Flowbox.System.UniPath (UniPath)

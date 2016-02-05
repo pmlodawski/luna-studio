@@ -10,7 +10,7 @@ module Luna.DEP.Graph.Graph(
     module Luna.DEP.Graph.Graph,
 ) where
 
-import qualified Data.List as List
+import qualified Data.List           as List
 
 import           Flowbox.Data.Graph  hiding (Edge, Graph)
 import qualified Flowbox.Data.Graph  as DG

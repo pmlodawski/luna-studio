@@ -13,7 +13,7 @@ import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe      as Maybe
 
-import Flowbox.Prelude hiding (children, lookup, toList)
+import           Flowbox.Prelude hiding (children, lookup, toList)
 
 
 

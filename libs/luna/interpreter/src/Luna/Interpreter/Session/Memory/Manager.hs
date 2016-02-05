@@ -8,15 +8,15 @@
 
 module Luna.Interpreter.Session.Memory.Manager where
 
-import qualified Control.Monad.Ghc          as MGHC
+import qualified Control.Monad.Ghc                           as MGHC
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
 
-import Flowbox.Prelude
-import Luna.Interpreter.Session.Data.KeyName       (KeyName)
-import Luna.Interpreter.Session.Env.Env            (Env)
-import Luna.Interpreter.Session.Error              (Error)
-import Luna.Interpreter.Session.Memory.Data.Status (Status)
+import           Flowbox.Prelude
+import           Luna.Interpreter.Session.Data.KeyName       (KeyName)
+import           Luna.Interpreter.Session.Env.Env            (Env)
+import           Luna.Interpreter.Session.Error              (Error)
+import           Luna.Interpreter.Session.Memory.Data.Status (Status)
 
 
 

@@ -5,7 +5,7 @@
 {-# LANGUAGE OverlappingInstances   #-}
 {-# LANGUAGE UndecidableInstances   #-}
 
-import Tmp
+import           Tmp
 
 myId2 (Pure a) = (Pure a)
 

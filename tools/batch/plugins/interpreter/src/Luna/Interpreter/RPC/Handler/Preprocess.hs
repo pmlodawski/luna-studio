@@ -11,10 +11,10 @@
 
 module Luna.Interpreter.RPC.Handler.Preprocess where
 
-import           Control.Monad (forever)
-import           Data.Map      (Map)
-import qualified Data.Map      as Map
-import           Data.Maybe    (fromMaybe)
+import           Control.Monad                      (forever)
+import           Data.Map                           (Map)
+import qualified Data.Map                           as Map
+import           Data.Maybe                         (fromMaybe)
 import qualified Pipes
 
 import           Flowbox.Bus.Data.Message           (Message)

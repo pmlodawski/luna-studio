@@ -18,12 +18,12 @@ module Flowbox.System.Process (
 ) where
 
 import           Control.Applicative
-import qualified Control.Exception   as Exception
-import           Data.Foldable       (forM_)
-import qualified System.Exit         as Exit
-import qualified System.IO           as IO
-import           System.Process      hiding (readProcess, readProcessWithExitCode, runProcess)
-import qualified System.Process      as Process
+import qualified Control.Exception                  as Exception
+import           Data.Foldable                      (forM_)
+import qualified System.Exit                        as Exit
+import qualified System.IO                          as IO
+import           System.Process                     hiding (readProcess, readProcessWithExitCode, runProcess)
+import qualified System.Process                     as Process
 
 import           Data.String.Utils                  (join)
 import           Flowbox.Prelude                    hiding (error)

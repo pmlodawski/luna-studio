@@ -7,22 +7,21 @@
 
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
 
-{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE OverlappingInstances      #-}
 
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 
@@ -30,8 +29,8 @@
 
 module Test.Luna.Comp.SamplesSpec where
 
-import Prelude
-import Flowbox.Test.QuickCheck
+import           Flowbox.Test.QuickCheck
+import           Prelude
 
 
 ------------------------------------------------------------------------

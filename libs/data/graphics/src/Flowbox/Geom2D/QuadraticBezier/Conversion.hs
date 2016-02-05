@@ -12,14 +12,14 @@ module Flowbox.Geom2D.QuadraticBezier.Conversion where
 import           Data.List
 import           Debug.Trace
 import           Geom2D
-import qualified Geom2D.CubicBezier.Basic as Cubic
+import qualified Geom2D.CubicBezier.Basic              as Cubic
 
-import Flowbox.Geom2D.Conversion
-import Flowbox.Geom2D.CubicBezier
-import Flowbox.Geom2D.CubicBezier.Conversion
-import Flowbox.Geom2D.QuadraticBezier
-import Flowbox.Geom2D.CubicBezier.Solve
-import Flowbox.Prelude                       hiding ((++))
+import           Flowbox.Geom2D.Conversion
+import           Flowbox.Geom2D.CubicBezier
+import           Flowbox.Geom2D.CubicBezier.Conversion
+import           Flowbox.Geom2D.CubicBezier.Solve
+import           Flowbox.Geom2D.QuadraticBezier
+import           Flowbox.Prelude                       hiding ((++))
 
 
 

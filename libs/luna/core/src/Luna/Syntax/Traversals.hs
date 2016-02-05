@@ -4,16 +4,16 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE DysfunctionalDependencies #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Luna.Syntax.Traversals (module X) where
 
-import Luna.Syntax.Traversals.Class   as X
-import Luna.Syntax.Traversals.Default as X
+import           Luna.Syntax.Traversals.Class   as X
+import           Luna.Syntax.Traversals.Default as X
 
 --import           Flowbox.Prelude        hiding (Traversal)
 --import           Control.Applicative
@@ -41,7 +41,7 @@ import Luna.Syntax.Traversals.Default as X
 --          , lit  :: Label a (Lit     ) -> m (Label a' Lit)
 --          , pat  :: Label a (Pat  a  ) -> m (Label a' (Pat  a'))
 --          , tp   :: Label a (Type a  ) -> m (Label a' (Type a'))
---          } 
+--          }
 
 --class Traversal cfg a m b | cfg a -> b where
 --    traverseM :: (Monad m, Applicative m) => cfg m -> a -> m b
@@ -174,7 +174,7 @@ import Luna.Syntax.Traversals.Default as X
 --    defaultTraverseM b (Decl.Cons name fields) = Decl.Cons <$> traverseM b name <*> traverseM b fields
 
 --instance ( Traversal base m (LType a) (LType a)
---         , Traversal base m e f) 
+--         , Traversal base m e f)
 --         => DefaultTraversal base m (Decl.Field a e) (Decl.Field a f) where
 --    defaultTraverseM b (Decl.Field tp name val) = Decl.Field <$> traverseM b tp <*> traverseM b name <*> traverseM b val
 
@@ -199,7 +199,7 @@ import Luna.Syntax.Traversals.Default as X
 ---- ----- Arg -----
 
 --instance ( Traversal base m (LPat a) (LPat a)
---         , Traversal base m v g) 
+--         , Traversal base m v g)
 --         => DefaultTraversal base m (Arg a v) (Arg a g) where
 --    defaultTraverseM b (Arg pat value) = Arg <$> traverseM b pat <*> traverseM b value
 
@@ -207,7 +207,7 @@ import Luna.Syntax.Traversals.Default as X
 
 ---- ----- Native -----
 
---instance DefaultTraversal base m (Native e) (Native e) 
+--instance DefaultTraversal base m (Native e) (Native e)
 
 
 ---- ----- Pat -----
@@ -219,12 +219,12 @@ import Luna.Syntax.Traversals.Default as X
 --    defaultTraverseM b = \case
 --        Pat.App         src   args -> Pat.App         <$> traverseM b src   <*> traverseM b args
 --        Pat.Typed       pat   cls  -> Pat.Typed       <$> traverseM b pat   <*> traverseM b cls
---        Pat.Grouped     pat        -> Pat.Grouped     <$> traverseM b pat 
---        Pat.Lit         lit        -> Pat.Lit         <$> traverseM b lit 
---        Pat.Tuple       items      -> Pat.Tuple       <$> traverseM b items 
+--        Pat.Grouped     pat        -> Pat.Grouped     <$> traverseM b pat
+--        Pat.Lit         lit        -> Pat.Lit         <$> traverseM b lit
+--        Pat.Tuple       items      -> Pat.Tuple       <$> traverseM b items
 --        Pat.Con         name       -> Pat.Con         <$> traverseM b name
 --        Pat.Var         name       -> Pat.Var         <$> traverseM b name
---        Pat.Wildcard               -> pure Pat.Wildcard   
+--        Pat.Wildcard               -> pure Pat.Wildcard
 --        Pat.RecWildcard            -> pure Pat.RecWildcard
 
 

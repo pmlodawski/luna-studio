@@ -9,7 +9,7 @@
 
 module Luna.DEP.Lib.Lib where
 
-import Data.Version (Version)
+import           Data.Version               (Version)
 
 import           Flowbox.Prelude
 import           Flowbox.System.UniPath     (UniPath)

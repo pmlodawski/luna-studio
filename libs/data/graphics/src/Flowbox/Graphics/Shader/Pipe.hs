@@ -9,12 +9,12 @@
 
 module Flowbox.Graphics.Shader.Pipe ( pipe ) where
 
-import Flowbox.Graphics.Shader.Matrix
-import Flowbox.Graphics.Shader.Rasterizer
-import Flowbox.Graphics.Shader.Shader
-import Flowbox.Prelude                    as P hiding (transform)
+import           Flowbox.Graphics.Shader.Matrix
+import           Flowbox.Graphics.Shader.Rasterizer
+import           Flowbox.Graphics.Shader.Shader
+import           Flowbox.Prelude                    as P hiding (transform)
 
-import Flowbox.Math.Matrix as M hiding (ftrans)
+import           Flowbox.Math.Matrix                as M hiding (ftrans)
 
 
 pipe :: Elt a

@@ -9,14 +9,14 @@
 
 module Luna.Data.StructInfo where
 
-import GHC.Generics (Generic)
+import           GHC.Generics             (Generic)
 
 
-import           Control.Monad     (join)
-import           Control.Monad.RWS (RWST)
-import           Data.IntMap       (IntMap)
-import           Data.Map          (Map)
-import qualified Data.Maps         as Map
+import           Control.Monad            (join)
+import           Control.Monad.RWS        (RWST)
+import           Data.IntMap              (IntMap)
+import           Data.Map                 (Map)
+import qualified Data.Maps                as Map
 
 import           Flowbox.Data.MapForest   (MapForest)
 import qualified Flowbox.Data.MapForest   as MapForest

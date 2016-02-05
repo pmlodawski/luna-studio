@@ -10,7 +10,7 @@
 
 module Luna.Compiler.Build where
 
-import Control.Applicative
+import           Control.Applicative
 
 import           Flowbox.Config.Config           (Config)
 import qualified Flowbox.Config.Config           as Config

@@ -13,12 +13,12 @@ import qualified GHC
 import qualified GhcMonad
 import qualified HscTypes
 import qualified InstEnv
-import           Text.Show.Pretty (ppShow)
+import           Text.Show.Pretty                  (ppShow)
 
-import Flowbox.Prelude
-import Flowbox.System.Log.Logger
-import Luna.Interpreter.Session.GHC.Util (dshow)
-import Luna.Interpreter.Session.Session  (Session)
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
+import           Luna.Interpreter.Session.GHC.Util (dshow)
+import           Luna.Interpreter.Session.Session  (Session)
 
 
 

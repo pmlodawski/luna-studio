@@ -9,12 +9,12 @@
 
 module Luna.Parser.Operator where
 
+import           Data.Map            (Map)
+import qualified Data.Map            as Map
 import           Flowbox.Prelude
 import           Luna.Data.ASTInfo   (ASTInfo)
 import           Luna.Data.SourceMap (SourceMap)
 import qualified Luna.Data.SourceMap as SourceMap
-import qualified Data.Map            as Map
-import           Data.Map            (Map)
 
 
 ------------------------------------------------------------------------

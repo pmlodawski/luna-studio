@@ -7,12 +7,12 @@
 
 module Flowbox.Data.IndexedSet where
 
-import           Data.List (sortBy)
-import           Data.Ord  (comparing)
-import           Data.Set  (Set)
-import qualified Data.Set  as Set
+import           Data.List       (sortBy)
+import           Data.Ord        (comparing)
+import           Data.Set        (Set)
+import qualified Data.Set        as Set
 
-import Flowbox.Prelude hiding (empty, set)
+import           Flowbox.Prelude hiding (empty, set)
 
 
 

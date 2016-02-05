@@ -7,7 +7,7 @@
 
 module Flowbox.ProjectManager.Version where
 
-import qualified Data.Version as Version
+import qualified Data.Version                  as Version
 
 import           Flowbox.Prelude
 import qualified Flowbox.ProjectManager.Config as Config

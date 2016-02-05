@@ -9,8 +9,8 @@
 
 module Data.Default.Instances.Missing where
 
-import Data.Text.Lazy           (Text)
-import Data.Default
+import           Data.Default
+import           Data.Text.Lazy (Text)
 
 
 

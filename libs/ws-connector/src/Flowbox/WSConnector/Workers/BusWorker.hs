@@ -1,24 +1,24 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.WSConnector.Workers.BusWorker (start) where
 
+import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import           Flowbox.Control.Error
 
-import           Control.Concurrent.STM        (atomically)
+import           Control.Concurrent                 (forkIO)
+import           Control.Concurrent.STM             (atomically)
 import           Control.Concurrent.STM.TChan
-import           Control.Concurrent            (forkIO)
-import           Control.Monad                 (forever)
-import           Flowbox.Bus.Bus               (Bus)
-import qualified Flowbox.Bus.Bus               as Bus
-import           Flowbox.Bus.EndPoint          (BusEndPoints)
-import qualified Flowbox.Bus.Data.Flag         as Flag
-import qualified Flowbox.Bus.Data.Message      as Message
-import qualified Flowbox.Bus.Data.MessageFrame as MessageFrame
+import           Control.Monad                      (forever)
+import           Flowbox.Bus.Bus                    (Bus)
+import qualified Flowbox.Bus.Bus                    as Bus
+import qualified Flowbox.Bus.Data.Flag              as Flag
+import qualified Flowbox.Bus.Data.Message           as Message
+import qualified Flowbox.Bus.Data.MessageFrame      as MessageFrame
+import           Flowbox.Bus.EndPoint               (BusEndPoints)
 
-import           Flowbox.WSConnector.Data.WSMessage (WSMessage(..))
+import           Flowbox.WSConnector.Data.WSMessage (WSMessage (..))
 
 logger :: LoggerIO
 logger = getLoggerIO $moduleName

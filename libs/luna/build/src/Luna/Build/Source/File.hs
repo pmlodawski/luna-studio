@@ -14,11 +14,11 @@ module Luna.Build.Source.File where
 
 import           Control.Applicative
 import           Control.Monad.RWS
-import qualified Data.List           as List
-import           Data.String.Utils   (replace)
-import qualified Data.String.Utils   as StringUtils
-import qualified Data.Text.Lazy      as Text
-import qualified System.IO           as IO
+import qualified Data.List                          as List
+import           Data.String.Utils                  (replace)
+import qualified Data.String.Utils                  as StringUtils
+import qualified Data.Text.Lazy                     as Text
+import qualified System.IO                          as IO
 
 import           Flowbox.Prelude                    hiding (error, id)
 import qualified Flowbox.System.Directory.Directory as Directory
@@ -26,7 +26,7 @@ import           Flowbox.System.Log.Logger
 import           Flowbox.System.UniPath             (UniPath)
 import qualified Flowbox.System.UniPath             as UniPath
 import           Luna.Data.Source                   (Code (Code), File (File), Source (Source))
-import Luna.Syntax.Name.Path (QualPath(QualPath))
+import           Luna.Syntax.Name.Path              (QualPath (QualPath))
 
 
 

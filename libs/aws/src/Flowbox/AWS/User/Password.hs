@@ -14,7 +14,7 @@ import           Database.PostgreSQL.Simple.FromRow (FromRow, field, fromRow)
 import           Database.PostgreSQL.Simple.ToField (toField)
 import           Database.PostgreSQL.Simple.ToRow   (ToRow, toRow)
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

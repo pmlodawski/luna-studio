@@ -9,9 +9,9 @@
 
 module Luna.Interpreter.Session.Cache.Value where
 
-import           Control.Monad (foldM)
-import qualified Data.Map      as Map
-import qualified Data.MultiSet as MultiSet
+import           Control.Monad                               (foldM)
+import qualified Data.Map                                    as Map
+import qualified Data.MultiSet                               as MultiSet
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude

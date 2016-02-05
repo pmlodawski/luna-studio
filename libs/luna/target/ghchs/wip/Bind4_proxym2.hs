@@ -1,20 +1,19 @@
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
+
+
+
+{-# LANGUAGE DeriveDataTypeable        #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE TypeFamilies #-}
-
-
-
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE RebindableSyntax          #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 --{-# LANGUAGE DysfunctionalDependencies #-}
 
@@ -23,30 +22,30 @@
 
 module Bind2 where
 
-import Control.Applicative
-import Control.Monad.IO.Class
-import Control.Monad.Trans
-import Control.PolyApplicative
-import Control.PolyApplicative.App
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans
+import           Control.PolyApplicative
+import           Control.PolyApplicative.App
 
-import Luna.Target.HS.Control.Context
-import Luna.Target.HS.Control.Error
+import           Luna.Target.HS.Control.Context
+import           Luna.Target.HS.Control.Error
 
-import Luna.Target.HS.Utils.BaseMonads
+import           Luna.Target.HS.Utils.BaseMonads
 
-import Control.Monad.Morph
-import Flowbox.Utils
-import Data.Typeable (Typeable, Proxy(..))
+import           Control.Monad.Morph
+import           Data.Typeable                             (Proxy (..), Typeable)
+import           Flowbox.Utils
 
-import Data.TypeLevel
-import Data.Wrap
+import           Data.TypeLevel
+import           Data.Wrap
 
 
-import Luna.Target.HS.Control.Context.Rebindable
+import           Luna.Target.HS.Control.Context.Rebindable
 ------------------------------------------------------------------------------------------
 
 
-tst ::  (MonadIO m, MonadState s0 m, MonadReader a0 m, Num s0)=>MonadCtx IO (Proxy StateT,(Proxy ReaderT, ())) m ()  
+tst ::  (MonadIO m, MonadState s0 m, MonadReader a0 m, Num s0)=>MonadCtx IO (Proxy StateT,(Proxy ReaderT, ())) m ()
 tst = do
     Pure x <- getX
     y <- askX
@@ -54,7 +53,7 @@ tst = do
     putX (x+1)
 
 
-tst2 ::  (MonadIO m, MonadState s0 m, MonadReader a0 m)=>MonadCtx IO (Proxy StateT,(Proxy ReaderT, ())) m (Safe Int)  
+tst2 ::  (MonadIO m, MonadState s0 m, MonadReader a0 m)=>MonadCtx IO (Proxy StateT,(Proxy ReaderT, ())) m (Safe Int)
 tst2 = do
     Pure x <- getX
     y <- askX

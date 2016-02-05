@@ -17,18 +17,18 @@ module Flowbox.Graphics.Composition.Dither where
 import qualified Data.Array.Accelerate             as A
 import qualified Data.Array.Accelerate.Array.Sugar as Sugar
 
-import Data.Vector.Unboxed as VU hiding (update)
-import Foreign.Storable
+import           Data.Vector.Unboxed               as VU hiding (update)
+import           Foreign.Storable
 
-import Flowbox.Math.Index
-import Flowbox.Math.Matrix as M hiding (size)
-import Flowbox.Prelude     as P hiding (ix)
+import           Flowbox.Math.Index
+import           Flowbox.Math.Matrix               as M hiding (size)
+import           Flowbox.Prelude                   as P hiding (ix)
 
-import Math.Coordinate.Cartesian hiding (x, y)
-import Math.Space.Space          hiding (height, width)
+import           Math.Coordinate.Cartesian         hiding (x, y)
+import           Math.Space.Space                  hiding (height, width)
 
-import Data.Function
-import Data.List
+import           Data.Function
+import           Data.List
 
 
 

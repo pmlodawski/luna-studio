@@ -8,10 +8,10 @@
 
 module Flowbox.Geom2D.Path where
 
-import Data.Binary (Binary)
+import           Data.Binary                 (Binary)
 
-import Flowbox.Geom2D.ControlPoint
-import Flowbox.Prelude
+import           Flowbox.Geom2D.ControlPoint
+import           Flowbox.Prelude
 
 
 

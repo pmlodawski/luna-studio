@@ -7,7 +7,7 @@
 
 module Flowbox.Bus.Logger.Version where
 
-import qualified Data.Version as Version
+import qualified Data.Version              as Version
 
 import qualified Flowbox.Bus.Logger.Config as Config
 import           Flowbox.Prelude

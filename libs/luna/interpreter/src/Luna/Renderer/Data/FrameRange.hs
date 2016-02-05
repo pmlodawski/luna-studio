@@ -7,11 +7,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Luna.Renderer.Data.FrameRange where
 
-import           Data.IntSet (IntSet)
-import qualified Data.IntSet as IntSet
+import           Data.IntSet                        (IntSet)
+import qualified Data.IntSet                        as IntSet
 
-import Flowbox.Prelude
-import Luna.Interpreter.Session.Data.Time (Time)
+import           Flowbox.Prelude
+import           Luna.Interpreter.Session.Data.Time (Time)
 
 
 

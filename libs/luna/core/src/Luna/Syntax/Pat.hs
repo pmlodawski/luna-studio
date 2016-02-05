@@ -8,7 +8,7 @@
 
 module Luna.Syntax.Pat where
 
-import Data.Binary (Binary)
+import           Data.Binary           (Binary)
 
 import           Flowbox.Prelude
 import           Luna.Syntax.Label     (Label)
@@ -26,8 +26,8 @@ type L      = Label
 data Pat a
     = App         { _src   :: LPat a    , _args :: [LPat a] }
     | Typed       { _pat   :: LPat a    , _cls  :: LType a  }
-    | Grouped     { _pat   :: LPat a                        }
-    | Lit         { _lit   :: L a Lit                       }
+    | Grouped     { _pat :: LPat a                        }
+    | Lit         { _lit :: L a Lit                       }
     | Tuple       { _items :: [LPat a ]                     }
     | Con         { _cname :: CName                         }
     | Var         { _vname :: VName                         }

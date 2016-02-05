@@ -5,23 +5,23 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
 
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs                     #-}
 --{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TypeFamilies              #-}
 
 
 
@@ -31,21 +31,21 @@
 
 module Luna.Target.HS.Utils.BaseMonads where
 
-import Luna.Target.HS.Control.Error
-import Luna.Target.HS.Control.Flow
-import Control.Monad.Trans
-import Control.Monad.Morph hiding (MonadTrans, lift)
-import Data.Typeable (Typeable)
-import Luna.Target.HS.Control.Context
-import Data.TypeLevel
-import Data.Typeable
-import Control.Applicative
-import Control.Monad (ap)
+import           Control.Applicative
+import           Control.Monad                  (ap)
+import           Control.Monad.Morph            hiding (MonadTrans, lift)
+import           Control.Monad.Trans
+import           Data.Typeable                  (Typeable)
+import           Data.Typeable
+import           Data.TypeLevel
+import           Luna.Target.HS.Control.Context
+import           Luna.Target.HS.Control.Error
+import           Luna.Target.HS.Control.Flow
 
-import Control.PolyMonad
+import           Control.PolyMonad
 
 
-import Flowbox.Utils
+import           Flowbox.Utils
 
 --print' = liftIO . print
 
@@ -102,50 +102,50 @@ instance (Monad m) => Functor (ReaderT r m) where
 -- StateT monad
 --------------------------------------------------------------------------------
 
--- data Vector a = Vector { x :: a 
+-- data Vector a = Vector { x :: a
 --                        , y :: a
 --                        , z :: a
 --                        , t :: a -> a
 --                        } deriving Show
- 
+
 -- class Vector a:
 --     x,y,z :: a
 --     t     :: a -> a
- 
- 
+
+
 -- ###
- 
+
 -- monad State s a:
 --     val :: s -> ctx (a, s)
- 
+
 --     def wrap val:
 --         State s: ctx.wrap (val, s)
- 
+
 --     def bind f:
 --         State s:
 --             (val2, subs) = unwrap (val s)
 --             (f val2).val subs
- 
+
 -- def get     : State s: (s, s)
 -- def put val : State _: ((), val)
--- def run st ::(a in State s) init::s : 
+-- def run st ::(a in State s) init::s :
 --     s.val(init).map(@.fst)
- 
+
 -- ### <=>
- 
+
 -- context State a:
 --     val :: a
- 
+
 --     def get: val
- 
+
 --     def put n:
 --         self.val = n
- 
- 
+
+
 -- konwersja w obie strony: monad <-> wartosc
 -- moze gadtsy?
 -- dowolne metody - zachowanie jak w klasach
- 
+
 -- >>= :: m a -> (a -> m b) -> m b
 
  --class Maybe a:
@@ -162,19 +162,19 @@ instance (Monad m) => Functor (ReaderT r m) where
 
 
 
- 
+
 ---  :: Value Pure (Safe (Maybe (Value Pure (Safe Int))))
 ---  -> Value Pure (Safe (MonadCtx Pure (Maybe,()) m (Value Pure (Safe Int))))
 ---
 ---  :: Value Pure (Safe (Maybe (Value Pure (Safe Int))))
 ---  -> MonadCtx Pure (Maybe,()) m (Safe (Value Pure (Safe Int)))
- 
+
 
 ---  -> MonadCtx Pure (Maybe,()) m (Safe Int)
 
- 
+
 -- Value Pure (Safe (Maybe Int)) -> Value Pure (Safe (MonadCtx Pure (Maybe,()) m Int))
- 
+
 -- Value Pure (Safe (Maybe Int)) -> (MonadCtx Pure (Maybe,()) m (Safe Int))
 
 
@@ -182,7 +182,7 @@ instance (Monad m) => Functor (ReaderT r m) where
 
 --put (x :: Value IO (Safe Int)) :: MonadCtx IO (Maybe,()) m (Safe Int)
 
---runStateT ... :: Value Pure (Safe    (Value IO(Safe Int) , Value IO(Safe Int))   ) 
+--runStateT ... :: Value Pure (Safe    (Value IO(Safe Int) , Value IO(Safe Int))   )
 
 
 --put (x :: Value IO (Safe Int)) :: MonadCtx IO (Maybe,()) m (Value IO (Safe Int))
@@ -190,7 +190,7 @@ instance (Monad m) => Functor (ReaderT r m) where
 
 --Pure (Safe val)
 
---MonadCtx Safe 
+--MonadCtx Safe
 
 --runMonadCtx -> Pure Safe val
 
@@ -206,7 +206,7 @@ data Unsafe2 a = Unsafe2 a deriving Show
 --liftIO :: IO a -> m a
 
 --instance MonadIO Safe2 where
---    liftIO a 
+--    liftIO a
 
 class Monad2 m where
     return2 :: Monad safety => a -> m safety a
@@ -346,10 +346,10 @@ instance  (Monad s, Monad3R m s) =>MonadState4 v (StateT3 v m) s  where
 put3 :: Monad3R m Safe => v -> StateT3 v m Safe v
 put3 s = StateT3 $ \_ -> wrap3 (s,s)
 
---raiseMe ::  Monad3R m (UnsafeBase Safe e)=>e -> m (UnsafeBase Safe e) ()  
+--raiseMe ::  Monad3R m (UnsafeBase Safe e)=>e -> m (UnsafeBase Safe e) ()
 --raiseMe e = return3 ()
 
-raiseMe ::  Monad3R m (UnsafeBase Safe e)=>e -> m (UnsafeBase Safe e) ()  
+raiseMe ::  Monad3R m (UnsafeBase Safe e)=>e -> m (UnsafeBase Safe e) ()
 raiseMe e = return3 (\_ -> Error e) ()
 
 tst1 = put3 (0::Int) `bindSafety` (\_ -> put3 (0::Int))
@@ -370,7 +370,7 @@ get5X = MonadCtx $ get4
 put5X :: MonadState4 val m Safe => val -> MonadCtx (Value Pure) (Insert (Proxy StateT3) Empty) m Safe (Value Pure Safe ())
 put5X = MonadCtx . put4
 
---put4X ::  MonadState4 v m Safe=>v -> MonadCtx PureS (Insert (Proxy StateT3) Empty) m Safe v  
+--put4X ::  MonadState4 v m Safe=>v -> MonadCtx PureS (Insert (Proxy StateT3) Empty) m Safe v
 --put4X = MonadCtx . put4
 
 
@@ -399,7 +399,7 @@ put5X = MonadCtx . put4
 --    lift2 :: m a -> t m s a
 
 --instance Lift2 Data where
---    func = 
+--    func =
 
 --instance Lift2 (StateT3 s) where
 --    lift m = StateT $ \s -> do
@@ -433,7 +433,7 @@ class Error a m where
     error' :: a -> m x
 
 --instance Error E1 Safe2 where
---    error' _ = 
+--    error' _ =
 
 instance (Monad m, Monad safety) => Monad (StateT2 s m safety) where
     return a = StateT2 $ \s -> return $ return (a, s)
@@ -455,7 +455,7 @@ instance x~Safe2 => MonadIO (Val IO x) where
 
 instance Monad (Val t m) where
 
-    
+
     --instance (Monad t, Monad m) => Monad (Val t m) where
     --    return = Val . return . return
 
@@ -524,19 +524,19 @@ state f = StateT (return . f)
 
 ----------------------------------------------------------------------
 
---getX2 ::  MonadState s m=>MonadCtx Pure (Insert (Proxy StateT) Empty) m s  
+--getX2 ::  MonadState s m=>MonadCtx Pure (Insert (Proxy StateT) Empty) m s
 --getX2 = MonadCtx get
 
---getX ::  MonadState s m=>MonadCtx Pure (Insert (Proxy StateT) Empty) m s  
+--getX ::  MonadState s m=>MonadCtx Pure (Insert (Proxy StateT) Empty) m s
 --getX = MonadCtx get
 
---putX ::  MonadState s m=>s -> MonadCtx Pure (Insert (Proxy StateT) Empty) m (Safe (Value Pure (Safe ())))  
+--putX ::  MonadState s m=>s -> MonadCtx Pure (Insert (Proxy StateT) Empty) m (Safe (Value Pure (Safe ())))
 --putX = MonadCtx . put
 
---askX ::  MonadReader s m=>MonadCtx Pure (Insert (Proxy ReaderT) Empty) m s  
+--askX ::  MonadReader s m=>MonadCtx Pure (Insert (Proxy ReaderT) Empty) m s
 --askX = MonadCtx ask
 
---getX' ::  MonadState s m=>MonadCtx Pure (ConstrainSet () (Insert (Proxy StateT) Empty)) m s  
+--getX' ::  MonadState s m=>MonadCtx Pure (ConstrainSet () (Insert (Proxy StateT) Empty)) m s
 --getX' = MonadCtx get
 
 runStateT' a s = fmap Safe $ runStateT a s

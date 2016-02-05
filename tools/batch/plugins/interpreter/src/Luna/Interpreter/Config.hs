@@ -9,6 +9,6 @@ module Luna.Interpreter.Config (
     module Paths_batch_plugin_interpreter,
 ) where
 
-import Paths_batch_plugin_interpreter (version)
+import           Paths_batch_plugin_interpreter (version)
 
 

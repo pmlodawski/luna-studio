@@ -13,8 +13,8 @@
 
 module Luna.DEP.Pass.Analysis.CallGraph.CallGraph where
 
-import Control.Applicative
-import Control.Monad.State (get)
+import           Control.Applicative
+import           Control.Monad.State                    (get)
 
 import           Flowbox.Prelude                        hiding (error, id, mod)
 import           Flowbox.System.Log.Logger

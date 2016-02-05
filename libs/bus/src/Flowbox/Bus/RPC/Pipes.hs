@@ -9,9 +9,9 @@
 
 module Flowbox.Bus.RPC.Pipes where
 
-import           Pipes            ((>->))
+import           Pipes                         ((>->))
 import qualified Pipes
-import qualified Pipes.Concurrent as Pipes
+import qualified Pipes.Concurrent              as Pipes
 
 import           Control.Monad                 (forever)
 import qualified Flowbox.Bus.Bus               as Bus

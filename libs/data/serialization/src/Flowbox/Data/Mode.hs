@@ -11,9 +11,9 @@ module Flowbox.Data.Mode (
     def,
 ) where
 
-import Data.Sequence
-import Flowbox.Prelude
-import Generated.Proto.Mode.Mode as X
+import           Data.Sequence
+import           Flowbox.Prelude
+import           Generated.Proto.Mode.Mode as X
 
 instance Default Mode where
     def = Mode Data.Sequence.empty

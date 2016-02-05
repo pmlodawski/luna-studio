@@ -8,25 +8,25 @@
 
 module Flowbox.RepoManager.Data.Repository where
 
-import           Data.Map (Map)
-import qualified Data.Map as Map
+import           Data.Map                                 (Map)
+import qualified Data.Map                                 as Map
 
-import qualified Flowbox.RepoManager.Data.Version     as Version
+import qualified Data.Either                              as Either
+import qualified Data.List                                as List
 import           Flowbox.Prelude
 import qualified Flowbox.RepoManager.Data.Package.Config  as Package
 import qualified Flowbox.RepoManager.Data.Package.Family  as Family
 import qualified Flowbox.RepoManager.Data.Package.Package as Package
-import qualified Flowbox.RepoManager.Data.RepoConfig  as RepoConfig
-import qualified Flowbox.RepoManager.Data.Types       as Types
-import qualified Flowbox.RepoManager.Utils.Utils      as Utils
-import qualified Data.Either                          as Either
-import qualified Data.List                            as List
-import qualified System.Directory                     as Directory
-import qualified System.FilePath                      as FilePath
-import qualified Flowbox.RepoManager.Utils.Utils      as Utils   (concatPath)
-import qualified Flowbox.RepoManager.VCS.VCS          as VCS
-import qualified Text.Regex.Posix                     as Regex
-import qualified Network.URI                          as URI
+import qualified Flowbox.RepoManager.Data.RepoConfig      as RepoConfig
+import qualified Flowbox.RepoManager.Data.Types           as Types
+import qualified Flowbox.RepoManager.Data.Version         as Version
+import qualified Flowbox.RepoManager.Utils.Utils          as Utils
+import qualified Flowbox.RepoManager.Utils.Utils          as Utils (concatPath)
+import qualified Flowbox.RepoManager.VCS.VCS              as VCS
+import qualified Network.URI                              as URI
+import qualified System.Directory                         as Directory
+import qualified System.FilePath                          as FilePath
+import qualified Text.Regex.Posix                         as Regex
 
 data Repository a = Repository { config   :: RepoConfig.RepoConfig
                                , packages :: Map Types.QualifiedPackageName Family.PackageFamily

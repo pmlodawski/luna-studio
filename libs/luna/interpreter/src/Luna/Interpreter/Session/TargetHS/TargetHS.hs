@@ -8,9 +8,9 @@
 
 module Luna.Interpreter.Session.TargetHS.TargetHS where
 
-import qualified Data.Map as Map
-import qualified Data.Set as Set
-import qualified DynFlags as GHC
+import qualified Data.Map                                    as Map
+import qualified Data.Set                                    as Set
+import qualified DynFlags                                    as GHC
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger

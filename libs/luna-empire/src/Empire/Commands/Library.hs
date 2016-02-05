@@ -4,24 +4,24 @@ module Empire.Commands.Library
     , createLibrary
     ) where
 
-import           Prologue
+import           Control.Monad.Error     (throwError)
 import           Control.Monad.State
-import           Control.Monad.Error      (throwError)
-import           System.Path              (Path)
-import qualified Data.IntMap              as IntMap
+import qualified Data.IntMap             as IntMap
+import           Prologue
+import           System.Path             (Path)
 
-import           Empire.Data.Project      (Project)
-import qualified Empire.Data.Project      as Project
-import           Empire.Data.Library      (Library)
-import qualified Empire.Data.Library      as Library
+import           Empire.Data.Library     (Library)
+import qualified Empire.Data.Library     as Library
+import           Empire.Data.Project     (Project)
+import qualified Empire.Data.Project     as Project
 
-import           Empire.API.Data.Project  (ProjectId)
-import           Empire.API.Data.Library  (LibraryId)
+import           Empire.API.Data.Library (LibraryId)
+import           Empire.API.Data.Project (ProjectId)
 
-import           Empire.Empire            (Empire, Command)
-import qualified Empire.Empire            as Empire
-import           Empire.Commands.Project  (withProject)
-import qualified Empire.Utils.IdGen       as IdGen
+import           Empire.Commands.Project (withProject)
+import           Empire.Empire           (Command, Empire)
+import qualified Empire.Empire           as Empire
+import qualified Empire.Utils.IdGen      as IdGen
 
 createLibrary :: ProjectId -> Maybe String -> Path -> Empire (LibraryId, Library)
 createLibrary pid name path = withProject pid $ do

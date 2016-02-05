@@ -13,8 +13,8 @@ module Luna.Passes.Inference.Literals
 import           Prelude.Luna
 
 import           Data.Construction
-import           Data.Prop
 import           Data.Layer.Cover
+import           Data.Prop
 
 import           Data.Record                         hiding (Layout, cons)
 import           Luna.Runtime.Model                  (Dynamic, Static)

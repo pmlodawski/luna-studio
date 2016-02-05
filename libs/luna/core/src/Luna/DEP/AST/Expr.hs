@@ -13,10 +13,10 @@
 
 module Luna.DEP.AST.Expr where
 
-import Control.Applicative
-import Control.Monad       ((<=<))
-import Data.Binary         (Binary)
-import GHC.Generics        (Generic)
+import           Control.Applicative
+import           Control.Monad                   ((<=<))
+import           Data.Binary                     (Binary)
+import           GHC.Generics                    (Generic)
 
 import qualified Data.Char                       as Char
 import           Flowbox.Generics.Deriving.QShow

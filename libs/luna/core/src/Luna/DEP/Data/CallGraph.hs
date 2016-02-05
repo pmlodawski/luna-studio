@@ -11,13 +11,13 @@
 
 module Luna.DEP.Data.CallGraph where
 
-import Data.Graph.Inductive               hiding (Node)
-import Data.Graph.Inductive.Monad
-import Data.Graph.Inductive.Monad.IOArray
-import Data.Graph.Inductive.Query.DFS
-import Data.Graph.Inductive.Tree          hiding (Gr)
+import           Data.Graph.Inductive               hiding (Node)
+import           Data.Graph.Inductive.Monad
+import           Data.Graph.Inductive.Monad.IOArray
+import           Data.Graph.Inductive.Query.DFS
+import           Data.Graph.Inductive.Tree          hiding (Gr)
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 type CallGraph = Gr () ()

@@ -11,12 +11,12 @@
 module Flowbox.Config.Config where
 
 import           Control.Applicative
-import qualified Control.Exception   as Exception
-import qualified Data.Configurator   as Configurator
-import qualified System.Environment  as Env
+import qualified Control.Exception         as Exception
+import qualified Data.Configurator         as Configurator
+import qualified System.Environment        as Env
 
-import Flowbox.Prelude           hiding (error)
-import Flowbox.System.Log.Logger
+import           Flowbox.Prelude           hiding (error)
+import           Flowbox.System.Log.Logger
 
 
 

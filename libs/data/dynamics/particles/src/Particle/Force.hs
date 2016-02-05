@@ -12,8 +12,8 @@ module Particle.Force (
 
 import qualified Data.Array.Accelerate as A
 
-import Particle
-import Particle.Algebra
+import           Particle
+import           Particle.Algebra
 
 data Force = Force Vec3
 

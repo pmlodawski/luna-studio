@@ -11,7 +11,7 @@ module Luna.Target.HS.AST.DataType (
         module Luna.Target.HS.AST.Expr
 )where
 
-import Luna.Target.HS.AST.Expr
+import           Luna.Target.HS.AST.Expr
 
 empty :: Expr
 empty = DataD "" [] [] []

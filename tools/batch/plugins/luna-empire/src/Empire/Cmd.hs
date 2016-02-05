@@ -1,6 +1,6 @@
 module Empire.Cmd where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 data Cmd = Run { topics  :: [String]

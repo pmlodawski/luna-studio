@@ -8,8 +8,8 @@
 
 module Flowbox.UR.Manager.Env where
 
-import Data.Map.Strict (Map)
-import Data.Time.Clock (UTCTime)
+import           Data.Map.Strict          (Map)
+import           Data.Time.Clock          (UTCTime)
 
 import           Flowbox.Bus.Data.Message (Message)
 import qualified Flowbox.Bus.Data.Message as Message

@@ -9,7 +9,7 @@
 
 module Luna.Interpreter.Session.Error where
 
-import           Control.Exception.Base     (SomeException)
+import           Control.Exception.Base                      (SomeException)
 import           Control.Monad.Trans.Either
 import qualified HscTypes
 

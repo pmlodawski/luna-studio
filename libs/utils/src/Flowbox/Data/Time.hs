@@ -10,8 +10,8 @@ module Flowbox.Data.Time (
 
 ) where
 
-import Data.Time
-import Flowbox.Prelude
+import           Data.Time
+import           Flowbox.Prelude
 
 
 

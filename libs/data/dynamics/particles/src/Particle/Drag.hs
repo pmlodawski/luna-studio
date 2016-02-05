@@ -13,8 +13,8 @@ module Particle.Drag (
 import           Control.Lens
 import qualified Data.Array.Accelerate as A
 
-import Particle
-import Particle.Algebra
+import           Particle
+import           Particle.Algebra
 
 data Drag = Drag Float
 

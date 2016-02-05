@@ -11,7 +11,7 @@
 
 module Luna.DEP.Pass.Analysis.ID.ExtractIDs where
 
-import Data.IntSet (IntSet)
+import           Data.IntSet                        (IntSet)
 
 import           Flowbox.Prelude                    hiding (mapM, mapM_)
 import           Flowbox.System.Log.Logger

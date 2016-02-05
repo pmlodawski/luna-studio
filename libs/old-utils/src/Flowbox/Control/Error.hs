@@ -4,8 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE CPP              #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE CPP #-}
 
 module Flowbox.Control.Error (
   module Flowbox.Control.Error
@@ -15,15 +15,15 @@ module Flowbox.Control.Error (
 ) where
 
 #if MIN_VERSION_errors(2,0,0)
-import Control.Error as X hiding (catchEither, runScript)
+import           Control.Error              as X hiding (catchEither, runScript)
 #else
-import Control.Error              as X hiding (catchEither, runScript, throwE)
-import Control.Monad.Trans.Either (bimapEitherT)
+import           Control.Error              as X hiding (catchEither, runScript, throwE)
+import           Control.Monad.Trans.Either (bimapEitherT)
 #endif
-import qualified Control.Exception as Exc
-import qualified Data.Maybe        as Maybe
+import qualified Control.Exception          as Exc
+import qualified Data.Maybe                 as Maybe
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 mkExceptT :: Monad m => m (Either e a) -> ExceptT e m a

@@ -7,22 +7,21 @@
 
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
 
-{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE OverlappingInstances      #-}
 
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 
@@ -30,19 +29,19 @@
 
 module Luna.Target.HS.Control.Error.ErrorSpec where
 
-import Prelude
-import Control.Applicative  
-import Control.Monad.IO.Class
-import Control.Monad.Trans
-import Data.Typeable
-import Control.PolyApplicative
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans
+import           Control.PolyApplicative
+import           Data.Typeable
+import           Prelude
 
-import Flowbox.Test.QuickCheck
+import           Flowbox.Test.QuickCheck
 
-import Luna.Target.HS.Control.Error
-import Luna.Target.HS.Control.Flow
-import Luna.Target.HS.Host.Lift
-import Flowbox.Utils
+import           Flowbox.Utils
+import           Luna.Target.HS.Control.Error
+import           Luna.Target.HS.Control.Flow
+import           Luna.Target.HS.Host.Lift
 
 
 ------------------------------------------------------------------------
@@ -78,37 +77,37 @@ spec = do
         it "e1 e2"       $ (raise E2 . raise E1) v                       `shouldBe` (Error E1 :: UnsafeBase (UnsafeBase Safe E2) E1 Int)
         it "e1 e2 e1"    $ (raise E1 . raise E2 . raise E1) v            `shouldBe` (Error E1 :: UnsafeBase (UnsafeBase Safe E2) E1 Int)
         it "e3 e1 e2 e1" $ (raise E3 . raise E1 . raise E2 . raise E1) v `shouldBe` (Error E1 :: UnsafeBase (UnsafeBase (UnsafeBase Safe E3) E2) E1 Int)
-  
+
     describe "LiftErr testing" $ do
         describe "[instance] LiftErr Safe Safe Safe" $ do
             it "sum v v"     $ summe' v v     `shouldBe` (Safe (2::Int))
-        
+
         describe "[instance] LiftErr Safe (UnsafeBase base e) (UnsafeBase base e)" $ do
             it "sum v e1"    $ summe' v e1   `shouldBe`  (Error E1 :: UnsafeBase Safe E1 Int)
             it "sum v e123"  $ summe' v e123 `shouldBe`  (Error E1 :: UnsafeBase (UnsafeBase (UnsafeBase Safe E3) E2) E1 Int)
             it "sum v v1x1"  $ summe' v v1x1 `shouldBe`  (UnsafeValue 2  :: UnsafeBase Safe E1 Int)
             it "sum v v2x12" $ summe' v v2x12 `shouldBe` (UnsafeOther (UnsafeValue 2)  :: UnsafeBase (UnsafeBase Safe E2) E1 Int)
             it "sum v v123"  $ summe' v v123 `shouldBe`  (UnsafeValue 2  :: UnsafeBase (UnsafeBase (UnsafeBase Safe E3) E2) E1 Int)
-        
+
         describe "[instance] LiftErr (UnsafeBase base e) Safe (UnsafeBase base e)" $ do
             it "sum e1   v"  $ summe' e1    v `shouldBe` (Error E1 :: UnsafeBase Safe E1 Int)
             it "sum e123 v"  $ summe' e123  v `shouldBe` (Error E1 :: UnsafeBase (UnsafeBase (UnsafeBase Safe E3) E2) E1 Int)
             it "sum v1x1 v"  $ summe' v1x1  v `shouldBe` (UnsafeValue 2  :: UnsafeBase Safe E1 Int)
             it "sum v2x12 v" $ summe' v2x12 v `shouldBe` (UnsafeOther (UnsafeValue 2)  :: UnsafeBase (UnsafeBase Safe E2) E1 Int)
             it "sum v123 v"  $ summe' v123  v `shouldBe` (UnsafeValue 2  :: UnsafeBase (UnsafeBase (UnsafeBase Safe E3) E2) E1 Int)
-        
+
         describe "[~] LiftErr (UnsafeBase base e) (UnsafeBase base e) (UnsafeBase base e)" $ do
             it "sum e1 e1"     $ summe' e1 e1     `shouldBe` (Error E1 :: UnsafeBase Safe E1 Int)
             it "sum e123 e123" $ summe' e123 e123 `shouldBe` (Error E1 :: UnsafeBase (UnsafeBase (UnsafeBase Safe E3) E2) E1 Int)
             it "sum v1x1 v1x1" $ summe' v1x1 v1x1 `shouldBe` (UnsafeValue 2  :: UnsafeBase Safe E1 Int)
-        
+
         describe "[instance] LiftErr (UnsafeBase base1 e) (UnsafeBase base2 e) (UnsafeBase dstBase e)" $ do
             it "sum e1 e1"       $ summe' e1 e1       `shouldBe` (Error E1 :: UnsafeBase Safe E1 Int)
             it "sum e34 e3"      $ summe' e34 e3      `shouldBe` (Error E3 :: UnsafeBase (UnsafeBase Safe E4) E3 Int)
             it "sum e3 e34"      $ summe' e3 e34      `shouldBe` (Error E3 :: UnsafeBase (UnsafeBase Safe E4) E3 Int)
             it "sum e34 e35"     $ summe' e34 e35     `shouldBe` (Error E3 :: UnsafeBase (UnsafeBase (UnsafeBase Safe E5) E4) E3 Int)
             it "sum v2x12 v3x13" $ summe' v2x12 v3x13 `shouldBe` (UnsafeOther (UnsafeValue 2) :: UnsafeBase (UnsafeBase (UnsafeBase Safe E3) E2) E1 Int)
-    
+
         describe "[instance] LiftErr (UnsafeBase base1 e1) (UnsafeBase base2 e2) (UnsafeBase dstBase e1)" $ do
             it "sum e23 e34"     $ summe' e23 e34     `shouldBe` (Error E2 :: UnsafeBase (UnsafeBase (UnsafeBase Safe E4) E3) E2 Int)
             it "sum v2x12 v1x21" $ summe' v2x12 v1x21 `shouldBe` (UnsafeOther (UnsafeValue 2) :: UnsafeBase (UnsafeBase Safe E2) E1 Int)

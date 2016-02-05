@@ -7,7 +7,7 @@
 
 module Test.Luna.Pass.Transform.Graph.GraphSpec where
 
-import Test.Hspec
+import           Test.Hspec
 
 import           Flowbox.Prelude
 import           Luna.Control.Crumb                    (Breadcrumbs)

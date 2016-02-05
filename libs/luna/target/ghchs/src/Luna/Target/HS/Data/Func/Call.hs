@@ -5,19 +5,19 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE PolyKinds                 #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 {-# LANGUAGE DysfunctionalDependencies #-}
 
@@ -25,23 +25,23 @@
 
 module Luna.Target.HS.Data.Func.Call where
 
-import GHC.TypeLits
-import Data.Typeable (Typeable, Proxy)
+import           Data.Typeable                  (Proxy, Typeable)
+import           GHC.TypeLits
 
 
-import Flowbox.Utils
+import           Flowbox.Utils
 
-import Control.PolyMonad
-import Luna.Target.HS.Data.Func.App
-import Luna.Target.HS.Data.Struct
-import Control.Monad.Shuffle
-import Luna.Target.HS.Data.Func.Func
-import Luna.Target.HS.Data.Func.Lam
+import           Control.Monad.Shuffle
+import           Control.PolyMonad
+import           Luna.Target.HS.Data.Func.App
+import           Luna.Target.HS.Data.Func.Func
+import           Luna.Target.HS.Data.Func.Lam
+import           Luna.Target.HS.Data.Struct
 
-import Luna.Target.HS.Data.Func.Args9 
+import           Luna.Target.HS.Data.Func.Args9
 import qualified Luna.Target.HS.Data.Func.Args9 as Args
 
-import Luna.Target.HS.Utils.MonoType (monoType, TVar, Analyze)
+import           Luna.Target.HS.Utils.MonoType  (Analyze, TVar, monoType)
 
 ----------------------------------------------------------------------------------
 -- Type classes
@@ -55,12 +55,12 @@ import Luna.Target.HS.Utils.MonoType (monoType, TVar, Analyze)
 ----------------------------------------------------------------------------------
 
 --callH :: ( MemberProvider obj name argRep (sig1, f1), AppArgs b (ArgsKind sig1) sig1 f1 k1 sig f, AppDefaults k1 f sig c
---         , Reverse a b, Analyze a argRep) 
+--         , Reverse a b, Analyze a argRep)
 --      => AppH (Mem obj name) a -> c
 --callH (AppH(fptr, args)) = appDefaults . appArgs args $ func sig f where
 --    (sig,f) = getMember fptr (monoType args)
 
---callL :: (Reverse a b, AppArgs b k1 sig1 f1 k sig f, AppDefaults k f sig c) 
+--callL :: (Reverse a b, AppArgs b k1 sig1 f1 k sig f, AppDefaults k f sig c)
 --      => AppH (Lam (Func k1 sig1 f1)) a -> c
 --callL (AppH (Lam f, args)) = appDefaults . appArgs args $ f
 
@@ -68,7 +68,7 @@ import Luna.Target.HS.Utils.MonoType (monoType, TVar, Analyze)
 --class Call' h args r | h args -> r where
 --    call' :: AppH h args -> r
 
---instance (Reverse a b, AppArgs b k1 sig1 f1 k sig f, AppDefaults k f sig c, fc~Func k1 sig1 f1) 
+--instance (Reverse a b, AppArgs b k1 sig1 f1 k sig f, AppDefaults k f sig c, fc~Func k1 sig1 f1)
 --      => Call' (Lam fc) a c where
 --    call' (AppH (Lam f, args)) = appDefaults . appArgs args $ f
 

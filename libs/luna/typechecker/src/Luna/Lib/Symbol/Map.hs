@@ -4,7 +4,7 @@
 
 module Luna.Lib.Symbol.Map where
 
-import Prologue
+import           Prologue
 
 --import           Control.Error.Operator
 --import           Control.Monad.Extra         (allM, findM)

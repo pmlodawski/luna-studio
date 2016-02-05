@@ -7,7 +7,7 @@
 
 module Test.Luna.DEP.Pass.Transform.SimpleText.SimpleTextSpec where
 
-import Test.Hspec
+import           Test.Hspec
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude

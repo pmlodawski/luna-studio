@@ -1,22 +1,22 @@
 module Flowbox.RepoManager.Data.Hooks.Install where
 
-import           Flowbox.Prelude
 import qualified Control.Exception                                 as Exception
 import           Control.Monad                                     (when)
-import           Flowbox.RepoManager.Data.Environment              (Command)
-import qualified Flowbox.RepoManager.Data.Hooks.Resolution         as Resolution
-import qualified Flowbox.RepoManager.Data.Package.Package          as Package
-import qualified Flowbox.RepoManager.Data.Package.Flag             as Flag
-import qualified Flowbox.RepoManager.Data.Package.InstalledPackage as InstalledPackage
-import qualified Flowbox.RepoManager.Data.RepoConfig               as RepoConfig
-import qualified Flowbox.RepoManager.Data.Repository               as Repository
-import qualified Flowbox.RepoManager.Data.Version                  as Version
-import qualified Flowbox.RepoManager.Utils.Utils                   as Utils
 import qualified Data.Digest.Pure.SHA                              as SHA
 import qualified Data.Graph                                        as Graph
 import qualified Data.List                                         as List
 import qualified Data.Map                                          as Map
 import qualified Data.Maybe                                        as Maybe
+import           Flowbox.Prelude
+import           Flowbox.RepoManager.Data.Environment              (Command)
+import qualified Flowbox.RepoManager.Data.Hooks.Resolution         as Resolution
+import qualified Flowbox.RepoManager.Data.Package.Flag             as Flag
+import qualified Flowbox.RepoManager.Data.Package.InstalledPackage as InstalledPackage
+import qualified Flowbox.RepoManager.Data.Package.Package          as Package
+import qualified Flowbox.RepoManager.Data.RepoConfig               as RepoConfig
+import qualified Flowbox.RepoManager.Data.Repository               as Repository
+import qualified Flowbox.RepoManager.Data.Version                  as Version
+import qualified Flowbox.RepoManager.Utils.Utils                   as Utils
 import qualified System.Directory                                  as Directory
 import qualified System.Exit                                       as Exit
 import qualified System.FilePath                                   as FilePath
@@ -44,7 +44,7 @@ installPackage repo package flags deps = let hash           = InstalledPackage.h
                                                 withEnv (prepareEnv repo thisPackageDir flags) $ do
                                                     dirExists <- Directory.doesDirectoryExist thisPackageDir
                                                     if dirExists then
-                                                            return $ Left "Directory already exists. Probably this package was installed before" 
+                                                            return $ Left "Directory already exists. Probably this package was installed before"
                                                         else do
                                                             Directory.createDirectoryIfMissing True thisPackageDir
                                                             installExitStatus <- tryExitCode $ runCommands $ package ^. Package.install

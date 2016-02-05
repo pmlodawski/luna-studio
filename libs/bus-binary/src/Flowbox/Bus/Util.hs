@@ -13,17 +13,17 @@
 
 module Flowbox.Bus.Util where
 
-import Data.Binary (Binary)
+import           Data.Binary               (Binary)
 
-import           Flowbox.Bus.Bus              (Bus)
-import qualified Flowbox.Bus.Bus              as Bus
-import           Flowbox.Bus.Data.Topic       (Topic)
-import qualified Flowbox.Bus.Data.Topic       as Topic
-import qualified Flowbox.Bus.RPC.Client       as Client
+import           Flowbox.Bus.Bus           (Bus)
+import qualified Flowbox.Bus.Bus           as Bus
+import           Flowbox.Bus.Data.Topic    (Topic)
+import qualified Flowbox.Bus.Data.Topic    as Topic
+import qualified Flowbox.Bus.RPC.Client    as Client
 import           Flowbox.Prelude
-import           Flowbox.System.Log.Logger    as L
+import           Flowbox.System.Log.Logger as L
 
-import Debug.Trace as T
+import           Debug.Trace               as T
 
 
 logger :: LoggerIO

@@ -7,15 +7,22 @@
   This version does not support lens integration.
 -}
 
-{-# LANGUAGE KindSignatures, DataKinds, MultiParamTypeClasses,
-             TypeFamilies, RankNTypes, FlexibleInstances, 
-             UndecidableInstances, PolyKinds, FlexibleContexts,
-             NoMonomorphismRestriction, TypeOperators #-}
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE PolyKinds                 #-}
+{-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module TrivialRecords where
 
-import Control.Applicative
-import GHC.TypeLits
+import           Control.Applicative
+import           GHC.TypeLits
 
 
 -- These class and type family declarations go in base:

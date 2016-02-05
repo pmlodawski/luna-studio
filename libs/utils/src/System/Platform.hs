@@ -1,12 +1,12 @@
+{-# LANGUAGE CPP               #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE CPP #-}
 
 
 module System.Platform where
 
-import           Flowbox.Prelude hiding (expand, lookup, splitAt, repr)
-import           GHC.Int (Int64, Int32)
 import           Data.Default
+import           Flowbox.Prelude hiding (expand, lookup, repr, splitAt)
+import           GHC.Int         (Int32, Int64)
 
 
 #include "ghcplatform.h"

@@ -11,9 +11,9 @@
 
 module Luna.Interpreter.Session.Data.AbortException where
 
-import Control.Exception.Base (Exception)
+import           Control.Exception.Base (Exception)
 
-import Flowbox.Prelude hiding (Context, error)
+import           Flowbox.Prelude        hiding (Context, error)
 
 
 

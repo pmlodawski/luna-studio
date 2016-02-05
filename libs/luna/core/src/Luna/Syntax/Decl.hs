@@ -12,19 +12,19 @@
 
 module Luna.Syntax.Decl where
 
-import Flowbox.Prelude hiding (Cons, traverse)
+import           Flowbox.Prelude          hiding (Cons, traverse)
 
-import Data.Binary              (Binary)
-import GHC.Generics             (Generic)
-import Luna.Syntax.Foreign      (Foreign)
-import Luna.Syntax.Label        (Label)
-import Luna.Syntax.Label        (Label (Label))
-import Luna.Syntax.Name         (CNameP, NameBaseP, TNameP, TVNameP, VNameP)
-import Luna.Syntax.Name.Pattern (ArgPat)
-import Luna.Syntax.Native       (Native)
-import Luna.Syntax.Pat          (LPat)
-import Luna.Syntax.Pragma       (Pragma)
-import Luna.Syntax.Type         (LType)
+import           Data.Binary              (Binary)
+import           GHC.Generics             (Generic)
+import           Luna.Syntax.Foreign      (Foreign)
+import           Luna.Syntax.Label        (Label)
+import           Luna.Syntax.Label        (Label (Label))
+import           Luna.Syntax.Name         (CNameP, NameBaseP, TNameP, TVNameP, VNameP)
+import           Luna.Syntax.Name.Pattern (ArgPat)
+import           Luna.Syntax.Native       (Native)
+import           Luna.Syntax.Pat          (LPat)
+import           Luna.Syntax.Pragma       (Pragma)
+import           Luna.Syntax.Type         (LType)
 
 import qualified Prelude
 

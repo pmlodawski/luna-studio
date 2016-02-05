@@ -8,8 +8,8 @@
 {-# LANGUAGE TupleSections   #-}
 module Luna.Interpreter.RPC.Handler.Renderer where
 
-import qualified Data.Sequence    as Sequence
-import qualified Pipes.Concurrent as Pipes
+import qualified Data.Sequence                                        as Sequence
+import qualified Pipes.Concurrent                                     as Pipes
 
 import           Flowbox.Bus.Data.Flag                                (Flag)
 import qualified Flowbox.Bus.Data.Flag                                as Flag

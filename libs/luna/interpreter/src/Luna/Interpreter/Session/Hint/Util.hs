@@ -6,9 +6,9 @@
 ---------------------------------------------------------------------------
 module Luna.Interpreter.Session.Hint.Util where
 
-import qualified Data.Char as Char
+import qualified Data.Char       as Char
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

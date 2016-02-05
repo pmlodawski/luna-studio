@@ -1,29 +1,29 @@
 
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE PartialTypeSignatures #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE PartialTypeSignatures     #-}
+{-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TupleSections             #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE UndecidableInstances      #-}
 --{-# LANGUAGE RecursiveDo #-}
-{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE NoOverloadedStrings       #-}
 
 -- {-# LANGUAGE PolyKinds #-}
 
 module Main where
 
-import Prologue hiding (simple, empty, Indexable, Simple, cons, lookup, index, children, Cons, Ixed, Repr, repr, minBound, maxBound, (#))
+import           Prologue hiding (Cons, Indexable, Ixed, Repr, Simple, children, cons, empty, index, lookup, maxBound, minBound, repr,
+                           simple, ( # ))
 
 main = do
     print "hello"
     print "hello"
-    
+
 
 --import Data.Repr
 
@@ -130,7 +130,7 @@ main = do
 --import Data.Variant.Patterns (ANY, MatchSet, MatchResolver, resolveMatch)
 --import qualified Luna.Syntax.AST.Layout as Layout
 
-----import Luna.Syntax.AST.Cache.Lit 
+----import Luna.Syntax.AST.Cache.Lit
 
 ----foo :: Lit Int IDT -> String
 ----foo l = case' l $ do
@@ -160,8 +160,8 @@ main = do
 --    _   -> return ()
 
 --data DD = DD1 String
---        | DD2 
---        | DD3 
+--        | DD2
+--        | DD3
 --        deriving (Show)
 
 
@@ -182,7 +182,7 @@ main = do
 --    --print args
 --    ----print nums
 --    let l = str  "foo" :: Lit Int IDT
---        v = l +> (Raw (5 :: Int) @: (Prop # Value)) 
+--        v = l +> (Raw (5 :: Int) @: (Prop # Value))
 --        d = cons v :: Static Val Int IDT
 --    --print $ case' l $ do
 --    --    match $ \Star   -> ("Star"           :: String)
@@ -330,7 +330,7 @@ main = do
 ------tstx2 :: (Node' (HRef2 Coat (Draft2 (HRef2 Coat))), Graph2)
 ----tstx2 :: (Node' (H (HRef2 (Labeled Int (Typed2 Coat))) Draft2), Graph2)
 ----tstx2 = runIdentity
-----      $ flip StarBuilder.evalT Nothing 
+----      $ flip StarBuilder.evalT Nothing
 ----      $ flip Builder.runT def
 ----      $ flip NodeBuilder.evalT (Node' $ HRef2 0 :: Node' (H (HRef2 (Labeled Int (Typed2 Coat))) Draft2))
 ----      $ string2 "hello"
@@ -447,7 +447,7 @@ main = do
 ----    let l    = case'_xy  "foo" :: Lit Int IDT
 
 
-----        --v   = l +> ((5 :: Int) @: (Prop # Value)) 
+----        --v   = l +> ((5 :: Int) @: (Prop # Value))
 ----        --d   = cons v :: Static Val Int IDT
 
 ----    print l
@@ -477,7 +477,7 @@ main = do
 
 
 --    --case' l1 $ do
---    --    match 
+--    --    match
 --    --let g  = snd tstx1
 --    --let (lmap, gs) = addStdLiterals g
 --    --let (unis, g2) = pass2 lmap gs

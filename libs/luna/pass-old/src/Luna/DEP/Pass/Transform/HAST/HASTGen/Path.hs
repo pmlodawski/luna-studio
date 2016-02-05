@@ -27,11 +27,11 @@ module Luna.DEP.Pass.Transform.HAST.HASTGen.Path (
     mkFuncName
 )where
 
-import Data.Char         (isLower)
-import Data.String.Utils (join)
+import           Data.Char         (isLower)
+import           Data.String.Utils (join)
 
-import Flowbox.Data.Path
-import Flowbox.Prelude   hiding (init, last, last, tail, toString)
+import           Flowbox.Data.Path
+import           Flowbox.Prelude   hiding (init, last, last, tail, toString)
 
 
 

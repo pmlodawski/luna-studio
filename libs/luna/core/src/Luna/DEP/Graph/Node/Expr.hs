@@ -8,9 +8,9 @@
 
 module Luna.DEP.Graph.Node.Expr where
 
-import Flowbox.Prelude
-import Luna.DEP.AST.Expr              (Expr)
-import Luna.DEP.Graph.Node.StringExpr (StringExpr)
+import           Flowbox.Prelude
+import           Luna.DEP.AST.Expr              (Expr)
+import           Luna.DEP.Graph.Node.StringExpr (StringExpr)
 
 
 

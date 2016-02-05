@@ -8,8 +8,8 @@ module Flowbox.Graphics.Image.IO.OpenEXR (
       readFromEXR
     ) where
 
-import           Control.Monad            (forM)
-import           Data.Char                (toLower)
+import           Control.Monad                  (forM)
+import           Data.Char                      (toLower)
 
 import           Flowbox.Codec.EXR              hiding (channels, name, x)
 import           Flowbox.Graphics.Image.Channel (Channel (..), ChannelData (..))

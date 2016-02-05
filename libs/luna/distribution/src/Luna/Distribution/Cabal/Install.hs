@@ -7,7 +7,7 @@
 
 module Luna.Distribution.Cabal.Install where
 
-import Control.Monad.RWS
+import           Control.Monad.RWS
 
 import           Flowbox.Config.Config     (Config)
 import qualified Flowbox.Config.Config     as Config

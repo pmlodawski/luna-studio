@@ -10,11 +10,11 @@ module Flowbox.Text.Show.Pretty (
         module Text.Show.Pretty
 ) where
 
-import Text.PrettyPrint
-import Text.Show.Pretty
+import           Text.PrettyPrint
+import           Text.Show.Pretty
 
-import Flowbox.Generics.Deriving.QShow
-import Flowbox.Prelude
+import           Flowbox.Generics.Deriving.QShow
+import           Flowbox.Prelude
 
 
 

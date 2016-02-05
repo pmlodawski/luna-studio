@@ -8,10 +8,10 @@
 
 module Flowbox.Geom2D.ControlPoint where
 
-import Data.Binary (Binary)
+import           Data.Binary               (Binary)
 
-import Flowbox.Prelude
-import Math.Coordinate.Cartesian (Point2 (..))
+import           Flowbox.Prelude
+import           Math.Coordinate.Cartesian (Point2 (..))
 
 
 

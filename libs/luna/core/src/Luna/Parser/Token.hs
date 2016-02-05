@@ -5,37 +5,37 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE NoOverloadedStrings       #-}
 
 module Luna.Parser.Token where
 
-import Control.Applicative
-import Control.Monad (MonadPlus(..))
-import Data.Char
-import qualified Data.HashSet as HashSet
-import Data.HashSet (HashSet)
-import Data.List (foldl', nub)
-import Data.Monoid
-import Data.String
-import Data.Text hiding (empty,zip,foldl,foldl', concat)
+import           Control.Applicative
+import           Control.Monad                (MonadPlus (..))
+import           Data.Char
+import           Data.HashSet                 (HashSet)
+import qualified Data.HashSet                 as HashSet
+import           Data.List                    (foldl', nub)
+import           Data.Monoid
+import           Data.String
+import           Data.Text                    hiding (concat, empty, foldl, foldl', zip)
+import           Flowbox.Prelude              as Prelude hiding (lex, noneOf, op, use)
+import qualified Luna.Syntax.Lit.Number       as Number
+import           Text.Parser.Char             hiding (spaces)
+import           Text.Parser.Combinators
+import           Text.Parser.Token            hiding (ident, symbol, symbolic)
+import           Text.Parser.Token.Highlight  hiding (Comment)
 import qualified Text.ParserCombinators.ReadP as ReadP
-import Text.Parser.Char hiding (spaces)
-import Text.Parser.Combinators
-import Text.Parser.Token.Highlight hiding (Comment)
-import Text.Parser.Token hiding (symbol, symbolic, ident)
-import Flowbox.Prelude as Prelude hiding (op, noneOf, lex, use)
-import qualified Luna.Syntax.Lit.Number as Number
 
-import qualified Luna.Parser.Indent as Indent
-import           Luna.Parser.Combinators 
-import qualified Luna.Syntax.Lit as Lit
 import           Luna.Parser.Char
-import qualified Luna.Parser.State as State
+import           Luna.Parser.Combinators
+import qualified Luna.Parser.Indent           as Indent
+import qualified Luna.Parser.State            as State
+import qualified Luna.Syntax.Lit              as Lit
 
-import qualified Text.Trifecta.Combinators as Trifecta
-import           Control.Monad.State.Class (MonadState)
+import           Control.Monad.State.Class    (MonadState)
+import qualified Text.Trifecta.Combinators    as Trifecta
 
 isSpaceLine c = isSpace c && c /= '\n' && c /= '\r'
 

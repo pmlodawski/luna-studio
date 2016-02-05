@@ -9,9 +9,9 @@
 
 module Test.Luna.Interpreter.SampleCodes where
 
-import Text.RawString.QQ
+import           Text.RawString.QQ
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

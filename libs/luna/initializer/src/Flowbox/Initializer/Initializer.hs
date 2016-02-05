@@ -10,8 +10,8 @@ module Flowbox.Initializer.Initializer where
 
 import           Control.Applicative
 import           Control.Monad
-import qualified Data.String.Utils   as StringUtils
-import qualified System.IO           as IO
+import qualified Data.String.Utils                  as StringUtils
+import qualified System.IO                          as IO
 
 import           Flowbox.Config.Config              (Config)
 import qualified Flowbox.Config.Config              as Config

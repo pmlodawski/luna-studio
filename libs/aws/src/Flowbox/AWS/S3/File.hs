@@ -8,14 +8,14 @@
 module Flowbox.AWS.S3.File where
 
 import           Control.Monad.Reader
-import qualified Data.ByteString      as ByteString
-import           Data.Conduit         (($$+-))
-import qualified Data.Conduit.Binary  as Binary
-import qualified Data.Text            as Text
-import qualified Network.HTTP.Conduit as HTTP
-import qualified System.Directory     as Directory
-import           System.FilePath      ((</>))
-import qualified System.FilePath      as FilePath
+import qualified Data.ByteString         as ByteString
+import           Data.Conduit            (($$+-))
+import qualified Data.Conduit.Binary     as Binary
+import qualified Data.Text               as Text
+import qualified Network.HTTP.Conduit    as HTTP
+import qualified System.Directory        as Directory
+import           System.FilePath         ((</>))
+import qualified System.FilePath         as FilePath
 
 import           Flowbox.AWS.S3.S3       (S3)
 import qualified Flowbox.AWS.S3.S3       as S3

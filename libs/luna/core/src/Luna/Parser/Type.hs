@@ -2,26 +2,26 @@
 
 module Luna.Parser.Type where
 
-import           Flowbox.Prelude         hiding (noneOf, maybe, element, cons)
-import qualified Luna.Syntax.Type        as Type
-import           Luna.Syntax.Type        (Type)
-import qualified Luna.Parser.Token       as Tok
+import           Flowbox.Prelude         hiding (cons, element, maybe, noneOf)
 import           Luna.Parser.Builder     (labeled, qualifiedPath)
 import qualified Luna.Parser.Builder     as B
-import           Text.Parser.Combinators 
-import           Text.Parser.Token       (braces)
 import           Luna.Parser.Combinators (many1, sepBy2)
+import qualified Luna.Parser.Token       as Tok
+import           Luna.Syntax.Type        (Type)
+import qualified Luna.Syntax.Type        as Type
+import           Text.Parser.Combinators
+import           Text.Parser.Token       (braces)
 
 typic   = choice [ try func
                  , single
                  ] <?> "type"
 
 single  = choice [ try app
-                 , term 
+                 , term
                  ] <?> "type"
 
-term    = choice [ try $ Tok.parens typic 
-                 , entT 
+term    = choice [ try $ Tok.parens typic
+                 , entT
                  ] <?> "type term"
 
 app     = labeled (Type.App <$> appBase <*> many1 term)

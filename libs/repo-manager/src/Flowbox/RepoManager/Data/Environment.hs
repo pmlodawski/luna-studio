@@ -6,6 +6,6 @@
 ---------------------------------------------------------------------------
 module Flowbox.RepoManager.Data.Environment where
 
-import 			 Flowbox.Prelude
+import           Flowbox.Prelude
 
 type Command      = String

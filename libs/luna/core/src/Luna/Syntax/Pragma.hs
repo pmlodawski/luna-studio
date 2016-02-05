@@ -11,9 +11,9 @@
 
 module Luna.Syntax.Pragma where
 
-import Data.Binary (Binary)
+import           Data.Binary     (Binary)
 
-import Flowbox.Prelude hiding (Cons, traverse)
+import           Flowbox.Prelude hiding (Cons, traverse)
 
 
 data Pragma = Enable  Text

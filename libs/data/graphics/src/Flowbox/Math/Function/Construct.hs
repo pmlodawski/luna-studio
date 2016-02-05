@@ -7,10 +7,10 @@
 module Flowbox.Math.Function.Construct where
 
 import           Data.List
-import qualified Data.Map as Map
+import qualified Data.Map                    as Map
 
-import Flowbox.Math.Function.Model
-import Flowbox.Prelude             as P hiding (empty)
+import           Flowbox.Math.Function.Model
+import           Flowbox.Prelude             as P hiding (empty)
 
 
 

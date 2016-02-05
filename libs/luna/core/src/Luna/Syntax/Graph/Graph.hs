@@ -11,7 +11,7 @@ module Luna.Syntax.Graph.Graph (
     module Luna.Syntax.Graph.Graph,
 ) where
 
-import qualified Data.List as List
+import qualified Data.List              as List
 
 import           Flowbox.Data.Graph     hiding (Edge, Graph)
 import qualified Flowbox.Data.Graph     as DG

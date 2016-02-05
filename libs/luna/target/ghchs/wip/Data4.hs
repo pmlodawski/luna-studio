@@ -1,21 +1,21 @@
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeOperators             #-}
 
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies              #-}
 
-{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE PolyKinds                 #-}
 
 
 module Luna.Target.HS.Control.Monad.Data where
 
 --import Luna.Target.HS.Bind (StateT(..),put,get)
 
-import Control.Applicative
-import Control.Monad.Trans
-import Control.Monad.Morph
-import Data.Wrap
+import           Control.Applicative
+import           Control.Monad.Morph
+import           Control.Monad.Trans
+import           Data.Wrap
 
 -------------------------------
 

@@ -7,7 +7,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
-import qualified Database.PostgreSQL.Simple as PSQL
+import qualified Database.PostgreSQL.Simple             as PSQL
 
 import           Flowbox.AccountManager.Cmd             (Cmd)
 import qualified Flowbox.AccountManager.Cmd             as Cmd

@@ -8,14 +8,14 @@
 
 module Flowbox.System.Console.StyledText.StyledText where
 
-import           GHC.IO.Handle.Types (Handle)
-import qualified System.Console.ANSI as ANSI
-import           System.IO           (stderr, stdout)
+import           GHC.IO.Handle.Types                     (Handle)
+import qualified System.Console.ANSI                     as ANSI
+import           System.IO                               (stderr, stdout)
 
+import qualified Data.Text.Lazy                          as Text
 import           Flowbox.Prelude                         hiding (print)
 import           Flowbox.System.Console.StyledText.Style (Style (Style))
 import qualified Flowbox.System.Console.StyledText.Style as Style
-import qualified Data.Text.Lazy                          as Text
 
 data Element = TextElement Text
              | StylePush Style

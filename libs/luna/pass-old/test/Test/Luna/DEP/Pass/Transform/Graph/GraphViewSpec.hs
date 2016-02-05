@@ -7,8 +7,8 @@
 
 module Test.Luna.DEP.Pass.Transform.Graph.GraphViewSpec where
 
-import Control.Monad (forM_)
-import Test.Hspec
+import           Control.Monad                             (forM_)
+import           Test.Hspec
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude

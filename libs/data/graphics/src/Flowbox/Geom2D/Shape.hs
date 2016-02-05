@@ -6,8 +6,8 @@
 ---------------------------------------------------------------------------
 module Flowbox.Geom2D.Shape where
 
-import Flowbox.Geom2D.Path
-import Flowbox.Prelude
+import           Flowbox.Geom2D.Path
+import           Flowbox.Prelude
 
 data Shape a = Shape { pathList :: [Path a] } deriving (Eq, Ord, Show)
 

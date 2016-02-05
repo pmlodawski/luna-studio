@@ -7,7 +7,7 @@
 
 module Test.Luna.Sample.Graph where
 
-import Control.Monad.State
+import           Control.Monad.State
 
 import           Flowbox.Prelude
 import           Luna.Data.ASTInfo                     (ASTInfo (ASTInfo))

@@ -64,20 +64,20 @@ import           Text.Trifecta                hiding (parseByteString, parseFrom
 import qualified Text.Trifecta                as Trifecta
 import           Text.Trifecta.Delta          as Delta
 
-import Data.Function            (on)
-import Text.EditDistance
-import Text.PhoneticCode.Phonix (phonix)
+import           Data.Function                (on)
+import           Text.EditDistance
+import           Text.PhoneticCode.Phonix     (phonix)
 
-import qualified Data.IntMap as IntMap
+import qualified Data.IntMap                  as IntMap
 
 --import Data.HashSet (HashSet)
-import qualified Data.HashSet as HashSet
+import qualified Data.HashSet                 as HashSet
 
-import qualified Text.DEP.Parsers.Indent as Indent
+import qualified Text.DEP.Parsers.Indent      as Indent
 
-import Control.Lens hiding (element, noneOf)
+import           Control.Lens                 hiding (element, noneOf)
 
-import qualified Luna.DEP.AST.Expr as Expr
+import qualified Luna.DEP.AST.Expr            as Expr
 
 infixl 4 <$!>
 

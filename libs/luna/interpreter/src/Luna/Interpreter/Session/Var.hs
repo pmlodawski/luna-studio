@@ -10,7 +10,7 @@
 module Luna.Interpreter.Session.Var where
 
 import           Control.Monad.State
-import qualified Data.Maybe          as Maybe
+import qualified Data.Maybe                       as Maybe
 
 import           Flowbox.Prelude
 import qualified Luna.DEP.AST.Common              as AST

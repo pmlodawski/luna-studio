@@ -5,37 +5,37 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 
 
 module Luna.Target.HS.Data.Struct.Mem where
 
-import GHC.TypeLits
-import Data.Typeable (Proxy(..))
-import Luna.Target.HS.Control
-import Luna.Target.HS.Data.Func.App
+import           Data.Typeable                  (Proxy (..))
+import           GHC.TypeLits
+import           Luna.Target.HS.Control
+import           Luna.Target.HS.Data.Func.App
 
+import           Control.Category.Dot
 import qualified Luna.Target.HS.Data.Func.Args7 as Args7
 import qualified Luna.Target.HS.Data.Func.Args9 as Args9
-import Control.Category.Dot
 
 
-import Data.Typeable
-import Type.BaseType
+import           Data.Typeable
+import           Type.BaseType
 
 --class ProxyType a b | a -> b where
 --	proxyType :: a -> b
@@ -66,7 +66,7 @@ class MemberProvider obj name argRep f | obj name argRep -> f where
 
 
 
---objPtr ::  (Env base, Safety s, BaseType (Proxy a) out, out~Proxy b)=>m base s a -> out  
+--objPtr ::  (Env base, Safety s, BaseType (Proxy a) out, out~Proxy b)=>m base s a -> out
 --objPtr el = Proxy
 
 objPtr :: forall m base s a out. (Env base, Safety s) => m base s a -> (Proxy (ProxyType a))

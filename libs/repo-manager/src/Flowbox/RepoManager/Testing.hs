@@ -1,40 +1,40 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneDeriving  #-}
+{-# LANGUAGE TemplateHaskell     #-}
 module Flowbox.RepoManager.Testing where
 
-import           Flowbox.Prelude hiding (Equality)
-import           Flowbox.RepoManager.Data.Dependency as Dependency
-import qualified System.Directory as Directory
-import qualified Data.Version as Version
-import qualified Network.URI  as URI
-import qualified System.FilePath as FilePath
-import qualified Text.ParserCombinators.ReadP as ReadP
-import qualified Data.Set as Set
-import qualified Flowbox.System.Log.Logger as Logger
-import qualified Data.Maybe as Maybe
-import qualified Data.Configurator as Configurator
-import qualified Data.Configurator.Types as Configurator
-import qualified Data.List.Split as Split
-import qualified Control.Exception.Base as Exception
-import qualified Data.Text as Text
-import qualified System.Process as Process
-import qualified System.Exit as Exit
+import qualified Control.Exception.Base                   as Exception
+import           Control.Monad                            (when)
+import qualified Data.ByteString.Lazy                     as BSL
+import qualified Data.Configurator                        as Configurator
+import qualified Data.Configurator.Types                  as Configurator
+import qualified Data.List.Split                          as Split
+import qualified Data.Maybe                               as Maybe
+import qualified Data.Set                                 as Set
+import qualified Data.Text                                as Text
+import           Data.Text.Lens                           (packed)
+import qualified Data.Version                             as Version
+import           Flowbox.Prelude                          hiding (Equality)
+import           Flowbox.RepoManager.Data.Dependency      as Dependency
 import           Flowbox.RepoManager.Data.Package.Package
 import           Flowbox.RepoManager.Data.Version
-import           Control.Monad (when)
-import           GHC.Generics (Generic)
-import           Data.Text.Lens (packed)
-import qualified Network.HTTP.Conduit as Conduit
-import qualified Data.ByteString.Lazy as BSL
+import qualified Flowbox.System.Log.Logger                as Logger
+import           GHC.Generics                             (Generic)
+import qualified Network.HTTP.Conduit                     as Conduit
+import qualified Network.URI                              as URI
+import qualified System.Directory                         as Directory
+import qualified System.Exit                              as Exit
+import qualified System.FilePath                          as FilePath
+import qualified System.Process                           as Process
+import qualified Text.ParserCombinators.ReadP             as ReadP
 
 type Command = String
 
 --instance Binary.Binary Package
 --instance Binary.Binary Dep
 --instance Binary.Binary Equality
---instance Binary.Binary Constraint 
+--instance Binary.Binary Constraint
 
 --deriving instance Generic Version.Version
 --deriving instance Generic URI.URI

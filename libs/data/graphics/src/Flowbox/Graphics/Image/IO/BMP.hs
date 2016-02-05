@@ -6,11 +6,11 @@
 ---------------------------------------------------------------------------
 module Flowbox.Graphics.Image.IO.BMP where
 
-import qualified Codec.BMP                  as BMP
-import           Control.Monad.IO.Class     (MonadIO, liftIO)
-import qualified Data.Array.Accelerate      as A
-import qualified Data.Array.Accelerate.IO   as A
-import           Data.Bits                  ((.&.))
+import qualified Codec.BMP                      as BMP
+import           Control.Monad.IO.Class         (MonadIO, liftIO)
+import qualified Data.Array.Accelerate          as A
+import qualified Data.Array.Accelerate.IO       as A
+import           Data.Bits                      ((.&.))
 
 import qualified Flowbox.Graphics.Image.Channel as Channel
 import           Flowbox.Graphics.Image.Image   (Image)

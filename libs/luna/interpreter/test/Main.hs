@@ -10,9 +10,9 @@
 
 module Main where
 
-import qualified Control.Concurrent as Concurrent
-import           Control.Monad      (replicateM_)
-import           Data.List          (intercalate)
+import qualified Control.Concurrent                                                as Concurrent
+import           Control.Monad                                                     (replicateM_)
+import           Data.List                                                         (intercalate)
 import           Text.RawString.QQ
 import           Text.Show.Pretty
 

@@ -7,10 +7,10 @@
 
 module Luna.DEP.Distribution.Cabal.Section where
 
-import Flowbox.Prelude
-import Luna.DEP.Data.HAST.Extension (Extension)
+import           Flowbox.Prelude
+import           Luna.DEP.Data.HAST.Extension (Extension)
 
-import Data.String.Utils (join)
+import           Data.String.Utils            (join)
 
 
 

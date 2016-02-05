@@ -11,15 +11,15 @@
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
 import           Control.Applicative
-import           Control.Monad.RWS          hiding (join)
-import           Control.Monad.State        hiding (join)
+import           Control.Monad.RWS                                                 hiding (join)
+import           Control.Monad.State                                               hiding (join)
 import           Control.Monad.Trans.Either
 import           Control.Monad.Trans.Maybe
-import           Control.Monad.Writer       hiding (join)
-import qualified Data.DList                 as DList
-import           Data.Either.Utils          (forceEither)
-import           Data.String.Utils          (join)
-import           Data.Version               (Version (Version))
+import           Control.Monad.Writer                                              hiding (join)
+import qualified Data.DList                                                        as DList
+import           Data.Either.Utils                                                 (forceEither)
+import           Data.String.Utils                                                 (join)
+import           Data.Version                                                      (Version (Version))
 import           Debug.Trace
 import           System.TimeIt
 

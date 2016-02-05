@@ -14,7 +14,7 @@
 module Luna.DEP.Data.Serialize.Proto.Conversion.Crumb where
 
 import           Control.Applicative
-import qualified Data.Map            as Map
+import qualified Data.Map                                         as Map
 
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert

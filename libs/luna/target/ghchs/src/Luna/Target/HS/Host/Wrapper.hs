@@ -5,21 +5,21 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE PolyKinds #-} -- needed by mainMaker
+{-# LANGUAGE PolyKinds                 #-}
 
 module Luna.Target.HS.Host.Wrapper where
 
-import Control.Monad
-import Data.Typeable
-import Luna.Target.HS.Control
-import Luna.Target.HS.Data
-import Luna.Target.HS.Host.Lift
-import Control.Monad.Shuffle
-import Control.PolyMonad
-import Flowbox.Utils
+import           Control.Monad
+import           Control.Monad.Shuffle
+import           Control.PolyMonad
+import           Data.Typeable
+import           Flowbox.Utils
+import           Luna.Target.HS.Control
+import           Luna.Target.HS.Data
+import           Luna.Target.HS.Host.Lift
 
 checkVal = join . fmap printCheck . toIOEnv
 
@@ -52,7 +52,7 @@ type List a = [a]
 
 
 
---raiseVP :: Value m s a -> 
+--raiseVP :: Value m s a ->
 
 data ETest = ETest deriving (Show)
 

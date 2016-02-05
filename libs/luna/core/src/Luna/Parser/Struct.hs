@@ -2,12 +2,12 @@
 
 module Luna.Parser.Struct where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
-import qualified Luna.Parser.Token       as Tok
-import qualified Luna.Parser.Indent as Indent
-import           Text.Parser.Combinators 
 import           Luna.Parser.Combinators (many1)
+import qualified Luna.Parser.Indent      as Indent
+import qualified Luna.Parser.Token       as Tok
+import           Text.Parser.Combinators
 
 
 moduleBlock p = braceBlockBegin p <|> indBlockBody p
@@ -17,7 +17,7 @@ indBlockBegin  p = Tok.indBlockBegin *> indBlock p
 indBlock       p = Tok.spaces *> Indent.indented *> Indent.withPos (indBlockBody p)
 indBlockBody   p = (:) <$> p <*> many (indBlockPrefix p)
 indBlockBody'  p = (:) <$> p <*> many (try $ indBlockPrefix p)
-indBlockBodyOpt p = ($) <$> (((:) <$> p) <|> pure id) 
+indBlockBodyOpt p = ($) <$> (((:) <$> p) <|> pure id)
                         <*> many (indBlockPrefix p)
 indBlockPrefix p = try ((try (Tok.spaces *> Indent.checkIndent) <|> try (Tok.terminator *> Tok.spaces *> Indent.checkIndentedOrEq )) *> notFollowedBy eof) *> p
 --indBlockBody   p = (:) <$> p <*> many (try (Tok.spaces *> Indent.checkIndent) *> p)

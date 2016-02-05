@@ -8,8 +8,8 @@
 
 module Luna.Interpreter.Cmd where
 
-import Flowbox.Bus.Data.Prefix (Prefix)
-import Flowbox.Prelude
+import           Flowbox.Bus.Data.Prefix (Prefix)
+import           Flowbox.Prelude
 
 
 

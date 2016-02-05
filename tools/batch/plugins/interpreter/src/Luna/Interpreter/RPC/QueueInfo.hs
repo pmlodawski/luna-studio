@@ -8,8 +8,8 @@
 
 module Luna.Interpreter.RPC.QueueInfo where
 
-import           Control.Concurrent.MVar (MVar)
-import qualified Control.Concurrent.MVar as MVar
+import           Control.Concurrent.MVar            (MVar)
+import qualified Control.Concurrent.MVar            as MVar
 
 import qualified Flowbox.Bus.Data.Message           as Message
 import qualified Flowbox.Control.Concurrent         as Concurrent

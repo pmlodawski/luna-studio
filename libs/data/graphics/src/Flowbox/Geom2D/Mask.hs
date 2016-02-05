@@ -8,10 +8,10 @@
 
 module Flowbox.Geom2D.Mask where
 
-import Data.Binary (Binary)
+import           Data.Binary         (Binary)
 
-import Flowbox.Geom2D.Path
-import Flowbox.Prelude
+import           Flowbox.Geom2D.Path
+import           Flowbox.Prelude
 
 
 

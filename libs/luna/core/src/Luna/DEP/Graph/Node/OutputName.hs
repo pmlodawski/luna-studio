@@ -12,8 +12,8 @@ module Luna.DEP.Graph.Node.OutputName (
     generate,
 ) where
 
-import qualified Data.Char as Char
-import qualified Data.List as List
+import qualified Data.Char                      as Char
+import qualified Data.List                      as List
 
 import           Flowbox.Prelude
 import           Luna.DEP.Graph.Node            (Node)

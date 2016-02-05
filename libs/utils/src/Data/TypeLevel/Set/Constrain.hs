@@ -5,26 +5,26 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ConstraintKinds        #-}
+{-# LANGUAGE DataKinds              #-}
+{-# LANGUAGE DeriveDataTypeable     #-}
+{-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE PolyKinds              #-}
+{-# LANGUAGE TypeFamilies           #-}
+{-# LANGUAGE TypeOperators          #-}
+{-# LANGUAGE UndecidableInstances   #-}
 
 module Data.TypeLevel.Set.Constrain where
 
-import Data.TypeLevel.Set
-import GHC.TypeLits
-import Data.Typeable
-import Type.Bool
-import Prelude hiding (Bool)
+import           Data.Typeable
+import           Data.TypeLevel.Set
+import           GHC.TypeLits
+import           Prelude            hiding (Bool)
+import           Type.Bool
 
-import Flowbox.Utils
+import           Flowbox.Utils
 
 --newtype Set a = Set a deriving (Show, Typeable)
 --newtype ConstrainSet a = ConstrainSet a deriving (Show, Typeable)

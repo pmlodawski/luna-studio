@@ -26,8 +26,8 @@ import qualified Text.Blaze.Html5              as HTML
 import qualified Text.Blaze.Html5.Attributes   as Attr
 import           Text.Parsec                   hiding (many, optional, parse, (<|>))
 
-import           Text.Blaze.Internal as Blaze (stringValue)
-import qualified Text.Doc.Lexer      as L
+import           Text.Blaze.Internal           as Blaze (stringValue)
+import qualified Text.Doc.Lexer                as L
 import           Text.Doc.Utils
 
 

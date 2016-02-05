@@ -9,4 +9,4 @@ module Luna.Interpreter.Session.Env.Session (
     module Luna.Interpreter.Session.Memory.Manager,
 ) where
 
-import Luna.Interpreter.Session.Memory.Manager (Session, SessionST)
+import           Luna.Interpreter.Session.Memory.Manager (Session, SessionST)

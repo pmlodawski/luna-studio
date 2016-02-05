@@ -2,15 +2,15 @@
 
 module Data.Text.AutoBuilder where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
-import qualified Data.Text.Lazy         as T
-import           Data.Text.Lazy         (Text)
-import qualified Data.Text.Lazy.Builder as TB
-import           Data.Text.Lazy.Builder (Builder)
-import           System.IO.Unsafe
-import           Data.IORef
 import           Data.Convert
+import           Data.IORef
+import           Data.Text.Lazy         (Text)
+import qualified Data.Text.Lazy         as T
+import           Data.Text.Lazy.Builder (Builder)
+import qualified Data.Text.Lazy.Builder as TB
+import           System.IO.Unsafe
 
 newtype AutoBuilder = AutoBuilder (IORef Data)
 

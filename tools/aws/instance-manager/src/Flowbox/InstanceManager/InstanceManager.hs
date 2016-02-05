@@ -9,9 +9,9 @@
 module Flowbox.InstanceManager.InstanceManager where
 
 import qualified AWS
-import qualified AWS.EC2.Types as Types
-import qualified Data.Maybe    as Maybe
-import qualified Data.Text     as Text
+import qualified AWS.EC2.Types                           as Types
+import qualified Data.Maybe                              as Maybe
+import qualified Data.Text                               as Text
 
 import qualified Flowbox.AWS.EC2.Control.Simple.Instance as Instance
 import qualified Flowbox.AWS.EC2.EC2                     as EC2

@@ -13,28 +13,28 @@ module Utils (
   run
 ) where
 
-import Flowbox.Graphics.Color.Color
-import Flowbox.Graphics.Image.IO.ImageMagick (loadImage, saveImage)
-import Flowbox.Graphics.Shader.Matrix
-import Flowbox.Graphics.Shader.Rasterizer
-import Flowbox.Graphics.Shader.Sampler
-import Flowbox.Graphics.Utils.Utils
-import Flowbox.Math.Matrix                   as M
-import Flowbox.Prelude                       as P hiding (pre)
+import           Flowbox.Graphics.Color.Color
+import           Flowbox.Graphics.Image.IO.ImageMagick (loadImage, saveImage)
+import           Flowbox.Graphics.Shader.Matrix
+import           Flowbox.Graphics.Shader.Rasterizer
+import           Flowbox.Graphics.Shader.Sampler
+import           Flowbox.Graphics.Utils.Utils
+import           Flowbox.Math.Matrix                   as M
+import           Flowbox.Prelude                       as P hiding (pre)
 
-import qualified Codec.Picture.Png        as Juicy
-import qualified Codec.Picture.Types      as Juicy
-import qualified Data.Array.Accelerate    as A
+import qualified Codec.Picture.Png                     as Juicy
+import qualified Codec.Picture.Types                   as Juicy
+import qualified Data.Array.Accelerate                 as A
 import           Data.Array.Accelerate.IO
 
 #ifdef ACCELERATE_CUDA_BACKEND
-import Data.Array.Accelerate.CUDA (run)
+import           Data.Array.Accelerate.CUDA            (run)
 #else
-import Data.Array.Accelerate.Interpreter (run)
+import           Data.Array.Accelerate.Interpreter     (run)
 #endif
 
-import           Data.List.Split      (chunksOf)
-import qualified Data.Vector.Storable as SV
+import           Data.List.Split                       (chunksOf)
+import qualified Data.Vector.Storable                  as SV
 import           Text.Printf
 
 

@@ -13,7 +13,7 @@
 
 module Luna.DEP.Pass.Build.Build where
 
-import Control.Monad.RWS hiding (mapM, mapM_)
+import           Control.Monad.RWS                                                 hiding (mapM, mapM_)
 
 import           Control.Monad.Trans.Either
 import           Flowbox.Prelude

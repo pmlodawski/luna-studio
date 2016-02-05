@@ -6,11 +6,11 @@
 ---------------------------------------------------------------------------
 module Flowbox.AWS.EC2.Instance.Request where
 
-import qualified AWS.EC2.Types as Types
-import           Data.Text     (Text)
-import qualified Data.Text     as Text
+import qualified AWS.EC2.Types   as Types
+import           Data.Text       (Text)
+import qualified Data.Text       as Text
 
-import Flowbox.Prelude hiding (Text)
+import           Flowbox.Prelude hiding (Text)
 
 
 

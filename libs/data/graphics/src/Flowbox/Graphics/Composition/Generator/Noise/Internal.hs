@@ -9,7 +9,7 @@ module Flowbox.Graphics.Composition.Generator.Noise.Internal where
 import qualified Data.Array.Accelerate as A
 import           Data.Bits             (xor, (.&.))
 
-import Flowbox.Prelude hiding (index, ix)
+import           Flowbox.Prelude       hiding (index, ix)
 
 
 

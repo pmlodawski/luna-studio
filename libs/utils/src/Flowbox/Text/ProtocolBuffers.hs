@@ -22,7 +22,7 @@ import qualified Data.Map                        as Map
 import           Text.ProtocolBuffers            as Proto
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

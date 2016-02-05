@@ -6,9 +6,9 @@
 ---------------------------------------------------------------------------
 module Flowbox.Bus.Data.Flag where
 
-import Text.Read as R
+import           Text.Read       as R
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

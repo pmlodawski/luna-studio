@@ -1,17 +1,17 @@
 module Flowbox.Graphics.Mockup.NoiseSpec where
 
-import Test.Hspec
-import Test.QuickCheck
-import Flowbox.Graphics.Mockup.Basic as M
-import Flowbox.Graphics.Mockup.Noise as M
-import qualified Flowbox.Graphics.Image.Image   as Img
 import qualified Flowbox.Graphics.Image.Channel as Chan
+import qualified Flowbox.Graphics.Image.Image   as Img
 import qualified Flowbox.Graphics.Image.View    as View
-import Flowbox.Graphics.Utils.Utils (clamp') 
+import           Flowbox.Graphics.Mockup.Basic  as M
+import           Flowbox.Graphics.Mockup.Noise  as M
+import           Flowbox.Graphics.Utils.Utils   (clamp')
+import           Test.Hspec
+import           Test.QuickCheck
 
-import Flowbox.Prelude as P
+import           Flowbox.Prelude                as P
 
-import TestHelpers
+import           TestHelpers
 
 spec :: Spec
 spec = do

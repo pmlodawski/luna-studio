@@ -7,7 +7,7 @@
 
 module Luna.Interpreter.Session.Data.CallPointPath where
 
-import Luna.Interpreter.Session.Data.CallPoint (CallPoint)
+import           Luna.Interpreter.Session.Data.CallPoint (CallPoint)
 
 
 

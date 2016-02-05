@@ -10,9 +10,9 @@
 
 module Luna.DEP.AST.Lit where
 
-import Control.Lens
-import Data.Binary  (Binary)
-import GHC.Generics
+import           Control.Lens
+import           Data.Binary                     (Binary)
+import           GHC.Generics
 
 import           Flowbox.Generics.Deriving.QShow
 import           Flowbox.Prelude                 (Eq, Read, Show)

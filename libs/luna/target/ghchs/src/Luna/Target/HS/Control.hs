@@ -7,6 +7,6 @@
 
 module Luna.Target.HS.Control (module X) where
 
-import Luna.Target.HS.Control.Context as X
-import Luna.Target.HS.Control.Error   as X
-import Luna.Target.HS.Control.Flow    as X
+import           Luna.Target.HS.Control.Context as X
+import           Luna.Target.HS.Control.Error   as X
+import           Luna.Target.HS.Control.Flow    as X

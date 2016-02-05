@@ -7,7 +7,7 @@
 
 module Luna.Core.Expr where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 -- pomyslec o uzywaniu Bound tu tez
 -- + do czego jest Core?
@@ -28,7 +28,7 @@ import Flowbox.Prelude
 --type Arg b = Expr b
 
 
---data Bind b = NonRec b (Expr b) 
+--data Bind b = NonRec b (Expr b)
 --            | Rec [(b, (Expr b))]
 
 
@@ -41,7 +41,7 @@ import Flowbox.Prelude
 --          | Alias
 
 
---data Cons = Cons FastString 
+--data Cons = Cons FastString
 
 
 --0) Call jest zle! bo nie wiadomo ile lambd callowac jezeli lambdy sa jednoargumentowe!
@@ -54,7 +54,7 @@ import Flowbox.Prelude
 --2) Co zawiera core?
 --    - rozwiazane patterny
 --    - brak smaczkow jak groupped lub type wrappers
---    - 
+--    -
 
 --3) moze warto wyczyscic AST? pozwolic na unifikacje nazw? Moze nazwy zbindowac z variablami i typami?
 --   moze warto wyrzucic grouped i w klasach uporzadkowac metody etc?
@@ -77,9 +77,9 @@ import Flowbox.Prelude
 
 
 
-----data Name = Name { _sort :: NameSort 
+----data Name = Name { _sort :: NameSort
 ----                 , _occ  :: OccName
-----                 -- , _loc 
+----                 -- , _loc
 ----                 }
 
 
@@ -97,12 +97,12 @@ import Flowbox.Prelude
 ----              | System
 
 
---data Module = Module { _pkgKey :: PackageKey 
+--data Module = Module { _pkgKey :: PackageKey
 --                     , _name   :: ModuleName
---                     , 
+--                     ,
 --                     }
 
---data QualifiedName = QualifiedName { _path :: [FastString] 
+--data QualifiedName = QualifiedName { _path :: [FastString]
 --                                   , _name :: FastString
 --                                   }
 
@@ -111,7 +111,7 @@ import Flowbox.Prelude
 ----newtype PackageKey = PackageKey FastString
 
 
-----data Var = Var { _name :: !Name 
+----data Var = Var { _name :: !Name
 ----               , _cls  :: Type
 ----               }
 
@@ -122,13 +122,13 @@ import Flowbox.Prelude
 --data PackageName = PackageName QualifiedName
 
 
---Map ModuleKey 
+--Map ModuleKey
 
 
 --data Package = Package { _name    :: PackageName
 --                       , _version :: Version
---                       , _modules :: [ModuleKey] 
---                       ,  
+--                       , _modules :: [ModuleKey]
+--                       ,
 --                       }
 
 

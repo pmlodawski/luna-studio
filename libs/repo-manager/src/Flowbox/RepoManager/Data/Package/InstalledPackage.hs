@@ -6,15 +6,15 @@
 ---------------------------------------------------------------------------
 module Flowbox.RepoManager.Data.Package.InstalledPackage where
 
-import           Flowbox.Prelude
-import qualified Flowbox.RepoManager.Data.Package.Flag    as Flag
-import qualified Flowbox.RepoManager.Data.Package.Package as Package
-import           Flowbox.RepoManager.Data.Environment     (Command)
-import qualified Flowbox.RepoManager.Data.Types           as Types
-import qualified Flowbox.RepoManager.Data.Version         as Version
 import qualified Data.ByteString.Lazy.Char8               as BSL
 import qualified Data.Digest.Pure.SHA                     as SHA
 import qualified Data.List                                as List
+import           Flowbox.Prelude
+import           Flowbox.RepoManager.Data.Environment     (Command)
+import qualified Flowbox.RepoManager.Data.Package.Flag    as Flag
+import qualified Flowbox.RepoManager.Data.Package.Package as Package
+import qualified Flowbox.RepoManager.Data.Types           as Types
+import qualified Flowbox.RepoManager.Data.Version         as Version
 import qualified Network.URI                              as URI
 
 data InstalledPackage = InstalledPackage { pkgName      :: Types.QualifiedPackageName

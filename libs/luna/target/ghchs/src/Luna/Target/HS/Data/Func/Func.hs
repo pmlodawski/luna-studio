@@ -9,7 +9,7 @@
 
 module Luna.Target.HS.Data.Func.Func where
 
-import Luna.Target.HS.Data.Struct
+import           Luna.Target.HS.Data.Struct
 
 ----------------------------------------------------------------------------------
 -- Type classes

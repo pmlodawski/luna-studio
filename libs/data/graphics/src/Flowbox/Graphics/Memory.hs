@@ -9,4 +9,4 @@ module Flowbox.Graphics.Memory (
     module X,
 ) where
 
-import Data.Array.Accelerate.CUDA as X (performGC, unsafeFreeArrays)
+import           Data.Array.Accelerate.CUDA as X (performGC, unsafeFreeArrays)

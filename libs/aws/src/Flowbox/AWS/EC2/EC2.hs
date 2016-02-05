@@ -21,8 +21,8 @@ import qualified AWS.EC2                      as EC2
 import           Control.Monad.IO.Class       (MonadIO)
 import qualified Control.Monad.Trans.Resource as Resource
 
-import           Flowbox.AWS.Region (Region)
-import qualified Flowbox.AWS.Region as Region
+import           Flowbox.AWS.Region           (Region)
+import qualified Flowbox.AWS.Region           as Region
 import           Flowbox.Prelude
 
 

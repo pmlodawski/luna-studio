@@ -11,9 +11,9 @@
 
 module Flowbox.ZMQ.RPC.Server.Server where
 
-import           Control.Monad       (forM_)
-import           System.ZMQ4.Monadic (ZMQ)
-import qualified System.ZMQ4.Monadic as ZMQ
+import           Control.Monad                    (forM_)
+import           System.ZMQ4.Monadic              (ZMQ)
+import qualified System.ZMQ4.Monadic              as ZMQ
 
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude

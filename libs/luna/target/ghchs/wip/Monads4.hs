@@ -1,28 +1,28 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE PolyKinds #-} 
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE PolyKinds                 #-}
 
-{-# LANGUAGE OverlappingInstances #-} 
-{-# LANGUAGE UndecidableInstances #-} 
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE UndecidableInstances      #-}
 --{-# LANGUAGE IncoherentInstances #-}
-{-# LANGUAGE DysfunctionalDependencies #-} 
+{-# LANGUAGE DysfunctionalDependencies #-}
 
-{-# LANGUAGE RankNTypes #-} 
-
-
+{-# LANGUAGE RankNTypes                #-}
 
 
-import Control.Monad.Trans
-import Control.Applicative
-import Data.Functor.Identity (Identity)
 
-import GHC.TypeLits        (Symbol)
+
+import           Control.Applicative
+import           Control.Monad.Trans
+import           Data.Functor.Identity (Identity)
+
+import           GHC.TypeLits          (Symbol)
 
 data Proxy a = Proxy
 
@@ -96,7 +96,7 @@ instance (Functor m) => Functor (StateT s m) where
 instance (MonadReader r m) => MonadReader r (StateT s m) where
     ask       = lift ask
     local f m = StateT $ \s -> local f (runStateT m s)
-        
+
 
 class (Monad m) => MonadState s m | m -> s where
     get :: m s
@@ -165,7 +165,7 @@ main = do
     print =<< runReaderT (runStateT test 0) 0
     print =<< runStateT (runReaderT test 0) 0
 
-    print =<< runReaderT (runStateT (callM0 (Proxy :: Proxy "test") V) 0) 0 
+    print =<< runReaderT (runStateT (callM0 (Proxy :: Proxy "test") V) 0) 0
 
 
     putStrLn ""

@@ -1,12 +1,12 @@
-{-# LANGUAGE NoMonomorphismRestriction  #-}
-{-# LANGUAGE RankNTypes                 #-}
-{-# LANGUAGE FunctionalDependencies     #-}
-{-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE TemplateHaskell            #-}
-{-# LANGUAGE OverlappingInstances       #-}
-{-# LANGUAGE UndecidableInstances       #-}
-{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 module Data.VariantsOld where

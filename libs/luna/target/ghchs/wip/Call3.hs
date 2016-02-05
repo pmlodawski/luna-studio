@@ -1,28 +1,28 @@
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE PolyKinds                 #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 --{-# LANGUAGE DysfunctionalDependencies #-}
 
 
 
-import GHC.TypeLits
+import           GHC.TypeLits
 
-import Luna.Target.HS.Proxy
-import Flowbox.Utils
-import Utils
+import           Flowbox.Utils
+import           Luna.Target.HS.Proxy
+import           Utils
 
-import Luna.Target.HS.Func.Args as Args hiding (main)
---import qualified Luna.Target.Func.HS.Args as Args 
+import           Luna.Target.HS.Func.Args as Args hiding (main)
+--import qualified Luna.Target.Func.HS.Args as Args
 
 ----------------------------------------------------------------------------------
 -- Data types
@@ -108,7 +108,7 @@ instance Func (Prop_Vector_length (Vector a)) (a,(b,())) ((a,(b,())) -> (a,b)) w
 
 main = do
     let v = Vector (1::Int) (2::Int) (3::Int)
-        p = prop (Proxy::Proxy "length") v 
+        p = prop (Proxy::Proxy "length") v
         args = (mkArg::Param,(Named (Untyped Unprovided) :: Named "dupa" (Untyped Unprovided),(mkArg::Param,())))
         args2 = (mkArg::Param,(Named (Typed Unprovided) :: Named "dupa" (Typed Int Unprovided),(Named (Untyped (Default 0)) :: Named "def" (Untyped (Default Int)),())))
         --args3 = (unnamedArg,(Typed Unprovided :: Typed Int (Unprovided "dupa"),(Default 0 :: Default "def" Int,())))

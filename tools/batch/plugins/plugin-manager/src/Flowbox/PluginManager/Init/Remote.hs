@@ -10,13 +10,13 @@
 module Flowbox.PluginManager.Init.Remote where
 
 import           Control.Monad.Trans.Either
-import qualified Data.Configurator          as Configurator
-import           Data.Configurator.Types    (Name, Value)
-import qualified Data.Configurator.Types    as Configurator
-import           Data.Either                (rights)
-import qualified Data.HashMap.Strict        as HashMap
-import qualified Data.String.Utils          as Utils
-import qualified Data.Text                  as Text
+import qualified Data.Configurator                   as Configurator
+import           Data.Configurator.Types             (Name, Value)
+import qualified Data.Configurator.Types             as Configurator
+import           Data.Either                         (rights)
+import qualified Data.HashMap.Strict                 as HashMap
+import qualified Data.String.Utils                   as Utils
+import qualified Data.Text                           as Text
 
 import           Flowbox.Bus.Bus                     (Bus)
 import qualified Flowbox.Bus.Bus                     as Bus

@@ -7,7 +7,7 @@
 
 module Luna.DEP.Lib.Edge where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

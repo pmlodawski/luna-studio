@@ -12,8 +12,8 @@
 
 module Luna.DEP.Data.Serialize.Proto.Conversion.Graph where
 
-import Control.Applicative
-import Data.Int            (Int32)
+import           Control.Applicative
+import           Data.Int                                      (Int32)
 
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert

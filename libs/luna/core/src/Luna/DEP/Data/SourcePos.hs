@@ -7,7 +7,7 @@
 
 module Luna.DEP.Data.SourcePos where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 -- this implementation is limited by hardcoded SourcePos in Parsec
 -- appropriate bug is reported

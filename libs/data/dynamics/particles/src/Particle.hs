@@ -34,7 +34,7 @@ import qualified Data.Array.Accelerate as A
 import           Data.Default          (Default, def)
 import qualified Data.Maybe            as Maybe
 
-import Particle.Algebra
+import           Particle.Algebra
 
 data ParticleSystem = ParticleSystem {
     _positions     :: Array Position

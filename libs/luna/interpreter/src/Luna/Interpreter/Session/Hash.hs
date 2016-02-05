@@ -8,7 +8,7 @@
 
 module Luna.Interpreter.Session.Hash where
 
-import qualified Data.Maybe as Maybe
+import qualified Data.Maybe                         as Maybe
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger

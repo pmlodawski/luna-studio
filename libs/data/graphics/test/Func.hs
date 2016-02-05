@@ -6,14 +6,14 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import Data.Array.Accelerate as A hiding (length)
-import Data.Array.Accelerate.CUDA as C
+import           Data.Array.Accelerate                       as A hiding (length)
+import           Data.Array.Accelerate.CUDA                  as C
 
-import Math.Coordinate.Cartesian (Point2(..))
-import Flowbox.Geom2D.Accelerate.CubicBezier.Solve
-import Flowbox.Geom2D.CubicBezier
+import           Flowbox.Geom2D.Accelerate.CubicBezier.Solve
+import           Flowbox.Geom2D.CubicBezier
+import           Math.Coordinate.Cartesian                   (Point2 (..))
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

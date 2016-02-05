@@ -5,26 +5,26 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Parser.State where
 
+import qualified Data.List                   as List
+import qualified Data.Maps                   as Map
 import           Flowbox.Prelude
-import qualified Luna.Data.ASTInfo    as ASTInfo
-import           Luna.Data.ASTInfo    (ASTInfo)
-import           Luna.Data.SourceMap  (SourceMap)
-import qualified Luna.Data.SourceMap  as SourceMap
-import           Luna.Parser.Operator (OperatorMap)
-import qualified Luna.Data.Namespace  as Namespace
-import           Luna.Data.Namespace  (Namespace, NamespaceMonad)
-import qualified Data.List            as List
-import qualified Data.Maps            as Map
+import           Luna.Data.ASTInfo           (ASTInfo)
+import qualified Luna.Data.ASTInfo           as ASTInfo
+import           Luna.Data.Namespace         (Namespace, NamespaceMonad)
+import qualified Luna.Data.Namespace         as Namespace
+import           Luna.Data.SourceMap         (SourceMap)
+import qualified Luna.Data.SourceMap         as SourceMap
+import           Luna.Parser.Operator        (OperatorMap)
 --import           Luna.DEP.AST.Comment     (Comment(..))
-import           Flowbox.Control.Monad.State (mapStateVal, get, put, StateT)
+import           Flowbox.Control.Monad.State (StateT, get, mapStateVal, put)
 import qualified Flowbox.Control.Monad.State as State
 import qualified Luna.Data.StructInfo        as StructInfo
 import           Luna.Syntax.Name.Path       (QualPath)
@@ -93,7 +93,7 @@ withNewScope id p = do
     popScope
     return ret
 
-    
+
 withScope id p = do
     pushScope id
     ret <- p

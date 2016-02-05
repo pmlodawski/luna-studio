@@ -8,8 +8,8 @@
 
 module Flowbox.PluginManager.Plugin.Info where
 
-import Flowbox.PluginManager.Plugin.Plugin (Plugin)
-import Flowbox.Prelude
+import           Flowbox.PluginManager.Plugin.Plugin (Plugin)
+import           Flowbox.Prelude
 
 
 

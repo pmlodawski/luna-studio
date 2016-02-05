@@ -1,17 +1,17 @@
 
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase                #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP                       #-}
 
 module Control.Monad.State.Generate.State where
 
 #if __GLASGOW_HASKELL__ >= 710
 
-import           Prelude
-import           Language.Haskell.TH hiding (appsE, classP)
-import qualified Control.Monad.Trans.State as State
 import           Control.Applicative
+import qualified Control.Monad.Trans.State as State
+import           Language.Haskell.TH       hiding (appsE, classP)
+import           Prelude
 
 newState :: String -> Name -> Q [Dec]
 newState name el = sequence [ genDataType

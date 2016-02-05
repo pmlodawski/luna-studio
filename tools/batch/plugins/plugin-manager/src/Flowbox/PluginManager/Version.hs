@@ -7,7 +7,7 @@
 
 module Flowbox.PluginManager.Version where
 
-import qualified Data.Version as Version
+import qualified Data.Version                 as Version
 
 import qualified Flowbox.PluginManager.Config as Config
 import           Flowbox.Prelude

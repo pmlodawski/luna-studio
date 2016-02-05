@@ -2,20 +2,20 @@
 
 module Luna.Parser.Pattern where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
-import           Text.Parser.Combinators 
-import           Luna.Parser.Combinators (many1, sepBy2)
-import qualified Luna.Syntax.Pat    as Pat
-import           Luna.Parser.Builder (labeled, withLabeled)
-import qualified Luna.Parser.Token       as Tok
-import qualified Luna.Parser.Type as Type
-import           Luna.Parser.Type (typic)
-import qualified Luna.Syntax.Name.Path        as NamePath
-import qualified Luna.Parser.State            as ParserState
-import qualified Luna.Data.Namespace.State    as Namespace
-import           Luna.Data.StructInfo         (OriginInfo(OriginInfo))
-import           Luna.Parser.Literal          (literal)
+import qualified Luna.Data.Namespace.State as Namespace
+import           Luna.Data.StructInfo      (OriginInfo (OriginInfo))
+import           Luna.Parser.Builder       (labeled, withLabeled)
+import           Luna.Parser.Combinators   (many1, sepBy2)
+import           Luna.Parser.Literal       (literal)
+import qualified Luna.Parser.State         as ParserState
+import qualified Luna.Parser.Token         as Tok
+import           Luna.Parser.Type          (typic)
+import qualified Luna.Parser.Type          as Type
+import qualified Luna.Syntax.Name.Path     as NamePath
+import qualified Luna.Syntax.Pat           as Pat
+import           Text.Parser.Combinators
 
 
 pattern    = choice [ try implTuple

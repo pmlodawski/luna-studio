@@ -8,20 +8,20 @@
 -- FIXME OR DELETEME [WD]
 -- moze stworzyc ogolna klase FS (isDirectory path -> Bool) etc, dla ktorego instancje beda dla amazona etc.
 
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DeriveGeneric    #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Flowbox.System.UniPath where
 
-import           Control.Monad      ((>=>))
-import           Data.Binary        (Binary)
-import qualified Data.List          as List
-import qualified Data.String.Utils  as StringUtils
-import qualified System.Directory   as Directory
-import qualified System.Environment as Environment
-import qualified System.FilePath    as FilePath
+import           Control.Monad                      ((>=>))
+import           Data.Binary                        (Binary)
+import qualified Data.List                          as List
+import qualified Data.String.Utils                  as StringUtils
+import qualified System.Directory                   as Directory
+import qualified System.Environment                 as Environment
+import qualified System.FilePath                    as FilePath
 
-import           Flowbox.Prelude                    hiding (empty, fromList, toList, Empty)
+import           Flowbox.Prelude                    hiding (Empty, empty, fromList, toList)
 import qualified Flowbox.System.Directory.Locations as Directory
 
 

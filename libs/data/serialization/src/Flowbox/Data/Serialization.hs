@@ -19,11 +19,11 @@ module Flowbox.Data.Serialization (
     SValue,
 ) where
 
-import Control.Monad
-import Data.Char                        (ord)
-import Text.ProtocolBuffers.Basic       (defaultValue)
-import Text.ProtocolBuffers.Extensions
-import Text.ProtocolBuffers.Identifiers
+import           Control.Monad
+import           Data.Char                           (ord)
+import           Text.ProtocolBuffers.Basic          (defaultValue)
+import           Text.ProtocolBuffers.Extensions
+import           Text.ProtocolBuffers.Identifiers
 
 import           Flowbox.Data.Error                  (Error (Error))
 import           Flowbox.Data.Mode                   (Mode)

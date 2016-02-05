@@ -8,7 +8,7 @@
 
 module Main where
 
-import qualified Control.Concurrent as Concurrent
+import qualified Control.Concurrent                  as Concurrent
 
 import           Flowbox.Broker.Cmd                  (Cmd)
 import qualified Flowbox.Broker.Cmd                  as Cmd

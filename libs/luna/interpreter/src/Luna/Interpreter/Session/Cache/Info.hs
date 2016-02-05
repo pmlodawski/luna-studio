@@ -8,7 +8,7 @@
 
 module Luna.Interpreter.Session.Cache.Info where
 
-import Data.Map (Map)
+import           Data.Map                              (Map)
 
 import           Flowbox.Prelude
 import           Generated.Proto.Data.SValue           (SValue)

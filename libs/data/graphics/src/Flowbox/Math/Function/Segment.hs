@@ -6,11 +6,11 @@
 ---------------------------------------------------------------------------
 module Flowbox.Math.Function.Segment where
 
-import Control.Monad
-import Data.Map as Map
+import           Control.Monad
+import           Data.Map                    as Map
 
-import Flowbox.Math.Function.Model
-import Flowbox.Prelude
+import           Flowbox.Math.Function.Model
+import           Flowbox.Prelude
 
 
 

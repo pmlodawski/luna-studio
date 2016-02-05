@@ -11,13 +11,13 @@
 module Flowbox.Graphics.Shader.Rasterizer where
 
 --import Flowbox.Graphics.Composition.Transform
-import Flowbox.Graphics.Shader.Shader
-import Flowbox.Math.Matrix                    as M
-import Flowbox.Prelude                        as P
+import           Flowbox.Graphics.Shader.Shader
+import           Flowbox.Math.Matrix            as M
+import           Flowbox.Prelude                as P
 
-import qualified Data.Array.Accelerate     as A
+import qualified Data.Array.Accelerate          as A
 import           Data.Monoid
-import           Math.Coordinate.Cartesian (Point2 (..))
+import           Math.Coordinate.Cartesian      (Point2 (..))
 import           Math.Space.Space
 
 

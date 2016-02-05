@@ -4,7 +4,6 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE BangPatterns  #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE ViewPatterns  #-}
 
@@ -17,11 +16,11 @@ module Flowbox.Codec.EXR.Channels (
     ) where
 
 import           Control.Applicative
-import qualified Data.Array.Accelerate           as A   
-import qualified Data.Array.Accelerate.IO        as A
-import qualified Data.Array.Repa                 as R
-import qualified Data.Array.Repa.Repr.ForeignPtr as R
-import qualified Data.Vector.Storable            as SV
+import qualified Data.Array.Accelerate               as A
+import qualified Data.Array.Accelerate.IO            as A
+import qualified Data.Array.Repa                     as R
+import qualified Data.Array.Repa.Repr.ForeignPtr     as R
+import qualified Data.Vector.Storable                as SV
 import           Foreign
 import           Foreign.C.String
 import           Foreign.C.Types

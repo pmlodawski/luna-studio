@@ -1,22 +1,22 @@
-{-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE OverloadedLists     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE ViewPatterns        #-}
 
 module Main where
 
-import           Math.Coordinate.Cartesian (Point2 (..))
+import           Math.Coordinate.Cartesian         (Point2 (..))
 import           Math.Space.Space
 
-import           Flowbox.Graphics.Shader.Shader (Shader(..), DiscreteShader, ContinuousShader)
-import qualified Flowbox.Graphics.Shader.Shader as Shader
+import           Flowbox.Graphics.Shader.Shader    (ContinuousShader, DiscreteShader, Shader (..))
+import qualified Flowbox.Graphics.Shader.Shader    as Shader
 import           Flowbox.Graphics.Utils.Accelerate (variable)
-import qualified Flowbox.Math.Index as Index
+import qualified Flowbox.Math.Index                as Index
 import           Flowbox.Prelude
 
 import           Data.Array.Accelerate
-import qualified Data.Array.Accelerate as A
-import qualified Data.Array.Accelerate.CUDA as C
+import qualified Data.Array.Accelerate             as A
+import qualified Data.Array.Accelerate.CUDA        as C
 
 
 

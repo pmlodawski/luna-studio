@@ -10,7 +10,7 @@
 
 module Data.String.Repr  where
 
-import Prelude
+import           Prelude
 
 ----------------------------------------------------------------------
 -- Tpye classes

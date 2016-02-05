@@ -11,12 +11,12 @@
 
 module Luna.DEP.AST.Type where
 
-import Data.Binary  (Binary)
-import GHC.Generics
+import           Data.Binary                     (Binary)
+import           GHC.Generics
 
-import Flowbox.Generics.Deriving.QShow
-import Flowbox.Prelude                 hiding (Traversal, drop, id)
-import Luna.DEP.AST.Common             (ID)
+import           Flowbox.Generics.Deriving.QShow
+import           Flowbox.Prelude                 hiding (Traversal, drop, id)
+import           Luna.DEP.AST.Common             (ID)
 
 
 

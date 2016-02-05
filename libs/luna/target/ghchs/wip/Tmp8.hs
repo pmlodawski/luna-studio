@@ -14,8 +14,8 @@
 
 module Main where
 
-import Control.Monad.State
-import Unsafe.Coerce
+import           Control.Monad.State
+import           Unsafe.Coerce
 
 data X = X
 data Y = Y

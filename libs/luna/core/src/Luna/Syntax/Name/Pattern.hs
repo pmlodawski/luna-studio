@@ -14,21 +14,21 @@
 
 module Luna.Syntax.Name.Pattern where
 
-import           Data.Binary       (Binary)
-import           Data.Foldable     (Foldable)
-import           Data.List         (intersperse)
-import           Data.Map          (Map)
-import qualified Data.Map          as Map
-import           Data.Maybe        (isNothing)
-import           Data.String       (IsString, fromString)
-import           Data.String.Utils (join)
-import           GHC.Generics      (Generic)
+import           Data.Binary                     (Binary)
+import           Data.Foldable                   (Foldable)
+import           Data.List                       (intersperse)
+import           Data.Map                        (Map)
+import qualified Data.Map                        as Map
+import           Data.Maybe                      (isNothing)
+import           Data.String                     (IsString, fromString)
+import           Data.String.Utils               (join)
+import           GHC.Generics                    (Generic)
 
-import Flowbox.Generics.Deriving.QShow
-import Flowbox.Prelude
-import Luna.Syntax.Arg                 (Arg (Arg))
-import Luna.Syntax.Name.Hash           (Hashable, hash)
-import Luna.Syntax.Name.Path           (NamePath (NamePath))
+import           Flowbox.Generics.Deriving.QShow
+import           Flowbox.Prelude
+import           Luna.Syntax.Arg                 (Arg (Arg))
+import           Luna.Syntax.Name.Hash           (Hashable, hash)
+import           Luna.Syntax.Name.Path           (NamePath (NamePath))
 
 ----------------------------------------------------------------------
 -- Type classes

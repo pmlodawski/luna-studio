@@ -9,8 +9,8 @@ module Flowbox.Test.Hspec.Lifted (
     module X
 ) where
 
-import Flowbox.Prelude
-import Test.Hspec      as X
+import           Flowbox.Prelude
+import           Test.Hspec      as X
 
 
 

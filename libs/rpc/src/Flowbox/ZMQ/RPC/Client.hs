@@ -8,9 +8,9 @@
 
 module Flowbox.ZMQ.RPC.Client where
 
-import           System.ZMQ4.Monadic             (ZMQ)
-import qualified System.ZMQ4.Monadic             as ZMQ
-import qualified Text.ProtocolBuffers.Extensions as Extensions
+import           System.ZMQ4.Monadic               (ZMQ)
+import qualified System.ZMQ4.Monadic               as ZMQ
+import qualified Text.ProtocolBuffers.Extensions   as Extensions
 
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert              (decodeP)

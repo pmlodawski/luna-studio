@@ -8,10 +8,10 @@
 
 module Luna.DEP.Graph.Properties where
 
-import Flowbox.Prelude
-import Luna.DEP.Graph.Attributes               (Attributes)
-import Luna.DEP.Graph.Flags                    (Flags)
-import Luna.DEP.Graph.View.Default.DefaultsMap (DefaultsMap)
+import           Flowbox.Prelude
+import           Luna.DEP.Graph.Attributes               (Attributes)
+import           Luna.DEP.Graph.Flags                    (Flags)
+import           Luna.DEP.Graph.View.Default.DefaultsMap (DefaultsMap)
 
 
 

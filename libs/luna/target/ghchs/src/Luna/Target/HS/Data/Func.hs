@@ -7,8 +7,8 @@
 
 module Luna.Target.HS.Data.Func (module X) where
 
-import Luna.Target.HS.Data.Func.App  as X
-import Luna.Target.HS.Data.Func.Call as X
-import Luna.Target.HS.Data.Func.Func as X
-import Luna.Target.HS.Data.Func.Lam  as X
-import Luna.Target.HS.Data.Func.Args9 as X hiding (reverse)
+import           Luna.Target.HS.Data.Func.App   as X
+import           Luna.Target.HS.Data.Func.Args9 as X hiding (reverse)
+import           Luna.Target.HS.Data.Func.Call  as X
+import           Luna.Target.HS.Data.Func.Func  as X
+import           Luna.Target.HS.Data.Func.Lam   as X

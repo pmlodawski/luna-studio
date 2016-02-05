@@ -10,28 +10,28 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TemplateHaskell           #-}
 
-{-# LANGUAGE TypeFamilies              #-}
 {-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE TypeFamilies              #-}
 
 module Luna.Syntax.Expr where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
-import Control.Applicative
-import GHC.Generics        (Generic)
+import           Control.Applicative
+import           GHC.Generics                    (Generic)
 
 import           Flowbox.Generics.Deriving.QShow
 
-import Luna.Syntax.Name         (VNameP, TNameP, CNameP, TVNameP, NameBaseP)
-import Luna.Syntax.Decl         (Decl)
-import Luna.Syntax.Lit          (LLit)
-import Luna.Syntax.Pat          (Pat, LPat)
-import Luna.Syntax.Type         (Type, LType, LMeta)
-import Luna.Syntax.Native       (Native)
-import Luna.Syntax.Arg          (LArg)
-import Luna.Syntax.Label        (Label(Label))
-import Luna.Syntax.Name.Pattern (NamePat(NamePat), Segment(Segment))
-import Data.Text.Lazy           (Text)
+import           Data.Text.Lazy                  (Text)
+import           Luna.Syntax.Arg                 (LArg)
+import           Luna.Syntax.Decl                (Decl)
+import           Luna.Syntax.Label               (Label (Label))
+import           Luna.Syntax.Lit                 (LLit)
+import           Luna.Syntax.Name                (CNameP, NameBaseP, TNameP, TVNameP, VNameP)
+import           Luna.Syntax.Name.Pattern        (NamePat (NamePat), Segment (Segment))
+import           Luna.Syntax.Native              (Native)
+import           Luna.Syntax.Pat                 (LPat, Pat)
+import           Luna.Syntax.Type                (LMeta, LType, Type)
 
 
 type Selector = [VNameP]
@@ -41,7 +41,7 @@ type ExprArg a v = LArg  a (LExpr a v)
 type SubDecl a v = Label a (Decl a (LExpr a v))
 
 
-type ArgName = Text 
+type ArgName = Text
 
 data Expr a v
     = Lambda      { _inputs  :: [ExprArg a v] , _output    :: Maybe (LType a) , _body   :: [LExpr a v] }
@@ -50,15 +50,15 @@ data Expr a v
     | Typed       { _cls     :: LType a       , _expr      :: LExpr a v                                }
     | Assignment  { _dst     :: LPat  a       , _src       :: LExpr a v                                }
     | Accessor    { _acc     :: NameBaseP     , _src       :: LExpr a v                                }
-    | Curry       { _expr    :: LExpr a v                                                              }
-    | Meta        { _meta    :: LMeta a                                                                }
-    | Tuple       { _items   :: [LExpr a v]                                                            }
-    | Grouped     { _expr    :: LExpr a v                                                              }
-    | Cons        { _cname   :: CNameP                                                                 }
-    | Decl        { _decl    :: SubDecl a v                                                            }
-    | Lit         { _lit     :: LLit a                                                                 }
-    | Native      { _native  :: Native (LExpr a v)                                                     }
-    | Var         { _ident   :: Variable v                                                             }
+    | Curry       { _expr :: LExpr a v                                                              }
+    | Meta        { _meta :: LMeta a                                                                }
+    | Tuple       { _items :: [LExpr a v]                                                            }
+    | Grouped     { _expr :: LExpr a v                                                              }
+    | Cons        { _cname :: CNameP                                                                 }
+    | Decl        { _decl :: SubDecl a v                                                            }
+    | Lit         { _lit :: LLit a                                                                 }
+    | Native      { _native :: Native (LExpr a v)                                                     }
+    | Var         { _ident :: Variable v                                                             }
     | List        (List (LExpr a v))
     | App         { _exprApp :: ExprApp a v }
     | Wildcard

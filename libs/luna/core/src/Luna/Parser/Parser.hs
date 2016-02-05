@@ -1,11 +1,11 @@
+{-# LANGUAGE DeriveDataTypeable        #-}
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE QuasiQuotes               #-}
-{-# LANGUAGE DeriveDataTypeable        #-}
 
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE UndecidableInstances       #-}
-{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 -----------------------------------------------------------------------------
 -- |
@@ -19,45 +19,45 @@
 
 module Luna.Parser.Parser where
 
-import Flowbox.Prelude hiding (init)
+import           Flowbox.Prelude              hiding (init)
 
-import           Text.Parser.Combinators 
+import           Control.Monad.State          (evalStateT, get)
 import qualified Data.ByteString.UTF8         as UTF8
-import Control.Monad.State (get, evalStateT)
+import           Text.Parser.Combinators
 
-import qualified Data.Text.Lazy.Encoding as Text
-import qualified Data.ByteString as ByteStr
+import qualified Data.ByteString              as ByteStr
+import qualified Data.Text.Lazy.Encoding      as Text
 import           Text.PrettyPrint.ANSI.Leijen (displayIO, linebreak, renderPretty)
 import qualified Text.PrettyPrint.ANSI.Leijen as Leijen
 
-import           Text.Trifecta.Delta (Delta(Directed))
-import           Text.Trifecta.Result (Result(Failure, Success))
-import qualified Text.Trifecta.Parser as Trifecta
+import           Text.Trifecta.Delta          (Delta (Directed))
+import qualified Text.Trifecta.Parser         as Trifecta
+import           Text.Trifecta.Result         (Result (Failure, Success))
 
 
 
-import qualified Luna.Parser.State  as ParserState
-import           Luna.Parser.State  (ParserState)
-import qualified Luna.Parser.Token  as Tok
-import           Luna.Parser.Indent (IndentStateT)
-import qualified Luna.Parser.Indent as Indent
+import           Luna.Parser.Indent           (IndentStateT)
+import qualified Luna.Parser.Indent           as Indent
+import           Luna.Parser.State            (ParserState)
+import qualified Luna.Parser.State            as ParserState
+import qualified Luna.Parser.Token            as Tok
 
-import qualified Data.List as List
+import qualified Data.List                    as List
 
-import qualified Luna.Parser.Type    as Type
-import qualified Luna.Parser.Pattern as Pattern
-import qualified Luna.Parser.Literal as Literal
-import qualified Luna.Parser.Struct  as Struct
-import qualified Luna.Parser.Term    as Term
-import qualified Luna.Parser.Decl    as Decl
-import qualified Luna.Parser.Module  as Module
+import qualified Luna.Parser.Decl             as Decl
+import qualified Luna.Parser.Literal          as Literal
+import qualified Luna.Parser.Module           as Module
+import qualified Luna.Parser.Pattern          as Pattern
+import qualified Luna.Parser.Struct           as Struct
+import qualified Luna.Parser.Term             as Term
+import qualified Luna.Parser.Type             as Type
 
-import Luna.Parser.Builder (labeled, label, nextID, qualifiedPath, withLabeled)
-import qualified Luna.Parser.Pragma        as Pragma
-import qualified Luna.System.Pragma.Store  as Pragma
+import           Luna.Parser.Builder          (label, labeled, nextID, qualifiedPath, withLabeled)
+import qualified Luna.Parser.Pragma           as Pragma
+import qualified Luna.System.Pragma.Store     as Pragma
 
 
-import Control.Monad.State (StateT)
+import           Control.Monad.State          (StateT)
 
 -----------------------------------------------------------
 -- Utils
@@ -146,13 +146,13 @@ parseText   input = handleParsing  (\p delta -> parseFromText   p delta input)
 handleParsingM f p = do
     pragmas <- Pragma.get
     rx <- handleResult <$> f (Pragma.runT p pragmas) (parserDelta parserName)
-    case rx of 
+    case rx of
         Left e                -> return $ Left e
         Right (res, pragmas') -> Right res <$ Pragma.put pragmas'
 
 handleParsing f p = do
     pragmas <- Pragma.get
-    case handleResult $ f (Pragma.runT p pragmas) (parserDelta parserName) of 
+    case handleResult $ f (Pragma.runT p pragmas) (parserDelta parserName) of
         Left e                -> return $ Left e
         Right (res, pragmas') -> Right res <$ Pragma.put pragmas'
 

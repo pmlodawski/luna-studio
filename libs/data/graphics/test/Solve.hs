@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies              #-}
 {-# LANGUAGE ViewPatterns              #-}
 
 module Main where
@@ -14,21 +14,21 @@ module Main where
 import           Data.Array.Accelerate                           as A
 
 import           Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve
-import           Flowbox.Geom2D.Rasterizer                       hiding (makePoints, makeSegments)
 import           Flowbox.Geom2D.QuadraticBezier
+import           Flowbox.Geom2D.Rasterizer                       hiding (makePoints, makeSegments)
+import           Flowbox.Graphics.Mockup                         (saveImageLuna)
 import           Flowbox.Math.Matrix                             ((:.) (..), DIM2, Matrix (..), Matrix2, Z (..))
 import qualified Flowbox.Math.Matrix                             as M
-import           Flowbox.Graphics.Mockup (saveImageLuna)
 import           Flowbox.Prelude
 import qualified Flowbox.Prelude                                 as P
 
-import Data.Array.Accelerate.CUDA
+import           Data.Array.Accelerate.CUDA
 
 
 
 
 combine :: Exp (QuadraticBezier Double) -> Exp DIM2 -> Exp Double
-combine quad (A.unlift . A.unindex2 -> (A.fromIntegral -> y, A.fromIntegral -> x) :: (A.Exp Int, A.Exp Int)) = 
+combine quad (A.unlift . A.unindex2 -> (A.fromIntegral -> y, A.fromIntegral -> x) :: (A.Exp Int, A.Exp Int)) =
     (distanceFromQuadratic (A.lift $ Point2 x y) quad) / 30
 
 combine2 :: Exp (QuadraticBezier Double) -> Exp DIM2 -> Exp Double

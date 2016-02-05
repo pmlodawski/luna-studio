@@ -8,8 +8,8 @@
 
 module Test.Flowbox.Batch.Handler.NodeDefaultSpec where
 
-import Data.List  ((\\))
-import Test.Hspec
+import           Data.List                                     ((\\))
+import           Test.Hspec
 
 import qualified Flowbox.Batch.Batch                           as Batch
 import qualified Flowbox.Batch.Handler.AST                     as Batch

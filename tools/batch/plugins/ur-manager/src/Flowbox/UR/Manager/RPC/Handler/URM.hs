@@ -12,12 +12,12 @@
 
 module Flowbox.UR.Manager.RPC.Handler.URM where
 
-import           Control.Monad.Trans.State (get, put)
-import qualified Data.Map                  as Map
-import           Data.Maybe                (fromMaybe, listToMaybe, maybeToList)
-import qualified Data.Set                  as Set
+import           Control.Monad.Trans.State                                (get, put)
+import qualified Data.Map                                                 as Map
+import           Data.Maybe                                               (fromMaybe, listToMaybe, maybeToList)
+import qualified Data.Set                                                 as Set
 
-import Flowbox.Prelude hiding (Context, error)
+import           Flowbox.Prelude                                          hiding (Context, error)
 
 import           Flowbox.Bus.Data.Message                                 (CorrelationID, Message)
 import qualified Flowbox.Bus.Data.Message                                 as Message

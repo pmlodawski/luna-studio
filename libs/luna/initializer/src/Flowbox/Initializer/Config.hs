@@ -9,4 +9,4 @@ module Flowbox.Initializer.Config (
     module Paths_luna_initializer
 ) where
 
-import Paths_luna_initializer (version)
+import           Paths_luna_initializer (version)

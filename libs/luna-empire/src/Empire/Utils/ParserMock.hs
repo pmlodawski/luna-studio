@@ -1,8 +1,8 @@
 module Empire.Utils.ParserMock where
 
-import Prologue
-import Text.Read  (readMaybe)
-import Data.Maybe (isJust)
+import           Data.Maybe (isJust)
+import           Prologue
+import           Text.Read  (readMaybe)
 
 asInteger :: String -> Maybe Int
 asInteger expr = readMaybe expr

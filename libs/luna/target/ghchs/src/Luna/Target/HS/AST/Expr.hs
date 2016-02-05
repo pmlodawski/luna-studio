@@ -5,19 +5,19 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Luna.Target.HS.AST.Expr where
 
-import           Prelude ()
+import           Prelude                      ()
 
+import           Data.Text.Lazy               (Text)
 import           Flowbox.Prelude
 import           Luna.Target.HS.AST.Comment   (Comment)
 import           Luna.Target.HS.AST.Deriving  (Deriving)
 import           Luna.Target.HS.AST.Extension (Extension)
 import qualified Luna.Target.HS.AST.Lit       as Lit
-import           Data.Text.Lazy (Text)
 
 
 type Lit = Lit.Lit
@@ -48,29 +48,29 @@ data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , 
           | AppT         { _src       :: Expr     , _dst       :: Expr                                                                                       }
           | AppP         { _src       :: Expr     , _dst       :: Expr                                                                                       }
           | CaseE        { _expr      :: Expr     , _matches   :: [Expr]                                                                                     }
-          | LambdaCase   { _matches   :: [Expr]                                                                                                              }
+          | LambdaCase   { _matches :: [Expr]                                                                                                              }
           | Match        { _pat       :: Expr     , _matchBody :: Expr                                                                                       }
-          | ViewP        { _expr      :: Expr     , _dst       :: Expr                                                                                       } 
-          | Tuple        { _items     :: [Expr]                                                                                                              }
-          | TupleP       { _items     :: [Expr]                                                                                                              }
-          | ListE        { _items     :: [Expr]                                                                                                              }
-          | ListT        { _item      :: Expr                                                                                                                }
-          | StringLit    { _litval    :: Text                                                                                                                }
-          | Var          { _name      :: Text                                                                                                                }
-          | VarE         { _name      :: Text                                                                                                                }
-          | VarT         { _name      :: Text                                                                                                                }
-          | LitT         { _lval      :: Lit                                                                                                                 }
-          | LetExpr      { _expr      :: Expr                                                                                                                }
-          | DoBlock      { _exprs     :: [Expr]                                                                                                              }
-          | ConT         { _name      :: Text                                                                                                                }
-          | ConP         { _name      :: Text                                                                                                                }
-          | ConE         { _qname     :: [Text]                                                                                                              }
-          | ImportNative { _code      :: Text                                                                                                                }
-          | Native       { _code      :: Text                                                                                                                }
-          | THE          { _expr      :: Expr                                                                                                                }
-          | Lit          { _lval      :: Lit                                                                                                                 }
-          | Comment      { _comment   :: Comment                                                                                                             }
-          | DataKindT    { _expr      :: Expr }
+          | ViewP        { _expr      :: Expr     , _dst       :: Expr                                                                                       }
+          | Tuple        { _items :: [Expr]                                                                                                              }
+          | TupleP       { _items :: [Expr]                                                                                                              }
+          | ListE        { _items :: [Expr]                                                                                                              }
+          | ListT        { _item :: Expr                                                                                                                }
+          | StringLit    { _litval :: Text                                                                                                                }
+          | Var          { _name :: Text                                                                                                                }
+          | VarE         { _name :: Text                                                                                                                }
+          | VarT         { _name :: Text                                                                                                                }
+          | LitT         { _lval :: Lit                                                                                                                 }
+          | LetExpr      { _expr :: Expr                                                                                                                }
+          | DoBlock      { _exprs :: [Expr]                                                                                                              }
+          | ConT         { _name :: Text                                                                                                                }
+          | ConP         { _name :: Text                                                                                                                }
+          | ConE         { _qname :: [Text]                                                                                                              }
+          | ImportNative { _code :: Text                                                                                                                }
+          | Native       { _code :: Text                                                                                                                }
+          | THE          { _expr :: Expr                                                                                                                }
+          | Lit          { _lval :: Lit                                                                                                                 }
+          | Comment      { _comment :: Comment                                                                                                             }
+          | DataKindT    { _expr :: Expr }
           | MacroE       String [Expr]
           | Pragma       Pragma
           | WildP
@@ -85,7 +85,7 @@ data Pragma = Include String deriving (Show)
 makeLenses ''Expr
 
 proxy name = TypedE (ConE ["Proxy"]) (AppT (ConT "Proxy") (LitT $ Lit.String name))
-app        = foldl AppE 
+app        = foldl AppE
 appP       = foldl AppP
 appT       = foldl AppT
 
@@ -101,6 +101,6 @@ val = flip Function mempty
 
 instance FromText Expr where
      fromText = Var
-     
+
 instance IsString Expr where
      fromString = Var . fromString

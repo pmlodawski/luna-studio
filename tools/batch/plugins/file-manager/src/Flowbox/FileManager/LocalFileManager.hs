@@ -10,11 +10,11 @@
 
 module Flowbox.FileManager.LocalFileManager where
 
-import           Control.Exception        (SomeException, catch)
-import qualified Data.ByteString.Lazy     as ByteString
-import qualified System.Directory         as Directory
-import qualified System.FilePath          as FilePath
-import qualified System.PosixCompat.Files as Files
+import           Control.Exception                               (SomeException, catch)
+import qualified Data.ByteString.Lazy                            as ByteString
+import qualified System.Directory                                as Directory
+import qualified System.FilePath                                 as FilePath
+import qualified System.PosixCompat.Files                        as Files
 
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert

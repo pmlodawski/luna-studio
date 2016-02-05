@@ -6,12 +6,12 @@
 
 module Bind where
 
-import Control.Applicative
-import Control.Monad.IO.Class
-import Control.Monad.Trans
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans
 --import Control.Monad.State
 
-import Data
+import           Data
 
 
 

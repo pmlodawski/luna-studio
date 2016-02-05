@@ -29,8 +29,8 @@ module Flowbox.Graphics.Mockup.Filter (
     prewittOperator
 ) where
 
-import qualified Data.Array.Accelerate as A
-import           Math.Space.Space      (Grid (..))
+import qualified Data.Array.Accelerate                  as A
+import           Math.Space.Space                       (Grid (..))
 
 import qualified Flowbox.Graphics.Color.Color           as Color
 import qualified Flowbox.Graphics.Composition.Color     as CC
@@ -52,7 +52,7 @@ import           Flowbox.Math.Matrix                    (Matrix2)
 import           Flowbox.Math.Matrix                    as M
 import           Flowbox.Prelude                        as P hiding (lookup)
 
-import Flowbox.Graphics.Mockup.Basic
+import           Flowbox.Graphics.Mockup.Basic
 
 
 

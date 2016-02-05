@@ -13,7 +13,7 @@ module Flowbox.Data.List (
 import           Data.List       as List
 import qualified Data.List.Utils as Utils
 
-import Flowbox.Prelude hiding (from, to)
+import           Flowbox.Prelude hiding (from, to)
 
 
 

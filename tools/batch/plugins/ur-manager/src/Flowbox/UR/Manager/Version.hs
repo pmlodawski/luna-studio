@@ -9,8 +9,8 @@ module Flowbox.UR.Manager.Version where
 
 import qualified Data.Version              as Version
 
-import qualified Flowbox.UR.Manager.Config as Config
 import           Flowbox.Prelude
+import qualified Flowbox.UR.Manager.Config as Config
 
 
 

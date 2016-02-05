@@ -8,7 +8,7 @@
 module Luna.DEP.Pass.CodeGen.Cabal.Store where
 
 import           Control.Monad.RWS
-import qualified System.IO         as IO
+import qualified System.IO                          as IO
 
 import           Flowbox.Prelude
 import           Flowbox.System.IO.Serializer       (Serializable (Serializable))

@@ -6,10 +6,10 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import Control.Exception.Assert
+import           Control.Exception.Assert
 
-import Flowbox.Animation.Controller
-import Flowbox.Prelude
+import           Flowbox.Animation.Controller
+import           Flowbox.Prelude
 
 
 
@@ -19,7 +19,7 @@ main = do
   let key = (0 :: Float)
       value = "string 0"
       animation = insertEmpty (insertValue (create key value) 50 "string 1") 100
-  putStrLn $ assert ((valueAt animation 10 )==(Just ("string 0"))) "---------------- test 1 - ok --------------------" 
-  putStrLn $ assert ((valueAt animation 60 )==(Just ("string 1"))) "---------------- test 2 - ok --------------------" 
-  putStrLn $ assert ((valueAt animation 110 )==(Nothing)) "---------------- test 3 - ok --------------------" 
+  putStrLn $ assert ((valueAt animation 10 )==(Just ("string 0"))) "---------------- test 1 - ok --------------------"
+  putStrLn $ assert ((valueAt animation 60 )==(Just ("string 1"))) "---------------- test 2 - ok --------------------"
+  putStrLn $ assert ((valueAt animation 110 )==(Nothing)) "---------------- test 3 - ok --------------------"
   return ()

@@ -9,7 +9,7 @@
 
 module Flowbox.Batch.Handler.Graph where
 
-import Control.Monad (forM_)
+import           Control.Monad                      (forM_)
 
 import           Flowbox.Batch.Batch                (Batch)
 import qualified Flowbox.Batch.Handler.Common       as Batch

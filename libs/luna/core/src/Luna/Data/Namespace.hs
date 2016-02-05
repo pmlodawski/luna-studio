@@ -13,21 +13,21 @@
 module Luna.Data.Namespace where
 
 
-import GHC.Generics (Generic)
+import           GHC.Generics              (Generic)
 
-import qualified Data.Maps           as Map
-import qualified Data.IntMap         as IntMap
-import           Data.Maybe          (fromJust)
-import           Flowbox.Prelude     hiding (head, id)
-import           Luna.Data.StructInfo (StructInfo, StructInfoMonad)
-import qualified Luna.Data.StructInfo as StructInfo
-import qualified Luna.Syntax.Name.Path as NamePath
-import           Data.Maybe          (fromJust)
-import           Control.Monad.RWS   (RWST)
-import qualified Control.Monad.RWS   as RWST
-import           Control.Monad.Trans.Class (lift, MonadTrans)
+import           Control.Monad.RWS         (RWST)
+import qualified Control.Monad.RWS         as RWST
+import           Control.Monad.Trans.Class (MonadTrans, lift)
+import qualified Data.IntMap               as IntMap
+import qualified Data.Maps                 as Map
+import           Data.Maybe                (fromJust)
+import           Data.Maybe                (fromJust)
+import           Flowbox.Prelude           hiding (head, id)
+import           Luna.Data.StructInfo      (StructInfo, StructInfoMonad)
+import qualified Luna.Data.StructInfo      as StructInfo
+import qualified Luna.Syntax.Name.Path     as NamePath
 
-import qualified Flowbox.Data.MapForest as MapForest
+import qualified Flowbox.Data.MapForest    as MapForest
 
 
 ----------------------------------------------------------------------

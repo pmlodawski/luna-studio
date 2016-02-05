@@ -8,7 +8,7 @@
 
 module Luna.Interpreter.Session.Data.CallDataPath where
 
-import qualified Data.Maybe as Maybe
+import qualified Data.Maybe                                  as Maybe
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude

@@ -1,21 +1,21 @@
 module Flowbox.Graphics.Mockup.GeneratorSpec where
 
-import Test.Hspec
-import Test.QuickCheck
-import System.IO.Unsafe
+import           System.IO.Unsafe
+import           Test.Hspec
+import           Test.QuickCheck
 
-import Flowbox.Graphics.Mockup.Generator
-import Flowbox.Graphics.Mockup.Basic
-import Flowbox.Prelude
-import Flowbox.Graphics.Color.Color
+import           Flowbox.Graphics.Color.Color
+import           Flowbox.Graphics.Mockup.Basic
+import           Flowbox.Graphics.Mockup.Generator
+import           Flowbox.Prelude
 
-import TestHelpers
+import           TestHelpers
 
 
 spec :: Spec
 spec = do
     let specPath = "./test/Flowbox/Graphics/Mockup/"
-        in do 
+        in do
             let testName = "constantLuna"
             let testPath = specPath++testName
 
@@ -42,4 +42,4 @@ spec = do
                     describe "should match reference image" $ do
                         it "in pixel-wise metric" $ do
                             shouldBeCloseTo testPath PixelWise actualImage (unsafePerformIO expectedImage)
-                        
+

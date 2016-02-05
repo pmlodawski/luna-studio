@@ -11,7 +11,7 @@
 
 module Luna.Pass.Analysis.ID.MaxID where
 
-import Control.Monad.State
+import           Control.Monad.State
 
 import           Flowbox.Prelude             hiding (mapM, mapM_)
 import           Luna.Pass                   (Pass (Pass))

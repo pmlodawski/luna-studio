@@ -7,16 +7,16 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Luna.Interpreter.Session.TargetHS.Bindings where
 
-import qualified Data.List as List
+import qualified Data.List                         as List
 import qualified GHC
-import           GhcMonad  (GhcMonad)
+import           GhcMonad                          (GhcMonad)
 import qualified GhcMonad
 import qualified HscTypes
 import qualified Linker
 
-import Flowbox.Prelude                   hiding (matching)
-import Flowbox.System.Log.Logger         as L
-import Luna.Interpreter.Session.GHC.Util (dshow)
+import           Flowbox.Prelude                   hiding (matching)
+import           Flowbox.System.Log.Logger         as L
+import           Luna.Interpreter.Session.GHC.Util (dshow)
 
 
 

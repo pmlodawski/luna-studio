@@ -12,9 +12,9 @@
 
 module Flowbox.AWS.EC2.Control.Simple.Instance where
 
-import qualified AWS.EC2.Types          as Types
-import           Control.Monad.IO.Class (liftIO)
-import qualified Data.Time              as Time
+import qualified AWS.EC2.Types                       as Types
+import           Control.Monad.IO.Class              (liftIO)
+import qualified Data.Time                           as Time
 
 import qualified Flowbox.AWS.EC2.Control.Simple.Tag  as Tag
 import           Flowbox.AWS.EC2.EC2                 (EC2, EC2Resource)

@@ -10,10 +10,10 @@
 
 module Luna.Pass.Analysis.ID.State where
 
-import           Control.Monad.State hiding (when)
-import           Data.IntSet         (IntSet)
-import qualified Data.IntSet         as IntSet
-import qualified Data.Maybe          as Maybe
+import           Control.Monad.State       hiding (when)
+import           Data.IntSet               (IntSet)
+import qualified Data.IntSet               as IntSet
+import qualified Data.Maybe                as Maybe
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger

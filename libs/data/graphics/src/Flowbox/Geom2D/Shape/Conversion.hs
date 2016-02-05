@@ -8,16 +8,16 @@
 
 module Flowbox.Geom2D.Shape.Conversion where
 
-import Data.Maybe
+import           Data.Maybe
 
-import Flowbox.Geom2D.QuadraticBezier
-import Flowbox.Geom2D.QuadraticBezier.Conversion
-import Flowbox.Geom2D.CubicBezier
-import Flowbox.Geom2D.Shape
-import Flowbox.Geom2D.Path
-import Flowbox.Geom2D.ControlPoint
-import Flowbox.Prelude
-import Math.Coordinate.Cartesian (Point2(..))
+import           Flowbox.Geom2D.ControlPoint
+import           Flowbox.Geom2D.CubicBezier
+import           Flowbox.Geom2D.Path
+import           Flowbox.Geom2D.QuadraticBezier
+import           Flowbox.Geom2D.QuadraticBezier.Conversion
+import           Flowbox.Geom2D.Shape
+import           Flowbox.Prelude
+import           Math.Coordinate.Cartesian                 (Point2 (..))
 
 
 

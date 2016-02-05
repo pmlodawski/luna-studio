@@ -13,8 +13,8 @@
 
 module Data.Text.CodeBuilder.Tok where
 
-import Prologue
-import Data.Text.CodeBuilder.Doc (Doc, between)
+import           Data.Text.CodeBuilder.Doc (Doc, between)
+import           Prologue
 
 ----------------------------------------------------------------------
 -- Data types

@@ -10,16 +10,16 @@
 {-# LANGUAGE IncoherentInstances       #-}
 {-# LANGUAGE OverlappingInstances      #-}
 
-import Control.Applicative
-import Control.Monad.IO.Class
-import Control.Monad.Trans
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans
 --import Control.Monad.State
 
-import Bind2 (MonadRebase (..), StateT (..), bind, bind2, get, put)
+import           Bind2                  (MonadRebase (..), StateT (..), bind, bind2, get, put)
 
-import Data
+import           Data
 
-import Utils
+import           Utils
 
 
 

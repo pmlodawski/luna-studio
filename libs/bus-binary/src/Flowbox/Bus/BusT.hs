@@ -8,10 +8,10 @@
 
 module Flowbox.Bus.BusT where
 
-import Control.Monad.IO.Class
+import           Control.Monad.IO.Class
 
-import Flowbox.Bus.Bus (Bus)
-import Flowbox.Prelude
+import           Flowbox.Bus.Bus        (Bus)
+import           Flowbox.Prelude
 
 
 --FIXME[PM] : rename to BusWrapper

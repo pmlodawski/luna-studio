@@ -11,7 +11,7 @@
 
 module Luna.Pass.Analysis.Find.Find where
 
-import Control.Monad.State
+import           Control.Monad.State
 
 import           Flowbox.Prelude               hiding (mapM, mapM_, pred)
 import           Luna.Pass                     (Pass (Pass))

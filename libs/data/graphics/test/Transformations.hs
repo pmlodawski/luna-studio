@@ -8,39 +8,39 @@
 
 module Main where
 
-import           Flowbox.Graphics.Mockup
-import           Flowbox.Graphics.Mockup.Basic as Mockup
-import           Flowbox.Graphics.Mockup.Transform as Transform
-import qualified Flowbox.Math.Matrix as M
-import           Data.Array.Accelerate as A hiding (fromIntegral)
+import           Data.Array.Accelerate                           as A hiding (fromIntegral)
 import           Data.Array.Accelerate.IO
+import           Flowbox.Graphics.Mockup
+import           Flowbox.Graphics.Mockup.Basic                   as Mockup
+import           Flowbox.Graphics.Mockup.Transform               as Transform
+import qualified Flowbox.Math.Matrix                             as M
 
-import           Flowbox.Geom2D.ControlPoint
-import           Flowbox.Geom2D.Path
-import           Flowbox.Geom2D.Mask as Mask
-import           Flowbox.Geom2D.Rasterizer hiding (makePoints, makeSegments)
-import           Flowbox.Graphics.Image.IO.BMP
-import           Flowbox.Graphics.Color.RGBA as Color
-import           Flowbox.Math.Function.Accelerate.BSpline
-import qualified Flowbox.Graphics.Composition.Color as Color
-import           Flowbox.Graphics.Color.Color as Color
-import           Flowbox.Graphics.Image.View as View
+import qualified Data.Array.Accelerate.CUDA                      as CUDA
 import           Data.Maybe
-import           Flowbox.Graphics.Image.Channel
-import           Flowbox.Prelude as P hiding (lookup)
-import           Flowbox.Graphics.Image.Image
-import qualified Flowbox.Graphics.Mockup as Mockup
-import           Flowbox.Graphics.Shader.Shader
-import           Flowbox.Graphics.Image.Matte
+import           Flowbox.Geom2D.ControlPoint
+import           Flowbox.Geom2D.Mask                             as Mask
+import           Flowbox.Geom2D.Path
+import           Flowbox.Geom2D.Rasterizer                       hiding (makePoints, makeSegments)
+import           Flowbox.Graphics.Color.Color                    as Color
+import           Flowbox.Graphics.Color.RGBA                     as Color
+import qualified Flowbox.Graphics.Composition.Color              as Color
 import           Flowbox.Graphics.Composition.Generator.Gradient
 import           Flowbox.Graphics.Composition.Transform
-import           Flowbox.Graphics.Image.View as View
+import           Flowbox.Graphics.Image.Channel
 import           Flowbox.Graphics.Image.Image
-import           Flowbox.Graphics.Shader.Sampler
+import           Flowbox.Graphics.Image.Image
+import           Flowbox.Graphics.Image.IO.BMP
+import           Flowbox.Graphics.Image.Matte
+import           Flowbox.Graphics.Image.View                     as View
+import           Flowbox.Graphics.Image.View                     as View
+import qualified Flowbox.Graphics.Mockup                         as Mockup
 import           Flowbox.Graphics.Shader.Rasterizer
-import           Flowbox.Graphics.Shader.Shader as Shader
-import           Flowbox.Math.Matrix as M
-import qualified Data.Array.Accelerate.CUDA as CUDA
+import           Flowbox.Graphics.Shader.Sampler
+import           Flowbox.Graphics.Shader.Shader
+import           Flowbox.Graphics.Shader.Shader                  as Shader
+import           Flowbox.Math.Function.Accelerate.BSpline
+import           Flowbox.Math.Matrix                             as M
+import           Flowbox.Prelude                                 as P hiding (lookup)
 
 
 dist :: (Point2 (A.Exp Double)) -> A.Exp Double

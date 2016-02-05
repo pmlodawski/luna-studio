@@ -7,7 +7,7 @@
 
 module Luna.DEP.AST.Common where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 type ID = Int

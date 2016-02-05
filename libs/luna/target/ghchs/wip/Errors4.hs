@@ -1,32 +1,31 @@
 
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
 
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE IncoherentInstances #-}
+{-# LANGUAGE IncoherentInstances       #-}
+{-# LANGUAGE OverlappingInstances      #-}
 
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 
 
 
-import Control.Applicative  
-import Control.Monad.IO.Class
-import Control.Monad.Trans
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans
 --import Control.Monad.State
 
 --import Bind2 (bind, bind2, MonadRebase(..), StateT(..), put,get)
 
 --import Data2
 
-import Utils
+import           Utils
 
 
 foo x y = x
@@ -138,7 +137,7 @@ instance  (TransApplicative (UnsafeBase base err) base (UnsafeBase base err)) =>
 
 
 class Raise e a b | e a -> b where
-    raise :: e -> a -> b 
+    raise :: e -> a -> b
 
 
 instance Raise e (Safe a)               (UnsafeBase Safe e a)     where raise e (Safe a) = Error e
@@ -266,7 +265,7 @@ instance  (LiftErr (UnsafeBase base e1) base (UnsafeBase dstBase e1), LiftErr ba
 --        Right val -> EitherError (val <$> b)
 
 --instance LiftErr (Either e) Safe (Either e) where
---    liftErr f (Safe a) = f <*> pure a 
+--    liftErr f (Safe a) = f <*> pure a
 
 liftErr2 f a b       = liftErr (liftErr f a) b
 --liftErr3 f a b c     = liftErr (liftErr2 f a b) c
@@ -310,17 +309,17 @@ main = do
         --tval = if (1<2) then matchSafe x ex1 else matchSafe ex1 x
 
         --tval = summe' ex1' ev1
-        tval = summe' ev1 ex1' 
+        tval = summe' ev1 ex1'
 
     print tval
     print $ catch (\Err2 -> Safe(0::Int)) $ catch (\Err1 -> Safe(5::Int)) tval
 
     --print ex4
     --print $ fmap (+10) ex4
-    
+
     --print $ catch (\Err1 -> Safe(0::Int)) $ ex2
-    --print $ catch (\Err1 -> Safe(0::Int)) 
-    --      . catch (\Err2 -> Safe(0::Int)) 
+    --print $ catch (\Err1 -> Safe(0::Int))
+    --      . catch (\Err2 -> Safe(0::Int))
     --      $ ex2
 
     print "end"

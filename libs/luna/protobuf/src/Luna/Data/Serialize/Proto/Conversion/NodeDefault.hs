@@ -12,7 +12,7 @@
 
 module Luna.Data.Serialize.Proto.Conversion.NodeDefault where
 
-import qualified Data.Map as Map
+import qualified Data.Map                                      as Map
 
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert

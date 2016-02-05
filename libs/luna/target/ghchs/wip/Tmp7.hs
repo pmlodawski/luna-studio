@@ -1,19 +1,19 @@
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE DeriveDataTypeable     #-}
+{-# LANGUAGE FlexibleContexts       #-}
+{-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE IncoherentInstances #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE GADTs                  #-}
+{-# LANGUAGE IncoherentInstances    #-}
+{-# LANGUAGE MagicHash              #-}
+{-# LANGUAGE OverlappingInstances   #-}
+{-# LANGUAGE RankNTypes             #-}
+{-# LANGUAGE TypeFamilies           #-}
+{-# LANGUAGE UndecidableInstances   #-}
 
 
 
-import Data.Typeable
-import GHC.Prim (unsafeCoerce#)
+import           Data.Typeable
+import           GHC.Prim      (unsafeCoerce#)
 
 data V a = V a deriving (Show, Typeable)
 

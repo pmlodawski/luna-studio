@@ -9,8 +9,8 @@
 
 module Control.PolyApplicative.App.TH where
 
-import Language.Haskell.TH
-import Prelude
+import           Language.Haskell.TH
+import           Prelude
 
 mkApp :: Int -> Int -> Q [Dec]
 mkApp min max = do

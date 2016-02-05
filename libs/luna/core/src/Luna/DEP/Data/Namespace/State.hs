@@ -11,8 +11,8 @@
 
 module Luna.DEP.Data.Namespace.State where
 
-import           Control.Monad.State (MonadState, get, modify, put)
-import qualified Data.IntMap         as IntMap
+import           Control.Monad.State       (MonadState, get, modify, put)
+import qualified Data.IntMap               as IntMap
 
 import           Flowbox.Prelude           hiding (id)
 import           Flowbox.System.Log.Logger as L

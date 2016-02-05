@@ -8,12 +8,12 @@
 
 module Luna.Build.BuildConfig where
 
-import Data.Version (Version)
+import           Data.Version           (Version)
 
-import Flowbox.Config.Config  (Config)
-import Flowbox.Prelude
-import Flowbox.System.UniPath (UniPath)
-import Luna.Build.Diagnostics (Diagnostics)
+import           Flowbox.Config.Config  (Config)
+import           Flowbox.Prelude
+import           Flowbox.System.UniPath (UniPath)
+import           Luna.Build.Diagnostics (Diagnostics)
 
 
 

@@ -16,22 +16,22 @@ import qualified Data.Time                              as Time
 import qualified Database.PostgreSQL.Simple             as PSQL
 import qualified Database.PostgreSQL.Simple.Transaction as Transaction
 
-import qualified Flowbox.AWS.Database.Instance         as InstanceDB
-import qualified Flowbox.AWS.Database.Session          as SessionDB
-import qualified Flowbox.AWS.Database.User             as UserDB
-import qualified Flowbox.AWS.EC2.Control.DBPool.Cost   as Cost
-import qualified Flowbox.AWS.EC2.Control.DBPool.Credit as Credit
-import qualified Flowbox.AWS.EC2.Control.DBPool.Tag    as Tag
-import qualified Flowbox.AWS.EC2.EC2                   as EC2
-import           Flowbox.AWS.EC2.Instance.Instance     (Instance (Instance))
-import qualified Flowbox.AWS.EC2.Instance.Instance     as Instance
-import qualified Flowbox.AWS.EC2.Instance.Management   as Management
-import qualified Flowbox.AWS.EC2.Instance.Request      as Request
-import qualified Flowbox.AWS.EC2.Instance.Tag          as Tag
-import           Flowbox.AWS.Region                    (Region)
-import qualified Flowbox.AWS.User.Session              as Session
-import qualified Flowbox.AWS.User.User                 as User
-import           Flowbox.Control.Error                 (assertIO, eitherStringToM, (<??&.>))
+import qualified Flowbox.AWS.Database.Instance          as InstanceDB
+import qualified Flowbox.AWS.Database.Session           as SessionDB
+import qualified Flowbox.AWS.Database.User              as UserDB
+import qualified Flowbox.AWS.EC2.Control.DBPool.Cost    as Cost
+import qualified Flowbox.AWS.EC2.Control.DBPool.Credit  as Credit
+import qualified Flowbox.AWS.EC2.Control.DBPool.Tag     as Tag
+import qualified Flowbox.AWS.EC2.EC2                    as EC2
+import           Flowbox.AWS.EC2.Instance.Instance      (Instance (Instance))
+import qualified Flowbox.AWS.EC2.Instance.Instance      as Instance
+import qualified Flowbox.AWS.EC2.Instance.Management    as Management
+import qualified Flowbox.AWS.EC2.Instance.Request       as Request
+import qualified Flowbox.AWS.EC2.Instance.Tag           as Tag
+import           Flowbox.AWS.Region                     (Region)
+import qualified Flowbox.AWS.User.Session               as Session
+import qualified Flowbox.AWS.User.User                  as User
+import           Flowbox.Control.Error                  (assertIO, eitherStringToM, (<??&.>))
 import           Flowbox.Prelude
 
 

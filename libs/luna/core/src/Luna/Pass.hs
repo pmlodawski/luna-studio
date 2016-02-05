@@ -7,4 +7,4 @@
 
 module Luna.Pass (module X) where
 
-import Luna.Pass.Pass as X
+import           Luna.Pass.Pass as X

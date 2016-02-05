@@ -26,7 +26,7 @@ import qualified Luna.Interpreter.Cmd                 as Cmd
 import qualified Luna.Interpreter.RPC.Handler.Handler as Handler
 import qualified Luna.Interpreter.Version             as Version
 #if !defined(mingw32_HOST_OS)
-import System.Remote.Monitoring
+import           System.Remote.Monitoring
 #endif
 
 

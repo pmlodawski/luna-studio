@@ -9,7 +9,7 @@
 
 module Flowbox.FileManager.FileManager where
 
-import Data.ByteString.Lazy (ByteString)
+import           Data.ByteString.Lazy                        (ByteString)
 
 import           Flowbox.Bus.RPC.RPC                         (RPC)
 import           Flowbox.Prelude

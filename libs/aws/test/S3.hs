@@ -10,8 +10,8 @@
 
 module Main where
 
-import qualified Aws                    as Aws
-import           Control.Monad.IO.Class (liftIO)
+import qualified Aws                                 as Aws
+import           Control.Monad.IO.Class              (liftIO)
 
 import           Flowbox.AWS.Region                  (Region)
 import qualified Flowbox.AWS.Region                  as Region

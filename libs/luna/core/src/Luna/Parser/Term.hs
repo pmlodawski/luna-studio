@@ -2,58 +2,58 @@
 
 module Luna.Parser.Term where
 
-import Flowbox.Prelude hiding (maybe)
+import           Flowbox.Prelude           hiding (maybe)
 
-import           Text.Parser.Combinators 
-import qualified Luna.Parser.Token       as Tok
-import qualified Luna.Syntax.Expr as Expr
-import           Luna.Syntax.Expr (LExpr, Expr)
-import Luna.Parser.Builder (label, labeled, withLabeled, nextID)
-import Luna.Parser.Combinators (just, many1, (<??>), applyAll, maybe)
-import Luna.Parser.Struct (blockBegin)
-import Luna.Parser.Pattern (pattern)
-import           Luna.Syntax.Name             (vname)
-import qualified Luna.Syntax.Name.Path        as NamePath
-import           Data.Function                (on)
-import qualified Data.List                    as List
-import           Text.EditDistance            (defaultEditCosts, levenshteinDistance, EditCosts(..), Costs(..))
-import qualified Flowbox.Data.MapForest       as MapForest
-import qualified Data.Maps                    as Map
-import           Data.List                    (sortBy)
-import qualified Luna.Data.StructInfo         as StructInfo
-import qualified Luna.Data.Namespace.State    as Namespace
-import           Luna.Data.Namespace          (NamespaceMonad)
-import qualified Luna.Parser.State            as ParserState
-import           Luna.Parser.State            (ParserState)
-import           Luna.Data.StructInfo         (OriginInfo(OriginInfo))
-import Control.Monad.State (MonadState, get)
-import           Data.Maybe                   (isJust, fromJust)
-import qualified Luna.Syntax.Name.Pattern     as NamePat
-import           Luna.Syntax.Label  (Label(Label))
-import           Luna.Syntax.Name.Pattern     (NamePat(NamePat))
+import           Control.Monad.State       (MonadState, get)
+import           Data.Function             (on)
+import           Data.List                 (sortBy)
+import qualified Data.List                 as List
+import qualified Data.Maps                 as Map
+import           Data.Maybe                (fromJust, isJust)
+import qualified Flowbox.Data.MapForest    as MapForest
+import           Luna.Data.Namespace       (NamespaceMonad)
+import qualified Luna.Data.Namespace.State as Namespace
+import           Luna.Data.StructInfo      (OriginInfo (OriginInfo))
+import qualified Luna.Data.StructInfo      as StructInfo
+import           Luna.Parser.Builder       (label, labeled, nextID, withLabeled)
+import           Luna.Parser.Combinators   (applyAll, just, many1, maybe, (<??>))
+import           Luna.Parser.Pattern       (pattern)
+import           Luna.Parser.State         (ParserState)
+import qualified Luna.Parser.State         as ParserState
+import           Luna.Parser.Struct        (blockBegin)
+import qualified Luna.Parser.Token         as Tok
+import           Luna.Syntax.Expr          (Expr, LExpr)
+import qualified Luna.Syntax.Expr          as Expr
+import           Luna.Syntax.Label         (Label (Label))
+import           Luna.Syntax.Name          (vname)
+import qualified Luna.Syntax.Name.Path     as NamePath
+import           Luna.Syntax.Name.Pattern  (NamePat (NamePat))
+import qualified Luna.Syntax.Name.Pattern  as NamePat
+import           Text.EditDistance         (Costs (..), EditCosts (..), defaultEditCosts, levenshteinDistance)
+import           Text.Parser.Combinators
 
-import           Text.Parser.Expression (Assoc(AssocLeft), Operator(Infix, Prefix, Postfix), buildExpressionParser)
-import qualified Luna.Parser.Pattern as Pat
-import           Luna.Parser.Type    (typic, metaBase)
-import           Luna.Parser.Literal (literal)
-import qualified Luna.Syntax.Name    as Name
-import qualified Data.ByteString.UTF8         as UTF8
-import           Data.Char                    (isSpace)
-import qualified Luna.System.Session as Session
-import qualified Luna.System.Pragma.Store  as Pragma hiding (isEnabled)
-import           Luna.System.Pragma.Store  (MonadPragmaStore)
-import qualified Luna.System.Pragma        as Pragma (isEnabled)
+import qualified Data.ByteString.UTF8      as UTF8
+import           Data.Char                 (isSpace)
+import           Luna.Parser.Literal       (literal)
+import qualified Luna.Parser.Pattern       as Pat
 import qualified Luna.Parser.Pragma        as Pragma
+import           Luna.Parser.Type          (metaBase, typic)
+import qualified Luna.Syntax.Name          as Name
+import qualified Luna.System.Pragma        as Pragma (isEnabled)
+import           Luna.System.Pragma.Store  (MonadPragmaStore)
+import qualified Luna.System.Pragma.Store  as Pragma hiding (isEnabled)
+import qualified Luna.System.Session       as Session
+import           Text.Parser.Expression    (Assoc (AssocLeft), Operator (Infix, Prefix, Postfix), buildExpressionParser)
 
 import qualified Luna.Parser.Decl          as Decl
 import qualified Luna.Syntax.Label         as Label
 
-import Text.Trifecta.Rendering (Caret(Caret))
-import Text.Trifecta.Combinators (DeltaParsing, careting)
-import Text.Trifecta.Delta (column)
-import Luna.Syntax.Enum (IDTag)
+import           Luna.Syntax.Enum          (IDTag)
+import           Text.Trifecta.Combinators (DeltaParsing, careting)
+import           Text.Trifecta.Delta       (column)
+import           Text.Trifecta.Rendering   (Caret (Caret))
 
-import Luna.Parser.Indent (MonadIndent)
+import           Luna.Parser.Indent        (MonadIndent)
 
 type ParserMonad m = (MonadIndent m, MonadState ParserState m, DeltaParsing m, NamespaceMonad m, MonadPragmaStore m)
 
@@ -115,8 +115,8 @@ opTE base = buildExpressionParser optableE (appE base)
 
 tupleE p = p <??> ((\id xs x -> label id $ Expr.Tuple (x:xs)) <$> nextID <* Tok.separator <*> sepBy1 p Tok.separator)
 
---appE base = p <??> (appID (\i a s -> Expr.App i s a) <*> many1 (argE p)) where 
-appE base = p <??> ((\i a s -> label i $ callBuilder2 s a) <$> nextID <*> many1 (appArg p)) where 
+--appE base = p <??> (appID (\i a s -> Expr.App i s a) <*> many1 (argE p)) where
+appE base = p <??> ((\i a s -> label i $ callBuilder2 s a) <$> nextID <*> many1 (appArg p)) where
     p = termE base
 
 
@@ -142,7 +142,7 @@ accE      = try( (\id a b -> label id $ Expr.Accessor a b) <$> nextID <*> accBas
 
 
 parensE p = Tok.parens $ choice [ Expr.Meta    <$  Tok.meta <*> labeled metaBase
-                                , Expr.Grouped <$> p 
+                                , Expr.Grouped <$> p
                                 , Expr.Grouped <$> labeled (Expr.Tuple <$> pure [])
                                 ]
 
@@ -184,7 +184,7 @@ entSimpleE = choice[ caseE -- CHECK [wd]: removed try
                    ]
            <?> "expression term"
 
-optableE = [ 
+optableE = [
              [ operator4 "^"                                  AssocLeft ]
            , [ operator4 "*"                                  AssocLeft ]
            , [ operator4 "/"                                  AssocLeft ]
@@ -233,13 +233,13 @@ callBuilder2 src@(Label lab expr) args = case expr of
 -- if everything fails, try parsing again the longest one to show nice error message
 mkFuncParsers (a:as) x =   try (foldl (\a b -> try a <|> b) (mkFuncParser x a) (fmap (mkFuncParser x) as))
                        <|> mkFuncParser x a -- nice error messages
-    
+
 
 appArg p = try (Expr.AppArg <$> just Tok.varIdent <* Tok.assignment <*> p) <|> (Expr.AppArg Nothing <$> p)
 
 --mkFuncParser baseVar (id, mpatt) = case mpatt of
 --    Nothing                                       -> baseVar
---    Just patt@(NamePat.NamePatDesc pfx base segs) -> ParserState.withReserved (tail segNames) 
+--    Just patt@(NamePat.NamePatDesc pfx base segs) -> ParserState.withReserved (tail segNames)
 --                                                   $ labeled $ Expr.App <$> pattParser
 --        where NamePat.SegmentDesc baseName baseDefs = base
 --              baseParser                                = NamePat.Segment <$> baseMultiVar <*> defBaseParser baseDefs
@@ -247,7 +247,7 @@ appArg p = try (Expr.AppArg <$> just Tok.varIdent <* Tok.assignment <*> p) <|> (
 
 --              defSegParser defs  = fmap takeJustArgs $ parseSegArgs defs
 --              defBaseParser defs = fmap takeJustArgs $ parseBaseArgs defs
---              takeJustArgs       = fmap fromJust . filter isJust 
+--              takeJustArgs       = fmap fromJust . filter isJust
 --              argSimpleExpr      = appArg pEntBaseSimpleE
 --              argCmplexExpr      = appArg (opTE pEntBaseSimpleE)
 --              segNames           = NamePat.segmentNames patt
@@ -264,7 +264,7 @@ appArg p = try (Expr.AppArg <$> just Tok.varIdent <* Tok.assignment <*> p) <|> (
 
 mkFuncParser baseVar (id, mpatt) = case mpatt of
     Nothing                                       -> baseVar
-    Just patt@(NamePat.NamePatDesc pfx base segs) -> ParserState.withReserved (tail segNames) 
+    Just patt@(NamePat.NamePatDesc pfx base segs) -> ParserState.withReserved (tail segNames)
                                                    $ labeled $ Expr.App <$> pattParser
         where NamePat.SegmentDesc baseName baseDefs = base
               baseParser                                = NamePat.Segment <$> baseMultiVar <*> defBaseParser baseDefs
@@ -272,7 +272,7 @@ mkFuncParser baseVar (id, mpatt) = case mpatt of
 
               defSegParser defs  = fmap takeJustArgs $ parseSegArgs defs
               defBaseParser defs = fmap takeJustArgs $ parseBaseArgs defs
-              takeJustArgs       = fmap fromJust . filter isJust 
+              takeJustArgs       = fmap fromJust . filter isJust
               argSimpleExpr      = appArg pEntBaseSimpleE
               argCmplexExpr      = appArg pEntBaseSimpleE
               segNames           = NamePat.segmentNames patt
@@ -358,12 +358,12 @@ findSimWords word words = fmap snd simPairs
     --where dist a b = levenshteinDistance editCosts (phonix a) (phonix b)
     where dist a b = levenshteinDistance editCosts2 (toString a) (toString b)
           simWords = fmap (dist word) words
-          simPairs = filter ((<20).fst) 
-                   $ List.sortBy (compare `on` fst) 
+          simPairs = filter ((<20).fst)
+                   $ List.sortBy (compare `on` fst)
                    $ zip simWords words
 
 
-    
+
 --varE   = appID $ Expr.var <*> Tok.varIdent
 varOpE = labeled $ (Expr.Var . (flip Expr.Variable ()) . vname . NamePath.single)  <$> try (Tok.parens Tok.varOp)
 conE   = labeled $ Expr.Cons <$> Tok.conIdent

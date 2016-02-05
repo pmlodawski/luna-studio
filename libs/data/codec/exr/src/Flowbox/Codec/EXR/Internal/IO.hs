@@ -6,11 +6,11 @@
 ---------------------------------------------------------------------------
 module Flowbox.Codec.EXR.Internal.IO where
 
-import Foreign
-import Foreign.C.String
+import           Foreign
+import           Foreign.C.String
 
 import qualified Flowbox.Codec.EXR.Internal.Bindings as Bindings
-import 			 Flowbox.Codec.EXR.Internal.Types
+import           Flowbox.Codec.EXR.Internal.Types
 
 
 

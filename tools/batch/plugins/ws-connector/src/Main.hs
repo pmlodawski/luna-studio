@@ -7,17 +7,17 @@
 
 module Main where
 
-import qualified Flowbox.WSConnector.WSConnector as WSConnector
-import           Flowbox.WSConnector.Cmd         (Cmd(..))
-import           Flowbox.System.Log.Logger
-import           Flowbox.Prelude
+import qualified Flowbox.Bus.EndPoint            as EndPoint
+import qualified Flowbox.Config.Config           as Config
 import           Flowbox.Options.Applicative     hiding (info)
 import qualified Flowbox.Options.Applicative     as Opt
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
+import           Flowbox.WSConnector.Cmd         (Cmd (..))
 import qualified Flowbox.WSConnector.Version     as Version
-import qualified Flowbox.Config.Config           as Config
-import qualified FlowboxData.Config.Config       as WSConfigLoader
 import qualified Flowbox.WSConnector.WSConfig    as WSConfig
-import qualified Flowbox.Bus.EndPoint            as EndPoint
+import qualified Flowbox.WSConnector.WSConnector as WSConnector
+import qualified FlowboxData.Config.Config       as WSConfigLoader
 
 rootLogger :: Logger
 rootLogger = getLogger ""

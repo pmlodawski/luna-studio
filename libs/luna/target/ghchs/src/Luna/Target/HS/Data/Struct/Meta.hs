@@ -5,18 +5,18 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable    #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE PolyKinds             #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
 
 module Luna.Target.HS.Data.Struct.Meta {-# DEPRECATED "Not used anymore" #-} where
 
-import Data.Typeable
-import Type.BaseType
+import           Data.Typeable
+import           Type.BaseType
 
 ----------------------------------------------------------------------------------
 -- Data types

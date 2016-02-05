@@ -7,12 +7,12 @@
 
 module Flowbox.Graphics.Shader.Matrix where
 
-import Flowbox.Graphics.Shader.Shader
-import Flowbox.Math.Matrix                          as M
-import Flowbox.Prelude
+import           Flowbox.Graphics.Shader.Shader
+import           Flowbox.Math.Matrix            as M
+import           Flowbox.Prelude
 
-import qualified Data.Array.Accelerate     as A
-import           Math.Coordinate.Cartesian (Point2 (..))
+import qualified Data.Array.Accelerate          as A
+import           Math.Coordinate.Cartesian      (Point2 (..))
 import           Math.Space.Space
 
 

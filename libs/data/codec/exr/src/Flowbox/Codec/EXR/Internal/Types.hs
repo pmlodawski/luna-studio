@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.Codec.EXR.Internal.Types where
 
-import Foreign.ForeignPtr
+import           Foreign.ForeignPtr
 
 
 

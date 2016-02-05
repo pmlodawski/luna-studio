@@ -1,6 +1,6 @@
 module Data.Constraint.Void where
 
-import Prelude
+import           Prelude
 
 data Void = Void deriving (Show)
 class    Void1 t1

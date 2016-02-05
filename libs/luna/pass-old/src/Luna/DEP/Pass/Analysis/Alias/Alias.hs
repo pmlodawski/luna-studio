@@ -12,7 +12,7 @@
 
 module Luna.DEP.Pass.Analysis.Alias.Alias where
 
-import Control.Applicative
+import           Control.Applicative
 
 import           Flowbox.Prelude               hiding (error, id, mod)
 import           Flowbox.System.Log.Logger
@@ -27,7 +27,8 @@ import           Luna.DEP.AST.Type             (Type)
 import qualified Luna.DEP.AST.Type             as Type
 import           Luna.DEP.Data.AliasInfo       (AliasInfo)
 import           Luna.DEP.Data.Namespace       (Namespace)
-import           Luna.DEP.Data.Namespace.State (getAliasInfo, regExpr, regLit, regModule, regPat, regType, regTypeName, regVarName, tryBindVar, withScope)
+import           Luna.DEP.Data.Namespace.State (getAliasInfo, regExpr, regLit, regModule, regPat, regType, regTypeName, regVarName,
+                                                tryBindVar, withScope)
 import           Luna.DEP.Pass.Pass            (Pass)
 import qualified Luna.DEP.Pass.Pass            as Pass
 

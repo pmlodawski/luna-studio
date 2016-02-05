@@ -9,10 +9,10 @@
 
 module Text.DEP.Parsers.Indent where
 
-import Control.Lens
-import Data.Default
-import GHC.Int
-import Prelude
+import           Control.Lens
+import           Data.Default
+import           GHC.Int
+import           Prelude
 
 import           Control.Applicative
 import           Control.Monad

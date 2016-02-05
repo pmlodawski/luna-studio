@@ -14,11 +14,11 @@ import           Data.Array.Accelerate.CUDA
 import           Data.Default
 import qualified Data.Thyme                 as Thyme
 
-import Particle
-import Particle.Conversions
-import Particle.PerlinNoise
-import Particle.PointAttractor
-import Particle.PointEmitter
+import           Particle
+import           Particle.Conversions
+import           Particle.PerlinNoise
+import           Particle.PointAttractor
+import           Particle.PointEmitter
 
 main :: IO ()
 main = go def =<< Thyme.getCurrentTime

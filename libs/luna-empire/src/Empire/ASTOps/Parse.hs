@@ -1,19 +1,19 @@
 module Empire.ASTOps.Parse where
 
+import           Control.Monad                (foldM)
+import           Control.Monad.Error          (throwError)
+import           Data.List                    (unfoldr)
+import           Data.Maybe                   (fromMaybe)
 import           Prologue
-import           Data.Maybe              (fromMaybe)
-import           Data.List               (unfoldr)
-import           Control.Monad           (foldM)
-import           Control.Monad.Error     (throwError)
 
-import           Empire.ASTOp            (ASTOp)
-import           Empire.Utils.ParserMock as Parser
-import           Empire.ASTOps.Builder   as ASTBuilder
+import           Empire.ASTOp                 (ASTOp)
+import           Empire.ASTOps.Builder        as ASTBuilder
+import           Empire.Utils.ParserMock      as Parser
 
-import           Empire.API.Data.DefaultValue (PortDefault(..), Value(..))
+import           Empire.API.Data.DefaultValue (PortDefault (..), Value (..))
 
+import           Luna.Syntax.Model.Graph      (Ref)
 import qualified Luna.Syntax.Model.Graph.Term as Builder
-import           Luna.Syntax.Model.Graph  (Ref)
 
 parsePortDefault :: PortDefault -> ASTOp (Ref Node)
 parsePortDefault (Expression expr)          = parseFragment expr

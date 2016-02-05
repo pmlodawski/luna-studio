@@ -14,7 +14,7 @@ import           Control.Monad.State
 import           Data.Set            (Set)
 import qualified Data.Set            as Set
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

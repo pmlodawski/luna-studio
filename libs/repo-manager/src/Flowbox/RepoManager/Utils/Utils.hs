@@ -1,17 +1,17 @@
 module Flowbox.RepoManager.Utils.Utils where
 
-import           Flowbox.Prelude
 import           Control.Monad
-import qualified Data.List             as List
-import qualified Data.List.Split       as Split
-import qualified System.FilePath       as FilePath
-import qualified System.Directory      as Directory
-import qualified System.Directory.Tree as DirTree
-import qualified Data.Foldable         as Foldable
-import qualified Data.Maybe            as Maybe
-import qualified Data.Set              as Set
-import qualified Flowbox.RepoManager.Data.Version as Version
+import qualified Data.Foldable                    as Foldable
+import qualified Data.List                        as List
+import qualified Data.List.Split                  as Split
+import qualified Data.Maybe                       as Maybe
+import qualified Data.Set                         as Set
+import           Flowbox.Prelude
 import qualified Flowbox.RepoManager.Data.Types   as Types
+import qualified Flowbox.RepoManager.Data.Version as Version
+import qualified System.Directory                 as Directory
+import qualified System.Directory.Tree            as DirTree
+import qualified System.FilePath                  as FilePath
 
 concatPath :: [String] -> String
 concatPath directories = List.intercalate [FilePath.pathSeparator] directories

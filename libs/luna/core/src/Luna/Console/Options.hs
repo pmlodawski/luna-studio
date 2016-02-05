@@ -6,9 +6,10 @@
 ---------------------------------------------------------------------------
 module Luna.Console.Options where
 
-import qualified Data.Version        as V
-import           Options.Applicative (auto, argument, command, command, fullDesc, help, hidden, long, metavar, option, prefs, progDesc, short, str, strOption, subparser, switch, value, (<>))
-import qualified Options.Applicative as Opt
+import qualified Data.Version                as V
+import           Options.Applicative         (argument, auto, command, command, fullDesc, help, hidden, long, metavar, option, prefs,
+                                              progDesc, short, str, strOption, subparser, switch, value, (<>))
+import qualified Options.Applicative         as Opt
 
 --import qualified Flowbox.Config.Config       as Config
 import           Flowbox.Control.Applicative
@@ -95,7 +96,7 @@ buildParser = Build <$> ( BuildOptions <$> argument str ( metavar "INPUTS" )
                                        <*> strOption ( long "output"  <> short 'o' <> value "out"  <> metavar "OUTPUT"  <> help "output file name" )
                                        <*> optIntFlag Nothing 'O' 0 2 "optimisation level [0-2], default 2"
                                        <*> many      ( strOption ( short 'l' <> metavar "LIBRARY" <> help "library to link with"))
-                                       
+
                                        <*> switch    ( long "library"                                                    <> help "compile as a library" )
                                        <*> strOption ( long "lib-name"    <> short 'n' <> value "name" <> metavar "NAME" <> help "library name"    )
                                        -- TODO [PM] : implement reading versions
@@ -103,7 +104,7 @@ buildParser = Build <$> ( BuildOptions <$> argument str ( metavar "INPUTS" )
                                        <*> strOption ( long "root-path"                <> value "" <> hidden )
                                        <*> switch    ( long "global"  <> help "compile to global library" )
                                        <*> strOption ( long "build-dir"                <> value "" <> hidden )
-                                       
+
                                        <*> switch ( long "DDEBUG"    <> hidden )
                                        <*> switch ( long "dump-all"  <> hidden )
                                        <*> switch ( long "dump-ast"  <> hidden )

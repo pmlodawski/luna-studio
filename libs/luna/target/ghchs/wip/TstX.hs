@@ -1,56 +1,55 @@
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE DeriveFunctor             #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TupleSections             #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 --{-# LANGUAGE IncoherentInstances #-}
 
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable        #-}
 
 
 {-# LANGUAGE DysfunctionalDependencies #-}
 
 
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax          #-}
 
 module TstX where
 
-import GHC.Prim (Constraint)
+import           GHC.Prim                                  (Constraint)
 
-import Control.Applicative
-import Control.Monad.IO.Class
-import Control.Monad.Trans
-import Control.PolyApplicative
-import Control.PolyApplicative.App
-import Luna.Target.HS.Control.Context
-import Luna.Target.HS.Control.Error
-import Luna.Target.HS.Control.Flow
-import Luna.Target.HS.Utils.BaseMonads
-import Luna.Target.HS.Data.Func
-import Control.Monad.Morph
-import Flowbox.Utils
-import Data.Typeable (Typeable, Proxy(..))
-import Data.TypeLevel
-import Data.Wrap
-import Luna.Target.HS.Data.Struct.Prop
-import Luna.Target.HS.Control.Context.Rebindable
-import GHC.TypeLits (Symbol)
-import Data.TupleList
-import Luna.Target.HS.Control.Flow.Utils
-import Luna.Target.HS.Control.Context.Pipe3 hiding (main)
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.Morph
+import           Control.Monad.Trans
+import           Control.PolyApplicative
+import           Control.PolyApplicative.App
+import           Data.TupleList
+import           Data.Typeable                             (Proxy (..), Typeable)
+import           Data.TypeLevel
+import           Data.Wrap
+import           Flowbox.Utils
+import           GHC.TypeLits                              (Symbol)
+import           Luna.Target.HS.Control.Context
+import           Luna.Target.HS.Control.Context.Pipe3      hiding (main)
+import           Luna.Target.HS.Control.Context.Rebindable
+import           Luna.Target.HS.Control.Error
+import           Luna.Target.HS.Control.Flow
+import           Luna.Target.HS.Control.Flow.Utils
+import           Luna.Target.HS.Data.Func
+import           Luna.Target.HS.Data.Struct.Prop
+import           Luna.Target.HS.Utils.BaseMonads
 
 class Pipe3 m1 m2 where
     pipe3 :: (m1 a -> b) -> m2 a -> b
@@ -124,7 +123,7 @@ instance  (a1~Value Pure a2, env~m2, set~Insert req Empty, m1~t m2, MonadTrans t
     appMonadCtx2 = Req . MonadCtx . lift . (fmap (Value . Pure)) . fromValue
 
 
---class AppMonadCtx2 x y | x -> y where 
+--class AppMonadCtx2 x y | x -> y where
 --    f :: x -> (forall req. MkReq req y)
 
 --type family MkReq req y where

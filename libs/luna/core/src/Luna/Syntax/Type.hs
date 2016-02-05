@@ -8,20 +8,20 @@
 
 module Luna.Syntax.Type where
 
-import Data.Binary (Binary)
+import           Data.Binary           (Binary)
 
-import Flowbox.Prelude
-import Luna.Syntax.Label     (Label)
-import Luna.Syntax.Name      (TNameP, VNameP)
-import Luna.Syntax.Name.Path (NamePath)
+import           Flowbox.Prelude
+import           Luna.Syntax.Label     (Label)
+import           Luna.Syntax.Name      (TNameP, VNameP)
+import           Luna.Syntax.Name.Path (NamePath)
 
 
 data Type a
     = Function { _inputs   :: [LType a]  , _output  :: LType a   }
     | App      { _src      :: LType a    , _args    :: [LType a] }
-    | Var      { _vname    :: VNameP                             }
-    | Tuple    { _items    :: [LType a]                          }
-    | List     { _item     :: LType a                            }
+    | Var      { _vname :: VNameP                             }
+    | Tuple    { _items :: [LType a]                          }
+    | List     { _item :: LType a                            }
     | Con      { _segments :: [TNameP]                           }
     | Meta     (LMeta a)
     | Wildcard

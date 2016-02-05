@@ -9,10 +9,10 @@
 
 module Flowbox.Bus.Server where
 
-import Control.Monad             (forever)
-import Control.Monad.Morph
-import Control.Monad.Trans
-import Control.Monad.Trans.State
+import           Control.Monad                 (forever)
+import           Control.Monad.Morph
+import           Control.Monad.Trans
+import           Control.Monad.Trans.State
 
 import           Flowbox.Bus.Bus               (Bus)
 import qualified Flowbox.Bus.Bus               as Bus

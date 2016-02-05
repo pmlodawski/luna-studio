@@ -1,44 +1,43 @@
 
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
 
-{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE OverlappingInstances      #-}
 --{-# LANGUAGE IncoherentInstances #-}
 
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 
 
 
-import Control.Applicative  
-import Control.Monad.IO.Class
-import Control.Monad.Trans
-import Data.Typeable
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans
+import           Data.Typeable
 
-import Data.Default
+import           Data.Default
 
-import Test.Hspec
-import Test.QuickCheck
-import Control.Exception (evaluate)
-import Unsafe.Coerce
+import           Control.Exception      (evaluate)
+import           Test.Hspec
+import           Test.QuickCheck
+import           Unsafe.Coerce
 --import Control.Monad.State
 
 --import Bind2 (bind, bind2, MonadRebase(..), StateT(..), put,get)
 
 --import Data2
 
-import Utils
+import           Utils
 
 
 foo x y = x
@@ -120,7 +119,7 @@ instance TransMonad Safe (UnsafeBase base err) (UnsafeBase base err) where
 --        Error a -> Other . Other $ Error a
 --        Other o -> o >>=~ f
 
--- following implementation allows returning monadic values, in special cases. 
+-- following implementation allows returning monadic values, in special cases.
 -- as far it seems we do not nbeed the implementation, but it is straightforward to create,
 -- but we would need to create a lot of instances covering lots of cases, like:
 --    instance TransMonad (UnsafeBase base err1) (UnsafeBase (UnsafeBase base err1) err2) (UnsafeBase (UnsafeBase base err1) err2)
@@ -245,7 +244,7 @@ instance  (InjectType base1 base2 baseOut) =>InjectType (UnsafeBase base1 e) (Un
         Other o -> Other $ injectType o (undefined :: base2 a)
 
 instance  (InjectType base1 (UnsafeBase Safe e2) dstBase, InjectType (UnsafeBase dstBase e1) base2 out) =>InjectType (UnsafeBase base1 e1) (UnsafeBase base2 e2) out  where
-    injectType a (i :: UnsafeBase base2 e2 a) = injectType (injectType a (undefined :: UnsafeBase Safe e2 a)) (undefined :: base2 a) 
+    injectType a (i :: UnsafeBase base2 e2 a) = injectType (injectType a (undefined :: UnsafeBase Safe e2 a)) (undefined :: base2 a)
 
 ----------------------------------------------------------------------------
 
@@ -271,7 +270,7 @@ main = do
 --     printTyped $ summe' v2x2 e12
 -- #endif
 --     print $ summe' v2x2 e12
-   
+
     putStrLn ""
 
 

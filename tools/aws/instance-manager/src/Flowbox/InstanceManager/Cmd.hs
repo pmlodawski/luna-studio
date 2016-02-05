@@ -7,7 +7,7 @@
 
 module Flowbox.InstanceManager.Cmd where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

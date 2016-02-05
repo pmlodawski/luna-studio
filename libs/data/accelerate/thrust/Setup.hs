@@ -1,21 +1,21 @@
-import Control.Exception (SomeException, try)
-import Data.Maybe
-import qualified Distribution.ModuleName as ModuleName
-import Distribution.PackageDescription as PD
-import Distribution.Simple
-import Distribution.Simple.BuildPaths
-import Distribution.Simple.Compiler
-import Distribution.Simple.LocalBuildInfo
-import Distribution.Simple.Program
-import Distribution.Simple.Program.Ar as Ar
-import Distribution.Simple.Setup
-import Distribution.Simple.Utils
-import Distribution.System
-import Distribution.Verbosity
-import System.Directory
-import System.Environment
-import System.FilePath
-import System.Process
+import           Control.Exception                  (SomeException, try)
+import           Data.Maybe
+import qualified Distribution.ModuleName            as ModuleName
+import           Distribution.PackageDescription    as PD
+import           Distribution.Simple
+import           Distribution.Simple.BuildPaths
+import           Distribution.Simple.Compiler
+import           Distribution.Simple.LocalBuildInfo
+import           Distribution.Simple.Program
+import           Distribution.Simple.Program.Ar     as Ar
+import           Distribution.Simple.Setup
+import           Distribution.Simple.Utils
+import           Distribution.System
+import           Distribution.Verbosity
+import           System.Directory
+import           System.Environment
+import           System.FilePath
+import           System.Process
 
 optimizationLevel = "-O3"
 cudaArchitecture  = "sm_30"

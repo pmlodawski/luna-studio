@@ -7,7 +7,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.Bus.Control.Handler.ID where
 
-import qualified Data.IORef as IORef
+import qualified Data.IORef                           as IORef
 
 import           Flowbox.Bus.Control.BusCtx           (BusCtx)
 import qualified Flowbox.Bus.Control.BusCtx           as BusCtx

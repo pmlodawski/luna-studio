@@ -11,8 +11,8 @@
 module Luna.DEP.AST.Name where
 
 
-import Data.Binary  (Binary)
-import GHC.Generics (Generic)
+import           Data.Binary                     (Binary)
+import           GHC.Generics                    (Generic)
 
 import           Data.List                       (intersperse)
 import           Data.Map                        (Map)

@@ -1,14 +1,14 @@
+{-# LANGUAGE DataKinds     #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DataKinds #-}
 
 module Empire.Data.AST where
 
-import Prologue
+import           Prologue
 
-import Luna.Syntax.Model.Graph       (Node, Link, Ref)
-import Luna.Syntax.AST.Layout        (Static)
-import Luna.Syntax.Model.Layer.Class ((:<))
-import Luna.Syntax.Model.Graph.Term  (NetGraph, NetType)
+import           Luna.Syntax.AST.Layout        (Static)
+import           Luna.Syntax.Model.Graph       (Link, Node, Ref)
+import           Luna.Syntax.Model.Graph.Term  (NetGraph, NetType)
+import           Luna.Syntax.Model.Layer.Class ((:<))
 {-import Luna.Syntax.Layer.Labeled-}
 {-import Luna.Syntax.Network        (Network, NetworkNode)-}
 

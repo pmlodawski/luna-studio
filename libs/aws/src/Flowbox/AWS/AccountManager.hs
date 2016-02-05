@@ -12,8 +12,8 @@
 module Flowbox.AWS.AccountManager where
 
 import qualified AWS
-import qualified AWS.EC2.Types as Types
-import           Data.IP       (IPv4)
+import qualified AWS.EC2.Types                           as Types
+import           Data.IP                                 (IPv4)
 
 import           Flowbox.AWS.Database.Database           (Database)
 import qualified Flowbox.AWS.Database.Session            as DBSession

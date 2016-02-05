@@ -3,7 +3,7 @@
 
 module Data where
 
-import Control.Applicative
+import           Control.Applicative
 
 data Pure a = Pure { fromPure :: a } deriving (Show)
 

@@ -7,9 +7,9 @@
 {-# LANGUAGE LambdaCase      #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-import Control.Monad.RWS          hiding (join)
-import Control.Monad.Trans.Either
-import System.TimeIt
+import           Control.Monad.RWS                     hiding (join)
+import           Control.Monad.Trans.Either
+import           System.TimeIt
 
 import           Flowbox.Data.Version                  ()
 import           Flowbox.Prelude                       hiding (error)

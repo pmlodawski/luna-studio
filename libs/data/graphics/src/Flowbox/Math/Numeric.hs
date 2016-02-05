@@ -10,10 +10,10 @@
 --   in Matlab, Octave or other programs.
 module Flowbox.Math.Numeric where
 
-import qualified Data.Array.Accelerate as A
+import qualified Data.Array.Accelerate             as A
 
-import Flowbox.Graphics.Utils.Accelerate
-import Flowbox.Prelude                   hiding (head, last, pre, ignored, index)
+import           Flowbox.Graphics.Utils.Accelerate
+import           Flowbox.Prelude                   hiding (head, ignored, index, last, pre)
 
 
 

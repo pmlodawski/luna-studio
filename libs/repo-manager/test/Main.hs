@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 --import qualified Flowbox.RepoManager.VCS.Git.Git as Git --import qualified Flowbox.RepoManager.VCS.VCS     as VCS
 --import qualified Flowbox.RepoManager.VCS.VCS  as VCS
 --import qualified Flowbox.RepoManager.Data.Item.Config as Config
@@ -18,14 +18,14 @@ main = do
      return ()
      --print =<< Config.loadItem "repo/packages/games-action/pacman/pacman-0.1.1.config"
      --print =<< Config.loadItem "test/test.config"
-     
-     --let vcs = Git.createVCS VCS.Git "repo/packages" "git@github.com:dobry/packages.git" 
+
+     --let vcs = Git.createVCS VCS.Git "repo/packages" "git@github.com:dobry/packages.git"
      ----print =<< Repository.buildRepository vcs
 
      --Git.remove vcs
 
      --repo <- Repository.initRepository vcs
-     --print repo 
+     --print repo
 
      ----Git.remove vcs
 
@@ -35,7 +35,7 @@ main = do
      --print $ Repository.searchRepository repo "c"
      --print $ Repository.searchRepository repo "^c"
      --print $ Repository.searchRepository repo "(not|man)"
-          
+
 
 
 --main = do

@@ -9,9 +9,9 @@ module Flowbox.Options.Applicative (
     optIntFlag,
 ) where
 
-import Options.Applicative
+import           Options.Applicative
 
-import Flowbox.Prelude hiding (switch)
+import           Flowbox.Prelude     hiding (switch)
 
 
 

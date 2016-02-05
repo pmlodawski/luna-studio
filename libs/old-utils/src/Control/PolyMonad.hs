@@ -10,7 +10,7 @@
 
 module Control.PolyMonad where
 
-import Prelude
+import           Prelude
 
 class PolyMonad m1 m2 m3 | m1 m2 -> m3 where
     (>>>=) :: m1 a -> (a -> m2 b) -> m3 b

@@ -10,7 +10,7 @@
 
 module Luna.DEP.AST.Prop where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 class HasName a where

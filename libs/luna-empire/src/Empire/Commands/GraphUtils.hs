@@ -1,18 +1,18 @@
 module Empire.Commands.GraphUtils where
 
-import           Prologue
-import           Control.Monad.State
 import           Control.Monad.Error     (throwError)
+import           Control.Monad.State
+import           Prologue
 
-import qualified Empire.Data.Graph       as Graph
 import           Empire.Data.Graph       (Graph)
+import qualified Empire.Data.Graph       as Graph
 
 import           Empire.API.Data.Node    (NodeId)
 
-import           Empire.Empire
-import qualified Empire.Commands.AST     as AST
 import qualified Empire.ASTOp            as AST
-import           Luna.Syntax.Model.Graph  (Ref, Node)
+import qualified Empire.Commands.AST     as AST
+import           Empire.Empire
+import           Luna.Syntax.Model.Graph (Node, Ref)
 
 getASTPointer :: NodeId -> Command Graph (Ref Node)
 getASTPointer nodeId = use (Graph.nodeMapping . at nodeId) <?!> "Node does not exist"

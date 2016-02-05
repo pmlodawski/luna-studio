@@ -1,39 +1,39 @@
 module Empire.Commands.GraphBuilder where
 
-import           Prologue
+import           Control.Monad.Error          (throwError)
 import           Control.Monad.State
-import           Control.Monad.Error     (throwError)
-import           Data.Map                (Map)
-import qualified Data.Map                as Map
-import qualified Data.IntMap             as IntMap
-import           Data.Maybe              (catMaybes, fromMaybe, maybeToList)
-import qualified Data.Text.Lazy          as Text
+import qualified Data.IntMap                  as IntMap
+import           Data.Map                     (Map)
+import qualified Data.Map                     as Map
+import           Data.Maybe                   (catMaybes, fromMaybe, maybeToList)
+import qualified Data.Text.Lazy               as Text
+import           Prologue
 
-import           Data.Record           (match, case', ANY(..))
+import           Data.Record                  (ANY (..), case', match)
 {-import           Data.Layer.Coat         (uncoat, coated)-}
 
-import qualified Empire.Data.Graph       as Graph
-import           Empire.Data.Graph       (Graph)
+import           Empire.Data.Graph            (Graph)
+import qualified Empire.Data.Graph            as Graph
 
-import           Empire.API.Data.Port         (InPort(..), OutPort(..), Port(..), PortId(..), PortState(..))
-import           Empire.API.Data.ValueType    (ValueType(..))
-import           Empire.API.Data.PortRef      (InPortRef(..), OutPortRef(..))
-import           Empire.API.Data.Node         (NodeId)
-import           Empire.API.Data.NodeMeta     (NodeMeta(..))
-import qualified Empire.API.Data.Node         as API
+import           Empire.API.Data.DefaultValue (PortDefault (..), Value (..))
 import qualified Empire.API.Data.Graph        as API
-import           Empire.API.Data.DefaultValue (PortDefault(..), Value(..))
+import           Empire.API.Data.Node         (NodeId)
+import qualified Empire.API.Data.Node         as API
+import           Empire.API.Data.NodeMeta     (NodeMeta (..))
+import           Empire.API.Data.Port         (InPort (..), OutPort (..), Port (..), PortId (..), PortState (..))
+import           Empire.API.Data.PortRef      (InPortRef (..), OutPortRef (..))
+import           Empire.API.Data.ValueType    (ValueType (..))
 
+import           Empire.ASTOp                 (ASTOp, runASTOp)
+import qualified Empire.ASTOps.Builder        as ASTBuilder
+import qualified Empire.ASTOps.Print          as Print
+import qualified Empire.Commands.AST          as AST
+import qualified Empire.Commands.GraphUtils   as GraphUtils
 import           Empire.Empire
-import qualified Empire.Commands.AST        as AST
-import           Empire.ASTOp               (ASTOp, runASTOp)
-import qualified Empire.ASTOps.Print        as Print
-import qualified Empire.ASTOps.Builder      as ASTBuilder
-import qualified Empire.Commands.GraphUtils as GraphUtils
 
+import           Luna.Syntax.AST.Term         (Accessor (..), App (..), Blank (..), Draft, Unify (..), Val, Var (..))
+import           Luna.Syntax.Model.Graph      (Edge, Node, Ref)
 import qualified Luna.Syntax.Model.Graph.Term as Builder
-import           Luna.Syntax.Model.Graph     (Ref, Node, Edge)
-import           Luna.Syntax.AST.Term       (Var(..), App(..), Blank(..), Accessor(..), Unify(..), Draft, Val)
 type VarMap = Map (Ref Node) NodeId
 
 buildGraph :: Command Graph API.Graph

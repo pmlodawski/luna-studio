@@ -8,10 +8,10 @@
 
 module Test.Luna.Sample.Code where
 
-import Text.RawString.QQ
+import           Text.RawString.QQ
 
-import Flowbox.Prelude
-import Test.Luna.Pass.Transform.Graph.Common (named)
+import           Flowbox.Prelude
+import           Test.Luna.Pass.Transform.Graph.Common (named)
 --import           Luna.Control.Crumb             (Breadcrumbs)
 --import qualified Luna.Control.Crumb             as Crumb
 --import qualified Luna.DEP.AST.Name                         as Name

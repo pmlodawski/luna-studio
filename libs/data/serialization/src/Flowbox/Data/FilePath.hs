@@ -6,11 +6,11 @@
 ---------------------------------------------------------------------------
 module Flowbox.Data.FilePath where
 
-import Data.String.Utils (split)
-import Text.Printf       (printf)
-import Text.Read         (readMaybe)
+import           Data.String.Utils (split)
+import           Text.Printf       (printf)
+import           Text.Read         (readMaybe)
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

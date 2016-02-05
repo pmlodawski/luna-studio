@@ -8,8 +8,8 @@
 
 module Text.Doc.Utils where
 
-import Data.Monoid
-import Text.Parsec hiding (many, optional, parse, (<|>))
+import           Data.Monoid
+import           Text.Parsec hiding (many, optional, parse, (<|>))
 
 
 

@@ -10,7 +10,7 @@
 
 module Flowbox.UR.Manager.RPC.Handler.Handler where
 
-import Control.Monad.Trans.State
+import           Control.Monad.Trans.State
 
 import qualified Flowbox.Batch.Project.Project              as Project
 import           Flowbox.Bus.Data.Message                   (CorrelationID, Message)

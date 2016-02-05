@@ -11,13 +11,13 @@
 
 module Data.Text.Builder.Poly where
 
-import Flowbox.Prelude hiding (simple)
+import           Flowbox.Prelude        hiding (simple)
 
-import Prelude ()
 import           Data.Text.Lazy         (Text)
 import qualified Data.Text.Lazy         as Text
 import           Data.Text.Lazy.Builder (fromLazyText, singleton, toLazyText)
 import qualified Data.Text.Lazy.Builder as Text
+import           Prelude                ()
 
 
 ----------------------------------------------------------------------

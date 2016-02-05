@@ -10,10 +10,10 @@
 module Luna.DEP.Parser.Pragma where
 
 
-import Data.Typeable
+import           Data.Typeable
 
-import Flowbox.Prelude
-import Luna.DEP.Pragma.Pragma (IsPragma)
+import           Flowbox.Prelude
+import           Luna.DEP.Pragma.Pragma (IsPragma)
 
 
 ------------------------------------------------------------------------

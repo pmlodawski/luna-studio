@@ -11,10 +11,10 @@ module Flowbox.Batch.Project.Serialize (
     restoreProject,
 ) where
 
-import qualified Data.ByteString.Lazy as ByteString
-import qualified Data.Maybe           as Maybe
+import qualified Data.ByteString.Lazy            as ByteString
+import qualified Data.Maybe                      as Maybe
 import           System.IO
-import qualified Text.ProtocolBuffers as Proto
+import qualified Text.ProtocolBuffers            as Proto
 
 import           Flowbox.Batch.Project.Project   (Project)
 import qualified Flowbox.Batch.Project.Project   as Project

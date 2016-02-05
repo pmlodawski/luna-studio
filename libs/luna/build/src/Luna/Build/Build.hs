@@ -14,13 +14,13 @@
 
 module Luna.Build.Build where
 
-import Control.Monad.RWS hiding (mapM, mapM_)
+import           Control.Monad.RWS                          hiding (mapM, mapM_)
 
 import           Control.Monad.Trans.Either
 import           Data.String.Utils                          (replace)
 import           Data.Text.Lazy                             (pack, unpack)
-import           System.FilePath                            ((</>))
 import qualified System.Environment                         as Env
+import           System.FilePath                            ((</>))
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
@@ -94,7 +94,7 @@ runSession inclStd s =
         False -> eitherStringToM . fst =<< Session.runT (void Parser.init >> Pragma.enable (Pragma.orphanNames) >> runEitherT s)
 
 
-processCompilable diag rootSrc inclStd compilable  = do 
+processCompilable diag rootSrc inclStd compilable  = do
     let getBasePath = UniPath.toFilePath . UniPath.basePath . UniPath.fromFilePath
         rootPath    = getBasePath . getPath $ rootSrc ^. Source.src
         mkFile      = Source.File . pack . (rootPath </>) . (++ ".luna") . MI.modPathToString
@@ -104,7 +104,7 @@ processCompilable diag rootSrc inclStd compilable  = do
 
 
 processSource diag src = parseSourceWithFun diag src src False (\_ _ _ _ -> return [])
-    
+
 
 parseSource diag rootSrc src inclStd = parseSourceWithFun diag rootSrc src inclStd processCompilable
 

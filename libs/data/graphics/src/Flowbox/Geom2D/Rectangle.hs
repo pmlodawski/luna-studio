@@ -8,10 +8,10 @@
 
 module Flowbox.Geom2D.Rectangle where
 
-import Math.Coordinate.Cartesian (Point2(..))
-import Flowbox.Prelude
+import           Flowbox.Prelude
+import           Math.Coordinate.Cartesian (Point2 (..))
 
-data Rectangle a = Rectangle { pA :: Point2 a
+data Rectangle a = Rectangle { pA             :: Point2 a
                    			 , pB :: Point2 a
                              } deriving (Eq, Ord, Show)
 

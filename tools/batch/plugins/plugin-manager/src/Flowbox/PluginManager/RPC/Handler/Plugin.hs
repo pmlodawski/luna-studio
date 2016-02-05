@@ -7,7 +7,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.PluginManager.RPC.Handler.Plugin where
 
-import Control.Monad.Trans.State
+import           Control.Monad.Trans.State
 
 import           Flowbox.Bus.RPC.RPC                                  (RPC)
 import           Flowbox.Control.Error

@@ -4,19 +4,19 @@ module Empire.Commands.Project
     , createProject
     ) where
 
-import           Prologue
-import           Control.Monad.State
 import           Control.Monad.Error     (throwError)
+import           Control.Monad.State
+import           Prologue
 
-import           Empire.Empire           (Empire, Command, ProjectManager)
-import qualified Empire.Empire           as Empire
+import           Empire.API.Data.Project (ProjectId)
 import           Empire.Data.Project     (Project)
 import qualified Empire.Data.Project     as Project
-import           Empire.API.Data.Project (ProjectId)
-import qualified Empire.Utils.IdGen     as IdGen
+import           Empire.Empire           (Command, Empire, ProjectManager)
+import qualified Empire.Empire           as Empire
+import qualified Empire.Utils.IdGen      as IdGen
 
-import           System.Path             (Path)
 import qualified Data.IntMap             as IntMap
+import           System.Path             (Path)
 
 createProject :: Maybe String -> Path -> Empire (ProjectId, Project)
 createProject name path = do

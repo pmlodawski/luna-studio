@@ -1,6 +1,6 @@
 module Logger.Internal.Stack where
 
-import Control.Monad          (join)
+import           Control.Monad (join)
 
 
 

@@ -7,7 +7,7 @@
 
 module Flowbox.Broker.Version where
 
-import qualified Data.Version as Version
+import qualified Data.Version          as Version
 
 import qualified Flowbox.Broker.Config as Config
 import           Flowbox.Prelude

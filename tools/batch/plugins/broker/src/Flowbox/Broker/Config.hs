@@ -9,4 +9,4 @@ module Flowbox.Broker.Config (
     module Paths_batch_plugin_broker,
 ) where
 
-import Paths_batch_plugin_broker (version)
+import           Paths_batch_plugin_broker (version)

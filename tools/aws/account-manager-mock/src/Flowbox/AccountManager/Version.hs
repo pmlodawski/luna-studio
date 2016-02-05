@@ -7,7 +7,7 @@
 
 module Flowbox.AccountManager.Version where
 
-import qualified Data.Version as Version
+import qualified Data.Version                  as Version
 
 import qualified Flowbox.AccountManager.Config as Config
 import           Flowbox.Prelude

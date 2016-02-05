@@ -15,8 +15,8 @@ module Luna.DEP.Pass.Transform.Graph.Builder.Builder where
 import           Control.Applicative
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
-import qualified Data.List                  as List
-import qualified Data.Maybe                 as Maybe
+import qualified Data.List                                   as List
+import qualified Data.Maybe                                  as Maybe
 
 import           Flowbox.Prelude                             hiding (error, mapM, mapM_)
 import qualified Flowbox.Prelude                             as Prelude

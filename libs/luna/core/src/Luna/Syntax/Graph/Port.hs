@@ -7,7 +7,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Luna.Syntax.Graph.Port where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

@@ -11,9 +11,9 @@ module Flowbox.RepoManager.Data.Version (
     parseVersion
 ) where
 
-import 			 Flowbox.Prelude
-import 			 Data.Version                 hiding (parseVersion)
+import           Data.Version                 hiding (parseVersion)
 import qualified Data.Version                 as Version (parseVersion)
+import           Flowbox.Prelude
 import qualified Text.ParserCombinators.ReadP as ReadP
 
 data Strictness = Strict | NotStrict

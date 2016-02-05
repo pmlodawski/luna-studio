@@ -8,16 +8,16 @@
 
 module Flowbox.UR.Manager.Utils where
 
-import qualified Flowbox.Text.ProtocolBuffers               as Proto
-import           Flowbox.Bus.Data.Topic                     (Topic)
-import qualified Generated.Proto.Bus.Message                as Bus
-import qualified Flowbox.Bus.Data.Message                   as Message
-import           Flowbox.Bus.Data.Message                   (Message)
-import           Flowbox.Prelude                            hiding (Context, error)
-import qualified Flowbox.Batch.Project.Project              as Project
-import           Flowbox.Data.Convert
-import qualified Generated.Proto.Urm.URM.Register.Request   as Register
+import qualified Flowbox.Batch.Project.Project                       as Project
+import           Flowbox.Bus.Data.Message                            (Message)
+import qualified Flowbox.Bus.Data.Message                            as Message
 import qualified Flowbox.Bus.Data.Serialize.Proto.Conversion.Message ()
+import           Flowbox.Bus.Data.Topic                              (Topic)
+import           Flowbox.Data.Convert
+import           Flowbox.Prelude                                     hiding (Context, error)
+import qualified Flowbox.Text.ProtocolBuffers                        as Proto
+import qualified Generated.Proto.Bus.Message                         as Bus
+import qualified Generated.Proto.Urm.URM.Register.Request            as Register
 
 serialize :: Proto.Serializable message => Topic -> message -> Bus.Message
 serialize = (encodeP .) . Message.mk

@@ -11,10 +11,10 @@ module Luna.Data.Serialize.Proto.Library (
     restoreLibrary,
 ) where
 
-import qualified Data.ByteString.Lazy as ByteString
-import qualified Data.Maybe           as Maybe
-import qualified System.IO            as IO
-import qualified Text.ProtocolBuffers as Proto
+import qualified Data.ByteString.Lazy                         as ByteString
+import qualified Data.Maybe                                   as Maybe
+import qualified System.IO                                    as IO
+import qualified Text.ProtocolBuffers                         as Proto
 
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert

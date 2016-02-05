@@ -9,9 +9,9 @@
 
 module Test.Luna.Sample.Program where
 
-import Text.RawString.QQ
+import           Text.RawString.QQ
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

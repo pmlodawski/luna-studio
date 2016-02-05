@@ -12,8 +12,8 @@
 
 module Flowbox.Bus.RPC.Client where
 
-import Data.Binary          (Binary, decode, encode)
-import Data.ByteString.Lazy (fromStrict, toStrict)
+import           Data.Binary                   (Binary, decode, encode)
+import           Data.ByteString.Lazy          (fromStrict, toStrict)
 
 import           Flowbox.Bus.Bus               (Bus)
 import qualified Flowbox.Bus.Bus               as Bus

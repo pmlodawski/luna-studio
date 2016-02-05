@@ -1,7 +1,7 @@
+{-# LANGUAGE FunctionalDependencies    #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TupleSections             #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Luna.Syntax.AST.Name.Pool where
 

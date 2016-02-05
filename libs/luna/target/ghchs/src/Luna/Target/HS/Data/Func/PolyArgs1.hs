@@ -1,17 +1,17 @@
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ExtendedDefaultRules #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE DataKinds                 #-}
 {-# LANGUAGE DysfunctionalDependencies #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE ExtendedDefaultRules      #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Luna.Target.HS.Data.Func.PolyArgs1 where
 
-import GHC.TypeLits
-import Data.Typeable
+import           Data.Typeable
+import           GHC.TypeLits
 
 --data V = V deriving (Show)
 
@@ -34,7 +34,7 @@ import Data.Typeable
 
 
 --instance Foo Int Int where
---    foo = (+1) 
+--    foo = (+1)
 
 
 --test v = do

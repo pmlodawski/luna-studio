@@ -1,31 +1,30 @@
-{-# LANGUAGE BangPatterns     #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TemplateHaskell  #-}
 
 module Empire.Server where
 
+import           Control.Monad                 (forever)
+import           Control.Monad.State           (StateT, evalStateT)
+import           Data.ByteString               (ByteString)
+import           Data.ByteString.Char8         (unpack)
+import qualified Data.Map.Strict               as Map
+import qualified Empire.Commands.Library       as Library
+import qualified Empire.Commands.Project       as Project
+import qualified Empire.Empire                 as Empire
+import           Empire.Env                    (Env)
+import qualified Empire.Env                    as Env
+import qualified Empire.Handlers               as Handlers
+import qualified Empire.Server.Server          as Server
+import qualified Empire.Utils                  as Utils
+import qualified Flowbox.Bus.Bus               as Bus
+import           Flowbox.Bus.BusT              (BusT (..))
+import qualified Flowbox.Bus.BusT              as BusT
+import qualified Flowbox.Bus.Data.Message      as Message
+import           Flowbox.Bus.Data.MessageFrame (MessageFrame (MessageFrame))
+import           Flowbox.Bus.Data.Topic        (Topic)
+import           Flowbox.Bus.EndPoint          (BusEndPoints)
 import           Flowbox.Prelude
-import           Control.Monad                          (forever)
-import           Control.Monad.State                    (StateT, evalStateT)
-import           Data.ByteString                        (ByteString)
-import           Data.ByteString.Char8                  (unpack)
-import qualified Data.Map.Strict                        as Map
-import qualified Empire.Env                             as Env
-import           Empire.Env                             (Env)
-import qualified Flowbox.Bus.Bus                        as Bus
-import           Flowbox.Bus.BusT                       (BusT (..))
-import qualified Flowbox.Bus.BusT                       as BusT
-import qualified Flowbox.Bus.Data.Message               as Message
-import           Flowbox.Bus.Data.MessageFrame          (MessageFrame (MessageFrame))
-import           Flowbox.Bus.Data.Topic                 (Topic)
-import           Flowbox.Bus.EndPoint                   (BusEndPoints)
-import qualified Flowbox.System.Log.Logger              as Logger
-import qualified Empire.Utils                           as Utils
-import qualified Empire.Handlers                        as Handlers
-import qualified Empire.Commands.Library                as Library
-import qualified Empire.Commands.Project                as Project
-import qualified Empire.Empire                          as Empire
-import qualified Empire.Server.Server                   as Server
+import qualified Flowbox.System.Log.Logger     as Logger
 
 
 logger :: Logger.LoggerIO

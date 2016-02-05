@@ -10,7 +10,7 @@ module Luna.DEP.Graph.View.Default.DefaultsMap (
     module X,
 ) where
 
-import Data.Map as X
+import           Data.Map                           as X
 
 import qualified Luna.DEP.Graph.Node                as Node
 import           Luna.DEP.Graph.Node.Expr           (NodeExpr)

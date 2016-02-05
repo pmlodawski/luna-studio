@@ -6,9 +6,9 @@
 ---------------------------------------------------------------------------
 module Flowbox.AWS.Database.Instance where
 
-import qualified Data.Maybe                 as Maybe
-import           Database.PostgreSQL.Simple ((:.) ((:.)))
-import qualified Database.PostgreSQL.Simple as PSQL
+import qualified Data.Maybe                                      as Maybe
+import           Database.PostgreSQL.Simple                      ((:.) ((:.)))
+import qualified Database.PostgreSQL.Simple                      as PSQL
 
 import qualified Flowbox.AWS.Database.SQL.Instance.Add           as InstanceAdd
 import qualified Flowbox.AWS.Database.SQL.Instance.All           as InstanceAll

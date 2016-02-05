@@ -9,7 +9,7 @@
 module Luna.Syntax.Graph.Node.MultiPart where
 
 import           Control.Monad.State
-import qualified Data.Maybe          as Maybe
+import qualified Data.Maybe               as Maybe
 
 import           Flowbox.Prelude          hiding (mapM)
 import           Luna.Data.ASTInfo        (ASTInfo)

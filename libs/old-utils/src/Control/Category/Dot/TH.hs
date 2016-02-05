@@ -8,8 +8,8 @@
 
 module Control.Category.Dot.TH where
 
-import Language.Haskell.TH
-import Prelude             hiding (max, min)
+import           Language.Haskell.TH
+import           Prelude             hiding (max, min)
 
 
 

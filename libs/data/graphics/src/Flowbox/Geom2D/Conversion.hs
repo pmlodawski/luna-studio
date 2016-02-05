@@ -8,10 +8,10 @@
 
 module Flowbox.Geom2D.Conversion where
 
-import Geom2D
+import           Geom2D
 
-import Math.Coordinate.Cartesian  (Point2(..))
-import Flowbox.Prelude
+import           Flowbox.Prelude
+import           Math.Coordinate.Cartesian (Point2 (..))
 
 
 fp2gp :: Point2 Float -> Point

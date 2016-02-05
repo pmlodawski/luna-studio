@@ -8,11 +8,11 @@
 
 module Luna.Interpreter.Session.Data.CompiledNode where
 
-import Data.HMap (HMap)
+import           Data.HMap                   (HMap)
 
-import Flowbox.Prelude
-import Generated.Proto.Data.SValue (SValue)
-import Generated.Proto.Mode.Mode   (Mode)
+import           Flowbox.Prelude
+import           Generated.Proto.Data.SValue (SValue)
+import           Generated.Proto.Mode.Mode   (Mode)
 
 
 

@@ -9,13 +9,13 @@
 
 module Flowbox.Bus.RPC.Server.Processor where
 
-import           Control.Monad (liftM)
-import           Data.Either   as Either
-import qualified Data.Maybe    as Maybe
+import           Control.Monad              (liftM)
+import           Data.Either                as Either
+import qualified Data.Maybe                 as Maybe
 --import           Data.Typeable
-import qualified Control.Monad.Catch       as Catch
-import           Control.Monad.Trans.State (StateT)
-import           Data.Binary               (Binary)
+import qualified Control.Monad.Catch        as Catch
+import           Control.Monad.Trans.State  (StateT)
+import           Data.Binary                (Binary)
 
 import           Flowbox.Bus.Data.Message   (CorrelationID, Message)
 import qualified Flowbox.Bus.Data.Message   as Message

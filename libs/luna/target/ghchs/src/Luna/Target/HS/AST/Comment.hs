@@ -7,7 +7,7 @@
 
 module Luna.Target.HS.AST.Comment where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 data Comment = H1 { text :: Text }
              | H2 { text :: Text }

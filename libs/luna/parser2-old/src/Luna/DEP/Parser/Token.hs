@@ -27,12 +27,12 @@ import           Text.Parser.Token            hiding (ident, symbol, symbolic)
 import           Text.Parser.Token.Highlight  hiding (Comment)
 import qualified Text.ParserCombinators.ReadP as ReadP
 
-import           Luna.DEP.AST.Comment        (Comment (..))
-import qualified Luna.DEP.AST.Lit            as Lit
+import           Luna.DEP.AST.Comment         (Comment (..))
+import qualified Luna.DEP.AST.Lit             as Lit
 import           Luna.DEP.Parser.Char
 import           Luna.DEP.Parser.Combinators
-import qualified Luna.DEP.Parser.State       as State
-import qualified Text.DEP.Parsers.Indent     as Indent
+import qualified Luna.DEP.Parser.State        as State
+import qualified Text.DEP.Parsers.Indent      as Indent
 
 isSpaceLine c = isSpace c && c /= '\n' && c /= '\r'
 

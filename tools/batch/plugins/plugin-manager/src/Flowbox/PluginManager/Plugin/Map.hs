@@ -11,7 +11,7 @@ module Flowbox.PluginManager.Plugin.Map (
 ) where
 
 import           Data.IntMap
-import qualified Data.IntMap as IntMap
+import qualified Data.IntMap                         as IntMap
 
 import           Flowbox.PluginManager.Plugin.Handle (PluginHandle)
 import qualified Flowbox.PluginManager.Plugin.Plugin as Plugin

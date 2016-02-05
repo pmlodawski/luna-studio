@@ -4,14 +4,14 @@ module Flowbox.RepoManager.VCS.Git.Git where
 
 import           Data.Bool
 import           Flowbox.Prelude
-import qualified Flowbox.RepoManager.VCS.VCS  as VCS
+import qualified Flowbox.RepoManager.VCS.VCS     as VCS
 
-import qualified Network.URI as URI
-import           System.FilePath ((</>))
-import qualified System.Directory as Directory
-import           System.Process   (system)
 import qualified Flowbox.RepoManager.Utils.Utils as Utils (concatPath)
-import qualified Text.Regex.Posix as Regex
+import qualified Network.URI                     as URI
+import qualified System.Directory                as Directory
+import           System.FilePath                 ((</>))
+import           System.Process                  (system)
+import qualified Text.Regex.Posix                as Regex
 
 
 data Git = Git { _gitLocalPath  :: FilePath

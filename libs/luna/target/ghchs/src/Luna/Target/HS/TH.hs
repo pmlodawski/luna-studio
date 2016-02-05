@@ -7,5 +7,5 @@
 
 module Luna.Target.HS.TH (module X) where
 
-import Luna.Target.HS.TH.Struct as X
-import Luna.Target.HS.TH.Utils  as X
+import           Luna.Target.HS.TH.Struct as X
+import           Luna.Target.HS.TH.Utils  as X

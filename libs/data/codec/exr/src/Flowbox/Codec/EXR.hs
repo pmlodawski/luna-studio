@@ -13,8 +13,8 @@ module Flowbox.Codec.EXR (
     , module X
     ) where
 
-import Flowbox.Codec.EXR.Channels            as X
-import Flowbox.Codec.EXR.Internal.Attributes as X
-import Flowbox.Codec.EXR.Internal.Debug      as X
-import Flowbox.Codec.EXR.Internal.IO         as X
-import Flowbox.Codec.EXR.Internal.Types
+import           Flowbox.Codec.EXR.Channels            as X
+import           Flowbox.Codec.EXR.Internal.Attributes as X
+import           Flowbox.Codec.EXR.Internal.Debug      as X
+import           Flowbox.Codec.EXR.Internal.IO         as X
+import           Flowbox.Codec.EXR.Internal.Types

@@ -8,13 +8,13 @@
 
 module Flowbox.PluginManager.Init.Local where
 
-import           Control.Arrow              (first)
+import           Control.Arrow                       (first)
 import           Control.Monad.Trans.Either
-import qualified Data.Configurator          as Configurator
-import           Data.Configurator.Types    (Name, Value)
-import qualified Data.Configurator.Types    as Configurator
-import qualified Data.HashMap.Strict        as HashMap
-import qualified Data.Text                  as Text
+import qualified Data.Configurator                   as Configurator
+import           Data.Configurator.Types             (Name, Value)
+import qualified Data.Configurator.Types             as Configurator
+import qualified Data.HashMap.Strict                 as HashMap
+import qualified Data.Text                           as Text
 
 import           Flowbox.Control.Error               (safeLiftIO)
 import           Flowbox.PluginManager.Plugin.Handle (PluginHandle)

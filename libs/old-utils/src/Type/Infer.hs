@@ -7,25 +7,25 @@
 
 {-# OPTIONS_GHC -fno-warn-missing-methods #-}
 
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE IncoherentInstances       #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE IncoherentInstances #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE PolyKinds                 #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Type.Infer where
 
-import Data.Typeable
-import Data.Proxy.Utils
-import Unsafe.Coerce
-import Prelude
+import           Data.Proxy.Utils
+import           Data.Typeable
+import           Prelude
+import           Unsafe.Coerce
 
 --------------------------------------------------------------------------------
 -- Type classes
@@ -68,12 +68,12 @@ data Id5 t1 t2 t3 t4 t5 = Id5 deriving (Show, Typeable)
 --instance Num a <= InferType2 a a
 --instance Monad a <= InferType2 a a
 
---instance InferType2 Int Int 
+--instance InferType2 Int Int
 
---instance InferType2 (m a) (m' a') <= (InferType2 m m', InferType2 a a') 
---instance InferType2 (a :: *) b <= (b~Id0) 
+--instance InferType2 (m a) (m' a') <= (InferType2 m m', InferType2 a a')
+--instance InferType2 (a :: *) b <= (b~Id0)
 --instance InferType2 (a :: * -> *) b <= (b~Id1)
---instance InferType2 (a :: * -> * -> *) b <= (b~Id2) 
+--instance InferType2 (a :: * -> * -> *) b <= (b~Id2)
 
 
 instance InferType a => Num a
@@ -81,7 +81,7 @@ instance InferType a => Functor a
 instance InferType a => Applicative a
 instance InferType a => Monad a
 
-instance InferType Int 
+instance InferType Int
 
 instance (InferType m, InferType a) => InferType (m a)
 instance (a~Id0) => InferType (a :: *)
@@ -94,8 +94,8 @@ instance (a~Id2) => InferType (a :: * -> * -> *)
 --c2 :: Monad (m a) => a -> b -> m a b
 --c2 = undefined
 
---instance InferType Foo1 
---instance InferType Foo2  
+--instance InferType Foo1
+--instance InferType Foo2
 
 --tm _ = 5
 

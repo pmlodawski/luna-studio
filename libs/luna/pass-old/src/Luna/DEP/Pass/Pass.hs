@@ -13,12 +13,12 @@
 
 module Luna.DEP.Pass.Pass where
 
-import Control.Monad.Reader
-import Control.Monad.State        hiding (fail, state)
-import Control.Monad.Trans.Either
+import           Control.Monad.Reader
+import           Control.Monad.State        hiding (fail, state)
+import           Control.Monad.Trans.Either
 
-import Flowbox.Prelude           hiding (error, fail)
-import Flowbox.System.Log.Logger
+import           Flowbox.Prelude            hiding (error, fail)
+import           Flowbox.System.Log.Logger
 
 
 

@@ -11,8 +11,8 @@
 
 module Luna.Pass.Analysis.ID.ExtractIDs where
 
-import Control.Monad.State
-import Data.IntSet         (IntSet)
+import           Control.Monad.State
+import           Data.IntSet                 (IntSet)
 
 import           Flowbox.Prelude             hiding (mapM, mapM_)
 import           Luna.Pass                   (Pass (Pass))

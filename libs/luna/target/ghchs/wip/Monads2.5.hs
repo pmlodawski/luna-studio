@@ -1,25 +1,25 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE PolyKinds #-} 
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE PolyKinds                 #-}
 
-{-# LANGUAGE OverlappingInstances #-} 
-{-# LANGUAGE UndecidableInstances #-} 
-
-
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
-import Control.Monad.State
-import Control.Monad.Reader
-import Control.Applicative
-import Data.Functor.Identity (Identity)
 
-import GHC.TypeLits        (Symbol)
+
+import           Control.Applicative
+import           Control.Monad.Reader
+import           Control.Monad.State
+import           Data.Functor.Identity (Identity)
+
+import           GHC.TypeLits          (Symbol)
 
 data Proxy a = Proxy
 
@@ -53,7 +53,7 @@ instance (Functor m) => Functor (StateT' s m) where
 instance (MonadReader r m) => MonadReader r (StateT' s m) where
     ask       = lift ask
     local f m = undefined -- StateT' $ \s -> local f (runStateT' m s)
-        
+
 
 class (Monad m) => MonadState' s m | m -> s where
     get' :: m s
@@ -99,7 +99,7 @@ instance Functor TestMonad where
 
 instance Applicative TestMonad where
     pure = TestMonad
-    (TestMonad f) <*> (TestMonad a) = TestMonad $ f a 
+    (TestMonad f) <*> (TestMonad a) = TestMonad $ f a
 
 
 data X1 = X1 deriving Show

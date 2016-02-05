@@ -7,7 +7,7 @@
 
 module Luna.Pass.Transform.Graph.Builder.ArgRef where
 
-import Data.Either (lefts, rights)
+import           Data.Either            (lefts, rights)
 
 import           Flowbox.Prelude
 import qualified Luna.Syntax.Graph.Node as Node

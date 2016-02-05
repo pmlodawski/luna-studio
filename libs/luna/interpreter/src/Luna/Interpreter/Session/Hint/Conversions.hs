@@ -12,7 +12,7 @@ import qualified GHC
 import qualified Outputable
 import qualified Type
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

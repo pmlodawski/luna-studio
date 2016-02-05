@@ -10,10 +10,10 @@
 
 module Flowbox.Bus.RPC.Server.Processor where
 
-import           Control.Monad             (liftM)
-import qualified Control.Monad.Catch       as Catch
+import           Control.Monad                (liftM)
+import qualified Control.Monad.Catch          as Catch
 import           Control.Monad.Trans.State
-import qualified Data.Maybe                as Maybe
+import qualified Data.Maybe                   as Maybe
 
 import           Flowbox.Bus.Data.Message     (CorrelationID, Message)
 import qualified Flowbox.Bus.Data.Message     as Message

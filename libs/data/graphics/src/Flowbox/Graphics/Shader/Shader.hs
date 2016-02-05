@@ -13,15 +13,15 @@
 
 module Flowbox.Graphics.Shader.Shader where
 
-import           Flowbox.Graphics.Prelude hiding (transform)
-import           Flowbox.Math.Index       (Boundable)
-import qualified Flowbox.Math.Index       as Index
+import           Flowbox.Graphics.Prelude  hiding (transform)
+import           Flowbox.Math.Index        (Boundable)
+import qualified Flowbox.Math.Index        as Index
 
-import           Control.Monad         (ap)
-import           Data.Array.Accelerate (Boundary, Elt, Exp, IsNum)
-import qualified Data.Array.Accelerate as A
+import           Control.Monad             (ap)
+import           Data.Array.Accelerate     (Boundary, Elt, Exp, IsNum)
+import qualified Data.Array.Accelerate     as A
 
-import           Math.Coordinate.Cartesian (Point2(..))
+import           Math.Coordinate.Cartesian (Point2 (..))
 import qualified Math.Coordinate.Cartesian as Cartesian
 import           Math.Space.Space
 

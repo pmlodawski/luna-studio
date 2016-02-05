@@ -12,7 +12,7 @@
 
 module Luna.DEP.Pass.General.Luna.Luna where
 
-import Control.Monad.Trans.Either
+import           Control.Monad.Trans.Either
 
 
 --run :: Pass.TransformerT Pass.NoState String IO b -> IO (Either Pass.PassError b)

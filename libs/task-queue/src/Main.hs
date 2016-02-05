@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import qualified Options.Applicative as Opt
+import qualified Options.Applicative       as Opt
 
 import qualified Flowbox.Config.Config     as Config
 import           Flowbox.Prelude           hiding (argument, op)

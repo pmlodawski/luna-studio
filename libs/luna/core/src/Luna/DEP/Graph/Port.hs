@@ -7,7 +7,7 @@
 
 module Luna.DEP.Graph.Port where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

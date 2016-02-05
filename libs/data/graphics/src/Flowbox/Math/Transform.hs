@@ -6,15 +6,15 @@
 ---------------------------------------------------------------------------
 module Flowbox.Math.Transform where
 
-import Flowbox.Prelude hiding (transform, (.), id)
+import           Flowbox.Prelude           hiding (id, transform, (.))
 
-import Math.Coordinate.Cartesian (Point2(..))
-import Control.Category
-import Data.Monoid
+import           Control.Category
+import           Data.Monoid
+import           Math.Coordinate.Cartesian (Point2 (..))
 
-import Linear.V2
-import Linear.V3
-import Linear.Matrix
+import           Linear.Matrix
+import           Linear.V2
+import           Linear.V3
 
 
 

@@ -13,8 +13,8 @@ import qualified Flowbox.System.Directory.Directory as Dir
 import qualified System.IO                          as IO
 
 import           Flowbox.Prelude
-import           Flowbox.System.UniPath (UniPath)
-import qualified Flowbox.System.UniPath as UniPath
+import           Flowbox.System.UniPath             (UniPath)
+import qualified Flowbox.System.UniPath             as UniPath
 
 
 

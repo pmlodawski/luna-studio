@@ -7,9 +7,9 @@
 
 module Flowbox.Bus.Data.Prefix where
 
-import Control.Arrow          (first)
-import Flowbox.Bus.Data.Topic (Topic)
-import Flowbox.Prelude
+import           Control.Arrow          (first)
+import           Flowbox.Bus.Data.Topic (Topic)
+import           Flowbox.Prelude
 
 
 

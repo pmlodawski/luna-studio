@@ -1,26 +1,26 @@
 module Flowbox.Graphics.Mockup.TransformSpec where
 
-import Test.Hspec
-import Test.QuickCheck
+import           Test.Hspec
+import           Test.QuickCheck
 
-import Flowbox.Graphics.Mockup.Generator
-import Flowbox.Graphics.Mockup.Basic
-import Flowbox.Graphics.Mockup.Transform
-import Flowbox.Prelude
-import Flowbox.Graphics.Color.Color
-import Flowbox.Geom2D.Rectangle
-import Math.Coordinate.Cartesian
-import Control.Monad
-import Linear (V2 (..))
-import Flowbox.Graphics.Mockup.Matte
+import           Control.Monad
+import           Flowbox.Geom2D.Rectangle
+import           Flowbox.Graphics.Color.Color
+import           Flowbox.Graphics.Mockup.Basic
+import           Flowbox.Graphics.Mockup.Generator
+import           Flowbox.Graphics.Mockup.Matte
+import           Flowbox.Graphics.Mockup.Transform
+import           Flowbox.Prelude
+import           Linear                            (V2 (..))
+import           Math.Coordinate.Cartesian
 
 
-import TestHelpers
+import           TestHelpers
 
 spec :: Spec
 spec = do
     let specPath = "./test/Flowbox/Graphics/Mockup/"
-    --    in do 
+    --    in do
     --        let testName = "rotateLuna"
     --        let testPath = specPath++testName
 
@@ -55,9 +55,9 @@ spec = do
     --defaultReferenceSaveM testName specPath actualImage
         in defaultReferenceTestM testName specPath actualImage
 
-    let matte = imageMatteLuna (constantLuna (CustomFormat 200 200) (RGBA 1 0 0 0)) "rgba.r" 
+    let matte = imageMatteLuna (constantLuna (CustomFormat 200 200) (RGBA 1 0 0 0)) "rgba.r"
 
-    let testName = "masked_translateLuna"    
+    let testName = "masked_translateLuna"
         actualImage = liftM (translateLuna (V2 40 60) True matte) $ loadImageLuna "./test/samples/lena.png"
     --defaultReferenceSaveM testName specPath actualImage
         in defaultReferenceTestM testName specPath actualImage

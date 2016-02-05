@@ -11,12 +11,12 @@
 module Flowbox.AWS.EC2.Control.DBPool.Monitor where
 
 import qualified AWS
-import qualified AWS.EC2.Types              as Types
-import           Control.Monad              (forever)
-import           Control.Monad.IO.Class     (liftIO)
-import           Data.List                  ((\\))
-import qualified Data.Time                  as Time
-import qualified Database.PostgreSQL.Simple as PSQL
+import qualified AWS.EC2.Types                         as Types
+import           Control.Monad                         (forever)
+import           Control.Monad.IO.Class                (liftIO)
+import           Data.List                             ((\\))
+import qualified Data.Time                             as Time
+import qualified Database.PostgreSQL.Simple            as PSQL
 
 import qualified Flowbox.AWS.Database.Instance         as InstanceDB
 import qualified Flowbox.AWS.Database.Session          as SessionDB

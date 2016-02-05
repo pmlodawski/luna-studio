@@ -10,11 +10,11 @@
 module Flowbox.Graphics.Utils.Linear where
 
 import qualified Data.Array.Accelerate as A
-import           Foreign.C.Types       (CFloat, CDouble)
-import           Linear                hiding (Epsilon, nearZero, inv33)
+import           Foreign.C.Types       (CDouble, CFloat)
+import           Linear                hiding (Epsilon, inv33, nearZero)
 import           Linear.Accelerate     ()
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

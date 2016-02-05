@@ -8,7 +8,7 @@
 
 module Luna.Interpreter.Session.AST.Inspect where
 
-import Control.Monad.State hiding (mapM, mapM_)
+import           Control.Monad.State                    hiding (mapM, mapM_)
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude                        hiding (inside)

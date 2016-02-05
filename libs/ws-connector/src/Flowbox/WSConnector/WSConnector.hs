@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.WSConnector.WSConnector where
@@ -12,21 +12,21 @@ module Flowbox.WSConnector.WSConnector where
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
-import           Control.Concurrent.STM        (atomically, STM)
+import           Control.Concurrent                    (forkIO)
+import           Control.Concurrent.STM                (STM, atomically)
 import           Control.Concurrent.STM.TChan
 import           Control.Concurrent.STM.TVar
-import           Control.Concurrent            (forkIO)
-import           Control.Monad                 (forever)
-import           Control.Exception             (catch)
-import qualified Network.WebSockets            as WS
-import qualified Data.ByteString               as ByteString
+import           Control.Exception                     (catch)
+import           Control.Monad                         (forever)
+import qualified Data.ByteString                       as ByteString
+import qualified Network.WebSockets                    as WS
 
-import           Flowbox.Bus.EndPoint          (BusEndPoints)
+import           Flowbox.Bus.EndPoint                  (BusEndPoints)
 
-import qualified Flowbox.WSConnector.WSConfig       as WSConfig
-import           Flowbox.WSConnector.Data.WSMessage (WSMessage(..), ControlCode(..))
-import           Flowbox.WSConnector.Data.WSFrame   (WSFrame(..), deserializeFrame, serializeFrame, messages)
+import           Flowbox.WSConnector.Data.WSFrame      (WSFrame (..), deserializeFrame, messages, serializeFrame)
+import           Flowbox.WSConnector.Data.WSMessage    (ControlCode (..), WSMessage (..))
 import qualified Flowbox.WSConnector.Workers.BusWorker as BusWorker
+import qualified Flowbox.WSConnector.WSConfig          as WSConfig
 
 logger :: LoggerIO
 logger = getLoggerIO $moduleName

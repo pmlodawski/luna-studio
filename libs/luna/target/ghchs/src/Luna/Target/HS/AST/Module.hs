@@ -11,10 +11,10 @@ module Luna.Target.HS.AST.Module (
         module Luna.Target.HS.AST.Expr
 )where
 
-import Flowbox.Prelude
-import Luna.Target.HS.AST.Expr
-import Luna.Target.HS.AST.Extension (Extension)
-import           Data.Text.Lazy (Text)
+import           Data.Text.Lazy               (Text)
+import           Flowbox.Prelude
+import           Luna.Target.HS.AST.Expr
+import           Luna.Target.HS.AST.Extension (Extension)
 
 
 empty :: Expr

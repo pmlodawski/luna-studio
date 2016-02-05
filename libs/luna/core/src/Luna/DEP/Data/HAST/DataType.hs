@@ -10,7 +10,7 @@ module Luna.DEP.Data.HAST.DataType (
         module Luna.DEP.Data.HAST.Expr
 )where
 
-import Luna.DEP.Data.HAST.Expr
+import           Luna.DEP.Data.HAST.Expr
 
 empty :: Expr
 empty = DataD "" [] [] []

@@ -4,14 +4,14 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE DeriveDataTypeable    #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 
 module Flowbox.Geom2D.QuadraticBezier where
 
-import Data.Typeable
+import           Data.Typeable
 
-import Math.Coordinate.Cartesian  (Point2(..))
-import Flowbox.Prelude
+import           Flowbox.Prelude
+import           Math.Coordinate.Cartesian (Point2 (..))
 
 
 

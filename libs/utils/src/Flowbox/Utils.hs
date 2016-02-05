@@ -9,8 +9,8 @@
 
 module Flowbox.Utils where
 
-import Data.Typeable (Typeable, typeOf)
-import Prelude
+import           Data.Typeable (Typeable, typeOf)
+import           Prelude
 
 
 ------------------------------------------------------------------------

@@ -6,12 +6,12 @@
 ---------------------------------------------------------------------------
 module Flowbox.RepoManager.Data.Dependency where
 
+import qualified Distribution.Version                  as CabalVersion
 import           Flowbox.Prelude
 import qualified Flowbox.RepoManager.Data.Package.Flag as Flag
 import qualified Flowbox.RepoManager.Data.Types        as Types
 import qualified Flowbox.RepoManager.Data.Version      as Version
 import qualified System.FilePath                       as FilePath
-import qualified Distribution.Version                  as CabalVersion
 
 data Dependency = Dependency { qualDepName   :: Types.QualifiedPackageName
                              , constraints   :: CabalVersion.VersionRange

@@ -1,17 +1,17 @@
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Data.Convert.Instances.Num where
 
-import Data.Convert.Bound
-import Data.Convert.Base
-import Data.Monoid
-import qualified Data.ByteString as BS
-import GHC.Int
-import Data.Word
-import Data.Bits (shiftR)
+import           Data.Bits          (shiftR)
+import qualified Data.ByteString    as BS
+import           Data.Convert.Base
+import           Data.Convert.Bound
+import           Data.Monoid
+import           Data.Word
+import           GHC.Int
 
 intTypes   = [ Type ''Int      $ layoutBounds $ IntLayout Signed 30 -- according to: https://hackage.haskell.org/package/base-4.8.0.0/docs/Data-Int.html#t:Int
              , Type ''Integer  $ layoutBounds $ InfiniteLayout

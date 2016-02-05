@@ -10,9 +10,9 @@
 
 module Luna.Syntax.Lit.Number where
 
-import Control.Lens
-import Data.Binary  (Binary)
-import GHC.Generics
+import           Control.Lens
+import           Data.Binary                     (Binary)
+import           GHC.Generics
 
 import           Flowbox.Generics.Deriving.QShow
 import           Flowbox.Prelude                 (Eq, Maybe, Maybe (Just, Nothing), Ord, Read, Show, concat, (++))

@@ -12,13 +12,13 @@
 
 module Luna.Syntax.Name where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
-import           Data.Binary     (Binary)
-import qualified Data.Char       as Char
-import           Data.Char.Class (LetterCase, isLower, isUpper)
-import           Data.String     (IsString, fromString)
-import qualified Data.Text.Lazy  as Text
+import           Data.Binary             (Binary)
+import qualified Data.Char               as Char
+import           Data.Char.Class         (LetterCase, isLower, isUpper)
+import           Data.String             (IsString, fromString)
+import qualified Data.Text.Lazy          as Text
 import           GHC.Generics
 
 import qualified Luna.Syntax.Name.Assert as Assert

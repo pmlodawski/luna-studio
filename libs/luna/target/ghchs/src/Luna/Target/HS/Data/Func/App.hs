@@ -5,19 +5,19 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE PolyKinds                 #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 --{-# LANGUAGE DysfunctionalDependencies #-}
 
@@ -25,11 +25,11 @@
 
 module Luna.Target.HS.Data.Func.App where
 
-import GHC.TypeLits
-import Data.Typeable (Typeable, Proxy)
+import           Data.Typeable (Proxy, Typeable)
+import           GHC.TypeLits
 
 
-import Flowbox.Utils
+import           Flowbox.Utils
 
 
 ----------------------------------------------------------------------------------

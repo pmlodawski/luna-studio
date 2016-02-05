@@ -1,24 +1,24 @@
+{-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE GADTs#-}
 
-module TestHelpers where 
+module TestHelpers where
 
-import Test.Hspec
-import Test.HUnit
-import Test.QuickCheck
-import Flowbox.Prelude as P
-import Flowbox.Graphics.Image.Image
-import qualified Flowbox.Math.Matrix as M
-import Flowbox.Graphics.Mockup.Basic as Mock
-import Flowbox.Graphics.Mockup.Merge
-import Data.Array.Accelerate.CUDA as AC
-import Flowbox.Graphics.Composition.Merge
-import qualified Data.Array.Accelerate as A
-import System.Directory
-import Network.Curl.Download
-import qualified Data.ByteString as B
-import TestConfigParser
-import Control.Monad
+import           Control.Monad
+import qualified Data.Array.Accelerate              as A
+import           Data.Array.Accelerate.CUDA         as AC
+import qualified Data.ByteString                    as B
+import           Flowbox.Graphics.Composition.Merge
+import           Flowbox.Graphics.Image.Image
+import           Flowbox.Graphics.Mockup.Basic      as Mock
+import           Flowbox.Graphics.Mockup.Merge
+import qualified Flowbox.Math.Matrix                as M
+import           Flowbox.Prelude                    as P
+import           Network.Curl.Download
+import           System.Directory
+import           Test.Hspec
+import           Test.HUnit
+import           Test.QuickCheck
+import           TestConfigParser
 
 shouldBeCloseTo :: (Show a, Comparable a b) => String -> b -> a -> a -> Expectation
 shouldBeCloseTo name metric actual expected = assertAlmostEqual name "" metric expected actual
@@ -34,27 +34,27 @@ rightReturnShouldBeCloseTo testPath metric actual expected = do
     shouldBeCloseTo testPath metric actual expected'
     -- expected >>= (shouldBeCloseTo testPath metric actual)
 
---assertAlmostEqual :: (Comparable a b, Show a) => String -- ^ The message prefix 
+--assertAlmostEqual :: (Comparable a b, Show a) => String -- ^ The message prefix
 --                              -> String --test name
 --                              -> b
---                              -> a      -- ^ The expected value 
+--                              -> a      -- ^ The expected value
 --                              -> a      -- ^ The actual value
 --                              -> Assertion
 --assertAlmostEqual name preface metric expected actual =
 --  unless (closeEnough metric actual expected) (assertFailure msg)
 -- where msg = (if null preface then "" else preface ++ "\n") ++ (diffMsg name metric actual expected)
              --"expected close to: " ++ show expected ++ "\nbut got: " ++ show actual ++
-             --"\ndifference: " 
+             --"\ndifference: "
 
 --monadic
-assertAlmostEqual :: (Comparable a b, Show a) => String -- ^ The message prefix 
+assertAlmostEqual :: (Comparable a b, Show a) => String -- ^ The message prefix
                               -> String --test name
                               -> b
-                              -> a      -- ^ The expected value 
+                              -> a      -- ^ The expected value
                               -> a      -- ^ The actual value
                               -> Assertion
 assertAlmostEqual name preface metric expected actual = do
-    
+
     let ret = do
           ioMsg <- diffMsg name metric actual expected
           assertFailure $ (if P.null preface then "" else preface ++ "\n") ++ ioMsg
@@ -62,7 +62,7 @@ assertAlmostEqual name preface metric expected actual = do
         --where msg = (if null preface then "" else preface ++ "\n") ++ ioMsg
 
 
-class Comparable thing metric where 
+class Comparable thing metric where
     closeEnough :: metric -> thing -> thing -> Bool
     diffMsg     :: String -> metric -> thing -> thing -> IO String
 
@@ -71,7 +71,7 @@ class Comparable thing metric where
 --    Just x  `close` Just y  = x == y
 --    _ `close` _ = False
 
-data FloatMetric a where 
+data FloatMetric a where
     Exact :: FloatMetric a
     Close :: Floating a => a -> FloatMetric a
 
@@ -82,10 +82,10 @@ instance (Show a, Ord a, Floating a) => Comparable (Maybe a) (FloatMetric a) whe
     closeEnough _ _ _ = False
 
     diffMsg _ _ Nothing Nothing = return "Nothings"
-    diffMsg _ Exact (Just x) (Just y)     = return $ "expected: " ++ show (Just y) ++ 
+    diffMsg _ Exact (Just x) (Just y)     = return $ "expected: " ++ show (Just y) ++
                                           "\nbut got: " ++ show (Just x) ++
                                           "\ndifference: " ++ show (x-y)
-    diffMsg _ (Close a) (Just x) (Just y) = return $ "expected max difference " ++ (show a) ++ " to: " ++ show (Just y) ++ 
+    diffMsg _ (Close a) (Just x) (Just y) = return $ "expected max difference " ++ (show a) ++ " to: " ++ show (Just y) ++
                                           "\nbut got: " ++ show (Just x) ++
                                           "\ndifference: " ++ show (x-y)
     diffMsg _ _ _ _ = return "Nothing with Just"
@@ -121,14 +121,14 @@ instance Comparable Image ImageMetric where
             --A.Z A.:.w2 A.:.h2 = M.shape r2
             (r1,g1,b1,a1) = Mock.unsafeGetChannels actualImage
             (r2,g2,b2,a2) = Mock.unsafeGetChannels expectedImage
-            
+
 
 
     diffMsg path metric actualImage expectedImage  = case metric of
         PixelWise ->    let (r1,g1,b1,a1) = Mock.unsafeGetChannels actualImage
                             (r2,g2,b2,a2) = Mock.unsafeGetChannels expectedImage
                           --(r,g,b,a) = Mock.unsafeGetChannels $ diff
-                            
+
 
                             r = M.map abs $ M.zipWith (-) r1 r2
                             g = M.map abs $ M.zipWith (-) g1 g2
@@ -146,11 +146,11 @@ instance Comparable Image ImageMetric where
                             diff = mergeLuna (Difference Adobe) actualImage expectedImage Nothing
 
 
-                            finMsg = "wrong result saved to"++resultPath++"\ndiff image saved to "++diffPath ++ "\nmax pixel-wise difference: " ++ (show $ maxDiff)   
-                            in do Mock.saveImageLuna resultPath actualImage       
+                            finMsg = "wrong result saved to"++resultPath++"\ndiff image saved to "++diffPath ++ "\nmax pixel-wise difference: " ++ (show $ maxDiff)
+                            in do Mock.saveImageLuna resultPath actualImage
                                     --return "diff image saved to ./samples/diff.png"
-                                  Mock.saveImageLuna diffPath diff   
-                                  return finMsg                
+                                  Mock.saveImageLuna diffPath diff
+                                  return finMsg
                         --return $ finMsg
                         --"pixel-wise difference" ++
                      --"actualImage sum: " ++ (show $ s1) ++
@@ -171,7 +171,7 @@ instance Comparable Image ImageMetric where
                           --  (r2,g2,b2,a2) = Mock.unsafeGetChannels expectedImage
 
                           --  diff = mergeLuna Difference Adobe actualImage expectedImage
-                     --   l1 = imgAsList actualImage 
+                     --   l1 = imgAsList actualImage
                      --   l2 = imgAsList expectedImage
                      --   s1 = sum l1
                      --   s2 = sum l2
@@ -198,7 +198,7 @@ instance Comparable Image ImageMetric where
                             (r2,g2,b2,a2) = Mock.unsafeGetChannels expectedImage
                         --(rd,gd,bd,ad) = Mock.unsafeGetChannels $ mergeLuna Difference Adobe actualImage expectedImage
 
-                        --l1 = imgAsList actualImage 
+                        --l1 = imgAsList actualImage
                         --l2 = imgAsList expectedImage
                         --s1 = M.sum l1
                         --s2 = sum l2
@@ -206,7 +206,7 @@ instance Comparable Image ImageMetric where
                         --s  = sum $ P.map abs dif
 
 
---imgAsList img = 
+--imgAsList img =
 --    let (r,g,b,a) = Mock.unsafeGetChannels img
 --    in  (M.toList AC.run r) ++ (M.toList AC.run g) ++ (M.toList AC.run b) ++(M.toList AC.run a)
 
@@ -230,7 +230,7 @@ tryDownloading specPath testName = do
     customExists  <- doesFileExist "./test/custom.config"
     defaultExists <- doesFileExist "./test/default.config"
     --let tries = [tryLocal, tryCustom, tryDefault]
-    if customExists 
+    if customExists
         then do
             conf <- getTestConfig "./test/custom.config"
             print $ getRemotePath conf
@@ -247,13 +247,13 @@ tryDownloading specPath testName = do
 
 --tryDownloading' specPath testName = (try local) || (try customFTP) || (try defaultFTP)
 
---try local = 
+--try local =
         --case site of
         --    Left err -> do
         --        altConf <- getTestConfig "./test/default.config"
         --        altSite <- openURI $ (getRemotePath altConf) ++specPath++testName++"Test/"++testName++"_expected.png"
         --        case altSite of
-        --            Left err -> error "no image"               
+        --            Left err -> error "no image"
         --            Right img -> do
         --                createDirectory $ specPath++testName++"Test/"
         --                B.writeFile (specPath++testName++"Test/"++testName++"_expected.png") img
@@ -262,9 +262,9 @@ tryDownloading specPath testName = do
         --    createDirectory $ specPath++testName++"Test/"
         --    B.writeFile (specPath++testName++"Test/"++testName++"_expected.png") img
         --    loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"
-    
+
 trySaveSite site specPath testName = case site of
-    Left err -> error "no image"               
+    Left err -> error "no image"
     Right img -> do
         createDirectory $ specPath++testName++"Test/"
         B.writeFile (specPath++testName++"Test/"++testName++"_expected.png") img
@@ -281,7 +281,7 @@ defaultReferenceTest testName specPath image =
             it "in image-wise metric" $ do
                 rightReturnShouldBeCloseTo testPath ImageWise image expectedImage
 
-defaultReferenceTestM testName specPath image = 
+defaultReferenceTestM testName specPath image =
     describe testName $ do
         describe "Should match reference image" $ do
             let expectedImage = getDefaultTestPic specPath testName

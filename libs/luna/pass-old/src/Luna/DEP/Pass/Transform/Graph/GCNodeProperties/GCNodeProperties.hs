@@ -12,8 +12,8 @@
 module Luna.DEP.Pass.Transform.Graph.GCNodeProperties.GCNodeProperties where
 
 import           Control.Monad.State
-import           Data.IntSet         ((\\))
-import qualified Data.IntSet         as IntSet
+import           Data.IntSet                             ((\\))
+import qualified Data.IntSet                             as IntSet
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude

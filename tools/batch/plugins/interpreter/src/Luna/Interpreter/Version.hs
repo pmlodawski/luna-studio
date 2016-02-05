@@ -7,7 +7,7 @@
 
 module Luna.Interpreter.Version where
 
-import qualified Data.Version as Version
+import qualified Data.Version            as Version
 
 import           Flowbox.Prelude
 import qualified Luna.Interpreter.Config as Config

@@ -10,10 +10,10 @@ module Luna.Data.SourceMap (
     module Data.Map
 )where
 
-import Data.Map
-import Flowbox.Prelude
+import           Data.Map
+import           Flowbox.Prelude
 
-import Luna.Data.SourcePos (SourceRange)
+import           Luna.Data.SourcePos (SourceRange)
 
 type ID = Int
 

@@ -8,9 +8,9 @@
 
 module GhcPkg where
 
-import qualified System.Environment as Env
-import qualified System.Exit        as Exit
-import qualified System.Process     as Process
+import qualified System.Environment      as Env
+import qualified System.Exit             as Exit
+import qualified System.Process          as Process
 
 import qualified Flowbox.Config.Config   as Cfg
 import           Flowbox.System.FilePath (expand')

@@ -18,7 +18,7 @@ module Flowbox.Graphics.Mockup (
     Taxicab(..),
 ) where
 
-import Linear                    (V2 (..))
-import Math.Coordinate.Cartesian (Point2 (..))
-import Math.Metric               (Chebyshev(..), Euclidean(..), Minkowski(..), Taxicab(..))
-import  Flowbox.Graphics.Serialization ()
+import           Flowbox.Graphics.Serialization ()
+import           Linear                         (V2 (..))
+import           Math.Coordinate.Cartesian      (Point2 (..))
+import           Math.Metric                    (Chebyshev (..), Euclidean (..), Minkowski (..), Taxicab (..))

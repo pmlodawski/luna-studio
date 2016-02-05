@@ -7,8 +7,8 @@
 
 module Flowbox.AWS.S3.Utils where
 
-import           Data.Text (Text)
-import qualified Data.Text as Text
+import           Data.Text               (Text)
+import qualified Data.Text               as Text
 
 import           Flowbox.Prelude         hiding (Text)
 import qualified Flowbox.System.FilePath as FilePath

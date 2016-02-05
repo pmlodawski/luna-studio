@@ -1,13 +1,13 @@
 module Flowbox.Graphics.Image.Matte where
 
-import Flowbox.Geom2D.Mask
-import Flowbox.Geom2D.Shape
-import Flowbox.Geom2D.Rasterizer
-import Flowbox.Math.Matrix
-import Flowbox.Prelude
-import Data.Array.Accelerate as A
-import Flowbox.Graphics.Image.Channel
-import Flowbox.Graphics.Shader.Shader
+import           Data.Array.Accelerate          as A
+import           Flowbox.Geom2D.Mask
+import           Flowbox.Geom2D.Rasterizer
+import           Flowbox.Geom2D.Shape
+import           Flowbox.Graphics.Image.Channel
+import           Flowbox.Graphics.Shader.Shader
+import           Flowbox.Math.Matrix
+import           Flowbox.Prelude
 
 data Matte a = ImageMatte Channel
              | VectorMatte (Mask a) deriving(Show)

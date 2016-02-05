@@ -5,18 +5,18 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE TypeFamilies        #-}
+{-# LANGUAGE TypeOperators       #-}
 
 module Flowbox.Graphics.Composition.Generator.Noise.RidgedMulti where
 
-import qualified Data.Array.Accelerate     as A
-import           Data.Bits                 ((.&.))
-import qualified Math.Coordinate.Cartesian as Cartesian
+import qualified Data.Array.Accelerate                                 as A
+import           Data.Bits                                             ((.&.))
+import qualified Math.Coordinate.Cartesian                             as Cartesian
 
-import Flowbox.Graphics.Composition.Generator.Noise.Internal
-import Flowbox.Graphics.Shader.Shader
-import Flowbox.Prelude
+import           Flowbox.Graphics.Composition.Generator.Noise.Internal
+import           Flowbox.Graphics.Shader.Shader
+import           Flowbox.Prelude
 
 
 

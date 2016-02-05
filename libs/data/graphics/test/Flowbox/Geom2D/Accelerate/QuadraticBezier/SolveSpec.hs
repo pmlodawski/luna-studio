@@ -2,22 +2,22 @@
 
 module Flowbox.Geom2D.Accelerate.QuadraticBezier.SolveSpec where
 
-import Data.Array.Accelerate as A
-import Data.Array.Accelerate.CUDA
-import TestHelpers
-import Test.Hspec
-import Test.HUnit
-import Test.QuickCheck
+import           Data.Array.Accelerate                           as A
+import           Data.Array.Accelerate.CUDA
+import           Test.Hspec
+import           Test.HUnit
+import           Test.QuickCheck
+import           TestHelpers
 
-import Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve
-import Flowbox.Geom2D.QuadraticBezier
+import           Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve
+import           Flowbox.Geom2D.QuadraticBezier
 
-import Flowbox.Prelude as P
+import           Flowbox.Prelude                                 as P
 
-import Math.Coordinate.Cartesian  (Point2(..))
+import           Math.Coordinate.Cartesian                       (Point2 (..))
 
 spec :: Spec
-spec = do 
+spec = do
     describe "eee func" $ do
         it "should something" $
             pending

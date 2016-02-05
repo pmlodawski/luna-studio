@@ -4,12 +4,12 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.WSConnector.WSConfig where
 
 import           Flowbox.Prelude
-import qualified FlowboxData.Config.Config  as FD
+import qualified FlowboxData.Config.Config as FD
 
 data Config = Config { _host     :: String
                      , _port     :: Int

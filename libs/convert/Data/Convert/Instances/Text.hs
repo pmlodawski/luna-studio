@@ -1,26 +1,26 @@
+{-# LANGUAGE CPP                       #-}
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE TypeSynonymInstances      #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 module Data.Convert.Instances.Text()
 where
 
-import Data.Convert.Base
-import qualified Data.Text as TS
-import qualified Data.Text.Encoding as TE
-import qualified Data.Text.Lazy as TL
-import qualified Data.Text.Lazy.Builder as TLB
-import qualified Data.Text.Lazy.Encoding as TLE
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BL
+import qualified Data.ByteString         as BS
 import qualified Data.ByteString.Builder as BB
-import Data.Word (Word8)
-import Data.Foldable
+import qualified Data.ByteString.Lazy    as BL
+import           Data.Convert.Base
+import           Data.Foldable
+import qualified Data.Text               as TS
+import qualified Data.Text.Encoding      as TE
+import qualified Data.Text.Lazy          as TL
+import qualified Data.Text.Lazy.Builder  as TLB
+import qualified Data.Text.Lazy.Encoding as TLE
+import           Data.Word               (Word8)
 
 
 

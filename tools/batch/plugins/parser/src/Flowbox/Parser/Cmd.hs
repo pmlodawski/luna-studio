@@ -7,7 +7,7 @@
 
 module Flowbox.Parser.Cmd where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

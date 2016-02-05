@@ -4,26 +4,22 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE MultiParamTypeClasses  #-}
-{-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE TypeFamilies           #-}
-{-# LANGUAGE FlexibleContexts       #-}
-{-# LANGUAGE UndecidableInstances   #-}
-{-# LANGUAGE ConstraintKinds        #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
 module Flowbox.Graphics.Prelude (
     module Flowbox.Graphics.Prelude,
     module PE
 ) where
 
-import Flowbox.Prelude as PE hiding (
-    lift,
-    Ord(..), Eq(..),
-    (&&), (||), not
-    )
+import           Flowbox.Prelude       as PE hiding (Eq (..), Ord (..), lift, not, (&&), (||))
 
-import qualified Flowbox.Prelude       as P
 import           Data.Array.Accelerate as A
+import qualified Flowbox.Prelude       as P
 
 
 
@@ -83,7 +79,7 @@ class (t ~ InferH a, EqC t a) => OrdC t a where
     (<) :: a -> a -> BooleanT t a
 
     infix 4 >=
-    (>=) :: a -> a -> BooleanT t a 
+    (>=) :: a -> a -> BooleanT t a
 
     infix 4 >
     (>) :: a -> a -> BooleanT t a

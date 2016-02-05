@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 module Luna.Syntax.Enum where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 ----------------------------------------------------------------------
 -- Data types

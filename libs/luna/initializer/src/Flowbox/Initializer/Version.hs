@@ -7,7 +7,7 @@
 
 module Flowbox.Initializer.Version where
 
-import qualified Data.Version as Version
+import qualified Data.Version               as Version
 
 import qualified Flowbox.Initializer.Config as Config
 import           Flowbox.Prelude

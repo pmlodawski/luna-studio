@@ -13,9 +13,9 @@
 
 module Luna.DEP.Pass.Transform.AST.Hash.Hash where
 
-import Control.Applicative
-import Control.Monad.State
-import Data.Char           (ord)
+import           Control.Applicative
+import           Control.Monad.State
+import           Data.Char                 (ord)
 --import           Data.Hashable       (hash)
 
 import           Flowbox.Prelude           hiding (error, id, mod)

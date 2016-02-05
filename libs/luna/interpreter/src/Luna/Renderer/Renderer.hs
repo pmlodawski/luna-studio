@@ -8,9 +8,9 @@
 
 module Luna.Renderer.Renderer where
 
-import           Control.Monad (forM, forM_)
-import           Data.HMap     (HMap)
-import qualified Data.IntSet   as IntSet
+import           Control.Monad                               (forM, forM_)
+import           Data.HMap                                   (HMap)
+import qualified Data.IntSet                                 as IntSet
 
 import           Flowbox.Data.MapForest                      (MapForest)
 import           Flowbox.Prelude

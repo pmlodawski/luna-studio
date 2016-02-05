@@ -11,13 +11,13 @@ module Flowbox.Graphics.Mockup.Keying (
     keyerLuna,
 ) where
 
-import           Data.Array.Accelerate     ((:.)(..), Exp, Z(..))
-import qualified Data.Array.Accelerate     as A
-import           Math.Coordinate.Cartesian (Point2 (..))
+import           Data.Array.Accelerate               ((:.) (..), Exp, Z (..))
+import qualified Data.Array.Accelerate               as A
+import           Math.Coordinate.Cartesian           (Point2 (..))
 
-import           Flowbox.Geom2D.Rectangle            (Rectangle(..))
+import           Flowbox.Geom2D.Rectangle            (Rectangle (..))
 import qualified Flowbox.Graphics.Color.Color        as Color
-import           Flowbox.Graphics.Composition.Keying (KeyerMode, KeyerThresholds(..))
+import           Flowbox.Graphics.Composition.Keying (KeyerMode, KeyerThresholds (..))
 import qualified Flowbox.Graphics.Composition.Keying as Keying
 import           Flowbox.Graphics.Image.Image        (Image)
 import qualified Flowbox.Graphics.Image.Image        as Image
@@ -25,8 +25,8 @@ import           Flowbox.Graphics.Utils.Accelerate   (variable)
 import qualified Flowbox.Math.Matrix                 as M
 import           Flowbox.Prelude                     as P hiding (lookup)
 
-import Flowbox.Graphics.Mockup.Basic
-import Flowbox.Graphics.Mockup.Transform
+import           Flowbox.Graphics.Mockup.Basic
+import           Flowbox.Graphics.Mockup.Transform
 
 keyer' :: (A.Exp (Color.RGB Float) -> A.Exp Float) -> Image -> Image
 keyer' f img = img'

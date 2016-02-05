@@ -8,9 +8,9 @@
 
 module Data.Convertible.Instances.Missing where
 
-import Data.ByteString
-import Data.Convertible
-import Prelude
+import           Data.ByteString
+import           Data.Convertible
+import           Prelude
 --import Data.Traversable (Traversable, sequenceA)
 
 

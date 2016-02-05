@@ -8,8 +8,8 @@
 
 module Luna.Target.HS.AST.Builder.Utils where
 
-import Flowbox.Prelude
-import Luna.Target.HS.AST.Expr as Expr
-import Luna.Target.HS.AST.Lit  as Lit
+import           Flowbox.Prelude
+import           Luna.Target.HS.AST.Expr as Expr
+import           Luna.Target.HS.AST.Lit  as Lit
 
 val = Expr.VarE "val"

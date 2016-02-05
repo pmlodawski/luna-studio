@@ -7,7 +7,7 @@
 
 module Luna.Compiler.Version  where
 
-import qualified Data.Version as Version
+import qualified Data.Version       as Version
 
 import           Flowbox.Prelude
 import qualified Luna.Compiler.Info as CompilerInfo

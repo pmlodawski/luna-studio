@@ -6,17 +6,17 @@
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs                  #-}
+{-# LANGUAGE OverlappingInstances   #-}
+{-# LANGUAGE UndecidableInstances   #-}
 
 module Luna.Target.HS.Control.Flow.Env (
     module Luna.Target.HS.Control.Flow.Env,
     module X
 ) where
 
-import Luna.Target.HS.Control.Context as X
-import Luna.Target.HS.Control.Error   as X
+import           Luna.Target.HS.Control.Context as X
+import           Luna.Target.HS.Control.Error   as X
 
 --------------------------------------------------------------------------------
 -- Utils

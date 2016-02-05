@@ -19,8 +19,8 @@ import           Foreign.Storable
 import           Foreign.Storable.Tuple       ()
 import           Linear                       hiding (point, trace)
 
-import           Flowbox.GuiMockup.JSInterop
 import           Debug.Trace
+import           Flowbox.GuiMockup.JSInterop
 
 
 

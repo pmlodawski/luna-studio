@@ -7,9 +7,9 @@
 module Flowbox.Animation.Controller where
 
 import           Control.Monad
-import qualified Data.Map as Map
+import qualified Data.Map                as Map
 
-import           Flowbox.Animation.Model 
+import           Flowbox.Animation.Model
 import           Flowbox.Prelude
 
 
@@ -23,6 +23,6 @@ insertValue (NonNumericModel segs) x y = NonNumericModel $ Map.insert x (Just y)
 insertEmpty :: (Ord x) => NonNumericModel x y -> x -> NonNumericModel x y
 insertEmpty (NonNumericModel segs) x = NonNumericModel $ Map.insert x Nothing segs
 
-create :: (Ord x) => x -> y -> NonNumericModel x y 
+create :: (Ord x) => x -> y -> NonNumericModel x y
 create x y = NonNumericModel $ Map.singleton x $ Just y
 

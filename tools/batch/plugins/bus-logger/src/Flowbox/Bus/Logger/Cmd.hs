@@ -7,7 +7,7 @@
 
 module Flowbox.Bus.Logger.Cmd where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

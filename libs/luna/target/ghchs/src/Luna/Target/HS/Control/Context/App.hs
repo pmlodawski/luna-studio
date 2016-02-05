@@ -5,17 +5,17 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 {-# LANGUAGE DysfunctionalDependencies #-}
@@ -23,14 +23,14 @@
 
 module Luna.Target.HS.Control.Context.App where
 
-import Control.PolyMonad
-import Control.Applicative
-import Control.PolyApplicative
-import Luna.Target.HS.Control.Context.Env
-import Luna.Target.HS.Control.Context.MonadCtx
-import Luna.Target.HS.Control.Context.Value
-import Data.TypeLevel
-import Control.Monad.IO.Class
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.PolyApplicative
+import           Control.PolyMonad
+import           Data.TypeLevel
+import           Luna.Target.HS.Control.Context.Env
+import           Luna.Target.HS.Control.Context.MonadCtx
+import           Luna.Target.HS.Control.Context.Value
 
 --------------------------------------------------------------------------------
 -- Instances

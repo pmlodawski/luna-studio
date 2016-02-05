@@ -14,14 +14,14 @@ import           Database.PostgreSQL.Simple.FromField (FromField, fromField)
 import           Database.PostgreSQL.Simple.FromRow   (FromRow, field, fromRow)
 import qualified Text.Read                            as Read
 
-import qualified Flowbox.AWS.EC2.Instance.Instance as Instance
-import qualified Flowbox.AWS.User.User             as User
+import qualified Flowbox.AWS.EC2.Instance.Instance    as Instance
+import qualified Flowbox.AWS.User.User                as User
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified Generated.Proto.Session.Policy    as Gen
-import qualified Generated.Proto.Session.Session   as Gen
+import qualified Generated.Proto.Session.Policy       as Gen
+import qualified Generated.Proto.Session.Session      as Gen
 
 
 

@@ -15,10 +15,10 @@ module Luna.Interpreter.Session.AST.Traverse (
 , next
 ) where
 
-import           Control.Monad.State hiding (mapM, mapM_)
-import qualified Data.List           as List
-import qualified Data.Maybe          as Maybe
-import qualified GHC.Exts            as Exts
+import           Control.Monad.State                        hiding (mapM, mapM_)
+import qualified Data.List                                  as List
+import qualified Data.Maybe                                 as Maybe
+import qualified GHC.Exts                                   as Exts
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude                            hiding (inside, matching, succ)

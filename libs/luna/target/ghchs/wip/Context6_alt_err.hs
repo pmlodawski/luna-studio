@@ -1,32 +1,32 @@
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE ViewPatterns              #-}
 
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE UndecidableInstances      #-}
 --{-# LANGUAGE IncoherentInstances #-}
 
 
 
 
-import Control.Applicative    hiding(pure)
-import Control.Monad.IO.Class
-import Control.Monad.Trans
-import Control.Monad.Morph
+import           Control.Applicative       hiding (pure)
+import           Control.Monad.IO.Class
+import           Control.Monad.Morph
+import           Control.Monad.Trans
 --import Control.Monad.State
 
 --import Bind2 (bind, bind2, MonadRebase(..), StateT(..), put,get)
-import Control.Monad.Trans.State
+import           Control.Monad.Trans.State
 
-import Data3_alt
+import           Data3_alt
 
-import Utils
+import           Utils
 
 
 
@@ -99,7 +99,7 @@ liftfM5 a = flattenEnv `dot5` liftf5 a
 
 
 class TransSquash t1 t2 t3 | t1 t2 -> t3 where
-    transSquash ::  Monad m=>t1 (t2 m) a -> t3 (m a)  
+    transSquash ::  Monad m=>t1 (t2 m) a -> t3 (m a)
 
 
 class TransJoin m1 m2 m3 | m1 m2 -> m3 where
@@ -127,10 +127,10 @@ instance TransJoin (StateT Int Pure) (StateT Int Pure) (StateT Int Pure) where
 liftValF1 :: (m1 t1 -> m2 t2) -> (t1 :> m1 -> t2 :> m2)
 liftValF1 f = Value . f . fromValue
 
-flattenEnv ::  (TransJoin m1 m2 m, Functor m1)=>Value m1 (Value m2 v) -> Value m v  
+flattenEnv ::  (TransJoin m1 m2 m, Functor m1)=>Value m1 (Value m2 v) -> Value m v
 flattenEnv = liftValF1 transJoin . fmap fromValue
 
-transSubsquash ::  (TransJoin (t m1) (t m2) (t m3), Functor (t m1), MonadTrans t, Monad m2)=>t m1 (m2 a) -> t m3 a  
+transSubsquash ::  (TransJoin (t m1) (t m2) (t m3), Functor (t m1), MonadTrans t, Monad m2)=>t m1 (m2 a) -> t m3 a
 transSubsquash (a :: t1 m1 (m2 a)) = transJoin (fmap lift a :: t1 m1 (t1 m2 a))
 
 ------------------------------------------------------------------------------------------
@@ -280,7 +280,7 @@ class UnFmap f where
 
 ---- overlapping
 ---- moze da sie jednak to zrobic metoda z Advanced Overlap?
---instance  (a1~a2, m1~m2, Monad mc, Monad c, Pipe (a1 :> m1 -> b) (a2  :> m2) out) =>Pipe (a1  :> m1   -> b)     (c (a2 :> m2) :> mc)   (c out :> mc)       where 
+--instance  (a1~a2, m1~m2, Monad mc, Monad c, Pipe (a1 :> m1 -> b) (a2  :> m2) out) =>Pipe (a1  :> m1   -> b)     (c (a2 :> m2) :> mc)   (c out :> mc)       where
 --    pipe f vma = Value $ do
 --        ma <- fromValue vma
 --        return $ do
@@ -291,11 +291,11 @@ class UnFmap f where
 
 instance  (m1~m2, a1~a2, MonadTrans c1, Monad m2) =>Pipe (IC c1 m1 a1 -> b)       (a2  :> m2)   b             where pipe f a = f $ liftCtx a
 
-instance  (m1~Pure, a1~a2, Functor (IC c2 m2)) =>Pipe (a1 :> m1    -> (b -> c)) (IC c2 m2 a2) (IC c2 m2 (b -> c))  where 
+instance  (m1~Pure, a1~a2, Functor (IC c2 m2)) =>Pipe (a1 :> m1    -> (b -> c)) (IC c2 m2 a2) (IC c2 m2 (b -> c))  where
     pipe f ca = fmap fn ca where
         fn = f . pureVal
 
-instance  (m1~Pure, a1~a2, MatchEnv mb m2 mout, MonadTrans c2, Monad (c2 mout), MFunctor c2, Monad m2, MatchEnv m2 mb mout, Monad mout) =>Pipe (a1 :> m1    -> b :> mb) (IC c2 m2 a2) (IC c2 mout b)  where 
+instance  (m1~Pure, a1~a2, MatchEnv mb m2 mout, MonadTrans c2, Monad (c2 mout), MFunctor c2, Monad m2, MatchEnv m2 mb mout, Monad mout) =>Pipe (a1 :> m1    -> b :> mb) (IC c2 m2 a2) (IC c2 mout b)  where
     pipe f ca = IC b where
         fn = lift . (matchEnv (undefined :: m2 b)) . fromValue . f . pureVal
         a = hoist (matchEnv (undefined :: mb b)) $ fromIC ca
@@ -317,10 +317,10 @@ instance  (Pipe (a1 :> m1 -> b :> mb) (a2 :> m2) out, Functor (IC c1 mc1), Squas
 
 
 instance  (TransJoin (c2 mc2) (c2 m3) (c2 m4), Pipe (a1 :> Pure -> b :> mb) (a2 :> Pure) (Value m3 a), MonadTrans c2, Functor (c2 mc2), Functor m2, Monad (c2 mc2), Monad m3, Monad m2) =>Pipe (a1 :> Pure -> b :> mb) (IC c2 mc2 a2 :> m2) ((IC c2 m4 a) :> m2)  where
-    pipe f ca = undefined 
+    pipe f ca = undefined
     --Value . fmap (IC . transSubsquash) $ do
     --ma <- fromValue ca
-    --return $ do 
+    --return $ do
     --    a <- fromIC ma
     --    return . fromValue $ f >>> (return a :: a2 :> m1)
 
@@ -348,8 +348,8 @@ instance  (TransJoin (c2 mc2) (c2 m3) (c2 m4), Pipe (a1 :> Pure -> b :> mb) (a2 
 
 --out ~ m2 (c2 mc2 (mb b)))
 
---instance  (m1~m2, a1~a2, MonadTrans c2, Monad (c2 mb), Monad mb, TransFunctor c2, Functor (c2 mb), Monad (c2 m2), Monad m2) =>Pipe (a1 :> m1    -> b :> mb) (IC c2 m2 a2) (IC c2 mb b)  where 
---    pipe f ca = IC $ fmap (Value . return) $ do 
+--instance  (m1~m2, a1~a2, MonadTrans c2, Monad (c2 mb), Monad mb, TransFunctor c2, Functor (c2 mb), Monad (c2 m2), Monad m2) =>Pipe (a1 :> m1    -> b :> mb) (IC c2 m2 a2) (IC c2 mb b)  where
+--    pipe f ca = IC $ fmap (Value . return) $ do
 --        a <- runIC ca
 --        runIC . liftCtx . f $ return a
 
@@ -414,7 +414,7 @@ main = do
 
 
     --print $ flip runStateT 0 $ fromIC $ fromPure . fromValue $ (sumMeSingle' >>> pureVal time)
-    
+
     --print $ sumMeSingle' >>> pureVal (1::Int)
 
     --print $ sumMeSingle' >>> pureVal [ pureVal (1::Int) ]
@@ -430,7 +430,7 @@ main = do
 
             --print $ concatMe' >>> pure [pure(2::Int), pure(5::Int)] >>> pure [pure(2::Int), pure(5::Int)]
             --print $ concatMe' >>> pure [pure(2::Int), pure(5::Int)] >>> pure(2::Int)
-            --print $ concatMe' >>> pure(2::Int)                      >>> pure [pure(2::Int), pure(5::Int)] 
+            --print $ concatMe' >>> pure(2::Int)                      >>> pure [pure(2::Int), pure(5::Int)]
             --print $ concatMe' >>> pure(2::Int)                      >>> pure(2::Int)
 
             --putStrLn "---"
@@ -525,7 +525,7 @@ main = do
 --    callEnv :: (a -> out) -> b -> out
 
 --instance CallEnv (IC ctx mx a1) (Value mx2 a2) where
---    callEnv f = 
+--    callEnv f =
 
         --instance out~b => Pipe (a->b) a out where
         --    pipe f a = f a
@@ -541,9 +541,9 @@ main = do
 --instance (m1~Pure, Monad m, Monad m2, out~(m2(m b))) => Pipe (Value m1 a -> b) (Value m2 (m a)) out where
 --    pipe f (Value tma) = do
 --        ma <- tma
---        return $ do 
+--        return $ do
 --            a <- ma
---            return . f $ pure a 
+--            return . f $ pure a
 
                                                          --(Pipe (Value m20 Int -> Value m30 Int) (Value Pure [  Value Pure Int])  s0)
 --instance (m1~m2, Monad m, Monad mx, out~(Value mx(m b))) => Pipe (Value m1  a   -> b            ) (Value mx  (m (Value m2   a  ))) out where
@@ -642,7 +642,7 @@ main = do
 --        unliftCtx $ f a
 
 
---instance (Monad m, Monad (mt m), MonadTrans mt, a~b, out~(c :> mt m)) => 
+--instance (Monad m, Monad (mt m), MonadTrans mt, a~b, out~(c :> mt m)) =>
 --         Pipe (b -> (c :> m)) (a :> mt m) out where
 --    pipe f (InContext ma) = InContext $ do
 --        a <- ma
@@ -680,7 +680,7 @@ main = do
     ----
     ---- it is possible to lift typed functions as:
     ----    mulBy2 :: (Int :> Pure) -> (Int :> Pure)
-    ----    
+    ----
     ----
     ---- but not untyped, like:
     ----    mulBy2 :: (LiftEnv' Pure m2 m3, Num b) => (b :> m2) -> (b :> m3)
@@ -694,21 +694,21 @@ main = do
 
 
 ---
-    --instance (a1~a2, ma1~mb ,out~(b :> ma2 mb), Monad(ma2 mb), MonadTrans ma2, Monad mb) => 
+    --instance (a1~a2, ma1~mb ,out~(b :> ma2 mb), Monad(ma2 mb), MonadTrans ma2, Monad mb) =>
     --         Pipe (a1 :> ma1 -> b :> mb) (a2 :> ma2 mb) out where
     --    pipe f (unliftCtx -> ma) = liftCtx $ do
     --        a <- ma
     --        lift . unliftCtx $ f a
 ---
 
-    --instance (out~(String :> StateT String IO)) => 
+    --instance (out~(String :> StateT String IO)) =>
     --         Pipe (String :> Pure -> String :> IO) (String :> StateT String Pure) out where
     --    pipe f (unliftCtx -> ma) = liftCtx $ do
     --        a <- rebase ma
     --        lift . unliftCtx $ f (ctxPure a)
 
 
-            --instance (a1~a2, ma1~ma2, out~(b :> t mb), Monad ma1, MonadRebase t ma1 mb, Monad (t mb), MonadTrans t) => 
+            --instance (a1~a2, ma1~ma2, out~(b :> t mb), Monad ma1, MonadRebase t ma1 mb, Monad (t mb), MonadTrans t) =>
             --         Pipe (a1 :> ma1 -> b :> mb) (a2 :> t ma2) out where
             --    pipe f (unliftCtx -> ma) = liftCtx $ do
             --        a <- rebase ma
@@ -727,7 +727,7 @@ main = do
 --([a] :> m2) -> [a] :> m3    ->   [Int] :> Pure
 
 --tst2 :: (IO Int -> IO Int) -> (IO [Int]) -> [IO Int]
---tst2 f a = 
+--tst2 f a =
 
 
 --tst3 :: (m a -> m a) -> m (a -> a)
@@ -821,7 +821,7 @@ main = do
             --t2 _ = 5
 
             --sme :: [Int] -> [Int] -> [Int]
-            --sme = (++) 
+            --sme = (++)
 
             --main = do
             --        --print $ concatMeSimple >>> (ctxPure ([1,2,3] :: [Int]))

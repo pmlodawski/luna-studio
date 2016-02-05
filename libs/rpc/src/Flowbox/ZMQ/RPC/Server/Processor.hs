@@ -11,10 +11,10 @@
 
 module Flowbox.ZMQ.RPC.Server.Processor where
 
-import           Control.Monad.IO.Class          (MonadIO)
-import           Data.ByteString                 (ByteString)
-import           System.ZMQ4.Monadic             (ZMQ)
-import qualified Text.ProtocolBuffers.Extensions as Extensions
+import           Control.Monad.IO.Class            (MonadIO)
+import           Data.ByteString                   (ByteString)
+import           System.ZMQ4.Monadic               (ZMQ)
+import qualified Text.ProtocolBuffers.Extensions   as Extensions
 
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert

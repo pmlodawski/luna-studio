@@ -9,8 +9,8 @@
 
 module Luna.Data.ASTInfo where
 
-import Control.Monad.RWS (RWST, get, put)
-import Flowbox.Prelude   hiding (id)
+import           Control.Monad.RWS (RWST, get, put)
+import           Flowbox.Prelude   hiding (id)
 
 
 

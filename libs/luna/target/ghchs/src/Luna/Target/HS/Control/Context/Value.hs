@@ -5,32 +5,32 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE DeriveFunctor             #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 module Luna.Target.HS.Control.Context.Value where
 
-import Control.PolyMonad
-import Control.PolyApplicative
-import Control.Monad.IO.Class
-import Data.Typeable (Typeable)
-import Flowbox.Utils
-import Data.TypeLevel
-import Control.Applicative
-import Control.Monad.Shuffle
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.Shuffle
+import           Control.PolyApplicative
+import           Control.PolyMonad
+import           Data.Typeable           (Typeable)
+import           Data.TypeLevel
+import           Flowbox.Utils
 
 --------------------------------------------------------------------------------
 -- Structures
@@ -72,7 +72,7 @@ instance Show (m (s a)) => Show (Value m s a) where
 --    return = Value . return . return
 --    Value m >>= Value f = Value $ do
 --        s <- m
---        shuffle $ do 
+--        shuffle $ do
 --            v <- s
 --            shuffle . fromValue $ f v
 

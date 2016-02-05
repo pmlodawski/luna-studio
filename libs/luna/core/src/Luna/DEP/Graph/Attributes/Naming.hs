@@ -7,7 +7,7 @@
 
 module Luna.DEP.Graph.Attributes.Naming where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

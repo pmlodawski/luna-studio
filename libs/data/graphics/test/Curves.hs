@@ -6,31 +6,30 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE CPP                 #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE ViewPatterns        #-}
 
 module Main where
 
-import Data.Array.Accelerate    as A
+import           Data.Array.Accelerate                     as A
 
 #ifdef ACCELERATE_CUDA_BACKEND
-import Data.Array.Accelerate.CUDA        (run)
+import           Data.Array.Accelerate.CUDA                (run)
 #else
-import Data.Array.Accelerate.Interpreter (run)
+import           Data.Array.Accelerate.Interpreter         (run)
 #endif
 
-import Math.Coordinate.Cartesian (Point2(..))
-import Flowbox.Geom2D.QuadraticBezier.Conversion
-import Flowbox.Geom2D.CubicBezier
-import Flowbox.Geom2D.ControlPoint
-import Flowbox.Geom2D.Path
-import Flowbox.Geom2D.Shape
-import Flowbox.Geom2D.Shape.Conversion
-import Flowbox.Graphics.Image.Image
-import Flowbox.Prelude
+import           Flowbox.Geom2D.ControlPoint
+import           Flowbox.Geom2D.CubicBezier
+import           Flowbox.Geom2D.Path
+import           Flowbox.Geom2D.QuadraticBezier.Conversion
+import           Flowbox.Geom2D.Shape
+import           Flowbox.Geom2D.Shape.Conversion
+import           Flowbox.Graphics.Image.Image
+import           Flowbox.Prelude
+import           Math.Coordinate.Cartesian                 (Point2 (..))
 
-import Flowbox.Math.Function.CurveGUI as CurveGUI
+import           Flowbox.Math.Function.CurveGUI            as CurveGUI
 
-import Utils
+import           Utils
 
 
 

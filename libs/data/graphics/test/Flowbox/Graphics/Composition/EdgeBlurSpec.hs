@@ -2,31 +2,31 @@
 
 module Flowbox.Graphics.Composition.EdgeBlurSpec where
 
-import TestHelpers
-import Test.Hspec
-import Test.HUnit
-import Test.QuickCheck
-import Flowbox.Graphics.Composition.EdgeBlur
+import           Flowbox.Graphics.Composition.EdgeBlur
+import           Test.Hspec
+import           Test.HUnit
+import           Test.QuickCheck
+import           TestHelpers
 
-import Debug.Trace
-import System.IO.Unsafe
+import           Debug.Trace
+import           System.IO.Unsafe
  -- import System.Console.ANSI
 
 
-import Flowbox.Prelude as P
-import Control.Applicative
+import           Control.Applicative
+import           Flowbox.Prelude                       as P
 
-import Control.Exception.Base (evaluate)
-import System.Timeout (timeout)
+import           Control.Exception.Base                (evaluate)
+import           System.Timeout                        (timeout)
 
-import Data.Maybe
+import           Data.Maybe
 
 
 spec :: Spec
-spec = do 
+spec = do
     describe "eee func" $ do
         it "should increment any argument" $
-            property $ \x -> 
+            property $ \x ->
                 eee x `shouldSatisfy` (==x+(1 ::Int))
 
     describe "magical function" $ do
@@ -39,7 +39,7 @@ spec = do
                 it "for Maybe" $ do
                     let mask   = Just 0
                         first  = Just 1
-                        second = Just 2 
+                        second = Just 2
                     mixImages mask first second `shouldBe` second
                 it "for ZipList" $ do
                     pending
@@ -47,15 +47,15 @@ spec = do
                     --    first  = ZipList [1,2]
                     --    second = ZipList [4,5]
                     --mixImages mask first second `shouldSatisfy` (closeTo second)
-        
+
         it "should for one mask return first" $ do
             let mask   = Just 1
                 first  = Just 1
-                second = Just 2 
+                second = Just 2
             mixImages mask first second `shouldBe` first
-        
+
         it "should for 0.5 mask return average" $
-            property $ \x y -> 
+            property $ \x y ->
                 let mask      = Just 0.50
                     firstNum  = x :: Float
                     secondNum = y :: Float
@@ -73,7 +73,7 @@ spec = do
 
 
 --closeTo :: (Eq a, Show a) => a -> a -> Bool
---closeTo a b = 
+--closeTo a b =
 --    if a==b
 --        then True
 --        else unsafePerformIO $ do

@@ -6,8 +6,8 @@
 ---------------------------------------------------------------------------
 module Flowbox.Source.Location.TH where
 
-import Flowbox.Prelude
-import Language.Haskell.TH.Syntax
+import           Flowbox.Prelude
+import           Language.Haskell.TH.Syntax
 
 
 

@@ -8,7 +8,7 @@
 
 module Flowbox.Bus.Data.MessageFrame where
 
-import qualified Data.ByteString.Char8 as Char8
+import qualified Data.ByteString.Char8    as Char8
 
 import           Flowbox.Bus.Data.Flag    (Flag)
 import           Flowbox.Bus.Data.Message (Message (Message))

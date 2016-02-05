@@ -8,7 +8,7 @@
 
 module Test.Luna.Control.BCZipperSpec where
 
-import Test.Hspec
+import           Test.Hspec
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude

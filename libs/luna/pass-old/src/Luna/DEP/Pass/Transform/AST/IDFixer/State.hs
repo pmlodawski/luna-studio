@@ -10,7 +10,7 @@
 
 module Luna.DEP.Pass.Transform.AST.IDFixer.State where
 
-import Control.Monad.State
+import           Control.Monad.State
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger

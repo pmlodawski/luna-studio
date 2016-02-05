@@ -14,18 +14,18 @@ module Luna.DEP.Pass.Source.File.Reader where
 
 import           Control.Applicative
 import           Control.Monad.RWS
-import qualified System.IO           as IO
+import qualified System.IO                 as IO
 
-import           Data.String.Utils      (replace)
-import           Flowbox.Prelude        hiding (error, id)
-import           Flowbox.System.UniPath (UniPath)
-import qualified Flowbox.System.UniPath as UniPath
-import           Luna.DEP.Data.Source   (Source (Source))
+import           Data.String.Utils         (replace)
+import           Flowbox.Prelude           hiding (error, id)
+import           Flowbox.System.UniPath    (UniPath)
+import qualified Flowbox.System.UniPath    as UniPath
+import           Luna.DEP.Data.Source      (Source (Source))
 
-import           Luna.DEP.Pass.Pass (Pass)
-import qualified Luna.DEP.Pass.Pass as Pass
+import           Luna.DEP.Pass.Pass        (Pass)
+import qualified Luna.DEP.Pass.Pass        as Pass
 
-import Flowbox.System.Log.Logger
+import           Flowbox.System.Log.Logger
 
 
 type FRPass result = Pass Pass.NoState result

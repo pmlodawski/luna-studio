@@ -5,30 +5,30 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell   #-}
 module Flowbox.RepoManager.Data.Package.Package where
 
-import           Control.Monad                        (join)
-import           Data.Map                             (Map)
+import qualified Control.Error.Util                    as Errors
+import qualified Control.Exception                     as Exception
+import           Control.Monad                         (join)
+import qualified Data.Configurator                     as Configurator
+import qualified Data.Configurator.Types               as Configurator
+import qualified Data.List                             as List
+import qualified Data.List.Split                       as Split
+import           Data.Map                              (Map)
+import qualified Data.Maybe                            as Maybe
+import qualified Data.Text                             as Text
+import           Data.Text.Lens                        (packed)
+import qualified Distribution.Version                  as CabalVersion
 import           Flowbox.Prelude
-import qualified Flowbox.RepoManager.Data.Dependency  as Dependency
-import           Flowbox.RepoManager.Data.Environment (Command)
+import qualified Flowbox.RepoManager.Data.Dependency   as Dependency
+import           Flowbox.RepoManager.Data.Environment  (Command)
 import qualified Flowbox.RepoManager.Data.Package.Flag as Flag
-import qualified Flowbox.RepoManager.Data.Types       as Types
-import qualified Flowbox.RepoManager.Data.Version     as Version
-import qualified Flowbox.RepoManager.Utils.Utils      as Utils
-import qualified Network.URI                          as URI
-import qualified Control.Error.Util                   as Errors
-import qualified Data.List.Split                      as Split
-import qualified Data.Maybe                           as Maybe
-import qualified Data.Configurator                    as Configurator
-import qualified Data.Configurator.Types              as Configurator
-import qualified Data.List                            as List
-import qualified Data.Text                            as Text
-import           Data.Text.Lens                       (packed)
-import qualified Distribution.Version                 as CabalVersion
-import qualified Control.Exception                    as Exception
-import qualified System.FilePath                      as FilePath
+import qualified Flowbox.RepoManager.Data.Types        as Types
+import qualified Flowbox.RepoManager.Data.Version      as Version
+import qualified Flowbox.RepoManager.Utils.Utils       as Utils
+import qualified Network.URI                           as URI
+import qualified System.FilePath                       as FilePath
 
 data Package = Package { _pkgName      :: Types.QualifiedPackageName
                        , _description  :: String
@@ -111,7 +111,7 @@ readDependencies conf = Exception.try $ do depends <- Configurator.require conf 
                                                                                 dependencies = join $ mapM parseDependency <$> depString
                                                                             case dependencies of
                                                                                 Just d -> return d
-                                                                                _      -> Exception.throwIO $ Configurator.KeyError "dependencies" 
+                                                                                _      -> Exception.throwIO $ Configurator.KeyError "dependencies"
                                                _                      -> Exception.throwIO $ Configurator.KeyError "dependencies"
     where groupByName deps = List.groupBy (\x y -> Dependency.qualDepName x == Dependency.qualDepName y)
           foldVersionRanges versionRanges = List.foldl1' CabalVersion.intersectVersionRanges versionRanges
@@ -143,7 +143,7 @@ toString _                       = Nothing
 --            allow specifying flags for each package
 parseDependency :: String -> Maybe Dependency.Dependency
 parseDependency str = case splitted of
-        [package]                     -> 
+        [package]                     ->
             Dependency.Dependency <$> Types.makeQualified package <*> pure CabalVersion.anyVersion <*> pure []
         [package, relation, version'] ->
             Dependency.Dependency <$> Types.makeQualified package <*> pure (toRange relation $ Version.parseVersion version') <*> pure []

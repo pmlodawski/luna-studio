@@ -7,7 +7,7 @@
 module Flowbox.AWS.Database.Database where
 
 import           Control.Monad
-import qualified Database.PostgreSQL.Simple as PSQL
+import qualified Database.PostgreSQL.Simple      as PSQL
 
 import qualified Flowbox.AWS.Database.SQL.Schema as Schema
 import           Flowbox.Prelude

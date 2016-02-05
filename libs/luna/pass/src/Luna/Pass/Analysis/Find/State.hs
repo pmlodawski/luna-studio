@@ -11,10 +11,10 @@
 
 module Luna.Pass.Analysis.Find.State where
 
-import Control.Monad.State       hiding (when)
+import           Control.Monad.State       hiding (when)
 
-import Flowbox.Prelude           hiding (pred)
-import Flowbox.System.Log.Logger
+import           Flowbox.Prelude           hiding (pred)
+import           Flowbox.System.Log.Logger
 
 
 

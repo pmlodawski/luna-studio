@@ -14,8 +14,8 @@ import           Database.PostgreSQL.Simple.FromRow   (FromRow, field, fromRow)
 import           Database.PostgreSQL.Simple.ToField   (ToField, toField)
 import           Database.PostgreSQL.Simple.ToRow     (ToRow, toRow)
 
-import qualified Flowbox.Data.Time as Time
-import           Flowbox.Prelude   hiding (Text, id)
+import qualified Flowbox.Data.Time                    as Time
+import           Flowbox.Prelude                      hiding (Text, id)
 
 
 

@@ -1,35 +1,35 @@
 module Flowbox.Graphics.Mockup.FilterSpec where
 
-import Test.Hspec
-import Test.QuickCheck
-import Flowbox.Graphics.Mockup.Basic as M
-import Flowbox.Graphics.Mockup.Filter as M
-import Flowbox.Graphics.Composition.EdgeBlur as EB
-import qualified Flowbox.Math.Matrix as M
-import System.IO.Unsafe
-import Control.Monad
-import qualified Flowbox.Graphics.Image.Image   as Img
-import qualified Flowbox.Graphics.Image.Channel as Chan
-import qualified Flowbox.Graphics.Image.View    as View
-import Flowbox.Graphics.Utils.Utils (clamp') 
+import           Control.Monad
+import           Flowbox.Graphics.Composition.EdgeBlur as EB
+import qualified Flowbox.Graphics.Image.Channel        as Chan
+import qualified Flowbox.Graphics.Image.Image          as Img
+import qualified Flowbox.Graphics.Image.View           as View
+import           Flowbox.Graphics.Mockup.Basic         as M
+import           Flowbox.Graphics.Mockup.Filter        as M
+import           Flowbox.Graphics.Utils.Utils          (clamp')
+import qualified Flowbox.Math.Matrix                   as M
+import           System.IO.Unsafe
+import           Test.Hspec
+import           Test.QuickCheck
 
-import Flowbox.Prelude as P
+import           Flowbox.Prelude                       as P
 
-import TestHelpers
+import           TestHelpers
 
 
 spec :: Spec
 spec = do
     let specPath = "./test/Flowbox/Graphics/Mockup/"
-        in do 
+        in do
           let testName = "edgeBlur"
               testPath = specPath++testName
-                in describe testName $ do 
+                in describe testName $ do
                     describe "should match previously computed picture on rgba.r channel with edge multiplier 5 and kernel size 5" $ do
                         let actualImage = testEdgeBlur 5 5 "rgba.r"
                             expectedImage = getDefaultTestPic specPath testName
                         it "in pixel-wise metric" $ do
-                            returnShouldBeCloseTo testPath PixelWise actualImage expectedImage 
+                            returnShouldBeCloseTo testPath PixelWise actualImage expectedImage
                         it "in image-wise metric" $ do
                             returnShouldBeCloseTo testPath ImageWise actualImage expectedImage
                     --it "should match previously computed picture on rgba.r channel with dge multiplier 5 and kernel size 5 in every metric" $
@@ -57,19 +57,19 @@ spec = do
 
           let testName = "blurLuna"
               actualImage = liftM (blurLuna 20) $ loadImageLuna "./test/samples/lena.png"
-                in 
+                in
                     --defaultReferenceSaveM testName specPath actualImage
                     defaultReferenceTestM testName specPath actualImage
 
           let testName = "closeLuna"
               actualImage = liftM (closeLuna 5) $ loadImageLuna "./test/samples/lena.png"
-                in 
+                in
                     --defaultReferenceSaveM testName specPath actualImage
                     defaultReferenceTestM testName specPath actualImage
 
           let testName = "histEqLuna"
               actualImage = liftM (histEqLuna 10) $ loadImageLuna "./test/samples/lena.png"
-                in 
+                in
                     --defaultReferenceSaveM testName specPath actualImage
                     defaultReferenceTestM testName specPath actualImage
 

@@ -8,7 +8,7 @@
 
 module Luna.Interpreter.Session.Hint.Typecheck where
 
-import           Control.Monad ((>=>))
+import           Control.Monad                             ((>=>))
 import qualified GHC
 
 import           Flowbox.Prelude

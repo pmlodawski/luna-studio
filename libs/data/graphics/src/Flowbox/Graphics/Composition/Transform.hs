@@ -24,16 +24,16 @@ import qualified Flowbox.Graphics.Image.Channel    as Channel
 import           Flowbox.Graphics.Prelude          as P hiding (lifted, transform)
 import qualified Flowbox.Graphics.Shader.Matrix    as Shader
 import           Flowbox.Graphics.Shader.Sampler   as Sampler
-import           Flowbox.Graphics.Shader.Shader    (CartesianShader, Shader(..))
+import           Flowbox.Graphics.Shader.Shader    (CartesianShader, Shader (..))
 import qualified Flowbox.Graphics.Shader.Shader    as Shader
 import           Flowbox.Graphics.Utils.Accelerate
 import           Flowbox.Graphics.Utils.Linear
 import           Flowbox.Math.Matrix               as M
 
-import qualified Data.Array.Accelerate     as A
-import           Linear                    hiding (inv33, normalize, rotate)
-import           Math.Coordinate.Cartesian (Point2 (..))
-import           Math.Space.Space          hiding (height, width)
+import qualified Data.Array.Accelerate             as A
+import           Linear                            hiding (inv33, normalize, rotate)
+import           Math.Coordinate.Cartesian         (Point2 (..))
+import           Math.Space.Space                  hiding (height, width)
 
 
 
@@ -182,7 +182,7 @@ cornerPin' (Grid width height) (Point2 x1 y1', Point2 x2 y2', Point2 x3 y3', Poi
           y2 = height - y2'
           y3 = height - y3'
           y4 = height - y4'
-          
+
           unsafeInv33 :: M33 (Exp a) -> M33 (Exp a)
           unsafeInv33 a = let (_, lifted) = A.unlift $ inv33 (A.lift a) :: (Exp Bool, Exp (M33 a))
                           in A.unlift <$> A.unlift lifted

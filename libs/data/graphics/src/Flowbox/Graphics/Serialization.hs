@@ -19,39 +19,39 @@ module Flowbox.Graphics.Serialization where
 
 import           Control.Error.Util
 import           Control.Monad
-import qualified Data.Array.Accelerate             as A
-import qualified Data.Array.Accelerate.Array.Data  as A
-import qualified Data.Array.Accelerate.Array.Sugar as A hiding (size)
+import qualified Data.Array.Accelerate                             as A
+import qualified Data.Array.Accelerate.Array.Data                  as A
+import qualified Data.Array.Accelerate.Array.Sugar                 as A hiding (size)
 import           Data.Array.Accelerate.IO
-import           Data.ByteString                   as S (ByteString)
-import           Data.ByteString.Lazy              as L (ByteString, fromStrict)
+import           Data.ByteString                                   as S (ByteString)
+import           Data.ByteString.Lazy                              as L (ByteString, fromStrict)
 -- import           Data.Set
-import           Data.Sequence                     (Seq, ViewL(..))
-import qualified Data.Sequence                     as Seq
-import qualified Data.Vector.Storable              as SV
-import           Foreign                           (Storable(..), alloca, castPtr, mallocBytes, copyBytes)
-import           System.IO.Unsafe                  (unsafePerformIO)
-import           Text.ProtocolBuffers.Basic        (uFromString, uToString)
+import           Data.Sequence                                     (Seq, ViewL (..))
+import qualified Data.Sequence                                     as Seq
+import qualified Data.Vector.Storable                              as SV
+import           Foreign                                           (Storable (..), alloca, castPtr, copyBytes, mallocBytes)
+import           System.IO.Unsafe                                  (unsafePerformIO)
+import           Text.ProtocolBuffers.Basic                        (uFromString, uToString)
 
-import qualified Flowbox.Data.Mode                    as Mode (Mode(..))
-import           Flowbox.Data.Serialization           (Serializable (..))
-import           Luna.Interpreter.Runtime.Serialization
-import qualified Flowbox.Graphics.Image.Channel       as Chan
-import qualified Flowbox.Graphics.Image.Image         as Img
-import qualified Flowbox.Graphics.Image.View          as V
-import           Flowbox.Graphics.Prelude             hiding (mapM, views)
-import           Flowbox.Graphics.Shader.Sampler      (Sampler, monosampler)
-import qualified Flowbox.Math.Matrix                  as M
-import qualified Generated.Proto.Data.Channel         as ProtoChan
-import qualified Generated.Proto.Data.ChannelData     as ChanData
-import qualified Generated.Proto.Data.ChannelDescription as ChanDesc
+import qualified Flowbox.Data.Mode                                 as Mode (Mode (..))
+import           Flowbox.Data.Serialization                        (Serializable (..))
+import qualified Flowbox.Graphics.Image.Channel                    as Chan
+import qualified Flowbox.Graphics.Image.Image                      as Img
+import qualified Flowbox.Graphics.Image.View                       as V
+import           Flowbox.Graphics.Prelude                          hiding (mapM, views)
+import           Flowbox.Graphics.Shader.Sampler                   (Sampler, monosampler)
+import qualified Flowbox.Math.Matrix                               as M
+import qualified Generated.Proto.Data.Channel                      as ProtoChan
+import qualified Generated.Proto.Data.ChannelData                  as ChanData
+import qualified Generated.Proto.Data.ChannelDescription           as ChanDesc
 import qualified Generated.Proto.Data.ChannelDescription.ChannelID as ChID
-import qualified Generated.Proto.Data.MatrixData      as MatrixData
-import qualified Generated.Proto.Data.MatrixData.Type as MatrixData
-import qualified Generated.Proto.Data.MatrixData.Tag  as MatrixData
-import qualified Generated.Proto.Data.SValue.Type      as SValue
+import qualified Generated.Proto.Data.MatrixData                   as MatrixData
+import qualified Generated.Proto.Data.MatrixData.Tag               as MatrixData
+import qualified Generated.Proto.Data.MatrixData.Type              as MatrixData
+import qualified Generated.Proto.Data.SValue.Type                  as SValue
+import           Luna.Interpreter.Runtime.Serialization
 
-import qualified Data.Array.Accelerate.CUDA as CUDA
+import qualified Data.Array.Accelerate.CUDA                        as CUDA
 
 
 

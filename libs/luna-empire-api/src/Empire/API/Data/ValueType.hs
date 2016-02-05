@@ -1,7 +1,7 @@
 module Empire.API.Data.ValueType where
 
-import Prologue
-import Data.Binary (Binary)
+import           Data.Binary (Binary)
+import           Prologue
 
 newtype ValueType = ValueType { _unValueType :: String } deriving (Show, Eq, Generic)
 

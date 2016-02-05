@@ -12,12 +12,12 @@
 
 module Flowbox.Bus.Bus where
 
-import qualified Control.Concurrent       as Concurrent
-import qualified Control.Concurrent.Async as Async
+import qualified Control.Concurrent                   as Concurrent
+import qualified Control.Concurrent.Async             as Async
 import           Control.Monad.State
-import           Data.ByteString          (ByteString)
-import           System.ZMQ4.Monadic      (ZMQ)
-import qualified System.ZMQ4.Monadic      as ZMQ
+import           Data.ByteString                      (ByteString)
+import           System.ZMQ4.Monadic                  (ZMQ)
+import qualified System.ZMQ4.Monadic                  as ZMQ
 
 import qualified Debug.Trace                          as T
 import           Flowbox.Bus.Data.Flag                (Flag)

@@ -15,7 +15,7 @@ module Control.Monad.Morph (
 
 
 
-import "mmorph" Control.Monad.Morph as X
+import           "mmorph" Control.Monad.Morph as X
 
 class MonadMorph m n where
     morph :: m a -> n a

@@ -9,8 +9,8 @@ module Flowbox.Source.Location (
     module Flowbox.Source.Location.TH,
 ) where
 
-import Flowbox.Prelude
-import Flowbox.Source.Location.TH
+import           Flowbox.Prelude
+import           Flowbox.Source.Location.TH
 
 
 

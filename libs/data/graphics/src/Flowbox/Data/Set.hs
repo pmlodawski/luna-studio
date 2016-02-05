@@ -9,6 +9,6 @@ module Flowbox.Data.Set (
     module X
 ) where
 
-import Data.Set as X
+import           Data.Set as X
 
 -- TODO[KM]: intending to add functionalities letting you search with a lambda returning Ord

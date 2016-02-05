@@ -9,11 +9,11 @@
 
 module Main where
 
-import qualified AWS                        as AWS
-import qualified Data.Map                   as Map
-import qualified Data.Text                  as Text
-import           Database.PostgreSQL.Simple as PSQL
-import qualified System.IO                  as IO
+import qualified AWS                                     as AWS
+import qualified Data.Map                                as Map
+import qualified Data.Text                               as Text
+import           Database.PostgreSQL.Simple              as PSQL
+import qualified System.IO                               as IO
 
 import qualified Flowbox.AWS.Database.Database           as Database
 import qualified Flowbox.AWS.Database.Instance           as InstanceDB

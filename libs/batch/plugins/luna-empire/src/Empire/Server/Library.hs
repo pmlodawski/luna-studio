@@ -4,22 +4,22 @@ module Empire.Server.Library where
 
 import           Prologue
 
-import qualified Data.Binary                      as Bin
 import           Control.Monad.State              (StateT)
+import qualified Data.Binary                      as Bin
 import           Data.ByteString                  (ByteString)
 import           Data.ByteString.Lazy             (fromStrict)
-import           Flowbox.Bus.BusT                 (BusT (..))
-import qualified Flowbox.System.Log.Logger        as Logger
-import qualified Empire.Env                       as Env
-import           Empire.Env                       (Env)
-import qualified Empire.Data.Library              as DataLibrary
 import qualified Empire.API.Library.CreateLibrary as CreateLibrary
 import qualified Empire.API.Library.ListLibraries as ListLibraries
-import qualified Empire.API.Update                as Update
 import qualified Empire.API.Topic                 as Topic
+import qualified Empire.API.Update                as Update
 import qualified Empire.Commands.Library          as Library
+import qualified Empire.Data.Library              as DataLibrary
 import qualified Empire.Empire                    as Empire
-import           Empire.Server.Server             (sendToBus, errorMessage)
+import           Empire.Env                       (Env)
+import qualified Empire.Env                       as Env
+import           Empire.Server.Server             (errorMessage, sendToBus)
+import           Flowbox.Bus.BusT                 (BusT (..))
+import qualified Flowbox.System.Log.Logger        as Logger
 
 logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)

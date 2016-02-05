@@ -7,5 +7,5 @@
 
 module Flowbox.UR.Manager.Config (module X) where
 
-import Paths_batch_plugin_ur_manager as X (version)
+import           Paths_batch_plugin_ur_manager as X (version)
 

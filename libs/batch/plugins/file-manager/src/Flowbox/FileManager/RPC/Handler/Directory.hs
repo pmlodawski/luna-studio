@@ -8,7 +8,7 @@
 {-# LANGUAGE TemplateHaskell       #-}
 
 module Flowbox.FileManager.RPC.Handler.Directory where
-import qualified Data.Sequence as Sequence
+import qualified Data.Sequence                                                         as Sequence
 
 import           Flowbox.Bus.RPC.RPC                                                   (RPC)
 import           Flowbox.Data.Convert

@@ -22,12 +22,12 @@ module Flowbox.Codec.EXR.Internal.Attributes (
     , readHeader
     ) where
 
-import Control.Applicative ((<$>), (<*>))
-import Control.Monad       (forM)
-import Data.List.Split     (endBy)
-import Foreign
-import Foreign.C.String
-import Foreign.C.Types
+import           Control.Applicative                 ((<$>), (<*>))
+import           Control.Monad                       (forM)
+import           Data.List.Split                     (endBy)
+import           Foreign
+import           Foreign.C.String
+import           Foreign.C.Types
 
 import qualified Flowbox.Codec.EXR.Internal.Bindings as Bindings
 import           Flowbox.Codec.EXR.Internal.Types

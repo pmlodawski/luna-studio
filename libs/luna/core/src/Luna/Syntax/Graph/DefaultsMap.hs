@@ -10,10 +10,10 @@ module Luna.Syntax.Graph.DefaultsMap (
     module X,
 ) where
 
-import Data.Map as X
+import           Data.Map               as X
 
-import Luna.Syntax.Expr       (LExpr)
-import Luna.Syntax.Graph.Port (DstPort)
+import           Luna.Syntax.Expr       (LExpr)
+import           Luna.Syntax.Graph.Port (DstPort)
 
 
 

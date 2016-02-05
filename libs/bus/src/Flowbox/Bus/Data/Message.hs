@@ -9,7 +9,7 @@
 
 module Flowbox.Bus.Data.Message where
 
-import Data.ByteString (ByteString)
+import           Data.ByteString               (ByteString)
 
 import           Flowbox.Bus.Data.Exception    (Exception (Exception))
 import           Flowbox.Bus.Data.Topic        (Topic, (/+))

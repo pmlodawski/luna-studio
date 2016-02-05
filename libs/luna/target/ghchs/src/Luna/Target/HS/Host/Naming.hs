@@ -6,17 +6,17 @@
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE FlexibleInstances         #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE TemplateHaskell           #-}
 {-# LANGUAGE NoImplicitPrelude         #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 
 module Luna.Target.HS.Host.Naming where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
-import Language.Haskell.TH
+import           Language.Haskell.TH
 
 
 class NameCls a where
@@ -34,7 +34,7 @@ instance NameCls Name where
     toStr      = nameBase
     toName     = id
 
-    
+
 mkFieldAccessor accName typeName memName = mkName $ "field" ++ accName ++ "_"
                                                             ++ toStr typeName  ++ "_"
                                                             -- ++ toStr conName   ++ "_"

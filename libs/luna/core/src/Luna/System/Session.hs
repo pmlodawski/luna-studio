@@ -1,6 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE NoImplicitPrelude         #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE GADTs #-}
 
 -----------------------------------------------------------------------------
 -- |
@@ -14,14 +14,14 @@
 
 module Luna.System.Session where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
-import qualified Luna.System.Pragma.Store as PragmaStore
-import           Luna.System.Pragma.Store (PragmaStoreT, MonadPragmaStore)
 import           Control.Monad.State      (StateT, evalStateT)
 import           Luna.System.Config       (Config)
 import qualified Luna.System.Config       as Config
 import qualified Luna.System.Env          as Env
+import           Luna.System.Pragma.Store (MonadPragmaStore, PragmaStoreT)
+import qualified Luna.System.Pragma.Store as PragmaStore
 
 ----------------------------------------------------------------------
 -- Session
@@ -37,9 +37,9 @@ type SessionT m a = PragmaStoreT m a
 run cfg session = flip PragmaStore.evalT mempty
                 . flip Config.evalT cfg
                 $ Env.evalT session =<< defM
-      
 
---runT2 s = flip runStateT (0::Int) 
+
+--runT2 s = flip runStateT (0::Int)
 --        $ flip PragmaStore.runT mempty s
 
 

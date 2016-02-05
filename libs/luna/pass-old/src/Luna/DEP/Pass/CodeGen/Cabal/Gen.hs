@@ -7,8 +7,8 @@
 
 module Luna.DEP.Pass.CodeGen.Cabal.Gen where
 
-import qualified Data.List    as List
-import           Data.Version (Version)
+import qualified Data.List                           as List
+import           Data.Version                        (Version)
 
 import           Flowbox.Prelude
 import           Luna.DEP.Data.Source                (Source)

@@ -9,14 +9,14 @@
 {-# LANGUAGE IncoherentInstances       #-}
 {-# LANGUAGE OverlappingInstances      #-}
 
-import Control.Applicative
-import Control.Monad.IO.Class
-import Control.Monad.State
-import Control.Monad.Trans
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.State
+import           Control.Monad.Trans
 
 --import Bind (bind)
 
-import Data
+import           Data
 
 
 

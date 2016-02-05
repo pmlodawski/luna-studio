@@ -5,19 +5,19 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE DeriveFunctor             #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE PolyKinds                 #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 {-# LANGUAGE DysfunctionalDependencies #-}
 
@@ -25,18 +25,18 @@
 
 module Luna.Target.HS.Control.Context.MonadCtx where
 
-import Control.Monad.Trans (MonadTrans, lift)
-import Control.PolyMonad
-import Control.PolyApplicative
-import Luna.Target.HS.Control.Context.Env
-import Luna.Target.HS.Control.Context.Value
-import Control.Monad.IO.Class
-import Data.Typeable (Typeable)
-import Flowbox.Utils
-import Data.TypeLevel
-import Control.Applicative
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans                  (MonadTrans, lift)
+import           Control.PolyApplicative
+import           Control.PolyMonad
+import           Data.Typeable                        (Typeable)
+import           Data.TypeLevel
+import           Flowbox.Utils
+import           Luna.Target.HS.Control.Context.Env
+import           Luna.Target.HS.Control.Context.Value
 
-import Luna.Target.HS.Control.Error.Data as DELME
+import           Luna.Target.HS.Control.Error.Data    as DELME
 
 --------------------------------------------------------------------------------
 -- Structures
@@ -76,7 +76,7 @@ runMonadProto _ f ms = MonadCtx $ f (fromMonadCtx ms)
 runMonadProtoReq :: mptr -> (ma sa a -> mb sb b) -> Req mptr (MonadCtx env set ma sa) a -> MonadCtx env (Remove mptr set) mb sb b
 runMonadProtoReq mptr f ms = runMonadProto mptr f (fromReq ms)
 
-runMonad ::  MatchMonadClose (MonadCtx env (Remove mptr set) mb sb) t=>mptr -> (ma sa a -> mb sb b) -> Req mptr (MonadCtx env set ma sa) a -> t b  
+runMonad ::  MatchMonadClose (MonadCtx env (Remove mptr set) mb sb) t=>mptr -> (ma sa a -> mb sb b) -> Req mptr (MonadCtx env set ma sa) a -> t b
 runMonad = matchMonadClose `dot3` runMonadProtoReq
 
 

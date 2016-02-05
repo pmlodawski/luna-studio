@@ -11,7 +11,7 @@ module Luna.Interpreter.Session.Profile.Info where
 
 import qualified Data.Time.Clock as Clock
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

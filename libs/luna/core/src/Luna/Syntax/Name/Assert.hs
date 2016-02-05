@@ -8,12 +8,12 @@
 
 module Luna.Syntax.Name.Assert where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
-import           Control.Exception.Assert (byPred, assert)
+import           Control.Exception.Assert (assert, byPred)
 import           Data.Char.Class          (LetterCase, isLower, isUpper)
-import           Luna.Syntax.Name.Path    (NamePath(NamePath))
 import qualified Data.Text.Lazy           as Text
+import           Luna.Syntax.Name.Path    (NamePath (NamePath))
 
 ----------------------------------------------------------------------
 -- Wrappers

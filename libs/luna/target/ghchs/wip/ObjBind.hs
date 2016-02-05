@@ -1,25 +1,25 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE PolyKinds #-} 
-{-# LANGUAGE DysfunctionalDependencies #-} 
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE DysfunctionalDependencies #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE PolyKinds                 #-}
 
-{-# LANGUAGE OverlappingInstances #-} 
-{-# LANGUAGE UndecidableInstances #-} 
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 
-import Control.Monad.State
-import Control.Monad.Reader
-import Control.Applicative
-import Data.Functor.Identity (Identity)
+import           Control.Applicative
+import           Control.Monad.Reader
+import           Control.Monad.State
+import           Data.Functor.Identity (Identity)
 
-import GHC.TypeLits        (Symbol)
+import           GHC.TypeLits          (Symbol)
 
 data Proxy a = Proxy
 

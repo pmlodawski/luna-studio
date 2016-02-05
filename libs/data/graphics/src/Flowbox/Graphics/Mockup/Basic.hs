@@ -4,14 +4,14 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
-{-# LANGUAGE DeriveFunctor       #-}
-{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE DeriveFunctor             #-}
+{-# LANGUAGE LambdaCase                #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE PatternSynonyms     #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies        #-}
-{-# LANGUAGE TypeOperators       #-}
-{-# LANGUAGE ViewPatterns        #-}
+{-# LANGUAGE PatternSynonyms           #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE ViewPatterns              #-}
 
 module Flowbox.Graphics.Mockup.Basic (
     InterpolationFilter(..),
@@ -44,21 +44,21 @@ module Flowbox.Graphics.Mockup.Basic (
     withAlpha,
 ) where
 
-import qualified Codec.Picture.Png                 as Juicy
-import qualified Codec.Picture.Types               as Juicy
-import qualified Data.Array.Accelerate             as A
-import qualified Data.Array.Accelerate.Array.Sugar as A
-import qualified Data.Array.Accelerate.CUDA        as CUDA (run)
-import qualified Data.Array.Accelerate.IO          as A
-import           Data.Char                         (toLower)
-import           Data.Maybe                        (fromJust)
-import qualified Data.Vector.Storable              as SV
-import           Math.Coordinate.Cartesian         (Point2 (..))
-import           Math.Space.Space                  (Grid (..))
-import qualified System.FilePath                   as FilePath
+import qualified Codec.Picture.Png                     as Juicy
+import qualified Codec.Picture.Types                   as Juicy
+import qualified Data.Array.Accelerate                 as A
+import qualified Data.Array.Accelerate.Array.Sugar     as A
+import qualified Data.Array.Accelerate.CUDA            as CUDA (run)
+import qualified Data.Array.Accelerate.IO              as A
+import           Data.Char                             (toLower)
+import           Data.Maybe                            (fromJust)
+import qualified Data.Vector.Storable                  as SV
+import           Math.Coordinate.Cartesian             (Point2 (..))
+import           Math.Space.Space                      (Grid (..))
+import qualified System.FilePath                       as FilePath
 import           Text.Printf
 
-import  Flowbox.Data.FilePath (applyTime)
+import           Flowbox.Data.FilePath                 (applyTime)
 import qualified Flowbox.Graphics.Color.Color          as Color
 import qualified Flowbox.Graphics.Composition.Filter   as Filter
 import           Flowbox.Graphics.Image.Channel        (Channel (..), ChannelData (..))
@@ -71,18 +71,18 @@ import           Flowbox.Graphics.Image.IO.OpenEXR     (readFromEXR)
 import           Flowbox.Graphics.Image.View           (View (..))
 import qualified Flowbox.Graphics.Image.View           as View
 import qualified Flowbox.Graphics.Shader.Matrix        as Shader
+import qualified Flowbox.Graphics.Shader.Rasterizer    as Shader
 import           Flowbox.Graphics.Shader.Sampler       (Sampler)
 import qualified Flowbox.Graphics.Shader.Sampler       as Sampler
 import           Flowbox.Graphics.Shader.Shader        (CartesianShader, DiscreteShader, Shader (..))
-import qualified Flowbox.Graphics.Shader.Rasterizer    as Shader
 import           Flowbox.Graphics.Utils.Accelerate     (variable)
 import qualified Flowbox.Graphics.Utils.Utils          as U
 import           Flowbox.Math.Matrix                   as M
 import           Flowbox.Prelude                       as P hiding (lookup, view)
 
-import Control.PolyApplicative ((<<*>>))
-import Data.TupleList          (curryTuple8, curryTuple9)
-import Luna.Target.HS          (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fromValue, val)
+import           Control.PolyApplicative               ((<<*>>))
+import           Data.TupleList                        (curryTuple8, curryTuple9)
+import           Luna.Target.HS                        (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fromValue, val)
 
 
 

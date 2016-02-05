@@ -8,8 +8,8 @@
 
 module Flowbox.PluginManager.Plugin.Handle where
 
-import           System.Process (ProcessHandle)
-import qualified System.Process as Process
+import           System.Process                      (ProcessHandle)
+import qualified System.Process                      as Process
 
 import           Flowbox.PluginManager.Plugin.Info   (PluginInfo (PluginInfo))
 import qualified Flowbox.PluginManager.Plugin.Info   as PluginInfo

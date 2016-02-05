@@ -7,9 +7,9 @@
 
 module Luna.Lib.Edge where
 
-import Data.Binary (Binary)
+import           Data.Binary     (Binary)
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

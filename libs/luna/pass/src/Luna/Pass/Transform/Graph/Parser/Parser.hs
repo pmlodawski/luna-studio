@@ -4,21 +4,21 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds  #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE MultiWayIf       #-}
-{-# LANGUAGE Rank2Types       #-}
-{-# LANGUAGE TemplateHaskell  #-}
-{-# LANGUAGE TupleSections    #-}
-{-# LANGUAGE NoMonomorphismRestriction    #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE MultiWayIf                #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE TupleSections             #-}
 
 module Luna.Pass.Transform.Graph.Parser.Parser where
 
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
-import qualified Data.List                  as List
-import qualified Data.Map                   as Map
-import qualified Data.Maybe                 as Maybe
+import qualified Data.List                              as List
+import qualified Data.Map                               as Map
+import qualified Data.Maybe                             as Maybe
 
 import           Flowbox.Control.Error                  ((<??>))
 import           Flowbox.Prelude                        hiding (folded, mapM, mapM_)

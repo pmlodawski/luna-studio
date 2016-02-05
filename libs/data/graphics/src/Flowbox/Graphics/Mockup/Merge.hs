@@ -24,12 +24,12 @@ import           Flowbox.Prelude                    as P hiding (lookup)
 import           Flowbox.Graphics.Mockup.Basic
 import           Flowbox.Graphics.Mockup.Transform
 
-import           Data.Array.Accelerate     (Exp, Z(..), (:.)(..))
-import qualified Data.Array.Accelerate     as A
-import           Linear                    (V2 (..))
-import           Math.Coordinate.Cartesian (Point2 (..))
-import           Math.Space.Space          (Grid (..))
-import           Flowbox.Graphics.Shader.Shader as Shader
+import           Data.Array.Accelerate              ((:.) (..), Exp, Z (..))
+import qualified Data.Array.Accelerate              as A
+import           Flowbox.Graphics.Shader.Shader     as Shader
+import           Linear                             (V2 (..))
+import           Math.Coordinate.Cartesian          (Point2 (..))
+import           Math.Space.Space                   (Grid (..))
 
 data MergeMode = Atop
            | Average AlphaBlend

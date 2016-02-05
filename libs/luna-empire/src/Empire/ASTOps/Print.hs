@@ -1,15 +1,15 @@
 module Empire.ASTOps.Print where
 
+import           Data.Record                  (ANY (..), case', match)
 import           Prologue
-import           Data.Record          (match, case', ANY(..))
 {-import           Data.Layer.Coat        (uncoat)-}
-import qualified Data.Text.Lazy         as Text
-import           Empire.ASTOp           (ASTOp)
-import qualified Empire.ASTOps.Builder  as ASTBuilder
+import qualified Data.Text.Lazy               as Text
+import           Empire.ASTOp                 (ASTOp)
+import qualified Empire.ASTOps.Builder        as ASTBuilder
 
+import           Luna.Syntax.AST.Term         (Accessor (..), App (..), Blank (..), Unify (..), Val, Var (..))
+import           Luna.Syntax.Model.Graph      (Ref)
 import qualified Luna.Syntax.Model.Graph.Term as Builder
-import           Luna.Syntax.Model.Graph (Ref)
-import           Luna.Syntax.AST.Term   (Var(..), App(..), Blank(..), Accessor(..), Unify(..), Val)
 
 printIdent :: Ref Node -> ASTOp String
 printIdent nodeRef = do

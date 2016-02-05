@@ -11,7 +11,7 @@
 
 module Luna.DEP.Pass.Transform.HAST.HASTGen.GenState where
 
-import Control.Monad.State
+import           Control.Monad.State
 
 import           Flowbox.Prelude           hiding (mod)
 import qualified Luna.DEP.AST.Expr         as LExpr
@@ -19,7 +19,7 @@ import qualified Luna.DEP.AST.Type         as LType
 import qualified Luna.DEP.Data.HAST.Expr   as HExpr
 import qualified Luna.DEP.Data.HAST.Module as Module
 
-import Flowbox.System.Log.Logger
+import           Flowbox.System.Log.Logger
 
 
 

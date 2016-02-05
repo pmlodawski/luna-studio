@@ -22,7 +22,7 @@ import           Data.Version                 as X
 import           GHC.Generics
 import qualified Text.ParserCombinators.ReadP as ReadP
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

@@ -9,8 +9,8 @@
 
 module Luna.Util.LunaShow where
 
-import qualified Data.List  as List
-import qualified Data.Maybe as Maybe
+import qualified Data.List                as List
+import qualified Data.Maybe               as Maybe
 
 
 import           Flowbox.Prelude          hiding (simple)

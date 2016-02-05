@@ -9,12 +9,12 @@
 {-# LANGUAGE TemplateHaskell     #-}
 module Flowbox.ProjectManager.RPC.Handler.Graph where
 
-import qualified Data.Bimap    as Bimap
-import qualified Data.Either   as Either
-import           Data.Maybe    (fromMaybe, isJust)
-import           Data.Sequence ((><))
-import qualified Data.Sequence as Sequence
-import qualified Data.Set      as Set
+import qualified Data.Bimap                                                                                    as Bimap
+import qualified Data.Either                                                                                   as Either
+import           Data.Maybe                                                                                    (fromMaybe, isJust)
+import           Data.Sequence                                                                                 ((><))
+import qualified Data.Sequence                                                                                 as Sequence
+import qualified Data.Set                                                                                      as Set
 
 import qualified Flowbox.Batch.Batch                                                                           as Batch
 import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
@@ -30,7 +30,8 @@ import           Flowbox.Prelude                                                
 import           Flowbox.ProjectManager.Context                                                                (Context)
 import qualified Flowbox.ProjectManager.RPC.Topic                                                              as Topic
 import           Flowbox.System.Log.Logger
-import           Flowbox.UR.Manager.Utils                                                             (makeMsgArr, prepareResponse, serialize)
+import           Flowbox.UR.Manager.Utils                                                                      (makeMsgArr, prepareResponse,
+                                                                                                                serialize)
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Request             as Connect
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Update              as Connect
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Disconnect.Request          as Disconnect

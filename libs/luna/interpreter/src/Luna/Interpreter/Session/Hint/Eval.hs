@@ -9,9 +9,9 @@
 
 module Luna.Interpreter.Session.Hint.Eval where
 
-import qualified Data.Typeable as Typeable
+import qualified Data.Typeable                      as Typeable
 import qualified GHC
-import qualified GHC.Exts      as Exts
+import qualified GHC.Exts                           as Exts
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger

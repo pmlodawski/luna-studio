@@ -1,11 +1,11 @@
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
 
 
 
@@ -17,17 +17,17 @@
 
 module Bind2 where
 
-import Control.Applicative
-import Control.Monad.IO.Class
-import Control.Monad.Trans
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans
 --import Control.Monad.State
 
-import Luna.Target.HS.Monad
+import           Luna.Target.HS.Monad
 
 --import Control.Monad.Trans.State
-import Luna.Target.HS.Utils.BaseMonads
+import           Luna.Target.HS.Utils.BaseMonads
 
-import Control.Monad.Morph
+import           Control.Monad.Morph
 
 ------------------------------------------------------------------------------------------
 
@@ -142,7 +142,7 @@ instance  (Monad (t IO), MonadTrans t) =>BindEnv (t IO) IO (t IO)  where
 
 -------------------------------
 
-bindCtx ::  (BindEnv ma mb mout, Context ca, Context cb, Context(CtxMerge ca cb))=>ca ma a -> (Pure a -> cb mb b) -> (CtxMerge ca cb) mout b  
+bindCtx ::  (BindEnv ma mb mout, Context ca, Context cb, Context(CtxMerge ca cb))=>ca ma a -> (Pure a -> cb mb b) -> (CtxMerge ca cb) mout b
 bindCtx a f = wrapCtx $ bindEnv (fromCtx a) (fromCtx . f)
 
 

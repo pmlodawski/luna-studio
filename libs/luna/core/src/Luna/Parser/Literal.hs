@@ -2,11 +2,11 @@
 
 module Luna.Parser.Literal where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
+import           Luna.Parser.Builder     (labeled)
 import qualified Luna.Parser.Token       as Tok
-import           Text.Parser.Combinators 
-import qualified Luna.Syntax.Lit    as Lit
-import Luna.Parser.Builder (labeled)
+import qualified Luna.Syntax.Lit         as Lit
+import           Text.Parser.Combinators
 
 
 literal = choice [ numL, charL, stringL ]

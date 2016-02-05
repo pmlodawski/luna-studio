@@ -7,7 +7,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.Project where
 
-import qualified Data.Sequence as Sequence
+import qualified Data.Sequence                                         as Sequence
 
 import qualified Flowbox.Batch.Batch                                   as Batch
 import qualified Flowbox.Batch.Handler.Common                          as Batch
@@ -21,7 +21,7 @@ import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                       hiding (Context)
 import           Flowbox.ProjectManager.Context                        (Context)
 import           Flowbox.System.Log.Logger
-import           Flowbox.UR.Manager.Utils                                                             (makeMsgArr, prepareResponse, serialize)
+import           Flowbox.UR.Manager.Utils                              (makeMsgArr, prepareResponse, serialize)
 import qualified Generated.Proto.Project.Project                       as Gen
 import qualified Generated.Proto.ProjectManager.Project.Close.Request  as Close
 import qualified Generated.Proto.ProjectManager.Project.Close.Update   as Close

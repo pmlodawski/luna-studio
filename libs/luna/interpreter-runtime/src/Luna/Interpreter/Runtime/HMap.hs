@@ -10,8 +10,8 @@ module Luna.Interpreter.Runtime.HMap (
     module HKey
 ) where
 
-import Data.HKey as HKey
-import Data.HMap as HMap
-import Prelude
+import           Data.HKey as HKey
+import           Data.HMap as HMap
+import           Prelude
 
 

@@ -6,7 +6,7 @@
 {-# LANGUAGE IncoherentInstances    #-}
 
 module Main where
-import Data.Typeable
+import           Data.Typeable
 
 
 class CTest a b | a -> b where

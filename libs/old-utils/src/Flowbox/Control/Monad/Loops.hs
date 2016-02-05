@@ -9,10 +9,10 @@ module Flowbox.Control.Monad.Loops (
     module X,
 ) where
 
-import Control.Monad       (liftM)
-import Control.Monad.Loops as X
+import           Control.Monad       (liftM)
+import           Control.Monad.Loops as X
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

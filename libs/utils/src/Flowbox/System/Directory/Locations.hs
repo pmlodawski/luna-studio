@@ -8,14 +8,14 @@
 
 module Flowbox.System.Directory.Locations where
 
-import qualified System.Directory as Directory
-import           System.FilePath  ((</>))
+import qualified System.Directory   as Directory
+import           System.FilePath    ((</>))
 #ifdef mingw32_HOST_OS
 import qualified System.Environment as Environment
 import qualified System.Win32       as Win32
 #endif
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

@@ -7,7 +7,7 @@
 
 module Flowbox.Parser.Version where
 
-import qualified Data.Version as Version
+import qualified Data.Version          as Version
 
 import qualified Flowbox.Parser.Config as Config
 import           Flowbox.Prelude

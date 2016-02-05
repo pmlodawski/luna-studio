@@ -1,13 +1,13 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.WSConnector.Data.WSFrame where
 
+import qualified Data.Binary                        as Binary
+import           Data.ByteString                    (ByteString)
+import           Data.ByteString.Base64.Lazy        (decodeLenient, encode)
+import           Data.ByteString.Lazy               (fromStrict, toStrict)
 import           Flowbox.Prelude
-import           Data.ByteString.Lazy        (toStrict, fromStrict)
-import           Data.ByteString             (ByteString)
-import           Data.ByteString.Base64.Lazy (decodeLenient, encode)
-import qualified Data.Binary                 as Binary
 
 import           Flowbox.WSConnector.Data.WSMessage
 

@@ -11,7 +11,7 @@
 
 module Flowbox.Graphics.Color.Conversion where
 
-import Data.Array.Accelerate
+import           Data.Array.Accelerate
 
 
 

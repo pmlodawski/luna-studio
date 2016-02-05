@@ -5,33 +5,33 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE DeriveGeneric             #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE LambdaCase                #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies              #-}
 
 
 
 
 module Luna.Target.HS.Control.Error.Data where
 
-import GHC.Generics
-import Control.Applicative  
-import Data.Typeable
+import           Control.Applicative
+import           Data.Typeable
+import           GHC.Generics
 
-import Control.PolyApplicative
-import Control.PolyMonad
-import Control.Monad.Shuffle
-import Flowbox.Utils
+import           Control.Monad.Shuffle
+import           Control.PolyApplicative
+import           Control.PolyMonad
+import           Flowbox.Utils
 
 
 ------------------------------------------------------------------------
@@ -118,7 +118,7 @@ instance  (PolyMonad base (UnsafeBase base err) (UnsafeBase base err)) =>Monad (
     return = UnsafeValue
     v >>= f = v >>>= f
 
--- == Applicative == --   
+-- == Applicative == --
 
 instance Applicative Safe where
     pure = Safe
@@ -220,7 +220,7 @@ liftTrans (sf :: UnsafeBase base e1 (a->b)) sa = case sf of
     Error       e -> Error e
     UnsafeOther o -> UnsafeOther $ o <<*>> sa
 
-    
+
 -- == Shuffle == --
 
 instance  Functor a =>Shuffle Safe a  where

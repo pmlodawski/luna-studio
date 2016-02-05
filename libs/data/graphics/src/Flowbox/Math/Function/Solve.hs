@@ -6,13 +6,13 @@
 ---------------------------------------------------------------------------
 module Flowbox.Math.Function.Solve where
 
-import Data.Map
+import           Data.Map
 
-import Math.Coordinate.Cartesian        (Point2(..))
-import Flowbox.Geom2D.CubicBezier
-import Flowbox.Geom2D.CubicBezier.Solve
-import Flowbox.Math.Function.Model      hiding (Point)
-import Flowbox.Prelude
+import           Flowbox.Geom2D.CubicBezier
+import           Flowbox.Geom2D.CubicBezier.Solve
+import           Flowbox.Math.Function.Model      hiding (Point)
+import           Flowbox.Prelude
+import           Math.Coordinate.Cartesian        (Point2 (..))
 
 
 

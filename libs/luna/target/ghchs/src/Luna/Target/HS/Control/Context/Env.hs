@@ -5,27 +5,27 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE CPP                   #-}
+{-# LANGUAGE DeriveDataTypeable    #-}
+{-# LANGUAGE DeriveFunctor         #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE PackageImports #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE PackageImports        #-}
+{-# LANGUAGE StandaloneDeriving    #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 module Luna.Target.HS.Control.Context.Env where
 
-import GHC.Generics
-import Control.PolyMonad
-import Control.PolyApplicative
-import Control.Applicative
-import Control.Monad.Morph
-import Data.Typeable (Typeable)
-import Luna.Target.HS.Control.Context.Value
+import           Control.Applicative
+import           Control.Monad.Morph
+import           Control.PolyApplicative
+import           Control.PolyMonad
+import           Data.Typeable                        (Typeable)
+import           GHC.Generics
+import           Luna.Target.HS.Control.Context.Value
 
-import Flowbox.Utils
+import           Flowbox.Utils
 
 --------------------------------------------------------------------------------
 -- Structures
@@ -73,7 +73,7 @@ type family GetEnv t where
 type family EnvMerge3 a b where
   EnvMerge3 (Value Pure) (Value Pure) = (Value Pure)
   EnvMerge3 a             b           = (Value IO)
-    
+
 
 --------------------------------------------------------------------------------
 -- Instances
@@ -122,4 +122,4 @@ instance IOEnv Pure where
     toIOEnv = return . fromPure
 
 instance IOEnv IO where
-    toIOEnv = id 
+    toIOEnv = id

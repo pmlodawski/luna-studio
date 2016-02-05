@@ -1,16 +1,16 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies        #-}
 
 module Data.Array.Accelerate.CUDA.Thrust where
 
 import           Control.Applicative                ((<$>))
 import qualified Data.Array.Accelerate              as A
-import qualified Data.Array.Accelerate.Array.Sugar  as Sugar (EltRepr, shape, size)
 import           Data.Array.Accelerate.Array.Data   (HTYPE_INT)
-import           Data.Array.Accelerate.Type         (FloatingType(..), IntegralType(..), NumType(..), numType)
-import           Data.Array.Accelerate.CUDA.Foreign (CIO, CUDAForeignAcc(..), DevicePtrs, devicePtrsOfArray, liftIO)
+import qualified Data.Array.Accelerate.Array.Sugar  as Sugar (EltRepr, shape, size)
+import           Data.Array.Accelerate.CUDA.Foreign (CIO, CUDAForeignAcc (..), DevicePtrs, devicePtrsOfArray, liftIO)
+import           Data.Array.Accelerate.Type         (FloatingType (..), IntegralType (..), NumType (..), numType)
+import           Foreign.C.Types                    (CInt (..))
 import qualified Foreign.CUDA.Ptr                   as CUDA
-import           Foreign.C.Types                    (CInt(..))
 import           Foreign.Ptr                        (Ptr)
 
 
@@ -49,7 +49,7 @@ sort input = A.foreignAcc cudaSort undef input
         TypeDouble{}  -> singleDevicePointer v
         TypeCFloat{}  -> CUDA.castDevPtr <$> singleDevicePointer v
         TypeCDouble{} -> CUDA.castDevPtr <$> singleDevicePointer v
-      
+
       IntegralNumType int -> case int of
         TypeInt{}   -> CUDA.castDevPtr <$> singleDevicePointer v
         TypeWord8{} -> singleDevicePointer v

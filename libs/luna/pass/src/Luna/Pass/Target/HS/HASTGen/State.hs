@@ -11,7 +11,7 @@
 
 module Luna.Pass.Target.HS.HASTGen.State where
 
-import Control.Monad.State hiding (withState)
+import           Control.Monad.State        hiding (withState)
 
 import           Flowbox.Prelude            hiding (mod)
 import           Luna.Syntax.Name.Path      (QualPath)
@@ -19,7 +19,7 @@ import           Luna.Target.HS.AST.Comment (Comment)
 import qualified Luna.Target.HS.AST.Expr    as HExpr
 import qualified Luna.Target.HS.AST.Module  as Module
 
-import Flowbox.System.Log.Logger
+import           Flowbox.System.Log.Logger
 
 
 

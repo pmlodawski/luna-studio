@@ -7,7 +7,7 @@
 
 module Flowbox.UR.Manager.Cmd where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 data Cmd = Run     { verbose :: Int , noColor :: Bool }

@@ -1,20 +1,20 @@
-{-# LANGUAGE   GADTs #-} 
-{-# LANGUAGE   DeriveDataTypeable #-} 
-{-# LANGUAGE   ScopedTypeVariables #-} 
+{-# LANGUAGE DeriveDataTypeable  #-}
+{-# LANGUAGE GADTs               #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 
 
 module Data.Type.Hide where
 
-import Prelude hiding (lookup)
+import           Control.Monad     (liftM)
+import           Data.HashMap.Lazy (HashMap)
 import qualified Data.HashMap.Lazy as M
-import Data.HashMap.Lazy(HashMap)
-import Unsafe.Coerce
-import Data.Typeable
-import System.Mem.Weak (Weak, mkWeak, deRefWeak)
-import System.IO.Unsafe (unsafePerformIO)
-import Data.Maybe (fromJust)
-import Control.Monad (liftM)
+import           Data.Maybe        (fromJust)
+import           Data.Typeable
+import           Prelude           hiding (lookup)
+import           System.IO.Unsafe  (unsafePerformIO)
+import           System.Mem.Weak   (Weak, deRefWeak, mkWeak)
+import           Unsafe.Coerce
 
 class HideType a c where
     hideType   :: a -> c

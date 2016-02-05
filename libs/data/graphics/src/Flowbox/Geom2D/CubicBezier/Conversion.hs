@@ -8,11 +8,11 @@
 
 module Flowbox.Geom2D.CubicBezier.Conversion where
 
-import qualified Geom2D.CubicBezier.Basic as Cubic
+import qualified Geom2D.CubicBezier.Basic   as Cubic
 
-import Flowbox.Geom2D.Conversion
-import Flowbox.Geom2D.CubicBezier
-import Flowbox.Prelude
+import           Flowbox.Geom2D.Conversion
+import           Flowbox.Geom2D.CubicBezier
+import           Flowbox.Prelude
 
 
 

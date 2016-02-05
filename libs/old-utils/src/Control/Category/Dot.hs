@@ -10,8 +10,8 @@
 
 module Control.Category.Dot where
 
-import Control.Category.Dot.TH
-import Prelude
+import           Control.Category.Dot.TH
+import           Prelude
 
 
 

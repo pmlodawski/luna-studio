@@ -1,10 +1,10 @@
 module Flowbox.RepoManager.Data.Hooks.Download where
 
-import Flowbox.Prelude
-import qualified Flowbox.RepoManager.Data.Repository      as Repository
+import qualified Data.ByteString.Lazy                     as BSL
+import           Flowbox.Prelude
 import qualified Flowbox.RepoManager.Data.Package.Package as Package
 import qualified Flowbox.RepoManager.Data.RepoConfig      as RepoConfig
-import qualified Data.ByteString.Lazy                     as BSL
+import qualified Flowbox.RepoManager.Data.Repository      as Repository
 import qualified Network.HTTP.Conduit                     as Conduit
 import qualified System.FilePath                          as FilePath
 

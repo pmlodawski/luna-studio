@@ -13,8 +13,8 @@
 module Luna.Data.Serialize.Proto.Conversion.Pat where
 
 import           Control.Applicative
-import qualified Data.Map                        as Map
-import qualified Text.ProtocolBuffers.Extensions as Extensions
+import qualified Data.Map                                  as Map
+import qualified Text.ProtocolBuffers.Extensions           as Extensions
 
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert

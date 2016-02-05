@@ -12,13 +12,13 @@
 
 module Flowbox.Bus.Bus where
 
-import qualified Control.Concurrent              as Concurrent
-import qualified Control.Concurrent.Async        as Async
+import qualified Control.Concurrent                   as Concurrent
+import qualified Control.Concurrent.Async             as Async
 import           Control.Monad.State
-import           Data.ByteString                 (ByteString)
-import           System.ZMQ4.Monadic             (ZMQ)
-import qualified System.ZMQ4.Monadic             as ZMQ
-import qualified Text.ProtocolBuffers.Extensions as Extensions
+import           Data.ByteString                      (ByteString)
+import           System.ZMQ4.Monadic                  (ZMQ)
+import qualified System.ZMQ4.Monadic                  as ZMQ
+import qualified Text.ProtocolBuffers.Extensions      as Extensions
 
 import           Flowbox.Bus.Data.Flag                (Flag)
 import           Flowbox.Bus.Data.Message             (Message)

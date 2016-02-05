@@ -12,10 +12,10 @@
 
 module Luna.Pass.Analysis.Imports where
 
-import           Control.Monad     (filterM)
-import           Data.Either       (isLeft, isRight)
-import           Data.Either.Utils (fromLeft, fromRight)
-import           Data.Map          (elems, filter, fromList, map)
+import           Control.Monad          (filterM)
+import           Data.Either            (isLeft, isRight)
+import           Data.Either.Utils      (fromLeft, fromRight)
+import           Data.Map               (elems, filter, fromList, map)
 
 import           Flowbox.Prelude        hiding (filter, fromList, isLeft, isRight, map)
 import           Luna.Data.ImportInfo   (ImportInfo (ImportInfo), createSymTable)
@@ -27,12 +27,12 @@ import           Luna.Pass              (PassMonad)
 import qualified Luna.Pass              as Pass
 import qualified Luna.Pass.Import       as Import
 import           Luna.Syntax.Enum       (Enumerated)
+import           Luna.Syntax.Label      (Label (Label), _element)
+import           Luna.Syntax.Module     (Module (Module))
+import           Luna.Syntax.Name.Path  (QualPath)
 import           Luna.Syntax.Traversals ()
 import qualified Luna.Syntax.Traversals as AST
-import           Luna.Syntax.Label  (Label (Label), _element)
-import           Luna.Syntax.Module (Module (Module))
-import           Luna.Syntax.Unit   (Unit (Unit), ASTUnit)
-import           Luna.Syntax.Name.Path (QualPath)
+import           Luna.Syntax.Unit       (ASTUnit, Unit (Unit))
 
 
 data ImportsAnalysis = ImportsAnalysis

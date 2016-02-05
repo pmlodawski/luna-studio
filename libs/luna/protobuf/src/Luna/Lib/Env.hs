@@ -7,9 +7,9 @@
 
 module Luna.Lib.Env where
 
-import qualified Data.List       as List
-import qualified Data.Maybe      as Maybe
-import qualified System.FilePath as FilePath
+import qualified Data.List                         as List
+import qualified Data.Maybe                        as Maybe
+import qualified System.FilePath                   as FilePath
 
 import           Flowbox.Data.Version              (Version)
 import qualified Flowbox.Data.Version              as Version

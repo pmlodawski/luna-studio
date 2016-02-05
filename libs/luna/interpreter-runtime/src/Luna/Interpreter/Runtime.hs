@@ -11,7 +11,7 @@ module Luna.Interpreter.Runtime (
 ) where
 
 import           Data.Word                     as X
-import           Flowbox.Data.Serialization    as X (computeValue, Mode, SValue)
+import           Flowbox.Data.Serialization    as X (Mode, SValue, computeValue)
 import           Luna.Interpreter.Runtime.Hash as X
 import           Luna.Interpreter.Runtime.HMap as X (HKey, HMap, T)
 import qualified Luna.Interpreter.Runtime.HMap as HMap

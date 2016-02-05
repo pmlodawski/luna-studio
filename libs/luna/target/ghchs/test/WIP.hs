@@ -1,32 +1,31 @@
 -- extensions --
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE RebindableSyntax #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE DeriveGeneric             #-}
 {-# LANGUAGE DysfunctionalDependencies #-}
-{-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE ExtendedDefaultRules      #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE RebindableSyntax          #-}
+{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 -- module --
 module Test where
 
 -- imports --
-import Luna.Target.HS
-import Foo
+import           Foo
+import           Luna.Target.HS
 
 -- body --
 #include "pragmas.h"
 
 -- ====== Test type ====== --
-data Test 
+data Test
     = Test
     deriving (Show,Eq,Ord,Generic,Typeable)
 $(registerType ''Test)

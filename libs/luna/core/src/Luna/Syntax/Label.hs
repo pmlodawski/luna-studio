@@ -11,8 +11,8 @@
 
 module Luna.Syntax.Label where
 
-import Data.Binary     (Binary)
-import Flowbox.Prelude hiding (element)
+import           Data.Binary     (Binary)
+import           Flowbox.Prelude hiding (element)
 
 
 ----------------------------------------------------------------------

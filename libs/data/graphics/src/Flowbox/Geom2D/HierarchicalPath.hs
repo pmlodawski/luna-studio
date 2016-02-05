@@ -3,17 +3,17 @@
 module Flowbox.Geom2D.HierarchicalPath where
 
 import           Flowbox.Geom2D.ControlPoint            as C
-import           Flowbox.Prelude                        as P
 import qualified Flowbox.Graphics.Composition.Transform as Transform
+import           Flowbox.Prelude                        as P
 
+import           Control.Monad                          as C
+import           Control.Monad.ST
+import           Data.IntMap                            as I
+import           Data.List                              as L
+import           Data.Maybe
+import           Data.Vector                            as V
 import           Linear                                 (V2 (..))
 import           Math.Coordinate.Cartesian
-import           Data.IntMap                            as I
-import           Data.Vector                            as V
-import           Data.Maybe
-import           Control.Monad.ST
-import           Control.Monad                          as C
-import           Data.List                              as L
 
 type Rank      = Int
 type Angles a  = (a, a)
@@ -50,7 +50,7 @@ convert points = P.map convertEl $ P.zip coords points
             (h1, h2) = p ^. handles
 
     extract :: HierarchicalControlPoint a -> Int
-    extract x = 
+    extract x =
       case x of
         BasePoint _ _ -> 0
         DependentPoint r _ _ -> r
@@ -61,7 +61,7 @@ walk points parents order = P.map (\(_,y) -> y) $ I.toList $ aux order coords
     coords = I.empty :: IntMap (Point2 a)
 
     aux [] coords = coords
-    aux (idx:l) coords = 
+    aux (idx:l) coords =
       case p of
         DependentPoint _ ang (h1,h2) -> let (Just p1, Just p2) = parents I.! idx
                                         in
@@ -101,7 +101,7 @@ makeTree ranks = aux 0 (ranks P.++ ranks) stacks pred (I.fromList $ genList (Not
                         acc''         = I.insert idx' (left',right) acc'
                      in
                         aux (idx+1) l stacks' pred' acc''
-            where 
+            where
                 idx'           = idx `mod` len
                 pred'          = I.insert rank (Just idx') pred
                 deps           = stacks I.! (rank+1)

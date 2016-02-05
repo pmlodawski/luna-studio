@@ -7,7 +7,7 @@
 
 module Flowbox.Initializer.Cmd where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

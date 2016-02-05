@@ -25,8 +25,8 @@ import           Luna.DEP.Pass.Pass           (Pass)
 import qualified Luna.DEP.Pass.Pass           as Pass
 import           Text.PrettyPrint.ANSI.Leijen (displayS)
 
-import Control.Monad.State
-import Flowbox.Prelude     hiding (error)
+import           Control.Monad.State
+import           Flowbox.Prelude              hiding (error)
 
 
 

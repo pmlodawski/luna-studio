@@ -5,18 +5,18 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE OverlappingInstances  #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 
 module Data.TypeLevel.FlatContainers where
 
-import GHC.TypeLits
-import Data.Typeable
-import Type.Bool
-import Prelude hiding (lookup)
+import           Data.Typeable
+import           GHC.TypeLits
+import           Prelude       hiding (lookup)
+import           Type.Bool
 
 type family Contains set t where
   Contains ()    t = False
@@ -24,7 +24,7 @@ type family Contains set t where
   Contains (a,x) t = Contains x t
 
 
-class Lookup s a where 
+class Lookup s a where
   lookup :: s -> Maybe a
 
 instance Lookup () a where
@@ -37,7 +37,7 @@ instance Lookup xs a => Lookup (x,xs) a where
   lookup (_,xs) = lookup xs
 
 
-class Modify s a where 
+class Modify s a where
   modify :: (a -> a) -> s -> s
 
 instance Modify () a where
@@ -45,7 +45,7 @@ instance Modify () a where
 
 instance Modify xs a => Modify (x,xs) a where
   modify f (x,xs) = (x, modify f xs)
-  
+
 instance Modify (a,xs) a where
   modify f (a,xs) = (f a, xs)
 

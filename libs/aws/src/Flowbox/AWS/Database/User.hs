@@ -7,9 +7,9 @@
 module Flowbox.AWS.Database.User where
 
 import           Control.Monad
-import qualified Data.Maybe                 as Maybe
-import           Database.PostgreSQL.Simple ((:.) ((:.)))
-import qualified Database.PostgreSQL.Simple as PSQL
+import qualified Data.Maybe                           as Maybe
+import           Database.PostgreSQL.Simple           ((:.) ((:.)))
+import qualified Database.PostgreSQL.Simple           as PSQL
 
 import qualified Flowbox.AWS.Database.SQL.User.Add    as UserAdd
 import qualified Flowbox.AWS.Database.SQL.User.All    as UserAll

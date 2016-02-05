@@ -9,8 +9,8 @@ module Luna.DEP.AST.Import(
     Import(..),
 ) where
 
-import Flowbox.Data.Path
-import Flowbox.Prelude
+import           Flowbox.Data.Path
+import           Flowbox.Prelude
 
 
 

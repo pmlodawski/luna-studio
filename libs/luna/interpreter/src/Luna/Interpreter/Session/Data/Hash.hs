@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 module Luna.Interpreter.Session.Data.Hash where
 
-import Data.Word (Word64)
+import           Data.Word (Word64)
 
 
 

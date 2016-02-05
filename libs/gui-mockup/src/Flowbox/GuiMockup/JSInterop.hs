@@ -1,24 +1,24 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE DeriveFoldable        #-}
+{-# LANGUAGE DeriveFunctor         #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE DeriveTraversable     #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 
 
 module Flowbox.GuiMockup.JSInterop where
 
 import           Control.Applicative  ((<$>), (<*>))
 import           Control.Lens
+import           Data.Binary          (Binary)
 import           Data.Foldable
 import           Data.List            (intercalate)
 import qualified Data.Vector.Storable as V
 import           Foreign.Ptr
 import           Foreign.Storable
-import           Linear               (V2(..))
-import           Data.Binary          (Binary)
 import           GHC.Generics         (Generic)
+import           Linear               (V2 (..))
 
 
 

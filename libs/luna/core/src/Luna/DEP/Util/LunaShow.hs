@@ -9,8 +9,8 @@
 
 module Luna.DEP.Util.LunaShow where
 
-import qualified Data.List  as List
-import qualified Data.Maybe as Maybe
+import qualified Data.List               as List
+import qualified Data.Maybe              as Maybe
 
 import           Flowbox.Prelude         hiding (simple)
 import           Luna.DEP.AST.Arg        (Arg)

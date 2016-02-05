@@ -10,9 +10,9 @@
 
 module Luna.Control.BCZipper where
 
-import           Control.Zipper ((:>>), Top)
-import qualified Control.Zipper as Zipper
-import qualified Data.List      as List
+import           Control.Zipper           ((:>>), Top)
+import qualified Control.Zipper           as Zipper
+import qualified Data.List                as List
 
 import           Flowbox.Control.Error    (assert, (<?>))
 import           Flowbox.Prelude          hiding (drop, id, mod)

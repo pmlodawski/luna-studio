@@ -11,11 +11,11 @@
 
 module Luna.Build.Diagnostics where
 
-import Data.Text.Lazy (unpack)
+import           Data.Text.Lazy            (unpack)
 
-import Flowbox.Prelude
-import Flowbox.System.Log.Logger
-import Flowbox.Text.Show.Hs      (hsShow)
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
+import           Flowbox.Text.Show.Hs      (hsShow)
 
 
 

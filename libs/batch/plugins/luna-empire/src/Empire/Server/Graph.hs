@@ -2,36 +2,36 @@
 
 module Empire.Server.Graph where
 
-import           Prologue
-import qualified Data.Binary                       as Bin
 import           Control.Monad.State               (StateT)
+import qualified Data.Binary                       as Bin
 import           Data.ByteString                   (ByteString)
 import           Data.ByteString.Lazy              (fromStrict)
-import qualified Data.Text.Lazy                    as Text
 import qualified Data.IntMap                       as IntMap
-import qualified Flowbox.System.Log.Logger         as Logger
-import           Flowbox.Bus.BusT                  (BusT (..))
-import qualified Empire.Env                        as Env
-import           Empire.Env                        (Env)
-import qualified Empire.API.Graph.AddNode          as AddNode
-import qualified Empire.API.Graph.RemoveNode       as RemoveNode
-import qualified Empire.API.Graph.UpdateNodeMeta   as UpdateNodeMeta
-import qualified Empire.API.Graph.RenameNode       as RenameNode
-import qualified Empire.API.Graph.Connect          as Connect
-import qualified Empire.API.Graph.Disconnect       as Disconnect
-import qualified Empire.API.Graph.SetDefaultValue  as SetDefaultValue
-import qualified Empire.API.Graph.GetProgram       as GetProgram
-import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
-import qualified Empire.API.Graph.CodeUpdate       as CodeUpdate
-import qualified Empire.API.Graph.NodeResultUpdate as NodeResultUpdate
-import qualified Empire.API.Update                 as Update
-import qualified Empire.API.Topic                  as Topic
+import qualified Data.Text.Lazy                    as Text
+import           Empire.API.Data.DefaultValue      (Value (..))
 import           Empire.API.Data.GraphLocation     (GraphLocation)
 import           Empire.API.Data.Node              (Node, NodeId)
-import           Empire.API.Data.DefaultValue      (Value(..))
+import qualified Empire.API.Graph.AddNode          as AddNode
+import qualified Empire.API.Graph.CodeUpdate       as CodeUpdate
+import qualified Empire.API.Graph.Connect          as Connect
+import qualified Empire.API.Graph.Disconnect       as Disconnect
+import qualified Empire.API.Graph.GetProgram       as GetProgram
+import qualified Empire.API.Graph.NodeResultUpdate as NodeResultUpdate
+import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
+import qualified Empire.API.Graph.RemoveNode       as RemoveNode
+import qualified Empire.API.Graph.RenameNode       as RenameNode
+import qualified Empire.API.Graph.SetDefaultValue  as SetDefaultValue
+import qualified Empire.API.Graph.UpdateNodeMeta   as UpdateNodeMeta
+import qualified Empire.API.Topic                  as Topic
+import qualified Empire.API.Update                 as Update
 import qualified Empire.Commands.Graph             as Graph
 import qualified Empire.Empire                     as Empire
-import           Empire.Server.Server              (sendToBus, withGraphLocation, errorMessage)
+import           Empire.Env                        (Env)
+import qualified Empire.Env                        as Env
+import           Empire.Server.Server              (errorMessage, sendToBus, withGraphLocation)
+import           Flowbox.Bus.BusT                  (BusT (..))
+import qualified Flowbox.System.Log.Logger         as Logger
+import           Prologue
 
 logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)

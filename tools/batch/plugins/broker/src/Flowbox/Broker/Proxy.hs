@@ -7,11 +7,11 @@
 
 module Flowbox.Broker.Proxy where
 
-import           System.ZMQ4.Monadic (ZMQ)
-import qualified System.ZMQ4.Monadic as ZMQ
+import           System.ZMQ4.Monadic  (ZMQ)
+import qualified System.ZMQ4.Monadic  as ZMQ
 
-import Flowbox.Bus.EndPoint (EndPoint)
-import Flowbox.Prelude
+import           Flowbox.Bus.EndPoint (EndPoint)
+import           Flowbox.Prelude
 
 
 run :: EndPoint -> EndPoint -> IO ()

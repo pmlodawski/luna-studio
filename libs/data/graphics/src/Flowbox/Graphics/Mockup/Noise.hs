@@ -14,11 +14,11 @@ module Flowbox.Graphics.Mockup.Noise (
     NoiseParams(..)
 ) where
 
-import qualified Data.Array.Accelerate as A
-import           Math.Space.Space      (Grid (..))
+import qualified Data.Array.Accelerate                                    as A
+import           Math.Space.Space                                         (Grid (..))
 
 import           Flowbox.Graphics.Composition.Generator.Noise.Billow
-import           Flowbox.Graphics.Composition.Generator.Noise.Internal    (Quality(..))
+import           Flowbox.Graphics.Composition.Generator.Noise.Internal    (Quality (..))
 import           Flowbox.Graphics.Composition.Generator.Noise.Perlin
 import           Flowbox.Graphics.Composition.Generator.Noise.RidgedMulti
 import qualified Flowbox.Graphics.Composition.Transform                   as Transform
@@ -29,7 +29,7 @@ import           Flowbox.Graphics.Shader.Shader                           (Carte
 import           Flowbox.Graphics.Utils.Accelerate                        (variable)
 import           Flowbox.Prelude                                          as P hiding (lookup)
 
-import Flowbox.Graphics.Mockup.Basic
+import           Flowbox.Graphics.Mockup.Basic
 
 
 

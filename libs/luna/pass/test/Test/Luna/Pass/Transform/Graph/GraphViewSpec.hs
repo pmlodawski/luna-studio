@@ -7,7 +7,7 @@
 
 module Test.Luna.Pass.Transform.Graph.GraphViewSpec where
 
-import Test.Hspec
+import           Test.Hspec
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude

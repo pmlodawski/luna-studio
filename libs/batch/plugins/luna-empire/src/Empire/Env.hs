@@ -4,7 +4,7 @@ module Empire.Env where
 
 import           Flowbox.Prelude
 
-import qualified Empire.Empire    as Empire
+import qualified Empire.Empire   as Empire
 
 data Env = Env { _empireEnv :: Empire.Env
                , _formatted :: Bool

@@ -41,7 +41,7 @@ import qualified Data.Graph.Inductive as DG
 import qualified Data.List            as List
 import           Data.Maybe           (fromJust)
 
-import Flowbox.Prelude hiding (pre, (&))
+import           Flowbox.Prelude      hiding (pre, (&))
 
 
 

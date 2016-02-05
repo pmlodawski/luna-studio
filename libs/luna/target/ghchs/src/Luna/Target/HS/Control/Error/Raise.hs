@@ -5,23 +5,22 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
 
-{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE OverlappingInstances      #-}
 --{-# LANGUAGE IncoherentInstances #-}
 
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 
@@ -30,7 +29,7 @@
 module Luna.Target.HS.Control.Error.Raise where
 
 
-import Luna.Target.HS.Control.Error.Data
+import           Luna.Target.HS.Control.Error.Data
 
 
 ------------------------------------------------------------------------
@@ -38,11 +37,11 @@ import Luna.Target.HS.Control.Error.Data
 ------------------------------------------------------------------------
 
 class Raise e a b | e a -> b where
-    raise :: e -> a -> b 
+    raise :: e -> a -> b
 
 
 class TouchErr e a b | e a -> b where
-    touchErr :: e -> a -> b 
+    touchErr :: e -> a -> b
 
 
 ------------------------------------------------------------------------

@@ -1,12 +1,12 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DataKinds            #-}
+{-# LANGUAGE PolyKinds            #-}
+{-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Type.List where
 
-import GHC.TypeLits
+import           GHC.TypeLits
 
 type family IndexOf (a :: k) (as :: [k]) :: Nat where
     IndexOf a (a ': as) = 0

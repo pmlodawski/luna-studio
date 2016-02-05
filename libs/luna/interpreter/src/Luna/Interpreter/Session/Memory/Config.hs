@@ -8,9 +8,9 @@
 
 module Luna.Interpreter.Session.Memory.Config where
 
-import Data.Int (Int64)
+import           Data.Int        (Int64)
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

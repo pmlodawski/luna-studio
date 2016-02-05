@@ -14,8 +14,8 @@ module Luna.Syntax.Graph.Node.OutputPat (
 ) where
 
 import           Control.Monad.State
-import qualified Data.Char           as Char
-import qualified Data.List           as List
+import qualified Data.Char                   as Char
+import qualified Data.List                   as List
 
 import           Flowbox.Prelude
 import           Luna.Data.ASTInfo           (ASTInfo)

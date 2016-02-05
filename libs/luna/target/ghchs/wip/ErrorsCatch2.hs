@@ -1,46 +1,45 @@
 
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
 
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE IncoherentInstances #-}
+{-# LANGUAGE IncoherentInstances       #-}
+{-# LANGUAGE OverlappingInstances      #-}
 
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 
 
 
-import Control.Applicative  
-import Control.Monad.IO.Class
-import Control.Monad.Trans
-import Data.Typeable
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans
+import           Data.Typeable
 
-import Data.Default
+import           Data.Default
 
-import Test.Hspec
-import Test.QuickCheck
-import Control.Exception (evaluate)
-import Unsafe.Coerce
+import           Control.Exception        (evaluate)
+import           Test.Hspec
+import           Test.QuickCheck
+import           Unsafe.Coerce
 --import Control.Monad.State
 
 --import Bind2 (bind, bind2, MonadRebase(..), StateT(..), put,get)
 
 --import Data2
 
-import Utils
-import Control.TransApplicative
-import Control.TransMonad
+import           Control.TransApplicative
+import           Control.TransMonad
+import           Utils
 
 
 foo x y = x
@@ -173,7 +172,7 @@ instance  (TransApplicative (UnsafeBase base err) base (UnsafeBase base err)) =>
 
 
 class Raise e a b | e a -> b where
-    raise :: e -> a -> b 
+    raise :: e -> a -> b
 
 
 instance Raise e (Safe a)               (UnsafeBase Safe e a)     where raise e (Safe a) = Error e
@@ -301,8 +300,8 @@ instance  Functor base =>LiftErr Safe (UnsafeBase base e) (UnsafeBase base e)  w
 --            --Error e -> Other $ liftErr (return f :: base1 (a->b)) sa
 --        --Error e -> Error e
 
---e12   = raise E2 e1   :: 
---e21   = raise E1 e2   :: 
+--e12   = raise E2 e1   ::
+--e21   = raise E1 e2   ::
 --                  UnsafeBase (UnsafeBase Safe E2) E1 Int ... UnsafeBase (UnsafeBase Safe E1) E2  Int  <= (LiftErr (UnsafeBase (UnsafeBase Safe E2) E1) (UnsafeBase Safe E2) rx, Functor rx, LiftErr rx (UnsafeBase Safe E1) out)
         --instance  (LiftErr (UnsafeBase base1 e1) (UnsafeBase Safe e2) rx, Functor rx, LiftErr rx base2 out, Functor base1) =>LiftErr (UnsafeBase base1                e1)       (UnsafeBase base2                e2) out   where
         --    liftErr (sf :: UnsafeBase base1 e1 (a->b)) (sa :: UnsafeBase base2 e2 a) = case sa of
@@ -321,7 +320,7 @@ instance  Functor base =>LiftErr Safe (UnsafeBase base e) (UnsafeBase base e)  w
 
 
 --instance  (InjectType base1 (UnsafeBase Safe e2) dstBase, InjectType (UnsafeBase dstBase e1) base2 out) =>InjectType (UnsafeBase base1 e1) (UnsafeBase base2 e2) out  where
---    injectType a (i :: UnsafeBase base2 e2 a) = injectType (injectType a (undefined :: UnsafeBase Safe e2 a)) (undefined :: base2 a) 
+--    injectType a (i :: UnsafeBase base2 e2 a) = injectType (injectType a (undefined :: UnsafeBase Safe e2 a)) (undefined :: base2 a)
 
 
 
@@ -433,7 +432,7 @@ instance  (Monad base1, Monad base2, LiftErr' base1 base2 dstBase) =>LiftErr' (U
     --        --Other o -> liftErr' (liftErr' (fmap const sf) (undefined :: UnsafeBase Safe e2 a)) (o :: base2 a)
 
 --instance  (InjectType base1 (UnsafeBase Safe e2) dstBase, InjectType (UnsafeBase dstBase e1) base2 out) =>InjectType (UnsafeBase base1 e1) (UnsafeBase base2 e2) out  where
---    injectType a (i :: UnsafeBase base2 e2 a) = injectType (injectType a (undefined :: UnsafeBase Safe e2 a)) (undefined :: base2 a) 
+--    injectType a (i :: UnsafeBase base2 e2 a) = injectType (injectType a (undefined :: UnsafeBase Safe e2 a)) (undefined :: base2 a)
 
 
 liftErr2' f a b       = liftErr' (liftErr' f a) b
@@ -693,7 +692,7 @@ v1x31 = Other $ Value 1 :: UnsafeBase (UnsafeBase Safe E1) E3 Int
 --main = do
 --    printTyped $ summe' v2 e12
 --    let
-        
+
 
 --        --niepoprawna wartosc - OSTATNIA NIEODKOMENTOWANA INSTANCJA - niepprawne zalozenie, ze w wyniku mamy e1 ...
 
@@ -701,7 +700,7 @@ v1x31 = Other $ Value 1 :: UnsafeBase (UnsafeBase Safe E1) E3 Int
 --        --tval = if (1<2) then matchSafe x ex1 else matchSafe ex1 x
 
 --        --tval = summe' ex1' ev1
---    --    tval = summe' ev1 ex1' 
+--    --    tval = summe' ev1 ex1'
 --        tval :: UnsafeBase (UnsafeBase Safe E1) E2 Int
 --        tval = magicMerge $ summe' ev1 ex4
 
@@ -716,8 +715,8 @@ v1x31 = Other $ Value 1 :: UnsafeBase (UnsafeBase Safe E1) E3 Int
 
 --    print ex4
 --    print $ fmap (+10) ex4
-    
+
 --    print $ catch (\E1 -> Safe(0::Int)) $ ex2
---    print $ catch (\E1 -> Safe(0::Int)) 
---          . catch (\E2 -> Safe(0::Int)) 
+--    print $ catch (\E1 -> Safe(0::Int))
+--          . catch (\E2 -> Safe(0::Int))
 --          $ ex2

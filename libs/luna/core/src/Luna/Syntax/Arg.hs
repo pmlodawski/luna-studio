@@ -9,12 +9,12 @@
 
 module Luna.Syntax.Arg where
 
-import Data.Binary  (Binary)
-import GHC.Generics (Generic)
+import           Data.Binary       (Binary)
+import           GHC.Generics      (Generic)
 
-import Flowbox.Prelude
-import Luna.Syntax.Label (Label)
-import Luna.Syntax.Pat   (LPat)
+import           Flowbox.Prelude
+import           Luna.Syntax.Label (Label)
+import           Luna.Syntax.Pat   (LPat)
 
 
 data Arg  a v = Arg { _pat :: LPat a, _val :: Maybe v } deriving (Show, Generic, Eq, Read)

@@ -12,14 +12,14 @@
 
 module Main where
 
-import Flowbox.Generics.Deriving.FShow
-import Flowbox.System.Log.Logger       as Logger
-import GHC.Generics
-import Flowbox.Prelude hiding (error)
+import           Flowbox.Generics.Deriving.FShow
+import           Flowbox.Prelude                              hiding (error)
+import           Flowbox.System.Log.Logger                    as Logger
+import           GHC.Generics
 
 import           Flowbox.Source.Location
 import qualified Flowbox.System.Console.StyledText.StyledText as Text
-import qualified System.Path as Path
+import qualified System.Path                                  as Path
 
 
 data Test = Test Int Int deriving(Show, Generic)

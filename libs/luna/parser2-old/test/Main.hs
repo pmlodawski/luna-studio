@@ -8,9 +8,9 @@ import           System.IO                    (stdout)
 import           Text.PrettyPrint.ANSI.Leijen (displayIO, linebreak, renderPretty, (<>))
 import           Text.Show.Pretty
 
-import qualified Luna.DEP.Data.ASTInfo  as ASTInfo
-import qualified Luna.DEP.Data.Config   as Config
-import qualified Luna.DEP.Parser.Pragma as Pragma
+import qualified Luna.DEP.Data.ASTInfo        as ASTInfo
+import qualified Luna.DEP.Data.Config         as Config
+import qualified Luna.DEP.Parser.Pragma       as Pragma
 
 
 patchedParserState info' = def

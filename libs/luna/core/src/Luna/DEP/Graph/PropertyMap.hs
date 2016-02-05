@@ -13,8 +13,8 @@ module Luna.DEP.Graph.PropertyMap (
 ) where
 
 import           Data.IntMap
-import qualified Data.IntMap as IntMap
-import qualified Data.Maybe  as Maybe
+import qualified Data.IntMap                             as IntMap
+import qualified Data.Maybe                              as Maybe
 
 import           Flowbox.Prelude                         as P hiding (set)
 import qualified Luna.DEP.Graph.Attributes               as Attributes

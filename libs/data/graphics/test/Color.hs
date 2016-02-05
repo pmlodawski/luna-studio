@@ -6,13 +6,13 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import Flowbox.Graphics.Composition.Color
-import Flowbox.Graphics.Utils.Utils
-import Flowbox.Prelude                    hiding (transform)
+import           Flowbox.Graphics.Composition.Color
+import           Flowbox.Graphics.Utils.Utils
+import           Flowbox.Prelude                    hiding (transform)
 
-import Data.Array.Accelerate (Exp)
+import           Data.Array.Accelerate              (Exp)
 
-import Utils
+import           Utils
 
 
 

@@ -12,10 +12,10 @@
 module Luna.DEP.Pass.Transform.Graph.Builder.State where
 
 import           Control.Monad.State
-import qualified Data.IntMap         as IntMap
-import           Data.Map            (Map)
-import qualified Data.Map            as Map
-import qualified Data.Maybe          as Maybe
+import qualified Data.IntMap                  as IntMap
+import           Data.Map                     (Map)
+import qualified Data.Map                     as Map
+import qualified Data.Maybe                   as Maybe
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude

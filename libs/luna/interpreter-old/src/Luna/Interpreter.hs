@@ -8,13 +8,13 @@
 
 module Luna.Interpreter where
 
-import           Control.Concurrent.Chan (Chan)
-import qualified Control.Concurrent.Chan as Chan
-import           Control.Monad           (forever)
-import qualified DynFlags                as GHC
-import           GHC                     (Ghc, GhcMonad)
-import qualified GHC                     as GHC
-import           MonadUtils              (liftIO)
+import           Control.Concurrent.Chan   (Chan)
+import qualified Control.Concurrent.Chan   as Chan
+import           Control.Monad             (forever)
+import qualified DynFlags                  as GHC
+import           GHC                       (Ghc, GhcMonad)
+import qualified GHC                       as GHC
+import           MonadUtils                (liftIO)
 
 import           Flowbox.Config.Config     (Config)
 import qualified Flowbox.Config.Config     as Config

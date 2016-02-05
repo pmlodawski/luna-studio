@@ -1,44 +1,44 @@
+{-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
 -- {-# LANGUAGE PartialTypeSignatures #-}
 
 module Luna.Passes.Diagnostic.GraphViz where
 
-import Prelude.Luna hiding (index)
+import           Prelude.Luna                           hiding (index)
 
 import           Data.GraphViz
-import           Data.GraphViz.Types.Canonical
-import           Data.GraphViz.Attributes.Complete   hiding (Label, Int, Star)
-import qualified Data.GraphViz.Attributes.Complete   as GV
-import qualified Data.GraphViz.Attributes            as GV
-import           Data.GraphViz.Printing              (toDot)
+import qualified Data.GraphViz.Attributes               as GV
+import qualified Data.GraphViz.Attributes.Colors        as GVC
+import qualified Data.GraphViz.Attributes.Colors.X11    as GVC
+import           Data.GraphViz.Attributes.Complete      hiding (Int, Label, Star)
+import qualified Data.GraphViz.Attributes.Complete      as GV
 import           Data.GraphViz.Commands
-import qualified Data.GraphViz.Attributes.Colors     as GVC
-import qualified Data.GraphViz.Attributes.Colors.X11 as GVC
-import           Data.GraphViz.Printing              (PrintDot)
-import           Luna.Syntax.Repr.Styles             (HeaderOnly(..), Simple(..))
+import           Data.GraphViz.Printing                 (toDot)
+import           Data.GraphViz.Printing                 (PrintDot)
+import           Data.GraphViz.Types.Canonical
+import           Luna.Syntax.Repr.Styles                (HeaderOnly (..), Simple (..))
 
 import           Data.Container
 import           Data.Container.Hetero
 
-import Luna.Syntax.Model.Graph
-import Luna.Syntax.Model.Network.Builder
-import Data.Record
+import           Data.Record
+import           Luna.Syntax.Model.Graph
+import           Luna.Syntax.Model.Network.Builder
 
-import           System.Platform
-import           System.Process                       (createProcess, shell)
 import           Data.Container.Class
 import           Data.Reprx
+import           System.Platform
+import           System.Process                         (createProcess, shell)
 
-import Luna.Syntax.Model.Layer
-import Luna.Syntax.Model.Graph
-import qualified Luna.Syntax.AST.Term as Term
-import Luna.Runtime.Model (Static, Dynamic)
-import Data.Layer.Cover (uncover)
-import Data.Prop
-import Luna.Syntax.Model.Network.Builder.Term
-import Luna.Syntax.Model.Network.Term
+import           Data.Layer.Cover                       (uncover)
+import           Data.Prop
+import           Luna.Runtime.Model                     (Dynamic, Static)
+import qualified Luna.Syntax.AST.Term                   as Term
+import           Luna.Syntax.Model.Graph
+import           Luna.Syntax.Model.Layer
+import           Luna.Syntax.Model.Network.Builder.Term
+import           Luna.Syntax.Model.Network.Term
 
 --instance Repr HeaderOnly Data where repr _ = "Data"
 --instance Repr HeaderOnly (Draft l v) where repr _ = "Draft"

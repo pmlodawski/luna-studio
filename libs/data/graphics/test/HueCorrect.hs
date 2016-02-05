@@ -8,12 +8,12 @@
 
 module Main where
 
-import qualified Data.Array.Accelerate    as A hiding (fromIntegral)
+import qualified Data.Array.Accelerate                    as A hiding (fromIntegral)
 import           Data.Array.Accelerate.IO
-import           Data.ByteString          hiding (head)
+import           Data.ByteString                          hiding (head)
 import           Data.VectorSpace
-import           Flowbox.Graphics.Mockup  as Mockup
-import qualified Flowbox.Math.Matrix      as M
+import           Flowbox.Graphics.Mockup                  as Mockup
+import qualified Flowbox.Math.Matrix                      as M
 --import           Diagrams.Prelude hiding (Path)
 --import           Diagrams.Backend.Cairo
 --import           Diagrams.Backend.Cairo.Internal

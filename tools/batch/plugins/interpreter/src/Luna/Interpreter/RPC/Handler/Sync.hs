@@ -9,8 +9,8 @@
 {-# LANGUAGE TemplateHaskell     #-}
 module Luna.Interpreter.RPC.Handler.Sync where
 
-import           Data.Int  (Int32)
-import qualified Text.Read as Read
+import           Data.Int                                                       (Int32)
+import qualified Text.Read                                                      as Read
 
 import           "flowbox-utils" Control.Monad.Morph
 import qualified Flowbox.Batch.Handler.Common                                   as Batch

@@ -12,17 +12,17 @@
 
 module Luna.Syntax.Name.Path where
 
-import           Data.Binary       (Binary)
-import           Data.List         (intersperse)
-import           Data.Map          (Map)
-import qualified Data.Map          as Map
-import           Data.String       (IsString, fromString)
-import           Data.String.Utils (join)
-import           Data.Text.Lazy    (Text)
+import           Data.Binary                     (Binary)
+import           Data.List                       (intersperse)
+import           Data.Map                        (Map)
+import qualified Data.Map                        as Map
+import           Data.String                     (IsString, fromString)
+import           Data.String.Utils               (join)
+import           Data.Text.Lazy                  (Text)
 
-import Flowbox.Generics.Deriving.QShow
-import Flowbox.Prelude
-import Luna.Syntax.Name.Hash           (Hashable, hash)
+import           Flowbox.Generics.Deriving.QShow
+import           Flowbox.Prelude
+import           Luna.Syntax.Name.Hash           (Hashable, hash)
 
 ----------------------------------------------------------------------
 -- Data types

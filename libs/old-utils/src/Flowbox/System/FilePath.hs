@@ -7,7 +7,7 @@
 
 module Flowbox.System.FilePath where
 
-import Control.Monad ((<=<))
+import           Control.Monad          ((<=<))
 
 import           Flowbox.Prelude
 import qualified Flowbox.System.UniPath as UniPath

@@ -3,14 +3,14 @@ module Flowbox.Graphics.Composition.EdgeBlur (
     BlurType(..) , edges, maskBlur, eee, mixImages
 ) where
 
-import Data.Array.Accelerate               as A hiding (constant, filter, scatter, size, stencil)
-import Flowbox.Graphics.Composition.Filter as F
-import Flowbox.Graphics.Prelude            as P hiding (filter)
-import Flowbox.Graphics.Shader.Pipe
-import Flowbox.Graphics.Shader.Shader
-import Flowbox.Graphics.Utils.Accelerate   (variable)
-import Flowbox.Math.Matrix                 as M
-import Math.Space.Space
+import           Data.Array.Accelerate               as A hiding (constant, filter, scatter, size, stencil)
+import           Flowbox.Graphics.Composition.Filter as F
+import           Flowbox.Graphics.Prelude            as P hiding (filter)
+import           Flowbox.Graphics.Shader.Pipe
+import           Flowbox.Graphics.Shader.Shader
+import           Flowbox.Graphics.Utils.Accelerate   (variable)
+import           Flowbox.Math.Matrix                 as M
+import           Math.Space.Space
 
 
 eee x = x+1
@@ -30,9 +30,9 @@ applyKernel kernel img = process img where
 
 
 mixImages :: (Applicative f, Floating a) => f a -> f a -> f a -> f a
-mixImages edgesMask first second = (+) <$> 
-                               ( (*) <$> first <*> edgesMask ) 
-                               <*> 
+mixImages edgesMask first second = (+) <$>
+                               ( (*) <$> first <*> edgesMask )
+                               <*>
 
 --mixImages :: (Applicative f, Num a) => f a -> f a -> f a -> f a
 --mixImages edgesMask first second = (+) <$>

@@ -13,14 +13,14 @@
 
 module Luna.Pass.Pass where
 
-import Control.Monad.Reader
-import Control.Monad.State        hiding (fail, state)
-import Control.Monad.Trans.Either
+import           Control.Monad.Reader
+import           Control.Monad.State        hiding (fail, state)
+import           Control.Monad.Trans.Either
 
-import Control.Monad.Trans.RWS   (RWST, runRWST)
-import Flowbox.Prelude           hiding (error, fail)
-import Flowbox.System.Log.Logger
-import Luna.System.Session       (SessionMonad)
+import           Control.Monad.Trans.RWS    (RWST, runRWST)
+import           Flowbox.Prelude            hiding (error, fail)
+import           Flowbox.System.Log.Logger
+import           Luna.System.Session        (SessionMonad)
 
 
 data Info = Info { name :: String

@@ -6,21 +6,19 @@
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE FlexibleInstances         #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE TemplateHaskell           #-}
-{-# LANGUAGE NoImplicitPrelude         #-}
-{-# LANGUAGE OverloadedStrings         #-}
 {-# LANGUAGE FunctionalDependencies    #-}
-{-# LANGUAGE UndecidableInstances      #-}
 {-# LANGUAGE GADTs                     #-}
-{-# LANGUAGE ViewPatterns              #-}
-{-# LANGUAGE OverloadedStrings       #-}
+{-# LANGUAGE NoImplicitPrelude         #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 module Luna.Target.HS.Host.Naming2 where
 
-import Flowbox.Prelude
-import Language.Haskell.TH
+import           Flowbox.Prelude
+import           Language.Haskell.TH
 
 
 class IsName a where
@@ -39,8 +37,8 @@ instance ToString Name where
     toString = nameBase
 
 mkFieldAccessor :: (Monoid a, IsString a) => a -> a -> a -> a
-mkFieldAccessor accName typeName memName = 
-    "field" <> accName  
+mkFieldAccessor accName typeName memName =
+    "field" <> accName
             <> "_" <> typeName
             <> "_" <> memName
 
@@ -63,7 +61,7 @@ funcGetFunc :: IsString a => a
 funcGetFunc = "getFunc"
 
 mkMemRef :: (Monoid a, IsString a) => a -> a -> a -> a
-mkMemRef base typeName methodName = 
+mkMemRef base typeName methodName =
     "mem" <> base
           <> "_" <> typeName
           <> "_" <> methodName

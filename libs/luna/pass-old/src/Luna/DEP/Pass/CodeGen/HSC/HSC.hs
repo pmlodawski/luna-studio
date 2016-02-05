@@ -24,7 +24,7 @@ import           Luna.DEP.Data.Source         (Source (Source))
 import           Luna.DEP.Pass.Pass           (Pass)
 import qualified Luna.DEP.Pass.Pass           as Pass
 
-import Flowbox.System.Log.Logger
+import           Flowbox.System.Log.Logger
 
 
 logger :: Logger

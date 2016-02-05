@@ -2,20 +2,20 @@
 
 module Empire.ASTOps.Builder where
 
+import           Control.Monad.Error     (throwError)
+import           Data.Record             (ANY (..), autoCons, caseTest, match)
 import           Prologue
-import           Control.Monad.Error (throwError)
-import           Data.Record       (match, caseTest, autoCons, ANY(..))
 {-import           Data.Layer.Coat     (uncoat, coated)-}
 
-import           Empire.ASTOp           (ASTOp)
-import           Empire.ASTOps.Remove   (removeNode, safeRemove)
-import           Empire.Data.AST        (ASTNode, ASTEdge, NodeRef, EdgeRef)
+import           Empire.ASTOp            (ASTOp)
+import           Empire.ASTOps.Remove    (removeNode, safeRemove)
+import           Empire.Data.AST         (ASTEdge, ASTNode, EdgeRef, NodeRef)
 
+import           Luna.Syntax.AST.Arg     (Arg)
+import qualified Luna.Syntax.AST.Arg     as Arg
+import           Luna.Syntax.AST.Term    (Acc (..), App (..), Blank (..), Draft, Unify (..), Val, Var (..))
+import qualified Luna.Syntax.AST.Term    as Term
 import qualified Luna.Syntax.Model.Graph as Graph
-import           Luna.Syntax.AST.Term   (Var(..), App(..), Blank(..), Acc(..), Unify(..), Val, Draft)
-import qualified Luna.Syntax.AST.Term   as Term
-import qualified Luna.Syntax.AST.Arg    as Arg
-import           Luna.Syntax.AST.Arg    (Arg)
 
 functionApplicationNode :: Lens' ASTNode (EdgeRef)
 functionApplicationNode = coated . lens getter setter where

@@ -1,24 +1,24 @@
 module Flowbox.Graphics.Mockup.KeyingSpec where
 
-import Test.Hspec
-import Test.QuickCheck
-import System.IO.Unsafe
+import           System.IO.Unsafe
+import           Test.Hspec
+import           Test.QuickCheck
 
-import Flowbox.Graphics.Mockup.Generator
-import Flowbox.Graphics.Mockup.Keying
-import Flowbox.Graphics.Composition.Keying
-import Flowbox.Graphics.Mockup.Basic
-import Flowbox.Prelude
-import Flowbox.Graphics.Color.Color
-import Control.Monad
+import           Control.Monad
+import           Flowbox.Graphics.Color.Color
+import           Flowbox.Graphics.Composition.Keying
+import           Flowbox.Graphics.Mockup.Basic
+import           Flowbox.Graphics.Mockup.Generator
+import           Flowbox.Graphics.Mockup.Keying
+import           Flowbox.Prelude
 
-import TestHelpers
+import           TestHelpers
 
 
 spec :: Spec
 spec = do
     let specPath = "./test/Flowbox/Graphics/Mockup/"
-        in do 
+        in do
             let testName = "differenceKeyerLuna"
             let testPath = specPath++testName
 
@@ -43,7 +43,7 @@ spec = do
                 defaultReferenceTestM testName specPath actualImage
 
                 --describe testName $ do
-                   
+
                 --    -- let expectedImage = getDefaultTestPic specPath testName
                 --    it "should save img" $ do
                 --        (testSave=<<actualImage) `shouldReturn` ()

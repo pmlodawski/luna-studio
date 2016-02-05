@@ -1,19 +1,19 @@
 module Main where
 
-import           Data.Array.Accelerate ((:.)(..), Z(..))
-import qualified Data.Array.Accelerate as A
+import           Data.Array.Accelerate                    ((:.) (..), Z (..))
+import qualified Data.Array.Accelerate                    as A
 
-import           Flowbox.Geom2D.Rectangle                 (Rectangle(..))
+import           Flowbox.Geom2D.Rectangle                 (Rectangle (..))
 import           Flowbox.Graphics.Color.RGBA
 import           Flowbox.Math.Function.Accelerate.BSpline as BSpline
 import qualified Flowbox.Math.Function.CurveGUI           as CurveGUI
-import           Flowbox.Prelude as P hiding (transform)
+import           Flowbox.Prelude                          as P hiding (transform)
 
-import Flowbox.Graphics.Mockup
-import Flowbox.Graphics.Mockup.Basic
-import Flowbox.Graphics.Mockup.ColorCorrect
-import Flowbox.Graphics.Mockup.Transform
-import Utils
+import           Flowbox.Graphics.Mockup
+import           Flowbox.Graphics.Mockup.Basic
+import           Flowbox.Graphics.Mockup.ColorCorrect
+import           Flowbox.Graphics.Mockup.Transform
+import           Utils
 
 
 

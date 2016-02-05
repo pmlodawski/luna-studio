@@ -9,8 +9,8 @@
 
 module Luna.DEP.AST.Control.Zipper where
 
-import Control.Monad.Trans.State
-import Data.List                 (find)
+import           Control.Monad.Trans.State
+import           Data.List                  (find)
 
 import           Flowbox.Control.Error      (assert, (<?>))
 import           Flowbox.Prelude            hiding (drop, id, mod)

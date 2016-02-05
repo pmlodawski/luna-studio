@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.Graphics.Composition.Merge where
 
-import qualified Data.Array.Accelerate as A
+import qualified Data.Array.Accelerate          as A
 
 import           Flowbox.Graphics.Shader.Shader
 import qualified Flowbox.Graphics.Utils.Utils   as U
@@ -31,7 +31,7 @@ data AlphaBlend = Adobe
 union :: Num a => a -> a -> a
 union a b = a + b - (a * b)
 
--- FIXME [KL]: Bounding box now is taken from the aa' generator -- FIXED [KR]: Canvas from background. 
+-- FIXME [KL]: Bounding box now is taken from the aa' generator -- FIXED [KR]: Canvas from background.
 threeWayMerge' :: (A.Elt a, A.IsFloating a)
               => AlphaBlend
               -> BlendMode a
@@ -51,7 +51,7 @@ threeWayMerge' alphaBlend blend br bg bb ar ag ab ba aa =
             Adobe  -> ba' p `union` aa' p
             Custom -> ba' p `blend` aa' p
 
--- FIXME [KL]: Bounding box now is taken from the overlay generator -- FIXED [KR]: Canvas from background. 
+-- FIXME [KL]: Bounding box now is taken from the overlay generator -- FIXED [KR]: Canvas from background.
 basicColorCompositingFormula :: (A.Elt a, A.IsFloating a)
                              => Shader x (A.Exp a) -- ^ Background / Destination / B
                              -> Shader x (A.Exp a) -- ^ Background alpha
@@ -70,7 +70,7 @@ basicColorCompositingFormula (Shader cnv background) (Shader _ alphaBackground) 
                     (U.invert (alphaBackground p) * overlay p + alphaBackground p * blend (background p) (overlay p)))
             0
 
--- FIXME [KL]: Bounding box now is taken from the overlay generator -- FIXED [KR]: Canvas from background. 
+-- FIXME [KL]: Bounding box now is taken from the overlay generator -- FIXED [KR]: Canvas from background.
 threeWayMerge :: (A.Elt a, A.IsFloating a)
               => ComplicatedBlendMode a
               -> Shader x (A.Exp a) -- ^ B.R
@@ -86,7 +86,7 @@ threeWayMerge blend br bg bb ar ag ab ba aa =
     (merge br ba ar aa, merge bg ba ag aa, merge bb ba ab aa, ba)
     where merge bgnd abgnd ov aov = complicatedColorCompositingFormula bgnd abgnd ov aov blend
 
--- FIXME [KL]: Bounding box now is taken from the overlay generator 
+-- FIXME [KL]: Bounding box now is taken from the overlay generator
 -- Changed images order - everywhere first background/B then foreground/overlay/A.
 complicatedColorCompositingFormula :: (A.Elt a, A.IsFloating a)
                                    => Shader x (A.Exp a)

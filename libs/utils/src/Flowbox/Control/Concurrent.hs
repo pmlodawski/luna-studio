@@ -9,9 +9,9 @@ module Flowbox.Control.Concurrent (
     module Flowbox.Control.Concurrent,
 ) where
 
-import Control.Concurrent
+import           Control.Concurrent
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

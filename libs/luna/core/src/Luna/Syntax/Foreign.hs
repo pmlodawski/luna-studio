@@ -7,9 +7,9 @@
 
 module Luna.Syntax.Foreign where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
-import           Data.Binary (Binary)
+import           Data.Binary     (Binary)
 import qualified Prelude
 
 

@@ -9,8 +9,8 @@
 
 module Flowbox.UR.Manager.Context where
 
-import           Data.Map (Map)
-import qualified Data.Map as Map
+import           Data.Map                 (Map)
+import qualified Data.Map                 as Map
 
 import           Flowbox.Bus.Data.Message (Message)
 import qualified Flowbox.Bus.Data.Message as Message

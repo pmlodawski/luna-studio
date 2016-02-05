@@ -8,7 +8,7 @@ module Flowbox.Codec.EXR.Internal.Debug (
 	dumpImageInfo
 	) where
 
-import Foreign.ForeignPtr
+import           Foreign.ForeignPtr
 
 import qualified Flowbox.Codec.EXR.Internal.Bindings as Bindings
 import           Flowbox.Codec.EXR.Internal.Types

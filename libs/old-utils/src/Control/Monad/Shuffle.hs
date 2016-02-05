@@ -10,8 +10,8 @@
 
 module Control.Monad.Shuffle where
 
-import Control.PolyMonad
-import Prelude
+import           Control.PolyMonad
+import           Prelude
 
 class Shuffle m1 m2 where
     shuffle :: m1 (m2 a) -> m2 (m1 a)

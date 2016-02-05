@@ -1,15 +1,15 @@
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE DeriveFunctor             #-}
+{-# LANGUAGE ExtendedDefaultRules      #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE KindSignatures            #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE ExtendedDefaultRules #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TupleSections             #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE UndecidableInstances      #-}
 --{-# LANGUAGE PolyKinds #-}
 
 
@@ -154,7 +154,7 @@ module Luna.Target.HS.Data.Func.Args4soerr where
 --funcSig :: Proxy names -> defs -> FuncSig names defs
 --funcSig _ = FuncSig
 
-----appArg 
+----appArg
 
 --tstX q v = call q (Proxy :: Proxy "foo") ([],v)
 
@@ -163,7 +163,7 @@ module Luna.Target.HS.Data.Func.Args4soerr where
 --sig = sArgN (Proxy::Proxy "x") // sArgN (Proxy::Proxy "y") // ()
 
 --main = do
---    let 
+--    let
 --        --args = appArg (uArg 5) $ appArg (uArg []) empty
 --        --args = appArg (uArg 5) $ appArg (uArg []) empty
 --        args = appArg (uArg 5) $ appArg (nArg [] (Proxy :: Proxy "x")) empty
@@ -271,7 +271,7 @@ module Luna.Target.HS.Data.Func.Args4soerr where
 --instance (f~(a->b), AppRTuple as b f') => AppRTuple (a,as) f f' where
 --    appRTuple (a,as) f = appRTuple as $ f a
 
-----class 
+----class
 
 ----appArgsR = appArgs . reverse
 
@@ -311,7 +311,7 @@ module Luna.Target.HS.Data.Func.Args4soerr where
 --class AppNth' (ok :: Ordering) (k::Nat) a f g | k a f -> g where
 --    appNth' :: Proxy ok -> Proxy k -> a -> f -> g
 
---instance (f~(t -> s), g~(t -> u), AppNth (n-1) a s u) 
+--instance (f~(t -> s), g~(t -> u), AppNth (n-1) a s u)
 --      => AppNth' GT n a f g where
 --    appNth' _ _ a = (\f t -> appNth (Proxy :: Proxy (n-1)) a (f t))
 

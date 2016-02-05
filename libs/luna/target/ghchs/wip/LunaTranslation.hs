@@ -1,8 +1,8 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-import Control.Applicative
-import Control.Monad.IO.Class
-import Control.Monad.State
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.State
 
 -- lift :: Monad m => m a -> t m a
 

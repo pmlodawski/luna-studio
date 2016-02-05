@@ -12,12 +12,12 @@
 
 module Flowbox.AWS.EC2.Instance.Management where
 
-import qualified AWS.EC2.Types          as Types
-import qualified AWS.EC2.Util           as Util
-import qualified Control.Concurrent     as Concurrent
-import           Control.Monad.IO.Class (MonadIO, liftIO)
-import qualified Control.Monad.Loops    as Loops
-import qualified System.IO              as IO
+import qualified AWS.EC2.Types                     as Types
+import qualified AWS.EC2.Util                      as Util
+import qualified Control.Concurrent                as Concurrent
+import           Control.Monad.IO.Class            (MonadIO, liftIO)
+import qualified Control.Monad.Loops               as Loops
+import qualified System.IO                         as IO
 
 import           Flowbox.AWS.EC2.EC2               (EC2, EC2Resource)
 import qualified Flowbox.AWS.EC2.EC2               as EC2

@@ -2,17 +2,17 @@
 
 module Luna.Parser.Module where
 
-import Flowbox.Prelude hiding (cons, maybe, noneOf)
+import           Flowbox.Prelude         hiding (cons, maybe, noneOf)
 
-import Luna.Parser.Builder (labeled)
-import           Luna.Syntax.Name.Path (QualPath(QualPath))
-import           Text.Parser.Combinators 
-import Luna.Parser.Decl (imp, func, cls, typeAlias, typeWrapper, pragma, foreigns)
-import qualified Luna.Parser.State            as ParserState
-import           Luna.Syntax.Module (Module(Module))
-import           Luna.Syntax.Unit   (Unit(Unit))
-import           Luna.Parser.Struct (moduleBlock)
-import qualified Luna.Parser.Indent as Indent
+import           Luna.Parser.Builder     (labeled)
+import           Luna.Parser.Decl        (cls, foreigns, func, imp, pragma, typeAlias, typeWrapper)
+import qualified Luna.Parser.Indent      as Indent
+import qualified Luna.Parser.State       as ParserState
+import           Luna.Parser.Struct      (moduleBlock)
+import           Luna.Syntax.Module      (Module (Module))
+import           Luna.Syntax.Name.Path   (QualPath (QualPath))
+import           Luna.Syntax.Unit        (Unit (Unit))
+import           Text.Parser.Combinators
 
 pModule qpath = do
     ParserState.setModPath qpath

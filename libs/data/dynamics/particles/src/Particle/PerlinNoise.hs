@@ -34,8 +34,8 @@ import qualified GHC.Float                    as Float
 import qualified Math.Noise                   as Noise
 import qualified Math.Noise.Modules.ScaleBias as Noise
 
-import Particle
-import Particle.Algebra
+import           Particle
+import           Particle.Algebra
 
 data PerlinNoise = PerlinNoise {
     _frequency   :: Double

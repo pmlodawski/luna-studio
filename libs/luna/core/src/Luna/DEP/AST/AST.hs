@@ -12,14 +12,14 @@ module Luna.DEP.AST.AST (
     module X
 ) where
 
-import Flowbox.Prelude     hiding (Wrapper, wrap)
-import Luna.DEP.AST.Common as X
-import Luna.DEP.AST.Expr   (Expr)
-import Luna.DEP.AST.Lit    (Lit)
-import Luna.DEP.AST.Module (Module)
-import Luna.DEP.AST.Pat    (Pat)
-import Luna.DEP.AST.Prop   as X
-import Luna.DEP.AST.Type   (Type)
+import           Flowbox.Prelude     hiding (Wrapper, wrap)
+import           Luna.DEP.AST.Common as X
+import           Luna.DEP.AST.Expr   (Expr)
+import           Luna.DEP.AST.Lit    (Lit)
+import           Luna.DEP.AST.Module (Module)
+import           Luna.DEP.AST.Pat    (Pat)
+import           Luna.DEP.AST.Prop   as X
+import           Luna.DEP.AST.Type   (Type)
 
 
 

@@ -16,8 +16,8 @@ module Particle.PointEmitter (
 
 import qualified Data.Array.Accelerate as A
 
-import Particle
-import Particle.Algebra
+import           Particle
+import           Particle.Algebra
 
 data PointEmitter = PointEmitter Position Int
 

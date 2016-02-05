@@ -8,14 +8,14 @@
 
 module Flowbox.Geom2D.CubicBezier.Solve where
 
-import           Math.BernsteinPoly
 import           Geom2D
-import qualified Geom2D.CubicBezier.Basic        as Cubic
-import qualified Geom2D.CubicBezier.Intersection as Cubic
+import qualified Geom2D.CubicBezier.Basic              as Cubic
+import qualified Geom2D.CubicBezier.Intersection       as Cubic
+import           Math.BernsteinPoly
 
-import Flowbox.Geom2D.CubicBezier
-import Flowbox.Geom2D.CubicBezier.Conversion
-import Flowbox.Prelude
+import           Flowbox.Geom2D.CubicBezier
+import           Flowbox.Geom2D.CubicBezier.Conversion
+import           Flowbox.Prelude
 
 
 

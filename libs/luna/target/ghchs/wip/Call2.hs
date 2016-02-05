@@ -1,22 +1,22 @@
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE PolyKinds                 #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 {-# LANGUAGE DysfunctionalDependencies #-}
 
 
 
-import GHC.TypeLits
+import           GHC.TypeLits
 
-import Luna.Target.HS.Proxy
+import           Luna.Target.HS.Proxy
 
 ----------------------------------------------------------------------------------
 -- Data types
@@ -111,12 +111,12 @@ data Vector a = Vector { x :: a
 newtype Prop_Vector_length obj = Prop_Vector_length obj deriving Show
 
 instance Prop "length" (Vector a) (AppH (Prop_Vector_length (Vector a)) (NoArg "",(NoArg "",(NoArg "",())))) where
-    prop _ obj = appH (Prop_Vector_length obj) (unnamedArg,(unnamedArg,(unnamedArg,()))) 
+    prop _ obj = appH (Prop_Vector_length obj) (unnamedArg,(unnamedArg,(unnamedArg,())))
 
 
 main = do
     let v = Vector (1::Int) (2::Int) (3::Int)
-        p = prop (Proxy::Proxy "length") v 
+        p = prop (Proxy::Proxy "length") v
         args = (unnamedArg,(NoArg :: NoArg "dupa",(unnamedArg,())))
         args2 = (unnamedArg,(NoArg :: NoArg "dupa",(DefaultArg 0 :: DefaultArg "def" Int,())))
     print $ readArgs $ appNextArg (1::Int) $ appNextArg (1::Int) $ appNextArg (1::Int) $ args

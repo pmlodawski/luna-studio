@@ -10,8 +10,8 @@ module Luna.DEP.Data.HAST.Extension (
     genCode
 )where
 
-import Data.String.Utils (join)
-import Flowbox.Prelude
+import           Data.String.Utils (join)
+import           Flowbox.Prelude
 
 data Extension = AllowAmbiguousTypes
                | AlternativeLayoutRule

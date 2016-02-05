@@ -7,13 +7,13 @@ module Logger (
     isFail, isFine
   ) where
 
-import Data.List
-import Data.Either             (isRight)
+import           Data.Either                 (isRight)
+import           Data.List
 
-import Logger.Internal.LoggerT
-import Logger.Internal.Runners
-import Logger.Internal.Stack
-import Logger.Internal.TraceInline (traceInline)
+import           Logger.Internal.LoggerT
+import           Logger.Internal.Runners
+import           Logger.Internal.Stack
+import           Logger.Internal.TraceInline (traceInline)
 
 
 

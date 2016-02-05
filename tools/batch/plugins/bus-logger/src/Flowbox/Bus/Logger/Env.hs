@@ -8,8 +8,8 @@
 
 module Flowbox.Bus.Logger.Env where
 
-import Data.Map.Strict (Map)
-import Data.Time.Clock (UTCTime)
+import           Data.Map.Strict          (Map)
+import           Data.Time.Clock          (UTCTime)
 
 import qualified Flowbox.Bus.Data.Message as Message
 import           Flowbox.Prelude

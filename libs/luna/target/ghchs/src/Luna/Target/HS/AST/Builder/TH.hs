@@ -8,7 +8,7 @@
 
 module Luna.Target.HS.AST.Builder.TH where
 
-import Data.Monoid
+import           Data.Monoid
 import qualified Luna.Target.HS.AST.Expr as Expr
 import qualified Luna.Target.HS.AST.Lit  as Lit
 

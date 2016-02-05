@@ -16,8 +16,8 @@ import qualified Data.Array.Accelerate    as A
 import qualified Data.Array.Accelerate.IO as AIO
 import qualified Data.Vector.Storable     as VectorS
 
-import Particle
-import Particle.Algebra
+import           Particle
+import           Particle.Algebra
 
 interleave3 :: A.Acc (Array Vec3) -> A.Acc (Array Float)
 interleave3 v = A.generate sh interleave3'

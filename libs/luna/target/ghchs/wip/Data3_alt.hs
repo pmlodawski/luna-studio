@@ -1,13 +1,13 @@
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeOperators             #-}
 
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies              #-}
 
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE PolyKinds                 #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 
@@ -16,9 +16,9 @@ module Data3_alt where
 --import Bind2 (StateT(..),put,get)
 
 
-import Control.Applicative
-import Control.Monad.Trans
-import Luna.Target.HS.Utils.BaseMonads
+import           Control.Applicative
+import           Control.Monad.Trans
+import           Luna.Target.HS.Utils.BaseMonads
 
 
 --instance  Monad m =>MonadState s (IC (StateT s) m)  where
@@ -140,7 +140,7 @@ test2 = do
 --    return $ f $ (Value . return) a
 
 instance (Functor (t m), Functor m) => Functor (IC t m) where
-    fmap f (IC a) = IC $ fmap f a 
+    fmap f (IC a) = IC $ fmap f a
 
 instance (Functor (t m), Functor m) => Applicative (IC t m) where
     pure = undefined

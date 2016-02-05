@@ -1,56 +1,55 @@
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE DeriveFunctor             #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TupleSections             #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 --{-# LANGUAGE IncoherentInstances #-}
 
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable        #-}
 
 
 {-# LANGUAGE DysfunctionalDependencies #-}
 
 
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax          #-}
 
 
 module Vector where
 
-import Control.Applicative
-import Control.Monad.IO.Class
-import Control.Monad.Trans
-import Control.PolyApplicative
-import Control.PolyApplicative.App
-import Luna.Target.HS.Control.Context
-import Luna.Target.HS.Control.Error
-import Luna.Target.HS.Control.Flow
-import Luna.Target.HS.Utils.BaseMonads
-import Luna.Target.HS.Data.Func
-import Control.Monad.Morph
-import Flowbox.Utils
-import Data.Typeable (Typeable, Proxy(..))
-import Data.TypeLevel
-import Data.Wrap
-import Luna.Target.HS.Data.Struct.Prop
-import Luna.Target.HS.Control.Context.Rebindable
-import GHC.TypeLits (Symbol)
-import Data.TupleList
-import Luna.Target.HS.Control.Flow.Utils
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.Morph
+import           Control.Monad.Trans
+import           Control.PolyApplicative
+import           Control.PolyApplicative.App
+import           Data.TupleList
+import           Data.Typeable                             (Proxy (..), Typeable)
+import           Data.TypeLevel
+import           Data.Wrap
+import           Flowbox.Utils
+import           GHC.TypeLits                              (Symbol)
+import           Luna.Target.HS.Control.Context
+import           Luna.Target.HS.Control.Context.Rebindable
+import           Luna.Target.HS.Control.Error
+import           Luna.Target.HS.Control.Flow
+import           Luna.Target.HS.Control.Flow.Utils
+import           Luna.Target.HS.Data.Func
+import           Luna.Target.HS.Data.Struct.Prop
+import           Luna.Target.HS.Utils.BaseMonads
 
-import Luna.Target.HS.Control.Context.Pipe3 hiding (main)
+import           Luna.Target.HS.Control.Context.Pipe3      hiding (main)
 
-import TstX
+import           TstX
 
 
 instance  (env1~env2, m1~m2, set1~set2) =>Pipe3 (Req req (MonadCtx env1 set1 m1)) (MonadCtx env2 set2 m2)  where
@@ -111,7 +110,7 @@ class TuplePipe f a out | f a -> out where
     tuplePipe :: f -> a -> out
 
 
---class ApplyMonad 
+--class ApplyMonad
 
 instance TuplePipe f () f where
     tuplePipe = const
@@ -282,7 +281,7 @@ call2D' (AppH(fptr, args)) = tuplePipe (uncurryTuple $ getFuncD2 fptr args') arg
 testme (AppH(fptr, args)) = getFunc2 fptr args' where
     args' = readArgs args
 
-testmeD (AppH(fptr, args)) = getFuncD fptr 
+testmeD (AppH(fptr, args)) = getFuncD fptr
 
 testmeD2 (AppH(fptr, args)) = getFuncD fptr args' where
     args' = readArgs args
@@ -468,7 +467,7 @@ instance (AppMonadCtx2 a (Req (Proxy StateT) (MonadCtx env set (StateT (Value Pu
           MatchMonadCloseProto (IsEmpty (Remove (Proxy StateT) set)) (MonadCtx env (Remove (Proxy StateT) set) mb) t,
           Num a2,
           args ~ (a,()),
-          out ~  t (a1, Value Pure (Safe a2))) 
+          out ~  t (a1, Value Pure (Safe a2)))
           => Func2 Prop_Vector_test args out where
     getFunc2 _ _ = prop_Vector_test
 
@@ -490,7 +489,7 @@ instance (out ~ ((t, ()) -> t)) => FuncD Prop_Vector_id out where
 
 ---
 
-print' ::  (MonadIO m, Show a)=>a -> MonadCtx IO () m ()  
+print' ::  (MonadIO m, Show a)=>a -> MonadCtx IO () m ()
 print' s = MonadCtx . liftIO $ print s
 
 

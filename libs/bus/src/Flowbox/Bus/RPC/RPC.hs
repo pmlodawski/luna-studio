@@ -13,9 +13,9 @@ import           Control.Exception         (SomeException)
 import qualified Control.Monad.Catch       as Catch
 import           Control.Monad.Trans.State
 
-import Flowbox.Control.Error
-import Flowbox.Prelude
-import Flowbox.System.Log.Logger
+import           Flowbox.Control.Error
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
 
 
 type RPC s m a = ExceptT Error (StateT s m) a

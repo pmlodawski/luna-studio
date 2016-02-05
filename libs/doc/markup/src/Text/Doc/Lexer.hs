@@ -10,8 +10,8 @@
 
 module Text.Doc.Lexer where
 
-import Control.Applicative
-import Text.Parsec         hiding (many, optional, parse, (<|>))
+import           Control.Applicative
+import           Text.Parsec         hiding (many, optional, parse, (<|>))
 
 
 

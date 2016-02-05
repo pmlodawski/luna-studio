@@ -1,9 +1,9 @@
 module Flowbox.RepoManager.Data.Package.ConfiguredPackage where
 
 import           Flowbox.Prelude
-import qualified Flowbox.RepoManager.Data.Package.Flag as Flag
 import qualified Flowbox.RepoManager.Data.Dependency   as Dependency
 import           Flowbox.RepoManager.Data.Environment  (Command)
+import qualified Flowbox.RepoManager.Data.Package.Flag as Flag
 import qualified Flowbox.RepoManager.Data.Version      as Version
 import qualified Network.URI                           as URI
 

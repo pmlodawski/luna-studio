@@ -7,8 +7,8 @@
 
 module Luna.Distribution.Cabal.Gen where
 
-import qualified Data.Text.Lazy as Text
-import           Data.Version   (Version)
+import qualified Data.Text.Lazy                  as Text
+import           Data.Version                    (Version)
 
 import           Flowbox.Prelude
 import           Luna.Data.Source                (Source)

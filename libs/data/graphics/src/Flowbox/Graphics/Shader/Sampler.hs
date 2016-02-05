@@ -9,14 +9,14 @@
 
 module Flowbox.Graphics.Shader.Sampler where
 
-import Flowbox.Graphics.Composition.Filter (Filter (..), convolve)
-import Flowbox.Graphics.Shader.Shader
-import Flowbox.Graphics.Utils.Utils
-import Flowbox.Math.Matrix                 as M hiding (get, size)
-import Flowbox.Prelude                     as P hiding (filter, transform)
+import           Flowbox.Graphics.Composition.Filter (Filter (..), convolve)
+import           Flowbox.Graphics.Shader.Shader
+import           Flowbox.Graphics.Utils.Utils
+import           Flowbox.Math.Matrix                 as M hiding (get, size)
+import           Flowbox.Prelude                     as P hiding (filter, transform)
 
-import qualified Data.Array.Accelerate     as A
-import           Math.Coordinate.Cartesian (Point2 (..))
+import qualified Data.Array.Accelerate               as A
+import           Math.Coordinate.Cartesian           (Point2 (..))
 
 
 

@@ -8,7 +8,7 @@
 
 module Flowbox.FileManager.S3FileManager where
 
-import qualified Data.ByteString.Lazy as ByteString
+import qualified Data.ByteString.Lazy            as ByteString
 
 import qualified Flowbox.AWS.S3.Directory        as Directory
 import qualified Flowbox.AWS.S3.File             as File

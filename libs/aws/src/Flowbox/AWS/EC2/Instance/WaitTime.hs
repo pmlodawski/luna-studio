@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 module Flowbox.AWS.EC2.Instance.WaitTime where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

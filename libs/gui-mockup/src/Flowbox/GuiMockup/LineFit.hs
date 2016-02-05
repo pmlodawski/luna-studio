@@ -1,6 +1,5 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE ViewPatterns        #-}
 {-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Flowbox.GuiMockup.LineFit
     (
@@ -17,7 +16,7 @@ module Flowbox.GuiMockup.LineFit
 	) where
 
 
-import           GHC.Generics (Generic)
+import           GHC.Generics                 (Generic)
 
 import           Control.Applicative          ((<$>), (<*>))
 import           Control.Error                hiding (err)
@@ -39,8 +38,8 @@ import           Linear                       hiding (point, trace)
 
 import           Flowbox.GuiMockup.JSInterop
 
-import System.IO.Unsafe
-import Control.Exception as Exc
+import           Control.Exception            as Exc
+import           System.IO.Unsafe
 
 
 

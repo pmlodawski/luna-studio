@@ -1,29 +1,29 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE FlexibleInstances #-}
 --{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE IncoherentInstances #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE IncoherentInstances       #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE TypeFamilies              #-}
 
 
     ----data family F a
-     
+
     ----f :: F a -> F a
     ----f = undefined
-     
+
     ----g :: F Int -> F Int
     ----g x = f x
 
 
 
     --type family F a
-     
+
     --f :: F a -> F a
     --f = undefined
-     
+
     ----g :: F Int -> F Int
     ----g :: F a -> F a
     --g x = f x

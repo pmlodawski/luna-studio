@@ -7,10 +7,10 @@
 module Luna.Interpreter.Session.GHC.Util where
 
 import qualified GHC
-import           Outputable (Outputable)
+import           Outputable      (Outputable)
 import qualified Outputable
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

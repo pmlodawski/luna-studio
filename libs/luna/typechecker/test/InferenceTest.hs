@@ -10,25 +10,25 @@
 
 module Main where
 
-import           Prologue                        hiding (cons, read)
+import           Prologue                               hiding (cons, read)
 
-import           Control.Monad.Error             (MonadError)
-import           Data.Prop
+import           Control.Monad.Error                    (MonadError)
 import           Data.Layer.Cover
-import           Data.Record                     hiding (Layout)
+import           Data.Prop
+import           Data.Record                            hiding (Layout)
 
 import           Luna.Passes.Diagnostic.GraphViz
 import           Luna.Passes.Inference.Literals
-import           Luna.Runtime.Model              (Dynamic, Static)
-import           Luna.Syntax.AST.Term            hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
-import qualified Luna.Syntax.AST.Term            as Term
-import           Luna.Syntax.Model.Network.Builder.Self  (MonadSelfBuilder)
-import           Luna.Syntax.Model.Network.Builder.Type  (MonadTypeBuilder)
-import           Luna.Syntax.Model.Network.Builder.Term
-import           Luna.Syntax.Model.Network.Term
+import           Luna.Runtime.Model                     (Dynamic, Static)
+import           Luna.Syntax.AST.Term                   hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
+import qualified Luna.Syntax.AST.Term                   as Term
 import           Luna.Syntax.Model.Graph
-import           Luna.Syntax.Model.Network.Builder (MonadBuilder)
 import           Luna.Syntax.Model.Layer
+import           Luna.Syntax.Model.Network.Builder      (MonadBuilder)
+import           Luna.Syntax.Model.Network.Builder.Self (MonadSelfBuilder)
+import           Luna.Syntax.Model.Network.Builder.Term
+import           Luna.Syntax.Model.Network.Builder.Type (MonadTypeBuilder)
+import           Luna.Syntax.Model.Network.Term
 
 -- import           Luna.Syntax.Model.Graph.Term    (NetGraph, NetNode)
 -- import           Luna.Syntax.Model.Layer.Class   (Succs, Type)

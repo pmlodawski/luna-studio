@@ -10,8 +10,8 @@
 module Flowbox.Batch.Handler.Common where
 
 import           Control.Monad.RWS
-import           Data.Int          (Int32)
-import qualified Data.List         as List
+import           Data.Int                                                        (Int32)
+import qualified Data.List                                                       as List
 import           Text.Show.Pretty
 
 import           Flowbox.Batch.Batch                                             (Batch)

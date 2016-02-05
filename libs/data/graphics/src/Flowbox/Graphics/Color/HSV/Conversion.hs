@@ -10,20 +10,20 @@
 
 module Flowbox.Graphics.Color.HSV.Conversion where
 
-import Data.Array.Accelerate as A
+import           Data.Array.Accelerate             as A
 
-import Flowbox.Graphics.Color.CMY
-import Flowbox.Graphics.Color.CMYK
-import Flowbox.Graphics.Color.Conversion
-import Flowbox.Graphics.Color.Helpers
-import Flowbox.Graphics.Color.HSL
-import Flowbox.Graphics.Color.HSV
-import Flowbox.Graphics.Color.RGB
-import Flowbox.Graphics.Color.RGBA
-import Flowbox.Graphics.Color.YCbCr
-import Flowbox.Graphics.Color.YCbCr_HD
-import Flowbox.Graphics.Utils.Utils
-import Flowbox.Prelude
+import           Flowbox.Graphics.Color.CMY
+import           Flowbox.Graphics.Color.CMYK
+import           Flowbox.Graphics.Color.Conversion
+import           Flowbox.Graphics.Color.Helpers
+import           Flowbox.Graphics.Color.HSL
+import           Flowbox.Graphics.Color.HSV
+import           Flowbox.Graphics.Color.RGB
+import           Flowbox.Graphics.Color.RGBA
+import           Flowbox.Graphics.Color.YCbCr
+import           Flowbox.Graphics.Color.YCbCr_HD
+import           Flowbox.Graphics.Utils.Utils
+import           Flowbox.Prelude
 
 
 

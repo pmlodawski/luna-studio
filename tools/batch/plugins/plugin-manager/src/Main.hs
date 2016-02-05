@@ -7,7 +7,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
-import Control.Monad.Trans.Either
+import           Control.Monad.Trans.Either
 
 import qualified Flowbox.Bus.EndPoint                      as EP
 import qualified Flowbox.Bus.RPC.Server.Server             as Server

@@ -1,12 +1,12 @@
+{-# LANGUAGE QuasiQuotes     #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE QuasiQuotes #-}
 
 module Flowbox.Math.BitonicSorterGenerator (generateBitonicNetworkList, generateBitonicNetworkTuple, generateGetNthFromTuple)  where
 
-import Language.Haskell.TH
-import Control.Monad (replicateM)
+import           Control.Monad       (replicateM)
+import           Language.Haskell.TH
 
-import Flowbox.Prelude hiding ((<&>))
+import           Flowbox.Prelude     hiding ((<&>))
 
 (<&>) = flip fmap
 
@@ -78,8 +78,8 @@ halfCleaner wiresA sizeA wiresB sizeB = do
                     let missingNamesP = wiresGeneratorP $ drop sizeB newWireNamesA
                         missingValuesB = (NormalB . wiresGeneratorE) $ drop sizeB wiresA
                         missingDecls = ValD missingNamesP missingValuesB []
-                    return $ missingDecls : declarations 
-                else return declarations 
+                    return $ missingDecls : declarations
+                else return declarations
     return (newWireNamesA ++ newWireNamesB, declsRes)
 
 halfCleaner' newWireNamesA wiresA newWireNamesB wiresB = mapM declaration declarationPairs where
@@ -87,7 +87,7 @@ halfCleaner' newWireNamesA wiresA newWireNamesB wiresB = mapM declaration declar
 
 declaration ((nameA, nameB),(vA, vB)) = valD pat val [] where
   pat = return $ wiresGeneratorP [nameA, nameB]
-  minMax = ['min,'max] <&> \method -> appE (appE (varE method) (varE vA)) (varE vB) 
+  minMax = ['min,'max] <&> \method -> appE (appE (varE method) (varE vA)) (varE vB)
   val = normalB $ tupE minMax
 
 splitOnPowerOf2 size = split' size 1 where

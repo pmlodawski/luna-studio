@@ -8,8 +8,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Flowbox.FileManager.Item where
 
-import           System.PosixCompat.Files (FileStatus)
-import qualified System.PosixCompat.Files as Files
+import           System.PosixCompat.Files                        (FileStatus)
+import qualified System.PosixCompat.Files                        as Files
 
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude

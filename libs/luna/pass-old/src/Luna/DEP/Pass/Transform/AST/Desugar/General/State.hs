@@ -11,13 +11,13 @@
 
 module Luna.DEP.Pass.Transform.AST.Desugar.General.State where
 
-import           Luna.DEP.Data.ASTInfo (ASTInfo)
-import qualified Luna.DEP.Data.ASTInfo as ASTInfo
+import           Luna.DEP.Data.ASTInfo     (ASTInfo)
+import qualified Luna.DEP.Data.ASTInfo     as ASTInfo
 
-import Flowbox.Prelude           hiding (id)
-import Flowbox.System.Log.Logger hiding (info)
+import           Flowbox.Prelude           hiding (id)
+import           Flowbox.System.Log.Logger hiding (info)
 
-import Control.Monad.State (MonadState, get, modify)
+import           Control.Monad.State       (MonadState, get, modify)
 
 logger :: Logger
 logger = getLogger $moduleName

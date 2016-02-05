@@ -5,8 +5,9 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-import           Options.Applicative (command, command, fullDesc, help, hidden, long, metavar, prefs, progDesc, short, strOption, subparser, switch, value, (<>))
-import qualified Options.Applicative as Opt
+import           Options.Applicative                     (command, command, fullDesc, help, hidden, long, metavar, prefs, progDesc, short,
+                                                          strOption, subparser, switch, value, (<>))
+import qualified Options.Applicative                     as Opt
 
 import qualified Flowbox.AWS.Region                      as Region
 import           Flowbox.Control.Applicative

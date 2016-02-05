@@ -11,17 +11,17 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
-{-# LANGUAGE TemplateHaskell       #-}
 
 module Flowbox.Graphics.Color.RGBA where
 
-import Data.Foldable                     (Foldable)
-import Data.Typeable
+import           Data.Foldable                     (Foldable)
+import           Data.Typeable
 
-import Flowbox.Prelude hiding (lift)
-import Flowbox.Graphics.Utils.Accelerate
+import           Flowbox.Graphics.Utils.Accelerate
+import           Flowbox.Prelude                   hiding (lift)
 
 
 data RGBA a = RGBA { _rgbaR :: a, _rgbaG :: a, _rgbaB :: a, _rgbaA :: a }

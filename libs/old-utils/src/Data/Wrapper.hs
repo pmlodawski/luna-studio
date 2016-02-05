@@ -5,15 +5,15 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE DefaultSignatures      #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE OverlappingInstances   #-}
+{-# LANGUAGE UndecidableInstances   #-}
 
 module Data.Wrapper where
 
-import Control.Monad.Trans
-import Prelude
+import           Control.Monad.Trans
+import           Prelude
 
 
 ----------------------------------------------------------------------------------

@@ -13,9 +13,9 @@ module Luna.Syntax.Graph.View.GraphView (
     isNotAlreadyConnected,
 ) where
 
-import           Data.Foldable (foldlM)
-import qualified Data.List     as List
-import qualified Data.Maybe    as Maybe
+import           Data.Foldable                         (foldlM)
+import qualified Data.List                             as List
+import qualified Data.Maybe                            as Maybe
 
 import           Flowbox.Control.Error
 import           Flowbox.Data.Graph                    hiding (Edge, Graph, fromGraph)

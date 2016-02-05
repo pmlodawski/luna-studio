@@ -5,22 +5,22 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
 --{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 module Type.BaseType where
 
-import Data.Typeable
-import Data.Proxy.Utils
-import Prelude
+import           Data.Proxy.Utils
+import           Data.Typeable
+import           Prelude
 
 --------------------------------------------------------------------------------
 -- Utils

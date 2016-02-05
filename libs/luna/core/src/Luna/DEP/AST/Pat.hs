@@ -11,9 +11,9 @@
 
 module Luna.DEP.AST.Pat where
 
-import Control.Applicative
-import Data.Binary         (Binary)
-import GHC.Generics
+import           Control.Applicative
+import           Data.Binary                     (Binary)
+import           GHC.Generics
 
 import           Flowbox.Generics.Deriving.QShow
 import           Flowbox.Prelude                 hiding (Traversal, drop, id)

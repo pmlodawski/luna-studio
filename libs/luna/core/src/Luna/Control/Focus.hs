@@ -10,11 +10,11 @@
 
 module Luna.Control.Focus where
 
-import Control.Zipper ((:>>), Top)
+import           Control.Zipper     ((:>>), Top)
 
-import Flowbox.Prelude
-import Luna.Syntax.Decl   (LDecl)
-import Luna.Syntax.Module (LModule)
+import           Flowbox.Prelude
+import           Luna.Syntax.Decl   (LDecl)
+import           Luna.Syntax.Module (LModule)
 --import Luna.Syntax.Expr   (Expr)
 --import           Luna.Syntax.Arg    (Arg)
 --import qualified Luna.Syntax.Expr   as Expr

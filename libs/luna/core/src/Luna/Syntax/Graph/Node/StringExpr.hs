@@ -8,7 +8,7 @@
 
 module Luna.Syntax.Graph.Node.StringExpr where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

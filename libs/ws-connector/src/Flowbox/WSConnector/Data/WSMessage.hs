@@ -1,11 +1,11 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.WSConnector.Data.WSMessage where
 
-import Flowbox.Prelude
-import Data.Binary
-import Data.ByteString (ByteString)
+import           Data.Binary
+import           Data.ByteString (ByteString)
+import           Flowbox.Prelude
 
 data ControlCode = ConnectionTakeover
                  | Welcome
@@ -13,7 +13,7 @@ data ControlCode = ConnectionTakeover
 
 instance Binary ControlCode
 
-data WSMessage = WebMessage { _topic :: String
+data WSMessage = WebMessage { _topic   :: String
                             , _message :: ByteString
                             }
                | ControlMessage ControlCode

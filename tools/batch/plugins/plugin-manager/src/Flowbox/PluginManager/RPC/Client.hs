@@ -10,8 +10,8 @@
 
 module Flowbox.PluginManager.RPC.Client where
 
-import Control.Monad.State
-import Control.Monad.Trans.Either
+import           Control.Monad.State
+import           Control.Monad.Trans.Either
 
 import           Flowbox.Bus.Bus                                          (Bus)
 import qualified Flowbox.Bus.Bus                                          as Bus

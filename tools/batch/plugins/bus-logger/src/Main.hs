@@ -8,7 +8,7 @@
 
 module Main where
 
-import qualified Data.List as List
+import qualified Data.List                   as List
 
 import qualified Flowbox.Bus.EndPoint        as EP
 import           Flowbox.Bus.Logger.Cmd      (Cmd)

@@ -12,8 +12,8 @@
 
 module Luna.DEP.Pass.Transform.AST.SSA.SSA where
 
-import Control.Applicative
-import Control.Monad.State
+import           Control.Applicative
+import           Control.Monad.State
 
 import           Flowbox.Prelude           hiding (error, id, mod)
 import           Flowbox.System.Log.Logger

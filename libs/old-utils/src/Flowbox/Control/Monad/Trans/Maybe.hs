@@ -11,10 +11,10 @@ module Flowbox.Control.Monad.Trans.Maybe (
     hoistMaybe
 ) where
 
-import Control.Error.Util        (hoistMaybe)
-import Control.Monad.Identity
-import Control.Monad.Trans.Maybe
-import Flowbox.Prelude
+import           Control.Error.Util        (hoistMaybe)
+import           Control.Monad.Identity
+import           Control.Monad.Trans.Maybe
+import           Flowbox.Prelude
 
 runMaybe :: MaybeT Identity a -> Maybe a
 runMaybe = runIdentity . runMaybeT

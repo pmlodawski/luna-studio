@@ -11,7 +11,7 @@
 module Luna.DEP.Data.Namespace where
 
 
-import GHC.Generics (Generic)
+import           GHC.Generics            (Generic)
 
 import qualified Data.Maps               as Map
 import           Data.Maybe              (fromJust)

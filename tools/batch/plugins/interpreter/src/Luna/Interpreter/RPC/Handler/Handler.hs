@@ -13,12 +13,12 @@
 module Luna.Interpreter.RPC.Handler.Handler where
 
 import           Control.Monad.Trans.State
-import           Data.IORef                (IORef)
-import qualified Data.IORef                as IORef
-import           Pipes                     ((>->))
+import           Data.IORef                                  (IORef)
+import qualified Data.IORef                                  as IORef
+import           Pipes                                       ((>->))
 import qualified Pipes
-import qualified Pipes.Concurrent          as Pipes
-import qualified Pipes.Safe                as Pipes
+import qualified Pipes.Concurrent                            as Pipes
+import qualified Pipes.Safe                                  as Pipes
 
 import           Flowbox.Bus.Data.Flag                       (Flag)
 import qualified Flowbox.Bus.Data.Flag                       as Flag

@@ -11,8 +11,8 @@
 
 module Luna.DEP.Parser.Unit where
 
-import Flowbox.Prelude
-import Luna.DEP.AST.Common (ID)
+import           Flowbox.Prelude
+import           Luna.DEP.AST.Common (ID)
 
 
 

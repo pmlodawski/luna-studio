@@ -12,8 +12,8 @@
 
 module Luna.DEP.Data.Serialize.Proto.Conversion.NodeDefault where
 
-import qualified Data.Map   as Map
-import qualified Data.Maybe as Maybe
+import qualified Data.Map                                          as Map
+import qualified Data.Maybe                                        as Maybe
 
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert

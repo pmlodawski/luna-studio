@@ -1,20 +1,20 @@
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE IncoherentInstances       #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE IncoherentInstances #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE PolyKinds                 #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 
 
 
 
-import Data.Typeable
+import           Data.Typeable
 
 data Foo1 a = Foo1 a deriving (Show, Typeable)
 data Foo2 a b = Foo2 a b deriving (Show, Typeable)
@@ -34,8 +34,8 @@ data Id5 t1 t2 t3 t4 t5 = Id5 deriving (Show, Typeable)
 c2 :: Monad (m a) => a -> b -> m a b
 c2 = undefined
 
-instance  KnownType a=>Num a  
-instance  KnownType a =>Monad a  
+instance  KnownType a=>Num a
+instance  KnownType a =>Monad a
 
 
 instance  (m ~ Id1) =>Test (Foo1 (m a))  where
@@ -46,15 +46,15 @@ class KnownType a where
     matchKnown :: Proxy a -> Proxy a
     matchKnown = undefined
 
-instance KnownType Int 
+instance KnownType Int
 
-instance KnownType Foo1 
-instance KnownType Foo2 
+instance KnownType Foo1
+instance KnownType Foo2
 
-instance  (KnownType m, KnownType a) =>KnownType (m a)  
-instance  (a~Id0) =>KnownType (a :: *)  
-instance  (a~Id1)=>KnownType (a :: * -> *)  
-instance  (a~Id2) =>KnownType (a :: * -> * -> *)  
+instance  (KnownType m, KnownType a) =>KnownType (m a)
+instance  (a~Id0) =>KnownType (a :: *)
+instance  (a~Id1)=>KnownType (a :: * -> *)
+instance  (a~Id2) =>KnownType (a :: * -> * -> *)
 
 
 

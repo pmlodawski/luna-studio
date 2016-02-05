@@ -5,13 +5,13 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies              #-}
 
 module Main where
 
 import           Data.Array.Accelerate             as A
 import qualified Flowbox.Graphics.Utils.Accelerate as UA
-import           Flowbox.Prelude                   as P hiding ((#))
+import           Flowbox.Prelude                   as P hiding (( # ))
 
 import qualified Data.Array.Accelerate.CUDA        as CUDA
 

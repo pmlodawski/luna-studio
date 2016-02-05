@@ -1,7 +1,7 @@
+{-# LANGUAGE FlexibleContexts     #-}
+{-# LANGUAGE LambdaCase           #-}
+{-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE LambdaCase #-}
 
 module Data.Graph.Sort where
 

@@ -1,14 +1,14 @@
-{-# LANGUAGE UndecidableInstances   #-}
+{-# LANGUAGE DataKinds              #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE PolyKinds              #-}
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE TypeOperators          #-}
-{-# LANGUAGE PolyKinds              #-}
-{-# LANGUAGE DataKinds              #-}
+{-# LANGUAGE UndecidableInstances   #-}
 
 module Data.TypeLevel.Containers where
 
-import Type.Bool hiding (Bool, True, False)
-import Prelude             (Bool(True, False))
+import           Prelude   (Bool (True, False))
+import           Type.Bool hiding (Bool, False, True)
 
 
 type family Elem a (cont :: p) :: Bool

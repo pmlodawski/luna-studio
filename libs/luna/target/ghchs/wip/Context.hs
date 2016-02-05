@@ -9,10 +9,10 @@
 {-# LANGUAGE IncoherentInstances       #-}
 {-# LANGUAGE OverlappingInstances      #-}
 
-import Control.Applicative
-import Control.Monad.IO.Class
-import Control.Monad.State
-import Control.Monad.Trans
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.State
+import           Control.Monad.Trans
 
 data Pure a = Pure { fromPure :: a } deriving (Show)
 

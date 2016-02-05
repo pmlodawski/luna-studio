@@ -10,8 +10,8 @@ module Flowbox.InstanceManager.Config (
     Config(..),
 ) where
 
-import Flowbox.Prelude
-import Paths_flowbox_instance_manager (version)
+import           Flowbox.Prelude
+import           Paths_flowbox_instance_manager (version)
 
 
 

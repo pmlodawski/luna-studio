@@ -6,7 +6,6 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TypeFamilies  #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE ViewPatterns  #-}
 
 module Flowbox.Graphics.Mockup.Matte (
     Matte,
@@ -16,14 +15,14 @@ module Flowbox.Graphics.Mockup.Matte (
     vectorMatteLuna,
 ) where
 
-import qualified Data.Array.Accelerate     as A
-import           Data.RTuple               (RTuple (RTuple), toTuple)
-import           Math.Coordinate.Cartesian (Point2 (..))
-import           Math.Space.Space          (Grid (..))
-import qualified System.FilePath           as FilePath
+import qualified Data.Array.Accelerate          as A
+import           Data.RTuple                    (RTuple (RTuple), toTuple)
+import           Math.Coordinate.Cartesian      (Point2 (..))
+import           Math.Space.Space               (Grid (..))
+import qualified System.FilePath                as FilePath
 
 import           Flowbox.Geom2D.ControlPoint
-import           Flowbox.Geom2D.Mask            (Mask(..))
+import           Flowbox.Geom2D.Mask            (Mask (..))
 import qualified Flowbox.Geom2D.Mask            as Mask
 import           Flowbox.Geom2D.Path
 import           Flowbox.Geom2D.Rasterizer
@@ -32,7 +31,7 @@ import           Flowbox.Graphics.Image.Channel (Channel (..), ChannelData (..))
 import qualified Flowbox.Graphics.Image.Channel as Channel
 import           Flowbox.Graphics.Image.Image   (Image)
 import qualified Flowbox.Graphics.Image.Image   as Image
-import           Flowbox.Graphics.Image.Matte   (Matte(..))
+import           Flowbox.Graphics.Image.Matte   (Matte (..))
 import qualified Flowbox.Graphics.Image.Matte   as Matte
 import           Flowbox.Graphics.Shader.Shader (CartesianShader, Shader (..))
 import qualified Flowbox.Graphics.Shader.Shader as Shader
@@ -41,7 +40,7 @@ import qualified Flowbox.Math.Matrix            as M
 import           Flowbox.Prelude                as P
 import           Luna.Target.HS.Host.Lift       (expandEl)
 
-import           Flowbox.Graphics.Mockup.Basic        as Basic
+import           Flowbox.Graphics.Mockup.Basic  as Basic
 
 
 rasterizeMaskLuna :: (Real a, Fractional a, a ~ Float) => Int -> Int -> Mask a -> Image

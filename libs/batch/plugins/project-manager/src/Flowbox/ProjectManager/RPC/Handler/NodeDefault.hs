@@ -7,8 +7,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.NodeDefault where
 
-import qualified Data.Bimap as Bimap
-import           Data.Maybe (isJust)
+import qualified Data.Bimap                                                                                    as Bimap
+import           Data.Maybe                                                                                    (isJust)
 
 import qualified Flowbox.Batch.Batch                                                                           as Batch
 import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
@@ -22,7 +22,8 @@ import           Flowbox.ProjectManager.Context                                 
 import           Flowbox.ProjectManager.RPC.Handler.Graph                                                      (mapID)
 import qualified Flowbox.ProjectManager.RPC.Topic                                                              as Topic
 import           Flowbox.System.Log.Logger
-import           Flowbox.UR.Manager.Utils                                                             (makeMsgArr, prepareResponse, serialize)
+import           Flowbox.UR.Manager.Utils                                                                      (makeMsgArr, prepareResponse,
+                                                                                                                serialize)
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Get.Request    as NodeDefaultGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Get.Status     as NodeDefaultGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Remove.Request as NodeDefaultRemove

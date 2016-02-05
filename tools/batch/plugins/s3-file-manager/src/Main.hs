@@ -7,7 +7,7 @@
 module Main where
 
 import qualified Aws
-import qualified Data.Text as Text
+import qualified Data.Text                               as Text
 
 import qualified Flowbox.Bus.EndPoint                    as EP
 import qualified Flowbox.Bus.RPC.Server.Server           as Server

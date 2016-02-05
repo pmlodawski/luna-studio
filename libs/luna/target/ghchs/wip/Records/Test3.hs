@@ -7,19 +7,26 @@
   This version does not support lens integration.
 -}
 
-{-# LANGUAGE KindSignatures, DataKinds, MultiParamTypeClasses,
-             TypeFamilies, RankNTypes, FlexibleInstances, 
-             UndecidableInstances, PolyKinds, FlexibleContexts,
-             NoMonomorphismRestriction, TypeOperators #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE DataKinds                 #-}
 {-# LANGUAGE DysfunctionalDependencies #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE PolyKinds                 #-}
+{-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module TrivialRecords where
 
-import Control.Applicative
-import GHC.TypeLits
-import TH
+import           Control.Applicative
+import           GHC.TypeLits
+import           TH
 
 
 -- These class and type family declarations go in base:
@@ -41,17 +48,17 @@ data Vector = Vector deriving Show
 instance (Property "foo" Vector (a -> out), Num out, Num a) => Property "foo2" Vector out where
   property _ base = property (P::P "foo") base 5 + 1
 
-$(nop) 
+$(nop)
 
 instance Property "foo" Vector (a->Vector) where
   property _ _ = (\_ -> Vector)
 
-$(nop) 
+$(nop)
 
 instance Property "bar" Vector (a->a) where
   property _ _ = id
 
-$(nop) 
+$(nop)
 
 
 

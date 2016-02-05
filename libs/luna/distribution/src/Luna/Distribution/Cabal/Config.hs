@@ -7,8 +7,8 @@
 
 module Luna.Distribution.Cabal.Config where
 
-import           Data.Version (Version)
-import qualified Data.Version as Version
+import           Data.Version                    (Version)
+import qualified Data.Version                    as Version
 
 import           Data.String.Utils               (join)
 import           Flowbox.Prelude

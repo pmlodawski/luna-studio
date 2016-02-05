@@ -1,21 +1,21 @@
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE KindSignatures            #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE PolyKinds                 #-}
+{-# LANGUAGE UndecidableInstances      #-}
 --{-# LANGUAGE OverlappingInstances #-}
 
 {-# LANGUAGE DysfunctionalDependencies #-}
 
 
 
-import GHC.TypeLits
+import           GHC.TypeLits
 
-import Luna.Target.HS.Proxy
+import           Luna.Target.HS.Proxy
 
 
 data Arg a = Arg a deriving Show
@@ -40,7 +40,7 @@ newtype FPtr ptr = FPtr ptr deriving Show
 newtype Prop_Vector_length obj = Prop_Vector_length obj deriving Show
 
 instance Prop "length" (Vector a) ((Arg(Arg(Arg(FPtr (Prop_Vector_length (Vector a)))))) )where
-    prop _ obj = (Arg(Arg(Arg(FPtr (Prop_Vector_length obj))))) 
+    prop _ obj = (Arg(Arg(Arg(FPtr (Prop_Vector_length obj)))))
 
 
 newtype AppH fptr args = AppH (fptr, args) deriving Show
@@ -68,7 +68,7 @@ instance Call (Prop_Vector_length (Vector a)) (a,(b,(c,()))) Int where
 
 main = do
     let v = Vector (1::Int) (2::Int) (3::Int)
-        p = prop (Proxy::Proxy "length") v 
+        p = prop (Proxy::Proxy "length") v
     print $ app (3::Int) $ app (2::Int) $ app (1::Int) p
     --print $ call $ app (3::Int) $ app (2::Int) $ app (1::Int) p
     print "end"

@@ -11,7 +11,7 @@ import           Data.ByteString.Char8 (pack, unpack)
 import qualified Data.List             as List
 import qualified Data.String.Utils     as Utils
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

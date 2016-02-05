@@ -7,9 +7,9 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Luna.Interpreter.Session.TargetHS.Reload where
 
-import           Data.Map (Map)
-import           Data.Set (Set)
-import qualified Data.Set as Set
+import           Data.Map                   (Map)
+import           Data.Set                   (Set)
+import qualified Data.Set                   as Set
 
 import           Flowbox.Prelude
 import           Luna.DEP.AST.Control.Crumb (Breadcrumbs)

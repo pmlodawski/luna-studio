@@ -11,9 +11,9 @@
 module Luna.DEP.Pass.Analysis.ID.State where
 
 import           Control.Monad.State
-import           Data.IntSet         (IntSet)
-import qualified Data.IntSet         as IntSet
-import qualified Data.Maybe          as Maybe
+import           Data.IntSet               (IntSet)
+import qualified Data.IntSet               as IntSet
+import qualified Data.Maybe                as Maybe
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger

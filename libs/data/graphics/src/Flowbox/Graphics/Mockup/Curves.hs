@@ -19,7 +19,7 @@ import           Flowbox.Math.Function.CurveGUI (ControlPointGUI (..), CurveGUI 
 import qualified Flowbox.Math.Function.CurveGUI as CurveGUI
 import           Flowbox.Prelude                as P hiding (lookup)
 
-import Flowbox.Graphics.Mockup.Basic
+import           Flowbox.Graphics.Mockup.Basic
 
 
 

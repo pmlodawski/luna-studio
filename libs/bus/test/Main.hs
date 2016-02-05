@@ -1,8 +1,8 @@
 module Main where
 
 import           Control.Monad.Reader
-import qualified Data.ByteString.Char8 as Char8
-import qualified System.ZMQ4.Monadic   as ZMQ
+import qualified Data.ByteString.Char8    as Char8
+import qualified System.ZMQ4.Monadic      as ZMQ
 
 import           Flowbox.Bus.Bus          (Bus)
 import qualified Flowbox.Bus.Bus          as Bus

@@ -11,7 +11,7 @@
 
 module Flowbox.Graphics.Color.Gamma where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

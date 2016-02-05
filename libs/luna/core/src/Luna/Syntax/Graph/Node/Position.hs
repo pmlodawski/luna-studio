@@ -7,7 +7,7 @@
 
 module Luna.Syntax.Graph.Node.Position where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

@@ -11,8 +11,8 @@
 
 module Flowbox.Batch.Project.Project where
 
-import Data.Int     (Int32)
-import GHC.Generics ()
+import           Data.Int                                            (Int32)
+import           GHC.Generics                                        ()
 
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude

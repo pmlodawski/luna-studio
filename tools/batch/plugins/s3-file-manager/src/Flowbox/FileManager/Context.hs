@@ -12,11 +12,11 @@ import qualified Aws
 import           Control.Monad.Trans.State
 import qualified Network.HTTP.Conduit      as Conduit
 
-import           Flowbox.AWS.S3.S3     (S3)
-import qualified Flowbox.AWS.S3.S3     as S3
-import           Flowbox.Bus.RPC.RPC   (RPC)
+import           Flowbox.AWS.S3.S3         (S3)
+import qualified Flowbox.AWS.S3.S3         as S3
+import           Flowbox.Bus.RPC.RPC       (RPC)
 import           Flowbox.Control.Error
-import           Flowbox.Prelude       hiding (Context)
+import           Flowbox.Prelude           hiding (Context)
 
 
 

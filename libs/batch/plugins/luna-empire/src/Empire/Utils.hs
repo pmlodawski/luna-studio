@@ -1,6 +1,6 @@
 module Empire.Utils where
 
-import Prologue
+import           Prologue
 
 import qualified Text.Show.Pretty as Pretty
 

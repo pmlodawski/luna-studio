@@ -1,19 +1,20 @@
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Logger.Internal.LoggerT where
 
-import Data.Monoid            (Monoid(..))
-import Data.Functor.Identity  (Identity)
+import           Data.Functor.Identity  (Identity)
+import           Data.Monoid            (Monoid (..))
 
-import Control.Applicative    (Applicative(..),Alternative(..))
+import           Control.Applicative    (Alternative (..), Applicative (..))
 
-import Control.Monad          (MonadPlus(..),ap,liftM)
-import Control.Monad.Except   (MonadError(..))
-import Control.Monad.IO.Class (MonadIO(..))
-import Control.Monad.Trans    (MonadTrans(..))
+import           Control.Monad          (MonadPlus (..), ap, liftM)
+import           Control.Monad.Except   (MonadError (..))
+import           Control.Monad.IO.Class (MonadIO (..))
+import           Control.Monad.Trans    (MonadTrans (..))
 
 
-import Logger.Internal.Stack
+import           Logger.Internal.Stack
 
 
 

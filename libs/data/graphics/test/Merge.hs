@@ -6,17 +6,17 @@
 ---------------------------------------------------------------------------
 module Main where
 
-import Flowbox.Graphics.Composition.Merge
-import Flowbox.Graphics.Shader.Matrix
-import Flowbox.Graphics.Shader.Rasterizer
-import Flowbox.Graphics.Shader.Sampler
-import Flowbox.Graphics.Shader.Shader
-import Flowbox.Prelude                    hiding (from, max, min, over, transform, under, zoom)
+import           Flowbox.Graphics.Composition.Merge
+import           Flowbox.Graphics.Shader.Matrix
+import           Flowbox.Graphics.Shader.Rasterizer
+import           Flowbox.Graphics.Shader.Sampler
+import           Flowbox.Graphics.Shader.Shader
+import           Flowbox.Prelude                    hiding (from, max, min, over, transform, under, zoom)
 
-import qualified Data.Array.Accelerate as A
+import qualified Data.Array.Accelerate              as A
 import           Data.Foldable
 
-import Utils
+import           Utils
 
 
 

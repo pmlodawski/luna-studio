@@ -7,8 +7,8 @@
 
 module Test.Luna.Interpreter.InterpreterSpec where
 
-import Control.Monad.State hiding (mapM, mapM_)
-import Test.Hspec
+import           Control.Monad.State                               hiding (mapM, mapM_)
+import           Test.Hspec
 
 import qualified Flowbox.Data.MapForest                            as MapForest
 import           Flowbox.Prelude

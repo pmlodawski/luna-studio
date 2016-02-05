@@ -9,14 +9,14 @@
 
 module Flowbox.Bus.Data.Message where
 
-import Data.ByteString (ByteString)
+import           Data.ByteString              (ByteString)
 
-import           Flowbox.Bus.Data.Topic        (Topic, (/+))
-import qualified Flowbox.Bus.Data.Topic        as Topic
-import           Flowbox.Prelude
-import qualified Flowbox.Bus.RPC.RPC           as RPC
+import           Flowbox.Bus.Data.Topic       (Topic, (/+))
+import qualified Flowbox.Bus.Data.Topic       as Topic
+import qualified Flowbox.Bus.RPC.RPC          as RPC
 import           Flowbox.Bus.RPC.Types
-import qualified Flowbox.Text.ProtocolBuffers  as Proto
+import           Flowbox.Prelude
+import qualified Flowbox.Text.ProtocolBuffers as Proto
 
 
 

@@ -7,13 +7,13 @@
 
 module Flowbox.AWS.S3.Directory where
 
-import           Control.Monad.IO.Class (liftIO)
-import qualified Data.String.Utils      as String
-import           Data.Text              (Text)
-import qualified Data.Text              as Text
-import qualified System.Directory       as Directory
-import           System.FilePath        ((</>))
-import qualified System.FilePath        as FilePath
+import           Control.Monad.IO.Class             (liftIO)
+import qualified Data.String.Utils                  as String
+import           Data.Text                          (Text)
+import qualified Data.Text                          as Text
+import qualified System.Directory                   as Directory
+import           System.FilePath                    ((</>))
+import qualified System.FilePath                    as FilePath
 
 import qualified Flowbox.AWS.S3.File                as File
 import           Flowbox.AWS.S3.S3                  (S3)

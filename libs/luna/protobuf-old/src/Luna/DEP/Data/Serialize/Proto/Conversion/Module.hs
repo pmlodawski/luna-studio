@@ -12,7 +12,7 @@
 
 module Luna.DEP.Data.Serialize.Proto.Conversion.Module where
 
-import Control.Applicative
+import           Control.Applicative
 
 import           Flowbox.Data.Convert
 import qualified Generated.Proto.Dep.Module.Module             as Gen

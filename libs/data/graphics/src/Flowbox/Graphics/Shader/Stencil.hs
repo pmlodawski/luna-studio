@@ -9,13 +9,13 @@
 
 module Flowbox.Graphics.Shader.Stencil where
 
-import Flowbox.Graphics.Shader.Shader
-import Flowbox.Math.Matrix            as M hiding (get, stencil)
-import Flowbox.Prelude                as P hiding (filter)
+import           Flowbox.Graphics.Shader.Shader
+import           Flowbox.Math.Matrix            as M hiding (get, stencil)
+import           Flowbox.Prelude                as P hiding (filter)
 
-import qualified Data.Array.Accelerate     as A
-import           Math.Coordinate.Cartesian (Point2 (..))
-import           Math.Space.Space          hiding (height, width)
+import qualified Data.Array.Accelerate          as A
+import           Math.Coordinate.Cartesian      (Point2 (..))
+import           Math.Space.Space               hiding (height, width)
 
 
 

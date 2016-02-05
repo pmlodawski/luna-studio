@@ -9,8 +9,8 @@
 
 module Flowbox.Batch.Handler.Library where
 
-import           Data.Version   (Version (Version))
-import qualified System.Process as Process
+import           Data.Version                          (Version (Version))
+import qualified System.Process                        as Process
 
 import           Flowbox.Batch.Batch                   (Batch, gets)
 import qualified Flowbox.Batch.Batch                   as Batch

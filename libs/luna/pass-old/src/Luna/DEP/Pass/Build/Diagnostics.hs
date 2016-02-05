@@ -11,8 +11,8 @@
 
 module Luna.DEP.Pass.Build.Diagnostics where
 
-import Control.Monad.IO.Class
-import Data.String.Utils      (join)
+import           Control.Monad.IO.Class
+import           Data.String.Utils               (join)
 
 import qualified Flowbox.Generics.Deriving.QShow as QShow
 import           Flowbox.Prelude

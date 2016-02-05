@@ -12,13 +12,13 @@ module Luna.Interpreter.Session.Session (
     module Luna.Interpreter.Session.Session,
 ) where
 
-import           Control.Monad.Catch        (bracket)
-import qualified Control.Monad.Catch        as Catch
-import qualified Control.Monad.Ghc          as MGHC
+import           Control.Monad.Catch                        (bracket)
+import qualified Control.Monad.Catch                        as Catch
+import qualified Control.Monad.Ghc                          as MGHC
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
-import qualified Data.Either                as Either
-import qualified DynFlags                   as GHC
+import qualified Data.Either                                as Either
+import qualified DynFlags                                   as GHC
 import qualified GHC
 import qualified HscTypes
 

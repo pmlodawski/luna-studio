@@ -1,41 +1,40 @@
 
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
 
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE IncoherentInstances #-}
+{-# LANGUAGE IncoherentInstances       #-}
+{-# LANGUAGE OverlappingInstances      #-}
 
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 
 
 
-import Control.Applicative  
-import Control.Monad.IO.Class
-import Control.Monad.Trans
-import Data.Typeable
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans
+import           Data.Typeable
 
 
-import Test.Hspec
-import Test.QuickCheck
-import Control.Exception (evaluate)
-import Unsafe.Coerce
+import           Control.Exception      (evaluate)
+import           Test.Hspec
+import           Test.QuickCheck
+import           Unsafe.Coerce
 --import Control.Monad.State
 
 --import Bind2 (bind, bind2, MonadRebase(..), StateT(..), put,get)
 
 --import Data2
 
-import Utils
+import           Utils
 
 
 foo x y = x
@@ -164,7 +163,7 @@ instance  (TransApplicative (UnsafeBase base err) base (UnsafeBase base err)) =>
 
 
 class Raise e a b | e a -> b where
-    raise :: e -> a -> b 
+    raise :: e -> a -> b
 
 
 instance Raise e (Safe a)               (UnsafeBase Safe e a)     where raise e (Safe a) = Error e
@@ -394,8 +393,8 @@ main = do
             it "sum e123 e34" $ summe' e123 e34 `shouldBeT` (Error E1 :: UnsafeBase (UnsafeBase (UnsafeBase (UnsafeBase Safe E4) E3) E2) E1 Int)
             it "sum e123 e34" $ summe' e123 e34 `shouldBeT` (Error E1 :: UnsafeBase (UnsafeBase (UnsafeBase (UnsafeBase Safe E4) E3) E2) E1 Int)
         describe "Unsafe values lifting" $ do
-            it "sum v2 e12"   $ magicMerge (summe' v2 e12) `shouldBeT` (Error E1 :: UnsafeBase (UnsafeBase Safe E2) E1 Int) 
-            it "sum e12 v2"   $ summe' e12 v2              `shouldBeT` (Error E1 :: UnsafeBase (UnsafeBase Safe E2) E1 Int) 
+            it "sum v2 e12"   $ magicMerge (summe' v2 e12) `shouldBeT` (Error E1 :: UnsafeBase (UnsafeBase Safe E2) E1 Int)
+            it "sum e12 v2"   $ summe' e12 v2              `shouldBeT` (Error E1 :: UnsafeBase (UnsafeBase Safe E2) E1 Int)
 
 
 v  = Safe(1::Int)
@@ -438,7 +437,7 @@ vx4 = Other . Other . Other $ Value 1 :: UnsafeBase (UnsafeBase (UnsafeBase (Uns
 --main = do
 --    printTyped $ summe' v2 e12
 --    let
-        
+
 
 --        --niepoprawna wartosc - OSTATNIA NIEODKOMENTOWANA INSTANCJA - niepprawne zalozenie, ze w wyniku mamy e1 ...
 
@@ -446,7 +445,7 @@ vx4 = Other . Other . Other $ Value 1 :: UnsafeBase (UnsafeBase (UnsafeBase (Uns
 --        --tval = if (1<2) then matchSafe x ex1 else matchSafe ex1 x
 
 --        --tval = summe' ex1' ev1
---    --    tval = summe' ev1 ex1' 
+--    --    tval = summe' ev1 ex1'
 --        tval :: UnsafeBase (UnsafeBase Safe E1) E2 Int
 --        tval = magicMerge $ summe' ev1 ex4
 
@@ -461,8 +460,8 @@ vx4 = Other . Other . Other $ Value 1 :: UnsafeBase (UnsafeBase (UnsafeBase (Uns
 
 --    print ex4
 --    print $ fmap (+10) ex4
-    
+
 --    print $ catch (\E1 -> Safe(0::Int)) $ ex2
---    print $ catch (\E1 -> Safe(0::Int)) 
---          . catch (\E2 -> Safe(0::Int)) 
+--    print $ catch (\E1 -> Safe(0::Int))
+--          . catch (\E2 -> Safe(0::Int))
 --          $ ex2

@@ -7,7 +7,7 @@
 module Flowbox.Graphics.Image.Error where
 
 import qualified Flowbox.Graphics.Image.Channel as Channel
-import			 Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

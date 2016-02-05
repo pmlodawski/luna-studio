@@ -10,8 +10,8 @@
 
 module Main where
 
-import qualified Data.Time                  as Time
-import           Database.PostgreSQL.Simple as PSQL
+import qualified Data.Time                           as Time
+import           Database.PostgreSQL.Simple          as PSQL
 
 import qualified Flowbox.AWS.Database.Database       as Database
 import qualified Flowbox.AWS.Database.Instance       as InstanceDB

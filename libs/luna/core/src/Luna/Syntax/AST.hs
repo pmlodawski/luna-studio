@@ -5,33 +5,33 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs                  #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
 
 module Luna.Syntax.AST (
     module Luna.Syntax.AST
 ) where
 
-import GHC.Generics        (Generic)
+import           GHC.Generics       (Generic)
 
-import Flowbox.Prelude
-import Luna.Syntax.Expr   (Expr)
-import Luna.Syntax.Lit    (Lit)
-import Luna.Syntax.Module (Module)
-import Luna.Syntax.Decl   (Decl)
-import Luna.Syntax.Pat    (Pat)
-import Luna.Syntax.Type   (Type)
+import           Flowbox.Prelude
+import           Luna.Syntax.Decl   (Decl)
+import           Luna.Syntax.Expr   (Expr)
+import           Luna.Syntax.Lit    (Lit)
+import           Luna.Syntax.Module (Module)
+import           Luna.Syntax.Pat    (Pat)
+import           Luna.Syntax.Type   (Type)
 
 
 type ID = Int
 
 data AST a e v = Module { fromModule :: Module a e }
-               | Decl   { fromDecl   :: Decl   a e }
-               | Expr   { fromExpr   :: Expr   a v }
-               | Lit    { fromLit    :: Lit        }
-               | Pat    { fromPat    :: Pat    a   }
-               | Type   { fromType   :: Type   a   }
+               | Decl   { fromDecl :: Decl   a e }
+               | Expr   { fromExpr :: Expr   a v }
+               | Lit    { fromLit :: Lit        }
+               | Pat    { fromPat :: Pat    a   }
+               | Type   { fromType :: Type   a   }
                deriving (Show, Generic)
 
 

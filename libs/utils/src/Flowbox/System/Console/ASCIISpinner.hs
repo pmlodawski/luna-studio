@@ -4,7 +4,7 @@ import qualified Control.Concurrent as C
 import           Control.Monad
 import qualified System.IO          as IO
 
-import Flowbox.Prelude hiding (elements)
+import           Flowbox.Prelude    hiding (elements)
 
 
 

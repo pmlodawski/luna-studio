@@ -1,14 +1,15 @@
-{-# LANGUAGE FlexibleInstances, TypeFamilies #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeFamilies      #-}
 
 module Logger.Internal.TraceInline (
     TraceInline,
     traceInline
   ) where
 
-import Logger.Internal.LoggerT
-import Logger.Internal.Stack
+import           Logger.Internal.LoggerT
+import           Logger.Internal.Stack
 
-import Data.List
+import           Data.List
 
 
 

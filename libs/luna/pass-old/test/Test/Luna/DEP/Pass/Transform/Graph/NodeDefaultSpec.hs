@@ -7,8 +7,8 @@
 
 module Test.Luna.DEP.Pass.Transform.Graph.NodeDefaultSpec where
 
-import Control.Monad (forM_)
-import Test.Hspec
+import           Control.Monad                                    (forM_)
+import           Test.Hspec
 
 import           Flowbox.Prelude
 import qualified Luna.DEP.Pass.Transform.GraphView.Defaults       as Defaults

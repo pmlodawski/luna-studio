@@ -8,7 +8,7 @@
 {-# LANGUAGE TemplateHaskell     #-}
 module Luna.Interpreter.RPC.Handler.Cache where
 
-import Data.Int (Int32)
+import           Data.Int                                         (Int32)
 
 import           Flowbox.Bus.RPC.RPC                              (RPC)
 import           Flowbox.Data.Convert

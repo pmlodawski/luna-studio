@@ -6,8 +6,8 @@
 ---------------------------------------------------------------------------
 module Flowbox.RepoManager.Data.Package.Flag where
 
-import Flowbox.Prelude
-import Data.Function   (on)
+import           Data.Function   (on)
+import           Flowbox.Prelude
 
 data Flag = Flag { name        :: String
                  , description :: String

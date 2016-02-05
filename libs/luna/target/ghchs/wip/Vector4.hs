@@ -1,72 +1,71 @@
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE DeriveFunctor             #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE PolyKinds                 #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE TupleSections             #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 --{-# LANGUAGE IncoherentInstances #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE LambdaCase                #-}
 
 
+{-# LANGUAGE DeriveGeneric             #-}
 {-# LANGUAGE DysfunctionalDependencies #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax          #-}
 
-{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE AllowAmbiguousTypes       #-}
 
 
 module Vector where
 
-import Control.PolyMonad
-import Control.Monad (join)
-import Control.Monad.Shuffle
-import Control.Applicative
-import Control.Monad.IO.Class
-import Control.Monad.Trans
-import Control.PolyApplicative
-import Control.PolyApplicative.App
-import Luna.Target.HS.Control.Context
-import Luna.Target.HS.Control.Flow
-import Luna.Target.HS.Utils.BaseMonads
-import Luna.Target.HS.Data.Func
-import Control.Monad.Morph
-import Flowbox.Utils
-import Data.Typeable (Typeable, Proxy(..))
-import Data.TypeLevel
-import Data.Wrap
-import Luna.Target.HS.Data.Struct
-import Luna.Target.HS.Host.Lift
+import           Control.Applicative
+import           Control.Monad                       (join)
+import           Control.Monad.IO.Class
+import           Control.Monad.Morph
+import           Control.Monad.Shuffle
+import           Control.Monad.Trans
+import           Control.PolyApplicative
+import           Control.PolyApplicative.App
+import           Control.PolyMonad
+import           Data.Typeable                       (Proxy (..), Typeable)
+import           Data.TypeLevel
+import           Data.Wrap
+import           Flowbox.Utils
+import           Luna.Target.HS.Control.Context
+import           Luna.Target.HS.Control.Flow
+import           Luna.Target.HS.Data.Func
+import           Luna.Target.HS.Data.Struct
+import           Luna.Target.HS.Host.Lift
+import           Luna.Target.HS.Utils.BaseMonads
 --import Luna.Target.HS.Control.Context.Rebindable
-import GHC.TypeLits (Symbol)
-import Data.TupleList
-import Type.BaseType
+import           Data.TupleList
+import           GHC.TypeLits                        (Symbol)
+import           Type.BaseType
 --import Type.Infer
-import Data.Proxy.Utils
+import           Data.Proxy.Utils
 
-import Luna.Target.HS.TH.TH
+import           Luna.Target.HS.TH.TH
 
 --import VectorData
 
-import qualified Prelude as P
+import qualified Prelude                             as P
 
-import           Prelude hiding ((>>=),(>>), return, fail)
-import Luna.Target.HS.Control.Context.Bind
-import GHC.Generics
+import           GHC.Generics
+import           Luna.Target.HS.Control.Context.Bind
+import           Prelude                             hiding (fail, return, (>>), (>>=))
 
 (>>=)  = bindEnv
 (>>)   = bindEnv_
@@ -216,7 +215,7 @@ registerMethod ''Vector "fstate"
 ---
 
 
-print' ::  (MonadIO m, Show a)=>a -> MonadCtx IO () m (Value Pure (Safe ()))  
+print' ::  (MonadIO m, Show a)=>a -> MonadCtx IO () m (Value Pure (Safe ()))
 print' s = MonadCtx . liftIO $ fmap val $ print s
 
 

@@ -1,12 +1,12 @@
 module Logger.Internal.Runners where
 
-import Control.Monad           (liftM)
+import           Control.Monad           (liftM)
 
-import Data.Either             (isLeft,isRight)
-import Data.Functor.Identity   (runIdentity)
+import           Data.Either             (isLeft, isRight)
+import           Data.Functor.Identity   (runIdentity)
 
-import Logger.Internal.Stack
-import Logger.Internal.LoggerT
+import           Logger.Internal.LoggerT
+import           Logger.Internal.Stack
 
 
 

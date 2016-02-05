@@ -6,18 +6,18 @@
 ---------------------------------------------------------------------------
 
 
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable   #-}
+{-# LANGUAGE GADTs                #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE GADTs #-}
 
 module Luna.Target.HS.Data.Func.Lam where
 
-import Luna.Target.HS.Data.Func.App
-import Data.Typeable
-import Luna.Target.HS.Control.Flow.Env
-import Luna.Target.HS.Data.Func.Args9 
-import qualified Luna.Target.HS.Data.Func.Args9 as Args
-import Data.PolyTypeable (PolyTypeable, polyTypeOf)
+import           Data.PolyTypeable               (PolyTypeable, polyTypeOf)
+import           Data.Typeable
+import           Luna.Target.HS.Control.Flow.Env
+import           Luna.Target.HS.Data.Func.App
+import           Luna.Target.HS.Data.Func.Args9
+import qualified Luna.Target.HS.Data.Func.Args9  as Args
 
 ----------------------------------------------------------------------------------
 -- Data types

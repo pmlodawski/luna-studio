@@ -11,7 +11,7 @@
 
 module Main where
 
-import Prelude hiding (print)
+import           Prelude hiding (print)
 
 class Print a where
     print :: a -> IO ()

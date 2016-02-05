@@ -4,27 +4,27 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE TemplateHaskell            #-}
-{-# LANGUAGE UndecidableInstances            #-}
+{-# LANGUAGE UndecidableInstances       #-}
 
 
 module Luna.Parser.Indent where
 
-import Control.Lens
-import Data.Default
-import GHC.Int
-import Prelude
+import           Control.Lens
+import           Data.Default
+import           GHC.Int
+import           Prelude
 
 import           Control.Applicative
 import           Control.Monad
-import           Control.Monad.Trans
+import           Control.Monad.State       (MonadState)
 import qualified Control.Monad.State       as State
-import           Control.Monad.State (MonadState)
+import           Control.Monad.Trans
 import           Text.Parser.Char
 import           Text.Parser.Combinators
+import           Text.Parser.LookAhead
 import           Text.Parser.Token
 import           Text.Trifecta.Combinators
-import           Text.Trifecta.Delta (column)
-import           Text.Parser.LookAhead
+import           Text.Trifecta.Delta       (column)
 
 
 ----------------------------------------------------------------------
@@ -109,8 +109,8 @@ checkIndentedOrEq = mapIndent (>=) "indentation doesn't match"
 -- IndentStateT
 ----------------------------------------------------------------------
 
-newtype IndentStateT s m a = IndentStateT { getState :: State.StateT s m a } 
-        deriving (Monad, MonadPlus, Applicative, Alternative, Functor, DeltaParsing, 
+newtype IndentStateT s m a = IndentStateT { getState :: State.StateT s m a }
+        deriving (Monad, MonadPlus, Applicative, Alternative, Functor, DeltaParsing,
                   TokenParsing, CharParsing, Parsing, MonadIO, LookAheadParsing)
 
 

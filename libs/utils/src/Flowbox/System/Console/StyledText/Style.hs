@@ -10,7 +10,7 @@ module Flowbox.System.Console.StyledText.Style (
         module System.Console.ANSI
 ) where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 import           System.Console.ANSI (Color (..), ColorIntensity (..), ConsoleLayer (..), SGR)
 import qualified System.Console.ANSI as ANSI

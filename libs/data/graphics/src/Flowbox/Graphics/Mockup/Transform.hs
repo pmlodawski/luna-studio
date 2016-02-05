@@ -26,30 +26,30 @@ module Flowbox.Graphics.Mockup.Transform (
     transformLuna
 ) where
 
-import           Data.Array.Accelerate     (Exp, Z(..), (:.)(..))
-import qualified Data.Array.Accelerate     as A
-import           Linear                    (V2 (..))
-import           Math.Coordinate.Cartesian (Point2 (..))
-import           Math.Space.Space          (Grid (..))
+import           Data.Array.Accelerate                  ((:.) (..), Exp, Z (..))
+import qualified Data.Array.Accelerate                  as A
+import           Linear                                 (V2 (..))
+import           Math.Coordinate.Cartesian              (Point2 (..))
+import           Math.Space.Space                       (Grid (..))
 
 import           Flowbox.Geom2D.Rectangle               (Rectangle)
 import           Flowbox.Graphics.Composition.Transform (CropConstantOutside, CropReformat)
 import qualified Flowbox.Graphics.Composition.Transform as Transform
 import           Flowbox.Graphics.Image.Channel         (Channel (..), ChannelData (..))
 import qualified Flowbox.Graphics.Image.Channel         as Channel
+import           Flowbox.Graphics.Image.Image           (Image)
 import           Flowbox.Graphics.Image.Matte           (Matte)
 import qualified Flowbox.Graphics.Image.Matte           as Matte
-import           Flowbox.Graphics.Image.Image           (Image)
 import           Flowbox.Graphics.Shader.Matrix         (fromMatrix)
 import           Flowbox.Graphics.Shader.Rasterizer     (rasterizer)
 import           Flowbox.Graphics.Shader.Sampler        (monosampler, nearest)
-import           Flowbox.Graphics.Shader.Shader         (Shader(..))
+import           Flowbox.Graphics.Shader.Shader         (Shader (..))
 import qualified Flowbox.Graphics.Shader.Shader         as Shader
 import           Flowbox.Graphics.Utils.Accelerate      (variable)
 import qualified Flowbox.Math.Matrix                    as M
 import           Flowbox.Prelude                        as P hiding (lookup)
 
-import Flowbox.Graphics.Mockup.Basic
+import           Flowbox.Graphics.Mockup.Basic
 
 
 data SkewOrder = SkewXY | SkewYX

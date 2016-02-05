@@ -13,10 +13,10 @@
 module Luna.Data.Serialize.Proto.Conversion.Expr where
 
 import           Control.Applicative
-import qualified Data.Foldable       as F
-import qualified Data.Map            as Map
-import qualified Data.Maybe          as Maybe
-import qualified Data.Sequence       as Seq
+import qualified Data.Foldable                             as F
+import qualified Data.Map                                  as Map
+import qualified Data.Maybe                                as Maybe
+import qualified Data.Sequence                             as Seq
 
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert

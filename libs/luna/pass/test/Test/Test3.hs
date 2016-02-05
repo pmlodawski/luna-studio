@@ -1,12 +1,12 @@
 
-import Data.Default
-import Data.IntMap (IntMap)
-import Control.Lens
-import qualified Data.IntMap as IntMap
-import qualified Data.IntSet    as IntSet
-import           Data.IntSet    (IntSet)
+import           Control.Lens
+import           Data.Default
+import           Data.IntMap        (IntMap)
+import qualified Data.IntMap        as IntMap
+import           Data.IntSet        (IntSet)
+import qualified Data.IntSet        as IntSet
 import           Data.Monoid
-import System.Environment (getArgs)
+import           System.Environment (getArgs)
 
 type Edge = (Int, Int)
 
@@ -42,9 +42,9 @@ insEdge n m (Graph ns) = ns' `seq` Graph ns'
 --          ns'   = maybe ns updateNodes medge
 --          updateNodes (n, m) = IntMap.adjust (\(ins,outs) -> (IntSet.delete e ins, outs)) m
 --                             $ IntMap.adjust (\(ins,outs) -> (ins, IntSet.delete e outs)) n
---                             $ ns 
+--                             $ ns
 
-----subgraph nodes (Graph ns es) 
+----subgraph nodes (Graph ns es)
 
 main = do
     args <- getArgs

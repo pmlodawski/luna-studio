@@ -8,12 +8,12 @@
 
 module Main where
 
-import Data.ByteString.Lazy.Char8
-import Flowbox.Prelude            hiding (putStrLn, view)
+import           Data.ByteString.Lazy.Char8
+import           Flowbox.Prelude                              hiding (putStrLn, view)
 
-import Flowbox.Graphics.Image.Channel hiding (compute)
-import Flowbox.Graphics.Image.View    as V
-import Flowbox.Graphics.Serialization ()
+import           Flowbox.Graphics.Image.Channel               hiding (compute)
+import           Flowbox.Graphics.Image.View                  as V
+import           Flowbox.Graphics.Serialization               ()
 
 import qualified Data.Array.Accelerate                        as A
 import           Flowbox.Data.Mode                            ()
@@ -25,7 +25,7 @@ import           Flowbox.Graphics.Shader.Stencil              as Stencil
 import           Flowbox.Graphics.Utils.Accelerate            (variable)
 import           Text.ProtocolBuffers.WireMessage
 
-import Utils
+import           Utils
 
 --
 -- applies defocus to the lena image and serializes it to the ByteString

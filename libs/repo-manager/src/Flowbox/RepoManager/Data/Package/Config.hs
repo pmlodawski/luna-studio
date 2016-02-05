@@ -12,9 +12,9 @@ module Flowbox.RepoManager.Data.Package.Config (
 ) where
 
 import           Control.Applicative
-import qualified Control.Exception   as Exception
-import qualified Data.Configurator   as Configurator
-import           Data.Text           as Text
+import qualified Control.Exception                        as Exception
+import qualified Data.Configurator                        as Configurator
+import           Data.Text                                as Text
 
 import           Data.Configurator.Types                  (Value)
 import qualified Data.Configurator.Types                  as Configurator

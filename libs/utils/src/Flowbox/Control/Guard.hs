@@ -9,7 +9,7 @@ module Flowbox.Control.Guard where
 
 import qualified Control.Exception.Base as Exception
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

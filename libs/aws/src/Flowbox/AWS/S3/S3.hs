@@ -20,7 +20,7 @@ import           Control.Monad.Reader
 import qualified Control.Monad.Trans.Resource as Resource
 import qualified Network.HTTP.Conduit         as Conduit
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

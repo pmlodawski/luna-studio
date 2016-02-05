@@ -9,9 +9,9 @@
 
 module Luna.DEP.Data.AliasInfo where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
-import GHC.Generics (Generic)
+import           GHC.Generics     (Generic)
 
 
 import           Data.IntMap      (IntMap)

@@ -13,10 +13,10 @@
 
 module Luna.Data.Serialize.Proto.Conversion.Attributes where
 
-import qualified Data.Foldable as Foldable
-import qualified Data.Map      as Map
-import qualified Data.Maybe    as Maybe
-import qualified Data.Sequence as Sequence
+import qualified Data.Foldable                                        as Foldable
+import qualified Data.Map                                             as Map
+import qualified Data.Maybe                                           as Maybe
+import qualified Data.Sequence                                        as Sequence
 
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert

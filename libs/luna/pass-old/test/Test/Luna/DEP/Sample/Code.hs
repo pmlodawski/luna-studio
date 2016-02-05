@@ -8,7 +8,7 @@
 
 module Test.Luna.DEP.Sample.Code where
 
-import Text.RawString.QQ
+import           Text.RawString.QQ
 
 import           Flowbox.Prelude
 import           Luna.DEP.AST.Control.Crumb                (Breadcrumbs)

@@ -2,20 +2,20 @@
 
 module Luna.Parser.Builder where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
-import           Luna.Syntax.Label   (Label(Label))
-import           Luna.Syntax.Enum    (IDTag(IDTag))
-import qualified Luna.Parser.State   as ParserState
-import qualified Luna.Data.ASTInfo   as ASTInfo
-import           Control.Monad.State (get, modify)
-import qualified Luna.Parser.Token   as Tok
-import           Text.Parser.Combinators 
-import           Luna.Parser.Combinators (many1, sepBy2, sepBy1_ng)
+import           Control.Monad.State     (get, modify)
+import qualified Luna.Data.ASTInfo       as ASTInfo
+import           Luna.Parser.Combinators (many1, sepBy1_ng, sepBy2)
+import qualified Luna.Parser.State       as ParserState
+import qualified Luna.Parser.Token       as Tok
+import           Luna.Syntax.Enum        (IDTag (IDTag))
+import           Luna.Syntax.Label       (Label (Label))
+import           Text.Parser.Combinators
 
 labeled p = withLabeled (const p)
 
-                          
+
 withLabeled f = do
     id <- nextID
     fmap (label id) $ f id

@@ -1,19 +1,19 @@
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE TypeOperators             #-}
 
-module Bind2 where 
+module Bind2 where
 
-import Control.Applicative
-import Control.Monad.IO.Class
-import Control.Monad.Trans
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans
 --import Control.Monad.State
 
-import Data
+import           Data
 
 
 
@@ -38,7 +38,7 @@ instance (MonadIO m) => MonadIO (StateT s m) where
 instance (Functor m) => Functor (StateT s m) where
     fmap f m = StateT $ \ s ->
         fmap (\ ~(a, s') -> (f a, s')) $ runStateT m s
-        
+
 
 get     = StateT $ \s -> return (s, s)
 put s   = StateT $ \_ -> return ((), s)
@@ -88,22 +88,22 @@ instance Bind IO IO IO where
 
 instance (Monad (m1 Pure), m1~m2) => Bind (m1 Pure) (m2 Pure) (m1 Pure) where
     bind ma f = do
-        a <- ma 
+        a <- ma
         f (Pure a)
 
 instance (Monad (m1 IO), m1~m2) => Bind (m1 IO) (m2 IO) (m1 IO) where
     bind ma f = do
-        a <- ma 
+        a <- ma
         f (Pure a)
 
 instance (Monad (m1 IO), MonadRebase m1 Pure IO, m1~m2) => Bind (m1 Pure) (m2 IO) (m1 IO) where
     bind ma f = do
-        a <- rebase ma 
+        a <- rebase ma
         f (Pure a)
 
 instance (Monad (m1 IO), MonadRebase m1 Pure IO, m1~m2) => Bind (m1 IO) (m2 Pure) (m1 IO) where
     bind ma f = do
-        a <- ma 
+        a <- ma
         rebase $ f (Pure a)
 
 ---
@@ -179,22 +179,22 @@ instance Bind2 IO IO IO where
 
 instance (Monad (m1 Pure), m1~m2) => Bind2 (m1 Pure) (m2 Pure) (m1 Pure) where
     bind2 ma f = liftCtx $ do
-        a <- unliftCtx ma 
+        a <- unliftCtx ma
         unliftCtx $ f (liftCtx $ Pure a)
 
 instance (Monad (m1 IO), m1~m2) => Bind2 (m1 IO) (m2 IO) (m1 IO) where
     bind2 ma f = liftCtx $ do
-        a <- unliftCtx ma 
+        a <- unliftCtx ma
         unliftCtx $ f (liftCtx $ Pure a)
 
 instance (Monad (m1 IO), MonadRebase m1 Pure IO, m1~m2) => Bind2 (m1 Pure) (m2 IO) (m1 IO) where
     bind2 ma f = liftCtx $ do
-        a <- rebase $ unliftCtx ma 
+        a <- rebase $ unliftCtx ma
         unliftCtx $ f (liftCtx $ Pure a)
 
 instance (Monad (m1 IO), MonadRebase m1 Pure IO, m1~m2) => Bind2 (m1 IO) (m2 Pure) (m1 IO) where
     bind2 ma f = liftCtx $ do
-        a <- unliftCtx ma 
+        a <- unliftCtx ma
         rebase . unliftCtx $ f (liftCtx $ Pure a)
 
 ---
@@ -275,7 +275,7 @@ printCtx s = liftCtx $ print (fromPure $ unliftCtx s)
 bind_ a b = bind a (\_ -> b)
 
 
-main = do 
+main = do
     --let x = testStateT `bind` testStateT2
     let x = testIO `bind` testStateT2
     print =<< runStateT x 5

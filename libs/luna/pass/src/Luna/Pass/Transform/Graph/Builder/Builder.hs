@@ -15,9 +15,9 @@
 
 module Luna.Pass.Transform.Graph.Builder.Builder where
 
-import           Control.Monad.State        hiding (mapM, mapM_)
+import           Control.Monad.State                      hiding (mapM, mapM_)
 import           Control.Monad.Trans.Either
-import qualified Data.Maybe                 as Maybe
+import qualified Data.Maybe                               as Maybe
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger                hiding (error)

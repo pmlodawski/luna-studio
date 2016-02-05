@@ -10,10 +10,10 @@
 
 module Flowbox.Graphics.Color.Profile where
 
-import Flowbox.Graphics.Color.CIE.XYZ
-import Flowbox.Graphics.Color.Gamma
-import Flowbox.Graphics.Color.Illuminants (Chromaticity(..))
-import Flowbox.Prelude
+import           Flowbox.Graphics.Color.CIE.XYZ
+import           Flowbox.Graphics.Color.Gamma
+import           Flowbox.Graphics.Color.Illuminants (Chromaticity (..))
+import           Flowbox.Prelude
 
 
 

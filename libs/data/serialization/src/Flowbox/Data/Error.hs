@@ -7,7 +7,7 @@
 
 module Flowbox.Data.Error where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
 
 

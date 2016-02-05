@@ -1,31 +1,30 @@
 -- extensions --
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE RebindableSyntax #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE DeriveGeneric             #-}
 {-# LANGUAGE DysfunctionalDependencies #-}
-{-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE ExtendedDefaultRules      #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE RebindableSyntax          #-}
+{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 -- module --
 module Main where
 
 -- imports --
-import Luna.Target.HS
+import           Luna.Target.HS
 
 -- body --
 #include "pragmas.h"
 
 -- ====== Main type ====== --
-data Main 
+data Main
     = Main
     deriving (Show,Eq,Ord,Generic,Typeable)
 $(registerType ''Main)
@@ -123,7 +122,7 @@ $(registerMethod ''Bool "bool")
 
 -- ====== Method: Main.not ====== --
 memSig_Main_not = _rtup2 (_nuSigArg ("self"), _nuSigArg ("a"))
-memDef_Main_not _self _a = polyJoin (liftF1 (\pat_base -> case pat_base of 
+memDef_Main_not _self _a = polyJoin (liftF1 (\pat_base -> case pat_base of
     True -> (_call (3) cons_False)
     False -> (_call (4) cons_True)
     _ -> (error "Non-exhaustive patterns in case")) (_call (5) (_member ("bool") _a)))
@@ -144,7 +143,7 @@ $(registerMethod ''Main "_equals_equals")
 
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1 (_nuSigArg ("self"))
-memDef_Main_main _self = do 
+memDef_Main_main _self = do
     _a <- val []
     _call (7) (appNext (_call (8) (appNext (val (2 :: Int)) (appNext (val (1 :: Int)) (appNext (_call (9) (appNext _a (_member ("not") _self))) (_member ("if_then_else") _self))))) (_member ("print") _self))
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
@@ -152,7 +151,7 @@ $(registerMethod ''Main "main")
 
 -- ====== Method: Main.if_then_else ====== --
 memSig_Main_if_then_else = _rtup4 (_nuSigArg ("self"), _nuSigArg ("base"), _nuSigArg ("ok"), _nuSigArg ("fail"))
-memDef_Main_if_then_else _self _base _ok _fail = polyJoin (liftF1 (\pat_base -> case pat_base of 
+memDef_Main_if_then_else _self _base _ok _fail = polyJoin (liftF1 (\pat_base -> case pat_base of
     True -> _ok
     False -> _fail
     _ -> (error "Non-exhaustive patterns in case")) (_call (10) (_member ("bool") _base)))

@@ -1,6 +1,6 @@
 module Luna.Syntax.AST where
 
-import Prologue hiding (cons)
+import           Prologue hiding (cons)
 
 
 

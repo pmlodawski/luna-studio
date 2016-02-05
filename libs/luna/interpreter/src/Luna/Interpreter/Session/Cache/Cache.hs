@@ -8,10 +8,10 @@
 
 module Luna.Interpreter.Session.Cache.Cache where
 
-import           Control.Monad.State hiding (mapM, mapM_)
-import qualified Data.IntSet         as IntSet
-import qualified Data.Maybe          as Maybe
-import qualified System.Mem          as Mem
+import           Control.Monad.State                         hiding (mapM, mapM_)
+import qualified Data.IntSet                                 as IntSet
+import qualified Data.Maybe                                  as Maybe
+import qualified System.Mem                                  as Mem
 
 import           Flowbox.Control.Error                       hiding (err)
 import qualified Flowbox.Data.MapForest                      as MapForest

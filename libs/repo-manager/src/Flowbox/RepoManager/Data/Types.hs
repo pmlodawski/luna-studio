@@ -7,8 +7,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.RepoManager.Data.Types where
 
-import           Flowbox.Prelude
 import qualified Data.List.Split as Split
+import           Flowbox.Prelude
 import qualified System.FilePath as FilePath
 
 data QualifiedPackageName = QualifiedPackageName { _name     :: String

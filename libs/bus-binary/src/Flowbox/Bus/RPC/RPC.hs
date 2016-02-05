@@ -16,10 +16,10 @@ import           Data.Binary               (decode, encode)
 import qualified Data.ByteString           as B
 import qualified Data.ByteString.Lazy      as BL
 
-import Flowbox.Bus.RPC.Types     (Request, Response)
-import Flowbox.Control.Error
-import Flowbox.Prelude
-import Flowbox.System.Log.Logger
+import           Flowbox.Bus.RPC.Types     (Request, Response)
+import           Flowbox.Control.Error
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
 
 
 

@@ -13,15 +13,15 @@
 
 module Data.Text.CodeBuilder.Tok where
 
-import Prelude ()
-import Flowbox.Prelude
-import Data.Text.CodeBuilder.Doc (Doc, between)
+import           Data.Text.CodeBuilder.Doc (Doc, between)
+import           Flowbox.Prelude
+import           Prelude                   ()
 
 ----------------------------------------------------------------------
 -- Data types
 ----------------------------------------------------------------------
 
-data Prec = Top 
+data Prec = Top
           | Bottom
           | Lvl Int
           deriving (Show, Generic, Eq)

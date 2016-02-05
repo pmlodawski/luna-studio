@@ -9,9 +9,9 @@
 
 module Flowbox.Batch.Handler.AST where
 
-import qualified Data.IntSet as IntSet
-import qualified Data.List   as List
-import qualified Data.Tuple  as Tuple
+import qualified Data.IntSet                                 as IntSet
+import qualified Data.List                                   as List
+import qualified Data.Tuple                                  as Tuple
 
 import           Flowbox.Batch.Batch                         (Batch)
 import           Flowbox.Batch.Handler.Common                (astDataConOp, astDataOp, astFocusOp, astFunctionOp, astModuleOp, astOp)

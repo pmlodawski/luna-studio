@@ -7,8 +7,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.AST where
 
-import qualified Data.Bimap    as Bimap
-import qualified Data.Sequence as Sequence
+import qualified Data.Bimap                                                                           as Bimap
+import qualified Data.Sequence                                                                        as Sequence
 
 import qualified Flowbox.Batch.Batch                                                                  as Batch
 import qualified Flowbox.Batch.Handler.AST                                                            as BatchAST
@@ -22,7 +22,8 @@ import           Flowbox.Prelude                                                
 import           Flowbox.ProjectManager.Context                                                       (Context)
 import qualified Flowbox.ProjectManager.RPC.Topic                                                     as Topic
 import           Flowbox.System.Log.Logger
-import           Flowbox.UR.Manager.Utils                                                             (makeMsgArr, prepareResponse, serialize)
+import           Flowbox.UR.Manager.Utils                                                             (makeMsgArr, prepareResponse,
+                                                                                                       serialize)
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request                  as CodeGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Status                   as CodeGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Request                  as CodeSet

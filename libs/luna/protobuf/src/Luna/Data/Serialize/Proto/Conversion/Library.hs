@@ -13,9 +13,9 @@
 module Luna.Data.Serialize.Proto.Conversion.Library where
 
 import           Control.Applicative
-import           Data.Int            (Int32)
-import           Data.IntMap         (IntMap)
-import qualified Data.IntMap         as IntMap
+import           Data.Int                                             (Int32)
+import           Data.IntMap                                          (IntMap)
+import qualified Data.IntMap                                          as IntMap
 
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert

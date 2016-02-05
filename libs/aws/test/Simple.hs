@@ -10,9 +10,9 @@
 
 module Main where
 
-import qualified AWS           as AWS
-import qualified AWS.EC2.Types as Types
-import           Data.Text     (Text)
+import qualified AWS                                     as AWS
+import qualified AWS.EC2.Types                           as Types
+import           Data.Text                               (Text)
 
 import qualified Flowbox.AWS.EC2.Control.Simple.Instance as Simple
 import qualified Flowbox.AWS.EC2.EC2                     as EC2

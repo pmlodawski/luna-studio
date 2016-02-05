@@ -3,8 +3,8 @@
 {-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-import Control.Monad.Trans
-import Control.Monad.Trans.State
+import           Control.Monad.Trans
+import           Control.Monad.Trans.State
 
 ------------------------------------------------------------------------------------------
 

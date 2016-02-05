@@ -8,8 +8,8 @@
 
 module Luna.DEP.Graph.Edge where
 
-import Flowbox.Prelude
-import Luna.DEP.Graph.Port (Port)
+import           Flowbox.Prelude
+import           Luna.DEP.Graph.Port (Port)
 
 
 

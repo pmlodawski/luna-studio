@@ -10,9 +10,9 @@
 module Luna.Interpreter.Session.TargetHS.Generator where
 
 import           Control.Monad.Trans.Either
-import qualified Data.List                   as List
-import qualified Data.Text.Lazy              as Text
-import qualified Language.Preprocessor.Cpphs as Cpphs
+import qualified Data.List                              as List
+import qualified Data.Text.Lazy                         as Text
+import qualified Language.Preprocessor.Cpphs            as Cpphs
 
 import           Flowbox.Control.Error                  (hoistEitherWith)
 import           Flowbox.Prelude

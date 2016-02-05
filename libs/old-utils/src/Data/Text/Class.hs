@@ -10,8 +10,8 @@
 
 module Data.Text.Class where
 
-import Prelude
-import Data.Text.Lazy (Text, pack, unpack)
+import           Data.Text.Lazy (Text, pack, unpack)
+import           Prelude
 
 
 ------------------------------------------------------------------------

@@ -1,18 +1,18 @@
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
 
 
 
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 {-# LANGUAGE DysfunctionalDependencies #-}
 
@@ -21,22 +21,22 @@
 
 module Bind2 where
 
-import Control.Applicative
-import Control.Monad.IO.Class
-import Control.Monad.Trans
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans
 --import Control.Monad.State
 
-import Luna.Target.HS.Monad
+import           Luna.Target.HS.Monad
 
 --import Control.Monad.Trans.State
-import Luna.Target.HS.Utils.BaseMonads
+import           Luna.Target.HS.Utils.BaseMonads
 
-import Control.Monad.Morph
-import Flowbox.Utils
-import Data.Typeable (Typeable)
+import           Control.Monad.Morph
+import           Data.Typeable                   (Typeable)
+import           Flowbox.Utils
 
-import TypeSet
-import Data.TypeLevel.Bool
+import           Data.TypeLevel.Bool
+import           TypeSet
 
 ------------------------------------------------------------------------------------------
 
@@ -165,10 +165,10 @@ instance MonadTransMatch () mref m m where
 instance  (MonadTrans t, Monad m) =>MonadTransMatch (x,()) (t mref) m (t m)  where
     liftMatch _ _ = lift
 
---instance  (MonadTransMatch (xs,xss) mref (t m) out, MonadTrans t, Monad m) =>MonadTransMatch (x,(xs,xss)) (t mref) m out  where 
+--instance  (MonadTransMatch (xs,xss) mref (t m) out, MonadTrans t, Monad m) =>MonadTransMatch (x,(xs,xss)) (t mref) m out  where
 --    liftMatch (_,x) _ (ma :: m a) = liftMatch x (undefined :: mref x)  $ (lift ma:: t m a)
 
-instance  (MonadTransMatch (xs,xss) mref m mout, MonadTrans t, Monad mout) =>MonadTransMatch (x,(xs,xss)) (t mref) m (t mout)  where 
+instance  (MonadTransMatch (xs,xss) mref m mout, MonadTrans t, Monad mout) =>MonadTransMatch (x,(xs,xss)) (t mref) m (t mout)  where
     liftMatch _ _ = lift . liftMatch (undefined :: (xs,xss)) (undefined :: mref w)
     --liftMatch (_,x) _ (ma :: m a) = undefined -- lift . liftMatch x (undefined :: mref w)
 
@@ -197,7 +197,7 @@ instance  (MatchMonadCloseProto emptySet (MonadSet env set ma) out, emptySet ~ I
 runMonadProto :: mptr -> (ma a -> mb b) -> (MonadSet env set ma a) -> (MonadSet env (Remove mptr set) mb b)
 runMonadProto _ f ms = MonadSet $ f (fromMS ms)
 
-runMonad ::  MatchMonadCloseProto (IsEmpty (Remove mptr set)) (MonadSet env (Remove mptr set) mb) t =>mptr -> (ma a -> mb b) -> MonadSet env set ma a -> t b  
+runMonad ::  MatchMonadCloseProto (IsEmpty (Remove mptr set)) (MonadSet env (Remove mptr set) mb) t =>mptr -> (ma a -> mb b) -> MonadSet env set ma a -> t b
 runMonad = matchMonadClose `dot3` runMonadProto
 
 
@@ -217,10 +217,10 @@ runReaderTX = liftMonadRunner1 MReader runReaderT
 
 
 
-getX ::  MonadState s m=>MonadSet Pure (Insert MState Empty) m s  
+getX ::  MonadState s m=>MonadSet Pure (Insert MState Empty) m s
 getX = MonadSet get
 
-askX ::  MonadReader s m=>MonadSet Pure (Insert MReader Empty) m s  
+askX ::  MonadReader s m=>MonadSet Pure (Insert MReader Empty) m s
 askX = MonadSet ask
 
     --tstM = getX `bindEnv_` askX
@@ -301,7 +301,7 @@ main = do
 
         --newtype ProxyMonad   a = ProxyMonad a
 
-        --unproxyTrans ::  (MonadTrans t, Monad m)=>ProxyTrans m a -> t m a  
+        --unproxyTrans ::  (MonadTrans t, Monad m)=>ProxyTrans m a -> t m a
         --unproxyTrans (ProxyTrans a) = lift a
 
         --instance  Monad m =>Monad (ProxyTrans m)  where
@@ -404,7 +404,7 @@ main = do
 
 -------------------------------
 
-bindCtx ::  (BindEnv ma mb mout, Context ca, Context cb, Context(CtxMerge ca cb))=>ca ma a -> (Pure a -> cb mb b) -> (CtxMerge ca cb) mout b  
+bindCtx ::  (BindEnv ma mb mout, Context ca, Context cb, Context(CtxMerge ca cb))=>ca ma a -> (Pure a -> cb mb b) -> (CtxMerge ca cb) mout b
 bindCtx a f = wrapCtx $ bindEnv (fromCtx a) (fromCtx . f)
 
 

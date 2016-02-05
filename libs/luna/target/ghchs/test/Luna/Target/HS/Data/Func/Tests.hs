@@ -5,18 +5,18 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE DeriveDataTypeable        #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Luna.Target.HS.Data.Func.Tests where
 
-import Data.Typeable
-import Flowbox.Test.QuickCheck
-import Luna.Target.HS.Data.Func
-import Data.TupleList
+import           Data.TupleList
+import           Data.Typeable
+import           Flowbox.Test.QuickCheck
+import           Luna.Target.HS.Data.Func
 
 
 

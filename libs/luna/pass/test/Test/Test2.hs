@@ -1,16 +1,16 @@
 
-import Data.Default
-import Data.IntMap (IntMap)
-import Control.Lens
-import qualified Data.IntMap as IntMap
-import qualified Data.IntSet    as IntSet
-import           Data.IntSet    (IntSet)
+import           Control.Lens
+import           Data.Default
+import           Data.IntMap                       (IntMap)
+import qualified Data.IntMap                       as IntMap
+import           Data.IntSet                       (IntSet)
+import qualified Data.IntSet                       as IntSet
 import           Data.Monoid
-import System.Environment (getArgs)
+import           System.Environment                (getArgs)
 
-import qualified Data.Graph.Inductive.Graph as Graph
-import Data.Graph.Inductive.Graph (insNode, insEdge, Edge, UEdge)
-import Data.Graph.Inductive.PatriciaTree
+import           Data.Graph.Inductive.Graph        (Edge, UEdge, insEdge, insNode)
+import qualified Data.Graph.Inductive.Graph        as Graph
+import           Data.Graph.Inductive.PatriciaTree
 
 
 main = do

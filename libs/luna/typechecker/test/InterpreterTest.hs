@@ -15,7 +15,8 @@
 
 module Main where
 
-import Prologue hiding (Cons, Indexable, Ixed, Repr, Simple, children, cons, empty, index, lookup, maxBound, minBound, repr, s, simple)
+import           Prologue                     hiding (Cons, Indexable, Ixed, Repr, Simple, children, cons, empty, index, lookup, maxBound,
+                                               minBound, repr, s, simple)
 
 import           Control.Monad.Trans.Except
 import           Control.Monad.Trans.Identity

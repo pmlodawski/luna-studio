@@ -7,27 +7,27 @@
 -- Stability   :  stable
 -- Portability :  portable
 -----------------------------------------------------------------------------
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE NoImplicitPrelude         #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Luna.System.Env where
 
-import Flowbox.Prelude
+import           Flowbox.Prelude
 
-import qualified Luna.System.Pragma           as Pragma
-import           Luna.System.Pragma           hiding (lookup, isEnabled)
 import qualified Control.Monad.State          as State
-import           Text.Parser.Char             (string, noneOf, CharParsing)
-import           Text.Parser.Token
 import           Control.Monad.State.Generate (newState)
 import           Data.List.Split              (splitOn)
-import qualified System.Environment           as Env
 import           Data.Map                     (Map)
 import qualified Luna.System.Config           as Config
+import           Luna.System.Pragma           hiding (isEnabled, lookup)
+import qualified Luna.System.Pragma           as Pragma
+import qualified System.Environment           as Env
+import           Text.Parser.Char             (CharParsing, noneOf, string)
+import           Text.Parser.Token
 
 ----------------------------------------------------------------------
 -- ConfigStore

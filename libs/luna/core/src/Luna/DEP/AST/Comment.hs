@@ -10,10 +10,10 @@
 
 module Luna.DEP.AST.Comment where
 
-import Control.Lens
-import Flowbox.Generics.Deriving.QShow
-import Flowbox.Prelude
-import GHC.Generics                    (Generic)
+import           Control.Lens
+import           Flowbox.Generics.Deriving.QShow
+import           Flowbox.Prelude
+import           GHC.Generics                    (Generic)
 
 newtype Comment = Comment { _txt :: String }
          deriving (Show, Eq, Generic, Read)
