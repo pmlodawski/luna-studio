@@ -71,10 +71,12 @@ handleAddNode content = do
     let request  = Bin.decode . fromStrict $ content :: AddNode.Request
         location = request ^. AddNode.location
     currentEmpireEnv <- use Env.empireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ withGraphLocation Graph.addNode
+    (result, newEmpireEnv) <- case request ^. AddNode.nodeType of
+      AddNode.ExpressionNode expression -> liftIO $ Empire.runEmpire currentEmpireEnv $ withGraphLocation Graph.addNode
         location
-        (Text.pack $ request ^. AddNode.expr)
+        (Text.pack $ expression)
         (request ^. AddNode.nodeMeta)
+      AddNode.InputNode _ _ -> return (Left "Input Nodes not yet supported", currentEmpireEnv)
     case result of
         Left err -> logger Logger.error $ errorMessage <> err
         Right node -> do

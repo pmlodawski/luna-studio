@@ -41,7 +41,7 @@ import qualified Empire.API.Update                as Update
 
 
 toGraphLocation :: String -> String -> GraphLocation
-toGraphLocation pid lid = GraphLocation.GraphLocation (read pid) (read lid) Breadcrumb.Breadcrumb
+toGraphLocation pid lid = GraphLocation.GraphLocation (read pid) (read lid) (Breadcrumb.Breadcrumb [])
 
 patterns :: Docopt
 patterns = [docoptFile|src/InvokerUsage.txt|]
@@ -109,7 +109,7 @@ main = do
 
 addNode :: EP.BusEndPoints -> GraphLocation -> String -> Double -> Double -> Int -> IO ()
 addNode endPoints graphLocation expression x y tag = do
-    let content = toStrict . Bin.encode $ AddNode.Request graphLocation expression (NodeMeta.NodeMeta (x, y)) tag
+    let content = toStrict . Bin.encode $ AddNode.Request graphLocation (AddNode.ExpressionNode expression) (NodeMeta.NodeMeta (x, y)) tag
     void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.addNodeRequest content
 
 removeNode :: EP.BusEndPoints -> GraphLocation -> NodeId -> IO ()

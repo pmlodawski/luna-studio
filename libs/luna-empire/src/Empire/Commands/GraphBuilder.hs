@@ -59,7 +59,7 @@ buildNode' varMap nodeId = do
     name  <- getNodeName nodeId
     ports <- buildPorts varMap ref
     let portMap = Map.fromList $ flip fmap ports $ \p@(Port id _ _) -> (id, p)
-    return $ API.Node nodeId (Text.pack expr) (Text.pack name) portMap $ fromMaybe def meta
+    return $ API.Node nodeId (Text.pack name) (API.ExpressionNode $ Text.pack expr) portMap $ fromMaybe def meta
 
 getNodeName :: NodeId -> Command Graph String
 getNodeName nid = do

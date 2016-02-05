@@ -21,6 +21,9 @@ disconnectUpdate       = "empire.graph.disconnect.update"
 setDefaultValueRequest = "empire.graph.node.defaultValue.request"
 setDefaultValueUpdate  = "empire.graph.node.defaultValue.update"
 
+setInputNodeTypeRequest = "empire.graph.node.inputNodeType.request"
+setInputNodeTypeUpdate  = "empire.graph.node.inputNodeType.update"
+
 programRequest         = "empire.graph.program.request"
 programStatus          = "empire.graph.program.status"
 

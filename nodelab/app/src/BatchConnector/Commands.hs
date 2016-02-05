@@ -56,9 +56,7 @@ withLibrary w f = f (w ^. Workspace.currentLocation)
 addNode :: Workspace -> Text -> NodeMeta -> Int -> IO ()
 addNode workspace expression meta tag = sendRequest topic body where
     topic = Topic.addNodeRequest
-    body  = (withLibrary workspace AddNode.Request) (Text.unpack expression)
-                                                   meta
-                                                   tag
+    body  = (withLibrary workspace AddNode.Request) (AddNode.ExpressionNode $ Text.unpack expression) meta tag
 
 createProject :: Text -> Text -> IO ()
 createProject name path = sendRequest topic body where

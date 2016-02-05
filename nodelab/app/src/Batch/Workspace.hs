@@ -29,7 +29,7 @@ instance ToJSON InterpreterState
 instance ToJSON Workspace
 
 instance Default Workspace where
-    def = Workspace def (GraphLocation 0 0 Breadcrumb) False Fresh False
+    def = Workspace def (GraphLocation 0 0 (Breadcrumb [])) False Fresh False
 
 makeLenses ''Workspace
 

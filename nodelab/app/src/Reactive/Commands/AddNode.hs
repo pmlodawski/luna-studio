@@ -40,7 +40,7 @@ import           Reactive.Commands.Command       (Command, performIO)
 import           Reactive.Commands.EnterNode     (enterNode)
 import           Reactive.Commands.Graph         (focusNode, nodeIdToWidgetId, portDefaultAngle, updateNodeMeta,
                                                   updatePortAngles)
-import           Reactive.Commands.PendingNode   (unrenderPending)
+-- import           Reactive.Commands.PendingNode   (unrenderPending)
 import           Reactive.Commands.RemoveNode    (removeSelectedNodes)
 import qualified Reactive.Commands.UIRegistry    as UICmd
 import           Reactive.State.Global           (State, inRegistry)
@@ -75,7 +75,7 @@ import qualified Empire.API.Data.ValueType       as ValueType
 
 addNode :: Node -> Command State ()
 addNode node = do
-    unrenderPending node
+    -- unrenderPending node
     zoom Global.graph $ modify (Graph.addNode node)
     zoom Global.uiRegistry $ registerNode node
     updatePortAngles
@@ -135,11 +135,14 @@ updateNode node = do
     maybeWidgetId <- inRegistry $ nodeIdToWidgetId nodeId
     zoom Global.graph $ modify (Graph.addNode node)
     forM_ maybeWidgetId $ \widgetId -> do
-        inRegistry $ do
-            displayPorts widgetId node
-            UICmd.update widgetId $ Model.expression .~ (node ^. Node.expression)
-        updatePortAngles
         updateNodeMeta nodeId $ node ^. Node.nodeMeta
+        inRegistry $ displayPorts widgetId node
+        updatePortAngles
+
+        case node ^. Node.nodeType of
+            Node.ExpressionNode expression -> do
+                inRegistry $ UICmd.update_ widgetId $ Model.expression .~ expression
+            _ -> return ()
         -- TODO: obsluzyc to ze moga zniknac polaczenia
 
 onValueChanged :: Typeable a => (a -> WidgetId -> Command Global.State ()) -> HTMap

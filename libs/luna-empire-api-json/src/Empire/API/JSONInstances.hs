@@ -30,6 +30,7 @@ import           Empire.API.Graph.NodeResultUpdate as NodeResultUpdate
 import           Empire.API.Graph.CodeUpdate       as CodeUpdate
 import           Empire.API.Graph.GetProgram       as GetProgram
 import           Empire.API.Graph.SetDefaultValue  as SetDefaultValue
+import           Empire.API.Graph.SetInputNodeType as SetInputNodeType
 import           Empire.API.Library.CreateLibrary  as CreateLibrary
 import           Empire.API.Library.ListLibraries  as ListLibraries
 import           Empire.API.Project.CreateProject  as CreateProject
@@ -37,10 +38,14 @@ import           Empire.API.Project.ListProjects   as ListProjects
 
 instance ToJSON Project.Project
 instance ToJSON Library.Library
+
 instance ToJSON Breadcrumb.Breadcrumb
+instance ToJSON Breadcrumb.BreadcrumbItem
+
 instance ToJSON GraphLocation.GraphLocation
 
 instance ToJSON Node.Node
+instance ToJSON Node.NodeType
 
 instance ToJSON NodeMeta.NodeMeta
 instance (ToJSON a, ToJSON b) => ToJSON (Map a b) where
@@ -67,6 +72,7 @@ instance ToJSON DefaultValue.PortDefault
 
 instance ToJSON Graph.Graph
 
+instance ToJSON AddNode.NodeType
 instance ToJSON AddNode.Request
 instance ToJSON AddNode.Result
 
@@ -89,6 +95,8 @@ instance ToJSON GetProgram.Request
 instance ToJSON GetProgram.Status
 
 instance ToJSON SetDefaultValue.Request
+
+instance ToJSON SetInputNodeType.Request
 
 instance ToJSON CreateLibrary.Request
 instance ToJSON CreateLibrary.Result
