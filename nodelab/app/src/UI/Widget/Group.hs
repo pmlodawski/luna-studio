@@ -24,7 +24,7 @@ newtype Group = Group JSVal deriving (PToJSVal, PFromJSVal)
 instance UIWidget Group
 
 foreign import javascript safe "new Group($1, $2, $3)"      create'       :: Int   -> Double -> Double -> IO Group
-foreign import javascript safe "$1.mesh.visible = $2"       setVisible'   :: Group -> Bool -> IO ()
+foreign import javascript safe "$1.setVisible($2)"          setVisible'   :: Group -> Bool -> IO ()
 foreign import javascript safe "$1.setBgVisible($2)"        setBgVisible' :: Group -> Bool -> IO ()
 foreign import javascript safe "$1.setBgColor($2, $3, $4)"  setBgColor'   :: Group -> Double -> Double -> Double -> IO ()
 
@@ -51,9 +51,8 @@ instance UIDisplayObject Model.Group where
 
     updateUI id old model = do
         group <- UI.lookup id :: IO Group
-        let vis = model ^. Model.visible
-        setVisible' group vis
-        setBgColor group model
+        setVisible' group $ model ^. Model.visible
+        setBgColor  group model
 
 instance CompositeWidget Model.Group where
     updateWidget id old model = do

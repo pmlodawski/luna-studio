@@ -140,8 +140,9 @@ instance CompositeWidget Model.Node where
                     & TextBox.position .~ Vector2 (-40.0) (-10.0)
         void $ UICmd.register id textBox $ textHandlers id
 
-        let offset = Vector2 (-30.0) 50.0
+        let offset = Vector2 (-30.0) 40.0
             group  = Group.create & Group.position .~ offset
+                                  & Group.visible  .~ (model ^. Model.isExpanded)
         controlGroups <- UICmd.register id group (Layout.verticalLayoutHandler def 5.0)
 
         let grp    = Group.Group def def True $ Just (0.2, 0.2, 0.2)
@@ -151,6 +152,7 @@ instance CompositeWidget Model.Node where
         UICmd.register controlGroups label def
 
         let group  = Group.create & Group.background ?~ (0.2, 0.2, 0.2)
+                                  & Group.visible    .~ (model ^. Model.isExpanded)
         UICmd.register_ controlGroups group (Layout.verticalLayoutHandler def 0.0)
 
     updateWidget id old model = do
@@ -158,8 +160,10 @@ instance CompositeWidget Model.Node where
         exprId     <- expressionId id
         nameId     <- nameId id
         valueId    <- valueLabelId id
+        valueVisId <- valueGroupId id
 
         UICmd.update_ controlsId $ Group.visible .~ (model ^. Model.isExpanded)
+        UICmd.update_ valueVisId $ Group.visible .~ (model ^. Model.isExpanded)
         UICmd.update_ exprId     $ Label.label   .~ (model ^. Model.expression)
         UICmd.update_ nameId     $ TextBox.value .~ (model ^. Model.name)
         UICmd.update_ valueId    $ Label.label   .~ (model ^. Model.value)
