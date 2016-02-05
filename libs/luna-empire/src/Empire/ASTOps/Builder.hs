@@ -1,25 +1,20 @@
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Empire.ASTOps.Builder where
 
-import           Prologue            hiding ((#), cons)
-import           Control.Monad.Error (throwError)
-import           Data.Record       (match, caseTest, cons, ANY(..), Match, MatchSet)
-import           Data.Prop         ((#))
-import           Data.Layer.Cover    (uncover, covered)
-
+import           Prologue                hiding ((#), cons)
+import           Control.Monad.Error     (throwError)
+import           Data.Record             (match, caseTest, cons, ANY(..))
+import           Data.Prop               ((#))
+import           Data.Layer.Cover        (uncover, covered)
 import           Empire.ASTOp            (ASTOp)
 import           Empire.ASTOps.Remove    (removeNode, safeRemove)
 import           Empire.Data.AST         (ASTEdge, ASTNode, EdgeRef, NodeRef)
-
 import           Luna.Syntax.AST.Arg     (Arg)
 import qualified Luna.Syntax.AST.Arg     as Arg
 import           Luna.Syntax.AST.Term    (Acc (..), App (..), Blank (..), Unify (..), Var (..), Str (..))
-import qualified Luna.Syntax.AST.Term   as Term
-
-import qualified Luna.Syntax.Builder    as Builder
-import           Luna.Syntax.Builder (Inputs, target)
+import qualified Luna.Syntax.Builder     as Builder
+import           Luna.Syntax.Builder     (Inputs, target)
 
 functionApplicationNode :: Lens' ASTNode EdgeRef
 functionApplicationNode = covered . lens getter setter where
@@ -95,8 +90,8 @@ reapply funRef args = do
         match $ \ANY -> return funRef
     Builder.app fun $ Builder.arg <$> args
 
-makeAccRec :: ASTOp m => NodeRef -> NodeRef -> Bool -> m NodeRef
-makeAccRec targetNodeRef namingNodeRef seenApp = do
+makeAccessorRec :: ASTOp m => NodeRef -> NodeRef -> Bool -> m NodeRef
+makeAccessorRec targetNodeRef namingNodeRef seenApp = do
     namingNode <- Builder.read namingNodeRef
     caseTest (uncover namingNode) $ do
         match $ \(Var name) -> do
@@ -106,7 +101,7 @@ makeAccRec targetNodeRef namingNodeRef seenApp = do
                 else Builder.app accNode ([] :: [Arg NodeRef])
         match $ \(App t _) -> do
             newNamingNodeRef <- Builder.follow target t
-            replacementRef <- makeAccRec targetNodeRef newNamingNodeRef True
+            replacementRef <- makeAccessorRec targetNodeRef newNamingNodeRef True
             Builder.reconnect namingNodeRef functionApplicationNode replacementRef
             return namingNodeRef
         match $ \(Acc name t) -> do
@@ -115,8 +110,8 @@ makeAccRec targetNodeRef namingNodeRef seenApp = do
             Builder.acc name targetNodeRef
         match $ \ANY -> throwError "Invalid node type"
 
-makeAcc :: ASTOp m => NodeRef -> NodeRef -> m NodeRef
-makeAcc targetNodeRef namingNodeRef = makeAccRec targetNodeRef namingNodeRef False
+makeAccessor :: ASTOp m => NodeRef -> NodeRef -> m NodeRef
+makeAccessor targetNodeRef namingNodeRef = makeAccessorRec targetNodeRef namingNodeRef False
 
 unAcc :: forall m. ASTOp m => NodeRef -> m NodeRef
 unAcc ref = do

@@ -20,6 +20,7 @@ Library
                   DeriveFunctor,
                   DeriveTraversable,
                   FlexibleInstances,
+                  FlexibleContexts,
                   TypeFamilies,
                   MultiParamTypeClasses,
                   RankNTypes
