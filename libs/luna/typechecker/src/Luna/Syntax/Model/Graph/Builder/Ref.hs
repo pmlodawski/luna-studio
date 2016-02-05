@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes           #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Luna.Syntax.Model.Graph.Builder.Ref where
@@ -25,15 +26,27 @@ withM ref f = read ref >>= f >>= write ref
 with :: RefHandler m a => Ref a -> (a -> a) -> m ()
 with ref = withM ref ∘ (return <$>)
 
+follow :: Reader m (Edge src tgt) => Lens' (Edge src tgt) t -> Ref (Edge src tgt) -> m t
+follow f ptr = view f <$> read ptr
+
+reconnect :: (Reader m src, Writer m src, Connectible (Ref src) (Ref tgt) m, e ~ Connection (Ref src) (Ref tgt), Unregister m e)
+          => Ref src -> Lens' src e -> Ref tgt -> m e
+reconnect srcRef l tgtRef = do
+    src  <- read srcRef
+    unregister $ src ^. l
+    conn <- connection srcRef tgtRef
+    write srcRef $ src & l .~ conn
+    return conn
+
 
 -- === Instances === --
 
 -- Construction
 
-instance (MonadBuilder n e m, Castable a n) => Constructor m (Ref $ Node a) where 
+instance (MonadBuilder n e m, Castable a n) => Constructor m (Ref $ Node a) where
     construct n = Ref ∘ Ptr <$> modify (nodeGraph $ swap ∘ ixed add (cast $ unwrap' n)) ; {-# INLINE construct #-}
 
-instance (MonadBuilder n e m, Castable (Edge src tgt) e) => Constructor m (Ref $ Edge src tgt) where 
+instance (MonadBuilder n e m, Castable (Edge src tgt) e) => Constructor m (Ref $ Edge src tgt) where
     construct e = Ref ∘ Ptr <$> modify (edgeGraph $ swap ∘ ixed add (cast e)) ; {-# INLINE construct #-}
 
 -- Accessors

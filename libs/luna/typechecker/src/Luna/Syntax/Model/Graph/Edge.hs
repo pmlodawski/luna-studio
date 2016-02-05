@@ -21,7 +21,7 @@ import Data.Container
 
 -- === Definitions === --
 
-type family Connection  src dst
+type family Connection src dst
 
 data Edge src dst = Edge (Ref src) (Ref dst) deriving (Show, Eq, Ord)
 type Link       a = Edge a a
@@ -50,21 +50,18 @@ target = lens (\(Edge _ dst) -> rewrap dst) (\(Edge src _) dst -> Edge src (rewr
 type instance Target (Ref (Edge src dst)) = Ref (Node dst)
 type instance Source (Ref (Edge src dst)) = Ref (Node src)
 
---type instance Source (Edge src dst) = Node src
---type instance Target (Edge src dst) = Node dst
-
 -- Connecting
 
 type instance Connection (Ref  a) (Ref  b) = Ref (Connection a b)
 type instance Connection (Node a) (Node b) = Edge a b
 
-instance (LayerConstructor m c, Dispatcher CONNECTION c m, Unlayered c ~ Edge src dst, c ~ Connection (Ref (Node src)) (Ref (Node dst))) 
+instance (LayerConstructor m c, Dispatcher CONNECTION c m, Unlayered c ~ Edge src dst, c ~ Connection (Ref (Node src)) (Ref (Node dst)))
       => Connectible (Ref (Node src)) (Ref (Node dst)) m where
          connection src dst = dispatch CONNECTION =<< constructLayer (edge src dst)
 
 -- Conversions
 
-instance (Castable (Ref src) (Ref src'), Castable (Ref dst) (Ref dst')) => Castable (Edge src dst) (Edge src' dst') where 
+instance (Castable (Ref src) (Ref src'), Castable (Ref dst) (Ref dst')) => Castable (Edge src dst) (Edge src' dst') where
     cast (Edge src dst) = Edge (cast src) (cast dst) ; {-# INLINE cast #-}
 
 -- Properties

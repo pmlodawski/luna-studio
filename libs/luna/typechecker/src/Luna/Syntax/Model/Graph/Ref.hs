@@ -33,7 +33,12 @@ rawPtr = ptr ∘ wrapped'
 
 -- === Instances === --
 
--- Ptr primitive instances
+-- Wrappers
+makeWrapped ''Ptr
+type instance Unlayered (Ptr i) = Unwrapped (Ptr i)
+instance      Layered   (Ptr i)
+
+-- Primitive instances
 type instance Index  (Ptr i) = i
 instance      HasIdx (Ptr i) where idx = wrapped'
 instance      HasPtr (Ptr i) where ptr = id
@@ -48,11 +53,11 @@ instance      HasPtr (Ptr i) where ptr = id
 
 data Ref a = Ref (Ptr Int) deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
 
-makeWrapped ''Ptr
-makeWrapped ''Ref
-
 
 -- === Instances === --
+
+-- Wrappers
+makeWrapped ''Ref
 
 -- Ref primitive instances
 type instance Unlayered     (Ref a) = a
@@ -69,5 +74,4 @@ instance Constructor m (Ref ref) => LayerConstructor m (Ref ref) where
     constructLayer = construct ; {-# INLINE constructLayer #-}
 
 -- Ref accessors
-
 type instance Prop (Ref a) (Graph n e) = a

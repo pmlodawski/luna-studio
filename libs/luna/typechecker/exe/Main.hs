@@ -46,8 +46,8 @@ prebuild :: IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
 prebuild = runNetworkBuilderT def $ star
 
 
---foo :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
-foo :: NetGraph -> IO ((), NetGraph)
+foo :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
+--foo :: NetGraph -> IO ((), NetGraph)
 foo g = runNetworkBuilderT g
     $ do
     title "basic element building"
@@ -68,7 +68,7 @@ foo g = runNetworkBuilderT g
     print c1_v
 
     title "edge following"
-    c1_tgt <- follow c1
+    c1_tgt <- follow target c1
     when (c1_tgt /= s2) $ fail "reading is broken!"
     print "ok!"
 
@@ -116,7 +116,7 @@ foo g = runNetworkBuilderT g
     --let ins = inputs s1_v
     --print ins
 
-    return ()
+    return s1
 
 
 
@@ -130,6 +130,9 @@ main = do
     putStrLn "\n--------------\n"
     (s,g') <- foo g
     print g'
+
+    title "params reading"
+    print $ g' # s
 
     renderAndOpen [("g", g')]
 
