@@ -6,7 +6,7 @@ packages:
 - {location: ../../../../libs/luna/typechecker}
 - {extra-dep: true, location: ../../../../libs/utils}
 - extra-dep: true
-  location: {commit: 754cb68fd4b9ceea29f3b6d8aad21a1e5085ff52, git: 'https://github.com/wdanilo/container.git'}
+  location: {commit: 41153d63e5b625c3ef153465622bebdbbafe549e, git: 'https://github.com/wdanilo/container.git'}
 - extra-dep: true
   location: {commit: b55500e95a422ec29b1dba4fc9c0b8092669350b, git: 'https://github.com/wdanilo/convert.git'}
 - extra-dep: true
@@ -30,7 +30,7 @@ packages:
 - extra-dep: true
   location: {commit: 8cb9cbd7e87f5c5223dc171ae97762e2a535483b, git: 'https://github.com/wdanilo/poly-control.git'}
 - extra-dep: true
-  location: {commit: 1117e43e6cae076d69cf514b378d0c3ff621632d, git: 'https://github.com/wdanilo/prologue.git'}
+  location: {commit: 45c1aa4f4b3642b984d692cb3ef7f478dfdc751f, git: 'https://github.com/wdanilo/prologue.git'}
 - extra-dep: true
   location: {commit: eee76a96bdd1d442299cecdcd1e445d76eef3b1a, git: 'https://github.com/wdanilo/type-cache.git'}
 - extra-dep: true
@@ -38,5 +38,5 @@ packages:
 - extra-dep: true
   location: {commit: ad98e23561702f27c6faa4b80818c01653bb38eb, git: 'https://github.com/wdanilo/data-construction.git'}
 - extra-dep: true
-  location: {commit: ade9273fee09b9eff0b3db17002c167fcef1f7f7, git: 'https://github.com/wdanilo/data-attribute.git'}
+  location: {commit: 7aabffffb84a57e1cf6a48d5da91a8d1153d77ac, git: 'https://github.com/wdanilo/data-member.git'}
 resolver: lts-4.1
