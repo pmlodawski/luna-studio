@@ -152,15 +152,12 @@ connectionVector map src dst = dstPos - srcPos where
 angleToDimVec :: Double -> Vector2 Double
 angleToDimVec angle = (/ 10.0) <$> Vector2 (cos angle) (-sin angle)
 
-portDefaultAngle :: Int -> PortId -> Vector2 Double
-portDefaultAngle numPorts (OutPortId _) = angleToDimVec angleMod where
+portDefaultAngle :: Int -> PortId -> Int -> Vector2 Double
+portDefaultAngle numPorts (OutPortId _) _ = angleToDimVec angleMod where
     angleMod = 0.0 -- TODO: only one out port supported for now
-portDefaultAngle numPorts (InPortId portId) = angleToDimVec angleMod where
+portDefaultAngle numPorts (InPortId portId) portNum = angleToDimVec angleMod where
     angleMod = angle `mod'` (2.0 * pi)
-    angle = (1 + fromIntegral portNum) * (pi / (fromIntegral $ numPorts + 1)) + delta
-    portNum = case portId of
-        Port.Self  -> 0
-        Port.Arg i -> i + 1
+    angle = (fromIntegral portNum) * (pi / (fromIntegral $ numPorts + 1)) + delta
     delta = pi / 2.0 -- TODO: OutputPort -> 3.0 * pi / 2.0
 
 defaultAngles :: Command Global.State (Map AnyPortRef (Vector2 Double))
@@ -168,8 +165,8 @@ defaultAngles = do
     nodes <- use $ Global.graph . Graph.nodes
 
     let angles = calculateAngles <$> nodes where
-            calculateAngles node = portAngle <$> (Map.keys $ node ^. Node.ports) where
-                portAngle portId = (PortRef.toAnyPortRef nodeId portId, portDefaultAngle portNum portId) where
+            calculateAngles node = portAngle <$> (zip [1..] $ Map.keys $ node ^. Node.ports) where
+                portAngle (portIx, portId) = (PortRef.toAnyPortRef nodeId portId, portDefaultAngle portNum portId portIx) where
                 nodeId = node ^. Node.nodeId
                 portNum = length $ node ^. Node.ports
 

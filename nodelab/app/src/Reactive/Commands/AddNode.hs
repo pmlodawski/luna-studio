@@ -100,11 +100,11 @@ nodePorts id = do
     filterM isPort children
 
 makePorts :: Node -> [PortModel.Port]
-makePorts node = makePort <$> (Map.elems $ node ^. Node.ports) where
+makePorts node = makePort <$> (zip [1..] $ Map.elems $ node ^. Node.ports) where
     nodeId  = node ^. Node.nodeId
-    makePort port = PortModel.Port portRef angle (colorPort $ port ^. Port.portId ) where
+    makePort (portIx, port) = PortModel.Port portRef angle (colorPort $ port ^. Port.portId ) where
         portRef = toAnyPortRef nodeId (port ^. Port.portId)
-        angle   = portDefaultAngle ((length $ node ^. Node.ports) - 1) (port ^. Port.portId)
+        angle   = portDefaultAngle ((length $ node ^. Node.ports) - 1) (port ^. Port.portId) portIx
 
 displayPorts :: WidgetId -> Node -> Command UIRegistry.State ()
 displayPorts id node = do
