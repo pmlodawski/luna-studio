@@ -79,7 +79,7 @@ foo g = runNetworkBuilderT g
         match $ \ANY  -> "something else!"
 
     title "complex element building"
-    u1 <- unify s1 s2
+    u1 <- unify2 s1 s2
     print u1
     u1_v <- read u1
 

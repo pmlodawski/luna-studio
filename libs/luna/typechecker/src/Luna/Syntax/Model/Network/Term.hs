@@ -89,6 +89,14 @@ type instance TermWrapper Term.Thunk = Thunk
 type instance TermWrapper Term.Expr  = Expr
 type instance TermWrapper Term.Draft = Draft
 
+-- Term origins
+
+type instance TermOf (Lit   rt ls) = TermOf (Unwrapped (Lit   rt ls))
+type instance TermOf (Val   rt ls) = TermOf (Unwrapped (Val   rt ls))
+type instance TermOf (Thunk rt ls) = TermOf (Unwrapped (Thunk rt ls))
+type instance TermOf (Expr  rt ls) = TermOf (Unwrapped (Expr  rt ls))
+type instance TermOf (Draft rt ls) = TermOf (Unwrapped (Draft rt ls))
+
 -- Records
 
 type instance RecordOf (Lit   rt ls) = RecordOf (Unwrapped (Lit   rt ls))

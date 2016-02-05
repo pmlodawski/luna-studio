@@ -243,6 +243,19 @@ instance Castable  d (ASTRecord gs vs t d)   where cast    = wrap'   ; {-# INLIN
 
 
 
+
+
+class TermCons n t term a | a -> n t where termCons :: term -> a
+
+instance (t ~ t', n ~ NameByRuntime rt t, t ~ Layout tp term rt, SmartCons (Unify t') (Term tp term rt))
+      => TermCons n t (Unify t') (Term tp term rt) where termCons = cons
+
+class TermCons2 a cls term rt where termCons2 :: a -> Term cls term rt
+
+instance (t ~ t', n ~ NameByRuntime rt t, t ~ Layout cls term rt, SmartCons (Unify t') (Term cls term rt))
+      => TermCons2 (Unify t) cls term rt where termCons2 = cons
+
+
 -------------------------
 -- === Term groups === --
 -------------------------
@@ -254,6 +267,7 @@ newtype     Term     t term rt = Term (ASTRecord (SubRuntimeGroups rt t term) (V
 type        Variants t term rt = Elems term (NameByRuntime rt (Layout t term rt)) (Layout t term rt)
 type family Layout   t term rt
 type family LayoutType a
+type family TermOf     a
 
 data Lit   = Lit   deriving (Show)
 data Val   = Val   deriving (Show)
@@ -334,6 +348,7 @@ showTermType (t :: Term t term rt) = tyConName $ typeRepTyCon $ head $ snd $ spl
 
 -- Basic instances
 type instance LayoutType (Term t term rt) = t
+type instance TermOf     (Term t term rt) = Term t term rt
 
 deriving instance Show (Unlayered (Term t term rt)) => Show (Term t term rt)
 deriving instance Eq   (Unlayered (Term t term rt)) => Eq   (Term t term rt)

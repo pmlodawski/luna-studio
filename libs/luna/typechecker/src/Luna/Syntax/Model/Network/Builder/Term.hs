@@ -10,7 +10,7 @@ import Prelude.Luna hiding (Num)
 import           Data.Record                    (RecordOf, IsRecord, asRecord, SmartCons, Variant, MapTryingElemList_, withElement_, Props)
 import qualified Data.Record                    as Record
 import qualified Luna.Syntax.AST.Term           as Term
-import           Luna.Syntax.AST.Term           hiding (Val, Lit, Thunk, Expr, Draft)
+import           Luna.Syntax.AST.Term           hiding (Val, Lit, Thunk, Expr, Draft, Source)
 import Luna.Syntax.Model.Graph
 import Data.Prop
 import           Control.Monad.Event
@@ -24,6 +24,8 @@ import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.AST.Arg
 import           Data.Layer
 import           Data.Layer.Cover
+import           Data.Direction
+
 
 -------------------------------------
 -- === Term building utilities === --
@@ -128,7 +130,43 @@ blank :: ElemBuilder Blank m u => m u
 blank = buildElem Blank
 
 
+--unify2 :: _ => _ -> _ -> m (Term.Term cls term rt)
+--unify2 a b = mdo
+--    let out = cons $ Unify ca cb
+--    ca  <- connection a out
+--    cb  <- connection b out
+--    return out
 
+--unify2 :: _ => _ -> _ -> Term.Term cls term rt
+--unify2 a b = Record.cons $ Unify a b
+
+unify2 :: ( MonadFix m
+         , ElemBuilder (Unify (Connection b u)) m u
+         , Connectible a u m
+         , Connectible b u m
+         , TermOf (Uncovered u) ~ Term cls term rt
+         , conn ~ Connection a u
+         , conn ~ Connection b u
+         , conn ~ Layout cls term rt
+         ) => a -> b -> m u
+unify2 a b = mdo
+    out <- buildElem $ Unify ca cb
+    ca  <- connection a out
+    cb  <- connection b out
+    return out
+
+
+unify3 :: ( MonadFix m
+         , conn ~ Connection a u
+         , conn ~ Connection b u
+         , Connectible2 a u m conn
+         , Connectible2 b u m conn
+         --, a ~ Int
+         --, b ~ Char
+         ) => a -> b -> m u
+unify3 a b = undefined
+
+unifytst = unify3 (return 5)
 ------------------------------
 -- === Network Building === --
 ------------------------------
@@ -174,26 +212,14 @@ instance {-# OVERLAPPABLE #-}
 
 
 
-
 -- FIXME[WD]: poprawic typ oraz `WithElement_` (!)
 -- FIXME[WD]: inputs should be more general and should be refactored out
-inputsxxx :: forall x ast rt ls.
-      ( x ~ Ref (Link (ls :< ast rt))
-      , (MapTryingElemList_ (Props Variant (RecordOf (RecordOf (ast rt ls)))) (TFoldable (Ref (Link (ls :< ast rt)))) (ast rt ls))
-      ) => ast rt ls -> [x]
-inputsxxx a = withElement_ (p :: P (TFoldable x)) (foldrT (:) []) a
-
-
-
-
--- FIXME[WD]: poprawic typ oraz `WithElement_` (!)
--- FIXME[WD]: inputs should be more general and should be refactored out
-inputsxxx2 :: forall layout term rt x.
+inputstmp :: forall layout term rt x.
       (MapTryingElemList_
                             (Elems term (ByRuntime rt Str x) x)
                             (TFoldable x)
                             (Term layout term rt), x ~ Layout layout term rt) => Term layout term rt -> [x]
-inputsxxx2 a = withElement_ (p :: P (TFoldable x)) (foldrT (:) []) a
+inputstmp a = withElement_ (p :: P (TFoldable x)) (foldrT (:) []) a
 
 
 
@@ -204,5 +230,5 @@ instance (MapTryingElemList_
                               (ByRuntime rt Str (Layout layout term rt))
                               (Layout layout term rt))
                            (TFoldable (Layout layout term rt))
-                           (Term layout term rt)) => Getter Inputs (Term layout term rt) where getter _ = inputsxxx2
+                           (Term layout term rt)) => Getter Inputs (Term layout term rt) where getter _ = inputstmp
 

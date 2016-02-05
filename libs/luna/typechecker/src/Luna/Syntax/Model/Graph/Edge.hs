@@ -30,6 +30,8 @@ class ( src ~ Source (Connection src dst)
       , dst ~ Target (Connection src dst)
       ) => Connectible src dst m where connection :: src -> dst -> m (Connection src dst)
 
+class conn ~ Connection src dst => Connectible2 src dst m conn | src dst -> conn, conn -> src dst where
+    connection2 ::  src -> dst -> m conn
 
 -- === Utils === --
 
