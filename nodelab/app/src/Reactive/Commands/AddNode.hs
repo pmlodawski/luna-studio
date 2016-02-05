@@ -86,7 +86,7 @@ colorPort _ = 11
 
 registerNode :: Node -> Command UIRegistry.State ()
 registerNode node = do
-    let nodeModel = Model.node node
+    let nodeModel = Model.fromNode node
     nodeWidget <- UICmd.register sceneGraphId nodeModel (nodeHandlers node)
 
     displayPorts nodeWidget node

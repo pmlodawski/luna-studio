@@ -100,10 +100,6 @@ getConnectionLine nodePos portAngles portTypes srcPortRef dstPortRef = (srcWs, d
     missingPortPos               = -pi / 2.0
     missingPortColor             = 13
 
-connectNodes :: OutPortRef -> InPortRef -> Command Global.State ()
-connectNodes src dst = do
-    batchConnectNodes src dst
-    -- localConnectNodes src dst
 
 batchConnectNodes :: OutPortRef -> InPortRef -> Command Global.State ()
 batchConnectNodes src dst = ioCommand $ \state -> let

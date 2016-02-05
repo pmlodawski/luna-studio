@@ -4,11 +4,13 @@ module Empire.Server.Graph where
 
 import           Prologue
 import qualified Data.Binary                       as Bin
+import           Data.Maybe                        (fromMaybe)
 import           Control.Monad.State               (StateT)
 import           Data.ByteString                   (ByteString)
 import           Data.ByteString.Lazy              (fromStrict)
 import qualified Data.Text.Lazy                    as Text
 import qualified Data.IntMap                       as IntMap
+import qualified Data.Map                          as Map
 import qualified Flowbox.System.Log.Logger         as Logger
 import           Flowbox.Bus.BusT                  (BusT (..))
 import qualified Empire.Env                        as Env
@@ -27,8 +29,11 @@ import qualified Empire.API.Graph.NodeResultUpdate as NodeResultUpdate
 import qualified Empire.API.Update                 as Update
 import qualified Empire.API.Topic                  as Topic
 import           Empire.API.Data.GraphLocation     (GraphLocation)
-import           Empire.API.Data.Node              (Node, NodeId)
+import           Empire.API.Data.Node              (Node(..), NodeId)
+import qualified Empire.API.Data.Node              as Node
 import           Empire.API.Data.DefaultValue      (Value(..))
+import           Empire.API.Data.Port              (Port(..), PortState(..), PortId(..), OutPort(..))
+import           Empire.API.Data.ValueType         (ValueType(..))
 import qualified Empire.Commands.Graph             as Graph
 import qualified Empire.Empire                     as Empire
 import           Empire.Server.Server              (sendToBus, withGraphLocation, errorMessage)
@@ -66,16 +71,36 @@ notifyNodeResultUpdate location nodeId value = do
     let update = NodeResultUpdate.Update location nodeId value
     sendToBus Topic.nodeResultUpdate update
 
+
+data Expr = Expression String | Function (Maybe String) | Module (Maybe String) | Input (Maybe String)
+
+parseExpr :: String -> Expr
+parseExpr ('d':'e':'f':' ':name) = Function $ Just name
+parseExpr "def"          = Function Nothing
+parseExpr ('m':'o':'d':'u':'l':'e':' ':name) = Module $ Just name
+parseExpr "module" = Module Nothing
+parseExpr ('i':'n':' ':name) = Input $ Just name
+parseExpr "in" = Input Nothing
+parseExpr expr = Expression expr
+
 handleAddNode :: ByteString -> StateT Env BusT ()
 handleAddNode content = do
     let request  = Bin.decode . fromStrict $ content :: AddNode.Request
         location = request ^. AddNode.location
     currentEmpireEnv <- use Env.empireEnv
     (result, newEmpireEnv) <- case request ^. AddNode.nodeType of
-      AddNode.ExpressionNode expression -> liftIO $ Empire.runEmpire currentEmpireEnv $ withGraphLocation Graph.addNode
-        location
-        (Text.pack $ expression)
-        (request ^. AddNode.nodeMeta)
+      AddNode.ExpressionNode expression -> case parseExpr expression of
+        Expression expression -> liftIO $ Empire.runEmpire currentEmpireEnv $ withGraphLocation Graph.addNode
+                                                                                                location
+                                                                                                (Text.pack $ expression)
+                                                                                                (request ^. AddNode.nodeMeta)
+        Function name -> return (Right node, currentEmpireEnv) where
+          node = Node 42 (Text.pack $ fromMaybe "function0" name) (Node.FunctionNode ["Int", "String"]) mempty (request ^. AddNode.nodeMeta)
+        Module   name -> return (Right node, currentEmpireEnv) where
+          node = Node 43 (Text.pack $ fromMaybe "module0" name) (Node.ModuleNode) mempty (request ^. AddNode.nodeMeta)
+        Input    name -> return (Right node, currentEmpireEnv) where
+          node = Node 44 (Text.pack $ fromMaybe "input0" name) (Node.InputNode 1) ports (request ^. AddNode.nodeMeta) where
+            ports = Map.fromList [ (OutPortId All,  Port (OutPortId All)  (ValueType "Int") NotConnected)]
       AddNode.InputNode _ _ -> return (Left "Input Nodes not yet supported", currentEmpireEnv)
     case result of
         Left err -> logger Logger.error $ errorMessage <> err

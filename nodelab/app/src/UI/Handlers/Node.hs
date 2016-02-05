@@ -148,7 +148,7 @@ instance CompositeWidget Model.Node where
         let grp    = Group.Group def def True $ Just (0.2, 0.2, 0.2)
         UICmd.register controlGroups grp (Layout.verticalLayoutHandler (Vector2 5.0 5.0) 5.0)
 
-        let label  = Label.Label (Vector2 (-50.0) 0.0) (Vector2 100.0 20.0) Label.Center "(pending)"
+        let label  = Label.Label (Vector2 (-50.0) 0.0) (Vector2 100.0 20.0) Label.Left ""
         UICmd.register controlGroups label def
 
         let group  = Group.create & Group.background ?~ (0.2, 0.2, 0.2)

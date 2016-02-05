@@ -32,13 +32,13 @@ data Node = Node { _nodeId     :: Int
 makeLenses ''Node
 instance ToJSON Node
 
-node :: N.Node -> Node
-node n = case n ^. N.nodeType of
-    N.ExpressionNode expression -> Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 expression (n ^. N.name) "()" False False False
-    N.InputNode inputIx         -> Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 (Text.pack $ show inputIx) (n ^. N.name) "Input" False False False
+fromNode :: N.Node -> Node
+fromNode n = case n ^. N.nodeType of
+    N.ExpressionNode expression -> Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 expression (n ^. N.name) "" False False False
+    N.InputNode inputIx         -> Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 (Text.pack $ "Input " <> show inputIx) (n ^. N.name) "" False False False
     N.OutputNode                -> Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 "Output"              (n ^. N.name) "" False False False
     N.ModuleNode                -> Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 "Module"              (n ^. N.name) "" False False False
-    N.FunctionNode tpeSig       -> Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 "Function"            (n ^. N.name) (Text.pack $ show tpeSig) False False False
+    N.FunctionNode tpeSig       -> Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 "Function"            (n ^. N.name) (Text.pack $ intercalate " -> " tpeSig) False False False
 
 instance IsDisplayObject Node where
     widgetPosition = position

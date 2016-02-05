@@ -118,6 +118,6 @@ stopDrag event@(Mouse.Event _ coord _ _ mayEvWd) (Connecting sourceRef _ _ _ _ (
             let destinationRef = destinationFile ^. widget . PortModel.portRef
             let srcDstMay = toValidConnection sourceRef destinationRef
             forM_ srcDstMay $ \(src, dst) -> do
-                connectNodes src dst
+                batchConnectNodes src dst
     updatePortAngles
     updateConnections
