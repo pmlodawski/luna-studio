@@ -10,7 +10,7 @@
 
 module Main where
 
-import           Prologue                               hiding (cons, read)
+import           Prologue                               hiding (cons, read, Num)
 
 import           Control.Monad.Error                    (MonadError)
 import           Data.Layer.Cover
@@ -133,6 +133,14 @@ prebuild = runNetworkBuilderT def $ star
 --     Applications.assignApplicationTypes i
 --     return ()
 
+proxy :: Proxy (Ref $ Node (NetLayers :< Draft Static))
+proxy = Proxy
+
+assignLiteralTypesTest :: (Ref $ Node (NetLayers :< Draft Static))
+                       -> NetGraph
+                       -> IO ((), NetGraph)
+assignLiteralTypesTest ref g = runNetworkBuilderT g $ assignLiteralTypes proxy
+
 sampleGraph2 :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
 sampleGraph2 g = runNetworkBuilderT g $ do
     i1 <- int 2
@@ -170,6 +178,6 @@ main = do
     -- putStrLn "\n--------------\n"
     -- print g
     (s1, g' ) <- sampleGraph2 g
-    ((), g'') <- assignLiteralTypes s1 g'
+    (s2, g'') <- assignLiteralTypesTest s1 g'
     -- print g'
     renderAndOpen [("g", g'')]

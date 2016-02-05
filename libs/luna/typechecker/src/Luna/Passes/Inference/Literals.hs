@@ -10,7 +10,7 @@ module Luna.Passes.Inference.Literals
     ( assignLiteralTypes
     ) where
 
-import           Prelude.Luna
+import           Prelude.Luna                        hiding (Num)
 
 import           Data.Construction
 import           Data.Layer.Cover
@@ -34,14 +34,77 @@ import           Luna.Syntax.Model.Network.Term
 --     mapM (Builder.follow) $ Term.inputs $ uncoat node
 
 
-assignLiteralTypes :: (Ref $ Node (NetLayers :< Draft Static))
-                   -> NetGraph
-                   -> IO ((), NetGraph)
-assignLiteralTypes ref g = do
-    ((consIntRef, consStringRef), g'  ) <- createLiteralTypes          ref                          g
-    ((),                          g'' ) <- assignLiteralTypesWithTypes ref consIntRef consStringRef g'
-    ((),                          g''') <- cleanUpLiteralTypes             consIntRef consStringRef g''
-    return ((), g''')
+
+-- bar :: forall m b. (Monad m, ElemBuilder Star m b, ElemBuilder Num m b) => m b
+-- bar = do
+--     s1 <- star  :: m (Ref (Node (NetLayers :< Draft Static)))
+--     s2 <- int 4 :: m (Ref (Node (NetLayers :< Draft Static)))
+--     node <- read s1  :: m (Node (NetLayers :< Draft Static))
+--     return s1
+
+-- bar :: forall m b term. (b ~ Ref term, Monad m, ElemBuilder Star m b, Reader m term) => m b
+-- foo :: forall m b. (b ~ Ref (Node (NetLayers :< Draft Static)), Monad m, ElemBuilder Star m b, Reader m (Node (NetLayers :< Draft Static))) => m b
+-- bar = do
+--     bar :: m b
+--     s1 <- star :: m b
+--     s2 <- star :: m b
+--     x <- read s1
+--     return s1
+
+
+
+
+-- assignLiteralTypes :: forall m b term. ( MonadIO m,
+--     b ~ Ref (Node term), Monad m, ElemBuilder Star m b, Reader m (Node term), Covered term, Matches (Uncovered term) '[ANY, Star]) =>
+--     m b
+-- assignLiteralTypes = do
+--     assignLiteralTypes :: m b
+--     s1 <- star :: m b
+--     return s1
+
+
+assignLiteralTypes :: forall m b term. ( MonadIO m
+                                       , b ~ Ref (Node term)
+                                       , Monad m
+                                       , ElemBuilder Star m b
+                                       -- , ElemBuilder (Cons a) m b
+                                       , Reader m (Node term)
+                                       , Covered term
+                                       , Matches (Uncovered term) '[ANY, Star])
+                   => Proxy b -> m ()
+assignLiteralTypes _ = do
+    -- consIntRef    <- cons "Int" :: m b
+    s1 <- star :: m b
+    s1 <- star :: m b
+    return ()
+
+-- assignLiteralTypes :: forall m b term. (MonadIO m,
+--     b ~ (), Monad m, ElemBuilder Star m b, Reader m (Node term), Covered term, Matches (Uncovered term) '[ANY, Star]) =>
+--     (Ref $ Node (NetLayers :< Draft Static)) -> m b
+-- assignLiteralTypes ref g = do
+--     return ()
+
+-- assignLiteralTypes :: (Ref $ Node (NetLayers :< Draft Static))
+--                    -> NetGraph
+--                    -> IO ((), NetGraph)
+-- assignLiteralTypes ref g = do
+--     ((consIntRef, consStringRef), g'  ) <- createLiteralTypes          ref                          g
+--     ((),                          g'' ) <- assignLiteralTypesWithTypes ref consIntRef consStringRef g'
+--     ((),                          g''') <- cleanUpLiteralTypes             consIntRef consStringRef g''
+--     return ((), g''')
+
+
+bar :: forall m b term. (MonadIO m,
+    b ~ Ref (Node term), Monad m, ElemBuilder Star m b, Reader m (Node term), Covered term, Matches (Uncovered term) '[ANY, Star]) => m b
+bar = do
+    bar :: m b
+    s1 <- star :: m b
+    s2 <- star :: m b
+    s1_v <- read s1
+    print $ caseTest (uncover s1_v) $ do
+        match $ \Star -> "its a star! <3"
+        match $ \ANY  -> "something else!"
+    return s1
 
 assignLiteralTypesWithTypes :: (Ref $ Node (NetLayers :< Draft Static))
                             -> (Ref $ Node (NetLayers :< Draft Static))
