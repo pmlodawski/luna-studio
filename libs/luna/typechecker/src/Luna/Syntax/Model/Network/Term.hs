@@ -9,7 +9,7 @@ import Prologue hiding (Getter, Setter, Cons, Num, cons)
 
 import           Luna.Syntax.Model.Network.Class
 import           Control.Monad.Event
-import           Data.Attribute
+import           Data.Prop
 import           Data.Layer.Cover
 import           Data.Record                    (RecordOf, IsRecord, asRecord, SmartCons, Variant, MapTryingElemList_, withElement_, Props)
 import qualified Data.Record                    as Record
@@ -22,7 +22,7 @@ import           Luna.Runtime.Model
 import           Luna.Syntax.AST.Arg
 
 
-import Data.Attribute
+import Data.Prop
 
 ---------------------------------------
 -- === Network layout definition === --
@@ -133,13 +133,13 @@ instance {-# OVERLAPPABLE #-} Repr s (Unwrapped (Thunk rt ls)) => Repr s (Thunk 
 instance {-# OVERLAPPABLE #-} Repr s (Unwrapped (Expr  rt ls)) => Repr s (Expr  rt ls) where repr = repr ∘ unwrap'
 instance {-# OVERLAPPABLE #-} Repr s (Unwrapped (Draft rt ls)) => Repr s (Draft rt ls) where repr = repr ∘ unwrap'
 
--- Attributes
+-- Properties
 
-type instance Attr a (Lit   rt ls) = Attr a (Unwrapped (Lit   rt ls))
-type instance Attr a (Val   rt ls) = Attr a (Unwrapped (Val   rt ls))
-type instance Attr a (Thunk rt ls) = Attr a (Unwrapped (Thunk rt ls))
-type instance Attr a (Expr  rt ls) = Attr a (Unwrapped (Expr  rt ls))
-type instance Attr a (Draft rt ls) = Attr a (Unwrapped (Draft rt ls))
+type instance Prop a (Lit   rt ls) = Prop a (Unwrapped (Lit   rt ls))
+type instance Prop a (Val   rt ls) = Prop a (Unwrapped (Val   rt ls))
+type instance Prop a (Thunk rt ls) = Prop a (Unwrapped (Thunk rt ls))
+type instance Prop a (Expr  rt ls) = Prop a (Unwrapped (Expr  rt ls))
+type instance Prop a (Draft rt ls) = Prop a (Unwrapped (Draft rt ls))
 
 instance SubGetter a (Lit   rt ls) => Getter a (Lit   rt ls)
 instance SubGetter a (Val   rt ls) => Getter a (Val   rt ls)

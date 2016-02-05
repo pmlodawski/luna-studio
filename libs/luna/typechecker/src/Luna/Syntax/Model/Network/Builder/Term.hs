@@ -12,7 +12,7 @@ import qualified Data.Record                    as Record
 import qualified Luna.Syntax.AST.Term           as Term
 import           Luna.Syntax.AST.Term           hiding (Val, Lit, Thunk, Expr, Draft)
 import Luna.Syntax.Model.Graph
-import Data.Attribute
+import Data.Prop
 import           Control.Monad.Event
 import           Luna.Runtime.Model
 import           Luna.Syntax.Model.Network.Builder.Layer
@@ -197,7 +197,7 @@ inputsxxx2 a = withElement_ (p :: P (TFoldable x)) (foldrT (:) []) a
 
 
 
-type instance Attr Inputs (Term layout term rt) = [Layout layout term rt]
+type instance Prop Inputs (Term layout term rt) = [Layout layout term rt]
 instance (MapTryingElemList_
                            (Elems
                               term

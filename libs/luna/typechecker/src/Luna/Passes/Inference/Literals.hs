@@ -12,8 +12,8 @@ module Luna.Passes.Inference.Literals
 
 import           Prelude.Luna
 
-import           Data.Attribute
 import           Data.Construction
+import           Data.Prop
 import           Data.Layer.Cover
 
 import           Data.Record                         hiding (Layout, cons)
@@ -53,15 +53,15 @@ assignLiteralTypesWithTypes ref consIntRef consStringRef g = runNetworkBuilderT 
     node <- read ref
     caseTest (uncover node) $ do
         match $ \(Str str) -> do
-            let tpeRef = node ^. attr Type
+            let tpeRef = node ^. prop Type
             putStrLn $ "tpeRef " <> show tpeRef
-            reconnect ref (attr Type) consStringRef
+            reconnect ref (prop Type) consStringRef
             return ()
         match $ \(Num num) -> do
-            let tpeRef = node ^. attr Type
+            let tpeRef = node ^. prop Type
             putStrLn $ "tpeRef " <> show tpeRef
             -- destruct tpeRef -- TODO: ?
-            reconnect ref (attr Type) consIntRef
+            reconnect ref (prop Type) consIntRef
             return ()
         match $ \ANY -> return ()
 

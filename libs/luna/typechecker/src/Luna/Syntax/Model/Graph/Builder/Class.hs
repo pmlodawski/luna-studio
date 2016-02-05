@@ -5,7 +5,7 @@ module Luna.Syntax.Model.Graph.Builder.Class where
 
 import Prologue hiding (Getter, Setter, read, (#))
 
-import           Data.Attribute
+import           Data.Prop
 import           Control.Monad.Catch            (MonadMask, MonadCatch, MonadThrow)
 import           Data.Construction
 import           Data.Container

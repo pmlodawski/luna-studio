@@ -5,7 +5,7 @@ module Luna.Syntax.Model.Network.Builder.Layer where
 import Prologue hiding (read)
 
 import           Control.Monad.Event
-import           Data.Attribute
+import           Data.Prop
 import           Data.Construction
 import qualified Luna.Syntax.Model.Network.Builder.Type as Type
 import qualified Luna.Syntax.Model.Network.Builder.Self as Self
@@ -16,6 +16,7 @@ import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Graph.Builder.Ref
 import qualified Luna.Syntax.Model.Graph.Builder.Ref as Ref
 import           Luna.Syntax.Model.Network.Class
+import           Data.Layer.Cover
 
 
 --------------------------------
@@ -30,12 +31,12 @@ instance ( Monad  m
          , Reader m (Node src)
          , Writer m (Node src)
          , Show src
-         , Attr Succs src ~ [Ref (Edge src tgt)]
-         , HasAttr Succs src
+         , Prop Succs src ~ [Ref (Edge src tgt)]
+         , HasProp Succs src
          ) => Handler t SuccRegister m (Ref (Edge src tgt)) where 
     handler e = do
         ve <- lift $ read e -- FIXME[WD]: remove the lift (it could be handy to disable the magic trans-instance in Graph.hs)
-        lift $ Ref.with (ve ^. source) $ attr Succs %~ (e:)
+        lift $ Ref.with (ve ^. source) $ prop Succs %~ (e:)
     {-# INLINE handler #-}
 
 instance Monad m => Destructor m (Layer (Network ls) Succs a) where
@@ -71,3 +72,11 @@ instance (MonadSelfBuilder s m, Ref (Link l) ~ Connection s (Ref $ Node l), Conn
 
 instance (Monad m, Unregister m (LayerData (Network ls) Type a)) => Destructor m (Layer (Network ls) Type a) where
     destruct (Layer ref) = unregister ref
+
+
+
+------------------------------------------
+-- === Layer building & destruction === --
+------------------------------------------
+
+instance CoverDestructor m (ls :< a) => Destructor m (ls :< a) where destruct a = () <$ destructCover a

@@ -13,7 +13,7 @@ module Main where
 import           Prologue                        hiding (cons, read)
 
 import           Control.Monad.Error             (MonadError)
-import           Data.Attribute
+import           Data.Prop
 import           Data.Layer.Cover
 import           Data.Record                     hiding (Layout)
 

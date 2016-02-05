@@ -4,7 +4,7 @@ module Luna.Syntax.Model.Layer where
 
 import Prologue hiding (Getter, Setter)
 
-import Data.Attribute
+import Data.Prop
 import Data.Construction
 import Data.Layer.Cover
 import Type.Bool
@@ -52,13 +52,13 @@ instance Castable (Unwrapped (Layer l t a)) (Unwrapped (Layer l' t' a')) => Cast
 
 -- Attributes
 
-type instance Attr attr (Attached (Layer l t a) base) = If (attr == t) (Unwrapped (Layer l t a)) (Attr attr base)
+type instance Prop prop (Attached (Layer l t a) base) = If (prop == t) (Unwrapped (Layer l t a)) (Prop prop base)
 
-instance {-# OVERLAPPABLE #-} (Attr  a (Attached (Layer l a' t) base) ~ Attr a base, Getter a base) 
+instance {-# OVERLAPPABLE #-} (Prop  a (Attached (Layer l a' t) base) ~ Prop a base, Getter a base) 
                            => Getter a (Attached (Layer l a' t) base) where getter a (Attached _ t) = getter a t ; {-# INLINE getter #-}
 instance {-# OVERLAPPABLE #-} Getter a (Attached (Layer l a  t) base) where getter _ (Attached d _) = unwrap' d  ; {-# INLINE getter #-}
 
-instance {-# OVERLAPPABLE #-} (Attr  a (Attached (Layer l a' t) base) ~ Attr a base, Setter a base)
+instance {-# OVERLAPPABLE #-} (Prop  a (Attached (Layer l a' t) base) ~ Prop a base, Setter a base)
                            => Setter a (Attached (Layer l a' t) base) where setter a v (Attached d t) = Attached d $ setter a v t ; {-# INLINE setter #-}
 instance {-# OVERLAPPABLE #-} Setter a (Attached (Layer l a  t) base) where setter _ v (Attached _ t) = Attached (Layer v) t      ; {-# INLINE setter #-}
 
@@ -98,7 +98,7 @@ instance Castable (Unwrapped (ls :< a)) (Unwrapped (ls' :< a')) => Castable (ls 
 
 -- Attributes
 
-type instance                                Attr a (ls :< t) = Attr a (Unwrapped (ls :< t))
+type instance                                Prop a (ls :< t) = Prop a (Unwrapped (ls :< t))
 instance Getter a (Unwrapped (ls :< t)) => Getter a (ls :< t) where getter a = getter a ∘ unwrap'      ; {-# INLINE getter #-}
 instance Setter a (Unwrapped (ls :< t)) => Setter a (ls :< t) where setter   = over wrapped' ∘∘ setter ; {-# INLINE setter #-}
 

@@ -36,7 +36,7 @@ import Luna.Syntax.Model.Graph
 import qualified Luna.Syntax.AST.Term as Term
 import Luna.Runtime.Model (Static, Dynamic)
 import Data.Layer.Cover (uncover)
-import Data.Attribute
+import Data.Prop
 import Luna.Syntax.Model.Network.Builder.Term
 import Luna.Syntax.Model.Network.Term
 
@@ -108,8 +108,8 @@ toGraphViz net = DotGraph { strictGraph     = False
                                                        , edgeStmts = edgeStmts
                                                        }
                           }
-    where ng                = net ^. nodes
-          eg                = net ^. edges
+    where ng                = net ^. nodeGraph
+          eg                = net ^. edgeGraph
           nodesE            = elems ng
           edgesE            = elems eg
           nodes'            = cast <$> nodesE :: [NetLayers :< Draft Static]
@@ -153,8 +153,8 @@ genInEdges (g :: NetGraph) (n :: NetLayers :< Draft Static) = tpEdge : fmap addC
     ins       = n # Inputs
     inIdxs    = getTgtIdx <$> ins
     inEdges   = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) [0..]
-    es        = g ^. edges
-    t         = n ^. attr Type
+    es        = g ^. edgeGraph
+    t         = n ^. prop Type
     tpEdge    = (getTgtIdx t, [GV.color typedArrClr, ArrowHead dotArrow])
 
     addColor (idx, attrs) = (idx, GV.color arrClr : attrs)
