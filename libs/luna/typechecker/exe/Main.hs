@@ -159,6 +159,8 @@ main = do
     putStrLn "\n--------------\n"
     (s,g') <- foo g
     print g'
+
+    title "graph sorting"
     print $ Sort.sortBy (const True) g'
 
     title "params reading"
