@@ -29,6 +29,7 @@ import           Luna.Syntax.Model.Network.Builder
 import           Luna.Syntax.Model.Network.Builder.Self (MonadSelfBuilder)
 import           Luna.Syntax.Model.Network.Builder.Type (MonadTypeBuilder)
 import           Luna.Syntax.Model.Network.Term
+import           Luna.Syntax.Model.Network.Class        (Network)
 
 
 
@@ -72,34 +73,40 @@ import           Luna.Syntax.Model.Network.Term
 --                                        , Covered term
 --                                        , Matches (Uncovered term) '[ANY, Star])
 
+instance Monad m => Destructor m (Layer (Network ls) (Meta meta) a) where
+    destruct _ = return ()
+
+instance Monad m => Destructor m (Layer (Network ls) Markable a) where
+    destruct _ = return ()
 
 type StaticDraft a = NetLayers a :< Draft Static
 type StaticNode  a = Node (StaticDraft a)
-type StaticRichDraft a = ('[Type, Succs, Markable, Meta a] :< Draft Static)
+type StaticFullDraft a = ('[Type, Succs, Markable, Meta a] :< Draft Static)
 
-type ASTOp m a b = ( MonadIO m
-                   , b ~ Ref (StaticNode a)
-                   , Monad m
-                   , ElemBuilder Star       m b
-                   , ElemBuilder Str        m b
-                   , ElemBuilder Num        m b
-                   , ElemBuilder (Cons Str) m b
-                   , Reader m (StaticNode a)
-                   , Reader m (Edge (StaticRichDraft a) (StaticRichDraft a))
-                   , Covered (StaticDraft a)
-                   , Matches (Uncovered (StaticDraft a)) '[ANY, Star]
-                   -- , Getter Type (Ref (StaticNode a))
-                   -- , Destructor m (Ref (Link ('[Type, Succs, Markable, Meta a] :< Draft Static)))
-                   -- , Dispatcher CONNECTION (Ref (Edge (NetLayers a :< Draft Static) (NetLayers a :< Draft Static)))
-                   -- , Castable (Edge (NetLayers a :< Draft Static) (NetLayers a :< Draft Static)) b
-                   -- , Castable
-                   --          e
-                   --          (Edge
-                   --             ('[Type, Succs, Markable, Meta a] :< Draft Static)
-                   --             ('[Type, Succs, Markable, Meta a] :< Draft Static))
-                   )
+type ASTOp m a b n e = ( MonadIO m
+                       , b ~ Ref (StaticNode a)
+                       , Monad m
+                       , ElemBuilder Star       m b
+                       , ElemBuilder Str        m b
+                       , ElemBuilder Num        m b
+                       , ElemBuilder (Cons Str) m b
+                       , Reader m (StaticNode a)
+                       , Reader m (Edge (StaticFullDraft a) (StaticFullDraft a))
+                       , Covered (StaticDraft a)
+                       , Matches (Uncovered (StaticDraft a)) '[ANY, Star]
+                       , MonadBuilder n e m
+                       -- , Getter Type (Ref (StaticNode a))
+                       -- , Destructor m (Ref (Link ('[Type, Succs, Markable, Meta a] :< Draft Static)))
+                       -- , Dispatcher CONNECTION (Ref (Edge (NetLayers a :< Draft Static) (NetLayers a :< Draft Static)))
+                       -- , Castable (Edge (NetLayers a :< Draft Static) (NetLayers a :< Draft Static)) b
+                       -- , Castable
+                       --          e
+                       --          (Edge
+                       --             ('[Type, Succs, Markable, Meta a] :< Draft Static)
+                       --             ('[Type, Succs, Markable, Meta a] :< Draft Static))
+                       )
 
-assignLiteralTypes :: ASTOp m a b
+assignLiteralTypes :: ASTOp m a b n e
                    => Proxy b
                    -> Ref (StaticNode a)
                    -> m ()
@@ -109,7 +116,7 @@ assignLiteralTypes proxy ref = do
     cleanUpLiteralTypes         proxy     consIntRef consStrRef
     return ()
 
-assignLiteralTypesWithTypes :: ASTOp m a b
+assignLiteralTypesWithTypes :: ASTOp m a b n e
                             => Proxy b
                             -> Ref (StaticNode a)
                             -> Ref (StaticNode a)
@@ -120,14 +127,14 @@ assignLiteralTypesWithTypes proxy ref consIntRef consStrRef = do
     node <- read ref
     caseTest (uncover node) $ do
         match $ \(Num num) -> do
-            let tpe = node # Type
             tpeRef <- follow target $ node ^. prop Type
-            -- destruct tpeRef
+            destruct tpeRef
             -- reconnect ref (prop Type) consIntRef -- TODO: ?
             putStrLn $ "tpeRef " <> show tpeRef
             return ()
         match $ \(Str str) -> do
-            let tpeRef = node ^. prop Type
+            tpeRef <- follow target $ node ^. prop Type
+            destruct tpeRef
             -- reconnect ref (prop Type) consStrRef
             putStrLn $ "tpeRef " <> show tpeRef
             return ()
