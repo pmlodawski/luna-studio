@@ -30,14 +30,13 @@ import Data.Prop
 
 type instance Layout (Network ls) term rt = Ref $ Link (ls :< TermWrapper term rt)
 
+type family TermWrapper (a :: *) :: * -> [*] -> *
 
 ---------------------------
 -- === Network Terms === --
 ---------------------------
 
 -- === Definitions === --
-
-type family TermWrapper (a :: *) :: * -> [*] -> *
 
 data    Raw      (ls :: [*]) = Raw Data                                deriving (Show, Eq)
 newtype Lit   rt (ls :: [*]) = Lit   (Term (Network ls) Term.Lit   rt) deriving (Show, Eq)
