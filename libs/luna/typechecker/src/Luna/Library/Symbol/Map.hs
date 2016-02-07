@@ -2,7 +2,7 @@
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Luna.Lib.Symbol.Map where
+module Luna.Library.Symbol.Map where
 
 import           Prologue
 

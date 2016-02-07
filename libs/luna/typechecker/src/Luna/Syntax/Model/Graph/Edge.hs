@@ -12,8 +12,8 @@ import Data.Prop
 import Control.Monad.Event
 import Data.Direction
 import Data.Index
-import Data.Container       hiding (Impossible)
-import Luna.Runtime.Model   as Runtime
+import Data.Container          hiding (Impossible)
+import Luna.Evaluation.Runtime as Runtime
 import Type.Bool
 
 

@@ -9,28 +9,27 @@ module Luna.Syntax.Model.Network.Builder.Term.Class where
 
 import Prelude.Luna hiding (Num)
 
-import           Data.Record                    (RecordOf, IsRecord, asRecord, SmartCons, Variant, MapTryingElemList_, withElement_, Props)
-import qualified Data.Record                    as Record
-import qualified Luna.Syntax.AST.Term           as Term
-import           Luna.Syntax.AST.Term           hiding (Val, Lit, Thunk, Expr, Draft, Source)
-import Luna.Syntax.Model.Graph
-import Data.Prop
 import           Control.Monad.Event
-import           Luna.Runtime.Model                       as Runtime
-import           Luna.Syntax.Model.Network.Builder.Layer
-import qualified Luna.Syntax.Model.Graph.Builder as GraphBuilder
-import qualified Luna.Syntax.Model.Network.Builder.Type as Type
-import qualified Luna.Syntax.Model.Network.Builder.Self as Self
-import           Luna.Syntax.Model.Network.Term
-import           Luna.Syntax.Model.Layer
-import           Luna.Syntax.AST.Arg
+import           Data.Direction
 import           Data.Layer
 import           Data.Layer.Cover
-import           Data.Direction
+import           Data.Prop
+import qualified Data.Record                             as Record
+import           Data.Record                             (RecordOf, IsRecord, asRecord, SmartCons, Variant, MapTryingElemList_, withElement_, Props)
 import           Data.Tuple.Curry.Missing
 import           Data.Tuple.OneTuple
-
-import Type.Bool
+import           Luna.Evaluation.Runtime                 as Runtime
+import           Luna.Syntax.AST.Arg
+import           Luna.Syntax.AST.Term                    hiding (Val, Lit, Thunk, Expr, Draft, Source)
+import qualified Luna.Syntax.AST.Term                    as Term
+import           Luna.Syntax.Model.Graph
+import qualified Luna.Syntax.Model.Graph.Builder         as GraphBuilder
+import           Luna.Syntax.Model.Layer
+import           Luna.Syntax.Model.Network.Builder.Layer
+import qualified Luna.Syntax.Model.Network.Builder.Self  as Self
+import qualified Luna.Syntax.Model.Network.Builder.Type  as Type
+import           Luna.Syntax.Model.Network.Term
+import           Type.Bool
 
 
 

@@ -6,7 +6,7 @@
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE UndecidableInstances      #-}
 
-module Luna.Passes.Inference.Literals
+module Luna.Compilation.Passes.Inference.Literals
     ( assignLiteralTypes
     ) where
 
@@ -18,7 +18,7 @@ import           Data.Prop
 import           Control.Monad.Event                    (Dispatcher)
 
 import           Data.Record                            hiding (Layout, cons)
-import           Luna.Runtime.Model                     (Dynamic, Static)
+import           Luna.Evaluation.Runtime                (Dynamic, Static)
 import           Luna.Syntax.AST.Term                   hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
 import qualified Luna.Syntax.AST.Term                   as Term
 import           Luna.Syntax.Model.Graph

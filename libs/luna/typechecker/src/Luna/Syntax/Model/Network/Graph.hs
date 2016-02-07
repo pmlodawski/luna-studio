@@ -4,7 +4,7 @@ module Luna.Syntax.Model.Network.Graph (module Luna.Syntax.Model.Network.Graph, 
 
 import Prelude.Luna
 
-import           Luna.Runtime.Model             as Runtime
+import           Luna.Evaluation.Runtime        as Runtime
 import           Luna.Syntax.Model.Graph        as X hiding (nodes, edges)
 import           Luna.Syntax.AST.Term           (Input)
 import qualified Luna.Syntax.Model.Graph        as Graph

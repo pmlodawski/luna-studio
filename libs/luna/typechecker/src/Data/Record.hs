@@ -20,8 +20,8 @@ module Data.Record where
 import Prologue hiding (simple, empty, Indexable, Simple, cons, lookup, index, children, Cons, Ixed, Repr, repr, minBound, maxBound, (#), assert, Index)
 import Type.Container
 
-import Luna.Runtime.Model (ToStatic, ToDynamic)
-import qualified Luna.Runtime.Model as Runtime
+import Luna.Evaluation.Runtime (ToStatic, ToDynamic)
+import qualified Luna.Evaluation.Runtime as Runtime
 --import Data.Bits.Mask         (Mask)
 import GHC.Prim            (Any, unsafeCoerce#)
 import Data.Int            (Int64)
@@ -198,7 +198,7 @@ type InvalidPattern' p = Error (InvalidPattern p)
 -- === Unchecked and checked constructors === --
 -- | Facilitates construction of records from given variants and groups if they match declared variant options
 
-class UncheckedElemCons    t v m rec |    t v rec -> m where uncheckedElemCons ::                       Proxy t -> v -> m rec 
+class UncheckedElemCons    t v m rec |    t v rec -> m where uncheckedElemCons ::                       Proxy t -> v -> m rec
 class CheckedElemCons      t v m rec |    t v rec -> m where checkedElemCons   ::                       Proxy t -> v -> m rec
 class CheckedElemCons'  ok t v m rec | ok t v rec -> m where checkedElemCons'  :: Proxy (ok :: Bool) -> Proxy t -> v -> m rec
 
@@ -301,7 +301,7 @@ type  ElemMapped    t v   rec = ElemMap t v Ok rec
 type  UncheckedElemMap            = ElemMap' 'True
 type  UncheckedElemMapped t v rec = ElemMap' 'True t v Ok rec
 
-instance {-# OVERLAPPABLE #-} ( ok ~ (v `In` (r ##. t)) , ElemMap' ok t v m r ) 
+instance {-# OVERLAPPABLE #-} ( ok ~ (v `In` (r ##. t)) , ElemMap' ok t v m r )
                                      => ElemMap         t v   m r where elemMap          = elemMap' (p :: P ok) ; {-# INLINE elemMap  #-}
 instance {-# OVERLAPPABLE #-} m ~ Ok => ElemMap         t ANY m r where elemMap  _ f _   = Ok $ Just $ f ANY    ; {-# INLINE elemMap  #-}
 instance {-# OVERLAPPABLE #-} m ~ IM => ElemMap         t v   m I where elemMap  _ _ _   = impossible           ; {-# INLINE elemMap  #-}
@@ -504,7 +504,7 @@ instance Eq Data where a == b = _mask a == _mask b
 ---------------------------------
 newtype Mask = Mask Int64 deriving (Eq, Num, Bits, FiniteBits)
 
-instance Show Mask where 
+instance Show Mask where
     show m = show (catMaybes (testBit' m <$> [0 .. finiteBitSize m - 1])) where
         testBit' m b = if testBit m b then Just b else Nothing
 
@@ -548,7 +548,7 @@ instance ( bits ~ MapLookup v emap
          , KnownNats bits
          , Wrapped   (rec Data)
          , Unwrapped (rec Data) ~ Data
-         ) => Encoder Variant v Ok (rec Data) where 
+         ) => Encoder Variant v Ok (rec Data) where
     encode _ v = Ok $ wrap' $ Data mask $ unsafeStore v where
         bits    = fromIntegral <$> natVals (p :: P bits)
         mask    = foldl' setBit zeroBits bits
@@ -565,7 +565,7 @@ instance ( MaskRebuilder layout layout'
 
          , IsRecord r
          , RecordOf r ~ rec Data
-         ) => Encoder Group r Ok (rec' Data) where 
+         ) => Encoder Group r Ok (rec' Data) where
     encode _ r = Ok $ wrap' $ Data mask' var where
         Data mask var = unwrap' $ view asRecord r
         mask' = rebuildMask (p :: P layout) (p :: P layout') mask

@@ -6,24 +6,25 @@
 
 module Luna.Syntax.AST.Term.Class (module Luna.Syntax.AST.Term.Class, module X) where
 
-import           Prelude.Luna                  hiding (Num, Swapped)
-import qualified Prelude.Luna                  as P
+import           Prelude.Luna                 hiding (Num, Swapped)
+import qualified Prelude.Luna                 as P
 
 import           Data.Abstract
 import           Data.Base
-import           Data.Record                   hiding (ASTRecord, Layout, Variants)
-import qualified Data.Record                   as Record
-import           Type.Cache.TH                 (assertTypesEq, cacheHelper, cacheType)
+import           Data.Record                  hiding (ASTRecord, Layout, Variants)
+import qualified Data.Record                  as Record
+import           Type.Cache.TH                (assertTypesEq, cacheHelper, cacheType)
 import           Type.Container
 import           Type.Map
 
-import           Data.Typeable                 (splitTyConApp, tyConName, typeRepTyCon)
-import           Luna.Runtime.Model            (Dynamic, Static, ToDynamic, ToStatic, SubRuntimes, SubSemiRuntimes, ByRuntime)
-import qualified Luna.Runtime.Model           as Runtime
+import           Data.Typeable                (splitTyConApp, tyConName, typeRepTyCon)
+import           Luna.Evaluation.Runtime      (Dynamic, Static, ToDynamic, ToStatic, SubRuntimes, SubSemiRuntimes, ByRuntime)
+import qualified Luna.Evaluation.Runtime      as Runtime
 import           Luna.Syntax.Repr.Styles
 import           Luna.Syntax.AST.Arg
 import qualified Data.Reprx                   as Repr
 import           Type.Bool
+import           Luna.Evaluation.Model
 
 import Data.Record as X (Data)
 
@@ -279,11 +280,7 @@ type family NameInput a where
 --    NameLayoutOf a = If (Runtime.Model a == Static) Str (LayoutOf a)
 
 
-data Lit   = Lit   deriving (Show)
-data Val   = Val   deriving (Show)
-data Thunk = Thunk deriving (Show)
-data Expr  = Expr  deriving (Show)
-data Draft = Draft deriving (Show)
+
 type TermGroups = '[Lit, Val, Thunk, Expr, Draft]
 
 

@@ -14,15 +14,16 @@ import           Data.Layer.Cover
 import           Data.Record                    (RecordOf, IsRecord, asRecord, SmartCons, Variant, MapTryingElemList_, withElement_, Props)
 import qualified Data.Record                    as Record
 import           Data.Reprx                     (Repr, repr)
-import qualified Luna.Syntax.AST.Term           as Term
 import           Luna.Syntax.AST.Term           hiding (Val, Lit, Thunk, Expr, Draft)
 import           Luna.Syntax.Model.Graph
 import           Luna.Syntax.Model.Layer
-import           Luna.Runtime.Model             as Runtime
+import           Luna.Evaluation.Runtime        as Runtime
 import           Luna.Syntax.AST.Arg
-
+import qualified Luna.Evaluation.Model          as Model
 
 import Data.Prop
+
+-- TODO[WD]: refactor the code to some kind of Luna/Evaluation/Model
 
 ---------------------------------------
 -- === Network layout definition === --
@@ -38,12 +39,12 @@ type family TermWrapper (a :: *) :: * -> [*] -> *
 
 -- === Definitions === --
 
-data    Raw      (ls :: [*]) = Raw Data                                deriving (Show, Eq)
-newtype Lit   rt (ls :: [*]) = Lit   (Term (Network ls) Term.Lit   rt) deriving (Show, Eq)
-newtype Val   rt (ls :: [*]) = Val   (Term (Network ls) Term.Val   rt) deriving (Show, Eq)
-newtype Thunk rt (ls :: [*]) = Thunk (Term (Network ls) Term.Thunk rt) deriving (Show, Eq)
-newtype Expr  rt (ls :: [*]) = Expr  (Term (Network ls) Term.Expr  rt) deriving (Show, Eq)
-newtype Draft rt (ls :: [*]) = Draft (Term (Network ls) Term.Draft rt) deriving (Show, Eq)
+data    Raw      (ls :: [*]) = Raw Data                                 deriving (Show, Eq)
+newtype Lit   rt (ls :: [*]) = Lit   (Term (Network ls) Model.Lit   rt) deriving (Show, Eq)
+newtype Val   rt (ls :: [*]) = Val   (Term (Network ls) Model.Val   rt) deriving (Show, Eq)
+newtype Thunk rt (ls :: [*]) = Thunk (Term (Network ls) Model.Thunk rt) deriving (Show, Eq)
+newtype Expr  rt (ls :: [*]) = Expr  (Term (Network ls) Model.Expr  rt) deriving (Show, Eq)
+newtype Draft rt (ls :: [*]) = Draft (Term (Network ls) Model.Draft rt) deriving (Show, Eq)
 
 
 -- === Instances === --
@@ -73,11 +74,11 @@ instance Layered (Draft rt ls)
 
 -- Term bindings
 
-type instance TermWrapper Term.Lit   = Lit
-type instance TermWrapper Term.Val   = Val
-type instance TermWrapper Term.Thunk = Thunk
-type instance TermWrapper Term.Expr  = Expr
-type instance TermWrapper Term.Draft = Draft
+type instance TermWrapper Model.Lit   = Lit
+type instance TermWrapper Model.Val   = Val
+type instance TermWrapper Model.Thunk = Thunk
+type instance TermWrapper Model.Expr  = Expr
+type instance TermWrapper Model.Draft = Draft
 
 -- Term origins
 

@@ -17,9 +17,9 @@ import           Data.Layer.Cover
 import           Data.Prop
 import           Data.Record                            hiding (Layout)
 
-import           Luna.Passes.Diagnostic.GraphViz
-import           Luna.Passes.Inference.Literals
-import           Luna.Runtime.Model                     (Dynamic, Static)
+import           Luna.Diagnostic.Vis.GraphViz
+import           Luna.Compilation.Passes.Inference.Literals
+import           Luna.Evaluation.Runtime                (Dynamic, Static)
 import           Luna.Syntax.AST.Term                   hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
 import qualified Luna.Syntax.AST.Term                   as Term
 import           Luna.Syntax.Model.Graph

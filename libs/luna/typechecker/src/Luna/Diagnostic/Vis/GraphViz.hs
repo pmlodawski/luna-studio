@@ -3,7 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables       #-}
 -- {-# LANGUAGE PartialTypeSignatures #-}
 
-module Luna.Passes.Diagnostic.GraphViz where
+module Luna.Diagnostic.Vis.GraphViz where
 
 import           Prelude.Luna                           hiding (index)
 
@@ -33,7 +33,7 @@ import           System.Process                         (createProcess, shell)
 
 import           Data.Layer.Cover                       (uncover)
 import           Data.Prop
-import           Luna.Runtime.Model                     (Dynamic, Static)
+import           Luna.Evaluation.Runtime                (Dynamic, Static)
 import qualified Luna.Syntax.AST.Term                   as Term
 import           Luna.Syntax.Model.Graph
 import           Luna.Syntax.Model.Layer

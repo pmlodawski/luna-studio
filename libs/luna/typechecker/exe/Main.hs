@@ -13,11 +13,11 @@ module Main where
 import Prologue              hiding (cons, read, (#))
 import Luna.Syntax.AST.Term  hiding (Lit, Val, Thunk, Expr, Draft, Target, Source, source, target)
 import qualified Luna.Syntax.AST.Term as Term
-import Luna.Passes.Diagnostic.GraphViz
+import Luna.Diagnostic.Vis.GraphViz
 import Data.Layer.Cover
 import Data.Record hiding (Layout)
-import Luna.Runtime.Model (Static, Dynamic)
-import qualified Luna.Runtime.Model as Runtime
+import Luna.Evaluation.Runtime (Static, Dynamic)
+import qualified Luna.Evaluation.Runtime as Runtime
 import Luna.Syntax.Model.Graph
 import Luna.Syntax.Model.Layer
 import Luna.Syntax.Model.Network.Builder

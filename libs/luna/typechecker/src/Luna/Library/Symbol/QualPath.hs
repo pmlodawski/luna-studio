@@ -1,4 +1,4 @@
-module Luna.Lib.Symbol.QualPath where
+module Luna.Library.Symbol.QualPath where
 
 import qualified Data.String.Utils as String
 import           FastString
