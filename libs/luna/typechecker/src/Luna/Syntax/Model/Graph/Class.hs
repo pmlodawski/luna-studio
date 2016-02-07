@@ -36,7 +36,7 @@ deriving instance FromList (AutoVector a)
 
 -- Containers
 type instance Container (AutoVector a) = Container (Unwrapped (AutoVector a))
-instance Monad m => HasContainerM m (AutoVector a) where 
+instance Monad m => HasContainerM m (AutoVector a) where
     viewContainerM = viewContainerM . unwrap ; {-# INLINE viewContainerM #-}
     setContainerM  = wrapped . setContainerM ; {-# INLINE setContainerM  #-}
 

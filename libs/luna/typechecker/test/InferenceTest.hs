@@ -138,9 +138,9 @@ sampleGraph2 g = runNetworkBuilderT g $ do
     i1 <- int 2
     i2 <- int 3
     i3 <- int 4
-    s1 <- string "abc"
-    s2 <- string "def"
-    s3 <- string "ghi"
+    s1 <- str "abc"
+    s2 <- str "def"
+    s3 <- str "ghi"
 
     accPlus1a  <- acc "+" i1
     appPlus1a  <- app accPlus1a [arg i2]

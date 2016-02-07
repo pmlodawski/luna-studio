@@ -18,7 +18,7 @@ import qualified Luna.Syntax.AST.Term           as Term
 import           Luna.Syntax.AST.Term           hiding (Val, Lit, Thunk, Expr, Draft)
 import           Luna.Syntax.Model.Graph
 import           Luna.Syntax.Model.Layer
-import           Luna.Runtime.Model
+import           Luna.Runtime.Model             as Runtime
 import           Luna.Syntax.AST.Arg
 
 
@@ -72,15 +72,6 @@ instance Layered (Thunk rt ls)
 instance Layered (Expr  rt ls)
 instance Layered (Draft rt ls)
 
--- Layout types
-
-type instance LayoutType (Raw      ls) = Network ls
-type instance LayoutType (Lit   rt ls) = Network ls
-type instance LayoutType (Val   rt ls) = Network ls
-type instance LayoutType (Thunk rt ls) = Network ls
-type instance LayoutType (Expr  rt ls) = Network ls
-type instance LayoutType (Draft rt ls) = Network ls
-
 -- Term bindings
 
 type instance TermWrapper Term.Lit   = Lit
@@ -110,6 +101,23 @@ instance IsRecord (Val   rt ls) where asRecord = wrapped' ∘ asRecord
 instance IsRecord (Thunk rt ls) where asRecord = wrapped' ∘ asRecord
 instance IsRecord (Expr  rt ls) where asRecord = wrapped' ∘ asRecord
 instance IsRecord (Draft rt ls) where asRecord = wrapped' ∘ asRecord
+
+-- Runtime models
+
+type instance Runtime.Model (Lit   rt ls) = Runtime.Model (Unwrapped (Lit   rt ls))
+type instance Runtime.Model (Val   rt ls) = Runtime.Model (Unwrapped (Val   rt ls))
+type instance Runtime.Model (Thunk rt ls) = Runtime.Model (Unwrapped (Thunk rt ls))
+type instance Runtime.Model (Expr  rt ls) = Runtime.Model (Unwrapped (Expr  rt ls))
+type instance Runtime.Model (Draft rt ls) = Runtime.Model (Unwrapped (Draft rt ls))
+
+-- Layouts
+
+type instance LayoutType (Raw      ls) = Network ls
+type instance LayoutType (Lit   rt ls) = Network ls
+type instance LayoutType (Val   rt ls) = Network ls
+type instance LayoutType (Thunk rt ls) = Network ls
+type instance LayoutType (Expr  rt ls) = Network ls
+type instance LayoutType (Draft rt ls) = Network ls
 
 -- Conversions
 
@@ -160,5 +168,4 @@ instance SubSetter a (Val   rt ls) => Setter a (Val   rt ls)
 instance SubSetter a (Thunk rt ls) => Setter a (Thunk rt ls)
 instance SubSetter a (Expr  rt ls) => Setter a (Expr  rt ls)
 instance SubSetter a (Draft rt ls) => Setter a (Draft rt ls)
-
 

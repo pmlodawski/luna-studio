@@ -8,8 +8,12 @@ import Prologue
 data Dynamic = Dynamic deriving (Show)
 data Static  = Static  deriving (Show)
 
+-- Model conversion
 type family ToStatic  a :: *
 type family ToDynamic a :: *
+
+-- Model query
+type family Model a :: *
 
 
 -- === Utils === --

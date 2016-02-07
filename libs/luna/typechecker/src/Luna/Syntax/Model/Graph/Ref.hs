@@ -5,14 +5,14 @@ module Luna.Syntax.Model.Graph.Ref where
 
 import Prelude.Luna
 
-import Data.Prop
-import qualified Data.Attr as Attr
-import           Data.Attr (HasAttr, Attr, attr)
-import Data.Index
-import Data.Construction
-import Data.Layer
-import Luna.Syntax.Model.Graph.Class
-import Data.Direction
+import           Data.Attr                     (HasAttr, Attr, attr)
+import qualified Data.Attr                     as Attr
+import           Data.Construction
+import           Data.Direction
+import           Data.Index
+import           Data.Layer
+import           Data.Prop
+import           Luna.Syntax.Model.Graph.Class
 
 
 -----------------
@@ -60,6 +60,7 @@ data Ref a = Ref (Ptr Int) deriving (Show, Eq, Ord, Functor, Traversable, Foldab
 makeWrapped ''Ref
 
 -- Ref primitive instances
+type instance Uncovered     (Ref a) = Uncovered (Unlayered (Ref a))
 type instance Unlayered     (Ref a) = a
 type instance Deconstructed (Ref a) = a
 type instance Index         (Ref a) = Index (Unwrapped (Ref a))

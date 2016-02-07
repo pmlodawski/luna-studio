@@ -72,11 +72,13 @@ Library
                  , lens
                  , MissingH
                  , mtl
+                 , OneTuple
                  , placeholders
                  , process
                  , prologue
                  , text
                  , transformers
+                 , tuple
                  , type-cache
                  , typelevel
                  , vector

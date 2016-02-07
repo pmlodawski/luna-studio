@@ -1,12 +1,13 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE UndecidableInstances      #-}
 {-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE RecursiveDo               #-}
 {-# LANGUAGE RankNTypes                #-}
 
-{-# LANGUAGE PartialTypeSignatures     #-}
+-- {-# LANGUAGE PartialTypeSignatures     #-}
+{-# LANGUAGE PolyKinds     #-}
 
-{-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
 import Prologue              hiding (cons, read, (#))
@@ -16,6 +17,7 @@ import Luna.Passes.Diagnostic.GraphViz
 import Data.Layer.Cover
 import Data.Record hiding (Layout)
 import Luna.Runtime.Model (Static, Dynamic)
+import qualified Luna.Runtime.Model as Runtime
 import Luna.Syntax.Model.Graph
 import Luna.Syntax.Model.Layer
 import Luna.Syntax.Model.Network.Builder
@@ -30,8 +32,9 @@ import Data.Container  (index_, elems)
 import Data.Index (idx)
 import Data.Container
 import           Data.Attr (attr)
+import           Control.Monad.Event
 
-
+import Type.Inference
 
 renderAndOpen lst = do
     flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
@@ -108,8 +111,8 @@ foo g = runNetworkBuilderT g
         match $ \ANY  -> "something else!"
 
     title "complex element building"
-    u1 <- unify2 s1 s2
-    print u1
+    u1 <- unify s1 s2
+    print (u1 :: Ref $ Node (NetLayers :< Draft Static))
     u1_v <- read u1
 
     title "inputs reading"
@@ -121,6 +124,12 @@ foo g = runNetworkBuilderT g
         s1s = s1_v # Succs
     print s1t
     print s1s
+
+    let x = caseTest (uncover u1_v) $ do
+        match $ \(Unify s t) -> s
+        match $ \ANY  -> undefined -- "something else!"
+
+    acc1 <- acc "n" s1
 
     --s1 <- star
     --s2 <- star
@@ -148,8 +157,64 @@ foo g = runNetworkBuilderT g
     return s1
 
 
+bar6 :: ( MonadIO        m
+        , TermNode Star  m (ls :< term)
+        , TermNode Unify m (ls :< term)
+        , NodeInferable  m (ls :< term)
+        , LitLike          (ls :< term)
+        ) => m ()
+bar6 = do
+    bar6
+    s1 <- infer ELEMENT =<< star_n
+    s2 <- infer ELEMENT =<< star_n
+    u1 <- infer ELEMENT =<< unify_n s1 s2
+    s1_v <- read s1
+    write s1 s1_v
+    let x = uncover s1_v
+    print $ caseTest x $ do
+        match $ \Star -> "its a star! <3"
+        match $ \ANY  -> "something else!"
+    return ()
 
 
+type NodeBuilder (t :: k) m node = TermBuilder t     m (Ref (Node node))
+type NodeReader           m node = Reader            m      (Node node)
+type NodeWriter           m node = Writer            m      (Node node)
+type NodeLinkable         m node = Linkable            (Ref (Node node)) m
+type NodeInferable        m node = Inferable ELEMENT   (Ref (Node node)) m
+
+type InferredNodeBuilder (t :: k) m node = (NodeBuilder t m node, NodeInferable m node)
+
+type TermNode (t :: k) m node = ( NodeBuilder t m node
+                                , NodeLinkable   m node
+                                , NodeReader     m node
+                                , NodeWriter     m node
+                                , Covered          node
+                                , MonadFix       m
+                                )
+
+
+type LitLike a = ( Matches (Uncovered a) '[ANY, Star, Str, Term.Num], Covered a)
+
+--type StarBuilder' ls m term =
+
+
+
+--type NodeBuilder t m ls term = ElemBuilder t m (Ref (Node $ (ls :< term)))
+
+inferNodeM = inferM ELEMENT
+
+star_n :: NodeBuilder Star m (ls :< t) => m (Ref $ Node $ ls :< t)
+star_n = node star
+
+unify_n :: NodeBuilder Unify m (ls :< t) => Ref (Node $ ls :< t) -> Ref (Node $ ls :< t) -> m (Ref (Node $ ls :< t))
+unify_n = node ∘∘ unify
+
+star_ni :: InferredNodeBuilder Star m (ls :< t) => m (Ref (Node $ ls :< t))
+star_ni = inferNodeM star_n
+
+unify_ni :: InferredNodeBuilder Unify m (ls :< t) => Ref (Node $ ls :< t) -> Ref (Node $ ls :< t) -> m (Ref (Node $ ls :< t))
+unify_ni = inferNodeM ∘∘ unify_n
 
 main :: IO ()
 main = do

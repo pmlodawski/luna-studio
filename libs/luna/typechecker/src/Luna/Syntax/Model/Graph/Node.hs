@@ -6,9 +6,9 @@ import Prelude.Luna
 
 import Luna.Syntax.Model.Graph.Ref
 
-import Data.Prop
-import Data.Index
 import Data.Container
+import Data.Index
+import Data.Prop
 import Luna.Syntax.Model.Graph.Class
 
 
@@ -25,8 +25,10 @@ data Outputs = Outputs deriving (Show)
 -- Wrappers
 
 makeWrapped ''Node
+type instance Uncovered (Node a) = Uncovered (Unlayered (Node a))
 type instance Unlayered (Node a) = Unwrapped (Node a)
 instance      Layered   (Node a)
+
 
 -- Construction
 

@@ -29,7 +29,7 @@ class Monad m => MonadTypeBuilder s m | m -> s where
 
 
 -- === Utils ===
-    
+
 runT  ::            TypeBuilderT s m a -> Maybe s -> m (a, Maybe s)
 evalT :: Monad m => TypeBuilderT s m a -> Maybe s -> m a
 execT :: Monad m => TypeBuilderT s m a -> Maybe s -> m (Maybe s)

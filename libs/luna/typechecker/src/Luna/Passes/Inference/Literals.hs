@@ -65,7 +65,7 @@ assignLiteralTypesWithTypes ref consIntRef consStringRef g = runNetworkBuilderT 
             return ()
         match $ \ANY -> return ()
 
-    -- mapM_ (assignLiteralTypesWithTypes consIntTpe consStringTpe) =<< pre ref  -- TODO: ?
+    -- mapM_ (assignLiteralTypesWithTypes consIntTpe consStringTpe) =<< pre ref
     return ()
 
 

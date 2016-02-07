@@ -7,6 +7,7 @@
 module Luna.Syntax.AST.Term (module Luna.Syntax.AST.Term, module X) where
 
 import           Prelude.Luna                  hiding (Num, Swapped)
+import qualified Prelude.Luna                  as P
 
 import           Data.Abstract
 import           Data.Base
@@ -18,9 +19,11 @@ import           Type.Map
 
 import           Data.Typeable                 (splitTyConApp, tyConName, typeRepTyCon)
 import           Luna.Runtime.Model            (Dynamic, Static, ToDynamic, ToStatic, SubRuntimes, SubSemiRuntimes, ByRuntime)
+import qualified Luna.Runtime.Model           as Runtime
 import           Luna.Syntax.Repr.Styles
 import           Luna.Syntax.AST.Arg
 import qualified Data.Reprx                   as Repr
+import           Type.Bool
 
 import Data.Record as X (Data)
 
@@ -86,8 +89,8 @@ class HasArgs   a where args   :: Lens' a (Args   a)
 
 
 data    Star   = Star          deriving (Show, Eq, Ord)
-newtype Str    = Str    String deriving (Show, Eq, Ord)
-newtype Num    = Num    Int    deriving (Show, Eq, Ord)
+newtype Str    = Str    String deriving (Show, Eq, Ord, IsString, ToString)
+newtype Num    = Num    Int    deriving (Show, Eq, Ord, P.Num)
 
 
 -- LEGEND
@@ -209,10 +212,6 @@ instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Acc   Str t) where repr (Acc (Str
 instance {-# OVERLAPPABLE #-} Repr HeaderOnly (App       t) where repr _ = "App"
 instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Unify     t) where repr _ = "Unify"
 
--- String
-
-instance IsString Str where fromString      str  = Str str
-instance ToString Str where   toString (Str str) =     str
 
 ---------------------------
 ---------------------------
@@ -266,8 +265,19 @@ instance (t ~ t', n ~ NameByRuntime rt t, t ~ Layout cls term rt, SmartCons (Uni
 newtype     Term     t term rt = Term (ASTRecord (SubRuntimeGroups rt t term) (Variants t term rt) t Data)
 type        Variants t term rt = Elems term (NameByRuntime rt (Layout t term rt)) (Layout t term rt)
 type family Layout   t term rt
+--type family LayoutOf   a
 type family LayoutType a
 type family TermOf     a
+
+type family Input     a
+type family NameInput a where
+    NameInput I = Impossible
+    NameInput a = If (Runtime.Model a == Static) Str (Input a)
+
+--type family NameLayoutOf a where
+--    NameLayoutOf I = Impossible
+--    NameLayoutOf a = If (Runtime.Model a == Static) Str (LayoutOf a)
+
 
 data Lit   = Lit   deriving (Show)
 data Val   = Val   deriving (Show)
@@ -347,8 +357,9 @@ showTermType (t :: Term t term rt) = tyConName $ typeRepTyCon $ head $ snd $ spl
 -- === Instances === --
 
 -- Basic instances
-type instance LayoutType (Term t term rt) = t
-type instance TermOf     (Term t term rt) = Term t term rt
+type instance Runtime.Model (Term t term rt) = rt
+type instance LayoutType    (Term t term rt) = t
+type instance TermOf        (Term t term rt) = Term t term rt
 
 deriving instance Show (Unlayered (Term t term rt)) => Show (Term t term rt)
 deriving instance Eq   (Unlayered (Term t term rt)) => Eq   (Term t term rt)
