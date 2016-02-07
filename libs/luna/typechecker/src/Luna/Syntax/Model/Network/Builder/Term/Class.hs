@@ -217,21 +217,8 @@ matchType _ = id
 matchTypeM :: Proxy t -> m t -> m t
 matchTypeM _ = id
 
-node :: n ~ Ref (Node $ ls :< term) => m n -> m n
-node = id
 
 
-
-acc4 :: ( MonadFix m
-       , ElemBuilder (Acc (NameConnection n u) (Connection a u)) m u
-       , Connectible a u m
-       , ConnectibleName n u m
-       ) => n -> a -> m u
-acc4 name obj = mdo
-    out   <- buildElem $ Acc cname cobj
-    cname <- nameConnection name out
-    cobj  <- connection obj out
-    return out
 
 ------------------------------
 -- === Network Building === --

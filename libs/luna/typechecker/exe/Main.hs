@@ -33,8 +33,12 @@ import Data.Index (idx)
 import Data.Container
 import           Data.Attr (attr)
 import           Control.Monad.Event
-
+import           Luna.Syntax.Model.Network.Builder.Node hiding (star, str,int,cons,acc,app,var,unify,blank)
+import qualified Luna.Syntax.Model.Network.Builder.Node.Inferred as Inf
+import           Luna.Syntax.Model.Network.Builder.Node.Class ()
 import Type.Inference
+
+import qualified Luna.Compilation.Passes.Inference.Struct as S
 
 renderAndOpen lst = do
     flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
@@ -125,49 +129,20 @@ foo g = runNetworkBuilderT g
     print s1t
     print s1s
 
-    let x = caseTest (uncover u1_v) $ do
-        match $ \(Unify s t) -> s
-        match $ \ANY  -> undefined -- "something else!"
-
-    acc1 <- acc "n" s1
-
-    --s1 <- star
-    --s2 <- star
-
-    --u <- unify s1 s2
-
-    --destruct u
-
-    --print "!!!! >>>"
-    --print s1
-
-    --print $ toList $ g ^. nodeGraph
-    ----print $ view (ref s1) g
-
-    --print $ g # s1
-
-    --unregister s1
-
-
-    --print $ getAttr Inputs s1_v
-
-    --let ins = inputs s1_v
-    --print ins
-
     return s1
 
 
-bar6 :: ( MonadIO        m
-        , TermNode Star  m (ls :< term)
-        , TermNode Unify m (ls :< term)
-        , NodeInferable  m (ls :< term)
-        , LitLike          (ls :< term)
-        ) => m ()
-bar6 = do
-    bar6
-    s1 <- infer ELEMENT =<< star_n
-    s2 <- infer ELEMENT =<< star_n
-    u1 <- infer ELEMENT =<< unify_n s1 s2
+infTest :: ( MonadIO        m
+           , TermNode Star  m (ls :< term)
+           , TermNode Unify m (ls :< term)
+           , NodeInferable  m (ls :< term)
+           , LitLike          (ls :< term)
+           ) => m ()
+infTest = do
+    infTest
+    s1 <- Inf.star
+    s2 <- Inf.star
+    u1 <- Inf.unify s1 s2
     s1_v <- read s1
     write s1 s1_v
     let x = uncover s1_v
@@ -177,32 +152,18 @@ bar6 = do
     return ()
 
 
-type NodeBuilder (t :: k) m node = TermBuilder t     m (Ref (Node node))
-type NodeReader           m node = Reader            m      (Node node)
-type NodeWriter           m node = Writer            m      (Node node)
-type NodeLinkable         m node = Linkable            (Ref (Node node)) m
-type NodeInferable        m node = Inferable ELEMENT   (Ref (Node node)) m
 
-type InferredNodeBuilder (t :: k) m node = (NodeBuilder t m node, NodeInferable m node)
+runInfTest :: forall a. Show a => NetGraph a -> IO ((), NetGraph a)
+runInfTest g = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers a :< Draft Static)))
+             $ runNetworkBuilderT g infTest
 
-type TermNode (t :: k) m node = ( NodeBuilder t m node
-                                , NodeLinkable   m node
-                                , NodeReader     m node
-                                , NodeWriter     m node
-                                , Covered          node
-                                , MonadFix       m
-                                )
-
-
-type LitLike a = ( Matches (Uncovered a) '[ANY, Star, Str, Term.Num], Covered a)
-
---type StarBuilder' ls m term =
 
 
 
 --type NodeBuilder t m ls term = ElemBuilder t m (Ref (Node $ (ls :< term)))
 
 inferNodeM = inferM ELEMENT
+
 
 star_n :: NodeBuilder Star m (ls :< t) => m (Ref $ Node $ ls :< t)
 star_n = node star
@@ -232,6 +193,8 @@ main = do
     print $ g' # s
 
     renderAndOpen [("g", g')]
+
+    --S.main
 
 -------------------------
 -- === Benchmarks === ---
