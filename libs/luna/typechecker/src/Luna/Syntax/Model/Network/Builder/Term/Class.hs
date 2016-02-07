@@ -238,21 +238,21 @@ acc4 name obj = mdo
 -- === Network Building === --
 ------------------------------
 
-type NetLayers = '[Type, Succs, Markable]
-type NetNode   = NetLayers :< Draft Static
+type NetLayers a = '[Type, Succs, Markable, Meta a]
+type NetNode   a = NetLayers a :< Draft Static
 
-type NetGraph = Graph (NetLayers :< Raw) (Link (NetLayers :< Raw))
+type NetGraph a = Graph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))
 
 buildNetwork  = runIdentity ∘ buildNetworkM
-buildNetworkM = rebuildNetworkM' (def :: NetGraph)
+buildNetworkM = rebuildNetworkM' (def :: NetGraph a)
 
 rebuildNetwork' = runIdentity .: rebuildNetworkM'
-rebuildNetworkM' (net :: NetGraph) = flip Self.evalT (undefined ::        Ref $ Node NetNode)
-                                   ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node NetNode))
-                                   ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
-                                   ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref $ Node NetNode)
-                                   ∘ flip GraphBuilder.runT net
-                                   ∘ registerSuccs   CONNECTION
+rebuildNetworkM' (net :: NetGraph a) = flip Self.evalT (undefined ::        Ref $ Node $ NetNode a)
+                                     ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node $ NetNode a))
+                                     ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
+                                     ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref $ Node $ NetNode a)
+                                     ∘ flip GraphBuilder.runT net
+                                     ∘ registerSuccs   CONNECTION
 {-# INLINE   buildNetworkM #-}
 {-# INLINE rebuildNetworkM' #-}
 
@@ -263,22 +263,20 @@ instance {-# OVERLAPPABLE #-} NetworkBuilderT I IM IM where runNetworkBuilderT =
 instance {-# OVERLAPPABLE #-}
     ( m      ~ Listener CONNECTION SuccRegister m'
     , m'     ~ GraphBuilder.BuilderT n e m''
-    , m''    ~ Listener ELEMENT (TypeConstraint Equality_Full (Ref $ Node NetNode)) m'''
+    , m''    ~ Listener ELEMENT (TypeConstraint Equality_Full (Ref $ Node $ NetNode a)) m'''
     , m'''   ~ Listener CONNECTION (TypeConstraint Equality_M1 (Ref c)) m''''
-    , m''''  ~ Type.TypeBuilderT (Ref $ Node NetNode) m'''''
-    , m''''' ~ Self.SelfBuilderT (Ref $ Node NetNode) m''''''
+    , m''''  ~ Type.TypeBuilderT (Ref $ Node $ NetNode a) m'''''
+    , m''''' ~ Self.SelfBuilderT (Ref $ Node $ NetNode a) m''''''
     , Monad m'''''
     , Monad m''''''
     , net ~ Graph n e
     ) => NetworkBuilderT net m m'''''' where
-    runNetworkBuilderT net = flip Self.evalT (undefined ::        Ref $ Node NetNode)
-                           ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node NetNode))
+    runNetworkBuilderT net = flip Self.evalT (undefined ::        Ref $ Node $ NetNode a)
+                           ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node $ NetNode a))
                            ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
-                           ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref $ Node NetNode)
+                           ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref $ Node $ NetNode a)
                            ∘ flip GraphBuilder.runT net
                            ∘ registerSuccs   CONNECTION
-
-
 
 
 -- FIXME[WD]: poprawic typ oraz `WithElement_` (!)

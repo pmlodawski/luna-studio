@@ -54,31 +54,31 @@ type instance Layout (MyGraph t) term rt = t (Term (MyGraph t) term rt)
 --  !!! KEEP THIS ON THE BEGINNING !!! --
 -- --------------------------------------
 -- - vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv ---
-prebuild :: IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
+prebuild :: Show a => IO (Ref $ Node (NetLayers a :< Draft Static), NetGraph a)
 prebuild = runNetworkBuilderT def $ star
 
 
-type instance Item NetGraph = Ref $ Node (NetLayers :< Draft Static)
+type instance Item (NetGraph a) = Ref $ Node (NetLayers a :< Draft Static)
 
-instance Sort.CompleteGraph     (Graph (NetLayers :< Raw) (Link (NetLayers :< Raw)))
+instance Sort.CompleteGraph     (Graph (NetLayers a :< Raw) (Link (NetLayers a :< Raw)))
 
-instance Sort.MarkableGraph     (Graph (NetLayers :< Raw) (Link (NetLayers :< Raw))) where
+instance Sort.MarkableGraph     (Graph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
     markNode ref g = snd $ rebuildNetwork' g $ do
         Ref.with ref $ prop Markable .~ True
     isMarked ref g = fst $ rebuildNetwork' g $ do
         node <- read ref
         return $ node # Markable
 
-instance Sort.Graph             (Graph (NetLayers :< Raw) (Link (NetLayers :< Raw))) where
+instance Sort.Graph             (Graph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
     listNodes g = map (Ref . Ptr) $ (usedIxes $ g ^. nodeGraph)
 
-instance Sort.ForwardEdgedGraph (Graph (NetLayers :< Raw) (Link (NetLayers :< Raw))) where
+instance Sort.ForwardEdgedGraph (Graph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
     successors ref g = fst $ rebuildNetwork' g $ do
         node <- read ref
         mapM (follow target) $ node ^. prop Succs
 
 
-foo :: NetGraph -> IO (Ref $ Node (NetLayers :< Draft Static), NetGraph)
+foo :: forall a. Show a => NetGraph a -> IO (Ref $ Node (NetLayers a :< Draft Static), NetGraph a)
 --foo :: NetGraph -> IO ((), NetGraph)
 foo g = runNetworkBuilderT g
     $ do
@@ -112,7 +112,7 @@ foo g = runNetworkBuilderT g
 
     title "complex element building"
     u1 <- unify s1 s2
-    print (u1 :: Ref $ Node (NetLayers :< Draft Static))
+    print (u1 :: Ref $ Node (NetLayers a :< Draft Static))
     u1_v <- read u1
 
     title "inputs reading"
@@ -218,7 +218,7 @@ unify_ni = inferNodeM ∘∘ unify_n
 
 main :: IO ()
 main = do
-    (star, g) <- prebuild
+    (star, g :: NetGraph ()) <- prebuild
     print star
     print g
     putStrLn "\n--------------\n"

@@ -20,6 +20,7 @@ Library
                   DeriveFunctor,
                   DeriveTraversable,
                   FlexibleInstances,
+                  FlexibleContexts,
                   TypeFamilies,
                   MultiParamTypeClasses,
                   RankNTypes
@@ -29,7 +30,7 @@ Library
   Build-Depends:  base,
                   bytestring,
                   containers,
-                  data-attribute,
+                  data-member,
                   data-construction,
                   data-layer,
                   either,
@@ -38,7 +39,7 @@ Library
                   flowbox-config,
                   flowbox-utils,
                   luna-empire-api,
-                  luna-tc,
+                  luna,
                   mtl,
                   prologue,
                   text,
@@ -57,5 +58,5 @@ Executable luna-empire-lib-test
                   luna-empire,
                   flowbox-utils,
                   luna-empire-api,
-                  luna-tc,
+                  luna,
                   prologue

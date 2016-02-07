@@ -130,3 +130,9 @@ data Markable = Markable deriving (Show, Eq, Ord)
 type instance LayerData layout Markable t = Bool
 instance Monad m => Creator m (Layer layout Markable a) where create = return $ Layer False
 instance Castable Bool Bool where cast = id
+
+-- Meta layer
+data Meta a = Meta deriving (Eq)
+type instance LayerData layout (Meta a) t = Maybe a
+instance Monad m => Creator m (Layer layout (Meta a) b) where create = return $ Layer Nothing
+instance Castable (Maybe a) (Maybe a) where cast = id

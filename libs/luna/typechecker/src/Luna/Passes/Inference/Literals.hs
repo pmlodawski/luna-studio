@@ -10,21 +10,27 @@ module Luna.Passes.Inference.Literals
     ( assignLiteralTypes
     ) where
 
-import           Prelude.Luna
+import           Prelude.Luna                           hiding (Num)
 
 import           Data.Construction
 import           Data.Layer.Cover
 import           Data.Prop
+import           Control.Monad.Event                    (Dispatcher)
 
-import           Data.Record                         hiding (Layout, cons)
-import           Luna.Runtime.Model                  (Dynamic, Static)
-import           Luna.Syntax.AST.Term                hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
-import qualified Luna.Syntax.AST.Term                as Term
+import           Data.Record                            hiding (Layout, cons)
+import           Luna.Runtime.Model                     (Dynamic, Static)
+import           Luna.Syntax.AST.Term                   hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
+import qualified Luna.Syntax.AST.Term                   as Term
 import           Luna.Syntax.Model.Graph
+import           Luna.Syntax.Model.Graph.Builder        (MonadBuilder)
 import           Luna.Syntax.Model.Graph.Builder.Ref
 import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Builder
+import           Luna.Syntax.Model.Network.Builder.Self (MonadSelfBuilder)
+import           Luna.Syntax.Model.Network.Builder.Type (MonadTypeBuilder)
 import           Luna.Syntax.Model.Network.Term
+import           Luna.Syntax.Model.Network.Class        (Network)
+
 
 
 -- TODO: ?
@@ -34,84 +40,175 @@ import           Luna.Syntax.Model.Network.Term
 --     mapM (Builder.follow) $ Term.inputs $ uncoat node
 
 
-assignLiteralTypes :: (Ref $ Node (NetLayers :< Draft Static))
-                   -> NetGraph
-                   -> IO ((), NetGraph)
-assignLiteralTypes ref g = do
-    ((consIntRef, consStringRef), g'  ) <- createLiteralTypes          ref                          g
-    ((),                          g'' ) <- assignLiteralTypesWithTypes ref consIntRef consStringRef g'
-    ((),                          g''') <- cleanUpLiteralTypes             consIntRef consStringRef g''
-    return ((), g''')
+-- type ASTNode       = Node NetNode
+-- type ASTEdge       = Link NetNode
+-- type AST           = NetGraph
 
-assignLiteralTypesWithTypes :: (Ref $ Node (NetLayers :< Draft Static))
-                            -> (Ref $ Node (NetLayers :< Draft Static))
-                            -> (Ref $ Node (NetLayers :< Draft Static))
-                            -> NetGraph
-                            -> IO ((), NetGraph)
-assignLiteralTypesWithTypes ref consIntRef consStringRef g = runNetworkBuilderT g $ do
+-- type NodeRef       = Ref ASTNode
+-- type EdgeRef       = Ref ASTEdge
+
+-- type ASTOp m = ( MonadIO m
+--                , MonadFix m
+--                -- , MonadError Error m
+--                , Destructor m NodeRef
+--                , MonadBuilder (NetLayers :< Raw) ASTEdge m
+--                , MonadSelfBuilder ASTNode m
+--                , MonadTypeBuilder ASTNode m
+--                , ElemBuilder Star              m NodeRef
+--                , ElemBuilder Blank             m NodeRef
+--                , ElemBuilder (Acc Str EdgeRef) m NodeRef
+--                , ElemBuilder (App     EdgeRef) m NodeRef
+--                , ElemBuilder (Unify   EdgeRef) m NodeRef
+--                , ElemBuilder (Var Str)         m NodeRef
+--                , Connectible NodeRef NodeRef m
+--                , Reader m (Node (NetLayers :< Draft Static))
+--                )
+
+-- assignLiteralTypes :: forall m b term. ( MonadIO m
+--                                        , b ~ Ref (Node term)
+--                                        , Monad m
+--                                        , ElemBuilder Star m b
+--                                        , ElemBuilder (Cons Str) m b
+--                                        , Reader m (Node term)
+--                                        , Covered term
+--                                        , Matches (Uncovered term) '[ANY, Star])
+
+instance Monad m => Destructor m (Layer (Network ls) (Meta meta) a) where
+    destruct _ = return ()
+
+instance Monad m => Destructor m (Layer (Network ls) Markable a) where
+    destruct _ = return ()
+
+type StaticDraft a = NetLayers a :< Draft Static
+type StaticNode  a = Node (StaticDraft a)
+type StaticFullDraft a = ('[Type, Succs, Markable, Meta a] :< Draft Static)
+
+type ASTOp m a b n e = ( MonadIO m
+                       , b ~ Ref (StaticNode a)
+                       , Monad m
+                       , TermBuilder Star m b
+                       , TermBuilder Str  m b
+                       , TermBuilder Num  m b
+                       , TermBuilder Cons m b
+                       , Reader m (StaticNode a)
+                       , Reader m (Edge (StaticFullDraft a) (StaticFullDraft a))
+                       , Covered (StaticDraft a)
+                       , Matches (Uncovered (StaticDraft a)) '[ANY, Star]
+                       , MonadBuilder n e m
+                       -- , Getter Type (Ref (StaticNode a))
+                       -- , Destructor m (Ref (Link ('[Type, Succs, Markable, Meta a] :< Draft Static)))
+                       -- , Dispatcher CONNECTION (Ref (Edge (NetLayers a :< Draft Static) (NetLayers a :< Draft Static)))
+                       -- , Castable (Edge (NetLayers a :< Draft Static) (NetLayers a :< Draft Static)) b
+                       -- , Castable
+                       --          e
+                       --          (Edge
+                       --             ('[Type, Succs, Markable, Meta a] :< Draft Static)
+                       --             ('[Type, Succs, Markable, Meta a] :< Draft Static))
+                       )
+
+assignLiteralTypes :: ASTOp m a b n e
+                   => Proxy b
+                   -> Ref (StaticNode a)
+                   -> m ()
+assignLiteralTypes proxy ref = do
+    (consIntRef, consStrRef) <- createLiteralTypes proxy
+    assignLiteralTypesWithTypes proxy ref consIntRef consStrRef
+    cleanUpLiteralTypes         proxy     consIntRef consStrRef
+    return ()
+
+assignLiteralTypesWithTypes :: ASTOp m a b n e
+                            => Proxy b
+                            -> Ref (StaticNode a)
+                            -> Ref (StaticNode a)
+                            -> Ref (StaticNode a)
+                            -> m ()
+assignLiteralTypesWithTypes proxy ref consIntRef consStrRef = do
     putStrLn $ "assignLiteralTypesWithTypes " <> show ref
     node <- read ref
     caseTest (uncover node) $ do
-        match $ \(Str str) -> do
-            let tpeRef = node ^. prop Type
-            putStrLn $ "tpeRef " <> show tpeRef
-            reconnect ref (prop Type) consStringRef
-            return ()
         match $ \(Num num) -> do
-            let tpeRef = node ^. prop Type
+            tpeRef <- follow target $ node ^. prop Type
+            destruct tpeRef
+            -- reconnect ref (prop Type) consIntRef -- TODO: ?
             putStrLn $ "tpeRef " <> show tpeRef
-            -- destruct tpeRef -- TODO: ?
-            reconnect ref (prop Type) consIntRef
+            return ()
+        match $ \(Str str) -> do
+            tpeRef <- follow target $ node ^. prop Type
+            destruct tpeRef
+            -- reconnect ref (prop Type) consStrRef
+            putStrLn $ "tpeRef " <> show tpeRef
             return ()
         match $ \ANY -> return ()
 
     -- mapM_ (assignLiteralTypesWithTypes consIntTpe consStringTpe) =<< pre ref
     return ()
 
+createLiteralTypes :: forall m a b . ( MonadIO m
+                                     , b ~ Ref (StaticNode a)
+                                     , Monad m
+                                     , TermBuilder Cons m b
+                                     , Reader m (StaticNode a)
+                                     , Covered (StaticDraft a)
+                                     , Matches (Uncovered (StaticDraft a)) '[ANY, Star])
+                   => Proxy b
+                   -> m (Ref (StaticNode a), Ref (StaticNode a))
+createLiteralTypes proxy = do
+    consIntRef <- cons ("Int"    :: Str) :: m b
+    consStrRef <- cons ("String" :: Str) :: m b
+    return (consIntRef, consStrRef)
 
-cleanUpLiteralTypes :: (Ref $ Node (NetLayers :< Draft Static))
-                    -> (Ref $ Node (NetLayers :< Draft Static))
-                    -> NetGraph
-                    -> IO ((), NetGraph)
-cleanUpLiteralTypes consIntRef consStringRef g = runNetworkBuilderT g $ do
-    putStrLn $ "cleanUpLiteralTypes"
+cleanUpLiteralTypes :: forall m a b . ( MonadIO m
+                                      , b ~ Ref (StaticNode a)
+                                      , Monad m
+                                      , Reader m (StaticNode a)
+                                      , Covered (StaticDraft a)
+                                      , Matches (Uncovered (StaticDraft a)) '[ANY, Star])
+                    => Proxy b
+                    -> Ref (StaticNode a)
+                    -> Ref (StaticNode a)
+                    -> m ()
+cleanUpLiteralTypes proxy consIntRef consStrRef = do
+--     safeRemove consIntTpe
+--     safeRemove consStringTpe
     return ()
 
-createLiteralTypes :: (Ref $ Node (NetLayers :< Draft Static))
-                   -> NetGraph
-                   -> IO ((Ref $ Node (NetLayers :< Draft Static), Ref $ Node (NetLayers :< Draft Static)), NetGraph)
-createLiteralTypes ref g = runNetworkBuilderT g $ do
-    putStrLn $ "createLiteralTypes"
-    consIntRef    <- cons "Int"
-    consStringRef <- cons "String"
-    return (consIntRef, consStringRef)
+
+
+-- removeNode :: ASTOp m => NodeRef -> m ()
+-- removeNode ref = do
+--     node     <- Builder.read ref
+--     typeNode <- Builder.follow target $ node # Type
+--     destruct typeNode
+--     void $ destruct ref
+
+-- safeRemove :: ASTOp m => NodeRef -> m ()
+-- safeRemove ref = do
+--     refCount <- getRefCount ref
+--     if refCount > 0
+--         then return ()
+--         else performSafeRemoval ref
+
+-- getRefCount :: ASTOp m => NodeRef -> m Int
+-- getRefCount ref = (length . (# Succs)) <$> Builder.read ref
+
+-- performSafeRemoval :: ASTOp m => NodeRef -> m ()
+-- performSafeRemoval ref = do
+--     node <- Builder.read ref
+--     toRemove <- mapM (Builder.follow target) $ uncover node # Inputs
+--     removeNode ref
+--     mapM_ safeRemove toRemove
 
 
 
--- import           Control.Monad              (forM_)
--- import qualified Data.IntSet                as IntSet
--- import           Data.Layer.Coat            (uncoat, Coat, Uncoated, Coated, CoatConstructor)
--- import           Data.Variants              (match, case', ANY(..))
--- import           Development.Placeholders
--- import           Prologue                   hiding (pre, succ, cons)
--- import qualified Data.Text.Lazy             as Text
--- import           Data.Construction
+-- createLiteralTypes :: (Ref $ Node (NetLayers :< Draft Static))
+--                    -> NetGraph
+--                    -> IO ((Ref $ Node (NetLayers :< Draft Static), Ref $ Node (NetLayers :< Draft Static)), NetGraph)
+-- createLiteralTypes ref g = runNetworkBuilderT g $ do
+--     putStrLn $ "createLiteralTypes"
+--     consIntRef    <- cons "Int"
+--     consStringRef <- cons "String"
+    -- return (consIntRef, consStringRef)
 
--- import           Luna.Syntax.AST.Term       (Draft, Star(..), Val(..))
--- import qualified Luna.Syntax.AST.Term       as Term
--- import qualified Luna.Syntax.AST.Lit        as Lit
--- import qualified Luna.Syntax.Builder        as Builder
--- import qualified Luna.Syntax.Repr.Graph     as Graph
--- import           Luna.Syntax.Repr.Graph     (Graph, Ref(..), Node(..), Edge, DoubleArc)
-
--- import           Luna.Syntax.Builder.Class  (BuilderMonad)
--- import qualified Luna.Syntax.Builder.Node   as NodeBuilder
--- import qualified Luna.Syntax.Builder.Star   as StarBuilder
--- import qualified Luna.Syntax.Builder.Symbol as SymbolBuilder
--- import           Luna.Syntax.Repr.Graph     (Edge (Edge), Node, Ref (Ref), TracksSuccs)
--- import qualified Luna.Syntax.Repr.Graph     as G
--- import qualified Luna.Syntax.AST.Typed      as Typed
--- import           Luna.Syntax.AST.Typed      (HasType)
 
 -- type NodeType a = ( Coated a
 --                   , Uncoated a ~ (Draft (Ref Edge))
