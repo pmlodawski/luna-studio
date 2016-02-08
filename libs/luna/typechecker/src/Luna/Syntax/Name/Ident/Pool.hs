@@ -3,14 +3,17 @@
 {-# LANGUAGE TupleSections             #-}
 {-# LANGUAGE UndecidableInstances      #-}
 
+{-# LANGUAGE RankNTypes      #-}
+
 module Luna.Syntax.Name.Ident.Pool where
 
 import Prelude.Luna
 
-import Data.Pool
-import Luna.Syntax.Name.Ident.Class
-import qualified Control.Monad.State            as State
 import           Control.Monad.Catch            (MonadMask, MonadCatch, MonadThrow)
+import qualified Control.Monad.State            as State
+import           Data.Pool
+import           Data.Tuple (swap)
+import           Luna.Syntax.Name.Ident.Class
 
 
 -----------------------
@@ -26,13 +29,104 @@ data IdentPoolState = IdentPoolState { _varNames  :: Pool VarIdent
 makeLenses ''IdentPoolState
 
 
--- === utils === --
+-- === State implementation === --
 
---requestVarName :: MonadNamePool m => m Name
---requestVarName = modify $ mapOver varNames $ fmap swap request
+---- TODO: template haskellize
+---- >->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->
 
---requestTypeName :: MonadNamePool m => m Name
---requestTypeName = modify $ mapOver typeNames $ fmap swap request
+-- === Declarations === --
+
+type    IdentPool      = IdentPoolT Identity
+newtype IdentPoolT m a = IdentPoolT (State.StateT IdentPoolState m a)
+                              deriving ( Functor, Monad, Applicative, MonadIO, MonadPlus, MonadTrans
+                                       , Alternative, MonadFix, MonadMask, MonadCatch, MonadThrow)
+
+makeWrapped ''IdentPoolT
+
+
+-- === Utils === --
+
+runT  ::            IdentPoolT m a -> IdentPoolState -> m (a, IdentPoolState)
+evalT :: Monad m => IdentPoolT m a -> IdentPoolState -> m a
+execT :: Monad m => IdentPoolT m a -> IdentPoolState -> m IdentPoolState
+
+runT  = State.runStateT  . unwrap' ; {-# INLINE runT  #-}
+evalT = State.evalStateT . unwrap' ; {-# INLINE evalT #-}
+execT = State.execStateT . unwrap' ; {-# INLINE execT #-}
+
+run  :: IdentPool a -> IdentPoolState -> (a, IdentPoolState)
+eval :: IdentPool a -> IdentPoolState -> a
+exec :: IdentPool a -> IdentPoolState -> IdentPoolState
+
+run   = runIdentity .: runT  ; {-# INLINE run  #-}
+eval  = runIdentity .: evalT ; {-# INLINE eval #-}
+exec  = runIdentity .: execT ; {-# INLINE exec #-}
+
+with :: MonadIdentPool m => (IdentPoolState -> IdentPoolState) -> m a -> m a
+with f m = do
+    s <- get
+    put $ f s
+    out <- m
+    put s
+    return out
+{-# INLINE with #-}
+
+modify :: MonadIdentPool m => (IdentPoolState -> (a, IdentPoolState)) -> m a
+modify = modifyM . fmap return
+{-# INLINE modify #-}
+
+modifyM :: MonadIdentPool m => (IdentPoolState -> m (a, IdentPoolState)) -> m a
+modifyM f = do
+    s <- get
+    (a, s') <- f s
+    put $ s'
+    return a
+{-# INLINE modifyM #-}
+
+modify_ :: MonadIdentPool m => (IdentPoolState -> IdentPoolState) -> m ()
+modify_ = modify . fmap ((),)
+{-# INLINE modify_ #-}
+
+
+-- === Instances === --
+
+class Monad m => MonadIdentPool m where
+    get :: m IdentPoolState
+    put :: IdentPoolState -> m ()
+
+instance Monad m => MonadIdentPool (IdentPoolT m) where
+    get = IdentPoolT   State.get ; {-# INLINE get #-}
+    put = IdentPoolT . State.put ; {-# INLINE put #-}
+
+instance State.MonadState s m => State.MonadState s (IdentPoolT m) where
+    get = IdentPoolT $ lift   State.get ; {-# INLINE get #-}
+    put = IdentPoolT . lift . State.put ; {-# INLINE put #-}
+
+instance {-# OVERLAPPABLE #-} (MonadIdentPool m, MonadTrans t, Monad (t m)) => MonadIdentPool (t m) where
+    get = lift get   ; {-# INLINE get #-}
+    put = lift . put ; {-# INLINE put #-}
+
+-- <-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<
+
+
+
+-- === Utils === --
+
+newVarIdent :: MonadIdentPool m => m VarIdent
+newVarIdent = new
+
+newTypeIdent :: MonadIdentPool m => m TypeIdent
+newTypeIdent = new
+
+newVarIdent' :: (MonadIdentPool m, IsString a) => m a
+newVarIdent' = (fromString ∘ toString) <$> newVarIdent
+
+newTypeIdent' :: (MonadIdentPool m, IsString a) => m a
+newTypeIdent' = (fromString ∘ toString) <$> newTypeIdent
+
+
+-- === Internal utils === --
+
 
 newNamePool :: IsString a => String -> String -> [Char] -> [Char] -> Pool a
 newNamePool preffix suffix base chars = Pool
@@ -50,157 +144,26 @@ typeNamePool :: IsString a => Pool a
 typeNamePool = newNamePool "" "#" ['A' .. 'Z'] ['a' .. 'z']
 
 
-
 -- === Isntances === --
---instance Default NamePoolState where
---    def = NamePoolState varNamePool typeNamePool
+
+instance Default IdentPoolState where
+    def = IdentPoolState varNamePool typeNamePool where
+
+instance MonadIdentPool m => Generator m VarIdent  where new = modify $ varNames  allocate
+instance MonadIdentPool m => Generator m TypeIdent where new = modify $ typeNames allocate
+
+--mapOver :: (Lens' a b) -> (b -> (b, out)) -> (a -> (a, out))
 
 
 
---------------------------------------------
--- === IdentPool state implementation === --
---------------------------------------------
+--class Monad m => Generator     m a where new         :: m a                      ; default new :: Maker a => Deconstructed a -> m a
+--                                                                                 ; new = return . make ; {-# INLINE new #-}
 
+--requestVarName :: MonadNamePool m => m Name
+--requestVarName = modify $ mapOver varNames $ fmap swap request
 
--- === State implementation === --
-
----- TODO: template haskellize
----- >->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->
-
--- === Declarations === --
-
-type    IdentPool  n e     = IdentPoolT n e Identity
-newtype IdentPoolT n e m a = IdentPoolT (State.StateT IdentPoolState m a)
-                              deriving ( Functor, Monad, Applicative, MonadIO, MonadPlus, MonadTrans
-                                       , Alternative, MonadFix, MonadMask, MonadCatch, MonadThrow)
-
-makeWrapped ''IdentPoolT
-
-
--- === Utils === --
-
-runT  ::            IdentPoolT n e m a -> IdentPoolState -> m (a, IdentPoolState)
-evalT :: Monad m => IdentPoolT n e m a -> IdentPoolState -> m a
-execT :: Monad m => IdentPoolT n e m a -> IdentPoolState -> m IdentPoolState
-
-runT  = State.runStateT  . unwrap' ; {-# INLINE runT  #-}
-evalT = State.evalStateT . unwrap' ; {-# INLINE evalT #-}
-execT = State.execStateT . unwrap' ; {-# INLINE execT #-}
-
-run  :: IdentPool n e a -> IdentPoolState -> (a, IdentPoolState)
-eval :: IdentPool n e a -> IdentPoolState -> a
-exec :: IdentPool n e a -> IdentPoolState -> IdentPoolState
-
-run   = runIdentity .: runT  ; {-# INLINE run  #-}
-eval  = runIdentity .: evalT ; {-# INLINE eval #-}
-exec  = runIdentity .: execT ; {-# INLINE exec #-}
-
-with :: MonadIdentPool n e m => (IdentPoolState -> IdentPoolState) -> m a -> m a
-with f m = do
-    s <- get
-    put $ f s
-    out <- m
-    put s
-    return out
-{-# INLINE with #-}
-
-modify :: MonadIdentPool n e m => (IdentPoolState -> (a, IdentPoolState)) -> m a
-modify = modifyM . fmap return
-{-# INLINE modify #-}
-
-modifyM :: MonadIdentPool n e m => (IdentPoolState -> m (a, IdentPoolState)) -> m a
-modifyM f = do
-    s <- get
-    (a, s') <- f s
-    put $ s'
-    return a
-{-# INLINE modifyM #-}
-
-modify_ :: MonadIdentPool n e m => (IdentPoolState -> IdentPoolState) -> m ()
-modify_ = modify . fmap ((),)
-{-# INLINE modify_ #-}
-
-
--- === Instances === --
-
-class Monad m => MonadIdentPool n e m | m -> n e where
-    get :: m IdentPoolState
-    put :: IdentPoolState -> m ()
-
-instance Monad m => MonadIdentPool n e (IdentPoolT n e m) where
-    get = IdentPoolT   State.get ; {-# INLINE get #-}
-    put = IdentPoolT . State.put ; {-# INLINE put #-}
-
-instance State.MonadState s m => State.MonadState s (IdentPoolT n e m) where
-    get = IdentPoolT $ lift   State.get ; {-# INLINE get #-}
-    put = IdentPoolT . lift . State.put ; {-# INLINE put #-}
-
-instance {-# OVERLAPPABLE #-} (MonadIdentPool n e m, MonadTrans t, Monad (t m)) => MonadIdentPool n e (t m) where
-    get = lift get   ; {-# INLINE get #-}
-    put = lift . put ; {-# INLINE put #-}
-
--- <-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<
+--requestTypeName :: MonadNamePool m => m Name
+--requestTypeName = modify $ mapOver typeNames $ fmap swap request
 
 
 
-
-
----- TODO: template haskellize
----- >->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->
-
---newtype NamePoolT m a = NamePoolT { fromNamePoolT :: State.StateT NamePoolState m a }
---                      deriving (Functor, Monad, Applicative, MonadIO, MonadPlus, MonadTrans, Alternative)
-
---type NamePool = NamePoolT Identity
-
---class Monad m => MonadNamePool m where
---    get :: m NamePoolState
---    put :: NamePoolState -> m ()
-
---instance Monad m => MonadNamePool (NamePoolT m) where
---    get = NamePoolT State.get
---    put = NamePoolT . State.put
-
---instance State.MonadState s m => State.MonadState s (NamePoolT m) where
---    get = NamePoolT (lift State.get)
---    put = NamePoolT . lift . State.put
-
---instance {-# OVERLAPPABLE #-} (MonadNamePool m, MonadTrans t, Monad (t m)) => MonadNamePool (t m) where
---    get = lift get
---    put = lift . put
-
---runT  ::            NamePoolT m a -> NamePoolState -> m (a, NamePoolState)
---evalT :: Monad m => NamePoolT m a -> NamePoolState -> m a
---execT :: Monad m => NamePoolT m a -> NamePoolState -> m NamePoolState
-
---runT  = State.runStateT  . fromNamePoolT
---evalT = State.evalStateT . fromNamePoolT
---execT = State.execStateT . fromNamePoolT
-
---run  :: NamePool a -> NamePoolState -> (a, NamePoolState)
---eval :: NamePool a -> NamePoolState -> a
---exec :: NamePool a -> NamePoolState -> NamePoolState
-
---run   = runIdentity .: runT
---eval  = runIdentity .: evalT
---exec  = runIdentity .: execT
-
---with :: MonadNamePool m => (NamePoolState -> NamePoolState) -> m b -> m b
---with f m = do
---    s <- get
---    put $ f s
---    out <- m
---    put s
---    return out
-
---modify :: MonadNamePool m => (NamePoolState -> (NamePoolState, a)) -> m a
---modify f = do
---    s <- get
---    let (s', a) = f s
---    put $ s'
---    return a
-
---modify_ :: MonadNamePool m => (NamePoolState -> NamePoolState) -> m ()
---modify_ = modify . fmap (,())
-
----- <-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<

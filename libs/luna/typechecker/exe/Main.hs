@@ -38,7 +38,7 @@ import qualified Luna.Syntax.Model.Network.Builder.Node.Inferred as Inf
 import           Luna.Syntax.Model.Network.Builder.Node.Class ()
 import Type.Inference
 
-import qualified Luna.Compilation.Passes.Inference.Struct as S
+import qualified Luna.Compilation.Pass.Inference.Struct as S
 
 renderAndOpen lst = do
     flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g

@@ -6,6 +6,7 @@ import Data.Char                   (isLower, isUpper)
 import Luna.Syntax.Name.Class
 import Luna.Syntax.Name.Ident.Type
 
+
 -------------------
 -- === Ident === --
 -------------------
@@ -22,17 +23,21 @@ type TypeIdent = Ident Type
 -- === Utils === --
 
 varIdent :: String -> Ident Var
-varIdent = wrap' ∘ make
+varIdent = wrap' ∘ fromString
 {-# INLINE varIdent #-}
 
 typeIdent :: String -> Ident Type
-typeIdent = wrap' ∘ make
+typeIdent = wrap' ∘ fromString
 {-# INLINE typeIdent #-}
 
 
 -- === Instances === --
 
-type instance Name (Ident t) =  Ident t
+type instance Name (Ident t) = Ident t
 instance   HasName (Ident t) where name = id ; {-# INLINE name #-}
 
-instance Repr s (Ident t) where repr = repr ∘ unwrap'
+instance IsString (Ident Var ) where fromString = varIdent           ; {-# INLINE fromString #-}
+instance IsString (Ident Type) where fromString = typeIdent          ; {-# INLINE fromString #-}
+instance ToString (Ident t)    where toString   = toString ∘ unwrap' ; {-# INLINE toString #-}
+
+instance Repr s (Ident t) where repr = repr ∘ unwrap' ; {-# INLINE repr #-}

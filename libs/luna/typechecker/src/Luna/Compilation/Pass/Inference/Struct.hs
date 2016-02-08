@@ -1,7 +1,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Luna.Compilation.Passes.Inference.Struct where
+module Luna.Compilation.Pass.Inference.Struct where
 
 import Prelude.Luna
 
@@ -20,6 +20,10 @@ import Data.Prop
 import Data.Construction
 import Luna.Syntax.AST.Term hiding (source)
 import Data.Record
+
+import qualified Luna.Compilation.Stage.TypeCheck as TypeCheck
+import           Luna.Syntax.Name.Ident.Pool      (MonadIdentPool, newVarIdent')
+import qualified Luna.Syntax.Name as Name
 
 --foo :: forall a. Show a => NetGraph a -> IO (Ref $ Node (NetLayers a :< Draft Static), NetGraph a)
 ----foo :: NetGraph -> IO ((), NetGraph)
@@ -50,18 +54,20 @@ myg :: ( ls   ~ NetLayers Foo
        , TermNode Star m (ls :< term)
        , TermNode Var  m (ls :< term)
        , TermNode App  m (ls :< term)
-       ) => m (Ref (Node $ (ls :< term)))
+       ) => m [Ref (Node $ (ls :< term))]
 myg = do
     f  <- var' "f"
     a  <- var' "a"
     b  <- var' "b"
     r  <- app' f [arg a, arg b]
 
+    g  <- var' "g"
+    r2 <- app' g [arg r]
     --r_v <- read r
     --print $ caseTest (uncover r_v) $ do
     --    match $ \(App a b) -> "APP!"
     --    match $ \ANY -> "something else :("
-    return r
+    return [r,r2]
 
 
 universe = Ref $ Ptr 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?
@@ -72,46 +78,44 @@ buildAppType :: ( ls   ~ NetLayers Foo
                 , ne   ~ Link (ls :< term)
 
                 , Castable e ne
-
                 , MonadIO m
                 , MonadBuilder n e m
-                , NodeInferable m (ls :< term)
-                , TermNode Var  m (ls :< term)
-                , TermNode Lam  m (ls :< term)
+                , NodeInferable  m (ls :< term)
+                , TermNode Var   m (ls :< term)
+                , TermNode Lam   m (ls :< term)
+                , MonadIdentPool m
                 ) => Ref (Node $ (ls :< term)) -> m ()
 buildAppType appRef = do
     appNode <- read appRef
     caseTest (uncover appNode) $ do
         match $ \(App srcConn argConns) -> do
-            args     <- (mapM . mapM) (follow source) argConns
-            specArgs <- (mapM . mapM) getTypeSpec args
-            out      <- var' "out"
+            args     <- (mapM ∘ mapM) (follow source) argConns
+            specArgs <- (mapM ∘ mapM) getTypeSpec args
+            out      <- var' =<< newVarIdent'
             l        <- lam' specArgs out
-
+            src      <- follow source srcConn
             reconnect appRef (prop Type) out
-
-            src     <- follow source srcConn
-            reconnect src (prop Type) l
-            return ()
-
+            reconnect src    (prop Type) l
         match $ \ANY -> impossible
-
     return ()
 
+-- | Returns a concrete type of a node
+--   If the type is just universe, create a new type variable
 getTypeSpec :: ( ls   ~ NetLayers Foo
                , term ~ Draft Static
                , ne   ~ Link (ls :< term)
                , Castable       e ne
                , MonadBuilder n e m
-               , NodeInferable m (ls :< term)
-               , TermNode Var  m (ls :< term)
-               , MonadIO m
+               , NodeInferable  m (ls :< term)
+               , TermNode Var   m (ls :< term)
+               , MonadIdentPool m
+               , MonadIO        m
                ) => Ref (Node $ (ls :< term)) -> m (Ref (Node $ (ls :< term)))
 getTypeSpec ref = do
     val <- read ref
     tp  <- follow source $ val # Type
     if tp /= universe then return tp else do
-        ntp <- var' "x"
+        ntp <- var' =<< newVarIdent'
         reconnect ref (prop Type) ntp
         return ntp
 
@@ -123,20 +127,23 @@ prebuild = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers Foo :< D
     star
 
 
-buildBase :: NetGraph Foo -> IO (Ref (Node $ (NetLayers Foo :< Draft Static)), NetGraph Foo)
+buildBase :: NetGraph Foo -> IO ([Ref (Node $ (NetLayers Foo :< Draft Static))], NetGraph Foo)
 buildBase g = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers Foo :< Draft Static)))
        $ runNetworkBuilderT g myg
 
 --runPass :: NetGraph Foo -> IO (Ref (Node $ (NetLayers Foo :< Draft Static)), NetGraph Foo)
-runPass g m = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers Foo :< Draft Static)))
+runPass g m = fmap snd
+            $ runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers Foo :< Draft Static)))
             $ runNetworkBuilderT g m
 
 main = do
 
     (_, g)   <- prebuild
-    (f, g')  <- buildBase g
-    (_, g'') <- runPass g' (buildAppType f)
-    renderAndOpen [("g", g'')]
+    (fs, g') <- buildBase g
+    g'' <- TypeCheck.runT $ runPass g' (mapM buildAppType fs)
+    renderAndOpen [ ("g1", g')
+                  , ("g2", g'')
+                  ]
     print "hej ho!"
 
 

@@ -6,7 +6,7 @@
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE UndecidableInstances      #-}
 
-module Luna.Compilation.Passes.Inference.Literals
+module Luna.Compilation.Pass.Inference.Literals
     ( assignLiteralTypes
     ) where
 
