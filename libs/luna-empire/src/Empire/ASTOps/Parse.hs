@@ -20,7 +20,7 @@ import           Luna.Syntax.AST.Term         (Str)
 parsePortDefault :: ASTOp m => PortDefault -> m NodeRef
 parsePortDefault (Expression expr)          = parseFragment expr
 parsePortDefault (Constant (IntValue i))    = Builder.int i
-parsePortDefault (Constant (StringValue s)) = Builder.string s
+parsePortDefault (Constant (StringValue s)) = Builder.str s
 
 parseFragment :: ASTOp m => String -> m NodeRef
 parseFragment = parseApp
@@ -53,6 +53,6 @@ buildAccs = foldM ASTBuilder.makeAccessor
 
 parseInitial :: ASTOp m => String -> m NodeRef
 parseInitial expr = fromMaybe (Builder.var (fromString expr :: Str)) (whenBlank <|> whenString <|> whenInt) where
-    whenString = Builder.string <$> Parser.asString  expr
-    whenInt    = Builder.int    <$> Parser.asInteger expr
+    whenString = Builder.str <$> Parser.asString  expr
+    whenInt    = Builder.int <$> Parser.asInteger expr
     whenBlank  = if expr == "_" then Just Builder.blank else Nothing

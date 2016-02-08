@@ -1,16 +1,17 @@
 module Empire.Commands.GraphBuilder where
 
-import           Control.Monad.Error          (throwError)
+import           Prologue
+
 import           Control.Monad.State
+import           Control.Monad.Error          (throwError)
+
 import qualified Data.IntMap                  as IntMap
 import           Data.Map                     (Map)
 import qualified Data.Map                     as Map
 import           Data.Maybe                   (catMaybes, fromMaybe, maybeToList)
 import qualified Data.Text.Lazy               as Text
-import           Prologue
-
-import           Data.Record                  (ANY (..), case', match)
-{-import           Data.Layer.Coat         (uncoat, coated)-}
+import           Data.Record                  (ANY (..), caseTest, match)
+import           Data.Layer.Cover             (uncover)
 
 import           Empire.Data.Graph            (Graph)
 import qualified Empire.Data.Graph            as Graph
@@ -24,6 +25,7 @@ import           Empire.API.Data.Port         (InPort (..), OutPort (..), Port (
 import           Empire.API.Data.PortRef      (InPortRef (..), OutPortRef (..))
 import           Empire.API.Data.ValueType    (ValueType (..))
 
+import           Empire.Data.AST              (NodeRef, EdgeRef)
 import           Empire.ASTOp                 (ASTOp, runASTOp)
 import qualified Empire.ASTOps.Builder        as ASTBuilder
 import qualified Empire.ASTOps.Print          as Print
@@ -31,10 +33,11 @@ import qualified Empire.Commands.AST          as AST
 import qualified Empire.Commands.GraphUtils   as GraphUtils
 import           Empire.Empire
 
-import           Luna.Syntax.AST.Term         (Accessor (..), App (..), Blank (..), Draft, Unify (..), Val, Var (..))
-import           Luna.Syntax.Model.Graph      (Edge, Node, Ref)
-{-import qualified Luna.Syntax.Model.Graph.Term as Builder-}
-type VarMap = Map (Ref Node) NodeId
+import           Luna.Syntax.AST.Term         (Acc (..), App (..), Blank (..), Unify (..), Var (..), Num (..), Str (..))
+import qualified Luna.Syntax.Builder          as Builder
+import           Luna.Syntax.Builder          (source)
+
+type VarMap = Map NodeRef NodeId
 
 buildGraph :: Command Graph API.Graph
 buildGraph = API.Graph <$> buildNodes <*> buildConnections
@@ -63,25 +66,24 @@ getNodeName :: NodeId -> Command Graph String
 getNodeName nid = do
     vref <- GraphUtils.getASTVar nid
     zoom Graph.ast $ runASTOp $ do
-        vnode <- Builder.readRef vref
-        case' (uncoat vnode) $ match $ \(Var n) -> Builder.follow n >>= Print.printIdent
+        vnode <- Builder.read vref
+        caseTest (uncover vnode) $ match $ \(Var n) -> return . toString $ n
 
-getPortState :: VarMap -> Ref Node -> ASTOp PortState
+getPortState :: ASTOp m => VarMap -> NodeRef -> m PortState
 getPortState varMap ref
     | Map.member ref varMap = return Connected
     | otherwise             = do
-        node <- Builder.readRef ref
-        case' (uncoat node) $ do
-            match $ \val -> case' (val :: Val (Ref Edge)) $ match $ \lit -> case lit of
-                Lit.String s -> return . WithDefault . Constant . StringValue $ Text.unpack $ toText s
-                Lit.Int    i -> return . WithDefault . Constant . IntValue    $ i
-            match $ \Blank -> return NotConnected
-            match $ \ANY   -> Print.printExpression ref >>= return . WithDefault . Expression
+        node <- Builder.read ref
+        caseTest (uncover node) $ do
+            match $ \(Str s) -> return . WithDefault . Constant . StringValue $ s
+            match $ \(Num i) -> return . WithDefault . Constant . IntValue    $ i
+            match $ \Blank   -> return NotConnected
+            match $ \ANY     -> Print.printExpression ref >>= return . WithDefault . Expression
 
-buildPort :: VarMap -> (PortId, Ref Node) -> ASTOp Port
+buildPort :: ASTOp m => VarMap -> (PortId, NodeRef) -> m Port
 buildPort varMap (portId, ref) = Port portId (ValueType "Int") <$> getPortState varMap ref
 
-buildPorts :: VarMap -> Ref Node -> Command Graph [Port]
+buildPorts :: VarMap -> NodeRef -> Command Graph [Port]
 buildPorts varMap ref = zoom Graph.ast $ runASTOp $ do
     selfRef  <- maybeToList <$> getSelfNodeRef ref
     args     <- getPositionalNodeRefs ref
@@ -102,18 +104,18 @@ getVarMap = do
     vars <- mapM GraphUtils.getASTVar allNodes
     return $ Map.fromList $ zip vars allNodes
 
-getSelfNodeRef :: Ref Node -> ASTOp (Maybe (Ref Node))
+getSelfNodeRef :: ASTOp m => NodeRef -> m (Maybe NodeRef)
 getSelfNodeRef nodeRef = do
-    node <- Builder.readRef nodeRef
-    case' (uncoat node) $ do
-        match $ \(Accessor _ t) -> Builder.follow t >>= return . Just
-        match $ \(App t _)      -> Builder.follow t >>= getSelfNodeRef
-        match $ \ANY            -> return Nothing
+    node <- Builder.read nodeRef
+    caseTest (uncover node) $ do
+        match $ \(Acc _ t) -> Builder.follow source t >>= return . Just
+        match $ \(App t _) -> Builder.follow source t >>= getSelfNodeRef
+        match $ \ANY       -> return Nothing
 
-getPositionalNodeRefs :: Ref Node -> ASTOp [Ref Node]
+getPositionalNodeRefs :: ASTOp m => NodeRef -> m [NodeRef]
 getPositionalNodeRefs nodeRef = do
-    node <- Builder.readRef nodeRef
-    case' (uncoat node) $ do
+    node <- Builder.read nodeRef
+    caseTest (uncover node) $ do
         match $ \(App _ args) -> ASTBuilder.unpackArguments args
         match $ \ANY          -> return []
 

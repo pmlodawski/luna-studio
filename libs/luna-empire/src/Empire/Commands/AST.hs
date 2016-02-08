@@ -2,16 +2,16 @@
 
 module Empire.Commands.AST where
 
-import           Control.Monad.Error          (throwError)
-import           Control.Monad.State
-import           Data.Record                  (ANY (..), case', match, specificCons)
 import           Prologue
-{-import           Data.Layer.Coat     (uncoat, coated)-}
+import           Control.Monad.State
+import           Control.Monad.Error          (throwError)
+import           Data.Record                  (ANY (..), caseTest, match)
+import           Data.Prop                    (prop)
 
+import           Empire.Empire
 import           Empire.API.Data.DefaultValue (PortDefault)
 import           Empire.API.Data.NodeMeta     (NodeMeta)
-import           Empire.Data.AST              (AST, ASTNode)
-import           Empire.Empire
+import           Empire.Data.AST              (AST, NodeRef)
 
 import           Empire.ASTOp                 (runASTOp)
 import qualified Empire.ASTOps.Builder        as ASTBuilder
@@ -19,54 +19,58 @@ import qualified Empire.ASTOps.Parse          as Parser
 import qualified Empire.ASTOps.Print          as Printer
 import           Empire.ASTOps.Remove         (safeRemove)
 
-import           Luna.Syntax.AST.Term         (Unify (..))
-import           Luna.Syntax.Model.Graph      (Node (..), Ref (..))
-{-import qualified Luna.Syntax.Model.Graph.Term as Builder-}
-{-import           Luna.Syntax.Layer.Labeled  (HasLabel, label)-}
-{-import           Luna.Syntax.Layer.WithMeta (meta)-}
+import qualified Luna.Syntax.Builder          as Builder
+import           Luna.Syntax.Builder          (Meta (..), source)
 
-addNode :: String -> String -> Command AST (Ref Node)
+meta :: Meta NodeMeta
+meta = Meta
+
+addNode :: String -> String -> Command AST (NodeRef)
 addNode name expr = runASTOp $ Parser.parseFragment expr >>= ASTBuilder.unifyWithName name
 
-addDefault :: PortDefault -> Command AST (Ref Node)
+addDefault :: PortDefault -> Command AST (NodeRef)
 addDefault val = runASTOp $ Parser.parsePortDefault val
 
-readMeta :: Ref Node -> Command AST (Maybe NodeMeta)
-readMeta ref = runASTOp $ view meta <$> Builder.readRef ref
+readMeta :: NodeRef -> Command AST (Maybe NodeMeta)
+readMeta ref = runASTOp $ view (prop meta) <$> Builder.read ref
 
-writeMeta :: Ref Node -> Maybe NodeMeta -> Command AST ()
+writeMeta :: NodeRef -> Maybe NodeMeta -> Command AST ()
 writeMeta ref newMeta = runASTOp $ do
-    node <- Builder.readRef ref
-    Builder.writeRef ref (node & meta .~ newMeta)
+    node <- Builder.read ref
+    Builder.write ref (node & prop meta .~ newMeta)
 
-renameVar :: Ref Node -> String -> Command AST ()
+renameVar :: NodeRef -> String -> Command AST ()
 renameVar = runASTOp .: ASTBuilder.renameVar
 
-removeSubtree :: Ref Node -> Command AST ()
+removeSubtree :: NodeRef -> Command AST ()
 removeSubtree = runASTOp . safeRemove
 
-printExpression :: Ref Node -> Command AST String
+printExpression :: NodeRef -> Command AST String
 printExpression = runASTOp . Printer.printExpression
 
-applyFunction :: Ref Node -> Ref Node -> Int -> Command AST (Ref Node)
+applyFunction :: NodeRef -> NodeRef -> Int -> Command AST (NodeRef)
 applyFunction = runASTOp .:. ASTBuilder.applyFunction
 
-unapplyArgument :: Ref Node -> Int -> Command AST (Ref Node)
+unapplyArgument :: NodeRef -> Int -> Command AST (NodeRef)
 unapplyArgument = runASTOp .: ASTBuilder.removeArg
 
-makeAccessor :: Ref Node -> Ref Node -> Command AST (Ref Node)
+makeAccessor :: NodeRef -> NodeRef -> Command AST (NodeRef)
 makeAccessor = runASTOp .: ASTBuilder.makeAccessor
 
-removeAccessor :: Ref Node -> Command AST (Ref Node)
+removeAccessor :: NodeRef -> Command AST (NodeRef)
 removeAccessor = runASTOp . ASTBuilder.unAcc
 
-getTargetNode :: Ref Node -> Command AST (Ref Node)
-getTargetNode nodeRef = runASTOp $ ASTBuilder.withUnifyNode nodeRef $ \(Unify _ r) -> Builder.follow r
+getTargetNode :: NodeRef -> Command AST (NodeRef)
+getTargetNode nodeRef = runASTOp $ Builder.read nodeRef
+                               >>= return . view ASTBuilder.rightUnifyOperand
+                               >>= Builder.follow source
 
-getVarNode :: Ref Node -> Command AST (Ref Node)
-getVarNode nodeRef = runASTOp $ ASTBuilder.withUnifyNode nodeRef $ \(Unify l _) -> Builder.follow l
+getVarNode :: NodeRef -> Command AST (NodeRef)
+getVarNode nodeRef = runASTOp $ Builder.read nodeRef
+                            >>= return . view ASTBuilder.leftUnifyOperand
+                            >>= Builder.follow source
 
-replaceTargetNode :: Ref Node -> Ref Node -> Command AST ()
+replaceTargetNode :: NodeRef -> NodeRef -> Command AST ()
 replaceTargetNode unifyNodeId newTargetId = runASTOp $ do
     Builder.reconnect unifyNodeId ASTBuilder.rightUnifyOperand newTargetId
     return ()

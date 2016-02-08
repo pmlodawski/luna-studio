@@ -7,6 +7,7 @@ packages:
 - {extra-dep: true, location: ../../libs/bus-binary}
 - {extra-dep: true, location: ../../libs/config}
 - {extra-dep: true, location: ../../libs/luna-empire-api}
+- {location: ../../libs/luna-empire}
 - {extra-dep: true, location: ../../libs/luna-empire-api-json}
 - {location: ../../libs/luna/typechecker}
 - {extra-dep: true, location: ../../libs/old-utils}

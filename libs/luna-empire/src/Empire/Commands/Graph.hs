@@ -101,24 +101,25 @@ getGraph pid lid = withGraph pid lid GraphBuilder.buildGraph
 
 runGraph :: ProjectId -> LibraryId -> Empire (IntMap Value)
 runGraph pid lid = withGraph pid lid $ do
-    allNodes <- uses Graph.nodeMapping IntMap.keys
-    astNodes <- mapM GraphUtils.getASTPointer allNodes
-    ast      <- use Graph.ast
-    astVals  <- liftIO $ NodeRunner.getNodeValues astNodes ast
+    {-allNodes <- uses Graph.nodeMapping IntMap.keys-}
+    {-astNodes <- mapM GraphUtils.getASTPointer allNodes-}
+    {-ast      <- use Graph.ast-}
+    {-astVals  <- liftIO $ NodeRunner.getNodeValues astNodes ast-}
 
-    let values = flip fmap (zip allNodes astNodes) $ \(n, ref) -> do
-        val <- Map.lookup ref astVals
-        case val of
-            NodeRunner.HaskellVal v tp -> return $ (,) n $ case tp of
-                "Int"    -> IntValue $ unsafeCoerce v
-                "Double" -> DoubleValue $ unsafeCoerce v
-                "String" -> StringValue $ unsafeCoerce v
-                "[Int]"  -> IntList $ unsafeCoerce v
-                "[Double]" -> DoubleList $ unsafeCoerce v
+    {-let values = flip fmap (zip allNodes astNodes) $ \(n, ref) -> do-}
+        {-val <- Map.lookup ref astVals-}
+        {-case val of-}
+            {-NodeRunner.HaskellVal v tp -> return $ (,) n $ case tp of-}
+                {-"Int"    -> IntValue $ unsafeCoerce v-}
+                {-"Double" -> DoubleValue $ unsafeCoerce v-}
+                {-"String" -> StringValue $ unsafeCoerce v-}
+                {-"[Int]"  -> IntList $ unsafeCoerce v-}
+                {-"[Double]" -> DoubleList $ unsafeCoerce v-}
 
-            _ -> Nothing
+            {-_ -> Nothing-}
 
-    return $ IntMap.fromList $ catMaybes values
+    {-return $ IntMap.fromList $ catMaybes values-}
+    return $ IntMap.empty
 
 renameNode :: ProjectId -> LibraryId -> NodeId -> Text -> Empire ()
 renameNode pid lid nid name = withGraph pid lid $ do

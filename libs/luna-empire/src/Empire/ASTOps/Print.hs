@@ -10,7 +10,7 @@ import qualified Empire.ASTOps.Builder as ASTBuilder
 
 import           Luna.Syntax.AST.Term  (Acc (..), App (..), Blank (..), Unify (..), Var (..), Num (..), Str (..))
 import qualified Luna.Syntax.Builder   as Builder
-import           Luna.Syntax.Builder   (target)
+import           Luna.Syntax.Builder   (source)
 
 printExpression' :: ASTOp m => [NodeRef] -> NodeRef -> m String
 printExpression' shadowVars nodeRef = do
@@ -18,18 +18,18 @@ printExpression' shadowVars nodeRef = do
     node <- Builder.read nodeRef
     caseTest (uncover node) $ do
         match $ \(Unify l r) -> do
-            leftRep  <- Builder.follow target l >>= recur
-            rightRep <- Builder.follow target r >>= recur
+            leftRep  <- Builder.follow source l >>= recur
+            rightRep <- Builder.follow source r >>= recur
             return $ leftRep ++ " = " ++ rightRep
         match $ \(Var n) ->
             if elem nodeRef shadowVars
                 then return "_"
                 else return $ toString n
         match $ \(Acc n t) -> do
-            targetRep <- Builder.follow target t >>= recur
+            targetRep <- Builder.follow source t >>= recur
             return $ targetRep ++ "." ++ toString n
         match $ \(App f args) -> do
-            funRep <- Builder.follow target f >>= recur
+            funRep <- Builder.follow source f >>= recur
             unpackedArgs <- ASTBuilder.unpackArguments args
             argsRep <- sequence $ recur <$> unpackedArgs
             case argsRep of

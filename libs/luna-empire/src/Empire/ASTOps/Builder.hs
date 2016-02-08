@@ -14,7 +14,7 @@ import           Luna.Syntax.AST.Arg     (Arg)
 import qualified Luna.Syntax.AST.Arg     as Arg
 import           Luna.Syntax.AST.Term    (Acc (..), App (..), Blank (..), Unify (..), Var (..), Str (..))
 import qualified Luna.Syntax.Builder     as Builder
-import           Luna.Syntax.Builder     (Inputs, target)
+import           Luna.Syntax.Builder     (Inputs, source)
 
 functionApplicationNode :: Lens' ASTNode EdgeRef
 functionApplicationNode = covered . lens getter setter where
@@ -22,7 +22,7 @@ functionApplicationNode = covered . lens getter setter where
     setter a f = caseTest a $ match $ \(App _ args) -> cons $ App f args
 
 unpackArguments :: ASTOp m => [Arg (EdgeRef)] -> m [NodeRef]
-unpackArguments args = mapM (Builder.follow target . Arg.__arec) args
+unpackArguments args = mapM (Builder.follow source . Arg.__arec) args
 
 isBlank :: ASTOp m => NodeRef -> m Bool
 isBlank ref = do
@@ -45,7 +45,7 @@ destructApp fun = do
     result <- caseTest (uncover app) $ do
         match $ \(App tg args) -> do
             unpackedArgs <- unpackArguments args
-            target <- Builder.follow target tg
+            target <- Builder.follow source tg
             return (target, unpackedArgs)
         match $ \ANY -> throwError "Expected App node, got wrong type."
     removeNode fun
@@ -84,7 +84,7 @@ reapply funRef args = do
     funNode <- Builder.read funRef
     fun <- caseTest (uncover funNode) $ do
         match $ \(App t _) -> do
-            f <- Builder.follow target t
+            f <- Builder.follow source t
             removeNode funRef
             return f
         match $ \ANY -> return funRef
@@ -100,12 +100,12 @@ makeAccessorRec targetNodeRef namingNodeRef seenApp = do
                 then return accNode
                 else Builder.app accNode ([] :: [Arg NodeRef])
         match $ \(App t _) -> do
-            newNamingNodeRef <- Builder.follow target t
+            newNamingNodeRef <- Builder.follow source t
             replacementRef <- makeAccessorRec targetNodeRef newNamingNodeRef True
             Builder.reconnect namingNodeRef functionApplicationNode replacementRef
             return namingNodeRef
         match $ \(Acc name t) -> do
-            oldTargetRef <- Builder.follow target t
+            oldTargetRef <- Builder.follow source t
             safeRemove oldTargetRef
             Builder.acc name targetNodeRef
         match $ \ANY -> throwError "Invalid node type"
@@ -122,7 +122,7 @@ unAcc ref = do
             removeNode ref
             Builder.acc n freshBlank
         match $ \(App t args) -> do
-            target <- Builder.follow target t
+            target <- Builder.follow source t
             replacementRef <- unAcc target
             case args of
                 [] -> removeNode ref >> return replacementRef
@@ -134,17 +134,15 @@ unifyWithName name node = do
     nameVar <- Builder.var (Str name) :: m NodeRef
     Builder.unify nameVar node
 
-withUnifyNode :: ASTOp m => NodeRef -> (Unify (EdgeRef) -> m a) -> m a
-withUnifyNode nodeRef op = do
-    node <- Builder.read nodeRef
-    caseTest (uncover node) $ do
-        match $ \x   -> op (x :: Unify (EdgeRef))
-        match $ \ANY -> throwError "Not a unify node."
-
 rightUnifyOperand :: Lens' ASTNode (EdgeRef)
 rightUnifyOperand = covered . lens rightGetter rightSetter where
     rightGetter u   = caseTest u $ match $ \(Unify _ r) -> r
     rightSetter u r = caseTest u $ match $ \(Unify l _) -> cons $ Unify l r
+
+leftUnifyOperand :: Lens' ASTNode (EdgeRef)
+leftUnifyOperand = covered . lens rightGetter rightSetter where
+    rightGetter u   = caseTest u $ match $ \(Unify l _) -> l
+    rightSetter u l = caseTest u $ match $ \(Unify _ r) -> cons $ Unify l r
 
 varName :: Lens' ASTNode String
 varName = covered . lens nameGetter nameSetter where
