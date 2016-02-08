@@ -10,13 +10,11 @@ import           Data.Layer.Cover              (uncover)
 import           Empire.ASTOp                  (ASTOp)
 import           Empire.Data.AST               (NodeRef)
 import qualified Luna.Syntax.Builder as Builder
-import           Luna.Syntax.Builder (Inputs (..), Type (..), Succs (..), target)
+import           Luna.Syntax.Builder (Inputs (..), Type (..), Succs (..), source)
 
 removeNode :: ASTOp m => NodeRef -> m ()
 removeNode ref = do
-    node     <- Builder.read ref
-    typeNode <- Builder.follow target $ node # Type
-    destruct typeNode
+    node <- Builder.read ref
     void $ destruct ref
 
 safeRemove :: ASTOp m => NodeRef -> m ()
@@ -32,7 +30,7 @@ getRefCount ref = (length . (# Succs)) <$> Builder.read ref
 performSafeRemoval :: ASTOp m => NodeRef -> m ()
 performSafeRemoval ref = do
     node <- Builder.read ref
-    toRemove <- mapM (Builder.follow target) $ uncover node # Inputs
+    toRemove <- mapM (Builder.follow source) $ uncover node # Inputs
     removeNode ref
     mapM_ safeRemove toRemove
 

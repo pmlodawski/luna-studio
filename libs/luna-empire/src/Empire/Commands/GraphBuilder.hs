@@ -35,7 +35,7 @@ import           Empire.Empire
 
 import           Luna.Syntax.AST.Term         (Acc (..), App (..), Blank (..), Unify (..), Var (..), Num (..), Str (..))
 import qualified Luna.Syntax.Builder          as Builder
-import           Luna.Syntax.Builder          (target)
+import           Luna.Syntax.Builder          (source)
 
 type VarMap = Map NodeRef NodeId
 
@@ -108,8 +108,8 @@ getSelfNodeRef :: ASTOp m => NodeRef -> m (Maybe NodeRef)
 getSelfNodeRef nodeRef = do
     node <- Builder.read nodeRef
     caseTest (uncover node) $ do
-        match $ \(Acc _ t) -> Builder.follow target t >>= return . Just
-        match $ \(App t _) -> Builder.follow target t >>= getSelfNodeRef
+        match $ \(Acc _ t) -> Builder.follow source t >>= return . Just
+        match $ \(App t _) -> Builder.follow source t >>= getSelfNodeRef
         match $ \ANY       -> return Nothing
 
 getPositionalNodeRefs :: ASTOp m => NodeRef -> m [NodeRef]

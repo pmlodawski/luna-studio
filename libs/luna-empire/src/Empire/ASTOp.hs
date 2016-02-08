@@ -21,7 +21,6 @@ import           Luna.Syntax.Model.Network.Term         (Raw)
 import           Luna.Syntax.AST.Term                   (Acc, App, Blank, Unify, Var, Str, Num)
 import           Luna.Syntax.Model.Layer                ((:<))
 
-
 type ASTOp m = ( MonadIO m
                , MonadFix m
                , MonadError Error m

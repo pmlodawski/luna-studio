@@ -20,7 +20,7 @@ import qualified Empire.ASTOps.Print          as Printer
 import           Empire.ASTOps.Remove         (safeRemove)
 
 import qualified Luna.Syntax.Builder          as Builder
-import           Luna.Syntax.Builder          (Meta (..), target)
+import           Luna.Syntax.Builder          (Meta (..), source)
 
 meta :: Meta NodeMeta
 meta = Meta
@@ -63,12 +63,12 @@ removeAccessor = runASTOp . ASTBuilder.unAcc
 getTargetNode :: NodeRef -> Command AST (NodeRef)
 getTargetNode nodeRef = runASTOp $ Builder.read nodeRef
                                >>= return . view ASTBuilder.rightUnifyOperand
-                               >>= Builder.follow target
+                               >>= Builder.follow source
 
 getVarNode :: NodeRef -> Command AST (NodeRef)
 getVarNode nodeRef = runASTOp $ Builder.read nodeRef
                             >>= return . view ASTBuilder.leftUnifyOperand
-                            >>= Builder.follow target
+                            >>= Builder.follow source
 
 replaceTargetNode :: NodeRef -> NodeRef -> Command AST ()
 replaceTargetNode unifyNodeId newTargetId = runASTOp $ do
