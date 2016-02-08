@@ -3,7 +3,6 @@
 
 module Luna.Compilation.Passes.Inference.Literals
     ( assignLiteralTypes
-    , Foo
     ) where
 
 import           Prelude.Luna                                    hiding (Num, pre)
@@ -27,16 +26,18 @@ import           Luna.Syntax.Model.Network.Class                 ()
 import           Type.Inference
 
 
-data Foo = Foo deriving (Show)
+type PassCtx ls term a ne n e m = ( ls   ~ NetLayers a
+                                  , term ~ Draft Static
+                                  , ne   ~ Link (ls :< term)
+                                  , Castable e ne
+                                  , MonadIO m
+                                  , MonadBuilder n e m
+                                  , NodeInferable m (ls :< term)
+                                  , TermNode Cons m (ls :< term)
+                                  , TermNode Lam  m (ls :< term)
+                                  )
 
-pre :: ( ls   ~ NetLayers Foo
-       , term ~ Draft Static
-       , ne   ~ Link (ls :< term)
-       , Castable e ne
-       , MonadBuilder n e m
-       , NodeInferable m (ls :< term)
-       , TermNode Cons m (ls :< term)
-       )
+pre :: PassCtx ls term a ne n e m
     => Ref (Node $ (ls :< term))
     -> m [Ref (Node $ (ls :< term))]
 pre ref = do
@@ -44,32 +45,14 @@ pre ref = do
     let inputs = node # Inputs
     mapM (follow source) inputs
 
-assignLiteralTypes :: ( ls   ~ NetLayers Foo
-                      , term ~ Draft Static
-                      , ne   ~ Link (ls :< term)
-                      , Castable e ne
-                      , MonadIO m
-                      , MonadBuilder n e m
-                      , NodeInferable m (ls :< term)
-                      , TermNode Cons m (ls :< term)
-                      , TermNode Lam  m (ls :< term)
-                      )
+assignLiteralTypes :: PassCtx ls term a ne n e m
                    => Ref (Node $ (ls :< term))
                    -> m ()
 assignLiteralTypes ref = do
     (consIntRef, consStrRef) <- createLiteralTypes
     assignLiteralTypesWith consIntRef consStrRef ref
 
-assignLiteralTypesWith :: ( ls   ~ NetLayers Foo
-                          , term ~ Draft Static
-                          , ne   ~ Link (ls :< term)
-                          , Castable e ne
-                          , MonadIO m
-                          , MonadBuilder n e m
-                          , NodeInferable m (ls :< term)
-                          , TermNode Cons m (ls :< term)
-                          , TermNode Lam  m (ls :< term)
-                          )
+assignLiteralTypesWith :: PassCtx ls term a ne n e m
                        => Ref (Node $ (ls :< term))
                        -> Ref (Node $ (ls :< term))
                        -> Ref (Node $ (ls :< term))
@@ -82,12 +65,7 @@ assignLiteralTypesWith consIntRef consStrRef ref = do
         match $ \ANY       -> return ()
     mapM_ (assignLiteralTypesWith consIntRef consStrRef) =<< pre ref
 
-createLiteralTypes :: ( ls   ~ NetLayers Foo
-                      , term ~ Draft Static
-                      , ne   ~ Link (ls :< term)
-                      , NodeInferable m (ls :< term)
-                      , TermNode Cons m (ls :< term)
-                      )
+createLiteralTypes :: PassCtx ls term a ne n e m
                    => m (Ref (Node $ (ls :< term)), Ref (Node $ (ls :< term)))
 createLiteralTypes = do
     consIntRef <- cons "Int"

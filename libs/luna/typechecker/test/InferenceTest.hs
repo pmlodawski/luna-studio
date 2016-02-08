@@ -23,10 +23,11 @@ import           Luna.Syntax.Model.Graph.Builder
 import           Luna.Syntax.Model.Network.Class                 ()
 import           Type.Inference
 
-import           Luna.Compilation.Passes.Inference.Literals      (assignLiteralTypes, Foo)
+import           Luna.Compilation.Passes.Inference.Literals      (assignLiteralTypes)
 
 
 
+data Foo = Foo deriving (Show)
 
 renderAndOpen lst = do
     flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
@@ -94,4 +95,4 @@ main = do
     (f, g')  <- buildBase g
     (_, g'') <- runPass g' (assignLiteralTypes f)
     renderAndOpen [("g", g'')]
-    print "done"
+    putStrLn "done"
