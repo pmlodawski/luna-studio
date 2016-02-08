@@ -8,11 +8,13 @@ packages:
 - extra-dep: true
   location: {commit: 41153d63e5b625c3ef153465622bebdbbafe549e, git: 'https://github.com/wdanilo/container.git'}
 - extra-dep: true
+  location: {commit: d3fe47920656a585b67d03a7e62c592097e49bee, git: 'https://github.com/wdanilo/data-pool.git'}
+- extra-dep: true
   location: {commit: b55500e95a422ec29b1dba4fc9c0b8092669350b, git: 'https://github.com/wdanilo/convert.git'}
 - extra-dep: true
   location: {commit: 345c1cdf5bef30631d3eadd55c326086ea0b6f71, git: 'https://github.com/wdanilo/data-base.git'}
 - extra-dep: true
-  location: {commit: ad98e23561702f27c6faa4b80818c01653bb38eb, git: 'https://github.com/wdanilo/data-construction.git'}
+  location: {commit: bbd505039ce0652109bde0738f22b4a1b69d8b86, git: 'https://github.com/wdanilo/data-construction.git'}
 - extra-dep: true
   location: {commit: 739f5931184259b51ef4c7a7218d031e82203e02, git: 'https://github.com/wdanilo/data-layer.git'}
 - extra-dep: true
@@ -30,13 +32,13 @@ packages:
 - extra-dep: true
   location: {commit: 8cb9cbd7e87f5c5223dc171ae97762e2a535483b, git: 'https://github.com/wdanilo/poly-control.git'}
 - extra-dep: true
-  location: {commit: 7027d9973387d80c2a56d4fc5ccb95af18e782e0, git: 'https://github.com/wdanilo/prologue.git'}
+  location: {commit: 816f5a5c59eba4c3ba967a88604805ecce421534, git: 'https://github.com/wdanilo/prologue.git'}
 - extra-dep: true
   location: {commit: eee76a96bdd1d442299cecdcd1e445d76eef3b1a, git: 'https://github.com/wdanilo/type-cache.git'}
 - extra-dep: true
-  location: {commit: 2cd5e9269aa10a5ed11517faf6eb6a1696668f4a, git: 'https://github.com/wdanilo/typelevel.git'}
+  location: {commit: 7e91afcbb940eb9822e034577bf72397924d4599, git: 'https://github.com/wdanilo/typelevel.git'}
 - extra-dep: true
-  location: {commit: ad98e23561702f27c6faa4b80818c01653bb38eb, git: 'https://github.com/wdanilo/data-construction.git'}
+  location: {commit: bbd505039ce0652109bde0738f22b4a1b69d8b86, git: 'https://github.com/wdanilo/data-construction.git'}
 - extra-dep: true
   location: {commit: f3859bee900d6be95b1141e828acb2bb53821164, git: 'https://github.com/wdanilo/data-member.git'}
 resolver: lts-4.1
