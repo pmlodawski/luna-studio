@@ -23,6 +23,8 @@ packages:
 - extra-dep: true
   location: {commit: b55500e95a422ec29b1dba4fc9c0b8092669350b, git: 'https://github.com/wdanilo/convert.git'}
 - extra-dep: true
+  location: {commit: d3fe47920656a585b67d03a7e62c592097e49bee, git: 'https://github.com/wdanilo/data-pool.git'}
+- extra-dep: true
   location: {commit: 345c1cdf5bef30631d3eadd55c326086ea0b6f71, git: 'https://github.com/wdanilo/data-base.git'}
 - extra-dep: true
   location: {commit: bbd505039ce0652109bde0738f22b4a1b69d8b86, git: 'https://github.com/wdanilo/data-construction.git'}
