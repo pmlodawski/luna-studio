@@ -8,6 +8,7 @@ packages:
     - ../../../../../../libs/data-base
     - ../../../../../../libs/data-construction
     - ../../../../../../libs/data-layer
+    - ../../../../../../libs/data-pool
     - ../../../../../../libs/data-repr
     - ../../../../../../libs/data-result
     - ../../../../../../libs/dependent-state

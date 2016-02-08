@@ -86,6 +86,7 @@ Library
                  , split
                  , dependent-state
                  , lens-utils
+                 , data-pool
 
 
 Executable luna
