@@ -4,6 +4,8 @@
 
 module Main where
 
+import           Prologue
+
 import           Empire.API.Data.DefaultValue (PortDefault (..), Value (..))
 import           Empire.API.Data.Node
 import           Empire.API.Data.NodeMeta
@@ -18,14 +20,7 @@ import           Empire.Data.AST              (ASTNode)
 import           Empire.Data.Graph
 import           Empire.Data.Library
 import           Empire.Empire
-import           Luna.Diagnostic.AST          (LabelAttrs (..), render, toGraphViz)
-import           Luna.Syntax.Builder
-import qualified Luna.Syntax.Builder          as Builder
-import qualified Luna.Syntax.Builder.Node     as NodeBuilder
-import qualified Luna.Syntax.Builder.Star     as StarBuilder
-import           Luna.Syntax.Layer.Labeled    (label)
-import           Luna.Syntax.Repr.Graph
-import           Prologue
+import           Luna.Diagnostic.Vis.GraphViz (render, toGraphViz)
 
 
 
@@ -34,6 +29,7 @@ test = do
     (pid, _) <- createProject (Just "dupa") "/no/elo"
     (lid, _) <- createLibrary pid (Just "xd") "/xd/xd"
 
+    print "tutti"
     n1 <- (view nodeId) <$> Graph.addNode pid lid "1"     (NodeMeta (1.0, 4.0))
     n2 <- (view nodeId) <$> Graph.addNode pid lid "2"     (NodeMeta (2.0, 3.0))
     np <- (view nodeId) <$> Graph.addNode pid lid "_.+ _"     (NodeMeta (3.0, 2.0))
