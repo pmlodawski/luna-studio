@@ -66,6 +66,7 @@ import qualified UI.Widget                       as UIT
 import qualified Empire.API.Data.DefaultValue    as DefaultValue
 import           Empire.API.Data.DefaultValue    (Value(..))
 import           Empire.API.Data.Node            (Node, NodeId)
+import qualified Empire.API.Data.Breadcrumb      as Breadcrumb
 import qualified Empire.API.Data.Node            as Node
 import           Empire.API.Data.Port            (InPort (..), Port (..), PortId (..))
 import qualified Empire.API.Data.Port            as Port
@@ -112,7 +113,7 @@ displayPorts id node = do
     oldPorts <- nodePorts id
     mapM_ UICmd.removeWidget oldPorts
 
-    groupId <- Node.controlsGroupId id
+    groupId <- Node.portControlsGroupId id
     portControls <- UICmd.children groupId
     mapM_ UICmd.removeWidget portControls
 
@@ -127,7 +128,11 @@ nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
                       workspace <- use Global.workspace
                       performIO $ BatchCmd.renameNode workspace nodeId name)
                   $ addHandler (UINode.FocusNodeHandler  $ \id -> zoom Global.uiRegistry (focusNode id))
-                  $ mempty
+                  $ addEnterNodeHandler where
+                        addEnterNodeHandler = case node ^. Node.nodeType of
+                            Node.FunctionNode _ -> addHandler (UINode.EnterNodeHandler $ enterNode $ Breadcrumb.Function $ Text.unpack $ node ^. Node.name) mempty
+                            Node.ModuleNode     -> addHandler (UINode.EnterNodeHandler $ enterNode $ Breadcrumb.Module   $ Text.unpack $ node ^. Node.name) mempty
+                            _                   -> mempty
 
 updateNode :: Node -> Command State ()
 updateNode node = do

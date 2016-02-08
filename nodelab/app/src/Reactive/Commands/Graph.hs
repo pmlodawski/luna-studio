@@ -178,25 +178,26 @@ portTypes = do
                 nodeId = node ^. Node.nodeId
 
 updatePortAngles :: Command Global.State ()
-updatePortAngles = do
-    connectionsMap <- use $ Global.graph . Graph.connectionsMap
-    nodePositions  <- zoom Global.uiRegistry nodePositionMap
-
-    let connectionTuples conn          = [ (OutPortRef' $ conn ^. Connection.src, InPortRef'  $ conn ^. Connection.dst)
-                                         , (InPortRef'  $ conn ^. Connection.dst, OutPortRef' $ conn ^. Connection.src) ]
-        connections                    = sortAndGroup . concat $ connectionTuples <$> connectionsMap
-
-    let calculateAngle portRef targets = sum $ fmap explode $ connectionVector nodePositions portRef <$> targets
-        connectedAngles                = Map.mapWithKey calculateAngle connections
-
-    defAngles <- defaultAngles
-
-    let angles = Map.union connectedAngles defAngles
-    portWidgets <- zoom Global.uiRegistry portRefToWidgetMap
-
-    forM_ (Map.toList angles) $ \(portRef, vector) -> do
-        let widgetId = portWidgets ^? ix portRef
-        forM_ widgetId $ \widgetId -> zoom Global.uiRegistry $ UICmd.update widgetId (PortModel.angleVector .~ vector)
+updatePortAngles = return ()
+-- do
+--     connectionsMap <- use $ Global.graph . Graph.connectionsMap
+--     nodePositions  <- zoom Global.uiRegistry nodePositionMap
+--
+--     let connectionTuples conn          = [ (OutPortRef' $ conn ^. Connection.src, InPortRef'  $ conn ^. Connection.dst)
+--                                          , (InPortRef'  $ conn ^. Connection.dst, OutPortRef' $ conn ^. Connection.src) ]
+--         connections                    = sortAndGroup . concat $ connectionTuples <$> connectionsMap
+--
+--     let calculateAngle portRef targets = sum $ fmap explode $ connectionVector nodePositions portRef <$> targets
+--         connectedAngles                = Map.mapWithKey calculateAngle connections
+--
+--     defAngles <- defaultAngles
+--
+--     let angles = Map.union connectedAngles defAngles
+--     portWidgets <- zoom Global.uiRegistry portRefToWidgetMap
+--
+--     forM_ (Map.toList angles) $ \(portRef, vector) -> do
+--         let widgetId = portWidgets ^? ix portRef
+--         forM_ widgetId $ \widgetId -> zoom Global.uiRegistry $ UICmd.update widgetId (PortModel.angleVector .~ vector)
 
 allNodes :: Command UIRegistry.State [WidgetFile Model.Node]
 allNodes = UIRegistry.lookupAllM
