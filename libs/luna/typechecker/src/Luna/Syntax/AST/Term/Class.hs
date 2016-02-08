@@ -25,6 +25,8 @@ import           Luna.Syntax.AST.Arg
 import qualified Data.Reprx                   as Repr
 import           Type.Bool
 import           Luna.Evaluation.Model
+import           Luna.Syntax.Name
+
 
 import Data.Record as X (Data)
 
@@ -71,12 +73,10 @@ import Data.Record as X (Data)
 -- === Properties === --
 ------------------------
 
-type family Name   a
 type family Source a
 type family Target a
 type family Args   a
 
-class HasName   a where name   :: Lens' a (Name   a)
 class HasSource a where source :: Lens' a (Source a)
 class HasTarget a where target :: Lens' a (Target a)
 class HasArgs   a where args   :: Lens' a (Args   a)
