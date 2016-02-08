@@ -51,6 +51,9 @@ intAs t = inferM t ∘ Term.int
 consAs :: TermBuilderAs t Cons m a => t -> NameInput a -> m a
 consAs t = inferM t ∘ Term.cons
 
+lamAs :: TermBuilderAs t Lam m a => t -> [Arg $ Input a] -> Input a -> m a
+lamAs t = inferM t ∘∘ Term.lam
+
 
 -- === Thunk === --
 

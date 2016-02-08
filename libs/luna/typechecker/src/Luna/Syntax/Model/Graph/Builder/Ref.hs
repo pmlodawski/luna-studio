@@ -29,13 +29,13 @@ with ref = withM ref ∘ (return <$>)
 follow :: Reader m (Edge src tgt) => Lens' (Edge src tgt) t -> Ref (Edge src tgt) -> m t
 follow f ptr = view f <$> read ptr
 
-reconnect :: (Reader m src, Writer m src, Connectible (Ref src) (Ref tgt) m, e ~ Connection (Ref src) (Ref tgt), Unregister m e)
-          => Ref src -> Lens' src e -> Ref tgt -> m e
-reconnect srcRef l tgtRef = do
-    src  <- read srcRef
-    unregister $ src ^. l
-    conn <- connection srcRef tgtRef
-    write srcRef $ src & l .~ conn
+reconnect :: (RefHandler m el, Connectible (Ref inp) (Ref el) m, conn ~ Connection (Ref inp) (Ref el), Unregister m conn)
+          => Ref el -> Lens' el conn -> Ref inp -> m conn
+reconnect elRef lens input = do
+    el  <- read elRef
+    unregister $ el ^. lens
+    conn <- connection input elRef
+    write elRef $ el & lens .~ conn
     return conn
 
 

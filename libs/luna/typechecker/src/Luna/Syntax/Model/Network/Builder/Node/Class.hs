@@ -1,7 +1,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE PolyKinds #-}
 
-module Luna.Syntax.Model.Network.Builder.Node.Class where
+module Luna.Syntax.Model.Network.Builder.Node.Class (module Luna.Syntax.Model.Network.Builder.Node.Class, module X) where
 
 import Prelude.Luna
 
@@ -12,7 +12,8 @@ import           Luna.Syntax.AST.Term                    hiding (Val, Lit, Thunk
 import           Luna.Syntax.Model.Graph
 import           Luna.Syntax.Model.Graph.Builder.Ref
 import           Luna.Syntax.Model.Layer
-import           Luna.Syntax.Model.Network.Builder.Term  as Term
+import qualified Luna.Syntax.Model.Network.Builder.Term  as Term
+import           Luna.Syntax.Model.Network.Builder.Term  as X (arg, TermBuilder)
 import           Type.Inference
 
 
@@ -28,12 +29,16 @@ type NodeInferable        m node = Inferable ELEMENT   (Ref (Node node)) m
 type InferredNodeBuilder (t :: k) m node = (NodeBuilder t m node, NodeInferable m node)
 
 type TermNode (t :: k) m node = ( NodeBuilder t m node
-                                , NodeLinkable   m node
-                                , NodeReader     m node
-                                , NodeWriter     m node
-                                , Covered          node
-                                , MonadFix       m
+                                , TermCtx       m node
                                 )
+
+type TermCtx m node = ( NodeLinkable   m node
+                      , NodeReader     m node
+                      , NodeWriter     m node
+                      , Covered          node
+                      , MonadFix       m
+                      , IsString (NameInput (Ref (Node node)))
+                      )
 
 type LitLike a = ( Matches (Uncovered a) '[ANY, Star, Str, Term.Num], Covered a)
 
@@ -56,6 +61,9 @@ int = node ∘ Term.int
 
 cons :: NodeBuilder Cons m (ls :< term) => NameInput (Ref (Node $ ls :< term)) -> m (Ref (Node $ ls :< term))
 cons = node ∘ Term.cons
+
+lam :: NodeBuilder Lam m (ls :< term) => [Arg $ Ref (Node $ ls :< term)] -> Ref (Node $ ls :< term) -> m (Ref (Node $ ls :< term))
+lam = node ∘∘ Term.lam
 
 acc :: NodeBuilder Acc m (ls :< term) => NameInput (Ref (Node $ ls :< term)) -> Ref (Node $ ls :< term) -> m (Ref (Node $ ls :< term))
 acc = node ∘∘ Term.acc

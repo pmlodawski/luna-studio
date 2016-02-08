@@ -104,7 +104,8 @@ int = curryN $ buildTerm (Proxy :: Proxy Num)
 
 -- === Val === --
 
-type instance BuildArgs Cons   n = OneTuple (NameInput n)
+type instance BuildArgs Cons n = OneTuple (NameInput n)
+type instance BuildArgs Lam  n = ([Arg (Input n)], Input n)
 
 instance ( name ~ NameInput a
          , MonadFix m
@@ -116,10 +117,23 @@ instance ( name ~ NameInput a
         cname <- nameConnection name out
         return out
 
+instance ( inp ~ Input a
+         , MonadFix m
+         , Connectible inp a m
+         , ElemBuilder (Lam $ Connection inp a) m a
+         ) => TermBuilder Lam m a where
+    buildTerm p (args,res) = mdo
+        out   <- buildElem $ Lam cargs cres
+        cargs <- (mapM ∘ mapM) (flip connection out) args
+        cres  <- connection res out
+        return out
+
+
 cons :: TermBuilder Cons m a => NameInput a -> m a
 cons = curryN $ buildTerm (Proxy :: Proxy Cons)
 
--- arr -- TODO (Maybe we should change the arr signature?)
+lam :: TermBuilder Lam m a => [Arg $ Input a] -> Input a -> m a
+lam = curryN $ buildTerm (Proxy :: Proxy Lam)
 
 
 -- === Thunk === --

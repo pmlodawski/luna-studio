@@ -12,6 +12,7 @@ star   = inferNodeM    Node.star
 str    = inferNodeM ∘  Node.str
 int    = inferNodeM ∘  Node.int
 cons   = inferNodeM ∘∘ Node.cons
+lam    = inferNodeM ∘∘ Node.lam
 acc    = inferNodeM ∘∘ Node.acc
 app    = inferNodeM ∘∘ Node.app
 var    = inferNodeM ∘  Node.var

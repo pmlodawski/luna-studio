@@ -160,41 +160,25 @@ runInfTest g = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers a :<
 
 
 
---type NodeBuilder t m ls term = ElemBuilder t m (Ref (Node $ (ls :< term)))
-
-inferNodeM = inferM ELEMENT
-
-
-star_n :: NodeBuilder Star m (ls :< t) => m (Ref $ Node $ ls :< t)
-star_n = node star
-
-unify_n :: NodeBuilder Unify m (ls :< t) => Ref (Node $ ls :< t) -> Ref (Node $ ls :< t) -> m (Ref (Node $ ls :< t))
-unify_n = node ∘∘ unify
-
-star_ni :: InferredNodeBuilder Star m (ls :< t) => m (Ref (Node $ ls :< t))
-star_ni = inferNodeM star_n
-
-unify_ni :: InferredNodeBuilder Unify m (ls :< t) => Ref (Node $ ls :< t) -> Ref (Node $ ls :< t) -> m (Ref (Node $ ls :< t))
-unify_ni = inferNodeM ∘∘ unify_n
 
 main :: IO ()
 main = do
-    (star, g :: NetGraph ()) <- prebuild
-    print star
-    print g
-    putStrLn "\n--------------\n"
-    (s,g') <- foo g
-    print g'
+    --(star, g :: NetGraph ()) <- prebuild
+    --print star
+    --print g
+    --putStrLn "\n--------------\n"
+    --(s,g') <- foo g
+    --print g'
 
-    title "graph sorting"
-    print $ Sort.sortBy (const True) g'
+    --title "graph sorting"
+    --print $ Sort.sortBy (const True) g'
 
-    title "params reading"
-    print $ g' # s
+    --title "params reading"
+    --print $ g' # s
 
-    renderAndOpen [("g", g')]
+    --renderAndOpen [("g", g')]
 
-    --S.main
+    S.main
 
 -------------------------
 -- === Benchmarks === ---
