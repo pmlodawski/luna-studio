@@ -1,5 +1,6 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE CPP                       #-}
 
 module Luna.Compilation.Pass.Inference.Struct where
 
@@ -25,6 +26,52 @@ import qualified Luna.Compilation.Stage.TypeCheck as TypeCheck
 import           Luna.Syntax.Name.Ident.Pool      (MonadIdentPool, newVarIdent')
 import qualified Luna.Syntax.Name as Name
 
+
+#define PassCtx(m,ls,term) ( term ~ Draft Static               \
+                           , ne   ~ Link (ls :< term)          \
+                           , Prop Type   (ls :< term) ~ Ref ne \
+                           , Castable       e ne               \
+                           , MonadBuilder n e m                \
+                           , HasProp Type     (ls :< term)     \
+                           , NodeInferable  m (ls :< term)     \
+                           , TermNode Var   m (ls :< term)     \
+                           , TermNode Lam   m (ls :< term)     \
+                           , MonadIdentPool m                  \
+                           )
+
+
+-- FIXME[WD]: Narrow the Ref type to support only App terms
+buildAppType :: PassCtx(m,ls,term) => Ref (Node $ (ls :< term)) -> m ()
+buildAppType appRef = do
+    appNode <- read appRef
+    caseTest (uncover appNode) $ do
+        match $ \(App srcConn argConns) -> do
+            src      <- follow source srcConn
+            args     <- (mapM ∘ mapM) (follow source) argConns
+            specArgs <- (mapM ∘ mapM) getTypeSpec args
+            out      <- var' =<< newVarIdent'
+            l        <- lam' specArgs out
+            reconnect appRef (prop Type) out
+            reconnect src    (prop Type) l
+        match $ \ANY -> impossible
+    return ()
+
+-- | Returns a concrete type of a node
+--   If the type is just universe, create a new type variable
+getTypeSpec :: PassCtx(m,ls,term) => Ref (Node $ (ls :< term)) -> m (Ref (Node $ (ls :< term)))
+getTypeSpec ref = do
+    val <- read ref
+    tp  <- follow source $ val # Type
+    if tp /= universe then return tp else do
+        ntp <- var' =<< newVarIdent'
+        reconnect ref (prop Type) ntp
+        return ntp
+
+
+
+
+
+
 --foo :: forall a. Show a => NetGraph a -> IO (Ref $ Node (NetLayers a :< Draft Static), NetGraph a)
 ----foo :: NetGraph -> IO ((), NetGraph)
 --foo g = runNetworkBuilderT g
@@ -46,8 +93,10 @@ data Foo = Foo deriving (Show)
 --var :: NodeBuilder Var m (ls :< term) => NameInput (Ref (Node $ ls :< term)) -> m (Ref (Node $ ls :< term))
 
 
-myg :: ( ls   ~ NetLayers Foo
-       , term ~ Draft Static
+
+
+myg :: ( -- ls   ~ NetLayers Foo
+        term ~ Draft Static
 
        , MonadIO       m
        , NodeInferable m (ls :< term)
@@ -71,53 +120,6 @@ myg = do
 
 
 universe = Ref $ Ptr 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?
-
--- FIXME[WD]: Narrow the Ref type to support only App terms
-buildAppType :: ( ls   ~ NetLayers Foo
-                , term ~ Draft Static
-                , ne   ~ Link (ls :< term)
-
-                , Castable e ne
-                , MonadIO m
-                , MonadBuilder n e m
-                , NodeInferable  m (ls :< term)
-                , TermNode Var   m (ls :< term)
-                , TermNode Lam   m (ls :< term)
-                , MonadIdentPool m
-                ) => Ref (Node $ (ls :< term)) -> m ()
-buildAppType appRef = do
-    appNode <- read appRef
-    caseTest (uncover appNode) $ do
-        match $ \(App srcConn argConns) -> do
-            args     <- (mapM ∘ mapM) (follow source) argConns
-            specArgs <- (mapM ∘ mapM) getTypeSpec args
-            out      <- var' =<< newVarIdent'
-            l        <- lam' specArgs out
-            src      <- follow source srcConn
-            reconnect appRef (prop Type) out
-            reconnect src    (prop Type) l
-        match $ \ANY -> impossible
-    return ()
-
--- | Returns a concrete type of a node
---   If the type is just universe, create a new type variable
-getTypeSpec :: ( ls   ~ NetLayers Foo
-               , term ~ Draft Static
-               , ne   ~ Link (ls :< term)
-               , Castable       e ne
-               , MonadBuilder n e m
-               , NodeInferable  m (ls :< term)
-               , TermNode Var   m (ls :< term)
-               , MonadIdentPool m
-               , MonadIO        m
-               ) => Ref (Node $ (ls :< term)) -> m (Ref (Node $ (ls :< term)))
-getTypeSpec ref = do
-    val <- read ref
-    tp  <- follow source $ val # Type
-    if tp /= universe then return tp else do
-        ntp <- var' =<< newVarIdent'
-        reconnect ref (prop Type) ntp
-        return ntp
 
 
 prebuild :: IO (Ref $ Node (NetLayers Foo :< Draft Static), NetGraph Foo)
@@ -145,6 +147,12 @@ main = do
                   , ("g2", g'')
                   ]
     print "hej ho!"
+
+
+
+
+
+
 
 
 
