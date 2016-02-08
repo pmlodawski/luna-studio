@@ -1,4 +1,5 @@
 #!/bin/sh
+mkdir -p dist/doc/images/overview/
 find src/Luna             -name '*.hs' | xargs graphmod -q --no-cluster -C Luna.Compilation -C Luna.Diagnostic -C Luna.Evaluation -C Luna.Library -C Luna.Syntax > dist/doc/images/overview/top-level.dot
 find src/Luna             -name '*.hs' | xargs graphmod -q                                                                                                       > dist/doc/images/overview/detailed.dot
 find src/Luna/Compilation -name '*.hs' | xargs graphmod -q --no-cluster                                                                                          > dist/doc/images/overview/compilation.dot
