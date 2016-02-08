@@ -32,49 +32,40 @@ import           Luna.Syntax.Model.Network.Builder.Type       (MonadTypeBuilder)
 import           Luna.Syntax.Model.Network.Class              (Network)
 import           Luna.Syntax.Model.Network.Term
 
+import           Luna.Syntax.Model.Network.Builder.Node.Inferred hiding (cons)
 
 
--- type ASTNode       = Node NetNode
--- type ASTEdge       = Link NetNode
--- type AST           = NetGraph
+-- myg :: ( ls   ~ NetLayers Foo
+--        , term ~ Draft Static
 
--- type NodeRef       = Ref ASTNode
--- type EdgeRef       = Ref ASTEdge
+--        , MonadIO       m
+--        , NodeInferable m (ls :< term)
+--        , TermNode Star m (ls :< term)
+--        , TermNode Var  m (ls :< term)
+--        , TermNode App  m (ls :< term)
+--        ) => m (Ref (Node $ (ls :< term)))
 
--- type ASTOp m = ( MonadIO m
---                , MonadFix m
---                -- , MonadError Error m
---                , Destructor m NodeRef
---                , MonadBuilder (NetLayers :< Raw) ASTEdge m
---                , MonadSelfBuilder ASTNode m
---                , MonadTypeBuilder ASTNode m
---                , ElemBuilder Star              m NodeRef
---                , ElemBuilder Blank             m NodeRef
---                , ElemBuilder (Acc Str EdgeRef) m NodeRef
---                , ElemBuilder (App     EdgeRef) m NodeRef
---                , ElemBuilder (Unify   EdgeRef) m NodeRef
---                , ElemBuilder (Var Str)         m NodeRef
---                , Connectible NodeRef NodeRef m
---                , Reader m (Node (NetLayers :< Draft Static))
---                )
 
--- assignLiteralTypes :: forall m b term. ( MonadIO m
---                                        , b ~ Ref (Node term)
---                                        , Monad m
---                                        , ElemBuilder Star m b
---                                        , ElemBuilder (Cons Str) m b
---                                        , Reader m (Node term)
---                                        , Covered term
---                                        , Matches (Uncovered term) '[ANY, Star])
 
-instance Monad m => Destructor m (Layer (Network ls) (Meta meta) a) where
-    destruct _ = return ()
+createLiteralTypes3 :: forall m a b . ( MonadIO m
+                                     , b ~ Ref (StaticNode a)
+                                     , Monad m
+                                     , TermBuilder Cons m b
+                                     , Reader m (StaticNode a)
+                                     , Covered (StaticDraft a)
+                                     , Matches (Uncovered (StaticDraft a)) '[ANY, Star])
+                   => Proxy b
+                   -> m (Ref (StaticNode a), Ref (StaticNode a))
+createLiteralTypes3 proxy = do
+    consIntRef <- cons ("Int"    :: Str) :: m b
+    consStrRef <- cons ("String" :: Str) :: m b
+    return (consIntRef, consStrRef)
 
-instance Monad m => Destructor m (Layer (Network ls) Markable a) where
-    destruct _ = return ()
 
-type StaticDraft a = NetLayers a :< Draft Static
-type StaticNode  a = Node (StaticDraft a)
+
+
+type StaticDraft     a = NetLayers a :< Draft Static
+type StaticNode      a = Node (StaticDraft a)
 type StaticFullDraft a = ('[Type, Succs, Markable, Meta a] :< Draft Static)
 
 type ASTOp m a b n e c = ( MonadIO m
@@ -96,6 +87,8 @@ type ASTOp m a b n e c = ( MonadIO m
                        , Unregister m c
                        )
 
+
+
 assignLiteralTypes :: ASTOp m a b n e c
                    => Proxy b
                    -> Ref (StaticNode a)
@@ -103,18 +96,6 @@ assignLiteralTypes :: ASTOp m a b n e c
 assignLiteralTypes proxy ref = do
     (consIntRef, consStrRef) <- createLiteralTypes proxy
     assignLiteralTypesWithTypes proxy consIntRef consStrRef ref
-    cleanUpLiteralTypes         proxy consIntRef consStrRef
-    return ()
-
-
-reconnect2 :: (Reader m src, Writer m src, Connectible (Ref tgt) (Ref src) m, e ~ Connection (Ref tgt) (Ref src), Unregister m e)
-          => Ref src -> Lens' src e -> Ref tgt -> m e
-reconnect2 srcRef l tgtRef = do
-    src  <- read srcRef
-    unregister $ src ^. l
-    conn <- connection tgtRef srcRef
-    write srcRef $ src & l .~ conn
-    return conn
 
 pre :: ASTOp m a b n e c
     => Proxy b
@@ -132,23 +113,12 @@ assignLiteralTypesWithTypes :: ASTOp m a b n e c
                             -> Ref (StaticNode a)
                             -> m ()
 assignLiteralTypesWithTypes proxy consIntRef consStrRef ref = do
-    putStrLn $ "assignLiteralTypesWithTypes " <> show ref
     node <- read ref
-    let uncNode = uncover node
-    caseTest uncNode $ do
-        match $ \(Str str) -> do
-            tpeRef <- follow source $ node ^. prop Type
-            reconnect2 ref (prop Type) consStrRef
-            putStrLn $ "tpeRef " <> show tpeRef
-            return ()
-        match $ \(Num num) -> do
-            tpeRef <- follow source $ node ^. prop Type
-            reconnect2 ref (prop Type) consIntRef
-            putStrLn $ "tpeRef " <> show tpeRef
-            return ()
-        match $ \ANY -> return ()
+    caseTest (uncover node) $ do
+        match $ \(Str str) -> void $ reconnect ref (prop Type) consStrRef
+        match $ \(Num num) -> void $ reconnect ref (prop Type) consIntRef
+        match $ \ANY       -> return ()
     mapM_ (assignLiteralTypesWithTypes proxy consIntRef consStrRef) =<< pre proxy ref
-    return ()
 
 createLiteralTypes :: forall m a b . ( MonadIO m
                                      , b ~ Ref (StaticNode a)
@@ -163,21 +133,6 @@ createLiteralTypes proxy = do
     consIntRef <- cons ("Int"    :: Str) :: m b
     consStrRef <- cons ("String" :: Str) :: m b
     return (consIntRef, consStrRef)
-
-cleanUpLiteralTypes :: forall m a b . ( MonadIO m
-                                      , b ~ Ref (StaticNode a)
-                                      , Monad m
-                                      , Reader m (StaticNode a)
-                                      , Covered (StaticDraft a)
-                                      , Matches (Uncovered (StaticDraft a)) '[ANY, Star])
-                    => Proxy b
-                    -> Ref (StaticNode a)
-                    -> Ref (StaticNode a)
-                    -> m ()
-cleanUpLiteralTypes proxy consIntRef consStrRef = do
---     safeRemove consIntTpe
---     safeRemove consStringTpe
-    return ()
 
 
 

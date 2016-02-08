@@ -1,49 +1,28 @@
-{-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE FunctionalDependencies    #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE PartialTypeSignatures     #-}
-{-# LANGUAGE RankNTypes                #-}
-{-# LANGUAGE RecursiveDo               #-}
-{-# LANGUAGE ScopedTypeVariables       #-}
-{-# LANGUAGE UndecidableInstances      #-}
-
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
 
-import           Prologue                                   hiding (Num, cons, read)
+import           Prelude.Luna                                    hiding (Num)
 
-import           Control.Monad.Error                        (MonadError)
-import           Data.Layer.Cover
-import           Data.Prop
-import           Data.Record                                hiding (Layout)
-
-import           Luna.Compilation.Passes.Inference.Literals
-import           Luna.Diagnostic.Vis.GraphViz
-import           Luna.Evaluation.Runtime                    (Dynamic, Static)
-import           Luna.Syntax.AST.Term                       hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
-import qualified Luna.Syntax.AST.Term                       as Term
+import           Luna.Evaluation.Runtime                         (Dynamic, Static)
 import           Luna.Syntax.Model.Graph
 import           Luna.Syntax.Model.Layer
-import           Luna.Syntax.Model.Network.Builder          (MonadBuilder)
-import           Luna.Syntax.Model.Network.Builder.Self     (MonadSelfBuilder)
-import           Luna.Syntax.Model.Network.Builder.Term
-import           Luna.Syntax.Model.Network.Builder.Type     (MonadTypeBuilder)
+import           Luna.Syntax.Model.Network.Builder.Node          (NodeInferable, TermNode)
+import           Luna.Syntax.Model.Network.Builder.Node.Inferred
+import           Luna.Syntax.Model.Network.Builder.Term.Class    (NetGraph, NetLayers, runNetworkBuilderT)
 import           Luna.Syntax.Model.Network.Term
 
--- import           Luna.Syntax.Model.Graph.Term    (NetGraph, NetNode)
--- import           Luna.Syntax.Model.Layer.Class   (Succs, Type)
+import           Data.Construction
+import           Data.Prop
+import           Data.Record
+import           Luna.Diagnostic.Vis.GraphViz
+import           Luna.Syntax.AST.Term                            hiding (source)
+import           Luna.Syntax.Model.Graph.Builder
+import           Luna.Syntax.Model.Network.Class                 ()
+import           Type.Inference
 
 
--- ====================================
-
--- typed a t = StarBuilder.with (const $ Just t) a
-
--- instance LabelAttrs (Labeled2 Label (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))) where
---     labelAttrs n = []
---         -- if n ^. label . Label.checked then [GV.color GVC.Magenta]
---         --                               else []
-
--- ====================================
 
 
 renderAndOpen lst = do
@@ -51,134 +30,86 @@ renderAndOpen lst = do
     open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
 
 
--- title s = putStrLn $ "\n" <> "-- " <> s <> " --"
+data Foo = Foo deriving (Show)
 
--- data IDT a = IDT a deriving (Show)
-
-
--- data MyGraph (t :: * -> *) = MyGraph deriving (Show)
-
--- type instance Layout (MyGraph t) term rt = t (Term (MyGraph t) term rt)
-
-prebuild :: Show a => IO (Ref $ Node (NetLayers a :< Draft Static), NetGraph a)
-prebuild = runNetworkBuilderT def $ star
+--var :: NodeBuilder Var m (ls :< term) => NameInput (Ref (Node $ ls :< term)) -> m (Ref (Node $ ls :< term))
 
 
--- data ImgAttr = ImgAttr deriving (Show)
--- type instance Attr ImgAttr (Cover x) = String
-
--- emptyNodeList :: [Ref Node]
--- emptyNodeList = []
-
--- sampleGraph1 :: ((Ref Node, SymbolMap (Network Label (Maybe Int))), Network Label (Maybe Int))
--- sampleGraph1 = runIdentity
---       $ flip StarBuilder.evalT Nothing
---       $ flip Builder.runT def
---       $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
---       $ do
---             nameInt       <- _string "Int"
---             nameString    <- _string "String"
---             namePlus      <- _string "+"
---             nameConc      <- _string "++"
---             nameLen       <- _string "len"
-
---             consIntTpe    <- cons nameInt
---             consStringTpe <- cons nameString
-
---             arrPlusTpe    <- arrow [consIntTpe] Map.empty consIntTpe
---             arrConcTpe    <- arrow [consStringTpe] Map.empty consStringTpe
---             arrLenTpe     <- arrow emptyNodeList Map.empty consIntTpe
-
---             i1 <- _int 2 -- `typed` arrLenTpe
---             i2 <- _int 3
---             i3 <- _int 4
---             s1 <- _stringVal "abc" -- `typed` consStringTpe
---             s2 <- _stringVal "def"
---             s3 <- _stringVal "ghi"
-
---             accPlus1a  <- accessor namePlus i1
---             appPlus1a  <- app accPlus1a [arg i2] `typed` arrPlusTpe
-
---             accPlus1b  <- accessor namePlus i3
---             appPlus1b  <- app accPlus1b [arg appPlus1a] `typed` arrPlusTpe
-
---             accConc1a  <- accessor nameConc s2
---             appConc1a  <- app accConc1a [arg s1] `typed` arrConcTpe
-
---             accConc1b  <- accessor nameConc appConc1a
---             appConc1b  <- app accConc1b [arg s3] `typed` arrConcTpe
-
---             accLen    <- accessor nameLen appConc1b
---             appLen    <- app accLen emptyArgList `typed` arrLenTpe
-
---             accPlus2  <- accessor namePlus appPlus1b
---             appPlus2  <- app accPlus2 [arg appLen] `typed` arrPlusTpe
-
---             return (appPlus1b, def)
---             -- return (appPlus2, def)
-
--- runGraph gr sm = runIdentityT
---             . flip SymbolBuilder.evalT sm
---             . flip StarBuilder.evalT Nothing
---             . flip Builder.runT gr
---             . flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
-
--- literalsTest :: Ref Node -> SymbolMap (Network Label (Maybe Int)) -> Network Label (Maybe Int) -> IO ((), Network Label (Maybe Int))
--- literalsTest i sm gr = runGraph gr sm $ do
---     Literals.assignLiteralTypes i
---     return ()
-
--- applicationsTest :: Ref Node -> SymbolMap (Network Label (Maybe Int)) -> Network Label (Maybe Int) -> IO ((), Network Label (Maybe Int))
--- applicationsTest i sm gr = runGraph gr sm $ do
---     Applications.assignApplicationTypes i
---     return ()
-
-proxy :: Proxy (Ref $ Node (NetLayers () :< Draft Static))
-proxy = Proxy
-
-assignLiteralTypesTest :: (Ref $ Node (NetLayers () :< Draft Static))
-                       -> NetGraph ()
-                       -> IO ((), NetGraph ())
-assignLiteralTypesTest ref g = runNetworkBuilderT g $ assignLiteralTypes proxy ref
-
-sampleGraph2 :: Show a => NetGraph a -> IO (Ref $ Node (NetLayers a :< Draft Static), NetGraph a)
-sampleGraph2 g = runNetworkBuilderT g $ do
+myg :: ( ls   ~ NetLayers Foo
+       , term ~ Draft Static
+       , MonadIO       m
+       , NodeInferable m (ls :< term)
+       , TermNode Star m (ls :< term)
+       , TermNode Var  m (ls :< term)
+       , TermNode Num  m (ls :< term)
+       , TermNode Str  m (ls :< term)
+       , TermNode App  m (ls :< term)
+       )
+    => m (Ref (Node $ (ls :< term)))
+myg = do
     i1 <- int 2
     i2 <- int 3
     i3 <- int 4
     s1 <- str "abc"
     s2 <- str "def"
     s3 <- str "ghi"
+    return i1
 
-    accPlus1a  <- acc "+" i1
-    appPlus1a  <- app accPlus1a [arg i2]
+    -- a  <- var' "a"
+    -- b  <- var' "b"
+    -- r  <- app' f [arg a, arg b]
 
-    accPlus1b  <- acc "+" i3
-    appPlus1b  <- app accPlus1b [arg appPlus1a]
 
-    accConc1a  <- acc "++" s2
-    appConc1a  <- app accConc1a [arg s1]
+universe = Ref $ Ptr 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?
 
-    accConc1b  <- acc "++" appConc1a
-    appConc1b  <- app accConc1b [arg s3]
+assignLiteralTypes :: ( ls   ~ NetLayers Foo
+                , term ~ Draft Static
+                , ne   ~ Link (ls :< term)
+                , Castable e ne
+                , MonadIO m
+                , MonadBuilder n e m
+                , NodeInferable m (ls :< term)
+                , TermNode Var  m (ls :< term)
+                , TermNode Lam  m (ls :< term)
+                ) => Ref (Node $ (ls :< term)) -> m ()
+assignLiteralTypes appRef = do
+    appNode <- read appRef
+    -- caseTest (uncover appNode) $ do
+    --     match $ \(App srcConn argConns) -> do
+    --         args     <- (mapM . mapM) (follow source) argConns
+    --         specArgs <- (mapM . mapM) getTypeSpec args
+    --         out      <- var' "out"
+    --         l        <- lam' specArgs out
 
-    accLen     <- acc "len" appConc1b
-    appLen     <- app accLen []
+    --         reconnect appRef (prop Type) out
 
-    accPlus2   <- acc "+" appPlus1b
-    appPlus2   <- app accPlus2 [arg appLen]
+    --         src     <- follow source srcConn
+    --         reconnect src (prop Type) l
+    --         return ()
 
-    -- print appPlus2
-    -- return i2
-    return appPlus2
+    --     match $ \ANY -> impossible
 
-main :: IO ()
+    return ()
+
+
+prebuild :: IO (Ref $ Node (NetLayers Foo :< Draft Static), NetGraph Foo)
+prebuild = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers Foo :< Draft Static)))
+         $ runNetworkBuilderT def
+         $ do
+    star
+
+
+buildBase :: NetGraph Foo -> IO (Ref (Node $ (NetLayers Foo :< Draft Static)), NetGraph Foo)
+buildBase g = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers Foo :< Draft Static)))
+       $ runNetworkBuilderT g myg
+
+-- runPass :: NetGraph Foo -> IO (Ref (Node $ (NetLayers Foo :< Draft Static)), NetGraph Foo)
+runPass g m = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers Foo :< Draft Static)))
+        $ runNetworkBuilderT g m
+
 main = do
-    (star, g :: NetGraph ()) <- prebuild
-    -- print star
-    -- putStrLn "\n--------------\n"
-    -- print g
-    (s1, g' ) <- sampleGraph2 g
-    (s2, g'') <- assignLiteralTypesTest s1 g'
-    -- print g'
-    renderAndOpen [("g", g'')]
+    (_, g)   <- prebuild
+    (f, g')  <- buildBase g
+    (_, g'') <- runPass g' (assignLiteralTypes f)
+    renderAndOpen [("g", g')]
+    print "done"
