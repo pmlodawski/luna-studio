@@ -28,7 +28,7 @@ packages:
 - extra-dep: true
   location: {commit: 345c1cdf5bef30631d3eadd55c326086ea0b6f71, git: 'https://github.com/wdanilo/data-base.git'}
 - extra-dep: true
-  location: {commit: bbd505039ce0652109bde0738f22b4a1b69d8b86, git: 'https://github.com/wdanilo/data-construction.git'}
+  location: {commit: 13c735377b61d6ab634f689e88612cf68d6a4111, git: 'https://github.com/wdanilo/data-construction.git'}
 - extra-dep: true
   location: {commit: 739f5931184259b51ef4c7a7218d031e82203e02, git: 'https://github.com/wdanilo/data-layer.git'}
 - extra-dep: true
@@ -42,16 +42,16 @@ packages:
 - extra-dep: true
   location: {commit: cab65d139d158f10c7c5b41db4aaedef945b11b2, git: 'https://github.com/wdanilo/impossible.git'}
 - extra-dep: true
-  location: {commit: 4b541f7d972b8a39e0cdf21ebe30cf55cdcb8069, git: 'https://github.com/wdanilo/lens-utils.git'}
+  location: {commit: 508ef1ccf6cd7ab1e1cd8e782170ffab19e526a5, git: 'https://github.com/wdanilo/lens-utils.git'}
 - extra-dep: true
   location: {commit: 8cb9cbd7e87f5c5223dc171ae97762e2a535483b, git: 'https://github.com/wdanilo/poly-control.git'}
 - extra-dep: true
-  location: {commit: 816f5a5c59eba4c3ba967a88604805ecce421534, git: 'https://github.com/wdanilo/prologue.git'}
+  location: {commit: 1c8333916ab64f754059e3277ec724a22853c623, git: 'https://github.com/wdanilo/prologue.git'}
 - extra-dep: true
   location: {commit: eee76a96bdd1d442299cecdcd1e445d76eef3b1a, git: 'https://github.com/wdanilo/type-cache.git'}
 - extra-dep: true
   location: {commit: 7e91afcbb940eb9822e034577bf72397924d4599, git: 'https://github.com/wdanilo/typelevel.git'}
 - extra-dep: true
-  location: {commit: bbd505039ce0652109bde0738f22b4a1b69d8b86, git: 'https://github.com/wdanilo/data-construction.git'}
+  location: {commit: 13c735377b61d6ab634f689e88612cf68d6a4111, git: 'https://github.com/wdanilo/data-construction.git'}
 - location: {commit: f3859bee900d6be95b1141e828acb2bb53821164, git: 'https://github.com/wdanilo/data-member.git'}
 resolver: lts-4.1
