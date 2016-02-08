@@ -23,14 +23,14 @@ import           Luna.Syntax.Model.Graph.Builder
 import           Luna.Syntax.Model.Network.Class                 ()
 import           Type.Inference
 
+import           Luna.Compilation.Passes.Inference.Literals      (assignLiteralTypes, Foo)
+
 
 
 
 renderAndOpen lst = do
     flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
     open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
-
-data Foo = Foo deriving (Show)
 
 graph1 :: ( ls   ~ NetLayers Foo
           , term ~ Draft Static
@@ -75,32 +75,6 @@ graph1 = do
     return appPlus2
     -- return i1
 
-
-universe = Ref $ Ptr 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?
-
-assignLiteralTypes :: ( ls   ~ NetLayers Foo
-                      , term ~ Draft Static
-                      , ne   ~ Link (ls :< term)
-                      , Castable e ne
-                      , MonadIO m
-                      , MonadBuilder n e m
-                      , NodeInferable m (ls :< term)
-                      , TermNode Cons m (ls :< term)
-                      , TermNode Lam  m (ls :< term)
-                      )
-                   => Ref (Node $ (ls :< term)) -> m ()
-assignLiteralTypes ref = do
-    consIntRef <- cons "Int"
-    consStrRef <- cons "String"
-
-    node <- read ref
-    caseTest (uncover node) $ do
-        match $ \(Str str) -> void $ reconnect ref (prop Type) consStrRef
-        match $ \(Num num) -> void $ reconnect ref (prop Type) consIntRef
-        match $ \ANY       -> return ()
-    return ()
-
-
 prebuild :: IO (Ref $ Node (NetLayers Foo :< Draft Static), NetGraph Foo)
 prebuild = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers Foo :< Draft Static)))
          $ runNetworkBuilderT def
@@ -119,5 +93,5 @@ main = do
     (_, g)   <- prebuild
     (f, g')  <- buildBase g
     (_, g'') <- runPass g' (assignLiteralTypes f)
-    renderAndOpen [("g", g')]
+    renderAndOpen [("g", g'')]
     print "done"
