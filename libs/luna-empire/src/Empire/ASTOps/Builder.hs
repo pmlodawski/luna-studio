@@ -134,17 +134,15 @@ unifyWithName name node = do
     nameVar <- Builder.var (Str name) :: m NodeRef
     Builder.unify nameVar node
 
-withUnifyNode :: ASTOp m => NodeRef -> (Unify (EdgeRef) -> m a) -> m a
-withUnifyNode nodeRef op = do
-    node <- Builder.read nodeRef
-    caseTest (uncover node) $ do
-        match $ \x   -> op (x :: Unify (EdgeRef))
-        match $ \ANY -> throwError "Not a unify node."
-
 rightUnifyOperand :: Lens' ASTNode (EdgeRef)
 rightUnifyOperand = covered . lens rightGetter rightSetter where
     rightGetter u   = caseTest u $ match $ \(Unify _ r) -> r
     rightSetter u r = caseTest u $ match $ \(Unify l _) -> cons $ Unify l r
+
+leftUnifyOperand :: Lens' ASTNode (EdgeRef)
+leftUnifyOperand = covered . lens rightGetter rightSetter where
+    rightGetter u   = caseTest u $ match $ \(Unify l _) -> l
+    rightSetter u l = caseTest u $ match $ \(Unify _ r) -> cons $ Unify l r
 
 varName :: Lens' ASTNode String
 varName = covered . lens nameGetter nameSetter where
