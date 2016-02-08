@@ -17,3 +17,4 @@ instance ToJSON RadioButton
 instance IsDisplayObject RadioButton where
     widgetPosition = position
     widgetSize     = size
+    widgetVisible  = to $ const True

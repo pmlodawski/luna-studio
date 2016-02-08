@@ -24,7 +24,8 @@ layoutGraph :: Command State ()
 layoutGraph = do
     newNodes  <- moveNodes
     workspace <- use Global.workspace
-    performIO $ BatchCmd.updateNodes workspace newNodes
+    return ()
+    -- performIO $ BatchCmd.updateNodes workspace newNodes
 
 moveNodes :: Command State [Node]
 moveNodes = do

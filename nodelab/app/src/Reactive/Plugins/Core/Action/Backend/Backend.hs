@@ -28,14 +28,14 @@ toAction _ = Nothing
 
 isModule _ = False
 
-insertSerializationMode :: Node -> Command State ()
-insertSerializationMode node = when (not $ isModule node)
-                                    $ zoom Global.workspace $ BatchCmd.insertSerializationMode node
-
-handleNextSerializationMode :: Command State ()
-handleNextSerializationMode = do
-    nodes <- use $ Global.graph . Graph.nodes
-    let nodesCount = length $ filter (not . isModule) nodes
-    Global.workspace . Workspace.interpreterState %= (Workspace.addSerializationMode nodesCount)
-    readyState <- use $ Global.workspace . Workspace.interpreterState
-    when (readyState == AllSet) $ zoom Global.workspace BatchCmd.runMain
+-- insertSerializationMode :: Node -> Command State ()
+-- insertSerializationMode node = when (not $ isModule node)
+--                                     $ zoom Global.workspace $ BatchCmd.insertSerializationMode node
+--
+-- handleNextSerializationMode :: Command State ()
+-- handleNextSerializationMode = do
+--     nodes <- use $ Global.graph . Graph.nodes
+--     let nodesCount = length $ filter (not . isModule) nodes
+--     Global.workspace . Workspace.interpreterState %= (Workspace.addSerializationMode nodesCount)
+--     readyState <- use $ Global.workspace . Workspace.interpreterState
+--     when (readyState == AllSet) $ zoom Global.workspace BatchCmd.runMain

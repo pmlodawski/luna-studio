@@ -16,17 +16,17 @@ import           Reactive.State.Global        (inRegistry)
 import qualified Reactive.State.Global        as Global
 import qualified Reactive.State.UIRegistry    as UIRegistry
 
-import           UI.Generic                   (takeFocus, defaultResize)
+import           UI.Generic                   (defaultResize)
 import           UI.Handlers.Generic          (triggerValueChanged)
 import           UI.Widget.TextBox            ()
 
 
 dblClickHandler :: ClickHandler Global.State
 dblClickHandler _ _ id = do
-    takeFocus undefined id
+    UICmd.takeFocus id
     inRegistry $ UICmd.update_ id $ Model.isEditing .~ True
 
-foreign import javascript unsafe "$1.registry[$2].input.val()" getValue' :: JSState -> WidgetId -> JSString
+foreign import javascript safe "$1.registry[$2].input.val()" getValue' :: JSState -> WidgetId -> JSString
 
 keyDownHandler :: KeyDownHandler Global.State
 keyDownHandler '\r' _ jsState id = do

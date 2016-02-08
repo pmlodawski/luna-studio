@@ -6,7 +6,7 @@ class Group extends BaseWidget
   constructor: (widgetId, width, height) ->
     super widgetId, width, height
     @container = @mesh
-    @visible   = true
+    @bgVisible   = true
 
     @bgUniforms =
       size:      { type: 'v2', value: new THREE.Vector2(width, height) }
@@ -39,13 +39,13 @@ class Group extends BaseWidget
 
   setBgColor: (r, g, b) -> @bgUniforms.color.value.set(r, g, b)
   setBgVisible: (vis)   ->
-    @visible    = vis
+    @bgVisible  = vis
     @bg.visible = vis && @width != 0 && @height != 0
 
   relayout: ->
     @bg.scale.x = @width
     @bg.scale.y = @height
-    @setBgVisible(@visible)
+    @setBgVisible(@bgVisible)
     @bgUniforms.size.value.set @width, @height
 
 module.exports = Group;

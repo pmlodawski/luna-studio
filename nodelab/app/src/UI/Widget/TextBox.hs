@@ -28,11 +28,11 @@ newtype TextBox = TextBox JSVal deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget TextBox
 
-foreign import javascript unsafe "new TextBox($1, $2, $3)" create'        :: Int     -> Double -> Double -> IO TextBox
-foreign import javascript unsafe "$1.setAlignment($2)"     setAlignment'  :: TextBox -> JSString         -> IO ()
-foreign import javascript unsafe "$1.setValueLabel($2)"    setValueLabel' :: TextBox -> JSString         -> IO ()
-foreign import javascript unsafe "$1.startEditing($2)"     startEditing'  :: TextBox -> JSString         -> IO ()
-foreign import javascript unsafe "$1.doneEditing()"        doneEditing'   :: TextBox                     -> IO ()
+foreign import javascript safe "new TextBox($1, $2, $3)" create'        :: Int     -> Double -> Double -> IO TextBox
+foreign import javascript safe "$1.setAlignment($2)"     setAlignment'  :: TextBox -> JSString         -> IO ()
+foreign import javascript safe "$1.setValueLabel($2)"    setValueLabel' :: TextBox -> JSString         -> IO ()
+foreign import javascript safe "$1.startEditing($2)"     startEditing'  :: TextBox -> JSString         -> IO ()
+foreign import javascript safe "$1.doneEditing()"        doneEditing'   :: TextBox                     -> IO ()
 
 create :: WidgetId -> Model.TextBox -> IO TextBox
 create oid model = do

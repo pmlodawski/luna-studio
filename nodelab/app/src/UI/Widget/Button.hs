@@ -23,10 +23,10 @@ newtype Button = Button JSVal deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget Button
 
-foreign import javascript unsafe "new Button($1, $2, $3)" create'    :: Int    -> Double -> Double  -> IO Button
-foreign import javascript unsafe "$1.setLabel($2)"        setLabel'  :: Button -> JSString          -> IO ()
-foreign import javascript unsafe "$1.setIcon($2)"         setIcon'   :: Button -> Nullable JSString -> IO ()
-foreign import javascript unsafe "$1.setEnabled($2)"      setEnabled':: Button -> Bool              -> IO ()
+foreign import javascript safe "new Button($1, $2, $3)" create'    :: Int    -> Double -> Double  -> IO Button
+foreign import javascript safe "$1.setLabel($2)"        setLabel'  :: Button -> JSString          -> IO ()
+foreign import javascript safe "$1.setIcon($2)"         setIcon'   :: Button -> Nullable JSString -> IO ()
+foreign import javascript safe "$1.setEnabled($2)"      setEnabled':: Button -> Bool              -> IO ()
 
 create :: WidgetId -> Model.Button -> IO Button
 create oid model = do

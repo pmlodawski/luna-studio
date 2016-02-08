@@ -27,43 +27,43 @@ newtype WSClosedEvent  = WSClosedEvent  { unWSClosedEvent  :: JSVal } deriving (
 instance IsJSVal WebSocket
 instance IsJSVal WSMessageEvent
 
-foreign import javascript unsafe "$1.data"
+foreign import javascript safe "$1.data"
     getData :: WSMessageEvent -> IO (JSVal)
 
-foreign import javascript unsafe "$1.code"
+foreign import javascript safe "$1.code"
     getCode :: WSClosedEvent -> IO Int
 
-foreign import javascript unsafe "app.websocket"
+foreign import javascript safe "app.websocket"
     getWebSocket :: IO WebSocket
 
-foreign import javascript unsafe "$1.onOpen($2)"
+foreign import javascript safe "$1.onOpen($2)"
     onOpen' :: WebSocket -> Callback (IO ()) -> IO ()
 
-foreign import javascript unsafe "$1.unOnOpen($2)"
+foreign import javascript safe "$1.unOnOpen($2)"
     unOnOpen' :: WebSocket -> Callback (IO ()) -> IO ()
 
-foreign import javascript unsafe "$1.onMessage($2)"
+foreign import javascript safe "$1.onMessage($2)"
     onMessage' :: WebSocket -> Callback (JSVal -> IO ()) -> IO ()
 
-foreign import javascript unsafe "$1.unOnMessage()"
+foreign import javascript safe "$1.unOnMessage()"
     unOnMessage' :: WebSocket -> Callback (JSVal -> IO ()) -> IO ()
 
-foreign import javascript unsafe "$1.onClose($2)"
+foreign import javascript safe "$1.onClose($2)"
     onClose' :: WebSocket -> Callback (JSVal -> IO ()) -> IO ()
 
-foreign import javascript unsafe "$1.unOnClose()"
+foreign import javascript safe "$1.unOnClose()"
     unOnClose' :: WebSocket -> Callback (JSVal -> IO ()) -> IO ()
 
-foreign import javascript unsafe "$1.onError($2)"
+foreign import javascript safe "$1.onError($2)"
     onError' :: WebSocket -> Callback (IO ()) -> IO ()
 
-foreign import javascript unsafe "$1.unOnError()"
+foreign import javascript safe "$1.unOnError()"
     unOnError' :: WebSocket -> Callback (IO ()) -> IO ()
 
-foreign import javascript unsafe "$1.send($2)"
+foreign import javascript safe "$1.send($2)"
     send :: WebSocket -> JSString -> IO ()
 
-foreign import javascript unsafe "$1.connect($2)"
+foreign import javascript safe "$1.connect($2)"
     connect' :: WebSocket -> JSString -> IO ()
 
 connect :: WebSocket -> String -> IO ()

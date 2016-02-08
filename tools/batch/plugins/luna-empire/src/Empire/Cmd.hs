@@ -1,10 +1,11 @@
 module Empire.Cmd where
 
-import           Flowbox.Prelude
+import Prologue
 
 
-data Cmd = Run { topics  :: [String]
-               , verbose :: Int
+data Cmd = Run { topics      :: [String]
+               , verbose     :: Int
+               , formatted   :: Bool
                }
          | Version
          deriving Show

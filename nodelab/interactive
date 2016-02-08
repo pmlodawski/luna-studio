@@ -12,7 +12,6 @@ ghcjs  -package-db $(stack path --snapshot-pkg-db) \
        -package base \
        -package ghcjs-base \
        -package ghcjs-dom \
-       -package reactive-banana \
        -package text \
        -package transformers \
        -package mtl \
@@ -47,4 +46,5 @@ ghcjs  -package-db $(stack path --snapshot-pkg-db) \
        -XScopedTypeVariables \
        -odir  ../../dist/ghcjs \
        -hidir ../../dist/ghcjs \
+       -debug \
        Main

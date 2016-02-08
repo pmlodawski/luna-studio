@@ -28,6 +28,7 @@ instance ToJSON List
 instance IsDisplayObject List where
     widgetPosition = position
     widgetSize     = size
+    widgetVisible  = to $ const True
 
 createList :: Double -> Text -> [AnyLunaValue] -> AnyLunaValue -> List
 createList w l v e = List def (Vector2 w 0) l v e False

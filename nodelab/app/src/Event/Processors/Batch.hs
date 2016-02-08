@@ -1,12 +1,14 @@
 module Event.Processors.Batch where
 
 import           Utils.PreludePlus
+import           Data.Binary (decode)
+
 import qualified Event.Event                as Event
 import           Event.Connection           as Connection
 import           Event.Batch                as Batch
 import           BatchConnector.Connection  (WebMessage(..), ControlCode(..))
-import           Data.Binary (decode)
 import           Empire.API.Topic as Topic
+
 
 process :: Event.Event -> Maybe Event.Event
 process (Event.Connection (Message msg)) = Just $ Event.Batch $ processMessage msg
@@ -34,9 +36,6 @@ processMessage (WebMessage topic bytes)
     -- "project.library.ast.function.add.update"                      -> WorkspaceCreated <$> parseFunctionCreateResponse bytes
     -- "interpreter.value.update"                                     -> uncurry ValueUpdate <$> parseValueUpdate bytes
     -- "project.library.ast.function.graph.node.add.update"           -> NodeAdded <$> parseAddNodeResponse bytes
-    -- "project.library.ast.function.graph.node.remove.update"        -> Just NodeRemoved
-    -- "project.library.ast.function.graph.node.modifyinplace.update" -> Just NodeModified
-    -- "project.library.ast.function.graph.node.add.fakeres"          -> NodeAdded <$> parseAddNodeFakeResponse bytes
     -- "project.library.ast.function.graph.node.default.set.update"   -> Just NodeDefaultUpdated
     -- "project.library.ast.code.get.status"                          -> CodeUpdate <$> parseGetCodeResponse bytes
     -- "project.library.ast.code.set.update"                          -> Just CodeSet
@@ -46,9 +45,7 @@ processMessage (WebMessage topic bytes)
     -- "project.library.ast.get.status"                               -> Just ASTElementExists
     -- "project.library.ast.get.error"                                -> Just ASTElementDoesNotExist
     -- "interpreter.run.update"                                       -> RunFinished <$> parseRunStatus bytes
-    -- "project.library.ast.function.graph.get.status"                -> uncurry GraphViewFetched <$> parseGraphViewResponse bytes
-    -- "interpreter.getprojectid.status"                              -> InterpreterGotProjectId <$> parseProjectIdStatus bytes
-    -- "interpreter.serializationmode.insert.update"                  -> Just SerializationModeInserted
-    -- _                                                              -> UnknownEvent topic
+
 processMessage (ControlMessage ConnectionTakeover) = ConnectionDropped
 processMessage (ControlMessage Welcome)            = ConnectionOpened
+

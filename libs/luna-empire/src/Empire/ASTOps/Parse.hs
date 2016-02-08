@@ -1,10 +1,12 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Empire.ASTOps.Parse where
 
 import           Prologue
 
 import           Control.Monad                (foldM)
 import           Control.Monad.Error          (throwError)
-import           Data.List                    (unfoldr)
+import           Data.List                    (unfoldr, break)
 import           Data.Maybe                   (fromMaybe)
 
 import           Empire.Data.AST              (ASTEdge, EdgeRef, NodeRef)

@@ -11,6 +11,7 @@ import qualified Batch.Workspace                 as Workspace
 import qualified BatchConnector.Commands         as BatchCmd
 import           Reactive.Commands.Command       (Command, execCommand, performIO)
 import qualified Reactive.Commands.UIRegistry    as UICmd
+import qualified Reactive.Commands.Breadcrumbs   as Breadcrumbs
 import           Reactive.Commands.UnrenderGraph (unrender)
 import           Reactive.State.Global           (State, inRegistry)
 import qualified Reactive.State.Global           as Global
@@ -18,6 +19,8 @@ import           Reactive.State.UIRegistry       (addHandler, handle, sceneInter
 import qualified Reactive.State.UIRegistry       as UIRegistry
 import qualified Reactive.State.UIElements       as UIElements
 
+import           Empire.API.Data.GraphLocation   (GraphLocation(..))
+import           Empire.API.Data.Breadcrumb      (Breadcrumb(..))
 import qualified Empire.API.Data.GraphLocation   as GraphLocation
 import           Empire.API.Data.Project         (ProjectId)
 import qualified Empire.API.Data.Project         as Project
@@ -31,14 +34,30 @@ import qualified UI.Layout                       as Layout
 
 loadProject :: ProjectId -> Command State ()
 loadProject projId = do
-    currentProjectId <- use $ Global.workspace . Workspace.currentLocation . GraphLocation.projectId
-    when (currentProjectId /= projId) $ do
+    let newLocation = GraphLocation projId 0 (Breadcrumb [])
+    loadGraph newLocation
+    displayProjectList
+
+loadGraph :: GraphLocation -> Command State ()
+loadGraph location = do
+    currentLocation <- use $ Global.workspace . Workspace.currentLocation
+    when (currentLocation /= location) $ do
         unrender
-        Global.workspace . Workspace.currentLocation . GraphLocation.projectId .= projId
+        Global.workspace . Workspace.currentLocation .= location
+        saveCurrentLocation
+        Breadcrumbs.update enterBreadcrumbs
         workspace <- use Global.workspace
         performIO $ BatchCmd.getProgram workspace
 
-        displayProjectList
+enterBreadcrumbs :: Breadcrumb -> Command State ()
+enterBreadcrumbs newBc = do
+    location <- use $ Global.workspace . Workspace.currentLocation
+    let newLocation = location & GraphLocation.breadcrumb .~ newBc
+    loadGraph newLocation
+
+
+saveCurrentLocation :: Command State ()
+saveCurrentLocation = return () -- TODO: Save current location to browser localStorage
 
 projectChooserId :: Command State WidgetId
 projectChooserId = use $ Global.uiElements . UIElements.projectChooser

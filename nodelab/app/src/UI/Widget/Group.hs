@@ -3,29 +3,30 @@ module UI.Widget.Group where
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           Data.JSString.Text            (lazyTextToJSString)
-import           GHCJS.Marshal.Pure            (PFromJSVal (..), PToJSVal (..))
-import           GHCJS.Types                   (JSString, JSVal)
+import           Data.JSString.Text           (lazyTextToJSString)
+import           GHCJS.Marshal.Pure           (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Types                  (JSString, JSVal)
 
 import           Object.UITypes
 import           Object.Widget
-import qualified Object.Widget.Group           as Model
-import qualified Reactive.State.UIRegistry     as UIRegistry
+import qualified Object.Widget.Group          as Model
+import qualified Reactive.Commands.UIRegistry as UICmd
+import qualified Reactive.State.UIRegistry    as UIRegistry
 
-import           UI.Generic                    (whenChanged)
-import qualified UI.Generic                    as UI
-import qualified UI.Registry                   as UI
-import           UI.Widget                     (UIWidget (..))
-import qualified UI.Widget                     as Widget
+import           UI.Generic                   (whenChanged)
+import qualified UI.Generic                   as UI
+import qualified UI.Registry                  as UI
+import           UI.Widget                    (UIWidget (..))
+import qualified UI.Widget                    as Widget
 
 newtype Group = Group JSVal deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget Group
 
-foreign import javascript unsafe "new Group($1, $2, $3)"      create'       :: Int   -> Double -> Double -> IO Group
-foreign import javascript unsafe "$1.mesh.visible = $2"       setVisible'   :: Group -> Bool -> IO ()
-foreign import javascript unsafe "$1.setBgVisible($2)"        setBgVisible' :: Group -> Bool -> IO ()
-foreign import javascript unsafe "$1.setBgColor($2, $3, $4)"  setBgColor'   :: Group -> Double -> Double -> Double -> IO ()
+foreign import javascript safe "new Group($1, $2, $3)"      create'       :: Int   -> Double -> Double -> IO Group
+foreign import javascript safe "$1.setVisible($2)"          setVisible'   :: Group -> Bool -> IO ()
+foreign import javascript safe "$1.setBgVisible($2)"        setBgVisible' :: Group -> Bool -> IO ()
+foreign import javascript safe "$1.setBgColor($2, $3, $4)"  setBgColor'   :: Group -> Double -> Double -> Double -> IO ()
 
 setBgColor :: Group -> Model.Group -> IO ()
 setBgColor group model = case model ^. Model.background of
@@ -50,10 +51,12 @@ instance UIDisplayObject Model.Group where
 
     updateUI id old model = do
         group <- UI.lookup id :: IO Group
+        setVisible' group $ model ^. Model.visible
+        setBgColor  group model
+
+instance CompositeWidget Model.Group where
+    updateWidget id old model = do
         let vis = model ^. Model.visible
-        setVisible' group (seq vis vis)
-        setBgColor group model
-
-instance CompositeWidget Model.Group
-
-
+        when (old ^. Model.visible /= vis) $ do
+            parent <- UICmd.parent id
+            UICmd.triggerChildrenResized parent id

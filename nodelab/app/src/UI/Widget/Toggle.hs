@@ -22,10 +22,10 @@ newtype Toggle = Toggle JSVal deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget Toggle
 
-foreign import javascript unsafe "new Toggle($1, $2, $3)" create'   :: Int    -> Double -> Double -> IO Toggle
-foreign import javascript unsafe "$1.setValue($2)"        setValue' :: Toggle -> Bool             -> IO ()
-foreign import javascript unsafe "$1.setLabel($2)"        setLabel' :: Toggle -> JSString         -> IO ()
-foreign import javascript unsafe "$1.setFocus($2)"        setFocus' :: Toggle -> Bool             -> IO ()
+foreign import javascript safe "new Toggle($1, $2, $3)" create'   :: Int    -> Double -> Double -> IO Toggle
+foreign import javascript safe "$1.setValue($2)"        setValue' :: Toggle -> Bool             -> IO ()
+foreign import javascript safe "$1.setLabel($2)"        setLabel' :: Toggle -> JSString         -> IO ()
+foreign import javascript safe "$1.setFocus($2)"        setFocus' :: Toggle -> Bool             -> IO ()
 
 create :: WidgetId -> Model.Toggle -> IO Toggle
 create oid model = do

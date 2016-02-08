@@ -6,7 +6,7 @@ loader = new THREE.TextureLoader();
 
 shouldRender = require('app').shouldRender
 
-class Group extends BaseWidget
+class ScatterPlot extends BaseWidget
   constructor: (widgetId, width, height) ->
     super widgetId, width, height
 
@@ -20,6 +20,7 @@ class Group extends BaseWidget
 
 
     @plotUniforms =
+      texScale:  { type: 'v2', value: new THREE.Vector2(1.0, 1.0) }
       size:      { type: 'v2', value: new THREE.Vector2(@width, @height) }
       objectId:  { type: 'v3', value: new THREE.Vector3(0, 0, 0) }
       map:       { type: 't',  value: @texture }
@@ -37,19 +38,15 @@ class Group extends BaseWidget
 
     @plot.scale.x = @width
     @plot.scale.y = @height
-    # @plot.rotation.x = Math.PI
+    @plot.visible = false
 
     @mesh.add @plot
 
 
   setData: (vector) ->
     @data = vector
-    @renderData()
 
-  renderData: ->
-    cf = $$.commonUniforms.camFactor.value
-
-    svg = d3.select("body")
+    @svg = d3.select("body")
       .append("svg")
       .attr("xmlns", "http://www.w3.org/2000/svg")
       .attr("width", @width)
@@ -58,7 +55,7 @@ class Group extends BaseWidget
 
     data = @data
 
-    myChart = new dimple.chart(svg, data)
+    myChart = new dimple.chart(@svg, data)
     myChart.addCategoryAxis("x", "Index");
     myChart.addMeasureAxis("y", "Value");
 
@@ -75,6 +72,12 @@ class Group extends BaseWidget
     ]
 
     myChart.draw();
+    @svg.remove()
+
+    @renderData()
+
+  renderData: ->
+    cf = $$.commonUniforms.camFactor.value
 
     texWidth  = Math.pow(2, Math.ceil(Math.log2(cf * @width)))
     texHeight = Math.pow(2, Math.ceil(Math.log2(cf * @height)))
@@ -82,23 +85,25 @@ class Group extends BaseWidget
     texWidth2  = Math.pow(2, Math.ceil(Math.log2(@width)))
     texHeight2 = Math.pow(2, Math.ceil(Math.log2(@height)))
 
-    overWidth =  texWidth  / @width
-    overHeight = texHeight / @height
+    overWidth =  texWidth  / (cf * @width)
+    overHeight = texHeight / (cf * @height)
 
-
-    svg.attr("width",  texWidth)
+    @svg.attr("width",  texWidth)
        .attr("height", texHeight);
-    svg.select("g").attr("transform", "scale(" + cf + ")")
+    @svg.select("g").attr("transform", "scale(" + cf + ")")
 
-    svgCode = new Blob([svg[0][0].outerHTML], {
+    svgCode = new Blob([@svg[0][0].outerHTML], {
         type: 'image/svg+xml;charset=utf-8'
     });
+
+
     url = DOMURL.createObjectURL(svgCode);
     loader.load url, (tex) =>
       @plotUniforms.map.value = tex
       @plotUniforms.map.value.needsUpdate = true
-      @plot.position.y = texHeight / cf
-      @plot.scale.set texWidth / cf, -texHeight / cf , 1.0
+      @plotUniforms.texScale.value.x = overWidth
+      @plotUniforms.texScale.value.y = overHeight
+      @plot.visible = true
       shouldRender()
       DOMURL.revokeObjectURL url
 
@@ -107,4 +112,4 @@ class Group extends BaseWidget
     @renderData()
   redrawTextures: -> @renderData()
 
-module.exports = Group;
+module.exports = ScatterPlot

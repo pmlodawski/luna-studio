@@ -29,10 +29,10 @@ convertChartType Widget.Scatter = Plot.bubble
 convertChartType Widget.Area    = Plot.area
 
 
-foreign import javascript unsafe "d3.select($1)" wrapD3 :: Element -> IO D3Element
-foreign import javascript unsafe "common.chart = $1" setChart :: Chart -> IO ()
+foreign import javascript safe "d3.select($1)" wrapD3 :: Element -> IO D3Element
+foreign import javascript safe "common.chart = $1" setChart :: Chart -> IO ()
 
-foreign import javascript unsafe "require('exampleData')" getExampleData :: IO JSArray
+foreign import javascript safe "require('exampleData')" getExampleData :: IO JSArray
 
 
 setStyle :: Element -> [(String, String)] -> IO ()

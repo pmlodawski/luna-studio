@@ -22,7 +22,7 @@ import qualified Reactive.State.Global           as Global
 import           Reactive.State.UIRegistry       (addHandler)
 import qualified Reactive.State.UIRegistry       as UIRegistry
 
-import           UI.Generic                      (startDrag, takeFocus, defaultResize)
+import           UI.Generic                      (startDrag, defaultResize)
 import           UI.Handlers.Generic             (triggerValueChanged)
 import           UI.Widget.LabeledTextBox        ()
 
@@ -32,7 +32,7 @@ import qualified UI.Handlers.TextBox             as TextBox
 dblClickHandler :: DblClickHandler Global.State
 dblClickHandler _ _ id = do
     (tbId:_) <- inRegistry $ UICmd.children id
-    takeFocus undefined tbId
+    UICmd.takeFocus tbId
     inRegistry $ UICmd.update_ tbId $ TextBox.isEditing .~ True
 
 widgetHandlers :: UIHandlers Global.State

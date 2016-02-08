@@ -23,6 +23,7 @@ instance IsDisplayObject Connection where
     widgetSize     = lens get set where
         get w      = abs <$> (w ^. from - w ^. to)
         set w s    = w & to .~ ((w ^. from) + s)
+    widgetVisible  = Prelude.to $ const True
 
 data CurrentConnection = CurrentConnection { _currentVisible      :: Bool
                                            , _currentFrom         :: Vector2 Double
@@ -38,3 +39,4 @@ instance IsDisplayObject CurrentConnection where
     widgetSize     = lens get set where
         get w      = abs <$> (w ^. currentFrom - w ^. currentTo)
         set w s    = w & currentTo .~ ((w ^. currentFrom) + s)
+    widgetVisible  = Prelude.to $ const True

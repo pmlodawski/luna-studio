@@ -5,7 +5,7 @@ import           GHCJS.Foreign
 import           GHCJS.Types (JSString)
 import           Data.JSString (pack)
 
-foreign import javascript unsafe "app.writeToTerminal($1)"
+foreign import javascript safe "app.writeToTerminal($1)"
     writeToTerminal' :: JSString -> IO ()
 
 writeToTerminal :: String -> IO ()

@@ -18,6 +18,7 @@ packages:
 - {location: ../../tools/batch/plugins/ws-connector}
 - {location: ../../tools/batch/plugins/broker}
 - {location: ../../tools/batch/plugins/bus-logger}
+- {location: ../../tools/batch/plugins/luna-empire}
 - extra-dep: true
   location: {commit: 41153d63e5b625c3ef153465622bebdbbafe549e, git: 'https://github.com/wdanilo/container.git'}
 - extra-dep: true

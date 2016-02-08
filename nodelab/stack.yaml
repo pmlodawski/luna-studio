@@ -8,14 +8,12 @@ setup-info:
       ghcjs-0.2.0.20160201_ghc-7.10.3:
         url: "https://s3-eu-west-1.amazonaws.com/nbo-toolchain/ghcjs/ghcjs-0.2.0.20160201-dupa.tar.gz"
 ghc-options:
-  nodelab: -DGHCJS_BROWSER
+  nodelab: -DGHCJS_BROWSER -debug
 packages:
   - .
   - location: ../libs/luna-empire-api
     extra-dep: true
   - location: ../libs/luna-empire-api-json
-    extra-dep: true
-  - location: ../libs/utils
     extra-dep: true
   - location:
       git: https://github.com/wdanilo/prologue.git

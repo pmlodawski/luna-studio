@@ -24,4 +24,4 @@ create s v a = TextBox def s v a False
 instance IsDisplayObject TextBox where
     widgetPosition = position
     widgetSize     = size
-
+    widgetVisible  = to $ const True

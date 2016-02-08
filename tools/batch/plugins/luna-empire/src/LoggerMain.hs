@@ -2,16 +2,16 @@
 
 module Main where
 
-import qualified Data.List                   as List
 import           Prologue
+import qualified Data.List                   as List
 
+import qualified Flowbox.Bus.EndPoint        as EP
 import           Empire.Cmd                  (Cmd)
 import qualified Empire.Cmd                  as Cmd
 import qualified Empire.Logger               as Logger
 import qualified Empire.Version              as Version
-import qualified Flowbox.Bus.EndPoint        as EP
 import qualified Flowbox.Config.Config       as Config
-import           Flowbox.Options.Applicative (help, long, metavar, short)
+import           Flowbox.Options.Applicative (short, long, help, metavar)
 import qualified Flowbox.Options.Applicative as Opt
 import           Flowbox.System.Log.Logger
 
@@ -27,8 +27,9 @@ logger = getLoggerIO $moduleName
 parser :: Opt.Parser Cmd
 parser = Opt.flag' Cmd.Version (short 'V' <> long "version" <> help "Version information")
        <|> Cmd.Run
-           <$> Opt.many       (Opt.strOption (short 't' <> metavar "TOPIC" <> help "Topic to listen"))
-           <*> Opt.optIntFlag (Just "verbose") 'v' 2 5 "Verbosity level (0-5, default 3)"
+           <$> Opt.many         (Opt.strOption (short 't' <> metavar "TOPIC" <> help "Topic to listen"))
+           <*> Opt.optIntFlag   (Just "verbose") 'v' 2 3 "Verbosity level (0-5, default 3)"
+           <*> not . Opt.switch (long "unformatted" <> help "Unformatted output" )
 
 opts :: Opt.ParserInfo Cmd
 opts = Opt.info (Opt.helper <*> parser)
@@ -46,7 +47,8 @@ run cmd = case cmd of
         let topics = if List.null $ Cmd.topics cmd
                         then [defaultTopic]
                         else Cmd.topics cmd
-        r <- Logger.run endPoints topics
+            formatted = Cmd.formatted cmd
+        r <- Logger.run endPoints topics formatted
         case r of
             Left err -> logger criticalFail err
             _        -> return ()
