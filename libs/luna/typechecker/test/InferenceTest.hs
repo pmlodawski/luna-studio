@@ -169,7 +169,7 @@ sampleGraph2 g = runNetworkBuilderT g $ do
     appPlus2   <- app accPlus2 [arg appLen]
 
     -- print appPlus2
-    return i1
+    return i2
 
 main :: IO ()
 main = do
