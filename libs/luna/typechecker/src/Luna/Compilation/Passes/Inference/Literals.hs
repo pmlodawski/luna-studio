@@ -10,7 +10,7 @@ module Luna.Compilation.Passes.Inference.Literals
     ( assignLiteralTypes
     ) where
 
-import           Prelude.Luna                                 hiding (Num)
+import           Prelude.Luna                                 hiding (Num, pre)
 
 import           Control.Monad.Event                          (Dispatcher)
 import           Data.Construction
@@ -32,14 +32,6 @@ import           Luna.Syntax.Model.Network.Builder.Type       (MonadTypeBuilder)
 import           Luna.Syntax.Model.Network.Class              (Network)
 import           Luna.Syntax.Model.Network.Term
 
-
-
-
--- TODO: ?
--- pre :: BuilderType m a => Ref Node -> m [Ref Node]
--- pre ref = do
---     node <- Builder.readRef ref
---     mapM (Builder.follow) $ Term.inputs $ uncoat node
 
 
 -- type ASTNode       = Node NetNode
@@ -110,19 +102,28 @@ assignLiteralTypes :: ASTOp m a b n e c
                    -> m ()
 assignLiteralTypes proxy ref = do
     (consIntRef, consStrRef) <- createLiteralTypes proxy
-    assignLiteralTypesWithTypes proxy ref consIntRef consStrRef
-    cleanUpLiteralTypes         proxy     consIntRef consStrRef
+    assignLiteralTypesWithTypes proxy consIntRef consStrRef ref
+    cleanUpLiteralTypes         proxy consIntRef consStrRef
     return ()
 
--- reconnect2 :: (Reader m src, Writer m src, Connectible (Ref src) (Ref tgt) m, e ~ Connection (Ref src) (Ref tgt), Unregister m e)
---            => Ref src -> Lens' src e -> Ref tgt -> m e
--- reconnect2 srcRef l tgtRef = do
---     src  <- read srcRef
---     unregister $ src ^. l
---     conn <- connection srcRef tgtRef
---     write srcRef $ src & l .~ conn
---     return conn
 
+reconnect2 :: (Reader m src, Writer m src, Connectible (Ref tgt) (Ref src) m, e ~ Connection (Ref tgt) (Ref src), Unregister m e)
+          => Ref src -> Lens' src e -> Ref tgt -> m e
+reconnect2 srcRef l tgtRef = do
+    src  <- read srcRef
+    unregister $ src ^. l
+    conn <- connection tgtRef srcRef
+    write srcRef $ src & l .~ conn
+    return conn
+
+pre :: ASTOp m a b n e c
+    => Proxy b
+    -> Ref (StaticNode a)
+    -> m [Ref (StaticNode a)]
+pre proxy ref = do
+    node <- read ref
+    let inputs = node # Inputs
+    mapM (follow source) inputs
 
 assignLiteralTypesWithTypes :: ASTOp m a b n e c
                             => Proxy b
@@ -130,27 +131,23 @@ assignLiteralTypesWithTypes :: ASTOp m a b n e c
                             -> Ref (StaticNode a)
                             -> Ref (StaticNode a)
                             -> m ()
-assignLiteralTypesWithTypes proxy ref consIntRef consStrRef = do
+assignLiteralTypesWithTypes proxy consIntRef consStrRef ref = do
     putStrLn $ "assignLiteralTypesWithTypes " <> show ref
     node <- read ref
-    caseTest (uncover node) $ do
-        match $ \(Num num) -> do
-            tpeRef <- follow target $ node ^. prop Type
-            reconnect ref (prop Type) consIntRef
-            destruct tpeRef
-            putStrLn $ "tpeRef " <> show tpeRef
-            -- conn <- connection ref consIntRef
-            return ()
+    let uncNode = uncover node
+    caseTest uncNode $ do
         match $ \(Str str) -> do
-            tpeRef <- follow target $ node ^. prop Type
-            reconnect ref (prop Type) consStrRef
-            destruct tpeRef
-            -- reconnect ref (prop Type) consStrRef
+            tpeRef <- follow source $ node ^. prop Type
+            reconnect2 ref (prop Type) consStrRef
+            putStrLn $ "tpeRef " <> show tpeRef
+            return ()
+        match $ \(Num num) -> do
+            tpeRef <- follow source $ node ^. prop Type
+            reconnect2 ref (prop Type) consIntRef
             putStrLn $ "tpeRef " <> show tpeRef
             return ()
         match $ \ANY -> return ()
-
-    -- mapM_ (assignLiteralTypesWithTypes consIntTpe consStringTpe) =<< pre ref
+    mapM_ (assignLiteralTypesWithTypes proxy consIntRef consStrRef) =<< pre proxy ref
     return ()
 
 createLiteralTypes :: forall m a b . ( MonadIO m

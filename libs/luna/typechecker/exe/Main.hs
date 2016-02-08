@@ -1,44 +1,48 @@
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE UndecidableInstances      #-}
 {-# LANGUAGE FunctionalDependencies    #-}
-{-# LANGUAGE ScopedTypeVariables       #-}
-{-# LANGUAGE RecursiveDo               #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE RankNTypes                #-}
-
+{-# LANGUAGE RecursiveDo               #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE UndecidableInstances      #-}
+{-# LANGUAGE PolyKinds                 #-}
 -- {-# LANGUAGE PartialTypeSignatures     #-}
-{-# LANGUAGE PolyKinds     #-}
+
 
 module Main where
 
-import Prologue              hiding (cons, read, (#))
-import Luna.Syntax.AST.Term  hiding (Lit, Val, Thunk, Expr, Draft, Target, Source, source, target)
-import qualified Luna.Syntax.AST.Term as Term
-import Luna.Diagnostic.Vis.GraphViz
-import Data.Layer.Cover
-import Data.Record hiding (Layout)
-import Luna.Evaluation.Runtime (Static, Dynamic)
-import qualified Luna.Evaluation.Runtime as Runtime
-import Luna.Syntax.Model.Graph
-import Luna.Syntax.Model.Layer
-import Luna.Syntax.Model.Network.Builder
-import Luna.Syntax.Model.Network.Term
-import Data.Construction
-import Luna.Syntax.Model.Graph.Builder.Ref as Ref
-import Data.Prop
-import Data.Graph.Sort hiding (Graph)
-import qualified Data.Graph.Sort as Sort
-import Development.Placeholders
-import Data.Container  (index_, elems)
-import Data.Index (idx)
-import Data.Container
-import           Data.Attr (attr)
-import           Control.Monad.Event
-import           Luna.Syntax.Model.Network.Builder.Node hiding (star, str,int,cons,acc,app,var,unify,blank)
-import qualified Luna.Syntax.Model.Network.Builder.Node.Inferred as Inf
-import           Luna.Syntax.Model.Network.Builder.Node.Class ()
-import Type.Inference
+import           Prologue                                        hiding (cons, read, ( # ))
 
-import qualified Luna.Compilation.Passes.Inference.Struct as S
+import           Control.Monad.Event
+import           Data.Attr                                       (attr)
+import           Data.Construction
+import           Data.Container                                  (elems, index_)
+import           Data.Container
+import           Data.Graph.Sort                                 hiding (Graph)
+import qualified Data.Graph.Sort                                 as Sort
+import           Data.Index                                      (idx)
+import           Data.Layer.Cover
+import           Data.Prop
+import           Data.Record                                     hiding (Layout)
+import           Development.Placeholders
+
+import           Luna.Diagnostic.Vis.GraphViz
+import           Luna.Evaluation.Runtime                         (Dynamic, Static)
+import qualified Luna.Evaluation.Runtime                         as Runtime
+import           Luna.Syntax.AST.Term                            hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
+import qualified Luna.Syntax.AST.Term                            as Term
+import           Luna.Syntax.Model.Graph
+import           Luna.Syntax.Model.Graph.Builder.Ref             as Ref
+import           Luna.Syntax.Model.Layer
+import           Luna.Syntax.Model.Network.Builder
+import           Luna.Syntax.Model.Network.Builder.Node          hiding (acc, app, blank, cons, int, star, str, unify, var)
+import           Luna.Syntax.Model.Network.Builder.Node.Class    ()
+import qualified Luna.Syntax.Model.Network.Builder.Node.Inferred as Inf
+import           Luna.Syntax.Model.Network.Term
+import           Type.Inference
+
+import qualified Luna.Compilation.Passes.Inference.Struct        as S
+
+
 
 renderAndOpen lst = do
     flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
@@ -131,33 +135,50 @@ foo g = runNetworkBuilderT g
 
     return s1
 
+-- TODO: make it compiling
+-- bar ::  ( MonadIO        m
+--         , TermNode Star  m (ls :< term)
+--         , TermNode Unify m (ls :< term)
+--         , NodeInferable  m (ls :< term)
+--         , LitLike          (ls :< term)
+--         ) => m ()
+-- bar = do
+--     s1  <- Inf.star
+--     f   <- Inf.var "f"
+--     a   <- Inf.var "a"
+--     b   <- Inf.var "b"
+--     r   <- Inf.app f [arg a]
+--     r_v <- read r
+--     Ref.reconnect f (prop Type) a
+--     return ()
 
-infTest :: ( MonadIO        m
-           , TermNode Star  m (ls :< term)
-           , TermNode Unify m (ls :< term)
-           , NodeInferable  m (ls :< term)
-           , LitLike          (ls :< term)
-           ) => m ()
-infTest = do
-    infTest
-    s1 <- Inf.star
-    s2 <- Inf.star
-    u1 <- Inf.unify s1 s2
-    s1_v <- read s1
-    write s1 s1_v
-    let x = uncover s1_v
-    print $ caseTest x $ do
-        match $ \Star -> "its a star! <3"
-        match $ \ANY  -> "something else!"
-    return ()
+-- runInfTest2 :: forall a. Show a => NetGraph a -> IO ((), NetGraph a)
+-- runInfTest2 g = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers a :< Draft Static)))
+--              $ runNetworkBuilderT g bar
+
+-- infTest :: ( MonadIO        m
+--            , TermNode Star  m (ls :< term)
+--            , TermNode Unify m (ls :< term)
+--            , NodeInferable  m (ls :< term)
+--            , LitLike          (ls :< term)
+--            ) => m ()
+-- infTest = do
+--     infTest
+--     s1 <- Inf.star
+--     s2 <- Inf.star
+--     u1 <- Inf.unify s1 s2
+--     s1_v <- read s1
+--     write s1 s1_v
+--     let x = uncover s1_v
+--     print $ caseTest x $ do
+--         match $ \Star -> "its a star! <3"
+--         match $ \ANY  -> "something else!"
+--     return ()
 
 
-
-runInfTest :: forall a. Show a => NetGraph a -> IO ((), NetGraph a)
-runInfTest g = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers a :< Draft Static)))
-             $ runNetworkBuilderT g infTest
-
-
+-- runInfTest :: forall a. Show a => NetGraph a -> IO ((), NetGraph a)
+-- runInfTest g = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers a :< Draft Static)))
+--              $ runNetworkBuilderT g infTest
 
 
 --type NodeBuilder t m ls term = ElemBuilder t m (Ref (Node $ (ls :< term)))
@@ -183,7 +204,8 @@ main = do
     print star
     print g
     putStrLn "\n--------------\n"
-    (s,g') <- foo g
+    (s, g') <- foo g
+    -- (s1,g') <- bar g
     print g'
 
     title "graph sorting"

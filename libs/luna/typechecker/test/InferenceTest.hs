@@ -10,24 +10,24 @@
 
 module Main where
 
-import           Prologue                               hiding (cons, read, Num)
+import           Prologue                                   hiding (Num, cons, read)
 
-import           Control.Monad.Error                    (MonadError)
+import           Control.Monad.Error                        (MonadError)
 import           Data.Layer.Cover
 import           Data.Prop
-import           Data.Record                            hiding (Layout)
+import           Data.Record                                hiding (Layout)
 
-import           Luna.Diagnostic.Vis.GraphViz
 import           Luna.Compilation.Passes.Inference.Literals
-import           Luna.Evaluation.Runtime                (Dynamic, Static)
-import           Luna.Syntax.AST.Term                   hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
-import qualified Luna.Syntax.AST.Term                   as Term
+import           Luna.Diagnostic.Vis.GraphViz
+import           Luna.Evaluation.Runtime                    (Dynamic, Static)
+import           Luna.Syntax.AST.Term                       hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
+import qualified Luna.Syntax.AST.Term                       as Term
 import           Luna.Syntax.Model.Graph
 import           Luna.Syntax.Model.Layer
-import           Luna.Syntax.Model.Network.Builder      (MonadBuilder)
-import           Luna.Syntax.Model.Network.Builder.Self (MonadSelfBuilder)
+import           Luna.Syntax.Model.Network.Builder          (MonadBuilder)
+import           Luna.Syntax.Model.Network.Builder.Self     (MonadSelfBuilder)
 import           Luna.Syntax.Model.Network.Builder.Term
-import           Luna.Syntax.Model.Network.Builder.Type (MonadTypeBuilder)
+import           Luna.Syntax.Model.Network.Builder.Type     (MonadTypeBuilder)
 import           Luna.Syntax.Model.Network.Term
 
 -- import           Luna.Syntax.Model.Graph.Term    (NetGraph, NetNode)
@@ -169,7 +169,8 @@ sampleGraph2 g = runNetworkBuilderT g $ do
     appPlus2   <- app accPlus2 [arg appLen]
 
     -- print appPlus2
-    return i2
+    -- return i2
+    return appPlus2
 
 main :: IO ()
 main = do
