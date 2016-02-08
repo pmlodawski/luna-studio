@@ -11,7 +11,6 @@ import qualified Reactive.Commands.UIRegistry as UICmd
 import           Reactive.State.Global        (inRegistry)
 import qualified Reactive.State.Global        as Global
 
-import           UI.Generic                   (takeFocus)
 import           UI.Widget.Toggle             ()
 
 newtype ClickedHandler = ClickedHandler (WidgetId -> Command Global.State ())

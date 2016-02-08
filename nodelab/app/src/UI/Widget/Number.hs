@@ -13,10 +13,10 @@ newtype Number = Number { unSlider :: JSVal } deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget Number
 
-foreign import javascript unsafe "new LabeledWidget($1, $2, $3)" create'        :: Int    -> Double -> Double -> IO Number
-foreign import javascript unsafe "$1.setLabel($2)"               setLabel'      :: Number -> JSString         -> IO ()
-foreign import javascript unsafe "$1.setValueLabel($2)"          setValueLabel' :: Number -> JSString         -> IO ()
-foreign import javascript unsafe "$1.setFocus($2)"               setFocus'      :: Number -> Bool             -> IO ()
+foreign import javascript safe "new LabeledWidget($1, $2, $3)" create'        :: Int    -> Double -> Double -> IO Number
+foreign import javascript safe "$1.setLabel($2)"               setLabel'      :: Number -> JSString         -> IO ()
+foreign import javascript safe "$1.setValueLabel($2)"          setValueLabel' :: Number -> JSString         -> IO ()
+foreign import javascript safe "$1.setFocus($2)"               setFocus'      :: Number -> Bool             -> IO ()
 
 setFocus :: Bool -> Number -> IO ()
 setFocus = flip setFocus'

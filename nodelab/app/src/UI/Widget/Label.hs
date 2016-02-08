@@ -23,9 +23,9 @@ newtype Label = Label JSVal deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget Label
 
-foreign import javascript unsafe "new Label($1, $2, $3)" create'       :: Int -> Double -> Double -> IO Label
-foreign import javascript unsafe "$1.setLabel($2)"       setLabel'     :: Label -> JSString -> IO ()
-foreign import javascript unsafe "$1.setAlignment($2)"   setAlignment' :: Label -> JSString -> IO ()
+foreign import javascript safe "new Label($1, $2, $3)" create'       :: Int -> Double -> Double -> IO Label
+foreign import javascript safe "$1.setLabel($2)"       setLabel'     :: Label -> JSString -> IO ()
+foreign import javascript safe "$1.setAlignment($2)"   setAlignment' :: Label -> JSString -> IO ()
 
 create :: WidgetId -> Model.Label -> IO Label
 create oid model = do

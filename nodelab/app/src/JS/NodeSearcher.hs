@@ -21,19 +21,19 @@ import           GHCJS.DOM.Types  ( UIEvent, Window, IsUIEvent, unUIEvent, toUIE
 
 
 
-foreign import javascript unsafe "app.createNodeSearcher($1, $2, $3, $4)"
+foreign import javascript safe "app.createNodeSearcher($1, $2, $3, $4)"
     initNodeSearcher' :: JSString -> Int -> Int -> Int-> IO ()
 
 initNodeSearcher :: Text -> Int -> Vector2 Int -> IO ()
 initNodeSearcher expr nodeId pos = initNodeSearcher' (lazyTextToJSString expr) nodeId (pos ^. x) (pos ^. y)
 
-foreign import javascript unsafe "app.destroyNodeSearcher()"
+foreign import javascript safe "app.destroyNodeSearcher()"
     destroyNodeSearcher :: IO ()
 
-foreign import javascript unsafe "$2[\"detail\"][$1]"
+foreign import javascript safe "$2[\"detail\"][$1]"
     nodesearcher_event_get :: JSString -> JSRef UIEvent -> IO JSString
 
-foreign import javascript unsafe "$1[\"detail\"][\"node\"]"
+foreign import javascript safe "$1[\"detail\"][\"node\"]"
     nodesearcher_event_get_node :: JSRef UIEvent -> IO Int
 
 nsEvent :: EventName Window UIEvent
@@ -61,13 +61,13 @@ getNode self = liftIO $ do
 
 data JSHighlight
 
-foreign import javascript unsafe "app.nodeSearcher().clearResults()"
+foreign import javascript safe "app.nodeSearcher().clearResults()"
     nodesearcher_clear_results :: IO ()
 
-foreign import javascript unsafe "app.nodeSearcher().addResult($1, $2, $3, $4, $5)"
+foreign import javascript safe "app.nodeSearcher().addResult($1, $2, $3, $4, $5)"
     nodesearcher_add_result :: JSString -> JSString -> JSString -> JSRef JSHighlight -> JSString -> IO ()
 
-foreign import javascript unsafe "app.nodeSearcher().addTreeResult($1, $2, $3, $4)"
+foreign import javascript safe "app.nodeSearcher().addTreeResult($1, $2, $3, $4)"
     nodesearcher_add_tree_result :: JSString -> JSString -> JSString -> JSString -> IO ()
 
 data Highlight = Highlight {start :: Int, len :: Int} deriving (Show, Eq)
@@ -91,10 +91,10 @@ displayTreeResult (QueryResult prefix name fullname _ tpe ) = do
 displayTreeResults :: [QueryResult] -> IO ()
 displayTreeResults results = mapM_ displayTreeResult results
 
-foreign import javascript unsafe "[]"
+foreign import javascript safe "[]"
     createJSArray :: IO (JSRef JSHighlight)
 
-foreign import javascript unsafe "$1.push({start: $2, length: $3})"
+foreign import javascript safe "$1.push({start: $2, length: $3})"
     pushHighlightJs :: JSRef JSHighlight -> Int -> Int -> IO (JSRef JSHighlight)
 
 pushHighlight :: JSRef JSHighlight -> Highlight -> IO (JSRef JSHighlight)

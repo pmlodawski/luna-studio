@@ -21,3 +21,4 @@ create s l v = LabeledTextBox def s l v False
 instance IsDisplayObject LabeledTextBox where
     widgetPosition = position
     widgetSize     = size
+    widgetVisible  = to $ const True

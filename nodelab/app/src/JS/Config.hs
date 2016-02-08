@@ -17,13 +17,13 @@ foreign import javascript safe "config.fontSize" fontSize :: Double
 
 foreign import javascript safe "features.widget_sandbox" widgetSandboxEnabled :: Bool
 
-foreign import javascript unsafe "config.logging"
+foreign import javascript safe "config.logging"
     isLoggerEnabled :: IO Bool
 
-foreign import javascript unsafe "config.backend"
+foreign import javascript safe "config.backend"
     isBackendEnabled :: IO Bool
 
-foreign import javascript unsafe "config.backendAddress"
+foreign import javascript safe "config.backendAddress"
     getBackendAddress' :: IO JSString
 
 getBackendAddress :: IO String

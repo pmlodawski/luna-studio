@@ -3,7 +3,7 @@ module Reactive.Commands.RegisterNode where
 import           Utils.PreludePlus
 
 import           Reactive.Commands.Command     (Command, performIO)
-import           Reactive.Commands.PendingNode (renderPending)
+-- import           Reactive.Commands.PendingNode (renderPending)
 import           Reactive.State.Global         (State)
 import qualified Reactive.State.Global         as Global
 import qualified Reactive.State.Camera         as Camera

@@ -26,3 +26,4 @@ createWithBg color = Group def def True (Just color)
 instance IsDisplayObject Group where
     widgetPosition = position
     widgetSize     = size
+    widgetVisible  = visible

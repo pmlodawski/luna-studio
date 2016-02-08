@@ -9,6 +9,7 @@ Usage:
   luna-empire-invoker createProject              <path> [<name>]
   luna-empire-invoker libraries      <pid>
   luna-empire-invoker projects
+  luna-empire-invoker dump
 
 Options:
   <outPort>          All  or an integer value

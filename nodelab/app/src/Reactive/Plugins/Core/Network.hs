@@ -2,9 +2,10 @@ module Reactive.Plugins.Core.Network where
 
 import           Utils.PreludePlus
 
-import           Reactive.Banana            (Event, Moment)
-import qualified Reactive.Banana            as RB
-import           Reactive.Banana.Frameworks (Frameworks, reactimate, fromAddHandler)
+import           Control.Exception (catch)
+import           GHCJS.Prim (JSException)
+
+import           Reactive.Handlers          (AddHandler(..))
 import qualified Reactive.Handlers          as Handlers
 
 import qualified Event.Event                as Event
@@ -27,18 +28,58 @@ import qualified Reactive.Plugins.Core.Action.TextEditor             as TextEdit
 import qualified Reactive.Plugins.Core.Action.Debug                  as Debug
 import qualified Reactive.Plugins.Core.Action.Sandbox                as Sandbox
 
-import           Reactive.Commands.Command (Command, execCommand)
+import           Reactive.Commands.Command (Command, execCommand, performIO)
 import           Reactive.State.Global     (State)
+import qualified Reactive.State.Global     as Global
 
 import           Batch.Workspace           (Workspace)
 import           JS.WebSocket              (WebSocket)
 import qualified JS.UI                     as UI
 
+import Control.Concurrent.MVar
+import Debug.Trace (trace)
+
 toTransformer :: Command a () -> (IO (), a) -> (IO (), a)
 toTransformer cmd (_, a) = execCommand cmd a
 
-makeNetworkDescription :: forall t. Frameworks t => WebSocket -> Bool -> State -> Moment t ()
-makeNetworkDescription conn logging initialState = do
+
+actions =  [ Debug.toActionEv
+           , Widget.toAction
+           , General.toAction
+           , Camera.toAction
+           , Graph.toAction
+           , MultiSelection.toAction
+           , Drag.toAction
+           , Connect.toAction
+           , NodeSearcher.toAction
+           , Backend.toAction
+           , Runner.toAction
+           , GraphFetcher.toAction
+           , ProjectManager.toAction
+           , ConnectionPen.toAction
+           , TextEditor.toAction
+           , Sandbox.toAction
+           , Debug.toAction
+           ]
+
+runCommands :: [Event.Event -> Maybe (Command State ())] -> Event.Event -> Command State ()
+runCommands cmds event = sequence_ . catMaybes $ fmap ($ event) actions
+
+preprocessBatchEvent :: Event.Event -> Event.Event
+preprocessBatchEvent ev = fromMaybe ev $ BatchEventProcessor.process ev
+
+processEvent :: MVar State -> Event.Event -> IO ()
+processEvent var ev = do
+    let realEvent = preprocessBatchEvent ev
+    state <- takeMVar var
+    let (ioActions, newState) = execCommand (runCommands actions realEvent) state
+    catch (ioActions >> UI.shouldRender) (handleExcept newState realEvent)
+    putMVar var newState
+
+
+
+makeNetworkDescription :: WebSocket -> Bool -> MVar State -> IO ()
+makeNetworkDescription conn logging state = do
     let handlers = [ Handlers.resizeHandler
                    , Handlers.mouseDownHandler
                    , Handlers.mouseUpHandler
@@ -55,38 +96,10 @@ makeNetworkDescription conn logging initialState = do
                    , Handlers.debugHandler
                    ]
 
-    primitiveE <- RB.unions <$> sequence (fromAddHandler <$> handlers)
+    let registerHandler (AddHandler rh) = rh (processEvent state)
 
-    let
-        batchE = RB.filterJust $ BatchEventProcessor.process <$> primitiveE
-        anyE   = primitiveE `RB.union` batchE
+    sequence_ $ registerHandler <$> handlers
 
-        actions :: [Event.Event -> Maybe (Command State ())]
-        actions =  [ Widget.toAction
-                   , General.toAction
-                   , Camera.toAction
-                   , Graph.toAction
-                   , MultiSelection.toAction
-                   , Drag.toAction
-                   , Connect.toAction
-                   , NodeSearcher.toAction
-                   , Backend.toAction
-                   , Runner.toAction
-                   , GraphFetcher.toAction
-                   , ProjectManager.toAction
-                   , ConnectionPen.toAction
-                   , TextEditor.toAction
-                   , Debug.toAction
-                   , Sandbox.toAction
-                   ]
-
-        commands :: Event t (Command State ())
-        commands =  sequence_ . catMaybes <$> fmap (\e -> fmap ($ e) actions) anyE
-
-        transformers :: Event t ((IO (), State) -> (IO (), State))
-        transformers =  toTransformer <$> commands
-
-        reactions :: Event t (IO (), State)
-        reactions =  RB.accumE (return (), initialState) transformers
-
-    reactimate $ (>> UI.shouldRender) . fst <$> reactions
+handleExcept :: State -> Event.Event -> JSException  -> IO ()
+handleExcept state event except = do
+    putStrLn $ "JavaScriptException: " <> (show except) <> "\n\nwhile processing: " <> (show event)

@@ -13,7 +13,7 @@ import qualified Reactive.Commands.UIRegistry     as UICmd
 import           Reactive.State.Global            (inRegistry)
 import qualified Reactive.State.Global            as Global
 
-import           UI.Generic                       (startDrag, takeFocus)
+import           UI.Generic                       (startDrag)
 import           UI.Widget.Toggle                 ()
 
 newtype SelectedHandler = SelectedHandler (Command Global.State ())

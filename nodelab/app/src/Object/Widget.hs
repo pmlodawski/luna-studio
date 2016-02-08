@@ -53,8 +53,9 @@ type Position = Vector2 Double
 type Size     = Vector2 Double
 
 class IsDisplayObject a where
-    widgetPosition :: Lens' a Position
-    widgetSize     :: Lens' a Size
+    widgetPosition :: Lens'  a Position
+    widgetSize     :: Lens'  a Size
+    widgetVisible  :: Getter a Bool
 
 class UIDisplayObject a where
     createUI   :: WidgetId -> WidgetId       -> a -> IO ()
@@ -65,6 +66,9 @@ getPosition obj = withCtxDynamic (^. widgetPosition) obj
 
 getSize :: DisplayObject -> Size
 getSize obj = withCtxDynamic (^. widgetSize) obj
+
+getVisible :: DisplayObject -> Bool
+getVisible obj = withCtxDynamic (^. widgetVisible) obj
 
 setPosition' :: DisplayObjectClass a => Position -> a -> DisplayObject
 setPosition' pos obj = toCtxDynamic $ obj & widgetPosition .~ pos
@@ -81,6 +85,7 @@ setSize obj size = withCtxDynamic (setSize' size) obj
 instance IsDisplayObject DisplayObject where
     widgetPosition = lens getPosition setPosition
     widgetSize     = lens getSize     setSize
+    widgetVisible  = to getVisible
 
 instance Show DisplayObject where
     show = withCtxDynamic show

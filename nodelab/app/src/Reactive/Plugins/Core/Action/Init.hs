@@ -9,6 +9,7 @@ import qualified Object.Widget.Group              as Group
 import           Reactive.Commands.Command        (Command, execCommand, performIO)
 import           Reactive.Commands.ProjectManager (initProjectChooser)
 import qualified Reactive.Commands.UIRegistry     as UICmd
+import qualified UI.Layout                        as Layout
 import           Reactive.State.Global            (State, inRegistry)
 import qualified Reactive.State.Global            as Global
 import qualified Reactive.State.UIElements        as UIElements
@@ -23,8 +24,15 @@ initSidebar = do
     Global.uiElements . UIElements.sidebar .= sidebar
     return sidebar
 
+initBreadcrumb :: Command State WidgetId
+initBreadcrumb = do
+    let group = Group.createWithBg (0.64, 0.21, 0.26) & Group.position .~ Vector2 230 0
+    groupId <- inRegistry $ UICmd.register sceneInterfaceId group (Layout.horizontalLayoutHandler (Vector2 3.0 3.0) 3.0)
+    Global.uiElements . UIElements.breadcrumbs .= groupId
+    return groupId
 
 initialize :: Command State ()
 initialize = do
     sidebarId <- initSidebar
+    initBreadcrumb
     void $ initProjectChooser sidebarId

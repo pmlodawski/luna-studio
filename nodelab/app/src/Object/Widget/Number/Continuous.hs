@@ -24,7 +24,8 @@ create s l v = ContinuousNumber def s l v True def
 instance IsDisplayObject ContinuousNumber where
     widgetPosition = position
     widgetSize     = size
-
+    widgetVisible  = to $ const True
+    
 displayValue' :: ContinuousNumber -> String
 displayValue' model = showGFloatAlt (Just 2) (model ^. value) ""
 

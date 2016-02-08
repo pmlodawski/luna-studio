@@ -51,6 +51,28 @@ Executable luna-empire-logger
                     flowbox-utils-old,
                     optparse-applicative
 
+Executable luna-empire-invoker
+    Main-Is:        Invoker.hs
+
+    Hs-Source-Dirs: src
+
+    GHC-Options:    -Wall -O2 -package ghc
+
+    Extensions:     NoImplicitPrelude,
+                    TemplateHaskell
+
+    Build-Depends:  base,
+                    prologue,
+                    bytestring,
+                    binary,
+                    containers,
+                    text,
+                    flowbox-bus-binary,
+                    flowbox-config,
+                    flowbox-utils,
+                    luna-empire,
+                    luna-empire-api,
+                    docopt
 
 Executable luna-empire-test
     Main-Is:        Main.hs
@@ -72,8 +94,7 @@ Executable luna-empire-test
                     flowbox-config,
                     flowbox-utils,
                     luna-empire,
-                    luna-empire-api,
-                    luna-tc
+                    luna-empire-api
 
 Executable luna-empire-kamiltest
     Main-Is:        KamilTest.hs
@@ -95,5 +116,4 @@ Executable luna-empire-kamiltest
                     flowbox-config,
                     flowbox-utils,
                     luna-empire,
-                    luna-empire-api,
-                    luna-tc
+                    luna-empire-api

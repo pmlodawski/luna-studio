@@ -20,6 +20,7 @@ instance ToJSON Button
 instance IsDisplayObject Button where
     widgetPosition = position
     widgetSize     = size
+    widgetVisible  = to $ const True
 
 create :: Size -> Text -> Button
 create s l = Button def s l Nothing True

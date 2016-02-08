@@ -83,7 +83,7 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     UICmd.register parent widget def
 
     let widget = ScatterPlot.create (Vector2 300 200)
-               & ScatterPlot.dataPoints .~ [(1, 5), (2, 7), (3, 1), (4, 10), (5, 0)]
+               & ScatterPlot.dataPoints .~ [Vector2 1 5, Vector2 2 7, Vector2 3 1, Vector2 4 10, Vector2 5  2]
     UICmd.register parent widget def
 
 

@@ -9,6 +9,7 @@ import           Object.Widget
 import           Utils.Vector
 
 import qualified Reactive.State.UIRegistry as UIRegistry
+import qualified Reactive.State.Global     as Global
 import           Reactive.Commands.Command (Command, performIO)
 import qualified UI.Generic as UI
 import qualified Data.HMap.Lazy as HMap
@@ -74,6 +75,7 @@ triggerChildrenResized id child = do
     maybeHandler <- handler id key
     forM_ maybeHandler $ \(ChildrenResizedHandler handler) -> handler id child
 
+
 resize :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
 resize id vec = resize' id (\_ -> vec)
 
@@ -89,7 +91,7 @@ resize'CB cb id f = do
     widgetFile <- preuse $ UIRegistry.widgets . ix id
     forM_ widgetFile $ \widgetFile -> do
         let model   = widgetFile ^. widget
-            wParent = widgetFile ^. parent
+            wParent = widgetFile ^. Object.Widget.parent
         resizeWidget id (model ^. widgetSize) model
         when cb $ forM_ wParent $ flip triggerChildrenResized id
 
@@ -117,6 +119,12 @@ children id = do
     let file   = fromMaybe (error "children: widget not exists") maybeFile
     return $ file ^. Object.Widget.children
 
+parent :: WidgetId -> Command UIRegistry.State WidgetId
+parent id = do
+    maybeFile <- UIRegistry.lookupM id
+    let file   = fromMaybe (error "parent: widget not exists") maybeFile
+    return $ fromMaybe (error "parent: called on scene") $ file ^. Object.Widget.parent
+
 handler :: Typeable k => WidgetId -> TypeKey k -> Command UIRegistry.State (Maybe k)
 handler id k = do
     maybeFile <- UIRegistry.lookupM id
@@ -128,3 +136,17 @@ removeWidget :: WidgetId -> Command UIRegistry.State ()
 removeWidget id = do
     widgets <- UIRegistry.unregisterM id
     forM_ widgets $ performIO . UI.removeWidget
+
+newtype LostFocus = LostFocus (WidgetId -> Command Global.State ())
+triggerLostFocus :: WidgetId -> Command Global.State ()
+triggerLostFocus id = do
+    let key = TypeKey :: (TypeKey LostFocus)
+    maybeHandler <- Global.inRegistry $ handler id key
+    forM_ maybeHandler $ \(LostFocus handler) -> handler id
+
+
+takeFocus :: WidgetId -> Command Global.State ()
+takeFocus id = do
+    currentFocused <- use $ Global.uiRegistry . UIRegistry.focusedWidget
+    forM_ currentFocused triggerLostFocus
+    Global.uiRegistry . UIRegistry.focusedWidget ?= id

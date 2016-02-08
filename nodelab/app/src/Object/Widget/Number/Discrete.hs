@@ -24,6 +24,7 @@ create s l v = DiscreteNumber def s l v True def
 instance IsDisplayObject DiscreteNumber where
     widgetPosition = position
     widgetSize     = size
+    widgetVisible  = to $ const True    
 
 displayValue' :: DiscreteNumber -> String
 displayValue' model = show $ model ^. value

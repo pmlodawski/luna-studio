@@ -18,15 +18,15 @@ import           Empire.API.Data.Node (NodeId)
 import qualified Empire.API.Data.Node as Node
 
 
-updateNode :: NodeId -> Text -> Command State ()
-updateNode nodeId expr = do
-    Global.graph . Graph.nodesMap . ix nodeId . Node.expression .= expr
-    nodeMay <- preuse $ Global.graph . Graph.nodesMap . ix nodeId
-    case nodeMay of
-        Just node -> do
-            widgetId <- zoom Global.uiRegistry $ nodeIdToWidgetId nodeId
-            forM_ widgetId $ \widgetId -> do
-                zoom Global.uiRegistry $ UICmd.update widgetId (NodeModel.expression .~ expr)
-            zoom Global.workspace $ BatchCmd.updateNode node
-            zoom Global.workspace BatchCmd.runMain
-        Nothing   -> return ()
+-- updateNode :: NodeId -> Text -> Command State ()
+-- updateNode nodeId expr = do
+--     Global.graph . Graph.nodesMap . ix nodeId . Node.expression .= expr
+--     nodeMay <- preuse $ Global.graph . Graph.nodesMap . ix nodeId
+--     case nodeMay of
+--         Just node -> do
+--             widgetId <- zoom Global.uiRegistry $ nodeIdToWidgetId nodeId
+--             forM_ widgetId $ \widgetId -> do
+--                 zoom Global.uiRegistry $ UICmd.update widgetId (NodeModel.expression .~ expr)
+--             zoom Global.workspace $ BatchCmd.updateNode node
+--             zoom Global.workspace BatchCmd.runMain
+--         Nothing   -> return ()

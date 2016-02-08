@@ -22,3 +22,4 @@ create s l v = Toggle def s l v True False
 instance IsDisplayObject Toggle where
     widgetPosition = position
     widgetSize     = size
+    widgetVisible  = to $ const True

@@ -7,6 +7,7 @@ import           Object.UITypes
 
 data State = State { _sidebar        :: WidgetId
                    , _projectChooser :: WidgetId
+                   , _breadcrumbs    :: WidgetId
                    } deriving (Eq, Show, Generic)
 
 
@@ -15,4 +16,4 @@ makeLenses ''State
 instance ToJSON State
 
 instance Default State where
-    def = State def def -- initialized in Init#initialize
+    def = State def def def -- initialized in Init#initialize

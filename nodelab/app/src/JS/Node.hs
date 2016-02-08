@@ -20,7 +20,7 @@ import qualified JavaScript.Array    as JSArray
 import           Data.JSString.Text  (lazyTextToJSString)
 import           Data.JSString       (unpack)
 
-foreign import javascript unsafe "app.createPendingNode($1, $2, $3, $4)"
+foreign import javascript safe "app.createPendingNode($1, $2, $3, $4)"
     createPendingNode' :: Int -> JSString -> Double -> Double -> IO ()
 
 createPendingNode :: Int -> Text -> Vector2 Double -> IO ()

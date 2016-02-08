@@ -14,7 +14,7 @@ data MouseButton = NoButton
                  | RightButton
                  deriving (Eq, Show, Generic)
 
-instance ToJSON MouseButton
+
 
 toMouseButton :: Int -> MouseButton
 toMouseButton 1  = LeftButton
@@ -30,12 +30,12 @@ data Type = Pressed
           | Clicked
           | DblClicked
           | Wheel (Vector2 Double)
-          deriving (Eq, Show)
+          deriving (Eq, Show, Generic)
 
 data EventWidget = EventWidget { _widgetId    :: WidgetId
                                , _worldMatrix :: [Double]
                                , _scene       :: SceneType
-                               } deriving (Eq, Show)
+                               } deriving (Eq, Show, Generic)
 
 makeLenses ''EventWidget
 
@@ -44,7 +44,7 @@ data Event a = Event { _tpe         :: Type
                      , _button      :: MouseButton
                      , _keyMods     :: KeyMods
                      , _widget      :: Maybe EventWidget
-                     } deriving (Eq, Show, Typeable)
+                     } deriving (Eq, Show, Typeable, Generic)
 
 type RawEvent  = Event Int
 type Event'    = Event Double
@@ -67,3 +67,9 @@ instance (PrettyPrinter a) => PrettyPrinter (Event a) where
                                                     " "   <> display keyMods <>
                                                     " "   <> display widget  <>
                                                     ")"
+
+instance ToJSON (Event Int)
+instance ToJSON (Event Double)
+instance ToJSON Type
+instance ToJSON MouseButton
+instance ToJSON EventWidget

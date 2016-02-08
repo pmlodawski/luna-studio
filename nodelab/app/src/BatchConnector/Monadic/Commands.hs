@@ -9,21 +9,21 @@ import           Data.Text.Lazy          (Text)
 
 import           Reactive.Commands.Command (Command, ioCommand, performIO)
 
-runMain :: Command Workspace ()
-runMain = performIO BatchCmd.runMain
+-- runMain :: Command Workspace ()
+-- runMain = performIO BatchCmd.runMain
 
-setCode :: Text -> Command Workspace ()
-setCode = ioCommand . BatchCmd.setCode
-
-insertSerializationMode :: Node -> Command Workspace ()
-insertSerializationMode = ioCommand . BatchCmd.insertSerializationMode
-
-insertSerializationModes :: [Node] -> Command Workspace ()
-insertSerializationModes = ioCommand . BatchCmd.insertSerializationModes
-
-updateNode :: Node -> Command Workspace ()
-updateNode _ = return () -- ioCommand . BatchCmd.updateNode
-
-requestValues :: [Node] -> Command Workspace ()
-requestValues = ioCommand . BatchCmd.requestValues
-
+-- setCode :: Text -> Command Workspace ()
+-- setCode = ioCommand . BatchCmd.setCode
+--
+-- insertSerializationMode :: Node -> Command Workspace ()
+-- insertSerializationMode = ioCommand . BatchCmd.insertSerializationMode
+--
+-- insertSerializationModes :: [Node] -> Command Workspace ()
+-- insertSerializationModes = ioCommand . BatchCmd.insertSerializationModes
+--
+-- updateNode :: Node -> Command Workspace ()
+-- updateNode _ = return () -- ioCommand . BatchCmd.updateNode
+--
+-- requestValues :: [Node] -> Command Workspace ()
+-- requestValues = ioCommand . BatchCmd.requestValues
+--

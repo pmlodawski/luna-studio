@@ -18,7 +18,7 @@ import qualified Reactive.State.Graph           as Graph
 import qualified Reactive.State.UIRegistry      as UIRegistry
 import           Reactive.Commands.Command      (Command, performIO)
 import           Reactive.Commands.RegisterNode (registerNode)
-import           Reactive.Commands.UpdateNode   (updateNode)
+import           Reactive.Commands.UpdateNode   () -- FIXME: import some required, but  unrelated instance
 
 import qualified Reactive.Plugins.Core.Action.NodeSearcher.Mock as Mock
 import           Data.Text.Lazy (Text)
@@ -27,7 +27,7 @@ toAction :: Event -> Maybe (Command Global.State ())
 toAction (NodeSearcher (NodeSearcher.Event "query" expr _))           = Just $ querySearch expr
 toAction (NodeSearcher (NodeSearcher.Event "tree"  expr _))           = Just $ queryTree expr
 toAction (NodeSearcher (NodeSearcher.Event "create" expr Nothing))    = Just $ registerNode expr
-toAction (NodeSearcher (NodeSearcher.Event "create" expr (Just nid))) = Just $ updateNode nid expr
+-- toAction (NodeSearcher (NodeSearcher.Event "create" expr (Just nid))) = Just $ updateNode nid expr
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\t' mods))        = Just $ if mods ^. Keyboard.shift
     then openEdit
     else openFresh

@@ -25,6 +25,7 @@ create s l min max v = DiscreteSlider def s l True min max v def
 instance IsDisplayObject DiscreteSlider where
     widgetPosition = position
     widgetSize     = size
+    widgetVisible  = to $ const True
 
 displayValue' :: DiscreteSlider -> String
 displayValue' slider = show $ slider ^. value
