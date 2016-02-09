@@ -151,19 +151,3 @@ instance Default IdentPoolState where
 
 instance MonadIdentPool m => Generator m VarIdent  where new = modify $ varNames  allocate
 instance MonadIdentPool m => Generator m TypeIdent where new = modify $ typeNames allocate
-
---mapOver :: (Lens' a b) -> (b -> (b, out)) -> (a -> (a, out))
-
-
-
---class Monad m => Generator     m a where new         :: m a                      ; default new :: Maker a => Deconstructed a -> m a
---                                                                                 ; new = return . make ; {-# INLINE new #-}
-
---requestVarName :: MonadNamePool m => m Name
---requestVarName = modify $ mapOver varNames $ fmap swap request
-
---requestTypeName :: MonadNamePool m => m Name
---requestTypeName = modify $ mapOver typeNames $ fmap swap request
-
-
-

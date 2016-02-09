@@ -47,8 +47,8 @@ buildAppType appRef = do
     caseTest (uncover appNode) $ do
         match $ \(App srcConn argConns) -> do
             src      <- follow source srcConn
-            args     <- (mapM ∘ mapM) (follow source) argConns
-            specArgs <- (mapM ∘ mapM) getTypeSpec args
+            args     <- mapM2 (follow source) argConns
+            specArgs <- mapM2 getTypeSpec args
             out      <- var' =<< newVarIdent'
             l        <- lam' specArgs out
             reconnect appRef (prop Type) out
@@ -68,100 +68,4 @@ getTypeSpec ref = do
         return ntp
 
 
-
-
-
-
---foo :: forall a. Show a => NetGraph a -> IO (Ref $ Node (NetLayers a :< Draft Static), NetGraph a)
-----foo :: NetGraph -> IO ((), NetGraph)
---foo g = runNetworkBuilderT g
---    $ do
---    title "basic element building"
---    s1 <- star
---    print s1
-
---    return s1
-
-
-renderAndOpen lst = do
-    flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
-    open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
-
-
-data Foo = Foo deriving (Show)
-
---var :: NodeBuilder Var m (ls :< term) => NameInput (Ref (Node $ ls :< term)) -> m (Ref (Node $ ls :< term))
-
-
-
-
-myg :: ( -- ls   ~ NetLayers Foo
-        term ~ Draft Static
-
-       , MonadIO       m
-       , NodeInferable m (ls :< term)
-       , TermNode Star m (ls :< term)
-       , TermNode Var  m (ls :< term)
-       , TermNode App  m (ls :< term)
-       ) => m [Ref (Node $ (ls :< term))]
-myg = do
-    f  <- var' "f"
-    a  <- var' "a"
-    b  <- var' "b"
-    r  <- app' f [arg a, arg b]
-
-    g  <- var' "g"
-    r2 <- app' g [arg r]
-    --r_v <- read r
-    --print $ caseTest (uncover r_v) $ do
-    --    match $ \(App a b) -> "APP!"
-    --    match $ \ANY -> "something else :("
-    return [r,r2]
-
-
 universe = Ref $ Ptr 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?
-
-
-prebuild :: IO (Ref $ Node (NetLayers Foo :< Draft Static), NetGraph Foo)
-prebuild = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers Foo :< Draft Static)))
-         $ runNetworkBuilderT def
-         $ do
-    star
-
-
-buildBase :: NetGraph Foo -> IO ([Ref (Node $ (NetLayers Foo :< Draft Static))], NetGraph Foo)
-buildBase g = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers Foo :< Draft Static)))
-       $ runNetworkBuilderT g myg
-
---runPass :: NetGraph Foo -> IO (Ref (Node $ (NetLayers Foo :< Draft Static)), NetGraph Foo)
-runPass g m = fmap snd
-            $ runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers Foo :< Draft Static)))
-            $ runNetworkBuilderT g m
-
-main = do
-
-    (_, g)   <- prebuild
-    (fs, g') <- buildBase g
-    g'' <- TypeCheck.runT $ runPass g' (mapM buildAppType fs)
-    renderAndOpen [ ("g1", g')
-                  , ("g2", g'')
-                  ]
-    print "hej ho!"
-
-
-
-
-
-
-
-
-
-
---reconnect :: (Reader m src, Writer m src, Connectible (Ref src) (Ref tgt) m, e ~ Connection (Ref src) (Ref tgt), Unregister m e)
---          => Ref src -> Lens' src e -> Ref tgt -> m e
---reconnect srcRef l tgtRef = do
---    src  <- read srcRef
---    unregister $ src ^. l
---    conn <- connection srcRef tgtRef
---    write srcRef $ src & l .~ conn
---    return conn

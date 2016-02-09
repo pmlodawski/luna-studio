@@ -233,3 +233,10 @@ instance (MonadIO m, Ord a, PrintDot a) => Displayable m (DotGraph a) where
         liftIO $ runGraphviz gv Png path
         open [path]
         return ()
+
+
+-- === Utils === --
+
+renderAndOpen lst = do
+    flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
+    open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)

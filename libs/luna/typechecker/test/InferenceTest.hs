@@ -31,13 +31,8 @@ import           Luna.Compilation.Pass.Inference.Literals      (assignLiteralTyp
 
 
 
-data Foo = Foo deriving (Show)
 
-renderAndOpen lst = do
-    flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
-    open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
-
-graph1 :: ( ls   ~ NetLayers Foo
+graph1 :: ( ls   ~ NetLayers ()
           , term ~ Draft Static
           , MonadIO       m
           , NodeInferable m (ls :< term)
@@ -80,18 +75,18 @@ graph1 = do
     return appPlus2
     -- return i1
 
-prebuild :: IO (Ref $ Node (NetLayers Foo :< Draft Static), NetGraph Foo)
-prebuild = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers Foo :< Draft Static)))
+prebuild :: IO (Ref $ Node (NetLayers () :< Draft Static), NetGraph ())
+prebuild = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers () :< Draft Static)))
          $ runNetworkBuilderT def
          $ star
 
 
-buildBase :: NetGraph Foo -> IO (Ref (Node $ (NetLayers Foo :< Draft Static)), NetGraph Foo)
-buildBase g = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers Foo :< Draft Static)))
+buildBase :: NetGraph () -> IO (Ref (Node $ (NetLayers () :< Draft Static)), NetGraph ())
+buildBase g = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers () :< Draft Static)))
             $ runNetworkBuilderT g graph1
 
--- runPass :: NetGraph Foo -> IO (Ref (Node $ (NetLayers Foo :< Draft Static)), NetGraph Foo)
-runPass g m = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers Foo :< Draft Static)))
+-- runPass :: NetGraph ()) -> IO (Ref (Node $ (NetLayers ()) :< Draft Static)), NetGraph ()))
+runPass g m = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers () :< Draft Static)))
             $ runNetworkBuilderT g m
 
 main = do

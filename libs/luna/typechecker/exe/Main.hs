@@ -20,7 +20,7 @@ import Luna.Evaluation.Runtime (Static, Dynamic)
 import qualified Luna.Evaluation.Runtime as Runtime
 import Luna.Syntax.Model.Graph
 import Luna.Syntax.Model.Layer
-import Luna.Syntax.Model.Network.Builder
+import Luna.Syntax.Model.Network.Builder (rebuildNetwork')
 import Luna.Syntax.Model.Network.Term
 import Data.Construction
 import Luna.Syntax.Model.Graph.Builder.Ref as Ref
@@ -33,54 +33,72 @@ import Data.Index (idx)
 import Data.Container
 import           Data.Attr (attr)
 import           Control.Monad.Event
-import           Luna.Syntax.Model.Network.Builder.Node hiding (star, str,int,cons,acc,app,var,unify,blank)
+import           Luna.Syntax.Model.Network.Builder.Node -- hiding (star, str,int,cons,acc,app,var,unify,blank)
 import qualified Luna.Syntax.Model.Network.Builder.Node.Inferred as Inf
 import           Luna.Syntax.Model.Network.Builder.Node.Class ()
 import Type.Inference
+import Luna.Syntax.Model.Network.Builder.Term.Class (runNetworkBuilderT, NetGraph, NetLayers)
 
 import qualified Luna.Compilation.Pass.Inference.Struct as S
+import qualified Luna.Compilation.Stage.TypeCheck as TypeCheck
+import qualified Luna.Compilation.Pass.Inference.Struct as StructInference
 
-renderAndOpen lst = do
-    flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
-    open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
+
 
 
 title s = putStrLn $ "\n" <> "-- " <> s <> " --"
 
-data IDT a = IDT a deriving (Show)
-
-
-data MyGraph (t :: * -> *) = MyGraph deriving (Show)
-
-type instance Layout (MyGraph t) term rt = t (Term (MyGraph t) term rt)
 
 -- --------------------------------------
 --  !!! KEEP THIS ON THE BEGINNING !!! --
 -- --------------------------------------
 -- - vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv ---
 prebuild :: Show a => IO (Ref $ Node (NetLayers a :< Draft Static), NetGraph a)
-prebuild = runNetworkBuilderT def $ star
+prebuild = runBuild def star
 
 
-type instance Item (NetGraph a) = Ref $ Node (NetLayers a :< Draft Static)
+runBuild (g :: NetGraph a) m = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers a :< Draft Static)))
+                             $ runNetworkBuilderT g m
 
-instance Sort.CompleteGraph     (Graph (NetLayers a :< Raw) (Link (NetLayers a :< Raw)))
+evalBuild = fmap snd ∘∘ runBuild
 
-instance Sort.MarkableGraph     (Graph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
-    markNode ref g = snd $ rebuildNetwork' g $ do
-        Ref.with ref $ prop Markable .~ True
-    isMarked ref g = fst $ rebuildNetwork' g $ do
-        node <- read ref
-        return $ node # Markable
 
-instance Sort.Graph             (Graph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
-    listNodes g = map (Ref . Ptr) $ (usedIxes $ g ^. nodeGraph)
+input_g1 :: ( term ~ Draft Static
+           , MonadIO       m
+           , NodeInferable m (ls :< term)
+           , TermNode Star m (ls :< term)
+           , TermNode Var  m (ls :< term)
+           , TermNode App  m (ls :< term)
+           ) => m [Ref (Node $ (ls :< term))]
+input_g1 = do
+    f  <- var' "f"
+    a  <- var' "a"
+    b  <- var' "b"
+    r  <- app' f [arg a, arg b]
 
-instance Sort.ForwardEdgedGraph (Graph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
-    successors ref g = fst $ rebuildNetwork' g $ do
-        node <- read ref
-        mapM (follow target) $ node ^. prop Succs
+    g  <- var' "g"
+    r2 <- app' g [arg r]
+    return [r,r2]
 
+
+main :: IO ()
+main = do
+    (_,  g :: NetGraph () ) <- prebuild
+
+    -- Running Type Checking compiler stage
+    TypeCheck.runT $ do
+        (fs, g') <- runBuild g input_g1
+        g''      <- evalBuild g' (mapM StructInference.buildAppType fs)
+        renderAndOpen [ ("g1", g')
+                      , ("g2", g'')
+                      ]
+    print "hej ho!"
+
+
+
+-----------------------
+-- === Showcase === ---
+-----------------------
 
 foo :: forall a. Show a => NetGraph a -> IO (Ref $ Node (NetLayers a :< Draft Static), NetGraph a)
 --foo :: NetGraph -> IO ((), NetGraph)
@@ -132,53 +150,32 @@ foo g = runNetworkBuilderT g
     return s1
 
 
-infTest :: ( MonadIO        m
-           , TermNode Star  m (ls :< term)
-           , TermNode Unify m (ls :< term)
-           , NodeInferable  m (ls :< term)
-           , LitLike          (ls :< term)
-           ) => m ()
-infTest = do
-    infTest
-    s1 <- Inf.star
-    s2 <- Inf.star
-    u1 <- Inf.unify s1 s2
-    s1_v <- read s1
-    write s1 s1_v
-    let x = uncover s1_v
-    print $ caseTest x $ do
-        match $ \Star -> "its a star! <3"
-        match $ \ANY  -> "something else!"
-    return ()
 
 
+----------------------------
+-- === Sorting stuff === ---
+----------------------------
 
-runInfTest :: forall a. Show a => NetGraph a -> IO ((), NetGraph a)
-runInfTest g = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers a :< Draft Static)))
-             $ runNetworkBuilderT g infTest
+type instance Item (NetGraph a) = Ref $ Node (NetLayers a :< Draft Static)
+
+instance Sort.CompleteGraph     (Graph (NetLayers a :< Raw) (Link (NetLayers a :< Raw)))
+
+instance Sort.MarkableGraph     (Graph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
+    markNode ref g = snd $ rebuildNetwork' g $ do
+        Ref.with ref $ prop Markable .~ True
+    isMarked ref g = fst $ rebuildNetwork' g $ do
+        node <- read ref
+        return $ node # Markable
+
+instance Sort.Graph             (Graph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
+    listNodes g = map (Ref . Ptr) $ (usedIxes $ g ^. nodeGraph)
+
+instance Sort.ForwardEdgedGraph (Graph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
+    successors ref g = fst $ rebuildNetwork' g $ do
+        node <- read ref
+        mapM (follow target) $ node ^. prop Succs
 
 
-
-
-
-main :: IO ()
-main = do
-    --(star, g :: NetGraph ()) <- prebuild
-    --print star
-    --print g
-    --putStrLn "\n--------------\n"
-    --(s,g') <- foo g
-    --print g'
-
-    --title "graph sorting"
-    --print $ Sort.sortBy (const True) g'
-
-    --title "params reading"
-    --print $ g' # s
-
-    --renderAndOpen [("g", g')]
-
-    S.main
 
 -------------------------
 -- === Benchmarks === ---
