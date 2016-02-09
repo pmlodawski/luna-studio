@@ -51,6 +51,7 @@ Library
 
     Exposed-modules: `findmodules('src', '.*\.hs', exclude='.*/Interpreter/.*')`
 
+    Other-Modules: Paths_luna
     Build-Depends: base
                  , constraints
                  , container
@@ -124,6 +125,7 @@ Executable luna
                   TypeOperators
                   ViewPatterns
 
+    Other-Modules: Paths_luna
     Build-Depends: luna
                  , base
                  , constraints

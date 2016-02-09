@@ -1,10 +1,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE CPP                 #-}
+{-# LANGUAGE CPP                       #-}
 
-module Luna.Compilation.Pass.Inference.Literals
-    ( assignLiteralTypes
-    ) where
+module Luna.Compilation.Pass.Inference.Literals where
 
 import           Prelude.Luna                                    hiding (Num, pre)
 

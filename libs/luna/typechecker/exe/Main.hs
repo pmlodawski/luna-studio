@@ -10,7 +10,7 @@
 
 module Main where
 
-import Prologue              hiding (cons, read, (#))
+import Prologue              hiding (cons, read, (#), Version)
 import Luna.Syntax.AST.Term  hiding (Lit, Val, Thunk, Expr, Draft, Target, Source, source, target)
 import qualified Luna.Syntax.AST.Term as Term
 import Luna.Diagnostic.Vis.GraphViz
@@ -43,7 +43,9 @@ import qualified Luna.Compilation.Pass.Inference.Struct as S
 import qualified Luna.Compilation.Stage.TypeCheck as TypeCheck
 import qualified Luna.Compilation.Pass.Inference.Struct as StructInference
 
+import           Data.Version.Semantic
 
+import qualified Luna.Compilation.Env.Class as Env
 
 
 title s = putStrLn $ "\n" <> "-- " <> s <> " --"
@@ -74,25 +76,30 @@ input_g1 = do
     f  <- var' "f"
     a  <- var' "a"
     b  <- var' "b"
-    r  <- app' f [arg a, arg b]
+    r1 <- app' f [arg a, arg b]
 
     g  <- var' "g"
-    r2 <- app' g [arg r]
-    return [r,r2]
+    r2 <- app' g [arg r1]
+    return [r1,r2]
 
 
 main :: IO ()
 main = do
     (_,  g :: NetGraph () ) <- prebuild
 
-    -- Running Type Checking compiler stage
-    TypeCheck.runT $ do
-        (fs, g') <- runBuild g input_g1
-        g''      <- evalBuild g' (mapM StructInference.buildAppType fs)
-        renderAndOpen [ ("g1", g')
-                      , ("g2", g'')
-                      ]
-    print "hej ho!"
+    -- Running compiler environment
+    flip Env.evalT def $ do
+        v <- view version <$> Env.get
+        putStrLn $ "Luna compiler version " <> showVersion v
+
+        -- Running Type Checking compiler stage
+        TypeCheck.runT $ do
+            (all_apps, g') <- runBuild g input_g1
+            g''            <- evalBuild g' $ StructInference.run all_apps
+            renderAndOpen [ ("g1", g')
+                          , ("g2", g'')
+                          ]
+    print "end"
 
 
 

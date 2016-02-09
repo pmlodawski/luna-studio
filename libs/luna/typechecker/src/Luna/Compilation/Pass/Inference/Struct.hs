@@ -1,30 +1,28 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE CPP                       #-}
 
 module Luna.Compilation.Pass.Inference.Struct where
 
 import Prelude.Luna
 
+import Data.Construction
+import Data.Prop
+import Data.Record
+import Luna.Diagnostic.Vis.GraphViz
+import Luna.Evaluation.Runtime                      (Static, Dynamic)
+import Luna.Syntax.AST.Term                         hiding (source)
+import Luna.Syntax.Model.Graph
+import Luna.Syntax.Model.Graph.Builder
+import Luna.Syntax.Model.Layer
 import Luna.Syntax.Model.Network.Builder.Node
 import Luna.Syntax.Model.Network.Builder.Term.Class (runNetworkBuilderT, NetGraph, NetLayers)
-import Luna.Syntax.Model.Graph
-import Luna.Evaluation.Runtime (Static, Dynamic)
+import Luna.Syntax.Model.Network.Class              ()
 import Luna.Syntax.Model.Network.Term
-import Luna.Syntax.Model.Layer
-
-import Luna.Syntax.Model.Network.Class ()
-import Luna.Diagnostic.Vis.GraphViz
+import Luna.Syntax.Name.Ident.Pool                  (MonadIdentPool, newVarIdent')
 import Type.Inference
-import Luna.Syntax.Model.Graph.Builder
-import Data.Prop
-import Data.Construction
-import Luna.Syntax.AST.Term hiding (source)
-import Data.Record
 
 import qualified Luna.Compilation.Stage.TypeCheck as TypeCheck
-import           Luna.Syntax.Name.Ident.Pool      (MonadIdentPool, newVarIdent')
-import qualified Luna.Syntax.Name as Name
+import qualified Luna.Syntax.Name                 as Name
 
 
 #define PassCtx(m,ls,term) ( term ~ Draft Static               \
@@ -67,5 +65,7 @@ getTypeSpec ref = do
         reconnect ref (prop Type) ntp
         return ntp
 
+run :: PassCtx(m,ls,term) => [Ref (Node $ (ls :< term))] -> m ()
+run = void ∘ mapM buildAppType
 
 universe = Ref $ Ptr 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?
