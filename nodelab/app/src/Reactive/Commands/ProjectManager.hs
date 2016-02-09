@@ -51,6 +51,9 @@ loadGraph location = do
         workspace <- use Global.workspace
         performIO $ BatchCmd.getProgram workspace
 
+displayCurrentBreadcrumb :: Command State ()
+displayCurrentBreadcrumb = Breadcrumbs.update enterBreadcrumbs
+
 enterBreadcrumbs :: Breadcrumb -> Command State ()
 enterBreadcrumbs newBc = do
     location <- use $ Global.workspace . Workspace.currentLocation
@@ -66,7 +69,7 @@ projectChooserId = use $ Global.uiElements . UIElements.projectChooser
 
 initProjectChooser :: WidgetId -> Command State WidgetId
 initProjectChooser container = do
-    let button = Button.create (Vector2 210 20) "Create project"
+    let button = Button.create Style.createProjectButtonSize "Create project"
     inRegistry $ UICmd.register container button (handle $ ClickedHandler $ const openAddProjectDialog)
 
     let group = Group.create & Group.position . y .~ 40.0
@@ -84,21 +87,20 @@ emptyProjectChooser pc = do
 
 openAddProjectDialog :: Command State ()
 openAddProjectDialog = inRegistry $ do
-    let group = Group.create & Group.position . x .~ 230.0
-                             & Group.style . Group.background ?~ (0.3, 0.3, 0.5)
-                             & Group.style . Group.padding .~ uniformPadding 5.0
+    let group = Group.create & Group.position .~ Style.createProjectDialogPosition
+                             & Group.style    .~ Style.createProjectDialogStyle
     groupId <- UICmd.register sceneInterfaceId group (Layout.horizontalLayoutHandler 5.0)
 
-    let tb = LabeledTextBox.create (Vector2 200 20) "Project name" "Untitled project"
+    let tb = LabeledTextBox.create Style.createProjectDialogTextBoxSize "Project name" "Untitled project"
     tbId <- UICmd.register groupId tb def
 
-    let button = Button.create (Vector2 100 20) "Create project"
+    let button = Button.create Style.createProjectDialogOKSize "Create project"
     UICmd.register_ groupId button $ handle $ ClickedHandler $ const $ do
         name <- inRegistry $ UICmd.get tbId LabeledTextBox.value
         inRegistry $ UICmd.removeWidget groupId
         performIO $ BatchCmd.createProject name $ name <> ".luna"
 
-    let button = Button.create (Vector2 80 20) "Cancel"
+    let button = Button.create Style.createProjectDialogCancelSize "Cancel"
     UICmd.register_ groupId button $ handle $ ClickedHandler $ const $ do
         inRegistry $ UICmd.removeWidget groupId
 
@@ -115,5 +117,5 @@ displayProjectList = do
     projects <- use $ Global.workspace . Workspace.projects
     forM_ (IntMap.toList projects) $ \(id, project) -> do
         let isCurrent = if (currentProjectId == id) then "* " else ""
-        let button = Button.create (Vector2 200 20) $ (isCurrent <> (Text.pack $ fromMaybe "(no name)" $ project ^. Project.name))
+        let button = Button.create Style.projectListItemSize $ (isCurrent <> (Text.pack $ fromMaybe "(no name)" $ project ^. Project.name))
         inRegistry $ UICmd.register groupId button (handle $ ClickedHandler $ const (loadProject id))
