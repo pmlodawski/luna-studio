@@ -1,7 +1,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE CPP                       #-}
 
-module Luna.Compilation.Pass.Inference.Literals where
+module Luna.Compilation.Pass.Utils.Literals where
 
 import           Prelude.Luna                                    hiding (Num, pre)
 
@@ -35,26 +35,19 @@ import           Luna.Syntax.Model.Network.Term
                              , TermNode Lam  m (ls :< term) \
                              )
 
-assignLiteralType :: PassCtx(m, ls, term)
-                  => Ref (Node $ (ls :< term))
-                  -> Ref (Node $ (ls :< term))
-                  -> Ref (Node $ (ls :< term))
-                  -> m ()
-assignLiteralType consIntRef consStrRef ref = do
+pre :: PassCtx(m, ls, term) => Ref (Node $ (ls :< term)) -> m [Ref (Node $ (ls :< term))]
+pre ref = mapM (follow source) =<< (# Inputs) <$> read ref
+
+collectLiterals :: PassCtx(m, ls, term) => Ref (Node $ (ls :< term)) -> m [Ref (Node $ (ls :< term))]
+collectLiterals ref = do
+    prev  <- pre ref
+    lists <- mapM collectLiterals prev
+    let list = join lists
     node <- read ref
     caseTest (uncover node) $ do
-        let process = void ∘ reconnect ref (prop Type)
-        match $ \(Str str) -> process consStrRef
-        match $ \(Num num) -> process consIntRef
-        match $ \ANY       -> return ()
+        match $ \(Str str) -> return $ ref : list
+        match $ \(Num num) -> return $ ref : list
+        match $ \ANY       -> return list
 
-createLiteralTypes :: PassCtx(m, ls, term) => m (Ref (Node $ (ls :< term)), Ref (Node $ (ls :< term)))
-createLiteralTypes = do
-    consIntRef <- cons "Int"
-    consStrRef <- cons "String"
-    return (consIntRef, consStrRef)
-
-run :: PassCtx(m, ls, term) => [Ref (Node $ (ls :< term))] -> m ()
-run literals = do
-    (consIntRef, consStrRef) <- createLiteralTypes
-    mapM_ (assignLiteralType consIntRef consStrRef) literals
+run :: PassCtx(m, ls, term) => Ref (Node $ (ls :< term)) -> m [Ref (Node $ (ls :< term))]
+run root = collectLiterals root
