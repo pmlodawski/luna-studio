@@ -13,6 +13,7 @@ import qualified Reactive.State.Global        as Global
 import           Reactive.State.UIRegistry    (addHandler, sceneGraphId, sceneInterfaceId)
 import qualified Reactive.State.UIRegistry    as UIRegistry
 
+import           Style.Types                  (Padding (..))
 
 maximum' :: [Double] -> Double
 maximum' [] = 0.0
@@ -24,10 +25,10 @@ getFarEdge getter id = do
     size   <- UICmd.get' id $ widgetSize     . getter
     return $ offset + size
 
-updateSize :: Vector2 Double -> WidgetId -> Command UIRegistry.State ()
-updateSize (Vector2 padX padY) id = do
+updateSize :: Padding -> WidgetId -> Command UIRegistry.State ()
+updateSize (Padding top right bottom left) id = do
     widgets <- UICmd.children id
     widths  <- mapM (getFarEdge x) widgets
     heights <- mapM (getFarEdge y) widgets
 
-    UICmd.resize id $ Vector2 (padX + maximum' widths) (padY + maximum' heights)
+    UICmd.resize id $ Vector2 (left + right + maximum' widths) (top + bottom + maximum' heights)

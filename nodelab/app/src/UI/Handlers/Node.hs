@@ -41,6 +41,7 @@ import           UI.Widget.Node               ()
 import           UI.Widget.TextBox            ()
 import           UI.Widget.LabeledTextBox     ()
 import           UI.Handlers.LabeledTextBox   ()
+import qualified Style.Node as Style
 
 import           Empire.API.Data.Node         (NodeId)
 
@@ -136,36 +137,34 @@ unselectNode = flip UICmd.update_ (Model.isSelected .~ False)
 instance ResizableWidget Model.Node
 instance CompositeWidget Model.Node where
     createWidget id model = do
-        let offset = Vector2 (-50.0) (-50.0)
-            label  = Label.Label offset (Vector2 100.0 20.0) Label.Center $ model ^. Model.expression
-        void $ UICmd.register id label def
+        let label  = Style.expressionLabel $ model ^. Model.expression
+        UICmd.register id label def
 
-        let textBox = Label.Label (Vector2 (-40.0) (-10.0)) (Vector2 80.0 20.0) Label.Center (model ^. Model.name)
-        void $ UICmd.register id textBox def
+        let label = Style.nameLabel (model ^. Model.name)
+        UICmd.register id label def
 
-        let offset = Vector2 (-30.0) 40.0
-            group  = Group.create & Group.position .~ offset
+        let group  = Group.create & Group.position .~ Style.controlsPosition
                                   & Group.visible  .~ (model ^. Model.isExpanded)
-        controlGroups <- UICmd.register id group (Layout.verticalLayoutHandler def 5.0)
+        controlGroups <- UICmd.register id group Style.controlsLayout
 
-        let grp    = Group.Group def def True $ Just (0.2, 0.2, 0.2)
-        expandedGroup <- UICmd.register controlGroups grp (Layout.verticalLayoutHandler (Vector2 5.0 5.0) 5.0)
+        let grp    = Group.create & Group.style .~ Style.expandedGroupStyle
+        expandedGroup <- UICmd.register controlGroups grp Style.expandedGroupLayout
 
         let grp    = Group.create
-        nodeGroup <- UICmd.register expandedGroup grp (Layout.verticalLayoutHandler def 5.0)
+        nodeGroup <- UICmd.register expandedGroup grp Style.expandedGroupLayout
 
-        let widget = LabeledTextBox.create (Vector2 200 20) "Name" (model ^. Model.name)
+        let widget = LabeledTextBox.create Style.portControlSize "Name" (model ^. Model.name)
         UICmd.register nodeGroup widget $ textHandlers id
 
         let grp    = Group.create
-        UICmd.register expandedGroup grp (Layout.verticalLayoutHandler def 5.0)
+        UICmd.register expandedGroup grp Style.expandedGroupLayout
 
-        let label  = Label.Label (Vector2 (-50.0) 0.0) (Vector2 100.0 20.0) Label.Left ""
+        let label  = Style.valueLabel ""
         UICmd.register controlGroups label def
 
-        let group  = Group.create & Group.background ?~ (0.2, 0.2, 0.2)
-                                  & Group.visible    .~ (model ^. Model.isExpanded)
-        UICmd.register_ controlGroups group (Layout.verticalLayoutHandler def 0.0)
+        let group  = Group.create & Group.style   .~ Style.visualizationGroupStyle
+                                  & Group.visible .~ (model ^. Model.isExpanded)
+        UICmd.register_ controlGroups group (Layout.verticalLayoutHandler 0.0)
 
     updateWidget id old model = do
         controlsId <- expandedGroupId id

@@ -6,28 +6,30 @@ import qualified Data.Text.Lazy                  as Text
 import           Utils.PreludePlus
 import           Utils.Vector                    (Vector2 (..), x, y)
 
-import           Object.UITypes (WidgetId)
 import qualified Batch.Workspace                 as Workspace
 import qualified BatchConnector.Commands         as BatchCmd
+import           Object.UITypes                  (WidgetId)
+import qualified Reactive.Commands.Breadcrumbs   as Breadcrumbs
 import           Reactive.Commands.Command       (Command, execCommand, performIO)
 import qualified Reactive.Commands.UIRegistry    as UICmd
-import qualified Reactive.Commands.Breadcrumbs   as Breadcrumbs
 import           Reactive.Commands.UnrenderGraph (unrender)
 import           Reactive.State.Global           (State, inRegistry)
 import qualified Reactive.State.Global           as Global
+import qualified Reactive.State.UIElements       as UIElements
 import           Reactive.State.UIRegistry       (addHandler, handle, sceneInterfaceId, sceneInterfaceId)
 import qualified Reactive.State.UIRegistry       as UIRegistry
-import qualified Reactive.State.UIElements       as UIElements
 
-import           Empire.API.Data.GraphLocation   (GraphLocation(..))
-import           Empire.API.Data.Breadcrumb      (Breadcrumb(..))
+import           Empire.API.Data.Breadcrumb      (Breadcrumb (..))
+import           Empire.API.Data.GraphLocation   (GraphLocation (..))
 import qualified Empire.API.Data.GraphLocation   as GraphLocation
 import           Empire.API.Data.Project         (ProjectId)
 import qualified Empire.API.Data.Project         as Project
 
 import qualified Object.Widget.Button            as Button
-import qualified Object.Widget.LabeledTextBox    as LabeledTextBox
 import qualified Object.Widget.Group             as Group
+import qualified Object.Widget.LabeledTextBox    as LabeledTextBox
+import           Style.Types                     (uniformPadding)
+import qualified Style.Layout as Style
 import           UI.Handlers.Button              (ClickedHandler (..))
 import           UI.Instances
 import qualified UI.Layout                       as Layout
@@ -64,11 +66,13 @@ projectChooserId = use $ Global.uiElements . UIElements.projectChooser
 
 initProjectChooser :: WidgetId -> Command State WidgetId
 initProjectChooser container = do
-    let button = Button.create (Vector2 210 20) "Create project" & Button.position .~ Vector2 5.0 5.0
+    let button = Button.create (Vector2 210 20) "Create project"
     inRegistry $ UICmd.register container button (handle $ ClickedHandler $ const openAddProjectDialog)
 
-    let group = Group.createWithBg (0.14, 0.42, 0.37)  & Group.position .~ Vector2 5.0 40.0
-    projectChooser <- inRegistry $ UICmd.register container group (Layout.verticalLayoutHandler (Vector2 5.0 5.0) 5.0)
+    let group = Group.create & Group.position . y .~ 40.0
+                             & Group.style .~ Style.projectChooser
+
+    projectChooser <- inRegistry $ UICmd.register container group (Layout.verticalLayoutHandler 5.0)
     Global.uiElements . UIElements.projectChooser .= projectChooser
 
     return projectChooser
@@ -80,9 +84,10 @@ emptyProjectChooser pc = do
 
 openAddProjectDialog :: Command State ()
 openAddProjectDialog = inRegistry $ do
-    let group = (Group.createWithBg (0.3, 0.3, 0.5)) & Group.position . x .~ 230.0
-
-    groupId <- UICmd.register sceneInterfaceId group (Layout.horizontalLayoutHandler (Vector2 5.0 5.0) 5.0)
+    let group = Group.create & Group.position . x .~ 230.0
+                             & Group.style . Group.background ?~ (0.3, 0.3, 0.5)
+                             & Group.style . Group.padding .~ uniformPadding 5.0
+    groupId <- UICmd.register sceneInterfaceId group (Layout.horizontalLayoutHandler 5.0)
 
     let tb = LabeledTextBox.create (Vector2 200 20) "Project name" "Untitled project"
     tbId <- UICmd.register groupId tb def

@@ -37,4 +37,4 @@ createTuple :: Text -> [AnyLunaValue] -> AnyLunaValue -> List
 createTuple l v e = List def def l v e True
 
 toGroup :: List -> Group
-toGroup l = Group (l ^. position) (l ^. size) True Nothing
+toGroup l = Group (l ^. position) (l ^. size) True def
