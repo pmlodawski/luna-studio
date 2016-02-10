@@ -13,6 +13,9 @@ import Data.Container.Auto      (Auto)
 import Data.Container.Resizable (Exponential)
 import Data.Index
 import Data.Vector              (Vector)
+import Data.IntSet              (IntSet)
+
+import qualified Data.IntSet as IntSet
 
 
 ----------------------------
@@ -45,14 +48,26 @@ instance Monad m => IsContainerM  m (AutoVector a) where
 
 
 
+---------------------
+-- === Cluster === --
+---------------------
+
+newtype Cluster = Cluster IntSet deriving (Show)
+
+
+
 -------------------
 -- === Graph === --
 -------------------
 
 data Graph node edge = Graph { _nodeGraph :: AutoVector node
                              , _edgeGraph :: AutoVector edge
+                             , _clusters  :: AutoVector Cluster
                              } deriving (Show)
-makeLenses ''Graph
+
+
+makeLenses  ''Graph
+
 
 
 -- === Attributes === --
@@ -72,7 +87,7 @@ edges = edgeGraph ∘ asList
 
 -- === Instances === --
 
-instance Default (Graph n e) where def = Graph (alloc 100) (alloc 100)
+instance Default (Graph n e) where def = Graph (alloc 100) (alloc 100) (alloc 100)
 
 
 

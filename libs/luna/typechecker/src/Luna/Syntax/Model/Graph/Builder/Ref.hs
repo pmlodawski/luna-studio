@@ -49,12 +49,18 @@ instance (MonadBuilder n e m, Castable a n) => Constructor m (Ref $ Node a) wher
 instance (MonadBuilder n e m, Castable (Edge src tgt) e) => Constructor m (Ref $ Edge src tgt) where
     construct e = Ref ∘ Ptr <$> modify (edgeGraph $ swap ∘ ixed add (cast e)) ; {-# INLINE construct #-}
 
+instance MonadBuilder n e m => Constructor m (Ref Cluster) where
+    construct c = Ref ∘ Ptr <$> modify (clusters $ swap ∘ ixed add c) ; {-# INLINE construct #-}
+
 -- Accessors
 
-instance (MonadBuilder n e m, Castable n a)              => Reader m (Node a)       where read  = flip fmap get ∘  getter ; {-# INLINE read  #-}
-instance (MonadBuilder n e m, Castable e (Edge src tgt)) => Reader m (Edge src tgt) where read  = flip fmap get ∘  getter ; {-# INLINE read  #-}
-instance (MonadBuilder n e m, Castable a n)              => Writer m (Node a)       where write = modify_       ∘∘ setter ; {-# INLINE write #-}
-instance (MonadBuilder n e m, Castable (Edge src tgt) e) => Writer m (Edge src tgt) where write = modify_       ∘∘ setter ; {-# INLINE write #-}
+instance (MonadBuilder n e m, Castable n a)              => Reader m (Node a)       where read  = flip fmap get ∘ getter ; {-# INLINE read #-}
+instance (MonadBuilder n e m, Castable e (Edge src tgt)) => Reader m (Edge src tgt) where read  = flip fmap get ∘ getter ; {-# INLINE read #-}
+instance  MonadBuilder n e m                             => Reader m Cluster        where read  = flip fmap get ∘ getter ; {-# INLINE read #-}
+
+instance (MonadBuilder n e m, Castable a n)              => Writer m (Node a)       where write = modify_ ∘∘ setter ; {-# INLINE write #-}
+instance (MonadBuilder n e m, Castable (Edge src tgt) e) => Writer m (Edge src tgt) where write = modify_ ∘∘ setter ; {-# INLINE write #-}
+instance  MonadBuilder n e m                             => Writer m Cluster        where write = modify_ ∘∘ setter ; {-# INLINE write #-}
 
 -- Unregistering
 

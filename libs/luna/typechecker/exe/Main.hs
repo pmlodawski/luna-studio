@@ -24,6 +24,7 @@ import Luna.Syntax.Model.Network.Builder (rebuildNetwork')
 import Luna.Syntax.Model.Network.Term
 import Data.Construction
 import Luna.Syntax.Model.Graph.Builder.Ref as Ref
+import qualified Luna.Syntax.Model.Graph.Builder.Class as Graph
 import Data.Prop
 import Data.Graph.Sort hiding (Graph)
 import qualified Data.Graph.Sort as Sort
@@ -47,6 +48,7 @@ import           Data.Version.Semantic
 
 import qualified Luna.Compilation.Env.Class as Env
 
+import qualified Luna.Syntax.Model.Graph.Cluster as Cluster
 
 title s = putStrLn $ "\n" <> "-- " <> s <> " --"
 
@@ -85,6 +87,13 @@ input_g1 = do
 
 main :: IO ()
 main = do
+    compiler
+    showcase
+    return ()
+
+
+compiler :: IO ()
+compiler = do
     (_,  g :: NetGraph () ) <- prebuild
 
     -- Running compiler environment
@@ -107,13 +116,20 @@ main = do
 -- === Showcase === ---
 -----------------------
 
+showcase :: IO ()
+showcase = do
+    (_,  g :: NetGraph () ) <- prebuild
+    (_, g') <- foo g
+    renderAndOpen [ ("g", g')
+                  ]
+
 foo :: forall a. Show a => NetGraph a -> IO (Ref $ Node (NetLayers a :< Draft Static), NetGraph a)
 --foo :: NetGraph -> IO ((), NetGraph)
 foo g = runNetworkBuilderT g
     $ do
     title "basic element building"
-    s1 <- star
-    s2 <- star
+    s1 <- int 8
+    s2 <- str "test"
     print s1
 
     title "reading node references"
@@ -154,10 +170,34 @@ foo g = runNetworkBuilderT g
     print s1t
     print s1s
 
+    title "cluster definition"
+    cl1 <- cluster
+    cl2 <- cluster
+    include s1 cl1
+    include s2 cl1
+    include s2 cl2
+    print "done"
+
+    title "cluster lookup"
+    print =<< cl1 `includes` s2
+
+    title "cluster modification"
+    exclude s2 cl1
+    print =<< cl1 `includes` s2
+
     return s1
 
 
+cluster :: Constructor m (Ref Cluster) => m (Ref Cluster)
+cluster = constructLayer $ Cluster mempty
 
+includes :: Graph.MonadBuilder n e m => Ref Cluster -> Ref a -> m Bool
+include  :: Graph.MonadBuilder n e m => Ref a -> Ref Cluster -> m ()
+exclude  :: Graph.MonadBuilder n e m => Ref a -> Ref Cluster -> m ()
+
+includes cluster el = Cluster.member (el ^. idx) <$> read cluster
+include  el cluster = Ref.with cluster $ Cluster.add    (el ^. idx)
+exclude  el cluster = Ref.with cluster $ Cluster.remove (el ^. idx)
 
 ----------------------------
 -- === Sorting stuff === ---

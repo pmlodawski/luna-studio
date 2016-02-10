@@ -39,6 +39,11 @@ import           Luna.Syntax.Model.Graph
 import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Builder.Term
 import           Luna.Syntax.Model.Network.Term
+import qualified Luna.Syntax.Model.Graph.Cluster as Cluster
+import Data.Index (idx)
+
+import           Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
 
 --instance Repr HeaderOnly Data where repr _ = "Data"
 --instance Repr HeaderOnly (Draft l v) where repr _ = "Draft"
@@ -46,6 +51,7 @@ import           Luna.Syntax.Model.Network.Term
 -- Skin definition
 
 bgClr         = GVC.Gray12
+gClr          = GVC.Gray30
 
 typedArrClr   = GVC.Firebrick
 namedArrClr   = GVC.Turquoise
@@ -55,10 +61,12 @@ arrClr        = GVC.DarkOrange
 nodeClr       = GVC.DeepSkyBlue
 valIntNodeClr = GVC.Chartreuse
 valStrNodeClr = GVC.LimeGreen
+valLitNodeClr = GVC.LimeGreen
 valUnkNodeClr = GVC.Red
 dirtyClr      = GVC.MediumOrchid
 checkedClr    = GVC.MediumOrchid
 
+graphLabelClr = GVC.Gray30
 nodeLabelClr  = GVC.Gray75
 edgeLabelClr  = GVC.Gray40
 
@@ -68,84 +76,114 @@ fontName = "arial"
 fontSize = 10.0
 
 
-gStyle :: [GlobalAttributes]
-gStyle = [ GraphAttrs [ RankDir FromTop
-                      , Splines SplineEdges
-                      , FontName fontName
-                      , bgColor  bgClr
-                      ]
-         , NodeAttrs  [ fontColor nodeLabelClr
-                      , FontName fontName
-                      , FontSize fontSize
-                      ]
-         , EdgeAttrs  [ fontColor edgeLabelClr
-                      , FontName fontName
-                      , FontSize fontSize
-                      ]
-         ]
+gStyle :: String -> [GlobalAttributes]
+gStyle name = [ GraphAttrs [ RankDir FromTop
+                           , Splines SplineEdges
+                           , fontColor graphLabelClr
+                           , FontName fontName
+                           , FontSize fontSize
+                           , bgColor  bgClr
+                           , color    gClr
+                           , GV.Label $ StrLabel $ fromString name
+                           ]
+              , NodeAttrs  [ fontColor nodeLabelClr
+                           , FontName fontName
+                           , FontSize fontSize
+                           ]
+              , EdgeAttrs  [ fontColor edgeLabelClr
+                           , FontName fontName
+                           , FontSize fontSize
+                           ]
+              ]
 
 
 
-labelAttrs = const []
---class LabelAttrs a where
---    labelAttrs :: a -> [GV.Attribute]
 
---instance
+toGraphViz :: forall a. Show a => String -> NetGraph a -> DotGraph String
+toGraphViz name net = DotGraph { strictGraph     = False
+                               , directedGraph   = True
+                               , graphID         = Nothing
+                               , graphStatements = DotStmts { attrStmts = gStyle name
+                                                            , subGraphs = subGraphs
+                                                            , nodeStmts = nodeStmts
+                                                            , edgeStmts = edgeStmts
+                                                            }
+                               }
+    where -- === Inputs === --
 
---instance LabelAttrs (WithMeta a (Labeled2 b (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) where
---    labelAttrs = const []
-
---instance LabelAttrs (Labeled2 b (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))) where
---    labelAttrs = const []
-
-toGraphViz :: forall a. Show a => NetGraph a -> DotGraph String
-toGraphViz net = DotGraph { strictGraph     = False
-                          , directedGraph   = True
-                          , graphID         = Nothing
-                          , graphStatements = DotStmts { attrStmts = gStyle
-                                                       , subGraphs = []
-                                                       , nodeStmts = nodeStmts
-                                                       , edgeStmts = edgeStmts
-                                                       }
-                          }
-    where ng                = net ^. nodeGraph
+          ng                = net ^. nodeGraph
           eg                = net ^. edgeGraph
-          nodesE            = elems ng
-          edgesE            = elems eg
-          nodes'            = cast <$> nodesE :: [NetLayers a :< Draft Static]
-          edges'            = cast <$> edgesE :: [Link (NetLayers a :< Draft Static)]
-          nodeIds           = usedIxes ng
-          nodeLabels        = reprStyled HeaderOnly . uncover <$> nodes'
-          nodeStmts         = fmap (uncurry labeledNode) $ zip3 nodes' nodeLabels nodeIds
-          inEdges           = concat $ fmap nodeInEdges nodeIds
+          cg                = net ^. clusters
+          nodeIxs           = usedIxes ng :: [Int]
+          clrIxs            = usedIxes cg
+          clrs              = elems $ net ^. clusters
+          clredNodeIxs      = zip (safeHead ∘ matchClusters clrIxs <$> nodeIxs) nodeIxs :: [(Maybe Int, Int)]
+          clredNodeMap      = fromListWithReps clredNodeIxs :: Map (Maybe Int) [Int]
+          rootNodeIxs       = case Map.lookup Nothing clredNodeMap of
+                                  Nothing  -> []
+                                  Just ixs -> ixs
 
-          mkEdgeDesc (Edge src dst) = DotEdge (nodeRef $ src ^. rawPtr) (nodeRef $ dst ^. rawPtr) [GV.color arrClr]
 
-          --edgeStmts         = mkEdgeDesc <$> edges'
-          --inEdges           = zip3 ([0..] :: [Int])
+          -- === outputs === --
+
+          inEdges           = concat $ fmap nodeInEdges nodeIxs
           edgeStmts         = fmap mkEdge inEdges
+          nodeStmts         = labeledNode <$> rootNodeIxs
+          subGraphs         = uncurry genSubGraph ∘ (_1 %~ fromJust) <$> Map.assocs (Map.delete Nothing clredNodeMap)
+
+
+          -- === Utils === --
+
           nodeRef         i = "<node " <> show i <> ">"
-          labeledNode n s a = DotNode (nodeRef a) $ (GV.Label . StrLabel $ fromString s) : (nodeColorAttrs n) ++ labelAttrs n
+          labeledNode ix    = DotNode ref attrs where
+              ref    = nodeRef ix
+              node   = draftNodeByIx ix
+              label  = GV.Label ∘ StrLabel ∘ fromString $ genNodeLabel node
+              colors = nodeColorAttrs node
+              attrs  = label : colors
+
           nodeInEdges   n   = zip3 ([0..] :: [Int]) (genInEdges net $ (cast $ index n ng :: NetLayers a :< Draft Static)) (repeat n)
-          mkEdge  (n,(a,attrs),b) = DotEdge (nodeRef a) (nodeRef b) attrs -- (GV.edgeEnds Back : attrs)
+          mkEdge  (n,(a,attrs),b) = DotEdge (nodeRef a) (nodeRef b) attrs
 
---          allEdges        = drawEdge <$> elems_ eg
+          draftNodeByIx ix   = cast $ index_ ix ng :: (NetLayers a :< Draft Static)
+          clusterByIx   ix   = index_ ix cg        :: Cluster
+          genNodeLabel  node = reprStyled HeaderOnly $ uncover node
 
---          nodeColorAttrs n = case' (uncoat n) $ do
---                                match $ \(Val val :: Val (Ref Edge)) ->
---                                     case' val $ match $ \lit -> case lit of
---                                        Lit.Int    i -> [GV.color valIntNodeClr]
---                                        Lit.String s -> [GV.color valStrNodeClr]
---                                        _            -> [GV.color valUnkNodeClr]
---                                match $ \ANY         -> [GV.color nodeClr]
+          matchCluster2 :: Int -> Int -> Maybe Int
+          matchCluster2 clrIx  nodeIx = if Cluster.member nodeIx (clusterByIx clrIx) then Just clrIx else Nothing
+          matchClusters :: [Int] -> Int -> [Int]
+          matchClusters clrIxs nodeIx = catMaybes $ flip matchCluster2 nodeIx <$> clrIxs
 
-          nodeColorAttrs n = caseTest (uncover n) $ do
-                                --match $ \(Val val :: Val (Ref Edge)) ->
-                                --     case' val $ match $ \lit -> case lit of
-                                --        Lit.Int    i -> [GV.color valIntNodeClr]
-                                --        Lit.String s -> [GV.color valStrNodeClr]
-                                --        _            -> [GV.color valUnkNodeClr]
-                                match $ \ANY         -> [GV.color nodeClr]
+          nodeColorAttrs :: (NetLayers a :< Draft Static) -> [Attribute]
+          nodeColorAttrs n = return ∘ GV.color $ caseTest (uncover n) $ do
+                                match $ \(Term.Str s) -> valLitNodeClr
+                                match $ \(Term.Num n) -> valLitNodeClr
+                                match $ \ANY          -> nodeClr
+
+          genSubGraph :: Int -> [Int] -> DotSubGraph String
+          genSubGraph sgIdx nodeIxs = DotSG
+              { isCluster     = True
+              , subGraphID    = Just $ Str $ fromString $ show sgIdx
+              , subGraphStmts = DotStmts { attrStmts = gStyle ("Subgraph " <> show sgIdx)
+                                         , subGraphs = []
+                                         , nodeStmts = labeledNode <$> nodeIxs
+                                         , edgeStmts = []
+                                         }
+              }
+
+
+
+
+safeHead :: [a] -> Maybe a
+safeHead []    = Nothing
+safeHead (a:_) = Just a
+
+
+fromListWithReps :: Ord k => [(k,v)] -> Map k [v]
+fromListWithReps lst = foldr update (Map.fromList initLst) lst where
+    ks           = fst   <$> lst
+    initLst      = (,[]) <$> ks
+    update (k,v) = Map.adjust (v:) k
 
 
 genInEdges (g :: NetGraph a) (n :: NetLayers a :< Draft Static) = tpEdge : fmap addColor inEdges  where
@@ -160,47 +198,24 @@ genInEdges (g :: NetGraph a) (n :: NetLayers a :< Draft Static) = tpEdge : fmap 
     addColor (idx, attrs) = (idx, GV.color arrClr : attrs)
     getTgtIdx inp         = view (source ∘ rawPtr) $ index (inp ^. rawPtr) es
 
-    --getIdx  i = deref . view target $ index (deref i) eg
-    --n =
 
 
-----          drawEdge (DoubleArc start end) = DotEdge (nodeRef $ deref start) (nodeRef $ deref end) []
 
---class GenInEdges n e a where
---    genInEdges :: Graph n e -> a -> [(Int, [GV.Attribute])]
 
-----instance GenInEdges n e a => GenInEdges n e (Labeled2 l a) where
-----    genInEdges g (Labeled2 _ a) = genInEdges g a
 
-----instance GenInEdges n DoubleArc a => GenInEdges n DoubleArc (Typed (Ref Edge) a) where
-----    genInEdges g (Typed t a) = [(tgt, [GV.color typedArrClr, ArrowHead dotArrow])] <> genInEdges g a where
-----        tgt = deref . view target $ index (deref t) (g ^. edges)
 
-----instance GenInEdges n e a => GenInEdges n e (SuccTracking a) where
-----    genInEdges g = genInEdges g . unlayer
 
-----instance GenInEdges n e a => GenInEdges n e (Coat a) where
-----    genInEdges g = genInEdges g . unwrap
 
-----instance GenInEdges n DoubleArc (Draft (Ref Edge)) where
-----    genInEdges g a = ($ inEdges) $ case checkName a of
-----        Nothing -> fmap addColor
-----            where addColor (idx, attrs) = (idx, GV.color arrClr : attrs)
-----        Just  t -> fmap addColor
-----            where tidx = getIdx t
-----                  addColor (idx, attrs) = if idx == tidx then (idx, GV.color namedArrClr : attrs)
-----                                                         else (idx, GV.color accArrClr   : attrs)
-----        where genLabel  = GV.Label . StrLabel . fromString . show
-----              ins       = inputs a
-----              getIdx  i = deref . view target $ index (deref i) edges'
-----              inIdxs    = getIdx <$> ins
-----              inEdges   = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) [0..]
-----              edges'    = g ^. edges
-----              xtt       = case' a $ do
-----                              match $ \(Val _) -> 11
 
-----instance GenInEdges n e a => GenInEdges n e (WithMeta b a) where
-----    genInEdges g = genInEdges g . view node
+
+
+
+
+
+
+
+
+
 
 
 class Displayable m a where
@@ -238,5 +253,5 @@ instance (MonadIO m, Ord a, PrintDot a) => Displayable m (DotGraph a) where
 -- === Utils === --
 
 renderAndOpen lst = do
-    flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
+    flip mapM_ lst $ \(name, g) -> render name $ toGraphViz name g
     open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
