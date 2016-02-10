@@ -25,31 +25,36 @@ import qualified Empire.API.Data.GraphLocation   as GraphLocation
 import           Empire.API.Data.Project         (ProjectId)
 import qualified Empire.API.Data.Project         as Project
 
+import qualified JS.GraphLocation                as JS
 import qualified Object.Widget.Button            as Button
 import qualified Object.Widget.Group             as Group
 import qualified Object.Widget.LabeledTextBox    as LabeledTextBox
+import qualified Style.Layout                    as Style
 import           Style.Types                     (uniformPadding)
-import qualified Style.Layout as Style
 import           UI.Handlers.Button              (ClickedHandler (..))
 import           UI.Instances
 import qualified UI.Layout                       as Layout
-
 loadProject :: ProjectId -> Command State ()
 loadProject projId = do
     let newLocation = GraphLocation projId 0 (Breadcrumb [])
-    loadGraph newLocation
+    navigateToGraph newLocation
     displayProjectList
 
 loadGraph :: GraphLocation -> Command State ()
 loadGraph location = do
     currentLocation <- use $ Global.workspace . Workspace.currentLocation
-    when (currentLocation /= location) $ do
-        unrender
-        Global.workspace . Workspace.currentLocation .= location
-        saveCurrentLocation
-        Breadcrumbs.update enterBreadcrumbs
-        workspace <- use Global.workspace
-        performIO $ BatchCmd.getProgram workspace
+    unrender
+    Global.workspace . Workspace.currentLocation .= location
+    saveCurrentLocation
+    Breadcrumbs.update enterBreadcrumbs
+    workspace <- use Global.workspace
+    performIO $ BatchCmd.getProgram workspace
+
+navigateToGraph :: GraphLocation -> Command State ()
+navigateToGraph location = do
+    currentLocation <- use $ Global.workspace . Workspace.currentLocation
+    when (currentLocation /= location) $ loadGraph location
+
 
 displayCurrentBreadcrumb :: Command State ()
 displayCurrentBreadcrumb = Breadcrumbs.update enterBreadcrumbs
@@ -58,11 +63,13 @@ enterBreadcrumbs :: Breadcrumb -> Command State ()
 enterBreadcrumbs newBc = do
     location <- use $ Global.workspace . Workspace.currentLocation
     let newLocation = location & GraphLocation.breadcrumb .~ newBc
-    loadGraph newLocation
+    navigateToGraph newLocation
 
 
 saveCurrentLocation :: Command State ()
-saveCurrentLocation = return () -- TODO: Save current location to browser localStorage
+saveCurrentLocation = do
+    workspace <- use $ Global.workspace
+    performIO $ JS.saveLocation $ workspace ^. Workspace.uiGraphLocation
 
 projectChooserId :: Command State WidgetId
 projectChooserId = use $ Global.uiElements . UIElements.projectChooser

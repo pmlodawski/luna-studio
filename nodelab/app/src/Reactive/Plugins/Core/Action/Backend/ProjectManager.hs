@@ -3,12 +3,11 @@ module Reactive.Plugins.Core.Action.Backend.ProjectManager where
 import           Utils.PreludePlus
 import qualified Data.IntMap.Lazy                 as IntMap
 
-import           Batch.Workspace                  (InterpreterState (..), interpreterState)
 import qualified Event.Batch                      as Batch
 import           Event.Event                      (Event (Init, Batch))
 
 import           Reactive.Commands.Command        (Command, execCommand, performIO)
-import           Reactive.Commands.ProjectManager (displayProjectList)
+import           Reactive.Commands.ProjectManager (displayProjectList, loadGraph)
 import           Reactive.Commands.RenderGraph    (renderGraph)
 import           Reactive.State.Global            (State)
 import qualified Reactive.State.Global            as Global
@@ -32,18 +31,23 @@ toAction (Batch (Batch.ProjectList response)) = Just $ do
     let projects = response ^. Update.result . ListProjects.projects
     Global.workspace . Workspace.projects .= IntMap.fromList projects
 
-    displayProjectList
 
-    workspace <- use Global.workspace
-    performIO $ BatchCmd.getProgram workspace
+    lastLocation <- use $ Global.workspace . Workspace.lastUILocation
+    withJust lastLocation $ \lastLocation -> do
+        let lastGraphLocation = Workspace.fromUIGraphLocation projects lastLocation
+        withJust lastGraphLocation $ assign (Global.workspace . Workspace.currentLocation)
+
+    loc <- use $ Global.workspace . Workspace.currentLocation
+
+    displayProjectList
+    loadGraph loc
 
 toAction (Batch (Batch.ProjectCreated response)) = Just $ do
-    let pid      = response ^. Update.result . CreateProject.projectId
+    let pid     = response ^. Update.result . CreateProject.projectId
         project = response ^. Update.result . CreateProject.project
     Global.workspace . Workspace.projects . at pid ?= project
 
     projs <- use $ Global.workspace . Workspace.projects
-    performIO $ putStrLn $ show projs
 
     displayProjectList
 toAction _ = Nothing

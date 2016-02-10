@@ -79,5 +79,6 @@ toAction (Event.Batch ev) = Just $ case ev of
     NodeResultUpdated response -> do
         shouldProcess <- isCurrentLocation (response ^. NodeResultUpdate.location)
         when shouldProcess $ updateNodeValue (response ^. NodeResultUpdate.nodeId) (response ^. NodeResultUpdate.value)
+    _ -> return ()
 
 toAction _ = Nothing

@@ -18,18 +18,18 @@ import qualified Reactive.State.MultiSelection as MultiSelection
 import qualified Reactive.State.UIElements     as UIElements
 import qualified Reactive.State.UIRegistry     as UIRegistry
 
-data State = State { _mousePos       :: Vector2 Int
-                   , _graph          :: Graph.State
-                   , _camera         :: Camera.State
-                   , _multiSelection :: MultiSelection.State
-                   , _drag           :: Drag.State
-                   , _connect        :: Connect.State
-                   , _uiRegistry     :: UIRegistry.State
-                   , _connectionPen  :: ConnectionPen.State
-                   , _workspace      :: Workspace
-                   , _uiElements     :: UIElements.State
-                   , _lastEvent      :: Maybe Event.Event
-                   , _eventNum       :: Int
+data State = State { _mousePos          :: Vector2 Int
+                   , _graph             :: Graph.State
+                   , _camera            :: Camera.State
+                   , _multiSelection    :: MultiSelection.State
+                   , _drag              :: Drag.State
+                   , _connect           :: Connect.State
+                   , _uiRegistry        :: UIRegistry.State
+                   , _connectionPen     :: ConnectionPen.State
+                   , _workspace         :: Workspace
+                   , _uiElements        :: UIElements.State
+                   , _lastEvent         :: Maybe Event.Event
+                   , _eventNum          :: Int
                    } deriving (Eq, Show, Generic)
 
 instance ToJSON State

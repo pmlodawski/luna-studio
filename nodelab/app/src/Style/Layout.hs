@@ -1,10 +1,11 @@
 module Style.Layout where
 
-import Utils.PreludePlus
-import Utils.Vector
-import Style.Types
-import qualified Object.Widget.Group as Group
+import           Utils.PreludePlus
+import           Utils.Vector
 
+import qualified Object.Widget.Button as Button
+import qualified Object.Widget.Group  as Group
+import           Style.Types
 
 sidebarPadding                 = 10.0
 sidebarBackground              = (0.64, 0.21, 0.26)
@@ -22,6 +23,9 @@ breadcrumbStyle                = def & Group.background   ?~ sidebarBackground
                                      & Group.padding      .~ xyPadding 10.0 5.0
                                      & Group.borderRadius .~ (0, 0, 0, 0)
 
+
+breadcrumbItemSize             = Vector2 100.0 20.0
+breadcrumbItemStyle            = def & Button.rounded .~ False
 
 projectChooser                 = def & Group.padding    .~ uniformPadding 5.0
                                      & Group.background ?~ (0.14, 0.42, 0.37)

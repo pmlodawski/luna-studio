@@ -29,6 +29,7 @@ module Main where
 import           Utils.PreludePlus
 
 import           Batch.Workspace                   (Workspace)
+import qualified Batch.Workspace                   as Workspace
 import qualified BatchConnector.Commands           as BatchCmd
 import           JS.Config                         (getBackendAddress, isLoggerEnabled)
 import           JS.UI                             (initializeGl, render, triggerWindowResize)
@@ -38,18 +39,24 @@ import qualified Reactive.Plugins.Core.Action.Init as Init
 import qualified Reactive.Plugins.Core.Network     as CoreNetwork
 import qualified Reactive.Plugins.Loader.Loader    as Loader
 import           Reactive.State.Global             (State, initialState)
+import qualified Reactive.State.Global             as Global
 import           Utils.URIParser                   (getProjectName)
 import Control.Concurrent.MVar
+import qualified JS.GraphLocation as GraphLocation
 
 runMainNetwork :: WebSocket -> IO ()
 runMainNetwork socket = do
     initializeGl
     render
     enableLogging <- isLoggerEnabled
-    let (initActions, initState) = execCommand Init.initialize $ initialState
+
+    lastLocation <- GraphLocation.loadLocation
+
+    let initState = initialState & Global.workspace . Workspace.lastUILocation .~ lastLocation
+    let (initActions, initState') = execCommand Init.initialize initState
     initActions
 
-    state <- newMVar initState
+    state <- newMVar initState'
     CoreNetwork.makeNetworkDescription socket enableLogging state
     triggerWindowResize
     BatchCmd.listProjects
