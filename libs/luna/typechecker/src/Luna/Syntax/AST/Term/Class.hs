@@ -115,6 +115,7 @@ data    Blank      = Blank                 deriving (Show, Eq, Ord)
 
 class NFunctor n m a a' | n m a -> a' where fmapN :: (n -> m) -> a -> a'
 class TFunctor t r a a' | t r a -> a' where fmapT :: (t -> r) -> a -> a'
+class MonoTFunctor t a where monoTMap :: (t -> t) -> a -> a
 
 class NFoldable a t where foldrN :: (a -> b -> b) -> b -> t -> b
 class TFoldable a t where foldrT :: (a -> b -> b) -> b -> t -> b
@@ -189,14 +190,26 @@ instance           NFunctor n m (App       t) (App      t) where fmapN = flip co
 instance           NFunctor n m (Unify     t) (Unify    t) where fmapN = flip const                    ; {-# INLINE fmapN #-}
 instance           NFunctor n m Blank         Blank        where fmapN = flip const                    ; {-# INLINE fmapN #-}
 
-instance t ~ t' => TFunctor t r (Lam      t') (Lam      r) where fmapT = fmap                    ; {-# INLINE fmapT #-}
-instance t ~ t' => TFunctor t r (Acc    n t') (Acc    n r) where fmapT = fmap                    ; {-# INLINE fmapT #-}
-instance t ~ t' => TFunctor t r (Native n t') (Native n r) where fmapT = fmap                    ; {-# INLINE fmapT #-}
-instance t ~ t' => TFunctor t r (App      t') (App      r) where fmapT = fmap                    ; {-# INLINE fmapT #-}
-instance t ~ t' => TFunctor t r (Unify    t') (Unify    r) where fmapT = fmap                    ; {-# INLINE fmapT #-}
-instance           TFunctor t r (Var    n   ) (Var    n  ) where fmapT = flip const              ; {-# INLINE fmapT #-}
-instance           TFunctor t r (Cons   n   ) (Cons   n  ) where fmapT = flip const              ; {-# INLINE fmapT #-}
-instance           TFunctor t r Blank         Blank        where fmapT = flip const              ; {-# INLINE fmapT #-}
+instance t ~ t' => TFunctor t r (Lam      t') (Lam      r) where fmapT = fmap       ; {-# INLINE fmapT #-}
+instance t ~ t' => TFunctor t r (Acc    n t') (Acc    n r) where fmapT = fmap       ; {-# INLINE fmapT #-}
+instance t ~ t' => TFunctor t r (Native n t') (Native n r) where fmapT = fmap       ; {-# INLINE fmapT #-}
+instance t ~ t' => TFunctor t r (App      t') (App      r) where fmapT = fmap       ; {-# INLINE fmapT #-}
+instance t ~ t' => TFunctor t r (Unify    t') (Unify    r) where fmapT = fmap       ; {-# INLINE fmapT #-}
+instance           TFunctor t r (Var    n   ) (Var    n  ) where fmapT = flip const ; {-# INLINE fmapT #-}
+instance           TFunctor t r (Cons   n   ) (Cons   n  ) where fmapT = flip const ; {-# INLINE fmapT #-}
+instance           TFunctor t r Blank         Blank        where fmapT = flip const ; {-# INLINE fmapT #-}
+
+instance           MonoTFunctor t Str           where monoTMap = flip const ; {-# INLINE monoTMap #-}
+instance           MonoTFunctor t Star          where monoTMap = flip const ; {-# INLINE monoTMap #-}
+instance           MonoTFunctor t Num           where monoTMap = flip const ; {-# INLINE monoTMap #-}
+instance t ~ t' => MonoTFunctor t (Lam      t') where monoTMap = fmap       ; {-# INLINE monoTMap #-}
+instance t ~ t' => MonoTFunctor t (Acc    n t') where monoTMap = fmap       ; {-# INLINE monoTMap #-}
+instance t ~ t' => MonoTFunctor t (Native n t') where monoTMap = fmap       ; {-# INLINE monoTMap #-}
+instance t ~ t' => MonoTFunctor t (App      t') where monoTMap = fmap       ; {-# INLINE monoTMap #-}
+instance t ~ t' => MonoTFunctor t (Unify    t') where monoTMap = fmap       ; {-# INLINE monoTMap #-}
+instance           MonoTFunctor t (Var    n   ) where monoTMap = flip const ; {-# INLINE monoTMap #-}
+instance           MonoTFunctor t (Cons   n   ) where monoTMap = flip const ; {-# INLINE monoTMap #-}
+instance           MonoTFunctor t Blank         where monoTMap = flip const ; {-# INLINE monoTMap #-}
 
 -- Representations
 

@@ -167,7 +167,9 @@ mkRecord r = view (from asRecord) r
 
 class Encoder t a m rec | t a rec -> m where encode :: Proxy t -> a -> m rec
 
+-- TODO[WD]: Maybe unsafe extract / insert should be some kind of lens?
 class UnsafeExtract t rec m a | t rec a -> m where unsafeExtract :: Proxy t -> rec -> m a
+class UnsafeInsert  t rec m a | t rec a -> m where unsafeInsert  :: Proxy t -> a -> rec -> m rec
 class CheckMatch    t a rec where checkMatch :: Proxy t -> Proxy (a :: *) -> rec -> Bool
 
 
@@ -408,6 +410,31 @@ instance MapTryingElemList_ '[] ctx rec where mapTryingElemList_ = undefined
 --class NFunctor n m a a' | n m a -> a' where fmapN :: (n -> m) -> a -> a'
 
 
+class OverElement ctx rec where overElement :: Proxy ctx -> (forall v. ctx v => v -> v) -> rec -> rec
+instance (MapOverElemList els ctx rec, els ~ (RecordOf rec ##. Variant)) => OverElement ctx rec where overElement = mapOverElemList (p :: P els)
+
+class MapOverElemList els ctx rec where mapOverElemList :: Proxy (els :: [*]) -> Proxy ctx -> (forall v. ctx v => v -> v) -> rec -> rec
+
+
+instance MapOverElemList '[] ctx rec where mapOverElemList = undefined
+
+
+instance ( IsRecord rec
+         , CheckMatch Variant el (RecordOf rec)
+         , UnsafeExtract Variant rec Ok el
+         , UnsafeInsert  Variant rec Ok el
+         , ctx el
+         , MapOverElemList els ctx rec
+         ) => MapOverElemList (el ': els) ctx rec where
+    mapOverElemList _ ctx f rec = if match then out else mapOverElemList (p :: P els) ctx f rec where
+        t      = p :: P Variant
+        match  = checkMatch t (p :: P el) $ view asRecord rec
+        Ok el  = unsafeExtract t rec :: Ok el
+        Ok out = unsafeInsert  t (f el) rec
+
+
+--class UnsafeInsert  t rec m a | t rec a -> m where unsafeInsert  :: Proxy t -> a -> rec -> m rec
+
 
 ------------------------------
 -- === Pattern matching === --
@@ -577,10 +604,13 @@ class    MaskRebuilder oldLayout newLayout where rebuildMask :: LayoutProxy oldL
 instance MaskRebuilder layout    layout    where rebuildMask _ _ = id ; {-# INLINE rebuildMask #-}
 
 
-
 instance UncheckedGroupCons rec m a                                                    => UnsafeExtract Group   rec      m  a where unsafeExtract _                       = uncheckedGroupCons        ; {-# INLINE unsafeExtract #-}
 instance {-# OVERLAPPABLE #-} (UnsafeExtract Variant (Unwrapped rec) m a, Wrapped rec) => UnsafeExtract Variant rec      m  a where unsafeExtract t                       = unsafeExtract t ∘ unwrap' ; {-# INLINE unsafeExtract #-}
 instance {-# OVERLAPPABLE #-} (Unwrapped (r Data) ~ Data, Wrapped (r Data))            => UnsafeExtract Variant (r Data) Ok a where unsafeExtract _ (unwrap' -> Data _ v) = Ok $ unsafeRestore v      ; {-# INLINE unsafeExtract #-}
+
+instance {-# OVERLAPPABLE #-} (UnsafeInsert Variant (Unwrapped rec) m a, Wrapped rec, Functor m) => UnsafeInsert Variant rec      m  a where unsafeInsert t a   = wrapped' $ unsafeInsert t a                                  ; {-# INLINE unsafeInsert #-}
+instance {-# OVERLAPPABLE #-} (Unwrapped (r Data) ~ Data, Wrapped (r Data))                      => UnsafeInsert Variant (r Data) Ok a where unsafeInsert _ a r = Ok $ r & wrapped' %~ (\(Data m s) -> Data m (unsafeStore a)) ; {-# INLINE unsafeInsert #-}
+
 
 
 instance ( rec  ~ r Data
@@ -594,10 +624,4 @@ instance ( rec  ~ r Data
         bit   = fromIntegral $ natVal (p :: P nat)
         match = testBit mask bit
     {-# INLINE checkMatch #-}
-
-
-
-
-
-
 

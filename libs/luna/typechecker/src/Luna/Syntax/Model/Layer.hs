@@ -9,6 +9,7 @@ import Data.Layer.Cover
 import Data.Prop
 import Luna.Syntax.AST.Term (LayoutType)
 import Type.Bool
+import Data.Record          (RecordOf, IsRecord, asRecord)
 
 
 --------------------
@@ -107,6 +108,9 @@ type instance                                Prop a (ls :< t) = Prop a (Unwrappe
 instance Getter a (Unwrapped (ls :< t)) => Getter a (ls :< t) where getter a = getter a ∘ unwrap'      ; {-# INLINE getter #-}
 instance Setter a (Unwrapped (ls :< t)) => Setter a (ls :< t) where setter   = over wrapped' ∘∘ setter ; {-# INLINE setter #-}
 
+-- Records
+type instance RecordOf (ls :< t) = RecordOf (t ls)
+--instance IsRecord (Uncovered (ls :< t)) => IsRecord (ls :< t) where asRecord = covered ∘ asRecord
 
 ---------------------------
 -- === Native layers === --

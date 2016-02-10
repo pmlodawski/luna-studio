@@ -9,6 +9,7 @@ import Luna.Syntax.Model.Graph.Ref
 import Data.Container
 import Data.Index
 import Data.Prop
+import Data.Record                   (RecordOf, IsRecord, asRecord)
 import Luna.Syntax.Model.Graph.Class
 
 
@@ -29,7 +30,6 @@ type instance Uncovered (Node a) = Uncovered (Unlayered (Node a))
 type instance Unlayered (Node a) = Unwrapped (Node a)
 instance      Layered   (Node a)
 
-
 -- Construction
 
 instance Monad m => LayerConstructor m (Node a) where constructLayer = return ∘ Node    ; {-# INLINE constructLayer #-}
@@ -48,3 +48,8 @@ instance Setter a t => Setter a (Node t) where setter   = over wrapped' ∘∘ s
 
 instance Castable n node => Getter (Ref (Node node)) (Graph n e) where getter ref     = Node ∘ cast ∘ index_ (ref ^. idx) ∘ view nodeGraph                       ; {-# INLINE getter #-}
 instance Castable node n => Setter (Ref (Node node)) (Graph n e) where setter ref val = nodeGraph %~ unchecked inplace insert_ (ref ^. idx) (cast $ unwrap' val) ; {-# INLINE setter #-}
+
+-- Records
+
+type instance          RecordOf (Node a) = RecordOf a
+instance IsRecord a => IsRecord (Node a) where asRecord = wrapped' ∘ asRecord

@@ -10,7 +10,7 @@
 
 module Main where
 
-import           Prologue                                        hiding (Version, cons, read, ( # ), Num)
+import           Prologue                                        hiding (Version, cons, read, ( # ), Num, Cons)
 
 import           Control.Monad.Event
 import           Data.Attr                                       (attr)
@@ -36,6 +36,7 @@ import qualified Luna.Compilation.Stage.TypeCheck                as TypeCheck
 import           Luna.Diagnostic.Vis.GraphViz
 import           Luna.Evaluation.Runtime                         (Dynamic, Static)
 import qualified Luna.Evaluation.Runtime                         as Runtime
+import qualified Luna.Evaluation.Model                           as EvalModel
 import           Luna.Syntax.AST.Term                            hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
 import qualified Luna.Syntax.AST.Term                            as Term
 import           Luna.Syntax.Model.Graph
@@ -46,7 +47,8 @@ import           Luna.Syntax.Model.Network.Builder               (rebuildNetwork
 import           Luna.Syntax.Model.Network.Builder.Node
 import           Luna.Syntax.Model.Network.Builder.Node.Class    ()
 import qualified Luna.Syntax.Model.Network.Builder.Node.Inferred as Inf
-import           Luna.Syntax.Model.Network.Builder.Term.Class    (NetGraph, NetLayers, runNetworkBuilderT)
+import           Luna.Syntax.Model.Network.Builder.Term.Class    (NetGraph, NetLayers, runNetworkBuilderT, fmapInputs)
+import           Luna.Syntax.Model.Network.Class                 (Network)
 import           Luna.Syntax.Model.Network.Term
 
 import qualified Luna.Syntax.Model.Graph.Cluster as Cluster
@@ -142,9 +144,9 @@ input_g2 = do
 
 main :: IO ()
 main = do
-    showcase
+    --showcase
     --test1
-    --test2
+    test2
     return ()
 
 
@@ -263,9 +265,50 @@ foo g = runNetworkBuilderT g
     exclude s2 cl1
     print =<< cl1 `includes` s2
 
+    let x1 = s1_v :: Node $ (NetLayers a :< Draft Static)
+        x2 = fmapInputs id x1
     return s1
 
 
+--fmapInputs :: OverElement (MonoTMap t) r => (t -> t) -> (r -> r)
+
+
+--class TFunctor t r a a' | t r a -> a' where fmapT :: (t -> r) -> a -> a'
+
+
+
+--class OverElement ctx rec where overElement :: Proxy ctx -> (forall v. ctx v => v -> v) -> rec -> rec
+
+
+--instance (out ~ Str          ) => TFunctor2 t r Str           out where fmapT2 = undefined
+--instance (out ~ Star         ) => TFunctor2 t r Star          out where fmapT2 = undefined
+--instance (out ~ Num          ) => TFunctor2 t r Num           out where fmapT2 = undefined
+--instance (out ~ (Lam      r')) => TFunctor2 t r (Lam      t') out where fmapT2 = undefined
+--instance (out ~ (Acc    n r')) => TFunctor2 t r (Acc    n t') out where fmapT2 = undefined
+--instance (out ~ (Native n r')) => TFunctor2 t r (Native n t') out where fmapT2 = undefined
+--instance (out ~ (App      r')) => TFunctor2 t r (App      t') out where fmapT2 = undefined
+--instance (out ~ (Unify    r')) => TFunctor2 t r (Unify    t') out where fmapT2 = undefined
+--instance (out ~ (Var    n   )) => TFunctor2 t r (Var    n   ) out where fmapT2 = undefined
+--instance (out ~ (Cons   n   )) => TFunctor2 t r (Cons   n   ) out where fmapT2 = undefined
+--instance (out ~ Blank        ) => TFunctor2 t r Blank         out where fmapT2 = undefined
+
+
+
+
+
+
+
+--instance (out ~ Str          ) => TFunctor2 t r Str           out where fmapT2 = undefined
+--instance (out ~ Star         ) => TFunctor2 t r Star          out where fmapT2 = undefined
+--instance ()                    => TFunctor2 t r Num           out where fmapT2 = undefined
+--instance ()                    => TFunctor2 t r (Lam      t') out where fmapT2 = undefined
+--instance ()                    => TFunctor2 t r (Acc    n t') out where fmapT2 = undefined
+--instance ()                    => TFunctor2 t r (Native n t') out where fmapT2 = undefined
+--instance ()                    => TFunctor2 t r (App      t') out where fmapT2 = undefined
+--instance ()                    => TFunctor2 t r (Unify    t') out where fmapT2 = undefined
+--instance ()                    => TFunctor2 t r (Var    n   ) out where fmapT2 = undefined
+--instance ()                    => TFunctor2 t r (Cons   n   ) out where fmapT2 = undefined
+--instance ()                    => TFunctor2 t r Blank         out where fmapT2 = undefined
 
 --fmaptmp :: forall layout term rt x.
 --      (MapTryingElemList_
