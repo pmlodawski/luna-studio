@@ -107,5 +107,5 @@ main = do
     (graph, st) <- runEmpire def test
     case graph of
         Left err -> putStrLn err
-        Right g  -> render "g" $ toGraphViz $ g
+        Right g  -> render "g" $ toGraphViz "g" g
 {-main = return ()-}
