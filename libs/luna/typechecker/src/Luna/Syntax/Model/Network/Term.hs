@@ -11,7 +11,7 @@ import           Luna.Syntax.Model.Network.Class
 import           Control.Monad.Event
 import           Data.Prop
 import           Data.Layer.Cover
-import           Data.Record                    (RecordOf, IsRecord, asRecord, SmartCons, Variant, MapTryingElemList_, withElement_, Props)
+import           Data.Record                    (HasRecord, RecordOf, IsRecord, asRecord, SmartCons, Variant, MapTryingElemList_, withElement_, Props)
 import qualified Data.Record                    as Record
 import           Data.Reprx                     (Repr, repr)
 import           Luna.Syntax.AST.Term           hiding (Val, Lit, Thunk, Expr, Draft)
@@ -101,6 +101,12 @@ instance IsRecord (Val   rt ls) where asRecord = wrapped' ∘ asRecord
 instance IsRecord (Thunk rt ls) where asRecord = wrapped' ∘ asRecord
 instance IsRecord (Expr  rt ls) where asRecord = wrapped' ∘ asRecord
 instance IsRecord (Draft rt ls) where asRecord = wrapped' ∘ asRecord
+
+instance HasRecord (Lit   rt ls)
+instance HasRecord (Val   rt ls)
+instance HasRecord (Thunk rt ls)
+instance HasRecord (Expr  rt ls)
+instance HasRecord (Draft rt ls)
 
 -- Runtime models
 

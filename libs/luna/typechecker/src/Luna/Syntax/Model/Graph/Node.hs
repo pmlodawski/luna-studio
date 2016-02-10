@@ -9,7 +9,7 @@ import Luna.Syntax.Model.Graph.Ref
 import Data.Container
 import Data.Index
 import Data.Prop
-import Data.Record                   (RecordOf, IsRecord, asRecord)
+import Data.Record
 import Luna.Syntax.Model.Graph.Class
 
 
@@ -51,5 +51,6 @@ instance Castable node n => Setter (Ref (Node node)) (Graph n e) where setter re
 
 -- Records
 
-type instance          RecordOf (Node a) = RecordOf a
-instance IsRecord a => IsRecord (Node a) where asRecord = wrapped' ∘ asRecord
+type instance           RecordOf  (Node a) = RecordOf a
+instance IsRecord  a => IsRecord  (Node a) where asRecord = wrapped' ∘ asRecord
+instance HasRecord a => HasRecord (Node a) where record   = wrapped' ∘ record

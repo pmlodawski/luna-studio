@@ -139,7 +139,10 @@ instance Wrapped   Store where
 -- === Record === --
 --------------------
 
-class IsRecord a where asRecord :: Iso' a (RecordOf a)
+class IsRecord  a where asRecord :: Iso'  a (RecordOf a)
+class HasRecord a where record   :: Lens' a (RecordOf a)
+                        default record :: IsRecord a => Lens' a (RecordOf a)
+                        record = asRecord
 
 type family Props p a :: [*]
 type family GatherProps p lst :: [*] where
