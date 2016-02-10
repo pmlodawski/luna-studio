@@ -1,6 +1,7 @@
 precision mediump float;
 
 uniform float value;
+uniform int   rounded;
 
 <%= require('shaders/stdlib')() %>
 
@@ -16,7 +17,7 @@ void main(void) {
 
     float width  = size.x;
     float height = size.y;
-    float radius = height / 2.0;
+    float radius = float(rounded) * height / 2.0;
     float gRect  = sdf_rect(p, vec2(width, height), vec4(radius, radius, radius, radius));
 
     float gBg  = sdf_aa(gRect);

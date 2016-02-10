@@ -19,9 +19,6 @@ import qualified Reactive.Plugins.Core.Action.Drag                   as Drag
 import qualified Reactive.Plugins.Core.Action.Connect                as Connect
 import qualified Reactive.Plugins.Core.Action.NodeSearcher           as NodeSearcher
 import qualified Reactive.Plugins.Core.Action.Widget                 as Widget
-import qualified Reactive.Plugins.Core.Action.Backend.Backend        as Backend
-import qualified Reactive.Plugins.Core.Action.Backend.Runner         as Runner
-import qualified Reactive.Plugins.Core.Action.Backend.GraphFetcher   as GraphFetcher
 import qualified Reactive.Plugins.Core.Action.Backend.Graph          as Graph
 import qualified Reactive.Plugins.Core.Action.Backend.ProjectManager as ProjectManager
 import qualified Reactive.Plugins.Core.Action.ConnectionPen          as ConnectionPen
@@ -54,9 +51,6 @@ actions =  [ Debug.toActionEv
            , Drag.toAction
            , Connect.toAction
            , NodeSearcher.toAction
-           , Backend.toAction
-           , Runner.toAction
-           , GraphFetcher.toAction
            , ProjectManager.toAction
            , ConnectionPen.toAction
            , TextEditor.toAction

@@ -6,7 +6,7 @@ import qualified FastString
 import           Prologue
 
 
-type QualPath = [FastString] --TODO[PM] Use FastStrings
+type QualPath = [FastString]
 
 
 mk :: ToString s => s -> QualPath

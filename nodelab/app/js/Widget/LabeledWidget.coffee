@@ -14,6 +14,7 @@ class LabeledWidget extends BaseWidget
     @bgUniforms =
       size:      { type: 'v2', value: new THREE.Vector2(width, height) }
       focus:     { type: 'i',  value: 0   }
+      rounded:   { type: 'i',  value: 1   }
       objectId:  { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
 
     @bgUniforms[k] = v for k, v of $$.commonUniforms

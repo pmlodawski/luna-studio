@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Empire.API.JSONInstances where
 
-import           Data.Aeson.Types                  (ToJSON, toJSON)
+import           Data.Aeson.Types                  (ToJSON, toJSON, FromJSON)
 import           Data.Map.Lazy                     (Map)
 import qualified Data.Map.Lazy                     as Map
 import           Prologue
@@ -41,6 +41,8 @@ instance ToJSON Library.Library
 
 instance ToJSON Breadcrumb.Breadcrumb
 instance ToJSON Breadcrumb.BreadcrumbItem
+instance FromJSON Breadcrumb.Breadcrumb
+instance FromJSON Breadcrumb.BreadcrumbItem
 
 instance ToJSON GraphLocation.GraphLocation
 

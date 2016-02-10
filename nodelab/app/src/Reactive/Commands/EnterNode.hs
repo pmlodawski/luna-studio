@@ -19,11 +19,11 @@ enterNode :: BreadcrumbItem -> Command State ()
 enterNode item = do
     location <- use $ Global.workspace . Workspace.currentLocation
     let newLocation = location & GraphLocation.breadcrumb . Breadcrumb.items %~ (item:)
-    ProjectManager.loadGraph newLocation
+    ProjectManager.navigateToGraph newLocation
 
 exitNode :: Command State ()
 exitNode = do
     location <- use $ Global.workspace . Workspace.currentLocation
     case location ^. GraphLocation.breadcrumb . Breadcrumb.items of
-        (_:t) -> ProjectManager.loadGraph $ location & GraphLocation.breadcrumb . Breadcrumb.items .~ t
+        (_:t) -> ProjectManager.navigateToGraph $ location & GraphLocation.breadcrumb . Breadcrumb.items .~ t
         [] -> return ()

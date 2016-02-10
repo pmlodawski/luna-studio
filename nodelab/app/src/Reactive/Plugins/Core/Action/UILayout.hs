@@ -16,6 +16,7 @@ import qualified Reactive.State.Global            as Global
 import qualified Reactive.State.UIElements        as UIElements
 
 import qualified UI.Layout                        as Layout
+import qualified Style.Layout                        as Style
 
 toAction :: Event -> Maybe (Command Global.State ())
 toAction (Window (Window.Event Window.Resized width height)) = Just $ resizeSidebar
@@ -25,4 +26,4 @@ resizeSidebar :: Command State ()
 resizeSidebar = do
     screenSize <- use $ Global.camera . Camera.camera . Camera.screenSize
     sidebarId <- use $ Global.uiElements . UIElements.sidebar
-    inRegistry $ UICmd.resize sidebarId (Vector2 220 $ fromIntegral $ screenSize ^. y)
+    inRegistry $ UICmd.resize sidebarId (Vector2 Style.sidebarWidth $ fromIntegral $ screenSize ^. y)

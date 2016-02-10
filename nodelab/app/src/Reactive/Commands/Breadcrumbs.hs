@@ -3,32 +3,34 @@ module Reactive.Commands.Breadcrumbs (
     update
 ) where
 
-import qualified Data.IntMap.Lazy                as IntMap
-import qualified Data.Text.Lazy                  as Text
+import qualified Data.IntMap.Lazy              as IntMap
+import qualified Data.Text.Lazy                as Text
 import           Utils.PreludePlus
-import           Utils.Vector                    (Vector2 (..), x, y)
+import           Utils.Vector                  (Vector2 (..), x, y)
 
-import           Object.UITypes (WidgetId)
-import qualified Batch.Workspace                 as Workspace
-import qualified BatchConnector.Commands         as BatchCmd
-import           Reactive.Commands.Command       (Command, execCommand, performIO)
-import qualified Reactive.Commands.UIRegistry    as UICmd
-import           Reactive.State.Global           (State, inRegistry)
-import qualified Reactive.State.Global           as Global
-import           Reactive.State.UIRegistry       (addHandler, handle, sceneInterfaceId, sceneInterfaceId)
-import qualified Reactive.State.UIRegistry       as UIRegistry
-import qualified Reactive.State.UIElements       as UIElements
+import qualified Batch.Workspace               as Workspace
+import qualified BatchConnector.Commands       as BatchCmd
+import           Object.UITypes                (WidgetId)
+import           Reactive.Commands.Command     (Command, execCommand, performIO)
+import qualified Reactive.Commands.UIRegistry  as UICmd
+import           Reactive.State.Global         (State, inRegistry)
+import qualified Reactive.State.Global         as Global
+import qualified Reactive.State.UIElements     as UIElements
+import           Reactive.State.UIRegistry     (addHandler, handle, sceneInterfaceId)
+import qualified Reactive.State.UIRegistry     as UIRegistry
 
-import           Empire.API.Data.Breadcrumb      (Breadcrumb(..))
-import qualified Empire.API.Data.Breadcrumb      as Breadcrumb
-import qualified Empire.API.Data.GraphLocation   as GraphLocation
+import           Empire.API.Data.Breadcrumb    (Breadcrumb (..))
+import qualified Empire.API.Data.Breadcrumb    as Breadcrumb
+import qualified Empire.API.Data.GraphLocation as GraphLocation
+import qualified Empire.API.Data.Project       as Project
 
-import qualified Object.Widget.Button            as Button
-import qualified Object.Widget.LabeledTextBox    as LabeledTextBox
-import qualified Object.Widget.Group             as Group
-import           UI.Handlers.Button              (ClickedHandler (..))
+import qualified Object.Widget.Button          as Button
+import qualified Object.Widget.Group           as Group
+import qualified Object.Widget.LabeledTextBox  as LabeledTextBox
+import qualified Style.Layout                  as Style
+import           UI.Handlers.Button            (ClickedHandler (..))
 import           UI.Instances
-import qualified UI.Layout                       as Layout
+import qualified UI.Layout                     as Layout
 
 destroyBreadcrumbs :: Command State ()
 destroyBreadcrumbs = do
@@ -36,11 +38,23 @@ destroyBreadcrumbs = do
     breadcrumbItems <- inRegistry $ UICmd.children breadcrumbs
     inRegistry  $ mapM_ UICmd.removeWidget breadcrumbItems
 
+toggleProjectList :: Command State ()
+toggleProjectList = do
+    projectList <- use $ Global.uiElements . UIElements.projectChooser . UIElements.pcContainer
+    inRegistry $ UICmd.update_ projectList $ Group.visible %~ not
+
 displayBreadcrumbs :: (Breadcrumb -> Command State ()) -> Command State ()
 displayBreadcrumbs enterBreadcrumbs = do
     group <- use $ Global.uiElements . UIElements.breadcrumbs
 
     currentBreadcrumb <- use $ Global.workspace . Workspace.currentLocation . GraphLocation.breadcrumb . Breadcrumb.items
+
+    let widget = Button.create Style.breadcrumbItemSize "Projects"
+               & Button.style .~ Style.breadcrumbItemStyle
+        handlers = addHandler (ClickedHandler $ \_ -> toggleProjectList) mempty
+    inRegistry $ UICmd.register group widget handlers
+
+    currentProjectName <- use $ Global.workspace . Workspace.currentProject . Project.name
 
     inRegistry $ do
         forM_ (reverse $ tails currentBreadcrumb) $ \bc -> do
@@ -48,8 +62,9 @@ displayBreadcrumbs enterBreadcrumbs = do
                     (item:_) -> case item of
                         Breadcrumb.Function name -> name
                         Breadcrumb.Module   name -> name
-                    [] -> "(Project)"
-                widget = Button.create (Vector2 100 20) (Text.pack name)
+                    [] -> fromMaybe "(untitled project)" currentProjectName
+                widget = Button.create Style.breadcrumbItemSize (Text.pack name)
+                       & Button.style .~ Style.breadcrumbItemStyle
                 handlers = addHandler (ClickedHandler $ \_ -> enterBreadcrumbs $ Breadcrumb bc) mempty
             UICmd.register group widget handlers
 
