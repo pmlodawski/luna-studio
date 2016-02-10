@@ -1,7 +1,8 @@
 module Luna.Compilation.Pass.Dirty.Data.Env where
 
-import           Control.Monad.Trans.State
 import           Prologue
+
+import           Luna.Compilation.Pass.Dirty.Monad
 
 
 
@@ -12,14 +13,14 @@ data Env node = Env
 makeLenses ''Env
 
 
-addReqNode :: Monad m => node -> StateT (Env node) m ()
-addReqNode node = modify (over reqNodes (node :))
+addReqNode :: DirtyMonad (Env node) m => node -> m ()
+addReqNode node = modify_ (over reqNodes (node :))
 
-clearReqNodes :: Monad m => StateT (Env node) m ()
-clearReqNodes = modify (set reqNodes def)
+clearReqNodes :: DirtyMonad (Env node) m => m ()
+clearReqNodes = modify_ (set reqNodes def)
 
-getReqNodes :: Monad m => StateT (Env node) m [node]
-getReqNodes = use reqNodes
+getReqNodes :: DirtyMonad (Env node) m => m [node]
+getReqNodes = view reqNodes <$> get
 
 
 instance Default (Env node) where

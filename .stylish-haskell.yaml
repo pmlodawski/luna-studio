@@ -78,4 +78,5 @@ language_extensions:
   - TemplateHaskell
   - TypeFamilies
   - TypeOperators
+  - TupleSections
   - QuasiQuotes
