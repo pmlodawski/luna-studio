@@ -2,7 +2,7 @@ module Luna.Compilation.Pass.Dirty.Handler where
 
 import           Data.Prop
 import           Development.Placeholders
-import           Prologue
+import           Prologue hiding (read)
 
 import           Luna.Compilation.Pass.Dirty.Data.Env   (Env)
 import qualified Luna.Compilation.Pass.Dirty.Data.Env   as Env
@@ -34,12 +34,22 @@ nodesToExecute = do
 reset :: DirtyMonad (Env node) m => m ()
 reset = Env.clearReqNodes
 
--- connect :: (InterpreterMonad Env m, BuilderMonad (Network Label a) m) => Ref Node -> Ref Node -> m ()
--- connect prev next = do
---     isPrevDirty <- view (label . Label.dirty) <$> readRef prev
---     Dirty.markSuccessors $ if isPrevDirty
---         then prev
---         else next
+
+connect :: ( Castable n n
+           , Castable e (Edge n n)
+           , DirtyMonad (Env (Ref (Node n))) m
+           , HasProp Dirty n
+           , HasProp Succs n
+           , MonadBuilder n e m
+           , Prop Dirty n ~ DirtyVal
+           , Prop Succs n ~ [Ref (Edge n n)])
+        => Ref (Node n) -> Ref (Node n) -> m ()
+connect prev next = do
+    isPrevDirty <- Dirty.isDirty <$> read prev
+    Dirty.markSuccessors $ if isPrevDirty
+        then prev
+        else next
+
 
 markModified :: ( Castable n n
                 , Castable e (Edge n n)
