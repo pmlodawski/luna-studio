@@ -2,7 +2,7 @@
 module Reactive.Commands.UnrenderGraph where
 
 import           Reactive.Commands.Command    (Command, performIO)
-import           Reactive.State.Global        (State)
+import           Reactive.State.Global        (State, inRegistry)
 import qualified Reactive.State.Global        as Global
 import qualified Reactive.State.UIRegistry    as UIRegistry
 import           Utils.PreludePlus
@@ -24,7 +24,7 @@ unrender = do
         connWidgets  = UIRegistry.lookupAll uiRegistry :: [WidgetFile Connection]
         allWidgetIds = (view objectId <$> nodeWidgets) ++ (view objectId <$> connWidgets)
 
-    zoom Global.uiRegistry $ mapM_ removeWidget allWidgetIds
+    inRegistry $ mapM_ removeWidget allWidgetIds
 
     Global.workspace . Workspace.isGraphLoaded .= False
 

@@ -3,16 +3,16 @@ module Reactive.Plugins.Core.Action.General where
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           JS.Camera
-import           Event.Mouse    hiding      ( Event, WithObjects )
-import qualified Event.Mouse                         as Mouse
-import qualified Event.Window                        as Window
 import           Event.Event
-import qualified Reactive.Plugins.Core.Action.Camera as Camera
-import qualified Reactive.State.Camera               as Camera
-import qualified Reactive.State.Global               as Global
+import           Event.Mouse               hiding (Event, WithObjects)
+import qualified Event.Mouse               as Mouse
+import qualified Event.Window              as Window
+import           JS.Camera
+import qualified Reactive.Commands.Camera  as Camera
+import qualified Reactive.State.Camera     as Camera
+import qualified Reactive.State.Global     as Global
 
-import Reactive.Commands.Command (Command, ioCommand, execCommand, performIO)
+import           Reactive.Commands.Command (Command, execCommand, ioCommand, performIO)
 
 toAction :: Event -> Maybe (Command Global.State ())
 toAction (Mouse _ (Mouse.Event Mouse.Moved pos _ _ _))       = Just $ updateMousePos pos
