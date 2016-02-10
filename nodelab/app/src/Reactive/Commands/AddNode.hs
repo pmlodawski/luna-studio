@@ -25,16 +25,16 @@ import           Object.Widget.Number.Continuous (ContinuousNumber (..))
 import qualified Object.Widget.Number.Continuous as ContinuousNumber
 import           Object.Widget.Number.Discrete   (DiscreteNumber (..))
 import qualified Object.Widget.Number.Discrete   as DiscreteNumber
+import qualified Object.Widget.Plots.ScatterPlot as ScatterPlot
 import qualified Object.Widget.Port              as PortModel
 import           Object.Widget.Toggle            (Toggle (..))
 import qualified Object.Widget.Toggle            as Toggle
-import qualified Object.Widget.Plots.ScatterPlot as ScatterPlot
 import qualified UI.Handlers.Button              as Button
 import qualified UI.Handlers.LabeledTextBox      as LabeledTextBox
+import qualified UI.Handlers.Node                as Node
 import qualified UI.Handlers.Number.Continuous   as ContinuousNumber
 import qualified UI.Handlers.Number.Discrete     as DiscreteNumber
 import qualified UI.Handlers.Toggle              as Toggle
-import qualified UI.Handlers.Node                as Node
 
 import           Reactive.Commands.Command       (Command, performIO)
 import           Reactive.Commands.EnterNode     (enterNode)
@@ -63,16 +63,20 @@ import qualified UI.Registry                     as UIR
 import qualified UI.Scene
 import qualified UI.Widget                       as UIT
 
-import qualified Empire.API.Data.DefaultValue    as DefaultValue
-import           Empire.API.Data.DefaultValue    (Value(..))
-import           Empire.API.Data.Node            (Node, NodeId)
+import qualified Style.Node                      as Style
+import qualified Style.Types                     as Style
+
 import qualified Empire.API.Data.Breadcrumb      as Breadcrumb
+import           Empire.API.Data.DefaultValue    (Value (..))
+import qualified Empire.API.Data.DefaultValue    as DefaultValue
+import           Empire.API.Data.Node            (Node, NodeId)
 import qualified Empire.API.Data.Node            as Node
 import           Empire.API.Data.Port            (InPort (..), Port (..), PortId (..))
 import qualified Empire.API.Data.Port            as Port
 import           Empire.API.Data.PortRef         (AnyPortRef (..), InPortRef (..), toAnyPortRef)
 import           Empire.API.Data.ValueType       (ValueType (..))
 import qualified Empire.API.Data.ValueType       as ValueType
+
 
 addNode :: Node -> Command State ()
 addNode node = do
@@ -161,9 +165,11 @@ makePortControl parent nodeId port = case port ^. Port.portId of
 makeInPortControl :: WidgetId -> NodeId -> InPort -> Port -> Command UIRegistry.State ()
 makeInPortControl parent nodeId inPort port = case port ^. Port.state of
     Port.NotConnected    -> do
-        groupId <- UICmd.register parent Group.create (Layout.horizontalLayoutHandler def 10)
-        let label  = Label.create (Vector2 140 20) (Text.pack $ show inPort)
-            button = Button.create (Vector2 50 20) ("Set")
+        let group = Group.create & Group.style . Group.padding .~ Style.Padding 0.0 0.0 0.0 Style.setLabelOffsetX
+        groupId <- UICmd.register parent group (Layout.horizontalLayoutHandler 0.0)
+        let label  = Label.create Style.setLabelSize (Text.pack $ show inPort)
+                   & Label.position . x .~ Style.setLabelOffsetX
+            button = Button.create Style.setButtonSize "Set"
             handlers = addHandler (Button.ClickedHandler $ \_ -> do
                 workspace <- use Global.workspace
                 performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.IntValue def)
@@ -172,13 +178,14 @@ makeInPortControl parent nodeId inPort port = case port ^. Port.state of
         UICmd.register_ groupId label def
         UICmd.register_ groupId button handlers
     Port.Connected       -> do
-        let widget = Label.create (Vector2 200 20) (Text.pack $ show inPort <> " (connected)")
+        let widget = Label.create (Style.portControlSize & x -~ Style.setLabelOffsetX) (Text.pack $ show inPort <> " (connected)")
+                   & Label.position . x .~ Style.setLabelOffsetX
         void $ UICmd.register parent widget def
     Port.WithDefault def -> void $ case port ^. Port.valueType . ValueType.toEnum of
         ValueType.DiscreteNumber -> do
             let label = show inPort
                 value = fromMaybe 0 $ def ^? DefaultValue._Constant . DefaultValue._IntValue
-                widget = DiscreteNumber.create (Vector2 200 20) (Text.pack $ show inPort) value
+                widget = DiscreteNumber.create Style.portControlSize (Text.pack $ show inPort) value
                 handlers = onValueChanged $ \val _ -> do
                     workspace <- use Global.workspace
                     performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.IntValue val)
@@ -186,7 +193,7 @@ makeInPortControl parent nodeId inPort port = case port ^. Port.state of
         ValueType.ContinuousNumber -> do
             let label = show inPort
                 value = fromMaybe 0.0 $ def ^? DefaultValue._Constant . DefaultValue._DoubleValue
-                widget = ContinuousNumber.create (Vector2 200 20) (Text.pack $ show inPort) value
+                widget = ContinuousNumber.create Style.portControlSize (Text.pack $ show inPort) value
                 handlers = onValueChanged $ \val _ -> do
                     workspace <- use Global.workspace
                     performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.DoubleValue val)
@@ -194,7 +201,7 @@ makeInPortControl parent nodeId inPort port = case port ^. Port.state of
         ValueType.String -> do
             let label = show inPort
                 value = fromMaybe "" $ def ^? DefaultValue._Constant . DefaultValue._StringValue
-                widget = LabeledTextBox.create (Vector2 200 20) (Text.pack $ show inPort) (Text.pack $ value)
+                widget = LabeledTextBox.create Style.portControlSize (Text.pack $ show inPort) (Text.pack $ value)
                 handlers = onValueChanged $ \val _ -> do
                     workspace <- use Global.workspace
                     performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.StringValue $ Text.unpack val)
@@ -202,13 +209,13 @@ makeInPortControl parent nodeId inPort port = case port ^. Port.state of
         ValueType.Bool -> do
             let label = show inPort
                 value = fromMaybe True $ def ^? DefaultValue._Constant . DefaultValue._BoolValue
-                widget = Toggle.create (Vector2 200 20) (Text.pack $ show inPort) value
+                widget = Toggle.create Style.portControlSize (Text.pack $ show inPort) value
                 handlers = onValueChanged $ \val _ -> do
                     workspace <- use Global.workspace
                     performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.BoolValue val)
             UICmd.register parent widget handlers
         ValueType.Other -> do
-            let widget = Label.create (Vector2 200 20) (Text.pack $ show inPort <> " :: " <> (show $ port ^. Port.valueType) )
+            let widget = Label.create Style.portControlSize (Text.pack $ show inPort <> " :: " <> (show $ port ^. Port.valueType) )
             UICmd.register parent widget mempty
 
 
@@ -243,7 +250,7 @@ visualizeNodeValue id (IntList     v) = do
     groupId <- Node.valueGroupId id
 
     let dataPoints = zipVectorInt v []
-        widget = ScatterPlot.create (Vector2 200 150)
+        widget = ScatterPlot.create Style.plotSize
                & ScatterPlot.dataPoints .~ dataPoints
     UICmd.register_ groupId widget def
 
@@ -251,7 +258,7 @@ visualizeNodeValue id (DoubleList     v) = do
     groupId <- Node.valueGroupId id
 
     let dataPoints = zipVector v []
-        widget = ScatterPlot.create (Vector2 200 150)
+        widget = ScatterPlot.create Style.plotSize
                & ScatterPlot.dataPoints .~ dataPoints
     UICmd.register_ groupId widget def
 

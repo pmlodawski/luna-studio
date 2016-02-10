@@ -5,30 +5,31 @@ module Main where
 
 import           Prelude.Luna                                    hiding (Num)
 
-import           Luna.Compilation.Pass.Inference.Literals
+import           Data.Construction
+import           Data.Prop
+import           Data.Record                                     hiding (cons)
+import           Data.Version.Semantic                           (showVersion, version)
+import           Type.Inference
+
+import qualified Luna.Compilation.Env.Class                      as Env
+import           Luna.Compilation.Pass.Inference.Literals        as LiteralsAssignement
+import           Luna.Compilation.Pass.Utils.Literals            as LiteralsUtils
+import qualified Luna.Compilation.Stage.TypeCheck                as TypeCheck
 import           Luna.Diagnostic.Vis.GraphViz
-import           Luna.Evaluation.Runtime                    (Dynamic, Static)
-import           Luna.Syntax.AST.Term                       hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
-import qualified Luna.Syntax.AST.Term                       as Term
+import           Luna.Diagnostic.Vis.GraphViz
+import           Luna.Evaluation.Runtime                         (Dynamic, Static)
+import           Luna.Syntax.AST.Term                            hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
+import           Luna.Syntax.AST.Term                            hiding (source)
+import qualified Luna.Syntax.AST.Term                            as Term
 import           Luna.Syntax.Model.Graph
+import           Luna.Syntax.Model.Graph.Builder
 import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Builder.Node          (NodeInferable, TermNode)
 import           Luna.Syntax.Model.Network.Builder.Node.Class    (arg)
 import           Luna.Syntax.Model.Network.Builder.Node.Inferred
 import           Luna.Syntax.Model.Network.Builder.Term.Class    (NetGraph, NetLayers, runNetworkBuilderT)
-import           Luna.Syntax.Model.Network.Term
-
-import           Data.Construction
-import           Data.Prop
-import           Data.Record                                     hiding (cons)
-import           Luna.Diagnostic.Vis.GraphViz
-import           Luna.Syntax.AST.Term                            hiding (source)
-import           Luna.Syntax.Model.Graph.Builder
 import           Luna.Syntax.Model.Network.Class                 ()
-import           Type.Inference
-
-import           Luna.Compilation.Pass.Inference.Literals      (assignLiteralTypes)
-
+import           Luna.Syntax.Model.Network.Term
 
 
 
@@ -80,18 +81,22 @@ prebuild = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers () :< Dr
          $ runNetworkBuilderT def
          $ star
 
+runBuild (g :: NetGraph a) m = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers a :< Draft Static)))
+                             $ runNetworkBuilderT g m
 
-buildBase :: NetGraph () -> IO (Ref (Node $ (NetLayers () :< Draft Static)), NetGraph ())
-buildBase g = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers () :< Draft Static)))
-            $ runNetworkBuilderT g graph1
+evalBuild = fmap snd ∘∘ runBuild
 
--- runPass :: NetGraph ()) -> IO (Ref (Node $ (NetLayers ()) :< Draft Static)), NetGraph ()))
-runPass g m = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers () :< Draft Static)))
-            $ runNetworkBuilderT g m
 
+main :: IO ()
 main = do
-    (_, g)   <- prebuild
-    (f, g')  <- buildBase g
-    (_, g'') <- runPass g' (assignLiteralTypes f)
-    renderAndOpen [("g", g'')]
+    (_,  g00 :: NetGraph ()) <- prebuild
+    flip Env.evalT def $ do
+        v <- view version <$> Env.get
+        putStrLn $ "Luna compiler version " <> showVersion v
+        TypeCheck.runT $ do
+            (root,     g01) <- runBuild  g00 graph1
+            (literals, g02) <- runBuild  g01 $ LiteralsUtils.run root
+            g03             <- evalBuild g02 $ LiteralsAssignement.run literals
+            renderAndOpen [ ("g1", g03)
+                          ]
     putStrLn "done"

@@ -63,7 +63,7 @@ makeItem isTuple listId listGroupId width elem ix = do
     groupId <- UICmd.register listGroupId Group.create def
     createValueWidget groupId elem (Text.pack $ show ix) width (addHandler (ValueChangedHandler $ listItemHandler listId listGroupId groupId) mempty)
     when (not isTuple) $ UICmd.register_ groupId removeButton (removeItemHandlers listId listGroupId groupId)
-    Layout.horizontalLayout def 0.0 groupId
+    Layout.horizontalLayout 0.0 groupId
 
 makeListItem  = makeItem False
 makeTupleItem = makeItem True
@@ -83,8 +83,8 @@ makeTupleItem = makeItem True
 
 relayout :: WidgetId -> WidgetId -> Command UIRegistry.State ()
 relayout listId groupId = do
-    Layout.verticalLayout def 0.0 groupId
-    Layout.verticalLayout def 0.0 listId
+    Layout.verticalLayout 0.0 groupId
+    Layout.verticalLayout 0.0 listId
 
 addNewElement :: WidgetId -> WidgetId -> Double -> Command UIRegistry.State ()
 addNewElement listId groupId width = do
@@ -121,7 +121,7 @@ instance CompositeWidget List where
 
         UICmd.register_ id label def
 
-        groupId     <- UICmd.register id Group.create (Layout.verticalLayoutHandler def def)
+        groupId     <- UICmd.register id Group.create (Layout.verticalLayoutHandler def)
         UICmd.moveX groupId padding
 
         addButtonId <- UICmd.register id addButton (addItemHandlers id groupId itemWidth)

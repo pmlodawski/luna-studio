@@ -174,6 +174,6 @@ Node.prototype.destructor = function (){
   this.htmlContainer.parentNode.removeChild(this.htmlContainer);
 };
 
-Node.prototype.redrawTextures = function() {}
+Node.prototype.redrawTextures = function() {};
 
 module.exports = Node;

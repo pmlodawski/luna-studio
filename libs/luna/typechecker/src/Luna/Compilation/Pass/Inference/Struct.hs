@@ -8,7 +8,6 @@ import Prelude.Luna
 import Data.Construction
 import Data.Prop
 import Data.Record
-import Luna.Diagnostic.Vis.GraphViz
 import Luna.Evaluation.Runtime                      (Static, Dynamic)
 import Luna.Syntax.AST.Term                         hiding (source)
 import Luna.Syntax.Model.Graph

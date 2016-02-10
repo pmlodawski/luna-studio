@@ -23,10 +23,13 @@ newtype Button = Button JSVal deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget Button
 
-foreign import javascript safe "new Button($1, $2, $3)" create'    :: Int    -> Double -> Double  -> IO Button
-foreign import javascript safe "$1.setLabel($2)"        setLabel'  :: Button -> JSString          -> IO ()
-foreign import javascript safe "$1.setIcon($2)"         setIcon'   :: Button -> Nullable JSString -> IO ()
-foreign import javascript safe "$1.setEnabled($2)"      setEnabled':: Button -> Bool              -> IO ()
+foreign import javascript safe "new Button($1, $2, $3)"    create'     :: Int    -> Double -> Double  -> IO Button
+foreign import javascript safe "$1.setLabel($2)"           setLabel'   :: Button -> JSString          -> IO ()
+foreign import javascript safe "$1.setIcon($2)"            setIcon'    :: Button -> Nullable JSString -> IO ()
+foreign import javascript safe "$1.setEnabled($2)"         setEnabled' :: Button -> Bool              -> IO ()
+foreign import javascript safe "$1.setRounded($2)"         setRounded' :: Button -> Bool              -> IO ()
+foreign import javascript safe "$1.setBgColor($2, $3, $4)" setBgColor' :: Button -> Double -> Double -> Double -> IO ()
+
 
 create :: WidgetId -> Model.Button -> IO Button
 create oid model = do
@@ -34,11 +37,19 @@ create oid model = do
     setLabel       model widget
     setEnabled     model widget
     setIcon        model widget
+    setRounded     model widget
+    setBgColor     model widget
     UI.setWidgetPosition (model ^. widgetPosition) widget
     return widget
 
 setLabel :: Model.Button -> Button -> IO ()
 setLabel model widget = setLabel' widget $ lazyTextToJSString $ model ^. Model.label
+
+setRounded :: Model.Button -> Button -> IO ()
+setRounded model widget = setRounded' widget $ model ^. Model.style . Model.rounded
+
+setBgColor :: Model.Button -> Button -> IO ()
+setBgColor model widget = setBgColor' widget r g b where (r, g, b) =  model ^. Model.style . Model.background
 
 setIcon :: Model.Button -> Button -> IO ()
 setIcon model widget = setIcon' widget $ maybeToNullable (lazyTextToJSString <$> model ^. Model.icon)
@@ -58,6 +69,9 @@ instance UIDisplayObject Model.Button where
         whenChanged old model Model.label   $ setLabel   model widget
         whenChanged old model Model.icon    $ setIcon    model widget
         whenChanged old model Model.enabled $ setEnabled model widget
+        whenChanged old model Model.style   $ do
+            setRounded model widget
+            setBgColor model widget
 
 instance CompositeWidget Model.Button
 

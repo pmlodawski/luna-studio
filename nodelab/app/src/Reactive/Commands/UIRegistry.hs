@@ -101,6 +101,12 @@ get id f = do
     let file     = fromMaybe (error "get: invalid type or widget not exists") maybeFile
     return $ file ^. widget . f
 
+maybeGet :: DisplayObjectClass a => WidgetId -> Getter a b -> Command UIRegistry.State (Maybe b)
+maybeGet id f = do
+    maybeFile <- UIRegistry.lookupTypedM id
+    return $ (view $ widget . f) <$> maybeFile
+
+
 get' :: WidgetId -> Getter DisplayObject b -> Command UIRegistry.State b
 get' id f = do
     maybeFile <- UIRegistry.lookupM id

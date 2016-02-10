@@ -10,45 +10,48 @@
 
 module Main where
 
-import Prologue              hiding (cons, read, (#), Version)
-import Luna.Syntax.AST.Term  hiding (Lit, Val, Thunk, Expr, Draft, Target, Source, source, target)
-import qualified Luna.Syntax.AST.Term as Term
-import Luna.Diagnostic.Vis.GraphViz
-import Data.Layer.Cover
-import Data.Record hiding (Layout)
-import Luna.Evaluation.Runtime (Static, Dynamic)
-import qualified Luna.Evaluation.Runtime as Runtime
-import Luna.Syntax.Model.Graph
-import Luna.Syntax.Model.Layer
-import Luna.Syntax.Model.Network.Builder (rebuildNetwork')
-import Luna.Syntax.Model.Network.Term
-import Data.Construction
-import Luna.Syntax.Model.Graph.Builder.Ref as Ref
-import qualified Luna.Syntax.Model.Graph.Builder.Class as Graph
-import Data.Prop
-import Data.Graph.Sort hiding (Graph)
-import qualified Data.Graph.Sort as Sort
-import Development.Placeholders
-import Data.Container  (index_, elems)
-import Data.Index (idx)
-import Data.Container
-import           Data.Attr (attr)
+import           Prologue                                        hiding (Version, cons, read, ( # ), Num)
+
 import           Control.Monad.Event
-import           Luna.Syntax.Model.Network.Builder.Node -- hiding (star, str,int,cons,acc,app,var,unify,blank)
-import qualified Luna.Syntax.Model.Network.Builder.Node.Inferred as Inf
-import           Luna.Syntax.Model.Network.Builder.Node.Class ()
-import Type.Inference
-import Luna.Syntax.Model.Network.Builder.Term.Class (runNetworkBuilderT, NetGraph, NetLayers)
-
-import qualified Luna.Compilation.Pass.Inference.Struct as S
-import qualified Luna.Compilation.Stage.TypeCheck as TypeCheck
-import qualified Luna.Compilation.Pass.Inference.Struct as StructInference
-
+import           Data.Attr                                       (attr)
+import           Data.Construction
+import           Data.Container                                  (elems, index_)
+import           Data.Container
+import           Data.Graph.Sort                                 hiding (Graph)
+import qualified Data.Graph.Sort                                 as Sort
+import           Data.Index                                      (idx)
+import           Data.Layer.Cover
+import           Data.Prop
+import           Data.Record                                     hiding (Layout)
 import           Data.Version.Semantic
+import           Development.Placeholders
+import           Type.Inference
 
-import qualified Luna.Compilation.Env.Class as Env
+import qualified Luna.Compilation.Env.Class                      as Env
+import           Luna.Compilation.Pass.Inference.Literals        as LiteralsAssignement
+import qualified Luna.Compilation.Pass.Inference.Struct          as S
+import qualified Luna.Compilation.Pass.Inference.Struct          as StructInference
+import           Luna.Compilation.Pass.Utils.Literals            as LiteralsUtils
+import qualified Luna.Compilation.Stage.TypeCheck                as TypeCheck
+import           Luna.Diagnostic.Vis.GraphViz
+import           Luna.Evaluation.Runtime                         (Dynamic, Static)
+import qualified Luna.Evaluation.Runtime                         as Runtime
+import           Luna.Syntax.AST.Term                            hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
+import qualified Luna.Syntax.AST.Term                            as Term
+import           Luna.Syntax.Model.Graph
+import           Luna.Syntax.Model.Graph.Builder.Ref             as Ref
+import qualified Luna.Syntax.Model.Graph.Builder.Class           as Graph
+import           Luna.Syntax.Model.Layer
+import           Luna.Syntax.Model.Network.Builder               (rebuildNetwork')
+import           Luna.Syntax.Model.Network.Builder.Node
+import           Luna.Syntax.Model.Network.Builder.Node.Class    ()
+import qualified Luna.Syntax.Model.Network.Builder.Node.Inferred as Inf
+import           Luna.Syntax.Model.Network.Builder.Term.Class    (NetGraph, NetLayers, runNetworkBuilderT)
+import           Luna.Syntax.Model.Network.Term
 
 import qualified Luna.Syntax.Model.Graph.Cluster as Cluster
+
+
 
 title s = putStrLn $ "\n" <> "-- " <> s <> " --"
 
@@ -85,15 +88,59 @@ input_g1 = do
     return [r1,r2]
 
 
+
+input_g2 :: ( ls   ~ NetLayers ()
+            , term ~ Draft Static
+            , MonadIO       m
+            , NodeInferable m (ls :< term)
+            , TermNode Star m (ls :< term)
+            , TermNode Var  m (ls :< term)
+            , TermNode Num  m (ls :< term)
+            , TermNode Str  m (ls :< term)
+            , TermNode Acc  m (ls :< term)
+            , TermNode App  m (ls :< term)
+            )
+         => m (Ref (Node $ (ls :< term)), [Ref (Node $ (ls :< term))])
+input_g2 = do
+    i1 <- int 2
+    i2 <- int 3
+    i3 <- int 4
+    s1 <- str "abc"
+    s2 <- str "def"
+    s3 <- str "ghi"
+
+    accPlus1a  <- acc "+" i1
+    appPlus1a  <- app accPlus1a [arg i2]
+
+    accPlus1b  <- acc "+" i3
+    appPlus1b  <- app accPlus1b [arg appPlus1a]
+
+    accConc1a  <- acc "++" s2
+    appConc1a  <- app accConc1a [arg s1]
+
+    accConc1b  <- acc "++" appConc1a
+    appConc1b  <- app accConc1b [arg s3]
+
+    accLen     <- acc "len" appConc1b
+    appLen     <- app accLen []
+
+    accPlus2   <- acc "+" appPlus1b
+    appPlus2   <- app accPlus2 [arg appLen]
+
+    return (appPlus2, [appPlus1a, appPlus1b, appConc1a, appConc1b, appLen, appPlus2])
+
+
+
 main :: IO ()
 main = do
-    compiler
-    showcase
+    --showcase
+    --test1
+    test2
     return ()
 
 
-compiler :: IO ()
-compiler = do
+test1 :: IO ()
+test1 = do
     (_,  g :: NetGraph () ) <- prebuild
 
     -- Running compiler environment
@@ -109,6 +156,28 @@ compiler = do
                           , ("g2", g'')
                           ]
     print "end"
+
+
+test2 :: IO ()
+test2 = do
+    (_,  g00 :: NetGraph ()) <- prebuild
+
+    -- Running compiler environment
+    flip Env.evalT def $ do
+        v <- view version <$> Env.get
+        putStrLn $ "Luna compiler version " <> showVersion v
+
+        -- Running Type Checking compiler stage
+        TypeCheck.runT $ do
+            ((root, apps), g01) <- runBuild  g00 input_g2
+            (literals, g02)     <- runBuild  g01 $ LiteralsUtils.run root
+            g03                 <- evalBuild g02 $ LiteralsAssignement.run literals
+            g04                 <- evalBuild g03 $ StructInference.run apps
+            renderAndOpen [ ("g02", g02)
+                          , ("g03", g03)
+                          , ("g04", g04)
+                          ]
+    putStrLn "done"
 
 
 

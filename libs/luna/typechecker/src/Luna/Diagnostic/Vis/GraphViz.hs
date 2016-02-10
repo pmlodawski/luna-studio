@@ -20,7 +20,6 @@ import           Data.GraphViz.Types.Canonical
 import           Luna.Syntax.Repr.Styles                (HeaderOnly (..), Simple (..))
 
 import           Data.Container
-import           Data.Container.Hetero
 
 import           Data.Record
 import           Luna.Syntax.Model.Graph
@@ -186,23 +185,27 @@ fromListWithReps lst = foldr update (Map.fromList initLst) lst where
     update (k,v) = Map.adjust (v:) k
 
 
-genInEdges (g :: NetGraph a) (n :: NetLayers a :< Draft Static) = tpEdge : fmap addColor inEdges  where
-    genLabel  = GV.Label . StrLabel . fromString . show
-    ins       = n # Inputs
-    inIdxs    = getTgtIdx <$> ins
-    inEdges   = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) [0..]
-    es        = g ^. edgeGraph
-    t         = n ^. prop Type
-    tpEdge    = (getTgtIdx t, [GV.color typedArrClr, ArrowHead dotArrow])
+genInEdges (g :: NetGraph a) (n :: NetLayers a :< Draft Static) = displayEdges where
+    displayEdges = ($ (addColor <$> inEdges)) $ if t == universe then id else (tpEdge :)
+    genLabel     = GV.Label . StrLabel . fromString . show
+    ins          = n # Inputs
+    inIdxs       = getTgtIdx <$> ins
+    inEdges      = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) [0..]
+    es           = g ^. edgeGraph
+    te           = n ^. prop Type
+    t            = getTgt te
+    tpEdge       = (getTgtIdx te, [GV.color typedArrClr, ArrowHead dotArrow])
 
     addColor (idx, attrs) = (idx, GV.color arrClr : attrs)
-    getTgtIdx inp         = view (source ∘ rawPtr) $ index (inp ^. rawPtr) es
+    getTgtIdx             = view rawPtr ∘ getTgt
+    getTgt    inp         = view source $ index (inp ^. rawPtr) es
 
 
 
 
 
 
+universe = Ref $ Ptr 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?
 
 
 
