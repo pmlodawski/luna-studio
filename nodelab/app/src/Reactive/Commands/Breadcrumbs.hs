@@ -16,12 +16,13 @@ import qualified Reactive.Commands.UIRegistry  as UICmd
 import           Reactive.State.Global         (State, inRegistry)
 import qualified Reactive.State.Global         as Global
 import qualified Reactive.State.UIElements     as UIElements
-import           Reactive.State.UIRegistry     (addHandler, handle, sceneInterfaceId, sceneInterfaceId)
+import           Reactive.State.UIRegistry     (addHandler, handle, sceneInterfaceId)
 import qualified Reactive.State.UIRegistry     as UIRegistry
 
 import           Empire.API.Data.Breadcrumb    (Breadcrumb (..))
 import qualified Empire.API.Data.Breadcrumb    as Breadcrumb
 import qualified Empire.API.Data.GraphLocation as GraphLocation
+import qualified Empire.API.Data.Project       as Project
 
 import qualified Object.Widget.Button          as Button
 import qualified Object.Widget.Group           as Group
@@ -37,11 +38,23 @@ destroyBreadcrumbs = do
     breadcrumbItems <- inRegistry $ UICmd.children breadcrumbs
     inRegistry  $ mapM_ UICmd.removeWidget breadcrumbItems
 
+toggleProjectList :: Command State ()
+toggleProjectList = do
+    projectList <- use $ Global.uiElements . UIElements.projectChooser . UIElements.pcContainer
+    inRegistry $ UICmd.update_ projectList $ Group.visible %~ not
+
 displayBreadcrumbs :: (Breadcrumb -> Command State ()) -> Command State ()
 displayBreadcrumbs enterBreadcrumbs = do
     group <- use $ Global.uiElements . UIElements.breadcrumbs
 
     currentBreadcrumb <- use $ Global.workspace . Workspace.currentLocation . GraphLocation.breadcrumb . Breadcrumb.items
+
+    let widget = Button.create Style.breadcrumbItemSize "Projects"
+               & Button.style .~ Style.breadcrumbItemStyle
+        handlers = addHandler (ClickedHandler $ \_ -> toggleProjectList) mempty
+    inRegistry $ UICmd.register group widget handlers
+
+    currentProjectName <- use $ Global.workspace . Workspace.currentProject . Project.name
 
     inRegistry $ do
         forM_ (reverse $ tails currentBreadcrumb) $ \bc -> do
@@ -49,7 +62,7 @@ displayBreadcrumbs enterBreadcrumbs = do
                     (item:_) -> case item of
                         Breadcrumb.Function name -> name
                         Breadcrumb.Module   name -> name
-                    [] -> "(Project)"
+                    [] -> fromMaybe "(untitled project)" currentProjectName
                 widget = Button.create Style.breadcrumbItemSize (Text.pack name)
                        & Button.style .~ Style.breadcrumbItemStyle
                 handlers = addHandler (ClickedHandler $ \_ -> enterBreadcrumbs $ Breadcrumb bc) mempty
