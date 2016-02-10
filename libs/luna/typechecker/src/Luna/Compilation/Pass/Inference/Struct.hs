@@ -64,7 +64,7 @@ getTypeSpec ref = do
         reconnect ref (prop Type) ntp
         return ntp
 
-run :: PassCtx(m,ls,term) => [Ref (Node $ (ls :< term))] -> m ()
-run = void ∘ mapM buildAppType
+run :: (PassCtx(m,ls,term), nodeRef ~ Ref (Node $ (ls :< term))) => [nodeRef] -> [nodeRef] -> m ()
+run apps accs = void $ mapM buildAppType apps
 
 universe = Ref $ Ptr 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?

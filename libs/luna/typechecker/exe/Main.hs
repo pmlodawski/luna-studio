@@ -71,21 +71,25 @@ evalBuild = fmap snd ∘∘ runBuild
 
 
 input_g1 :: ( term ~ Draft Static
-           , MonadIO       m
-           , NodeInferable m (ls :< term)
-           , TermNode Star m (ls :< term)
-           , TermNode Var  m (ls :< term)
-           , TermNode App  m (ls :< term)
-           ) => m [Ref (Node $ (ls :< term))]
+            , nr   ~ Ref (Node $ (ls :< term))
+            , MonadIO       m
+            , NodeInferable m (ls :< term)
+            , TermNode Star m (ls :< term)
+            , TermNode Var  m (ls :< term)
+            , TermNode App  m (ls :< term)
+            , TermNode Acc  m (ls :< term)
+            ) => m ([nr],[nr])
 input_g1 = do
     f  <- var' "f"
     a  <- var' "a"
     b  <- var' "b"
     r1 <- app' f [arg a, arg b]
 
+    x  <- acc' "x" r1
+
     g  <- var' "g"
-    r2 <- app' g [arg r1]
-    return [r1,r2]
+    r2 <- app' g [arg x]
+    return ([r1,r2], [x])
 
 
 
@@ -134,8 +138,8 @@ input_g2 = do
 main :: IO ()
 main = do
     --showcase
-    --test1
-    test2
+    test1
+    --test2
     return ()
 
 
@@ -150,34 +154,34 @@ test1 = do
 
         -- Running Type Checking compiler stage
         TypeCheck.runT $ do
-            (all_apps, g') <- runBuild g input_g1
-            g''            <- evalBuild g' $ StructInference.run all_apps
+            ((all_apps, all_accs), g') <- runBuild g input_g1
+            g''            <- evalBuild g' $ StructInference.run all_apps all_accs
             renderAndOpen [ ("g1", g')
                           , ("g2", g'')
                           ]
     print "end"
 
 
-test2 :: IO ()
-test2 = do
-    (_,  g00 :: NetGraph ()) <- prebuild
+--test2 :: IO ()
+--test2 = do
+--    (_,  g00 :: NetGraph ()) <- prebuild
 
-    -- Running compiler environment
-    flip Env.evalT def $ do
-        v <- view version <$> Env.get
-        putStrLn $ "Luna compiler version " <> showVersion v
+--    -- Running compiler environment
+--    flip Env.evalT def $ do
+--        v <- view version <$> Env.get
+--        putStrLn $ "Luna compiler version " <> showVersion v
 
-        -- Running Type Checking compiler stage
-        TypeCheck.runT $ do
-            ((root, apps), g01) <- runBuild  g00 input_g2
-            (literals, g02)     <- runBuild  g01 $ LiteralsUtils.run root
-            g03                 <- evalBuild g02 $ LiteralsAssignement.run literals
-            g04                 <- evalBuild g03 $ StructInference.run apps
-            renderAndOpen [ ("g02", g02)
-                          , ("g03", g03)
-                          , ("g04", g04)
-                          ]
-    putStrLn "done"
+--        -- Running Type Checking compiler stage
+--        TypeCheck.runT $ do
+--            ((root, apps), g01) <- runBuild  g00 input_g2
+--            (literals, g02)     <- runBuild  g01 $ LiteralsUtils.run root
+--            g03                 <- evalBuild g02 $ LiteralsAssignement.run literals
+--            g04                 <- evalBuild g03 $ StructInference.run apps
+--            renderAndOpen [ ("g02", g02)
+--                          , ("g03", g03)
+--                          , ("g04", g04)
+--                          ]
+--    putStrLn "done"
 
 
 
