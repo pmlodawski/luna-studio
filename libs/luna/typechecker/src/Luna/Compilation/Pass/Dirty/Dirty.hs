@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP                       #-}
+
 module Luna.Compilation.Pass.Dirty.Dirty where
 
 import           Control.Monad                          (forM_)
@@ -5,7 +7,7 @@ import           Control.Monad.Trans.State
 import qualified Data.IntSet                            as IntSet
 import           Data.Prop
 import           Development.Placeholders
-import           Prologue                               hiding (pre, read, succ, ( # ))
+import           Prologue                               hiding (pre, read, succ, ( # ), Getter, Setter)
 
 import           Luna.Compilation.Pass.Dirty.Data.Env   (Env)
 import qualified Luna.Compilation.Pass.Dirty.Data.Env   as Env
@@ -17,24 +19,39 @@ import qualified Luna.Syntax.Model.Graph                as G
 import           Luna.Syntax.Model.Graph.Builder.Class  (MonadBuilder)
 
 
+import           Luna.Evaluation.Runtime                         (Dynamic, Static)
 
-pre :: ( Castable n n
-       , Castable e (Edge n n)
-       , Data.Prop.Getter Inputs n
-       , MonadBuilder n e m
-       , Prop Inputs n ~ [Ref (Edge n n)])
-    => Ref (Node n) -> m [Ref (Node n)]
+import           Data.Construction
+import           Data.Record                                     hiding (cons)
+import           Type.Inference
+
+import           Luna.Syntax.Model.Network.Term
+import           Luna.Syntax.Model.Graph
+import           Luna.Syntax.Model.Graph.Builder
+import           Luna.Syntax.Model.Layer
+import           Luna.Syntax.Model.Network.Builder.Node.Inferred
+
+
+#define PassCtx(m, ls, term, n) ( Castable n n                         \
+                                , Castable e (Edge n n)                \
+                                , Castable e (Edge n n)                \
+                                , DirtyMonad (Env (Ref (Node n))) m    \
+                                , Getter  Inputs n                     \
+                                , HasProp Dirty n                      \
+                                , HasProp Succs n                      \
+                                , MonadBuilder  n e m                  \
+                                , Prop Dirty    n ~ DirtyVal           \
+                                , Prop Succs    n ~ [Ref (Edge n n)]   \
+                                , Prop Inputs   n ~ [Ref (Edge n n)]   \
+                                )
+
+pre :: PassCtx(m, ls, term, n) => Ref (Node n) -> m [Ref (Node n)]
 pre ref = do
     node <- read ref
     mapM (follow target) $ node # Inputs
 
 
-succ :: ( Castable n n
-        , Castable e (Edge n n)
-        , HasProp Succs n
-        , MonadBuilder n e m
-        , Prop Succs n ~ [Ref (Edge n n)])
-     => Ref (Node n) -> m [Ref $ Node n]
+succ :: PassCtx(m, ls, term, n) => Ref (Node n) -> m [Ref (Node n)]
 succ ref = do
     node <- read ref
     mapM (follow source) $ node ^. prop Succs
@@ -47,32 +64,17 @@ isDirty node = node ^. prop Dirty . Label.dirty
 isRequired :: (Prop Dirty n ~ DirtyVal, HasProp Dirty n) => n -> Bool
 isRequired node = node ^. prop Dirty . Label.required
 
-followDirty :: ( Castable n n
-               , Castable e (Edge n n)
-               , Data.Prop.Getter Inputs n
-               , DirtyMonad (Env (Ref (Node n))) m
-               , HasProp Dirty n
-               , MonadBuilder n e m
-               , Prop Inputs n ~ [Ref (Edge n n)]
-               , Prop Dirty n ~ DirtyVal)
-            => Ref (Node n) -> m ()
-followDirty node = do
-    Env.addReqNode node
-    prevs <- pre node
+
+followDirty :: PassCtx(m, ls, term, n) => Ref (Node n) -> m ()
+followDirty ref = do
+    Env.addReqNode ref
+    prevs <- pre ref
     forM_ prevs $ \ p ->
         whenM (isDirty <$> read p) $
             followDirty p
 
 
-markSuccessors :: ( Castable n n
-                  , Castable e (Edge n n)
-                  , DirtyMonad (Env (Ref (Node n))) m
-                  , HasProp Dirty n
-                  , HasProp Succs n
-                  , MonadBuilder n e m
-                  , Prop Dirty n ~ DirtyVal
-                  , Prop Succs n ~ [Ref (Edge n n)])
-              => Ref (Node n) -> m ()
+markSuccessors :: PassCtx(m, ls, term, n) => Ref (Node n) -> m ()
 markSuccessors ref = do
     node <- read ref
     unless (isDirty node) $ do
