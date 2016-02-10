@@ -152,7 +152,7 @@ type a ##. p = (RecordOf a) ## p
 type Variants a = Props Variant a
 type Groups   a = Props Group   a
 
-type family Layout2 t a :: [*]
+type family Layout_Variants t a :: [*] -- TODO[WD]: Refactor and allow Layout to lookup for different layout aspects
 
 type family RecordOf  a :: *
 type family Layout    a :: [*]
@@ -365,7 +365,7 @@ groupMapped = elemMapped (p :: P Group) ; {-# INLINE groupMapped #-}
 --class MyVariantMap where myVariantMap :: Proxy ctx -> (forall )
 
 class WithElement' ctx rec a where withElement' :: Proxy ctx -> (forall v. ctx v a => v -> a) -> rec -> a
-instance (MapTryingElemList els ctx rec a, els ~ Layout2 Variant (RecordOf rec)) => WithElement' ctx rec a where withElement' = mapTryingElemList (p :: P els)
+instance (MapTryingElemList els ctx rec a, els ~ Layout_Variants Variant (RecordOf rec)) => WithElement' ctx rec a where withElement' = mapTryingElemList (p :: P els)
 
 class MapTryingElemList els ctx rec a where mapTryingElemList :: Proxy (els :: [*]) -> Proxy ctx -> (forall v. ctx v a => v -> a) -> rec -> a
 

@@ -15,7 +15,7 @@ import           Data.Layer
 import           Data.Layer.Cover
 import           Data.Prop
 import qualified Data.Record                             as Record
-import           Data.Record                             (RecordOf, IsRecord, asRecord, SmartCons, Variant, MapTryingElemList_, withElement_, Props)
+import           Data.Record                             (RecordOf, IsRecord, asRecord, SmartCons, Variant, MapTryingElemList_, withElement_, Props, withElement', Layout_Variants, MapTryingElemList)
 import           Data.Tuple.Curry.Missing
 import           Data.Tuple.OneTuple
 import           Luna.Evaluation.Runtime                 as Runtime
@@ -298,3 +298,7 @@ instance (MapTryingElemList_
                               (Layout layout term rt))
                            (TFoldable (Layout layout term rt))
                            (Term layout term rt)) => Getter Inputs (Term layout term rt) where getter _ = inputstmp
+
+
+fmpInputs :: (MapTryingElemList (Layout_Variants Variant (RecordOf r)) (TFunctor a b) r r') => (a -> b) -> r -> r'
+fmpInputs (f :: a -> b) a = withElement' (p :: P (TFunctor a b)) (fmapT f) a

@@ -505,7 +505,7 @@ CACHE_AS(Layout_RULE, "Layout_CACHE")
 
 type instance Record.Layout (ASTRecord gs vs t d) = Layout_CACHE t
 
-type instance Layout2 Variant (ASTRecord gs vs t d) = VariantList t
+type instance Layout_Variants Variant (ASTRecord gs vs t d) = VariantList t
 
 -- === DecodeMap === --
 

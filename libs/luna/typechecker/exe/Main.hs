@@ -95,6 +95,7 @@ input_g1 = do
 
 input_g2 :: ( ls   ~ NetLayers ()
             , term ~ Draft Static
+            , nr   ~ Ref (Node $ (ls :< term))
             , MonadIO       m
             , NodeInferable m (ls :< term)
             , TermNode Star m (ls :< term)
@@ -104,7 +105,7 @@ input_g2 :: ( ls   ~ NetLayers ()
             , TermNode Acc  m (ls :< term)
             , TermNode App  m (ls :< term)
             )
-         => m (Ref (Node $ (ls :< term)), [Ref (Node $ (ls :< term))])
+         => m (nr, ([nr], [nr]))
 input_g2 = do
     i1 <- int 2
     i2 <- int 3
@@ -131,14 +132,18 @@ input_g2 = do
     accPlus2   <- acc "+" appPlus1b
     appPlus2   <- app accPlus2 [arg appLen]
 
-    return (appPlus2, [appPlus1a, appPlus1b, appConc1a, appConc1b, appLen, appPlus2])
+    return ( appPlus2
+           , ( [appPlus1a, appPlus1b, appConc1a, appConc1b, appLen, appPlus2]
+             , [accPlus1a, accPlus1b, accConc1a, accConc1b, accLen, accPlus2]
+             )
+           )
 
 
 
 main :: IO ()
 main = do
-    --showcase
-    test1
+    showcase
+    --test1
     --test2
     return ()
 
@@ -162,26 +167,26 @@ test1 = do
     print "end"
 
 
---test2 :: IO ()
---test2 = do
---    (_,  g00 :: NetGraph ()) <- prebuild
+test2 :: IO ()
+test2 = do
+    (_,  g00 :: NetGraph ()) <- prebuild
 
---    -- Running compiler environment
---    flip Env.evalT def $ do
---        v <- view version <$> Env.get
---        putStrLn $ "Luna compiler version " <> showVersion v
+    -- Running compiler environment
+    flip Env.evalT def $ do
+        v <- view version <$> Env.get
+        putStrLn $ "Luna compiler version " <> showVersion v
 
---        -- Running Type Checking compiler stage
---        TypeCheck.runT $ do
---            ((root, apps), g01) <- runBuild  g00 input_g2
---            (literals, g02)     <- runBuild  g01 $ LiteralsUtils.run root
---            g03                 <- evalBuild g02 $ LiteralsAssignement.run literals
---            g04                 <- evalBuild g03 $ StructInference.run apps
---            renderAndOpen [ ("g02", g02)
---                          , ("g03", g03)
---                          , ("g04", g04)
---                          ]
---    putStrLn "done"
+        -- Running Type Checking compiler stage
+        TypeCheck.runT $ do
+            ((root, (all_apps, all_accs)), g01) <- runBuild  g00 input_g2
+            (literals, g02)     <- runBuild  g01 $ LiteralsUtils.run root
+            g03                 <- evalBuild g02 $ LiteralsAssignement.run literals
+            g04                 <- evalBuild g03 $ StructInference.run all_apps all_accs
+            renderAndOpen [ ("g02", g02)
+                          , ("g03", g03)
+                          , ("g04", g04)
+                          ]
+    putStrLn "done"
 
 
 
@@ -259,6 +264,21 @@ foo g = runNetworkBuilderT g
     print =<< cl1 `includes` s2
 
     return s1
+
+
+
+--fmaptmp :: forall layout term rt x.
+--      (MapTryingElemList_
+--                            (Elems term (ByRuntime rt Str x) x)
+--                            (TFoldable x)
+--                            (Term layout term rt), x ~ Layout layout term rt) => Term layout term rt -> [x]
+
+
+--class TFunctor t r a a' | t r a -> a' where fmapT :: (t -> r) -> a -> a'
+
+--class WithElement' ctx rec a where withElement' :: Proxy ctx -> (forall v. ctx v a => v -> a) -> rec -> a
+--instance (MapTryingElemList els ctx rec a, els ~ Layout2 Variant (RecordOf rec)) => WithElement' ctx rec a where withElement' = mapTryingElemList (p :: P els)
+
 
 
 cluster :: Constructor m (Ref Cluster) => m (Ref Cluster)

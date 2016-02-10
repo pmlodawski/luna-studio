@@ -65,9 +65,7 @@ data Graph node edge = Graph { _nodeGraph :: AutoVector node
                              , _clusters  :: AutoVector Cluster
                              } deriving (Show)
 
-
 makeLenses  ''Graph
-
 
 
 -- === Attributes === --

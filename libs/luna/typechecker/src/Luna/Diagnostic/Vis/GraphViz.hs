@@ -186,6 +186,7 @@ fromListWithReps lst = foldr update (Map.fromList initLst) lst where
 
 
 genInEdges (g :: NetGraph a) (n :: NetLayers a :< Draft Static) = displayEdges where
+    --displayEdges = tpEdge : (addColor <$> inEdges)
     displayEdges = ($ (addColor <$> inEdges)) $ if t == universe then id else (tpEdge :)
     genLabel     = GV.Label . StrLabel . fromString . show
     ins          = n # Inputs

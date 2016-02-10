@@ -33,11 +33,12 @@ import qualified Luna.Syntax.Name                 as Name
                            , NodeInferable  m (ls :< term)     \
                            , TermNode Var   m (ls :< term)     \
                            , TermNode Lam   m (ls :< term)     \
+                           , TermNode Unify m (ls :< term)     \
+                           , TermNode Acc   m (ls :< term)     \
                            , MonadIdentPool m                  \
                            )
 
 
--- FIXME[WD]: Narrow the Ref type to support only App terms
 buildAppType :: PassCtx(m,ls,term) => Ref (Node $ (ls :< term)) -> m ()
 buildAppType appRef = do
     appNode <- read appRef
@@ -48,10 +49,39 @@ buildAppType appRef = do
             specArgs <- mapM2 getTypeSpec args
             out      <- var' =<< newVarIdent'
             l        <- lam' specArgs out
-            reconnect appRef (prop Type) out
-            reconnect src    (prop Type) l
+
+            src_v    <- read src
+            let src_tc = src_v # Type
+            src_t    <- follow source src_tc
+            uniSrcTp <- unify src_t l
+            reconnect src (prop Type) uniSrcTp
+
+            app_v    <- read appRef
+            let app_tc = app_v # Type
+            app_t    <- follow source app_tc
+            uniAppTp <- unify app_t out
+            reconnect appRef (prop Type) uniAppTp
         match $ \ANY -> impossible
     return ()
+
+
+buildAccType :: PassCtx(m,ls,term) => Ref (Node $ (ls :< term)) -> m ()
+buildAccType accRef = do
+    appNode <- read accRef
+    caseTest (uncover appNode) $ do
+        match $ \(Acc name srcConn) -> do
+            src      <- follow source srcConn
+            srcTSpec <- getTypeSpec src
+            newType  <- acc name srcTSpec
+            acc_v    <- read accRef
+            let acc_tc = acc_v # Type
+            acc_t    <- follow source acc_tc
+            uniTp    <- unify acc_t newType
+            reconnect accRef (prop Type) uniTp
+            return ()
+        match $ \ANY -> impossible
+    return ()
+
 
 -- | Returns a concrete type of a node
 --   If the type is just universe, create a new type variable
@@ -65,6 +95,10 @@ getTypeSpec ref = do
         return ntp
 
 run :: (PassCtx(m,ls,term), nodeRef ~ Ref (Node $ (ls :< term))) => [nodeRef] -> [nodeRef] -> m ()
-run apps accs = void $ mapM buildAppType apps
+run apps accs = void $ do
+    mapM_ buildAppType apps
+    mapM_ buildAccType accs
+
+
 
 universe = Ref $ Ptr 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?
