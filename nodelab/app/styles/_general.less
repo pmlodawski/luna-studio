@@ -80,17 +80,7 @@ a {
   border-radius: 5px;
 }
 
-.rejected-container {
-  position: relative;
-  top: 50%;
-  margin-top: -40px;
-}
-
-.rejected-container p {
-  text-align: center;
-}
-
-.crashed-container {
+.message-container {
   position: fixed;
   top: 0;
   bottom: 0;
@@ -100,18 +90,18 @@ a {
   z-index: 9999;
 }
 
-.crashed-container svg {
+.message-container svg {
   width: 100px;
   height: 100px;
   float: left;
   margin-right: 20px;
 }
 
-.crashed-msg {
+.message-container .msg {
   position: absolute;
   top: 50%;
   margin-top: -40px;
-  padding: 0 40px;
+  padding: 0 150px;
   width: 100%;
   box-sizing: border-box;
 }
