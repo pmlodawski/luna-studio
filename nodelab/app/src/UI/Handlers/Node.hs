@@ -144,10 +144,10 @@ instance CompositeWidget Model.Node where
         UICmd.register id label def
 
         let group  = Group.create & Group.position .~ Style.controlsPosition
-                                  & Group.visible  .~ (model ^. Model.isExpanded)
         controlGroups <- UICmd.register id group Style.controlsLayout
 
-        let grp    = Group.create & Group.style .~ Style.expandedGroupStyle
+        let grp    = Group.create & Group.style   .~ Style.expandedGroupStyle
+                                  & Group.visible .~ (model ^. Model.isExpanded)
         expandedGroup <- UICmd.register controlGroups grp Style.expandedGroupLayout
 
         let grp    = Group.create

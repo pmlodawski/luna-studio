@@ -54,6 +54,7 @@ create oid model = do
     setBgColor group model
     setPadding group model
     setBorderRadius group model
+    setVisible' group $ model ^. Model.visible
     UI.setWidgetPosition (model ^. widgetPosition) group
     return group
 
