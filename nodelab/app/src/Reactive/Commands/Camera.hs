@@ -66,6 +66,8 @@ autoZoom = do
         zoom Global.camera $ setZoom zoomFactor
         Global.camera . Camera.camera . Camera.pan    .= zoomPan
 
+    zoom Global.camera syncCamera
+
 zoomIn :: Command Camera.State ()
 zoomIn = do
     factor <- use $ Camera.camera . Camera.factor
