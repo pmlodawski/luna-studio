@@ -39,7 +39,7 @@ import qualified Luna.Syntax.Name                 as Name
                            )
 
 
-buildAppType :: PassCtx(m,ls,term) => Ref (Node $ (ls :< term)) -> m ()
+buildAppType :: (PassCtx(m,ls,term), nodeRef ~ Ref (Node $ (ls :< term))) => nodeRef -> m [nodeRef]
 buildAppType appRef = do
     appNode <- read appRef
     caseTest (uncover appNode) $ do
@@ -61,11 +61,13 @@ buildAppType appRef = do
             app_t    <- follow source app_tc
             uniAppTp <- unify app_t out
             reconnect appRef (prop Type) uniAppTp
+
+            return [uniSrcTp, uniAppTp]
+
         match $ \ANY -> impossible
-    return ()
 
 
-buildAccType :: PassCtx(m,ls,term) => Ref (Node $ (ls :< term)) -> m ()
+buildAccType :: (PassCtx(m,ls,term), nodeRef ~ Ref (Node $ (ls :< term))) => nodeRef -> m [nodeRef]
 buildAccType accRef = do
     appNode <- read accRef
     caseTest (uncover appNode) $ do
@@ -78,9 +80,8 @@ buildAccType accRef = do
             acc_t    <- follow source acc_tc
             uniTp    <- unify acc_t newType
             reconnect accRef (prop Type) uniTp
-            return ()
+            return [uniTp]
         match $ \ANY -> impossible
-    return ()
 
 
 -- | Returns a concrete type of a node
@@ -94,10 +95,11 @@ getTypeSpec ref = do
         reconnect ref (prop Type) ntp
         return ntp
 
-run :: (PassCtx(m,ls,term), nodeRef ~ Ref (Node $ (ls :< term))) => [nodeRef] -> [nodeRef] -> m ()
-run apps accs = void $ do
-    mapM_ buildAppType apps
-    mapM_ buildAccType accs
+run :: (PassCtx(m,ls,term), nodeRef ~ Ref (Node $ (ls :< term))) => [nodeRef] -> [nodeRef] -> m [nodeRef]
+run apps accs = do
+    appUnis <- concat <$> mapM buildAppType apps
+    accUnis <- concat <$> mapM buildAccType accs
+    return $ appUnis <> accUnis -- FIXME[WD]: use monadic element registration instead
 
 
 

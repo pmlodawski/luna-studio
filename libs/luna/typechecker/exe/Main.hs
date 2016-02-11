@@ -29,8 +29,8 @@ import           Type.Inference
 
 import qualified Luna.Compilation.Env.Class                      as Env
 import           Luna.Compilation.Pass.Inference.Literals        as LiteralsAssignement
-import qualified Luna.Compilation.Pass.Inference.Struct          as S
 import qualified Luna.Compilation.Pass.Inference.Struct          as StructInference
+import qualified Luna.Compilation.Pass.Inference.Unification     as Unification
 import           Luna.Compilation.Pass.Utils.Literals            as LiteralsUtils
 import qualified Luna.Compilation.Stage.TypeCheck                as TypeCheck
 import           Luna.Diagnostic.Vis.GraphViz
@@ -161,10 +161,12 @@ test1 = do
 
         -- Running Type Checking compiler stage
         TypeCheck.runT $ do
-            ((all_apps, all_accs), g') <- runBuild g input_g1
-            g''            <- evalBuild g' $ StructInference.run all_apps all_accs
-            renderAndOpen [ ("g1", g')
-                          , ("g2", g'')
+            ((apps, accs), g01) <- runBuild g input_g1
+            (unis        , g02) <- runBuild  g01 $ StructInference.run apps accs
+            g03                 <- evalBuild g02 $ Unification.run unis
+            renderAndOpen [ ("g01", g01)
+                          , ("g02", g02)
+                          , ("g03", g03)
                           ]
     print "end"
 
@@ -180,13 +182,15 @@ test2 = do
 
         -- Running Type Checking compiler stage
         TypeCheck.runT $ do
-            ((root, (all_apps, all_accs)), g01) <- runBuild  g00 input_g2
+            ((root, (apps, accs)), g01) <- runBuild  g00 input_g2
             (literals, g02)     <- runBuild  g01 $ LiteralsUtils.run root
             g03                 <- evalBuild g02 $ LiteralsAssignement.run literals
-            g04                 <- evalBuild g03 $ StructInference.run all_apps all_accs
+            (unis, g04)         <- runBuild  g03 $ StructInference.run apps accs
+            g05                 <- evalBuild g04 $ Unification.run unis
             renderAndOpen [ ("g02", g02)
                           , ("g03", g03)
                           , ("g04", g04)
+                          , ("g05", g05)
                           ]
     putStrLn "done"
 

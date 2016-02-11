@@ -39,6 +39,7 @@ import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Builder.Term
 import           Luna.Syntax.Model.Network.Term
 import qualified Luna.Syntax.Model.Graph.Cluster as Cluster
+import qualified Data.GraphViz.Attributes.HTML as Html
 import Data.Index (idx)
 
 import           Data.Map.Strict (Map)
@@ -57,19 +58,19 @@ namedArrClr   = GVC.Turquoise
 accArrClr     = GVC.Yellow
 arrClr        = GVC.DarkOrange
 
-nodeClr       = GVC.DeepSkyBlue
+nodeClr       = HSV 0.6 0.64 0.95
 valIntNodeClr = GVC.Chartreuse
 valStrNodeClr = GVC.LimeGreen
-valLitNodeClr = GVC.LimeGreen
+valLitNodeClr = HSV 0.4 0.64 0.95
 valUnkNodeClr = GVC.Red
 dirtyClr      = GVC.MediumOrchid
 checkedClr    = GVC.MediumOrchid
 
 graphLabelClr = GVC.Gray30
-nodeLabelClr  = GVC.Gray75
+nodeLabelClr  = GVC.Gray8
 edgeLabelClr  = GVC.Gray40
 
-
+portClr = HSV 0.0 0.0 0.3
 
 fontName = "arial"
 fontSize = 10.0
@@ -133,28 +134,52 @@ toGraphViz name net = DotGraph { strictGraph     = False
 
           -- === Utils === --
 
+          inPortName num    = fromString $ "in" <> show num
           nodeRef         i = "<node " <> show i <> ">"
+
+          --labeledNode ix    = DotNode ref attrs where
+          --    ref    = nodeRef ix
+          --    node   = draftNodeByIx ix
+          --    label  = GV.Label ∘ StrLabel ∘ fromString $ genNodeLabel node
+          --    colors = nodeColorAttr node
+          --    attrs  = label : colors
+
           labeledNode ix    = DotNode ref attrs where
               ref    = nodeRef ix
               node   = draftNodeByIx ix
-              label  = GV.Label ∘ StrLabel ∘ fromString $ genNodeLabel node
-              colors = nodeColorAttrs node
-              attrs  = label : colors
+              ins    = node # Inputs
+
+              inPortsNum = length ins
+              inPorts    = port <$> [0 .. inPortsNum - 1]
+              inLayout   = if length inPorts < 2 then [] else [Html.Cells inPorts]
+              label      = GV.Label ∘ StrLabel ∘ fromString $ ""
+              htmlCells  = Html.Cells [labelCell width $ fromString $ genNodeLabel node] where
+                  width  = if null inPorts then 1 else fromIntegral inPortsNum
+
+              labelCell cs s = Html.LabelCell [Html.ColSpan cs, Html.BGColor $ color, Html.Port $ fromString "label"] $ Html.Text [Html.Str $ fromString s]
+              port num       = Html.LabelCell [Html.ColSpan 1, Html.Height 2, Html.Border 0, Html.Port $ inPortName num, Html.BGColor $ portClr] $ Html.Text [Html.Str $ fromString ""]
+              htmlLabel      = GV.Label $ HtmlLabel $ Html.Table $ Html.HTable Nothing [Html.CellSpacing 3, Html.CellBorder 1, Html.Border 0] $ inLayout <> [htmlCells]
+              color   = nodeColor node
+              --attrs   = GV.color color : shAttrs
+              attrs   = Color (toColorList [color]) : shAttrs
+              shAttrs = caseTest (uncover node) $ do
+                  match $ \(Term.Unify a b) -> [shape DoubleCircle, label, Width 0.2, Height 0.2]
+                  match $ \ANY              -> [shape PlainText   , htmlLabel]
 
           nodeInEdges   n   = zip3 ([0..] :: [Int]) (genInEdges net $ (cast $ index n ng :: NetLayers a :< Draft Static)) (repeat n)
-          mkEdge  (n,(a,attrs),b) = DotEdge (nodeRef a) (nodeRef b) attrs
+          mkEdge  (n,(a,attrs),b) = DotEdge (nodeRef a) (nodeRef b) $ HeadPort (LabelledPort (inPortName n) Nothing): TailPort (LabelledPort "label" Nothing) : attrs
 
           draftNodeByIx ix   = cast $ index_ ix ng :: (NetLayers a :< Draft Static)
           clusterByIx   ix   = index_ ix cg        :: Cluster
           genNodeLabel  node = reprStyled HeaderOnly $ uncover node
 
-          matchCluster2 :: Int -> Int -> Maybe Int
-          matchCluster2 clrIx  nodeIx = if Cluster.member nodeIx (clusterByIx clrIx) then Just clrIx else Nothing
+          matchCluster :: Int -> Int -> Maybe Int
+          matchCluster clrIx  nodeIx = if Cluster.member nodeIx (clusterByIx clrIx) then Just clrIx else Nothing
           matchClusters :: [Int] -> Int -> [Int]
-          matchClusters clrIxs nodeIx = catMaybes $ flip matchCluster2 nodeIx <$> clrIxs
+          matchClusters clrIxs nodeIx = catMaybes $ flip matchCluster nodeIx <$> clrIxs
 
-          nodeColorAttrs :: (NetLayers a :< Draft Static) -> [Attribute]
-          nodeColorAttrs n = return ∘ GV.color $ caseTest (uncover n) $ do
+          --nodeColor :: (NetLayers a :< Draft Static) -> Attribute
+          nodeColor n = caseTest (uncover n) $ do
                                 match $ \(Term.Str s) -> valLitNodeClr
                                 match $ \(Term.Num n) -> valLitNodeClr
                                 match $ \ANY          -> nodeClr
@@ -172,6 +197,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
 
 
 
+instance IsString PortName where fromString = PN . fromString
 
 safeHead :: [a] -> Maybe a
 safeHead []    = Nothing
@@ -187,7 +213,7 @@ fromListWithReps lst = foldr update (Map.fromList initLst) lst where
 
 genInEdges (g :: NetGraph a) (n :: NetLayers a :< Draft Static) = displayEdges where
     --displayEdges = tpEdge : (addColor <$> inEdges)
-    displayEdges = ($ (addColor <$> inEdges)) $ if t == universe then id else (tpEdge :)
+    displayEdges = ($ (addColor <$> inEdges)) $ if t == universe then id else (<> [tpEdge])
     genLabel     = GV.Label . StrLabel . fromString . show
     ins          = n # Inputs
     inIdxs       = getTgtIdx <$> ins
