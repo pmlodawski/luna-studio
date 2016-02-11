@@ -83,9 +83,8 @@ initProjectChooser :: Command State ()
 initProjectChooser = do
     let group = Group.create & Group.position . x .~ Style.sidebarWidth
                              & Group.position . y .~ 30
-                             & Group.style . Group.background   ?~ (1.0, 0.0, 0.0)
-                             & Group.style . Group.borderRadius .~ (0, 0, 0, 0)
-                             & Group.style . Group.padding      .~ uniformPadding 5.0
+                             & Group.visible      .~ False
+                             & Group.style        .~ Style.projectChooserStyle
 
     container <- inRegistry $ UICmd.register sceneInterfaceId group (Layout.verticalLayoutHandler 5.0)
 
