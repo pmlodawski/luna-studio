@@ -81,7 +81,7 @@ instance HasHandlers State where
         | tpe == connectionType        = def
         | tpe == currentConnectionType = def
         | tpe == pendingNodeType       = def
-        | tpe == portType              = def
+        | tpe == portType              =             Port.widgetHandlers
 
         | tpe ==   discreteNumberType  =   DiscreteNumber.widgetHandlers
         | tpe == continuousNumberType  = ContinuousNumber.widgetHandlers

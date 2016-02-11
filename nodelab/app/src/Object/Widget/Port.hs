@@ -1,20 +1,23 @@
 module Object.Widget.Port where
 
-import Utils.PreludePlus
-import Utils.Vector
-import Object.UITypes
-import Utils.Angle (toAngle)
-import Object.Widget
-import Object.Node
-import Data.Aeson (ToJSON)
-import Empire.API.Data.PortRef (AnyPortRef)
+import           Data.Aeson               (ToJSON)
+import           Utils.Angle              (toAngle)
+import           Utils.PreludePlus
+import           Utils.Vector
+
+import           Empire.API.Data.PortRef  (AnyPortRef)
 import qualified Empire.API.JSONInstances ()
 
-import qualified JS.Widget as UI
+import           Object.Node
+import           Object.UITypes
+import           Object.Widget
+
+import qualified JS.Widget                as UI
 
 data Port = Port { _portRef     :: AnyPortRef
                  , _angleVector :: Vector2 Double
                  , _color       :: Int
+                 , _highlight   :: Bool
                  } deriving (Eq, Show, Typeable, Generic)
 
 makeLenses ''Port

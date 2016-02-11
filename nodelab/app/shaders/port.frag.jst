@@ -13,7 +13,7 @@ uniform float portSize;
 uniform vec4 colorFar;
 uniform vec4 color;
 
-uniform int focused;
+uniform int highlight;
 
 uniform int antialias;
 
@@ -82,16 +82,7 @@ void main() {
     } else if (dist_squared < r4) {
         alpha *= d_blur_r34;
     } else {
-        if(focused == 0) {
-            discard;
-        } else {
-            if(posUV.x < 0.7) {
-                alpha *= 0.3;
-            } else {
-                float z = 1.0 - (posUV.x - 0.7) / 0.3;
-                alpha *= 0.3 * z;
-            }
-        }
+        discard;
     }
 
     float disappearE = 0.5;
@@ -103,6 +94,9 @@ void main() {
        alpha *= 1.0 - (disappearS - camFactor) / disappearW;
     }
 
+    if(highlight == 1) {
+        colorShow = vec4(1.3 * colorShow.xyz, colorShow.w);
+    }
 
-    gl_FragColor = vec4(colorShow.xyz, alpha * colorShow.w);;
+    gl_FragColor = vec4(colorShow.xyz, alpha * colorShow.w);
 }

@@ -17,7 +17,7 @@ class Port
     @uniforms =
       color:     {type: 'v4', value: new (THREE.Color)('red')}
       colorFar:  {type: 'v4', value: colorFar}
-      focused:   {type: 'i',  value: 0}
+      highlight: {type: 'i',  value: 0}
       mouseDist: {type: 'f',  value: 0.0}
       nodeSize:  {type: 'f',  value: nodeSize}
       portSize:  {type: 'f',  value: height}
@@ -41,9 +41,9 @@ class Port
     @mesh.position.y = Math.sin(angle) * dist
     @mesh.rotation.z = angle
 
-  setColor:        (color)     -> @uniforms.color.value = colors[color]
+  setColor:        (color)     -> @uniforms.color.value     = colors[color]
+  setHighlight:    (val)       -> @uniforms.highlight.value = if val then 1 else 0
   updateMouseDist: (mouseDist) -> @uniforms.mouseDist.value = mouseDist
-  setFocused:      (focused)   -> @uniforms.focused.value = if focused then 1 else 0
 
 module.exports = Port
 

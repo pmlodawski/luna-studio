@@ -106,7 +106,7 @@ nodePorts id = do
 makePorts :: Node -> [PortModel.Port]
 makePorts node = makePort <$> (zip [1..] $ Map.elems $ node ^. Node.ports) where
     nodeId  = node ^. Node.nodeId
-    makePort (portIx, port) = PortModel.Port portRef angle (colorPort $ port ^. Port.portId ) where
+    makePort (portIx, port) = PortModel.Port portRef angle (colorPort $ port ^. Port.portId ) False where
         portRef = toAnyPortRef nodeId (port ^. Port.portId)
         angle   = portDefaultAngle ((length $ node ^. Node.ports) - 1) (port ^. Port.portId) portIx
 
