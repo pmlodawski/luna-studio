@@ -6,9 +6,8 @@ import           Luna.Compilation.Pass.Dirty.Monad
 
 
 
-data Env node = Env
-        { _reqNodes :: [node]
-        } deriving (Show)
+data Env node = Env { _reqNodes :: [node]
+                    } deriving Show
 
 makeLenses ''Env
 

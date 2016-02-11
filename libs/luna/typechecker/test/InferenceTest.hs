@@ -44,7 +44,7 @@ graph1 :: ( ls   ~ NetLayers ()
           , TermNode Acc  m (ls :< term)
           , TermNode App  m (ls :< term)
           )
-       => m (Ref (Node $ (ls :< term)))
+       => m (Ref (Node (ls :< term)))
 graph1 = do
     i1 <- int 2
     i2 <- int 3
@@ -76,10 +76,8 @@ graph1 = do
     return appPlus2
     -- return i1
 
-prebuild :: IO (Ref $ Node (NetLayers () :< Draft Static), NetGraph ())
-prebuild = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers () :< Draft Static)))
-         $ runNetworkBuilderT def
-         $ star
+prebuild :: Show a => IO (Ref $ Node (NetLayers a :< Draft Static), NetGraph a)
+prebuild = runBuild def star
 
 runBuild (g :: NetGraph a) m = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers a :< Draft Static)))
                              $ runNetworkBuilderT g m
