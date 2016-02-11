@@ -58,10 +58,9 @@ namedArrClr   = GVC.Turquoise
 accArrClr     = GVC.Yellow
 arrClr        = GVC.DarkOrange
 
-nodeClr       = HSV 0.6 0.64 0.95
-valIntNodeClr = GVC.Chartreuse
-valStrNodeClr = GVC.LimeGreen
-valLitNodeClr = HSV 0.4 0.64 0.95
+nodeClr       = HSV 0.58 0.64 0.8
+valIntNodeClr = HSV 0.2 0.64 0.8
+valStrNodeClr = HSV 0.3 0.6 0.8
 valUnkNodeClr = GVC.Red
 dirtyClr      = GVC.MediumOrchid
 checkedClr    = GVC.MediumOrchid
@@ -70,7 +69,7 @@ graphLabelClr = GVC.Gray30
 nodeLabelClr  = GVC.Gray8
 edgeLabelClr  = GVC.Gray40
 
-portClr = HSV 0.0 0.0 0.3
+portClr = HSV 0.0 0.0 0.25
 
 fontName = "arial"
 fontSize = 10.0
@@ -151,7 +150,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
 
               inPortsNum = length ins
               inPorts    = port <$> [0 .. inPortsNum - 1]
-              inLayout   = if length inPorts < 2 then [] else [Html.Cells inPorts]
+              inLayout   = if length inPorts < 1 then [] else [Html.Cells inPorts]
               label      = GV.Label ∘ StrLabel ∘ fromString $ ""
               htmlCells  = Html.Cells [labelCell width $ fromString $ genNodeLabel node] where
                   width  = if null inPorts then 1 else fromIntegral inPortsNum
@@ -180,8 +179,8 @@ toGraphViz name net = DotGraph { strictGraph     = False
 
           --nodeColor :: (NetLayers a :< Draft Static) -> Attribute
           nodeColor n = caseTest (uncover n) $ do
-                                match $ \(Term.Str s) -> valLitNodeClr
-                                match $ \(Term.Num n) -> valLitNodeClr
+                                match $ \(Term.Str s) -> valStrNodeClr
+                                match $ \(Term.Num n) -> valIntNodeClr
                                 match $ \ANY          -> nodeClr
 
           genSubGraph :: Int -> [Int] -> DotSubGraph String
