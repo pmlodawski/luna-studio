@@ -15,13 +15,11 @@ import           Luna.Evaluation.Runtime         (Static)
 import           Luna.Syntax.AST.Term            (Term)
 
 
-data DirtyVal = DirtyVal
-        { _location :: CallPointPath
-        , _required :: Bool
-        , _dirty    :: Bool
-        , _userNode :: Bool
-        } deriving Show
-
+data DirtyVal = DirtyVal { _location :: CallPointPath
+                         , _required :: Bool
+                         , _dirty    :: Bool
+                         , _userNode :: Bool
+                         } deriving Show
 
 makeLenses ''DirtyVal
 

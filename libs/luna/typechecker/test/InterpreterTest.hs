@@ -30,7 +30,7 @@ import           Luna.Syntax.Model.Network.Builder.Term.Class    (NetGraph, NetL
 import           Luna.Syntax.Model.Network.Class                 ()
 import           Luna.Syntax.Model.Network.Term
 
-
+import           Luna.Compilation.Pass.Dirty.Monad               as DirtyMonad
 
 graph1 :: ( term ~ Draft Static
           , MonadIO       m
@@ -88,8 +88,7 @@ main = do
         putStrLn $ "Luna compiler version " <> showVersion v
         TypeCheck.runT $ do
             (root,     g01) <- runBuild  g00 graph1
-            -- ((), g02) <- runBuild  g01 $ Dirty.markSuccessors root
-            -- (literals, g02) <- runBuild  g01 $ Dirty.markSuccessors root
+            g02             <- evalBuild g01 $ Dirty.run root
             renderAndOpen [ ("g1", g01)
                           ]
     putStrLn "done"
