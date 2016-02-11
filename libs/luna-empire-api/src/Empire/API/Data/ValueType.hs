@@ -3,7 +3,7 @@ module Empire.API.Data.ValueType where
 import           Data.Binary (Binary)
 import           Prologue
 
-newtype ValueType = ValueType { _unValueType :: String } deriving (Show, Eq, Generic)
+newtype ValueType = ValueType { _valueTypeName :: String } deriving (Show, Eq, Generic)
 
 data ValueTypeEnum = DiscreteNumber
                    | ContinuousNumber
@@ -14,6 +14,7 @@ data ValueTypeEnum = DiscreteNumber
 
 instance Binary ValueType
 instance Binary ValueTypeEnum
+makeLenses ''ValueType
 
 toEnum' :: ValueType -> ValueTypeEnum
 toEnum' (ValueType name) = case name of

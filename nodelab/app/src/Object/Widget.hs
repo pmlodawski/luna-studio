@@ -187,9 +187,7 @@ instance Default (UIHandlers a) where
 
 
 makeLenses ''DragState
-
 makeLenses ''UIHandlers
-
 makeLenses ''WidgetFile
 
 widgetType :: DisplayObject -> String

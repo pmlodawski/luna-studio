@@ -2,53 +2,55 @@ module BatchConnector.Commands where
 
 import           Utils.PreludePlus
 
+import           Data.Binary                       (encode)
+import qualified Data.Binary                       as Binary
 import           Data.ByteString.Lazy.Char8        (pack)
-import qualified Data.Sequence                     as Seq
-import           Data.Map                          as Map
 import           Data.Int
+import           Data.Map                          as Map
+import qualified Data.Sequence                     as Seq
 import qualified Data.Text.Lazy                    as Text
 import qualified Data.Text.Lazy                    as Text
-import           Utils.Vector                      (Vector2(..), x, y)
+import           Utils.Vector                      (Vector2 (..), x, y)
 
+import           Batch.Expressions
 import           Batch.Workspace                   (Workspace)
 import qualified Batch.Workspace                   as Workspace
-import           Batch.Expressions
-import           BatchConnector.Connection         (sendMessage, sendMany, sendRequest, WebMessage(..))
-import           Empire.API.Data.Node              (Node(..))
-import qualified Empire.API.Data.Node              as Node
-import qualified Empire.API.Data.Port              as Port
-import           Empire.API.Data.PortRef           (InPortRef(..), OutPortRef(..))
-import qualified Empire.API.Data.PortRef           as PortRef
+import           BatchConnector.Connection         (WebMessage (..), sendMany, sendMessage, sendRequest)
+
 import qualified Empire.API.Data.Connection        as Connection
-import           Empire.API.Data.NodeMeta          (NodeMeta)
-import qualified Empire.API.Data.NodeMeta          as NodeMeta
-import           Empire.API.Data.Node              (NodeId)
-import           Empire.API.Data.Port              (InPort(..))
-import           Empire.API.Data.Project           (ProjectId, Project)
-import qualified Empire.API.Data.Project           as Project
+import qualified Empire.API.Data.DefaultValue      as DefaultValue
 import           Empire.API.Data.GraphLocation     (GraphLocation)
 import qualified Empire.API.Data.GraphLocation     as GraphLocation
-import           Empire.API.Data.Library           (LibraryId, Library)
+import           Empire.API.Data.Library           (Library, LibraryId)
 import qualified Empire.API.Data.Library           as Library
-import qualified Empire.API.Data.DefaultValue      as DefaultValue
+import           Empire.API.Data.Node              (Node (..))
+import           Empire.API.Data.Node              (NodeId)
+import qualified Empire.API.Data.Node              as Node
+import           Empire.API.Data.NodeMeta          (NodeMeta)
+import qualified Empire.API.Data.NodeMeta          as NodeMeta
+import           Empire.API.Data.Port              (InPort (..))
+import qualified Empire.API.Data.Port              as Port
+import           Empire.API.Data.PortRef           (InPortRef (..), OutPortRef (..))
+import qualified Empire.API.Data.PortRef           as PortRef
+import           Empire.API.Data.Project           (Project, ProjectId)
+import qualified Empire.API.Data.Project           as Project
 import qualified Empire.API.Topic                  as Topic
 
 import qualified Empire.API.Graph.AddNode          as AddNode
 import qualified Empire.API.Graph.Connect          as Connect
 import qualified Empire.API.Graph.Disconnect       as Disconnect
+import qualified Empire.API.Graph.GetProgram       as GetProgram
 import qualified Empire.API.Graph.RemoveNode       as RemoveNode
 import qualified Empire.API.Graph.RenameNode       as RenameNode
-import qualified Empire.API.Graph.UpdateNodeMeta   as UpdateNodeMeta
 import qualified Empire.API.Graph.SetDefaultValue  as SetDefaultValue
-import qualified Empire.API.Graph.GetProgram       as GetProgram
-import qualified Empire.API.Project.CreateProject  as CreateProject
-import qualified Empire.API.Project.ListProjects   as ListProjects
+import qualified Empire.API.Graph.SetInputNodeType as SetInputNodeType
+import qualified Empire.API.Graph.UpdateNodeMeta   as UpdateNodeMeta
 import qualified Empire.API.Library.CreateLibrary  as CreateLibrary
 import qualified Empire.API.Library.ListLibraries  as ListLibraries
+import qualified Empire.API.Project.CreateProject  as CreateProject
+import qualified Empire.API.Project.ListProjects   as ListProjects
 
 
-import Data.Binary (encode)
-import qualified Data.Binary as Binary
 
 withLibrary :: Workspace -> (GraphLocation -> a) -> a
 withLibrary w f = f (w ^. Workspace.currentLocation)
@@ -112,4 +114,9 @@ setDefaultValue :: Workspace -> InPortRef -> DefaultValue.PortDefault -> IO ()
 setDefaultValue workspace inPortRef val = sendRequest topic body where
     topic = Topic.setDefaultValueRequest
     body = (withLibrary workspace SetDefaultValue.Request) inPortRef val
+
+setInputNodeType :: Workspace -> NodeId -> Text -> IO ()
+setInputNodeType workspace id tpe = sendRequest topic body where
+    topic = Topic.setInputNodeTypeRequest
+    body = (withLibrary workspace SetInputNodeType.Request) id (Text.unpack tpe)
 

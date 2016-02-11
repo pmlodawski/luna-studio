@@ -97,7 +97,6 @@ registerNode node = do
     displayPorts nodeWidget node
     focusNode nodeWidget
 
-
 nodePorts :: WidgetId -> Command UIRegistry.State [WidgetId]
 nodePorts id = do
     children <- UICmd.children id
@@ -131,6 +130,9 @@ nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
                   $ addHandler (UINode.RenameNodeHandler $ \_ nodeId name -> do
                       workspace <- use Global.workspace
                       performIO $ BatchCmd.renameNode workspace nodeId name)
+                  $ addHandler (UINode.ChangeInputNodeTypeHandler $ \_ nodeId name -> do
+                      workspace <- use Global.workspace
+                      performIO $ BatchCmd.setInputNodeType workspace nodeId name)
                   $ addHandler (UINode.FocusNodeHandler  $ \id -> zoom Global.uiRegistry (focusNode id))
                   $ addEnterNodeHandler where
                         addEnterNodeHandler = case node ^. Node.nodeType of
@@ -246,7 +248,7 @@ zipVectorInt (ax:xs) (acc:accs) = zipVectorInt xs ((Vector2 (acc ^. x + 1.0) (fr
 zipVectorInt [] accs = accs
 
 visualizeNodeValue :: WidgetId -> Value -> Command UIRegistry.State ()
-visualizeNodeValue id (IntList     v) = do
+visualizeNodeValue id (IntList v) = do
     groupId <- Node.valueGroupId id
 
     let dataPoints = zipVectorInt v []
@@ -254,7 +256,7 @@ visualizeNodeValue id (IntList     v) = do
                & ScatterPlot.dataPoints .~ dataPoints
     UICmd.register_ groupId widget def
 
-visualizeNodeValue id (DoubleList     v) = do
+visualizeNodeValue id (DoubleList v) = do
     groupId <- Node.valueGroupId id
 
     let dataPoints = zipVector v []

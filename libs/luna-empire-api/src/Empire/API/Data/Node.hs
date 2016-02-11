@@ -16,9 +16,9 @@ type NodeId = Int
 type FunctionType = [String]
 
 data NodeType = ExpressionNode  { _expression :: Text }
-              | InputNode    { _inputIx :: Int  }
-              | OutputNode
-              | FunctionNode { _functionType :: FunctionType }
+              | InputNode       { _inputIx    :: Int  }
+              | OutputNode      { _outputIx   :: Int  }
+              | FunctionNode    { _functionType :: FunctionType }
               | ModuleNode
               deriving (Show, Eq, Generic)
 

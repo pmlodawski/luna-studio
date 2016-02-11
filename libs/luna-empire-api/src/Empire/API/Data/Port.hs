@@ -38,7 +38,6 @@ instance Read InPort where
     readsPrec d r = do
         (v, r') <- readsPrec d r
         return (Arg v, r')
-    readsPrec _ _ = []
 
 instance Read OutPort where
     readsPrec _ ('A':'l':'l':rest) = [(All, rest)]
@@ -46,7 +45,6 @@ instance Read OutPort where
     readsPrec d r = do
         (v, r') <- readsPrec d r
         return (Projection v, r')
-    readsPrec _ _ = []
 
 data PortState = NotConnected | Connected | WithDefault PortDefault deriving (Show, Eq, Generic)
 

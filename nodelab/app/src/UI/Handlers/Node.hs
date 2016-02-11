@@ -46,15 +46,25 @@ import qualified Style.Node as Style
 import           Empire.API.Data.Node         (NodeId)
 
 
-textHandlers :: WidgetId -> HTMap
-textHandlers id = addHandler (ValueChangedHandler $ textValueChangedHandler id)
+nameHandlers :: WidgetId -> HTMap
+nameHandlers id = addHandler (ValueChangedHandler $ nameValueChangedHandler id)
                 $ addHandler (UICmd.LostFocus $ inRegistry . flip UICmd.update_ (TextBox.isEditing .~ False))
                 $ mempty where
 
-textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
-textValueChangedHandler parent val tbId = do
+nameValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
+nameValueChangedHandler parent val tbId = do
     model <- inRegistry $ UICmd.update parent $ Model.name .~ val
     triggerRenameNodeHandler parent model
+
+typeHandlers :: WidgetId -> HTMap
+typeHandlers id = addHandler (ValueChangedHandler $ typeValueChangedHandler id)
+                $ addHandler (UICmd.LostFocus $ inRegistry . flip UICmd.update_ (TextBox.isEditing .~ False))
+                $ mempty where
+
+typeValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
+typeValueChangedHandler parent val tbId = do
+    model <- inRegistry $ UICmd.update parent $ Model.tpe ?~ val
+    triggerChangeInputNodeTypeHandler parent model
 
 newtype RemoveNodeHandler = RemoveNodeHandler (Command Global.State ())
 removeNodeHandler = TypeKey :: TypeKey RemoveNodeHandler
@@ -64,6 +74,9 @@ focusNodeHandler = TypeKey :: TypeKey FocusNodeHandler
 
 newtype RenameNodeHandler = RenameNodeHandler (WidgetId -> NodeId -> Text -> Command Global.State ())
 renameNodeHandler = TypeKey :: TypeKey RenameNodeHandler
+
+newtype ChangeInputNodeTypeHandler = ChangeInputNodeTypeHandler (WidgetId -> NodeId -> Text -> Command Global.State ())
+changeInputNodeTypeHandler = TypeKey :: TypeKey ChangeInputNodeTypeHandler
 
 newtype EnterNodeHandler = EnterNodeHandler (Command Global.State ())
 enterNodeHandler = TypeKey :: TypeKey EnterNodeHandler
@@ -82,6 +95,12 @@ triggerRenameNodeHandler :: WidgetId -> Model.Node -> Command Global.State ()
 triggerRenameNodeHandler id model = do
     maybeHandler <- inRegistry $ UICmd.handler id renameNodeHandler
     forM_ maybeHandler $ \(RenameNodeHandler handler) -> handler id (model ^. Model.nodeId) (model ^. Model.name)
+
+triggerChangeInputNodeTypeHandler :: WidgetId -> Model.Node -> Command Global.State ()
+triggerChangeInputNodeTypeHandler id model = do
+    withJust (model ^. Model.tpe) $ \tpe -> do
+        maybeHandler <- inRegistry $ UICmd.handler id changeInputNodeTypeHandler
+        forM_ maybeHandler $ \(ChangeInputNodeTypeHandler handler) -> handler id (model ^. Model.nodeId) tpe
 
 triggerEnterNodeHandler :: WidgetId -> Command Global.State ()
 triggerEnterNodeHandler id = do
@@ -154,7 +173,11 @@ instance CompositeWidget Model.Node where
         nodeGroup <- UICmd.register expandedGroup grp Style.expandedGroupLayout
 
         let widget = LabeledTextBox.create Style.portControlSize "Name" (model ^. Model.name)
-        UICmd.register nodeGroup widget $ textHandlers id
+        UICmd.register nodeGroup widget $ nameHandlers id
+
+        withJust (model ^. Model.tpe) $ \tpe -> do
+            let widget = LabeledTextBox.create Style.portControlSize "Type" (fromMaybe "" $ model ^. Model.tpe)
+            UICmd.register_ nodeGroup widget $ typeHandlers id
 
         let grp    = Group.create
         UICmd.register expandedGroup grp Style.expandedGroupLayout
@@ -173,6 +196,7 @@ instance CompositeWidget Model.Node where
         nameTbId   <- nameTextBoxId   id
         valueId    <- valueLabelId    id
         valueVisId <- valueGroupId    id
+        typeTbId   <- typeTextBoxId   id
 
         UICmd.update_ controlsId $ Group.visible .~ (model ^. Model.isExpanded)
         UICmd.update_ valueVisId $ Group.visible .~ (model ^. Model.isExpanded)
@@ -180,6 +204,8 @@ instance CompositeWidget Model.Node where
         UICmd.update_ nameId     $ Label.label   .~ (model ^. Model.name)
         UICmd.update_ nameTbId   $ LabeledTextBox.value .~ (model ^. Model.name)
         UICmd.update_ valueId    $ Label.label   .~ (model ^. Model.value)
+        withJust (model ^. Model.tpe) $ \tpe -> do
+            withJust typeTbId $ \typeTbId -> UICmd.update_ typeTbId $ LabeledTextBox.value .~ tpe
 
 
 -- Node widget structure:
@@ -189,6 +215,8 @@ instance CompositeWidget Model.Node where
 --   3. group
 --      1. expanded group
 --        1. node controls [name, etc.]
+--          1. node name labeled textbox
+--          1. Maybe input node type labeled textbox
 --        2. port controls [name, etc.]
 --      2. Expression value
 --      3. Visualization group
@@ -212,6 +240,12 @@ nameTextBoxId id = do
     group <- nodeControlsGroupId id
     (nodeNameId:_) <- UICmd.children group
     return nodeNameId
+
+typeTextBoxId :: WidgetId -> Command UIRegistry.State (Maybe WidgetId)
+typeTextBoxId id = do
+    group <- nodeControlsGroupId id
+    children <- UICmd.children group
+    return $ children ^? ix 1
 
 expandedGroupId :: WidgetId -> Command UIRegistry.State WidgetId
 expandedGroupId id = do

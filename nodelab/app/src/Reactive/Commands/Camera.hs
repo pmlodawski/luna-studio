@@ -60,7 +60,7 @@ autoZoom = do
             maxXY          =  padding + (Vector2 (maximum $ (^. Node.position . _1) <$> nodes) (maximum $ (^. Node.position . _2) <$> nodes))
             spanXY         = maxXY - minXY
             zoomFactorXY   = Vector2 (screenSize ^. x / spanXY ^. x) (screenSize ^. y / spanXY ^. y)
-            zoomFactor     = min (zoomFactorXY ^. x) (zoomFactorXY ^. y)
+            zoomFactor     = min 1.0 $ min (zoomFactorXY ^. x) (zoomFactorXY ^. y)
             zoomPan        = minXY + ((/2.0) <$> spanXY)
 
         zoom Global.camera $ setZoom zoomFactor

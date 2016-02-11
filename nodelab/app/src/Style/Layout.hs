@@ -20,8 +20,8 @@ breadcrumbBackground           = sidebarBackground
 breadcrumbPosition             = Vector2 sidebarWidth 0.0
 
 breadcrumbStyle                = def & Group.background   ?~ sidebarBackground
-                                     & Group.padding      .~ xyPadding 10.0 5.0
-                                     & Group.borderRadius .~ (0, 0, 0, 0)
+                                     & Group.padding      .~ xyPadding 5.0 5.0
+                                     & Group.borderRadius .~ (0, 10, 0, 0)
 
 
 breadcrumbItemSize             = Vector2 150.0 20.0

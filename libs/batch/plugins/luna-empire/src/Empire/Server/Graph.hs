@@ -16,7 +16,7 @@ import           Empire.API.Data.DefaultValue      (Value (..))
 import           Empire.API.Data.GraphLocation     (GraphLocation)
 import           Empire.API.Data.Node              (Node (..), NodeId)
 import qualified Empire.API.Data.Node              as Node
-import           Empire.API.Data.Port              (OutPort (..), Port (..), PortId (..), PortState (..))
+import           Empire.API.Data.Port              (InPort (..), OutPort (..), Port (..), PortId (..), PortState (..))
 import           Empire.API.Data.ValueType         (ValueType (..))
 import qualified Empire.API.Graph.AddNode          as AddNode
 import qualified Empire.API.Graph.CodeUpdate       as CodeUpdate
@@ -73,7 +73,7 @@ notifyNodeResultUpdate location nodeId value = do
     sendToBus Topic.nodeResultUpdate update
 
 
-data Expr = Expression String | Function (Maybe String) | Module (Maybe String) | Input (Maybe String)
+data Expr = Expression String | Function (Maybe String) | Module (Maybe String) | Input (Maybe String)| Output (Maybe String)
 
 parseExpr :: String -> Expr
 parseExpr ('d':'e':'f':' ':name) = Function $ Just name
@@ -82,6 +82,8 @@ parseExpr ('m':'o':'d':'u':'l':'e':' ':name) = Module $ Just name
 parseExpr "module" = Module Nothing
 parseExpr ('i':'n':' ':name) = Input $ Just name
 parseExpr "in" = Input Nothing
+parseExpr ('o':'u':'t':' ':name) = Output $ Just name
+parseExpr "out" = Output Nothing
 parseExpr expr = Expression expr
 
 handleAddNode :: ByteString -> StateT Env BusT ()
@@ -102,6 +104,9 @@ handleAddNode content = do
         Input    name -> return (Right node, currentEmpireEnv) where
           node = Node 44 (Text.pack $ fromMaybe "input0" name) (Node.InputNode 1) ports (request ^. AddNode.nodeMeta) where
             ports = Map.fromList [ (OutPortId All,  Port (OutPortId All)  (ValueType "Int") NotConnected)]
+        Output   name -> return (Right node, currentEmpireEnv) where
+          node = Node 45 (Text.pack $ fromMaybe "output0" name) (Node.OutputNode 1) ports (request ^. AddNode.nodeMeta) where
+            ports = Map.fromList [ (InPortId (Arg 0),  Port (InPortId (Arg 0))  (ValueType "Int") NotConnected)]
       AddNode.InputNode _ _ -> return (Left "Input Nodes not yet supported", currentEmpireEnv)
     case result of
         Left err -> logger Logger.error $ errorMessage <> err
