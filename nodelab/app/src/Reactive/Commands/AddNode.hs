@@ -171,7 +171,7 @@ makeInPortControl parent nodeId inPort port = case port ^. Port.state of
         groupId <- UICmd.register parent group (Layout.horizontalLayoutHandler 0.0)
         let label  = Label.create Style.setLabelSize (Text.pack $ show inPort)
                    & Label.position . x .~ Style.setLabelOffsetX
-            button = Button.create Style.setButtonSize "Set"
+            button = Button.create Style.setButtonSize "not set"
             handlers = addHandler (Button.ClickedHandler $ \_ -> do
                 workspace <- use Global.workspace
                 performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.IntValue def)

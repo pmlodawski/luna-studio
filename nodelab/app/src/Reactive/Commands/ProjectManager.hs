@@ -112,10 +112,10 @@ openAddProjectDialog = inRegistry $ do
                              & Group.style    .~ Style.createProjectDialogStyle
     groupId <- UICmd.register sceneInterfaceId group (Layout.horizontalLayoutHandler 5.0)
 
-    let tb = LabeledTextBox.create Style.createProjectDialogTextBoxSize "Project name" "Untitled project"
+    let tb = LabeledTextBox.create Style.createProjectDialogTextBoxSize "Name" "Untitled"
     tbId <- UICmd.register groupId tb def
 
-    let button = Button.create Style.createProjectDialogOKSize "Create project"
+    let button = Button.create Style.createProjectDialogOKSize "Create"
     UICmd.register_ groupId button $ handle $ ClickedHandler $ const $ do
         name <- inRegistry $ UICmd.get tbId LabeledTextBox.value
         inRegistry $ UICmd.removeWidget groupId
@@ -135,6 +135,6 @@ updateProjectList = do
 
     projects <- use $ Global.workspace . Workspace.projects
     forM_ (IntMap.toList projects) $ \(id, project) -> do
-        let isCurrent = if (currentProjectId == id) then "* " else ""
+        let isCurrent = if (currentProjectId == id) then "> " else ""
         let button = Button.create Style.projectListItemSize $ (isCurrent <> (Text.pack $ fromMaybe "(no name)" $ project ^. Project.name))
         inRegistry $ UICmd.register groupId button (handle $ ClickedHandler $ const (loadProject id))
