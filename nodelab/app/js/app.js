@@ -89,8 +89,8 @@ function initializeGl() {
 }
 
 function initUserInfo() {
-  $('body').append('<div id="userInfo"><div>Signed in as YC. <a class="tutorial" href="#">Tutorial</a></div></div>');
-  $('body').append(require('tutorial')());
+  $('body').append(require('templates/logo')());
+  $('body').append(require('templates/tutorial')());
 
   if (localStorage.getItem('tutorial') === "1")
     $(".tutorial-box").hide();
