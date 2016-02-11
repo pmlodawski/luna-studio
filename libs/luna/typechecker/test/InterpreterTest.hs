@@ -88,7 +88,7 @@ main = do
         putStrLn $ "Luna compiler version " <> showVersion v
         TypeCheck.runT $ do
             (root,     g01) <- runBuild  g00 graph1
-            g02             <- evalBuild g01 $ Dirty.run root
+            -- g02             <- evalBuild g01 $ Dirty.run root
             renderAndOpen [ ("g1", g01)
                           ]
     putStrLn "done"

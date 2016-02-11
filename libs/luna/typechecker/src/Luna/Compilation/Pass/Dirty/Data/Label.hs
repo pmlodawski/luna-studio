@@ -32,12 +32,3 @@ type instance LayerData layout Dirty t = DirtyVal
 instance Monad m => Creator    m (Layer layout Dirty a) where create = return $ Layer def
 instance Monad m => Destructor m (Layer layout Dirty t) where destruct _ = return ()
 
-
-type instance Prop Dirty (Term (Network '[Type, Succs, Markable, Meta ()]) Draft Static) = DirtyVal
-
-instance Getter Dirty (Term (Network '[Type, Succs, Markable, Meta ()]) Draft Static) where
-    getter _ _ = undefined
-
-instance Setter Dirty (Cover (Term.Draft Static '[Type, Succs, Markable, Meta ()])) where
-    setter _ _ _ = undefined
-
