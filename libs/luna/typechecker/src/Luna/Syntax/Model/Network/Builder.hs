@@ -52,7 +52,7 @@ merge g = do
 
     forM newNodeRefs $ \ref -> do
         node <- read ref
-        let nodeWithFixedEdges = node & over covered (fmapInputs' unsafeTranslateEdge)
+        let nodeWithFixedEdges = node & over covered (fmapInputs unsafeTranslateEdge)
                                       & over (prop Succs . mapped) unsafeTranslateEdge
                                       & over (prop Type)           unsafeTranslateEdge
                 where
