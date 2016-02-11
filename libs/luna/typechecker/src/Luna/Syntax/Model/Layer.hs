@@ -66,11 +66,11 @@ instance {-# OVERLAPPABLE #-} Setter a (Attached (Layer l a  t) base) where sett
 -- === Shell === ---
 --------------------
 
-data (layers :: [*]) :< (a :: [*] -> *) = Shell (ShellStrcture layers (a layers))
+data (layers :: [*]) :< (a :: [*] -> *) = Shell (ShellStructure layers (a layers))
 
-type family ShellStrcture ls a where
-    ShellStrcture '[]       a = Cover a
-    ShellStrcture (l ': ls) a = AttachedLayer l (ShellStrcture ls a)
+type family ShellStructure ls a where
+    ShellStructure '[]       a = Cover a
+    ShellStructure (l ': ls) a = AttachedLayer l (ShellStructure ls a)
 
 type AttachedLayer t a = Attached (Layer (LayoutType (Uncovered a)) t (Uncovered a)) a
 
@@ -121,7 +121,6 @@ instance (HasRecord (Uncovered (ls :< t)), Uncovered (Unwrapped (ls :< t)) ~ t l
 
 data Type  = Type  deriving (Show, Eq, Ord)
 data Succs = Succs deriving (Show, Eq, Ord)
-
 
 -- === Universal === --
 

@@ -24,7 +24,8 @@ import           Luna.Syntax.AST.Term                    hiding (Val, Lit, Thunk
 import qualified Luna.Syntax.AST.Term                    as Term
 import           Luna.Syntax.Model.Graph
 import qualified Luna.Syntax.Model.Graph.Builder         as GraphBuilder
-import           Luna.Syntax.Model.Layer
+import           Luna.Syntax.Model.Layer                 (Type, Succs, Markable, Meta, (:<))
+import           Luna.Compilation.Pass.Dirty.Data.Label  (Dirty)
 import           Luna.Syntax.Model.Network.Builder.Layer
 import qualified Luna.Syntax.Model.Network.Builder.Self  as Self
 import qualified Luna.Syntax.Model.Network.Builder.Type  as Type
@@ -238,7 +239,7 @@ matchTypeM _ = id
 -- === Network Building === --
 ------------------------------
 
-type NetLayers a = '[Type, Succs, Markable, Meta a]
+type NetLayers a = '[Type, Succs, Dirty, Markable, Meta a]
 type NetNode   a = NetLayers a :< Draft Static
 
 type NetGraph a = Graph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))
