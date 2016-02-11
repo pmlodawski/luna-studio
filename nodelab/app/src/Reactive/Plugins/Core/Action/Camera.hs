@@ -24,7 +24,7 @@ import           Reactive.Commands.Command (Command, execCommand, ioCommand, per
 
 
 toAction :: Event -> Maybe (Command Global.State ())
-toAction (Keyboard _ (Keyboard.Event Keyboard.Press '0' KeyMods {_ctrl = True})) = Just $ autoZoom
+toAction (Keyboard _ (Keyboard.Event Keyboard.Press 'h' _)) = Just $ autoZoom
 toAction evt = (zoom Global.camera) <$> (>> syncCamera) <$> toAction' evt
 
 toAction' :: Event -> Maybe (Command Camera.State ())
