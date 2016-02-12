@@ -31,6 +31,7 @@ import qualified Luna.Compilation.Env.Class                      as Env
 import           Luna.Compilation.Pass.Inference.Literals        as LiteralsAssignement
 import qualified Luna.Compilation.Pass.Inference.Struct          as StructInference
 import qualified Luna.Compilation.Pass.Inference.Unification     as Unification
+import qualified Luna.Compilation.Pass.Inference.Inlining        as Inlining
 import           Luna.Compilation.Pass.Utils.Literals            as LiteralsUtils
 import qualified Luna.Compilation.Stage.TypeCheck                as TypeCheck
 import           Luna.Diagnostic.Vis.GraphViz
