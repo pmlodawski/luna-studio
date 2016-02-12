@@ -30,7 +30,11 @@ import           Luna.Syntax.Model.Network.Builder.Term.Class    (NetGraph, NetL
 import           Luna.Syntax.Model.Network.Class                 ()
 import           Luna.Syntax.Model.Network.Term
 
-import           Luna.Compilation.Pass.Dirty.Monad               as DirtyMonad
+import qualified Luna.Compilation.Pass.Dirty.Monad               as DirtyMonad
+
+import           Luna.Compilation.Pass.Dirty.Data.Label          (Dirty (Dirty), DirtyVal (DirtyVal))
+import qualified Luna.Compilation.Pass.Dirty.Data.Label          as Label
+
 
 graph1 :: ( term ~ Draft Static
           , MonadIO       m
@@ -41,6 +45,8 @@ graph1 :: ( term ~ Draft Static
           , TermNode Str  m (ls :< term)
           , TermNode Acc  m (ls :< term)
           , TermNode App  m (ls :< term)
+          , HasProp Dirty (ls :< term)
+          , Prop Dirty    (ls :< term) ~ DirtyVal
           )
        => m (Ref (Node (ls :< term)))
 graph1 = do
@@ -69,7 +75,13 @@ graph1 = do
     accPlus2   <- acc "+" appPlus1b
     appPlus2   <- app accPlus2 [arg appLen]
 
+
+    let ref = appConc1b
+    node <- read ref
+    write ref (node & prop Dirty . Label.required .~ True)
+
     return appConc1b
+
 
 prebuild :: Show a => IO (Ref $ Node (NetLayers a :< Draft Static), NetGraph a)
 prebuild = runBuild def star
