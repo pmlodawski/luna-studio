@@ -82,6 +82,7 @@ evalBuild = fmap snd ∘∘ runBuild
 
 main :: IO ()
 main = do
+    putStrLn "Interpreter test"
     (_,  g00 :: NetGraph ()) <- prebuild
     flip Env.evalT def $ do
         v <- view version <$> Env.get
