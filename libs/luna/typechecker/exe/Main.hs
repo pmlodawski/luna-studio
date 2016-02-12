@@ -22,7 +22,7 @@ import qualified Data.Graph.Sort                                 as Sort
 import           Data.Index                                      (idx)
 import           Data.Layer.Cover
 import           Data.Prop
-import           Data.Record                                     hiding (Layout)
+import           Data.Record                                     hiding (Layout, cons)
 import           Data.Version.Semantic
 import           Development.Placeholders
 import           Type.Inference
@@ -80,7 +80,7 @@ input_g1 :: ( term ~ Draft Static
             , TermNode Var  m (ls :< term)
             , TermNode App  m (ls :< term)
             , TermNode Acc  m (ls :< term)
-            ) => m ([nr],[nr])
+            ) => m ([nr],[nr],[nr])
 input_g1 = do
     f  <- var' "f"
     a  <- var' "a"
@@ -91,9 +91,42 @@ input_g1 = do
 
     g  <- var' "g"
     r2 <- app' g [arg x]
-    return ([r1,r2], [x])
+    return ([r1,r2], [x], [f,g])
 
 
+input_g1_resolution_mock :: ( term ~ Draft Static
+                            , node ~ Node (ls :< term)
+                            , edge ~ Link (ls :< term)
+                            , nr   ~ Ref node
+                            , er   ~ Ref edge
+                            , MonadIO        m
+                            , NodeInferable  m (ls :< term)
+                            , TermNode Star  m (ls :< term)
+                            , TermNode Var   m (ls :< term)
+                            , TermNode App   m (ls :< term)
+                            , TermNode Acc   m (ls :< term)
+                            , TermNode Cons  m (ls :< term)
+                            , TermNode Lam   m (ls :< term)
+                            , TermNode Unify m (ls :< term)
+                            , HasProp Type (ls :< term)
+                            , Prop    Type (ls :< term) ~ er
+                            , Graph.MonadBuilder n e m
+                            , Castable e edge
+                            ) => [nr] -> m [nr]
+input_g1_resolution_mock [f,g] = do
+    c_int   <- cons' "Int"
+    c_str   <- cons' "String"
+    ft_mock <- lam' [arg c_int, arg c_int] c_int
+    gt_mock <- lam' [arg c_str]            c_str
+    f'      <- read f
+    g'      <- read g
+    let ft_c = f' # Type
+        gt_c = g' # Type
+    ft      <- follow source ft_c
+    gt      <- follow source gt_c
+    ft_u    <- unify' ft ft_mock
+    gt_u    <- unify' gt gt_mock
+    return [ft_u, gt_u]
 
 input_g2 :: ( ls   ~ NetLayers ()
             , term ~ Draft Static
@@ -145,8 +178,8 @@ input_g2 = do
 main :: IO ()
 main = do
     --showcase
-    --test1
-    test2
+    test1
+    --test2
     return ()
 
 
@@ -161,13 +194,18 @@ test1 = do
 
         -- Running Type Checking compiler stage
         TypeCheck.runT $ do
-            ((apps, accs), g01) <- runBuild g input_g1
-            (unis        , g02) <- runBuild  g01 $ StructInference.run apps accs
-            g03                 <- evalBuild g02 $ Unification.run unis
-            renderAndOpen [ ("g01", g01)
-                          , ("g02", g02)
-                          , ("g03", g03)
-                          ]
+            ((apps, accs, funcs), g01) <- runBuild g input_g1
+            (unis               , g02) <- runBuild  g01 $ StructInference.run apps accs
+            g03                        <- evalBuild g02 $ Unification.run 1 unis
+            (unis               , g04) <- runBuild  g03 $ input_g1_resolution_mock funcs
+            (gs05, g05)                <- runBuild  g04 $ Unification.run 1 unis
+            let gss = zipWith (,) (("g0" <>) ∘ show <$> [5..]) gs05
+            renderAndOpen $ [ ("g01", g01)
+                            , ("g02", g02)
+                            , ("g03", g03)
+                            , ("g04", g04)
+                            --, ("g05", g05)
+                            ] <> gss
     print "end"
 
 
@@ -186,13 +224,15 @@ test2 = do
             (literals, g02)     <- runBuild  g01 $ LiteralsUtils.run root
             g03                 <- evalBuild g02 $ LiteralsAssignement.run literals
             (unis, g04)         <- runBuild  g03 $ StructInference.run apps accs
-            g05                 <- evalBuild g04 $ Unification.run unis
-            renderAndOpen [ ("g02", g02)
-                          , ("g03", g03)
-                          , ("g04", g04)
-                          , ("g05", g05)
-                          ]
+            (gs05, g05)         <- runBuild  g04 $ Unification.run 1 unis
+            let gss = zipWith (,) (("g0" <>) ∘ show <$> [5..]) gs05
+            renderAndOpen $ [ ("g02", g02)
+                            , ("g03", g03)
+                            , ("g04", g04)
+                            --, ("g05", g05)
+                            ] <> gss
     putStrLn "done"
+
 
 
 

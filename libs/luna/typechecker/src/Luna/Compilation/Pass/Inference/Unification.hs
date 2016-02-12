@@ -1,6 +1,8 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE CPP                       #-}
 
+{-# LANGUAGE UndecidableInstances #-} -- used for resolution monad, delete after refactoring
+
 module Luna.Compilation.Pass.Inference.Unification where
 
 import Prelude.Luna
@@ -12,7 +14,7 @@ import Data.Record
 import Luna.Evaluation.Runtime                      (Static, Dynamic)
 import Luna.Syntax.AST.Term                         hiding (source)
 import Luna.Syntax.Model.Graph
-import Luna.Syntax.Model.Graph.Builder
+import Luna.Syntax.Model.Graph.Builder              hiding (run)
 import Luna.Syntax.Model.Layer
 import Luna.Syntax.Model.Network.Builder.Node
 import Luna.Syntax.Model.Network.Builder.Term.Class (runNetworkBuilderT, NetGraph, NetLayers)
@@ -26,22 +28,29 @@ import qualified Luna.Syntax.Model.Graph.Builder  as Graph
 import qualified Luna.Compilation.Stage.TypeCheck as TypeCheck
 import qualified Luna.Syntax.Name                 as Name
 
+--
 
-#define PassCtx(m,ls,term) ( term ~ Draft Static                   \
-                           , ne   ~ Link (ls :< term)              \
-                           , Prop Type   (ls :< term) ~ Ref ne     \
-                           , Prop Succs  (ls :< term) ~ [Ref $ ne] \
-                           , BiCastable     e ne                   \
-                           , MonadBuilder n e m                    \
-                           , HasProp Type     (ls :< term)         \
-                           , HasProp Succs    (ls :< term)         \
-                           , NodeInferable  m (ls :< term)         \
-                           , TermNode Var   m (ls :< term)         \
-                           , TermNode Lam   m (ls :< term)         \
-                           , TermNode Unify m (ls :< term)         \
-                           , TermNode Acc   m (ls :< term)         \
-                           , MonadIdentPool m                      \
-                           , Destructor     m (Ref $ Node (ls :< term)) \
+import Control.Monad.Fix
+import Control.Monad (liftM, MonadPlus(..))
+
+import Control.Monad.Trans.Either
+
+#define PassCtx(m,ls,term) ( term ~ Draft Static                     \
+                           , ne   ~ Link (ls :< term)                \
+                           , Prop Type   (ls :< term) ~ Ref ne       \
+                           , Prop Succs  (ls :< term) ~ [Ref $ ne]   \
+                           , BiCastable     e ne                     \
+                           , BiCastable     n (ls :< term)           \
+                           , MonadBuilder n e (m)                    \
+                           , HasProp Type       (ls :< term)         \
+                           , HasProp Succs      (ls :< term)         \
+                           , NodeInferable  (m) (ls :< term)         \
+                           , TermNode Var   (m) (ls :< term)         \
+                           , TermNode Lam   (m) (ls :< term)         \
+                           , TermNode Unify (m) (ls :< term)         \
+                           , TermNode Acc   (m) (ls :< term)         \
+                           , MonadIdentPool (m)                      \
+                           , Destructor     (m) (Ref $ Node (ls :< term)) \
                            )
 
 
@@ -89,46 +98,158 @@ import qualified Luna.Syntax.Name                 as Name
 --            return [uniTp]
 --        match $ \ANY -> impossible
 
-data ResolutionStatus a = Resolved
-                        | Unresolved a
-                        deriving (Show)
 
-catUnresolved [] = []
-catUnresolved (a : as) = ($ (catUnresolved as)) $ case a of
-    Resolved     -> id
-    Unresolved u -> (u :)
+class Monad m => MonadResolution r m | m -> r where
+    resolve :: r -> m ()
+
+
+
+
+
+--------------------------
+---- === Resolution === --
+--------------------------
+
+--data Resolution r u = Resolved2   r
+--                    | Unresolved2 u
+--                    deriving (Show, Functor, Traversable, Foldable)
+
+---- === Instances === --
+--instance Applicative (Resolution r) where
+--    pure    = Unresolved2
+--    f <*> a = case f of
+--        Resolved2   r -> Resolved2 r
+--        Unresolved2 u -> u <$> a
+--    {-# INLINE pure  #-}
+--    {-# INLINE (<*>) #-}
+
+--instance Monad (Resolution r) where
+--    m >>= f = case m of
+--        Resolved2   r -> Resolved2 r
+--        Unresolved2 u -> f u
+--    {-# INLINE (>>=) #-}
+
+---- MonadResolution
+
+--instance MonadResolution r (Resolution r) where
+--    resolve = Resolved2
+--    {-# INLINE resolve #-}
+
+
+
+-------------------------
+-- === ResolutionT === --
+-------------------------
+
+--newtype ResolutionT r m u = ResolutionT (m (Resolution r u))
+newtype ResolutionT r m u = ResolutionT (EitherT r m u) deriving (Functor, Applicative, Monad, MonadFix, MonadIO, MonadTrans)
+makeWrapped ''ResolutionT
+
+-- === Utils === --
+
+runResolutionT :: Monad m => ResolutionT r m u -> m (Resolution r u)
+runResolutionT m = runEitherT (unwrap' m) >>= return ∘ \case
+    Left  l -> Resolved   l
+    Right r -> Unresolved r
+
+
+---- === Instances === --
+
+---- Show
+deriving instance Show (Unwrapped (ResolutionT r m u)) => Show (ResolutionT r m u)
+
+---- MonadResolution
+
+instance Monad m => MonadResolution r (ResolutionT r m) where
+    resolve = wrap' ∘ left
+    {-# INLINE resolve #-}
+
+data Resolution r u = Resolved   r
+                    | Unresolved u
+                    deriving (Show)
+
+
+
+
+
+resolve_ = resolve []
 
 resolveUnify :: forall m ls term nodeRef ne ter n e. (PassCtx(m,ls,term), nodeRef ~ Ref (Node $ (ls :< term))
-                , MonadIO m, Show (ls :< term))
-             => nodeRef -> m (ResolutionStatus nodeRef)
+                , MonadIO m, Show (ls :< term), MonadResolution [nodeRef] m)
+             => nodeRef -> m ()
 resolveUnify uni = do
     uni' <- read uni
     caseTest (uncover uni') $ do
         match $ \(Unify lc rc) -> do
             l  <- follow source lc
             r  <- follow source rc
-            resolve uni l r
-            --symmetrical (resolve uni) l r
+
+            symmetrical (resolveStar uni) l r
+            symmetrical (resolveVar  uni) l r
+            resolveLams uni l r
 
         match $ \ANY -> impossible
-    where --symmetrical f a b = f a b *> f b a
-          resolve uni a b = do
+
+    where symmetrical f a b = f a b *> f b a
+
+          resolveStar uni a b = do
+              uni' <- read uni
+              a'   <- read (a :: nodeRef)
+              whenMatched (uncover a') $ \Star -> do
+                  mapM_ (reroute b) $ uni' # Succs
+                  destruct uni
+                  resolve_
+
+          resolveVar uni a b = do
+              uni' <- read uni
+              a'   <- read (a :: nodeRef)
+              whenMatched (uncover a') $ \(Var v) -> do
+                  mapM_ (reroute b) $ uni' # Succs
+                  mapM_ (reroute b) $ a'   # Succs
+                  destruct uni
+                  destruct a
+                  resolve_
+
+          resolveLams uni a b = do
               uni' <- read uni
               a'   <- read (a :: nodeRef)
               b'   <- read (b :: nodeRef)
-              caseTest (uncover a') $ do
-                  match $ \Star -> do
-                      mapM_ (reroute source b) $ uni' # Succs
-                      destruct uni
-                      return Resolved
-                  match $ \ANY  -> return $ Unresolved uni
+              whenMatched (uncover a') $ \(Lam cargs cout) ->
+                  whenMatched (uncover b') $ \(Lam cargs' cout') -> do
+                    let cRawArgs  = unlayer <$> cargs
+                    let cRawArgs' = unlayer <$> cargs'
+                    args  <- mapM (follow source) (cout  : cRawArgs )
+                    args' <- mapM (follow source) (cout' : cRawArgs')
+                    unis  <- zipWithM unify args args'
+
+                    mapM_ (reroute a) $ b' # Succs
+
+                    destruct uni
+                    destruct b
+                    resolve unis
 
 
-reroute lens input edge = do
+-- FIXME[WD]!!!!!!
+-- Tu jest bug - nie aktualizujemy successorow!
+--reroute lens input edge = do
+--    el  <- read edge
+--    write edge $ el & lens .~ input
+--    input' <- read input
+--    --write input $ (input' & (prop Succs) %~ (: edge))
+--    return ()
+
+--reroute :: (BiCastable n (ls :< term), BiCastable e (Link (ls :< term)), MonadBuilder n e m, Prop Succs (ls :< term) ~ [Ref (Link (ls :< term))])
+--         => Ref (Node (ls :< term)) -> Ref (Link (ls :< term)) -> m ()
+reroute input edge = do
     el  <- read edge
-    write edge $ el & lens .~ input
+    write edge $ el & source .~ input
+    input' <- read input
+    write input $ (input' & (prop Succs) %~ (edge :))
+    return ()
 
-
+whenMatched a f = caseTest a $ do
+    match f
+    match $ \ANY -> return ()
 
 -- | Returns a concrete type of a node
 --   If the type is just universe, create a new type variable
@@ -147,24 +268,61 @@ data TCStatus = TCStatus { _terms     :: Int
 
 makeLenses ''TCStatus
 
-run :: (PassCtx(m,ls,term), nodeRef ~ Ref (Node $ (ls :< term))
+-- FIXME[WD]: we should not return [Graph n e] from pass - we should use ~ IterativePassRunner instead which will handle iterations by itself
+run :: (PassCtx(ResolutionT [nodeRef] m,ls,term), MonadBuilder n e m, nodeRef ~ Ref (Node $ (ls :< term))
        , MonadIO m, Show (ls :< term))
-    => [nodeRef] -> m ()
-run unis = do
+    => Int -> [nodeRef] -> m [Graph n e]
+run it unis = do
     g <- Graph.get
-    let it  = (1 :: Int)
-        tcs = TCStatus (length (usedIxes $ g ^. Graph.nodeGraph)) (length unis)
+    let tcs = TCStatus (length (usedIxes $ g ^. Graph.nodeGraph)) (length unis)
     putStrLn $ ("Running Inference.Unification (iteration " <> show it <> "):" :: String)
     print tcs
 
-    unis' <- catUnresolved <$> mapM resolveUnify unis
+    results <- mapM (\u -> fmap (resolveUnifyY u) $ runResolutionT $ resolveUnify u) unis
+    let resolutions = catResolved results
+        newUnis     = concat resolutions
+        oldUnis     = catUnresolved results
+        unis'       = newUnis <> oldUnis
+
     g <- Graph.get
     putStrLn $ ("Result size of Inference.Unification (iteration " <> show it <> "):" :: String)
     let tcs' = TCStatus (length (usedIxes $ g ^. Graph.nodeGraph)) (length unis')
     print tcs'
 
-    return ()
+    if (not $ null resolutions) then (g :) <$> run (it + 1) unis'
+                                else return []
+
 
 
 
 universe = Ref $ Ptr 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?
+
+-- FIXME[WD]: Change the implementation to list builder
+resolveUnifyX :: (PassCtx(ResolutionT [nodeRef] m,ls,term), nodeRef ~ Ref (Node $ (ls :< term)), MonadIO m, Show (ls :< term))
+              => nodeRef -> m [nodeRef]
+resolveUnifyX uni = (runResolutionT ∘ resolveUnify) uni >>= return ∘ \case
+    Resolved unis -> unis
+    Unresolved _  -> [uni]
+
+resolveUnifyY uni = \case
+    Resolved unis -> Resolved   unis
+    Unresolved _  -> Unresolved uni
+
+
+catUnresolved [] = []
+catUnresolved (a : as) = ($ (catUnresolved as)) $ case a of
+    Resolved   _ -> id
+    Unresolved u -> (u :)
+
+catResolved [] = []
+catResolved (a : as) = ($ (catResolved as)) $ case a of
+    Unresolved _ -> id
+    Resolved   r -> (r :)
+
+
+--------------------------
+-- !!!!!!!!!!!!!!!!!!!! --
+--------------------------
+
+-- User - nody i inputy do funkcji bedace varami sa teraz zjadane, moze warto dac im specjalny typ?
+-- pogadac z Marcinem o tym

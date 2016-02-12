@@ -11,3 +11,6 @@ instance Repr s a => Repr s (Arg a) where repr (Arg n a) = "Arg" <+> repr n <+> 
 
 
 --data NamedArg a = NamedArg VarIdent a deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+
+type instance Unlayered (Arg a) = a
+instance Layered (Arg a) where layered = lens (\(Arg _ a) -> a) (\(Arg n _ ) a -> Arg n a)
