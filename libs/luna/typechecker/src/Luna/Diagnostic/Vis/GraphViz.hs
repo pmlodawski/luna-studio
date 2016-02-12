@@ -67,6 +67,7 @@ checkedClr    = GVC.MediumOrchid
 
 graphLabelClr = GVC.Gray30
 nodeLabelClr  = GVC.Gray8
+unifyLabelClr = GVC.Gray60
 edgeLabelClr  = GVC.Gray40
 
 portClr = HSV 0.0 0.0 0.25
@@ -152,6 +153,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
               inPorts    = port <$> [0 .. inPortsNum - 1]
               inLayout   = if length inPorts < 1 then [] else [Html.Cells inPorts]
               label      = GV.Label ∘ StrLabel ∘ fromString $ ""
+              idlabel    = GV.Label ∘ StrLabel ∘ fromString ∘ show $ ix
               htmlCells  = Html.Cells [labelCell width $ fromString $ genNodeLabel node] where
                   width  = if null inPorts then 1 else fromIntegral inPortsNum
 
@@ -162,7 +164,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
               --attrs   = GV.color color : shAttrs
               attrs   = Color (toColorList [color]) : shAttrs
               shAttrs = caseTest (uncover node) $ do
-                  match $ \(Term.Unify a b) -> [shape DoubleCircle, label, Width 0.2, Height 0.2]
+                  match $ \(Term.Unify a b) -> [shape DoubleCircle, idlabel, FixedSize SetNodeSize, Width 0.4, Height 0.4, fontColor unifyLabelClr]
                   match $ \ANY              -> [shape PlainText   , htmlLabel]
 
           nodeInEdges   n   = zip3 ([0..] :: [Int]) (genInEdges net $ (cast $ index n ng :: NetLayers a :< Draft Static)) (repeat n)

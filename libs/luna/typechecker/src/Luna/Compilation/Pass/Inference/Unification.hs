@@ -326,3 +326,5 @@ catResolved (a : as) = ($ (catResolved as)) $ case a of
 
 -- User - nody i inputy do funkcji bedace varami sa teraz zjadane, moze warto dac im specjalny typ?
 -- pogadac z Marcinem o tym
+
+-- cos jest zle z wynikowym unifikatorem
