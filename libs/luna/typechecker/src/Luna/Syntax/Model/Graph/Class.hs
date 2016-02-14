@@ -17,7 +17,7 @@ import Data.IntSet              (IntSet)
 
 import qualified Data.IntSet as IntSet
 
-import Data.Graph.Model
+import Data.Graph.Referenced
 
 import Data.Graph.Backend.Vector
 

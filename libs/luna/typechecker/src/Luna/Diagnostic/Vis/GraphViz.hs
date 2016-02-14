@@ -48,6 +48,8 @@ import Data.Index (idx)
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Graph.Backend.Vector
+import Data.Graph.Referenced
+
 
 --instance Repr HeaderOnly Data where repr _ = "Data"
 --instance Repr HeaderOnly (Draft l v) where repr _ = "Draft"

@@ -56,6 +56,7 @@ import           Luna.Syntax.Model.Network.Term
 import qualified Luna.Syntax.Model.Graph.Cluster as Cluster
 import qualified Luna.Syntax.Model.Graph         as Graph
 import Data.Graph.Backend.Vector
+import Data.Graph.Referenced
 
 
 title s = putStrLn $ "\n" <> "-- " <> s <> " --"

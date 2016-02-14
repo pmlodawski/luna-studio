@@ -24,6 +24,7 @@ import           Luna.Syntax.Model.Network.Builder.Term.Class    (NetGraph, NetL
 import           Luna.Syntax.Model.Network.Class                 ()
 import           Luna.Syntax.Model.Network.Term
 import Data.Graph.Backend.Vector as Graph
+import Data.Graph.Referenced
 
 
 #define PassCtx(m, ls, term) ( ls   ~ NetLayers a              \

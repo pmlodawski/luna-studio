@@ -20,6 +20,7 @@ import           Luna.Syntax.Model.Layer
 import           Luna.Evaluation.Runtime        as Runtime
 import           Luna.Syntax.AST.Arg
 import qualified Luna.Evaluation.Model          as Model
+import           Data.Graph.Referenced
 
 import Data.Prop
 

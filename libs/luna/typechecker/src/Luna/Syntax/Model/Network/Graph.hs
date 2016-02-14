@@ -9,7 +9,7 @@ import           Luna.Syntax.Model.Graph        as X hiding (nodes, edges)
 import           Luna.Syntax.AST.Term           (Input)
 import qualified Luna.Syntax.Model.Graph        as Graph
 import           Luna.Syntax.Model.Layer        ((:<))
-
+import           Data.Graph.Referenced
 
 -- === Instances === --
 -- All th instances below implement Network relations on general Graph type.

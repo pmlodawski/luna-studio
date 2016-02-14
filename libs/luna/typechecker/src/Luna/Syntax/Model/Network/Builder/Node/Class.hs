@@ -17,6 +17,7 @@ import           Luna.Syntax.Model.Layer
 import qualified Luna.Syntax.Model.Network.Builder.Term  as Term
 import           Luna.Syntax.Model.Network.Builder.Term  as X (arg, TermBuilder)
 import           Type.Inference
+import           Data.Graph.Referenced
 
 
 

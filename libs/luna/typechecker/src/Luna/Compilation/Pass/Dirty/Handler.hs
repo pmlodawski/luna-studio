@@ -27,6 +27,7 @@ import           Luna.Syntax.Model.Network.Builder.Node          (NodeInferable,
 import           Luna.Syntax.Model.Network.Builder.Node.Inferred
 import           Luna.Syntax.Model.Network.Term
 import Data.Graph.Backend.Vector as Graph
+import Data.Graph.Referenced
 
 
 #define PassCtxDirty(m, ls, term) ( ls   ~ NetLayers a                           \

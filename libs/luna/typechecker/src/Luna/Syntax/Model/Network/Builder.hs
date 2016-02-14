@@ -21,6 +21,8 @@ import           Luna.Syntax.Model.Graph.Builder.Ref
 import           Luna.Syntax.Model.Network.Term (Draft)
 import           Luna.Evaluation.Runtime        (Static)
 import           Data.Graph.Backend.Vector
+import           Data.Graph.Referenced
+
 
 -------------------
 -- === Utils === --

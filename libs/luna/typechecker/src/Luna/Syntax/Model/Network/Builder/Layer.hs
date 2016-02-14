@@ -18,6 +18,7 @@ import           Luna.Syntax.Model.Graph.Builder.Ref
 import qualified Luna.Syntax.Model.Graph.Builder.Ref as Ref
 import           Luna.Syntax.Model.Network.Class
 import           Data.Layer.Cover
+import           Data.Graph.Referenced
 
 
 --------------------------------

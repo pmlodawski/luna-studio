@@ -14,6 +14,7 @@ import Data.Index
 import Luna.Syntax.Model.Graph.Builder.Class
 import Data.Container
 import Data.Graph.Backend.Vector
+import Data.Graph.Referenced
 
 
 -- === Utils === --

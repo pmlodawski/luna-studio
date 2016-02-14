@@ -2,7 +2,7 @@ module Luna.Syntax.Model.Graph.Cluster where
 
 import Prelude.Luna
 
-import Data.Graph.Model
+import Data.Graph.Referenced
 import Luna.Syntax.Model.Graph.Class
 
 import Data.Container
