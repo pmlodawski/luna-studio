@@ -28,11 +28,11 @@ import           Data.Graph.Backend.Vector
 
 merge :: forall n e m a.
          ( n ~ (NetLayers a :< Draft Static)
-         , e ~ Link n
+         , e ~ (Edge $ Link n)
          , Constructor m (Ref (Node n))
-         , Constructor m (Ref (Link n))
+         , Constructor m (Ref e)
          , Getter (Ref $ Node n) (VectorGraph n e)
-         , Getter (Ref (Link n)) (VectorGraph n e)
+         , Getter (Ref e) (VectorGraph n e)
          , RefHandler m (Node n)
          ) => VectorGraph n e -> m (Map (Ref $ Node n) (Ref $ Node n))
 merge g = do

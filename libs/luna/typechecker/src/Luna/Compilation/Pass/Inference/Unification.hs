@@ -40,8 +40,8 @@ import Control.Monad.Trans.Either
 
 #define PassCtx(m,ls,term) ( term ~ Draft Static                     \
                            , ne   ~ Link (ls :< term)                \
-                           , Prop Type   (ls :< term) ~ Ref ne       \
-                           , Prop Succs  (ls :< term) ~ [Ref $ ne]   \
+                           , Prop Type   (ls :< term) ~ Ref (Edge ne)       \
+                           , Prop Succs  (ls :< term) ~ [Ref $ Edge $ ne]   \
                            , BiCastable     e ne                     \
                            , BiCastable     n (ls :< term)           \
                            , MonadBuilder n e (m)                    \
@@ -349,22 +349,22 @@ run debugits exc it unis = do
     putStrLn $ ("Running Inference.Unification (iteration " <> show it <> "):" :: String)
     print tcs
 
-    when (it `elem` debugits) $ do
-        putStrLn ""
-        putStrLn $ ">>>> " <> show it
-        putStrLn $ "    " <> show (fmap (^. idx) unis)
-        let n_13 = cast $ index_ 13 $ g ^. Graph.nodeGraph :: ls :< term
-            n_13_ins = n_13 # Inputs
-            n_13_es  = (cast ∘ flip index_ (g ^. Graph.edgeGraph) ∘ view idx) <$> n_13_ins :: [Link (ls :< term)]
-        let n_21 = cast $ index_ 21 $ g ^. Graph.nodeGraph :: ls :< term
-            n_21_ins = n_21 # Inputs
-            n_21_es  = (cast ∘ flip index_ (g ^. Graph.edgeGraph) ∘ view idx) <$> n_21_ins :: [Link (ls :< term)]
-        putStrLn $ "    13 ins: " <> show (n_13_ins)
-        putStrLn $ "    13 es : " <> show (n_13_es)
-        when (it == 2) $ do
-            putStrLn $ "    21 ins: " <> show (n_21_ins)
-            putStrLn $ "    21 es : " <> show (n_21_es)
-        putStrLn ""
+    --when (it `elem` debugits) $ do
+    --    putStrLn ""
+    --    putStrLn $ ">>>> " <> show it
+    --    putStrLn $ "    " <> show (fmap (^. idx) unis)
+    --    let n_13 = cast $ index_ 13 $ g ^. Graph.nodeGraph :: ls :< term
+    --        n_13_ins = n_13 # Inputs
+    --        n_13_es  = (cast ∘ flip index_ (g ^. Graph.edgeGraph) ∘ view idx) <$> n_13_ins :: [Link (ls :< term)]
+    --    let n_21 = cast $ index_ 21 $ g ^. Graph.nodeGraph :: ls :< term
+    --        n_21_ins = n_21 # Inputs
+    --        n_21_es  = (cast ∘ flip index_ (g ^. Graph.edgeGraph) ∘ view idx) <$> n_21_ins :: [Link (ls :< term)]
+    --    putStrLn $ "    13 ins: " <> show (n_13_ins)
+    --    putStrLn $ "    13 es : " <> show (n_13_es)
+    --    when (it == 2) $ do
+    --        putStrLn $ "    21 ins: " <> show (n_21_ins)
+    --        putStrLn $ "    21 es : " <> show (n_21_es)
+    --    putStrLn ""
 
     results <- if ((it `elem` debugits) && it == 2)
         then mapM (\u -> if ((it, u ^. idx) `elem` exc) then return (Unresolved u) else (if u ^. idx == 21 then fmap (resolveUnifyY u) $ runResolutionT $ resolveUnify2 u else fmap (resolveUnifyY u) $ runResolutionT $ resolveUnify u)) unis

@@ -89,13 +89,16 @@ instance Default (VectorGraph n e) where def = VectorGraph (alloc 100) (alloc 10
 
 -- References handling
 
-instance r ~ n => HasRef (Node r) (VectorGraph n e) where
+instance HasRef (Node n) (VectorGraph n e) where
     ref r = lens getter setter where
         getter t     = Node $ index_ (r ^. idx) $ t ^. nodeGraph                           ; {-# INLINE getter #-}
         setter t val = t & nodeGraph %~ unchecked inplace insert_ (r ^. idx) (unwrap' val) ; {-# INLINE setter #-}
     {-# INLINE ref #-}
 
-
+instance r ~ e => HasRef (Edge r) (VectorGraph n e) where
+    ref r = lens getter setter where
+        getter t     = Edge $ index_ (r ^. idx) $ t ^. edgeGraph                           ; {-# INLINE getter #-}
+        setter t val = t & edgeGraph %~ unchecked inplace insert_ (r ^. idx) (unwrap' val) ; {-# INLINE setter #-}
 
 
 --instance Castable n node => Getter (Ref (Node node)) (VectorGraph n e) where getter ref     = Node ∘ cast ∘ index_ (ref ^. idx) ∘ view nodeGraph                       ; {-# INLINE getter #-}

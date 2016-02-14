@@ -28,13 +28,13 @@ import           Data.Layer.Cover
 
 data SuccRegister = SuccRegister deriving (Show)
 instance ( Monad  m
-         , Reader m (Arc src tgt)
+         , Reader m (Edge (Arcx src tgt))
          , Reader m (Node src)
          , Writer m (Node src)
          , Show src
-         , Prop Succs src ~ [Ref (Arc src tgt)]
+         , Prop Succs src ~ [Ref (Edge (Arcx src tgt))]
          , HasProp Succs src
-         ) => Handler t SuccRegister m (Ref (Arc src tgt)) where
+         ) => Handler t SuccRegister m (Ref (Edge (Arcx src tgt))) where
     handler e = do
         ve <- lift $ read e -- FIXME[WD]: remove the lift (it could be handy to disable the magic trans-instance in Graph.hs)
         lift $ Ref.with (ve ^. source) $ prop Succs %~ (e:)
@@ -56,15 +56,15 @@ registerSuccs _ = unwrap'
 
 -- === Succs layer === --
 
-type instance LayerData (Network ls) Succs t = [Ref $ Link (Shelled t)]
+type instance LayerData (Network ls) Succs t = [Ref $ Edge $ Link (Shelled t)]
 instance Monad m => Creator m (Layer (Network ls) Succs a) where create = return $ Layer []
 
 
 -- === Type layer === --
 
-type instance LayerData (Network ls) Type t = Ref $ Link (Shelled t)
+type instance LayerData (Network ls) Type t = Ref $ Edge $ Link (Shelled t)
 
-instance (MonadSelfBuilder s m, Ref (Link l) ~ Connection s (Ref $ Node l), Connectible s (Ref $ Node l) m, l ~ Shelled a)
+instance (MonadSelfBuilder s m, Ref (Edge (Link l)) ~ Connection s (Ref $ Node l), Connectible s (Ref $ Node l) m, l ~ Shelled a)
       => Creator m (Layer (Network ls) Type a) where
     create = Layer <$> do
         s <- self

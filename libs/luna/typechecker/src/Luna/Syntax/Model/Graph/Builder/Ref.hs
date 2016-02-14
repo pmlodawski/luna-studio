@@ -28,7 +28,7 @@ withM ref f = read ref >>= f >>= write ref
 with :: RefHandler m a => Ref a -> (a -> a) -> m ()
 with ref = withM ref ∘ (return <$>)
 
-follow :: Reader m (Arc src tgt) => Lens' (Arc src tgt) t -> Ref (Arc src tgt) -> m t
+follow :: Reader m (Edge (Arcx src tgt)) => Lens' (Edge (Arcx src tgt)) t -> Ref (Edge (Arcx src tgt)) -> m t
 follow f ptr = view f <$> read ptr
 
 reconnect :: (RefHandler m el, Connectible (Ref inp) (Ref el) m, conn ~ Connection (Ref inp) (Ref el), Unregister m conn)
@@ -48,7 +48,7 @@ reconnect elRef lens input = do
 instance (MonadBuilder n e m, Castable a n) => Constructor m (Ref $ Node a) where
     construct n = Ref <$> modify (nodeGraph $ swap ∘ ixed add (cast $ unwrap' n)) ; {-# INLINE construct #-}
 
-instance (MonadBuilder n e m, Castable (Arc src tgt) e) => Constructor m (Ref $ Arc src tgt) where
+instance (MonadBuilder n e m, Castable (Edge e') e) => Constructor m (Ref $ Edge e') where
     construct e = Ref <$> modify (edgeGraph $ swap ∘ ixed add (cast e)) ; {-# INLINE construct #-}
 
 instance MonadBuilder n e m => Constructor m (Ref Cluster) where
@@ -57,17 +57,17 @@ instance MonadBuilder n e m => Constructor m (Ref Cluster) where
 -- Accessors
 
 instance (MonadBuilder n e m, Castable n a)              => Reader m (Node a)       where read  = flip fmap get ∘ getter ; {-# INLINE read #-}
-instance (MonadBuilder n e m, Castable e (Arc src tgt)) => Reader m (Arc src tgt) where read  = flip fmap get ∘ getter ; {-# INLINE read #-}
+instance (MonadBuilder n e m, Castable e e')             => Reader m (Edge e')      where read  = flip fmap get ∘ getter ; {-# INLINE read #-}
 instance  MonadBuilder n e m                             => Reader m Cluster        where read  = flip fmap get ∘ getter ; {-# INLINE read #-}
 
 instance (MonadBuilder n e m, Castable a n)              => Writer m (Node a)       where write = modify_ ∘∘ setter ; {-# INLINE write #-}
-instance (MonadBuilder n e m, Castable (Arc src tgt) e) => Writer m (Arc src tgt) where write = modify_ ∘∘ setter ; {-# INLINE write #-}
+instance (MonadBuilder n e m, Castable e' e)             => Writer m (Edge e')      where write = modify_ ∘∘ setter ; {-# INLINE write #-}
 instance  MonadBuilder n e m                             => Writer m Cluster        where write = modify_ ∘∘ setter ; {-# INLINE write #-}
 
 -- Unregistering
 
-instance MonadBuilder n e m => Unregister m (Ref $ Node node)    where unregister ref = modify_ $ nodeGraph %~ free (ref ^. idx)
-instance MonadBuilder n e m => Unregister m (Ref $ Arc src dst) where unregister ref = modify_ $ edgeGraph %~ free (ref ^. idx)
+instance MonadBuilder n e m => Unregister m (Ref $ Node node) where unregister ref = modify_ $ nodeGraph %~ free (ref ^. idx)
+instance MonadBuilder n e m => Unregister m (Ref $ Edge edge) where unregister ref = modify_ $ edgeGraph %~ free (ref ^. idx)
 
 -- Destruction
 

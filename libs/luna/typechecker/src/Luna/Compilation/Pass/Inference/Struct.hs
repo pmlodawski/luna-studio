@@ -26,7 +26,7 @@ import qualified Luna.Syntax.Name                 as Name
 
 #define PassCtx(m,ls,term) ( term ~ Draft Static               \
                            , ne   ~ Link (ls :< term)          \
-                           , Prop Type   (ls :< term) ~ Ref ne \
+                           , Prop Type   (ls :< term) ~ Ref (Edge ne) \
                            , Castable       e ne               \
                            , MonadBuilder n e m                \
                            , HasProp Type     (ls :< term)     \

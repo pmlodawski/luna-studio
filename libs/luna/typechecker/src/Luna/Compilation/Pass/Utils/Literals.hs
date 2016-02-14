@@ -25,15 +25,15 @@ import           Luna.Syntax.Model.Network.Class                 ()
 import           Luna.Syntax.Model.Network.Term
 
 
-#define PassCtx(m, ls, term) ( ls   ~ NetLayers a           \
-                             , term ~ Draft Static          \
-                             , ne   ~ Link (ls :< term)     \
-                             , Castable e ne                \
-                             , MonadIO m                    \
-                             , MonadBuilder n e m           \
-                             , NodeInferable m (ls :< term) \
-                             , TermNode Cons m (ls :< term) \
-                             , TermNode Lam  m (ls :< term) \
+#define PassCtx(m, ls, term) ( ls   ~ NetLayers a              \
+                             , term ~ Draft Static             \
+                             , ne   ~ Link (ls :< term)        \
+                             , Castable e ne                   \
+                             , MonadIO m                       \
+                             , MonadBuilder n e m              \
+                             , NodeInferable m (ls :< term)    \
+                             , TermNode Cons m (ls :< term)    \
+                             , TermNode Lam  m (ls :< term)    \
                              )
 
 pre :: PassCtx(m, ls, term) => Ref (Node $ (ls :< term)) -> m [Ref (Node $ (ls :< term))]

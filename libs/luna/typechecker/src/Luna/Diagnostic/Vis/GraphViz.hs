@@ -155,13 +155,14 @@ toGraphViz name net = DotGraph { strictGraph     = False
           --    colors = nodeColorAttr node
           --    attrs  = label : colors
 
-          isOrphanTgt (node :: Ref (Node $ NetLayers a :< Draft Static)) (edge :: Ref (Link (NetLayers a :< Draft Static)))
+          isOrphanTgt (node :: Ref (Node $ NetLayers a :< Draft Static)) (edge :: Ref (Edge (Link (NetLayers a :< Draft Static))))
                     = not $ existing && validSource && validTarget where
               existing    = (edge ^. idx) `elem` edgeIxs
               validSource = edge' ^. source == node
               validTarget = edge `elem` (tgt' # Type) : (tgt' # Inputs)
 
-              edge' = net # edge
+              edge2 = cast edge :: Ref (Edge (Link (NetLayers a :< Raw)))
+              edge' = cast $ net ^. ref edge2 :: Edge (Link (NetLayers a :< Draft Static))
               tgt   = edge' ^. target
               tgt'  = net # tgt
 
@@ -170,18 +171,19 @@ toGraphViz name net = DotGraph { strictGraph     = False
           selectOrphanTgts nix  = catMaybes ∘ fmap (matchOrphanTgt nix)
 
 
-          labeledNode nix    = [ DotNode ref attrs
+          labeledNode nix    = [ DotNode nodeId attrs
                                ] <> orphanTgtNodes
               where
-              ref      = nodeRef nix
+              nodeId   = nodeRef nix
               node     = draftNodeByIx nix
               ins      = node # Inputs
               succs    = node # Succs
-              succs'   = (net #) <$> succs
+              succs2   = cast <$> succs :: [Ref $ Edge (Link (NetLayers a :< Raw))]
+              succs'   = cast ∘ (net ^.) ∘ ref <$> succs2 :: [Edge (Link (NetLayers a :< Draft Static))] -- (net #) <$> succs
 
               orphanTgts = selectOrphanTgts (Ref nix) succs -- FIXME[WD] ugliness
 
-              orphanTgtNodes = flip DotNode [shape PointShape, emptyLabel] ∘ ((ref <> "orphanTgt ") <>) ∘ show <$> orphanTgts
+              orphanTgtNodes = flip DotNode [shape PointShape, emptyLabel] ∘ ((nodeId <> "orphanTgt ") <>) ∘ show <$> orphanTgts
 
 
               inPortsNum = length ins
@@ -279,7 +281,7 @@ genInEdges (g :: NetGraph a) (n :: NetLayers a :< Draft Static) = displayEdges w
 
     addColor (idx, attrs) = (idx, GV.color arrClr : attrs)
     getTgtIdx             = view idx ∘ getTgt
-    getTgt    inp         = view source $ index (inp ^. idx) es
+    getTgt    inp         = view source $ Edge $ index (inp ^. idx) es
 
 
 

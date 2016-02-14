@@ -61,6 +61,8 @@ import Data.Graph.Backend.Vector
 title s = putStrLn $ "\n" <> "-- " <> s <> " --"
 
 
+instance Castable (Arcx src tgt) (Arcx src' tgt') => Castable (Edge (Arcx src tgt)) (Arcx src' tgt') where cast (Edge e) = cast e
+instance Castable (Arcx src tgt) (Arcx src' tgt') => Castable (Arcx src tgt) (Edge (Arcx src' tgt')) where cast e = Edge $ cast e
 -- --------------------------------------
 --  !!! KEEP THIS ON THE BEGINNING !!! --
 -- --------------------------------------
@@ -104,7 +106,7 @@ input_g1_resolution_mock :: ( term ~ Draft Static
                             , node ~ Node (ls :< term)
                             , edge ~ Link (ls :< term)
                             , nr   ~ Ref node
-                            , er   ~ Ref edge
+                            , er   ~ Ref (Edge edge)
                             , MonadIO        m
                             , NodeInferable  m (ls :< term)
                             , TermNode Star  m (ls :< term)
@@ -197,18 +199,18 @@ test1 = do
         TypeCheck.runT $ do
             ((apps, accs, funcs), g01) <- runBuild g input_g1
             (unis               , g02) <- runBuild  g01 $ StructInference.run apps accs
-            g03                        <- evalBuild g02 $ Unification.run [] [] 1 unis
-            (unis               , g04) <- runBuild  g03 $ input_g1_resolution_mock funcs
-            --(gs05, g05)                <- runBuild  g04 $ Unification.run [(2,13),(2,18),(2,21),(2,22),(2,23)] 1 unis
-            (gs05, g05)                <- runBuild  g04 $ Unification.run [2,3] [(2,13),(3,13)] 1 unis
-            --(gs05, g05)                <- runBuild  g04 $ Unification.run [(2,21)] 1 unis
-            let gss = zipWith (,) (("g0" <>) ∘ show <$> [5..]) gs05
+            --(g03 :: NetGraph ())                        <- evalBuild g02 $ Unification.run [] [] 1 unis
+            --(unis               , g04) <- runBuild  g03 $ input_g1_resolution_mock funcs
+            ----(gs05, g05)                <- runBuild  g04 $ Unification.run [(2,13),(2,18),(2,21),(2,22),(2,23)] 1 unis
+            --(gs05, g05)                <- runBuild  g04 $ Unification.run [2,3] [(2,13),(3,13)] 1 unis
+            ----(gs05, g05)                <- runBuild  g04 $ Unification.run [(2,21)] 1 unis
+            --let gss = zipWith (,) (("g0" <>) ∘ show <$> [5..]) gs05
             renderAndOpen $ [ ("g01", g01)
                             , ("g02", g02)
-                            , ("g03", g03)
-                            , ("g04", g04)
+                            --, ("g03", g03)
+                            --, ("g04", g04)
                             --, ("g05", g05)
-                            ] <> gss
+                            ] -- <> gss
     print "end"
 
 
@@ -344,31 +346,31 @@ instance UnwrappedGetter sel p (ls :< t) => Getter2 sel p (ls :< t) where getter
 
 
 
-class GraphC g where
-    xnodes :: Lens' g [Ref $ Node General]
-    xedges :: Lens' g [Ref $ Link General]
+--class GraphC g where
+--    xnodes :: Lens' g [Ref $ Node General]
+--    xedges :: Lens' g [Ref $ Link General]
 
 
-data General = General deriving (Show)
+--data General = General deriving (Show)
 
---nodes' :: Selector Every (Ref $ Node $ General)
---nodes' = Selector
+----nodes' :: Selector Every (Ref $ Node $ General)
+----nodes' = Selector
 
 
---check :: ( MonadIO m
---         , Show (g # Homo.Node)
+----check :: ( MonadIO m
+----         , Show (g # Homo.Node)
 
---         , GraphLike g
---         , GetProps Homo.Node g
---         , GetProps Input (g # Homo.Node)
---         --, GetProps Input (g # Homo.Node)
---         , GetAttrs (Ref Homo.Node) g
---         ) => g -> m Bool
+----         , GraphLike g
+----         , GetProps Homo.Node g
+----         , GetProps Input (g # Homo.Node)
+----         --, GetProps Input (g # Homo.Node)
+----         , GetAttrs (Ref Homo.Node) g
+----         ) => g -> m Bool
 
-check :: (Monad m, GraphC g) => g -> m [Ref $ Node $ General]
-check g = do
-    let ns = g ^. xnodes
-    return ns
+--check :: (Monad m, GraphC g) => g -> m [Ref $ Node $ General]
+--check g = do
+--    let ns = g ^. xnodes
+--    return ns
 --        nodes   = g ## (p :: P (Ref Homo.Node))
 --    nres <- checkNode `mapM` nodes'
 
@@ -581,24 +583,24 @@ exclude  el cluster = Ref.with cluster $ Cluster.remove (el ^. idx)
 -- === Sorting stuff === ---
 ----------------------------
 
-type instance Item (NetGraph a) = Ref $ Node (NetLayers a :< Draft Static)
+--type instance Item (NetGraph a) = Ref $ Node (NetLayers a :< Draft Static)
 
-instance Sort.CompleteGraph     (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw)))
+--instance Sort.CompleteGraph     (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw)))
 
-instance Sort.MarkableGraph     (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
-    markNode ref g = snd $ rebuildNetwork' g $ do
-        Ref.with ref $ prop Markable .~ True
-    isMarked ref g = fst $ rebuildNetwork' g $ do
-        node <- read ref
-        return $ node # Markable
+--instance Sort.MarkableGraph     (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
+--    markNode ref g = snd $ rebuildNetwork' g $ do
+--        Ref.with ref $ prop Markable .~ True
+--    isMarked ref g = fst $ rebuildNetwork' g $ do
+--        node <- read ref
+--        return $ node # Markable
 
-instance Sort.Graph             (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
-    listNodes g = Ref <$> (usedIxes $ g ^. nodeGraph)
+--instance Sort.Graph             (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
+--    listNodes g = Ref <$> (usedIxes $ g ^. nodeGraph)
 
-instance Sort.ForwardEdgedGraph (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
-    successors ref g = fst $ rebuildNetwork' g $ do
-        node <- read ref
-        mapM (follow target) $ node ^. prop Succs
+--instance Sort.ForwardEdgedGraph (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
+--    successors ref g = fst $ rebuildNetwork' g $ do
+--        node <- read ref
+--        mapM (follow target) $ node ^. prop Succs
 
 
 

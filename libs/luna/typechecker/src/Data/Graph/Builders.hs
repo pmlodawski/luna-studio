@@ -43,7 +43,7 @@ class                        ConnectibleNameH rt src tgt m conn | rt src tgt -> 
 -- === Instances === --
 
 
-instance (LayerConstructor m c, Dispatcher CONNECTION c m, Unlayered c ~ Arc src tgt, c ~ Connection (Ref (Node src)) (Ref (Node tgt)))
+instance (LayerConstructor m c, Dispatcher CONNECTION c m, c ~ Connection (Ref (Node src)) (Ref (Node tgt))) -- Unlayered c ~ Arc src tgt
       => Connectible' (Ref (Node src)) (Ref (Node tgt)) m c where
          connection src tgt = dispatch CONNECTION =<< constructLayer (edge src tgt)
 
