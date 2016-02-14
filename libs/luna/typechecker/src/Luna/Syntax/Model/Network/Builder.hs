@@ -31,10 +31,10 @@ merge :: forall n e m a.
          , e ~ Link n
          , Constructor m (Ref (Node n))
          , Constructor m (Ref (Link n))
-         , Getter (Ref $ Node n) (Graph n e)
-         , Getter (Ref (Link n)) (Graph n e)
+         , Getter (Ref $ Node n) (VectorGraph n e)
+         , Getter (Ref (Link n)) (VectorGraph n e)
          , RefHandler m (Node n)
-         ) => Graph n e -> m (Map (Ref $ Node n) (Ref $ Node n))
+         ) => VectorGraph n e -> m (Map (Ref $ Node n) (Ref $ Node n))
 merge g = do
     let foreignNodeRefs = Ref <$> usedIxes (g ^. nodeGraph)
         foreignEdgeRefs = Ref <$> usedIxes (g ^. edgeGraph)

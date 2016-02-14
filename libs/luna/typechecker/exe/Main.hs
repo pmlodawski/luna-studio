@@ -311,7 +311,7 @@ data Error node edge = MissingInput  node (node # Input )
 
 
 
-newtype Network' ls = Network' (Graph (ls :< Raw) (Link (ls :< Raw)))
+newtype Network' ls = Network' (VectorGraph (ls :< Raw) (Link (ls :< Raw)))
 makeWrapped ''Network'
 
 
@@ -583,19 +583,19 @@ exclude  el cluster = Ref.with cluster $ Cluster.remove (el ^. idx)
 
 type instance Item (NetGraph a) = Ref $ Node (NetLayers a :< Draft Static)
 
-instance Sort.CompleteGraph     (Graph (NetLayers a :< Raw) (Link (NetLayers a :< Raw)))
+instance Sort.CompleteGraph     (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw)))
 
-instance Sort.MarkableGraph     (Graph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
+instance Sort.MarkableGraph     (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
     markNode ref g = snd $ rebuildNetwork' g $ do
         Ref.with ref $ prop Markable .~ True
     isMarked ref g = fst $ rebuildNetwork' g $ do
         node <- read ref
         return $ node # Markable
 
-instance Sort.Graph             (Graph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
+instance Sort.Graph             (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
     listNodes g = Ref <$> (usedIxes $ g ^. nodeGraph)
 
-instance Sort.ForwardEdgedGraph (Graph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
+instance Sort.ForwardEdgedGraph (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
     successors ref g = fst $ rebuildNetwork' g $ do
         node <- read ref
         mapM (follow target) $ node ^. prop Succs

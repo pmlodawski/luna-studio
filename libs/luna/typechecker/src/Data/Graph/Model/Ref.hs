@@ -20,6 +20,9 @@ import           Data.Prop
 
 newtype Ref a = Ref Int deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
 
+class HasRef a t where ref :: Ref a -> Lens' t a
+
+
 
 -- === Instances === --
 

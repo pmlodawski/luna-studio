@@ -26,11 +26,11 @@ import Data.Graph.Backend.Vector
 -- TO REFACTOR --
 -----------------
 
-instance Castable n node => Getter (Ref (Node node)) (Graph n e) where getter ref     = Node ∘ cast ∘ index_ (ref ^. idx) ∘ view nodeGraph                       ; {-# INLINE getter #-}
-instance Castable node n => Setter (Ref (Node node)) (Graph n e) where setter ref val = nodeGraph %~ unchecked inplace insert_ (ref ^. idx) (cast $ unwrap' val) ; {-# INLINE setter #-}
+instance Castable n node => Getter (Ref (Node node)) (VectorGraph n e) where getter ref     = Node ∘ cast ∘ index_ (ref ^. idx) ∘ view nodeGraph                       ; {-# INLINE getter #-}
+instance Castable node n => Setter (Ref (Node node)) (VectorGraph n e) where setter ref val = nodeGraph %~ unchecked inplace insert_ (ref ^. idx) (cast $ unwrap' val) ; {-# INLINE setter #-}
 
-instance Castable e (Edge src tgt) => Getter (Ref (Edge src tgt)) (Graph n e) where getter ref     = cast ∘ index_ (ref ^. idx) ∘ view edgeGraph                    ; {-# INLINE getter #-}
-instance Castable (Edge src tgt) e => Setter (Ref (Edge src tgt)) (Graph n e) where setter ref val = edgeGraph %~ unchecked inplace insert_ (ref ^. idx) (cast val) ; {-# INLINE setter #-}
+instance Castable e (Edge src tgt) => Getter (Ref (Edge src tgt)) (VectorGraph n e) where getter ref     = cast ∘ index_ (ref ^. idx) ∘ view edgeGraph                    ; {-# INLINE getter #-}
+instance Castable (Edge src tgt) e => Setter (Ref (Edge src tgt)) (VectorGraph n e) where setter ref val = edgeGraph %~ unchecked inplace insert_ (ref ^. idx) (cast val) ; {-# INLINE setter #-}
 
 
 
@@ -40,4 +40,4 @@ instance Castable (Edge src tgt) e => Setter (Ref (Edge src tgt)) (Graph n e) wh
 ----------------------------
 
 -- Ref accessors
-type instance Prop (Ref a) (Graph n e) = a
+type instance Prop (Ref a) (VectorGraph n e) = a

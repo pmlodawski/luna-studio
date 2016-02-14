@@ -342,7 +342,7 @@ run :: forall nodeRef m ls term n e ne.
        (PassCtx(ResolutionT [nodeRef] m,ls,term), MonadBuilder n e m, nodeRef ~ Ref (Node $ (ls :< term))
        , MonadIO m, Show (ls :< term)
        , Getter Inputs (ls :< term), Prop Inputs (ls :< term) ~ [Ref (Link (ls :< term))])
-    => [Int] -> [(Int,Int)] -> Int -> [nodeRef] -> m [Graph n e]
+    => [Int] -> [(Int,Int)] -> Int -> [nodeRef] -> m [VectorGraph n e]
 run debugits exc it unis = do
     g <- Graph.get
     let tcs = TCStatus (length (usedIxes $ g ^. Graph.nodeGraph)) (length unis)

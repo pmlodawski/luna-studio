@@ -8,10 +8,3 @@ import           Luna.Syntax.Model.Graph         as X hiding (nodes, edges)
 import           Luna.Syntax.Model.Network.Class as X
 import           Luna.Syntax.Model.Network.Term
 import           Data.Graph.Backend.Vector       as Graph
-
-
-nodes :: BiCastable n (Draft Dynamic ls) => Lens' (Graph n e) [Draft Dynamic ls]
-nodes = Graph.nodes ∘ casted
-
-edges :: BiCastable e (Link (Draft Dynamic ls)) => Lens' (Graph n e) [Link (Draft Dynamic ls)]
-edges = Graph.edges ∘ casted
