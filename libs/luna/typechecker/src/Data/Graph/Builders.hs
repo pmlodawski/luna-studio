@@ -5,8 +5,6 @@ module Data.Graph.Builders where
 
 import Prelude.Luna
 
-import Data.Graph.Model.Ref
-import Data.Graph.Model.Node
 
 import Data.Prop
 import Control.Monad.Event
@@ -45,7 +43,7 @@ class                        ConnectibleNameH rt src tgt m conn | rt src tgt -> 
 -- === Instances === --
 
 
-instance (LayerConstructor m c, Dispatcher CONNECTION c m, Unlayered c ~ Edge src tgt, c ~ Connection (Ref (Node src)) (Ref (Node tgt)))
+instance (LayerConstructor m c, Dispatcher CONNECTION c m, Unlayered c ~ Arc src tgt, c ~ Connection (Ref (Node src)) (Ref (Node tgt)))
       => Connectible' (Ref (Node src)) (Ref (Node tgt)) m c where
          connection src tgt = dispatch CONNECTION =<< constructLayer (edge src tgt)
 

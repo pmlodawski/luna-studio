@@ -28,13 +28,13 @@ import           Data.Layer.Cover
 
 data SuccRegister = SuccRegister deriving (Show)
 instance ( Monad  m
-         , Reader m (Edge src tgt)
+         , Reader m (Arc src tgt)
          , Reader m (Node src)
          , Writer m (Node src)
          , Show src
-         , Prop Succs src ~ [Ref (Edge src tgt)]
+         , Prop Succs src ~ [Ref (Arc src tgt)]
          , HasProp Succs src
-         ) => Handler t SuccRegister m (Ref (Edge src tgt)) where
+         ) => Handler t SuccRegister m (Ref (Arc src tgt)) where
     handler e = do
         ve <- lift $ read e -- FIXME[WD]: remove the lift (it could be handy to disable the magic trans-instance in Graph.hs)
         lift $ Ref.with (ve ^. source) $ prop Succs %~ (e:)

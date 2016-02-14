@@ -1,5 +1,7 @@
 module Data.Graph.Model.Cluster where
 
+import Prologue
+
 
 type family ClusterOf a
 

@@ -24,7 +24,7 @@ import           Data.Graph.Backend.Vector
 type    Builder  n e     = BuilderT n e Identity
 newtype BuilderT n e m a = BuilderT (State.StateT (VectorGraph n e) m a)
                               deriving ( Functor, Monad, Applicative, MonadIO, MonadPlus, MonadTrans
-                              	       , Alternative, MonadFix, MonadMask, MonadCatch, MonadThrow)
+                                       , Alternative, MonadFix, MonadMask, MonadCatch, MonadThrow)
 
 makeWrapped ''BuilderT
 

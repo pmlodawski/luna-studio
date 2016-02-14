@@ -1,7 +1,7 @@
 {-# LANGUAGE RankNTypes           #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Data.Graph.Model.Ref where
+module Data.Graph.Referenced.Ref where
 
 import Prelude.Luna
 

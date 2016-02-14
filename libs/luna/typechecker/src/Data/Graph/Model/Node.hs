@@ -4,8 +4,6 @@ module Data.Graph.Model.Node where
 
 import Prologue hiding (Getter, Setter)
 
-import Data.Graph.Model.Ref
-
 import Data.Container
 import Data.Index
 import Data.Prop
