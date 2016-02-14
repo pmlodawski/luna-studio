@@ -5,13 +5,15 @@ module Luna.Syntax.Model.Graph.Builder.Ref where
 
 import Prelude.Luna
 
+import Data.Graph.Builders
+import Data.Graph
 import Luna.Syntax.Model.Graph
 import Data.Construction
 import Data.Prop
 import Data.Index
 import Luna.Syntax.Model.Graph.Builder.Class
 import Data.Container
-
+import Data.Graph.Backend.Vector
 
 
 -- === Utils === --
@@ -44,13 +46,13 @@ reconnect elRef lens input = do
 -- Construction
 
 instance (MonadBuilder n e m, Castable a n) => Constructor m (Ref $ Node a) where
-    construct n = Ref ∘ Ptr <$> modify (nodeGraph $ swap ∘ ixed add (cast $ unwrap' n)) ; {-# INLINE construct #-}
+    construct n = Ref <$> modify (nodeGraph $ swap ∘ ixed add (cast $ unwrap' n)) ; {-# INLINE construct #-}
 
 instance (MonadBuilder n e m, Castable (Edge src tgt) e) => Constructor m (Ref $ Edge src tgt) where
-    construct e = Ref ∘ Ptr <$> modify (edgeGraph $ swap ∘ ixed add (cast e)) ; {-# INLINE construct #-}
+    construct e = Ref <$> modify (edgeGraph $ swap ∘ ixed add (cast e)) ; {-# INLINE construct #-}
 
 instance MonadBuilder n e m => Constructor m (Ref Cluster) where
-    construct c = Ref ∘ Ptr <$> modify (clusters $ swap ∘ ixed add c) ; {-# INLINE construct #-}
+    construct c = Ref <$> modify (clusterGraph $ swap ∘ ixed add c) ; {-# INLINE construct #-}
 
 -- Accessors
 

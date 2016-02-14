@@ -100,8 +100,10 @@ instance Monad m => LayerConstructor m (ls :< a) where constructLayer = return â
 instance Monad m => LayerDestructor  m (ls :< a) where destructLayer  = return âˆ˜ unwrap' ; {-# INLINE destructLayer  #-}
 
 -- Conversion
+-- FIXME[WD]: change the implementation to be independent from layers. Wee need to implement full-lens Layered and Covered type classes
 instance Castable (Unwrapped (ls :< a)) (Unwrapped (ls' :< a')) => Castable (ls :< a) (ls' :< a') where
     cast = wrapped %~ cast ; {-# INLINE cast #-}
+
 
 -- Attributes
 type instance                                Prop a (ls :< t) = Prop a (Unwrapped (ls :< t))

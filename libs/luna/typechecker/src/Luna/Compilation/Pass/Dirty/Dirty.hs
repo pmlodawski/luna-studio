@@ -2,6 +2,7 @@
 
 module Luna.Compilation.Pass.Dirty.Dirty where
 
+import           Data.Graph
 import           Control.Monad                                   (forM_)
 import           Control.Monad.Trans.State
 import qualified Data.IntSet                                     as IntSet

@@ -11,6 +11,8 @@ import Prelude.Luna hiding (Num)
 
 import           Control.Monad.Event
 import           Data.Direction
+import           Data.Graph
+import           Data.Graph.Builders
 import           Data.Layer
 import           Data.Layer.Cover
 import           Data.Prop
@@ -32,7 +34,7 @@ import qualified Luna.Syntax.Model.Network.Builder.Type  as Type
 import           Luna.Syntax.Model.Network.Term
 import           Type.Bool
 
-
+import Data.Graph.Backend.Vector
 
 -------------------------------------
 -- === Term building utilities === --

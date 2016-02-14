@@ -8,7 +8,7 @@ import Prelude.Luna hiding (Num)
 import           Type.Inference
 import           Luna.Syntax.AST.Arg
 import           Luna.Syntax.AST.Term
-import           Luna.Syntax.Model.Graph.Class                (ELEMENT(..))
+import           Data.Graph                                  (ELEMENT(..))
 import qualified Luna.Syntax.Model.Network.Builder.Term.Class as Term
 import           Luna.Syntax.Model.Network.Builder.Term.Class as X (arg)
 

@@ -5,6 +5,7 @@ module Luna.Compilation.Pass.Utils.Literals where
 
 import           Prelude.Luna                                    hiding (Num, pre)
 
+import           Data.Graph
 import           Data.Construction
 import           Data.Prop
 import           Data.Record                                     hiding (cons)

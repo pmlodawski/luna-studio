@@ -5,6 +5,8 @@ module Luna.Syntax.Model.Network.Builder.Node.Class (module Luna.Syntax.Model.Ne
 
 import Prelude.Luna
 
+import           Data.Graph
+import           Data.Graph.Builders
 import           Data.Record                             (ANY, Matches)
 import           Luna.Syntax.AST.Arg
 import qualified Luna.Syntax.AST.Term                    as Term

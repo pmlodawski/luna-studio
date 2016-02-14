@@ -13,7 +13,7 @@ import           Data.Index
 import           Luna.Syntax.Model.Graph
 import qualified Control.Monad.State            as State
 import           Data.Layer.Cover
-
+import           Data.Graph.Backend.Vector
 
 
 ---- TODO: template haskellize

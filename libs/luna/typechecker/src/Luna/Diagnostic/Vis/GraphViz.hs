@@ -1,12 +1,15 @@
 {-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
+
+{-# LANGUAGE UndecidableInstances      #-}
 -- {-# LANGUAGE PartialTypeSignatures #-}
 
 module Luna.Diagnostic.Vis.GraphViz where
 
 import           Prelude.Luna                           hiding (index)
 
+import           Data.Graph
 import           Data.GraphViz
 import qualified Data.GraphViz.Attributes               as GV
 import qualified Data.GraphViz.Attributes.Colors        as GVC
@@ -44,6 +47,7 @@ import Data.Index (idx)
 
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
+import Data.Graph.Backend.Vector
 
 --instance Repr HeaderOnly Data where repr _ = "Data"
 --instance Repr HeaderOnly (Draft l v) where repr _ = "Draft"
@@ -58,6 +62,8 @@ namedArrClr   = GVC.Turquoise
 accArrClr     = GVC.Yellow
 arrClr        = GVC.DarkOrange
 
+idClr         = HSV 0.0 0.0 0.40
+starClr       = HSV 0.18 0.64 0.8
 nodeClr       = HSV 0.58 0.64 0.8
 valIntNodeClr = HSV 0.2 0.64 0.8
 valStrNodeClr = HSV 0.3 0.6 0.8
@@ -89,6 +95,8 @@ gStyle name = [ GraphAttrs [ RankDir FromTop
               , NodeAttrs  [ fontColor nodeLabelClr
                            , FontName fontName
                            , FontSize fontSize
+                           , bgColor valUnkNodeClr
+                           , fillColor valUnkNodeClr
                            ]
               , EdgeAttrs  [ fontColor edgeLabelClr
                            , FontName fontName
@@ -98,6 +106,8 @@ gStyle name = [ GraphAttrs [ RankDir FromTop
 
 
 
+
+--check :: NetGraph a -> Coherence
 
 toGraphViz :: forall a. Show a => String -> NetGraph a -> DotGraph String
 toGraphViz name net = DotGraph { strictGraph     = False
@@ -113,10 +123,11 @@ toGraphViz name net = DotGraph { strictGraph     = False
 
           ng                = net ^. nodeGraph
           eg                = net ^. edgeGraph
-          cg                = net ^. clusters
+          cg                = net ^. clusterGraph
           nodeIxs           = usedIxes ng :: [Int]
+          edgeIxs           = usedIxes eg :: [Int]
           clrIxs            = usedIxes cg
-          clrs              = elems $ net ^. clusters
+          clrs              = elems $ net ^. clusterGraph
           clredNodeIxs      = zip (safeHead ∘ matchClusters clrIxs <$> nodeIxs) nodeIxs :: [(Maybe Int, Int)]
           clredNodeMap      = fromListWithReps clredNodeIxs :: Map (Maybe Int) [Int]
           rootNodeIxs       = case Map.lookup Nothing clredNodeMap of
@@ -128,7 +139,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
 
           inEdges           = concat $ fmap nodeInEdges nodeIxs
           edgeStmts         = fmap mkEdge inEdges
-          nodeStmts         = labeledNode <$> rootNodeIxs
+          nodeStmts         = concat $ labeledNode <$> rootNodeIxs
           subGraphs         = uncurry genSubGraph ∘ (_1 %~ fromJust) <$> Map.assocs (Map.delete Nothing clredNodeMap)
 
 
@@ -144,43 +155,81 @@ toGraphViz name net = DotGraph { strictGraph     = False
           --    colors = nodeColorAttr node
           --    attrs  = label : colors
 
-          labeledNode ix    = DotNode ref attrs where
-              ref    = nodeRef ix
-              node   = draftNodeByIx ix
-              ins    = node # Inputs
+          isOrphanTgt (node :: Ref (Node $ NetLayers a :< Draft Static)) (edge :: Ref (Link (NetLayers a :< Draft Static)))
+                    = not $ existing && validSource && validTarget where
+              existing    = (edge ^. idx) `elem` edgeIxs
+              validSource = edge' ^. source == node
+              validTarget = edge `elem` (tgt' # Type) : (tgt' # Inputs)
+
+              edge' = net # edge
+              tgt   = edge' ^. target
+              tgt'  = net # tgt
+
+          matchOrphanTgt nix e = if isOrphanTgt nix e then Just e else Nothing
+
+          selectOrphanTgts nix  = catMaybes ∘ fmap (matchOrphanTgt nix)
+
+
+          labeledNode nix    = [ DotNode ref attrs
+                               ] <> orphanTgtNodes
+              where
+              ref      = nodeRef nix
+              node     = draftNodeByIx nix
+              ins      = node # Inputs
+              succs    = node # Succs
+              succs'   = (net #) <$> succs
+
+              orphanTgts = selectOrphanTgts (Ref nix) succs -- FIXME[WD] ugliness
+
+              orphanTgtNodes = flip DotNode [shape PointShape, emptyLabel] ∘ ((ref <> "orphanTgt ") <>) ∘ show <$> orphanTgts
+
 
               inPortsNum = length ins
               inPorts    = port <$> [0 .. inPortsNum - 1]
-              inLayout   = if length inPorts < 1 then [] else [Html.Cells inPorts]
-              label      = GV.Label ∘ StrLabel ∘ fromString $ ""
-              idlabel    = GV.Label ∘ StrLabel ∘ fromString ∘ show $ ix
-              htmlCells  = Html.Cells [labelCell width $ fromString $ genNodeLabel node] where
+              inLayout   = if length inPorts < 1 then [] else [Html.Cells $ blankCell : inPorts]
+              emptyLabel = GV.Label  ∘ StrLabel ∘ fromString $ ""
+              idlabel    = GV.XLabel ∘ StrLabel ∘ fromString ∘ show $ nix
+              --htmlCells  = Html.Cells [idCell $ show nix, labelCell width $ fromString $ genNodeLabel node <> show (length orphanTgts)] where
+              htmlCells  = Html.Cells [idCell $ show nix, labelCell width $ fromString $ genNodeLabel node <> "(" <> show (length orphanTgts) <> ") " <> show (view idx <$> node # Succs)] where
                   width  = if null inPorts then 1 else fromIntegral inPortsNum
 
-              labelCell cs s = Html.LabelCell [Html.ColSpan cs, Html.BGColor $ color, Html.Port $ fromString "label"] $ Html.Text [Html.Str $ fromString s]
-              port num       = Html.LabelCell [Html.ColSpan 1, Html.Height 2, Html.Border 0, Html.Port $ inPortName num, Html.BGColor $ portClr] $ Html.Text [Html.Str $ fromString ""]
-              htmlLabel      = GV.Label $ HtmlLabel $ Html.Table $ Html.HTable Nothing [Html.CellSpacing 3, Html.CellBorder 1, Html.Border 0] $ inLayout <> [htmlCells]
-              color   = nodeColor node
+
+              labelCell cs s = Html.LabelCell [Html.ColSpan cs, Html.BGColor $ color, Html.Port "label"] $ Html.Text [Html.Str $ fromString s]
+              idCell       s = Html.LabelCell [Html.ColSpan 1 , Html.Border 0, Html.Port "id"]    $ Html.Text [Html.Font [Html.Color idClr] [Html.Str $ fromString s]]
+              blankCell      = Html.LabelCell [Html.Border 0] ""
+              spacerCell   w = Html.LabelCell [Html.Border 0, Html.Width w] ""
+              port num       = Html.LabelCell [Html.ColSpan 1 , Html.Height 2, Html.Border 0, Html.Port $ inPortName num, Html.BGColor $ portClr] ""
+
+              nodeLabel      = GV.Label $ HtmlLabel $ Html.Table $ Html.HTable Nothing [Html.CellSpacing 3, Html.CellBorder 1, Html.Border 0] $ inLayout <> [htmlCells]
+              unifyLabel     = GV.Label $ HtmlLabel $ Html.Table $ Html.HTable Nothing [Html.CellSpacing 3, Html.CellBorder 1, Html.Border 0] $ [cells] where
+                               cells = Html.Cells [idCell $ show nix, spacerCell 40]
+
+              starColor      = toColorList [starClr]
+              nodeColor      = toColorList [color]
+              bgColor'       = toColorList [GVC.X11Color bgClr]
+              color          = getNodeColor node
               --attrs   = GV.color color : shAttrs
-              attrs   = Color (toColorList [color]) : shAttrs
-              shAttrs = caseTest (uncover node) $ do
-                  match $ \(Term.Unify a b) -> [shape DoubleCircle, idlabel, FixedSize SetNodeSize, Width 0.4, Height 0.4, fontColor unifyLabelClr]
-                  match $ \ANY              -> [shape PlainText   , htmlLabel]
+              --attrs   = Color (toColorList [color]) : shAttrs
+              attrs = specAttrs
+              specAttrs = caseTest (uncover node) $ do
+                  --match $ \Term.Star        -> [Color bgColor' , shape Star        , emptyLabel, FixedSize SetNodeSize, Width 0.4, Height 0.4, PenWidth 6, FillColor starColor, Style [SItem Filled []]]
+                  --match $ \(Term.Unify a b) -> [Color nodeColor, shape DoubleCircle , unifyLabel, FixedSize SetNodeSize, Width 0.2, Height 0.2, fontColor unifyLabelClr]
+                  match $ \ANY              -> [Color nodeColor, shape PlainText   , nodeLabel ]
 
           nodeInEdges   n   = zip3 ([0..] :: [Int]) (genInEdges net $ (cast $ index n ng :: NetLayers a :< Draft Static)) (repeat n)
-          mkEdge  (n,(a,attrs),b) = DotEdge (nodeRef a) (nodeRef b) $ HeadPort (LabelledPort (inPortName n) Nothing): TailPort (LabelledPort "label" Nothing) : attrs
+          mkEdge  (n,(a,attrs),b) = DotEdge (nodeRef a) (nodeRef b) $ HeadPort (LabelledPort (inPortName n) Nothing) : TailPort (LabelledPort "label" Nothing) : attrs
 
           draftNodeByIx ix   = cast $ index_ ix ng :: (NetLayers a :< Draft Static)
           clusterByIx   ix   = index_ ix cg        :: Cluster
           genNodeLabel  node = reprStyled HeaderOnly $ uncover node
 
           matchCluster :: Int -> Int -> Maybe Int
-          matchCluster clrIx  nodeIx = if Cluster.member nodeIx (clusterByIx clrIx) then Just clrIx else Nothing
+          matchCluster clrIx  nix = if Cluster.member nix (clusterByIx clrIx) then Just clrIx else Nothing
           matchClusters :: [Int] -> Int -> [Int]
-          matchClusters clrIxs nodeIx = catMaybes $ flip matchCluster nodeIx <$> clrIxs
+          matchClusters clrIxs nix = catMaybes $ flip matchCluster nix <$> clrIxs
 
           --nodeColor :: (NetLayers a :< Draft Static) -> Attribute
-          nodeColor n = caseTest (uncover n) $ do
+          getNodeColor n = caseTest (uncover n) $ do
                                 match $ \(Term.Str s) -> valStrNodeClr
                                 match $ \(Term.Num n) -> valIntNodeClr
                                 match $ \ANY          -> nodeClr
@@ -191,14 +240,16 @@ toGraphViz name net = DotGraph { strictGraph     = False
               , subGraphID    = Just $ Str $ fromString $ show sgIdx
               , subGraphStmts = DotStmts { attrStmts = gStyle ("Subgraph " <> show sgIdx)
                                          , subGraphs = []
-                                         , nodeStmts = labeledNode <$> nodeIxs
+                                         , nodeStmts = [] -- concat $ labeledNode <$> nodeIxs
                                          , edgeStmts = []
                                          }
               }
 
 
 
-instance IsString PortName where fromString = PN . fromString
+instance IsString PortName      where fromString = PN . fromString
+instance IsString Html.TextItem where fromString = Html.Str . fromString
+instance IsString Html.Label    where fromString = Html.Text . (:[]) . fromString
 
 safeHead :: [a] -> Maybe a
 safeHead []    = Nothing
@@ -217,23 +268,25 @@ genInEdges (g :: NetGraph a) (n :: NetLayers a :< Draft Static) = displayEdges w
     displayEdges = ($ (addColor <$> inEdges)) $ if t == universe then id else (<> [tpEdge])
     genLabel     = GV.Label . StrLabel . fromString . show
     ins          = n # Inputs
+    inIxs        = view idx <$> ins
     inIdxs       = getTgtIdx <$> ins
-    inEdges      = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) [0..]
+    inEdges      = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) inIxs :: [(Int, [Attribute])]
+    --inEdges      = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) [0..] :: [(Int, [Attribute])]
     es           = g ^. edgeGraph
     te           = n ^. prop Type
     t            = getTgt te
-    tpEdge       = (getTgtIdx te, [GV.color typedArrClr, ArrowHead dotArrow])
+    tpEdge       = (getTgtIdx te, [GV.color typedArrClr, ArrowHead dotArrow, genLabel $ te ^. idx])
 
     addColor (idx, attrs) = (idx, GV.color arrClr : attrs)
-    getTgtIdx             = view rawPtr ∘ getTgt
-    getTgt    inp         = view source $ index (inp ^. rawPtr) es
+    getTgtIdx             = view idx ∘ getTgt
+    getTgt    inp         = view source $ index (inp ^. idx) es
 
 
 
 
 
 
-universe = Ref $ Ptr 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?
+universe = Ref 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?
 
 
 

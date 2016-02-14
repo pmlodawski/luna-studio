@@ -20,6 +20,7 @@ import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Graph.Builder.Ref
 import           Luna.Syntax.Model.Network.Term (Draft)
 import           Luna.Evaluation.Runtime        (Static)
+import           Data.Graph.Backend.Vector
 
 -------------------
 -- === Utils === --
@@ -35,8 +36,8 @@ merge :: forall n e m a.
          , RefHandler m (Node n)
          ) => Graph n e -> m (Map (Ref $ Node n) (Ref $ Node n))
 merge g = do
-    let foreignNodeRefs = Ref . Ptr <$> usedIxes (g ^. nodeGraph)
-        foreignEdgeRefs = Ref . Ptr <$> usedIxes (g ^. edgeGraph)
+    let foreignNodeRefs = Ref <$> usedIxes (g ^. nodeGraph)
+        foreignEdgeRefs = Ref <$> usedIxes (g ^. edgeGraph)
 
     newNodeRefs <- forM foreignNodeRefs $ construct . flip getter g
 

@@ -103,4 +103,4 @@ run apps accs = do
 
 
 
-universe = Ref $ Ptr 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?
+universe = Ref 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?

@@ -17,75 +17,27 @@ import Data.IntSet              (IntSet)
 
 import qualified Data.IntSet as IntSet
 
+import Data.Graph.Model
 
+import Data.Graph.Backend.Vector
+
+
+-----------------
+-- TO REFACTOR --
+-----------------
+
+instance Castable n node => Getter (Ref (Node node)) (Graph n e) where getter ref     = Node ∘ cast ∘ index_ (ref ^. idx) ∘ view nodeGraph                       ; {-# INLINE getter #-}
+instance Castable node n => Setter (Ref (Node node)) (Graph n e) where setter ref val = nodeGraph %~ unchecked inplace insert_ (ref ^. idx) (cast $ unwrap' val) ; {-# INLINE setter #-}
+
+instance Castable e (Edge src tgt) => Getter (Ref (Edge src tgt)) (Graph n e) where getter ref     = cast ∘ index_ (ref ^. idx) ∘ view edgeGraph                    ; {-# INLINE getter #-}
+instance Castable (Edge src tgt) e => Setter (Ref (Edge src tgt)) (Graph n e) where setter ref val = edgeGraph %~ unchecked inplace insert_ (ref ^. idx) (cast val) ; {-# INLINE setter #-}
+
+
+
+
+----------------------------
+-- TO DELETE AND REFACTOR --
 ----------------------------
--- === Data container === --
-----------------------------
 
-newtype AutoVector a = AutoVector (Auto Exponential (Vector a)) deriving (Show, Default)
-
-
--- === Instances === --
-
--- Wrappers
-makeWrapped ''AutoVector
-type instance Unlayered (AutoVector a) = Unwrapped (AutoVector a)
-instance      Layered   (AutoVector a)
-
--- List conversions
-type instance Item (AutoVector a) = Item (Unwrapped (AutoVector a))
-deriving instance ToList   (AutoVector a)
-deriving instance FromList (AutoVector a)
-
--- Containers
-type instance Container (AutoVector a) = Container (Unwrapped (AutoVector a))
-instance Monad m => HasContainerM m (AutoVector a) where
-    viewContainerM = viewContainerM . unwrap ; {-# INLINE viewContainerM #-}
-    setContainerM  = wrapped . setContainerM ; {-# INLINE setContainerM  #-}
-
-instance Monad m => IsContainerM  m (AutoVector a) where
-    fromContainerM = fmap AutoVector . fromContainerM ; {-# INLINE fromContainerM #-}
-
-
-
----------------------
--- === Cluster === --
----------------------
-
-newtype Cluster = Cluster IntSet deriving (Show)
-
-
-
--------------------
--- === Graph === --
--------------------
-
-data Graph node edge = Graph { _nodeGraph :: AutoVector node
-                             , _edgeGraph :: AutoVector edge
-                             , _clusters  :: AutoVector Cluster
-                             } deriving (Show)
-
-makeLenses  ''Graph
-
-
--- === Attributes === --
-
-data ELEMENT    = ELEMENT    deriving (Show)
-data CONNECTION = CONNECTION deriving (Show)
-
-
--- === Utils === --
-
-nodes :: Lens' (Graph n e) [n]
-nodes = nodeGraph ∘ asList
-
-edges :: Lens' (Graph n e) [e]
-edges = edgeGraph ∘ asList
-
-
--- === Instances === --
-
-instance Default (Graph n e) where def = Graph (alloc 100) (alloc 100) (alloc 100)
-
-
-
+-- Ref accessors
+type instance Prop (Ref a) (Graph n e) = a
