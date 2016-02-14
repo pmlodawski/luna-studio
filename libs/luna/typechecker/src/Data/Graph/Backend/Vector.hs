@@ -86,10 +86,40 @@ instance Default (VectorGraph n e) where def = VectorGraph (alloc 100) (alloc 10
 --    nodeRefs :: Lens' g [Ref $ Node (Item g)]
 --    edgeRefs :: Lens' g [Ref $ Link (Item g)]
 
+type family Generalized a
+class Generalize a where
+    generalize :: a -> Generalized a
+
+--type instance Generalized
+
+type instance Generalized (Ref a) = Ref  (Generalized a)
+instance      Generalize  (Ref a) where generalize = rewrap
+
+type instance            Generalized (Node a) = Node (Generalized a)
+instance Generalize a => Generalize  (Node a) where generalize = wrapped %~ generalize
+
+
+type instance            Generalized (Edge a) = Edge (Generalized a)
+instance Generalize a => Generalize  (Edge a) where generalize = wrapped %~ generalize
+
+
+newtype Hetero a = Hetero a deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
+makeWrapped ''Hetero
+
+instance (HasRef (Node gen) a, BiCastable n gen, gen ~ Generalized n)
+      => HasRef (Node n) (Hetero a) where ref r = wrapped' ∘ ref (generalize r) ∘ casted ; {-# INLINE ref #-}
+instance HasRef (Node I) (Hetero a) where ref   = impossible
+instance HasRef (Node n) (Hetero I) where ref   = impossible
+
+
+instance (HasRef (Edge gen) a, BiCastable e gen, gen ~ Generalized e)
+      => HasRef (Edge e) (Hetero a) where ref r = wrapped' ∘ ref (generalize r) ∘ casted ; {-# INLINE ref #-}
+instance HasRef (Edge I) (Hetero a) where ref   = impossible
+instance HasRef (Edge e) (Hetero I) where ref   = impossible
 
 -- References handling
 
-instance HasRef (Node n) (VectorGraph n e) where
+instance r ~ n => HasRef (Node r) (VectorGraph n e) where
     ref r = lens getter setter where
         getter t     = Node $ index_ (r ^. idx) $ t ^. nodeGraph                           ; {-# INLINE getter #-}
         setter t val = t & nodeGraph %~ unchecked inplace insert_ (r ^. idx) (unwrap' val) ; {-# INLINE setter #-}
