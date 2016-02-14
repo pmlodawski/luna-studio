@@ -342,10 +342,10 @@ run :: forall nodeRef m ls term n e ne.
        (PassCtx(ResolutionT [nodeRef] m,ls,term), MonadBuilder n e m, nodeRef ~ Ref (Node $ (ls :< term))
        , MonadIO m, Show (ls :< term)
        , Getter Inputs (ls :< term), Prop Inputs (ls :< term) ~ [Ref (Link (ls :< term))])
-    => [Int] -> [(Int,Int)] -> Int -> [nodeRef] -> m [VectorGraph n e]
+    => [Int] -> [(Int,Int)] -> Int -> [nodeRef] -> m [Hetero $ VectorGraph n e]
 run debugits exc it unis = do
     g <- Graph.get
-    let tcs = TCStatus (length (usedIxes $ g ^. Graph.nodeGraph)) (length unis)
+    let tcs = TCStatus (length (usedIxes $ g ^. wrapped' ∘ Graph.nodeGraph)) (length unis)
     putStrLn $ ("Running Inference.Unification (iteration " <> show it <> "):" :: String)
     print tcs
 
@@ -377,7 +377,7 @@ run debugits exc it unis = do
 
     g <- Graph.get
     putStrLn $ ("Result size of Inference.Unification (iteration " <> show it <> "):" :: String)
-    let tcs' = TCStatus (length (usedIxes $ g ^. Graph.nodeGraph)) (length unis')
+    let tcs' = TCStatus (length (usedIxes $ g ^. wrapped' ∘ Graph.nodeGraph)) (length unis')
     print tcs'
 
     if (not $ null resolutions) then (g :) <$> run debugits exc (it + 1) unis'

@@ -244,7 +244,7 @@ matchTypeM _ = id
 type NetLayers a = '[Type, Succs, Dirty, Markable, Meta a]
 type NetNode   a = NetLayers a :< Draft Static
 
-type NetGraph a = VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))
+type NetGraph a = Hetero (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw)))
 
 buildNetwork  = runIdentity ∘ buildNetworkM
 buildNetworkM = rebuildNetworkM' (def :: NetGraph a)
@@ -272,7 +272,7 @@ instance {-# OVERLAPPABLE #-}
     , m''''' ~ Self.SelfBuilderT (Ref $ Node $ NetNode a) m''''''
     , Monad m'''''
     , Monad m''''''
-    , net ~ VectorGraph n e
+    , net ~ Hetero (VectorGraph n e)
     ) => NetworkBuilderT net m m'''''' where
     runNetworkBuilderT net = flip Self.evalT (undefined ::        Ref $ Node $ NetNode a)
                            ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node $ NetNode a))

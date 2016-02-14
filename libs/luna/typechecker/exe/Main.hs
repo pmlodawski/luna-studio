@@ -383,20 +383,20 @@ instance UnwrappedGetter sel p (ls :< t) => Getter2 sel p (ls :< t) where getter
 --        return False
 
 
-main2 :: IO ()
-main2 = do
-    (node, g_ :: NetGraph ()) <- prebuild2
-    let g = Network' g_ :: Network' (NetLayers ())
+--main2 :: IO ()
+--main2 = do
+--    (node, g_ :: NetGraph ()) <- prebuild2
+--    let g = Network' g_ :: Network' (NetLayers ())
 
-    --let ins = getter2 tp node
-    --print =<< check g
-
-
-    --print $ getter2 nodes'
+--    --let ins = getter2 tp node
+--    --print =<< check g
 
 
+--    --print $ getter2 nodes'
 
-    return ()
+
+
+--    return ()
 
 
 
@@ -405,7 +405,7 @@ main = do
     --showcase
     test1
     --test2
-    main2
+    --main2
     return ()
 
 

@@ -13,6 +13,7 @@ import Data.Record
 -- === Definitions === --
 
 newtype Node a = Node a deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
+type family NodeOf a
 
 
 -- === Instances === --

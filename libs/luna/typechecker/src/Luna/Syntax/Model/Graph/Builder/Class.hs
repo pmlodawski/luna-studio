@@ -22,7 +22,7 @@ import           Data.Graph.Backend.Vector
 -- === Declarations === --
 
 type    Builder  n e     = BuilderT n e Identity
-newtype BuilderT n e m a = BuilderT (State.StateT (VectorGraph n e) m a)
+newtype BuilderT n e m a = BuilderT (State.StateT (Hetero (VectorGraph n e)) m a)
                               deriving ( Functor, Monad, Applicative, MonadIO, MonadPlus, MonadTrans
                                        , Alternative, MonadFix, MonadMask, MonadCatch, MonadThrow)
 
@@ -31,23 +31,23 @@ makeWrapped ''BuilderT
 
 -- === Utils === --
 
-runT  ::            BuilderT n e m a -> VectorGraph n e -> m (a, VectorGraph n e)
-evalT :: Monad m => BuilderT n e m a -> VectorGraph n e -> m a
-execT :: Monad m => BuilderT n e m a -> VectorGraph n e -> m (VectorGraph n e)
+runT  ::            BuilderT n e m a -> Hetero (VectorGraph n e) -> m (a, Hetero (VectorGraph n e))
+evalT :: Monad m => BuilderT n e m a -> Hetero (VectorGraph n e) -> m a
+execT :: Monad m => BuilderT n e m a -> Hetero (VectorGraph n e) -> m (Hetero (VectorGraph n e))
 
 runT  = State.runStateT  . unwrap' ; {-# INLINE runT  #-}
 evalT = State.evalStateT . unwrap' ; {-# INLINE evalT #-}
 execT = State.execStateT . unwrap' ; {-# INLINE execT #-}
 
-run  :: Builder n e a -> VectorGraph n e -> (a, VectorGraph n e)
-eval :: Builder n e a -> VectorGraph n e -> a
-exec :: Builder n e a -> VectorGraph n e -> VectorGraph n e
+run  :: Builder n e a -> Hetero (VectorGraph n e) -> (a, Hetero (VectorGraph n e))
+eval :: Builder n e a -> Hetero (VectorGraph n e) -> a
+exec :: Builder n e a -> Hetero (VectorGraph n e) -> Hetero (VectorGraph n e)
 
 run   = runIdentity .: runT  ; {-# INLINE run  #-}
 eval  = runIdentity .: evalT ; {-# INLINE eval #-}
 exec  = runIdentity .: execT ; {-# INLINE exec #-}
 
-with :: MonadBuilder n e m => (VectorGraph n e -> VectorGraph n e) -> m a -> m a
+with :: MonadBuilder n e m => (Hetero (VectorGraph n e) -> Hetero (VectorGraph n e)) -> m a -> m a
 with f m = do
     s <- get
     put $ f s
@@ -56,11 +56,11 @@ with f m = do
     return out
 {-# INLINE with #-}
 
-modify :: MonadBuilder n e m => (VectorGraph n e -> (a, VectorGraph n e)) -> m a
+modify :: MonadBuilder n e m => (Hetero (VectorGraph n e) -> (a, Hetero (VectorGraph n e))) -> m a
 modify = modifyM . fmap return
 {-# INLINE modify #-}
 
-modifyM :: MonadBuilder n e m => (VectorGraph n e -> m (a, VectorGraph n e)) -> m a
+modifyM :: MonadBuilder n e m => (Hetero (VectorGraph n e) -> m (a, Hetero (VectorGraph n e))) -> m a
 modifyM f = do
     s <- get
     (a, s') <- f s
@@ -68,7 +68,7 @@ modifyM f = do
     return a
 {-# INLINE modifyM #-}
 
-modify_ :: MonadBuilder n e m => (VectorGraph n e -> VectorGraph n e) -> m ()
+modify_ :: MonadBuilder n e m => (Hetero (VectorGraph n e) -> Hetero (VectorGraph n e)) -> m ()
 modify_ = modify . fmap ((),)
 {-# INLINE modify_ #-}
 
@@ -76,8 +76,8 @@ modify_ = modify . fmap ((),)
 -- === Instances === --
 
 class Monad m => MonadBuilder n e m | m -> n e where
-    get :: m (VectorGraph n e)
-    put :: (VectorGraph n e) -> m ()
+    get :: m (Hetero (VectorGraph n e))
+    put :: (Hetero (VectorGraph n e)) -> m ()
 
 instance Monad m => MonadBuilder n e (BuilderT n e m) where
     get = BuilderT   State.get ; {-# INLINE get #-}

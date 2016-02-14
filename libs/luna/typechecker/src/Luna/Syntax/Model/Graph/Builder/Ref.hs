@@ -46,13 +46,13 @@ reconnect elRef lens input = do
 -- Construction
 
 instance (MonadBuilder n e m, Castable a n) => Constructor m (Ref $ Node a) where
-    construct n = Ref <$> modify (nodeGraph $ swap ∘ ixed add (cast $ unwrap' n)) ; {-# INLINE construct #-}
+    construct n = Ref <$> modify (wrapped' ∘ nodeGraph $ swap ∘ ixed add (cast $ unwrap' n)) ; {-# INLINE construct #-}
 
 instance (MonadBuilder n e m, Castable (Edge e') e) => Constructor m (Ref $ Edge e') where
-    construct e = Ref <$> modify (edgeGraph $ swap ∘ ixed add (cast e)) ; {-# INLINE construct #-}
+    construct e = Ref <$> modify (wrapped' ∘ edgeGraph $ swap ∘ ixed add (cast e)) ; {-# INLINE construct #-}
 
 instance MonadBuilder n e m => Constructor m (Ref Cluster) where
-    construct c = Ref <$> modify (clusterGraph $ swap ∘ ixed add c) ; {-# INLINE construct #-}
+    construct c = Ref <$> modify (wrapped' ∘ clusterGraph $ swap ∘ ixed add c) ; {-# INLINE construct #-}
 
 -- Accessors
 
@@ -66,8 +66,8 @@ instance  MonadBuilder n e m                             => Writer m Cluster    
 
 -- Unregistering
 
-instance MonadBuilder n e m => Unregister m (Ref $ Node node) where unregister ref = modify_ $ nodeGraph %~ free (ref ^. idx)
-instance MonadBuilder n e m => Unregister m (Ref $ Edge edge) where unregister ref = modify_ $ edgeGraph %~ free (ref ^. idx)
+instance MonadBuilder n e m => Unregister m (Ref $ Node node) where unregister ref = modify_ $ wrapped' ∘ nodeGraph %~ free (ref ^. idx)
+instance MonadBuilder n e m => Unregister m (Ref $ Edge edge) where unregister ref = modify_ $ wrapped' ∘ edgeGraph %~ free (ref ^. idx)
 
 -- Destruction
 

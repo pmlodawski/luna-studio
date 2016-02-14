@@ -4,7 +4,7 @@
 module Data.Graph.Backend.Vector where
 
 
-import Prologue
+import Prologue                 hiding (Getter, Setter)
 
 import Data.Prop
 import Data.Container           hiding (impossible)
@@ -73,6 +73,8 @@ makeLenses  ''VectorGraph
 
 -- Construction
 
+type instance NodeOf (VectorGraph n e) = n
+type instance EdgeOf (VectorGraph n e) = e
 instance Default (VectorGraph n e) where def = VectorGraph (alloc 100) (alloc 100) (alloc 100)
 
 -- Graph class
@@ -86,34 +88,42 @@ instance Default (VectorGraph n e) where def = VectorGraph (alloc 100) (alloc 10
 --    nodeRefs :: Lens' g [Ref $ Node (Item g)]
 --    edgeRefs :: Lens' g [Ref $ Link (Item g)]
 
-type family Generalized a
-class Generalize a where
-    generalize :: a -> Generalized a
+--type family Generalized a
+--class Generalize a where
+--    generalize :: a -> Generalized a
 
---type instance Generalized
+----type instance Generalized
 
-type instance Generalized (Ref a) = Ref  (Generalized a)
-instance      Generalize  (Ref a) where generalize = rewrap
+--type instance Generalized (Ref a) = Ref  (Generalized a)
+--instance      Generalize  (Ref a) where generalize = rewrap
 
-type instance            Generalized (Node a) = Node (Generalized a)
-instance Generalize a => Generalize  (Node a) where generalize = wrapped %~ generalize
-
-
-type instance            Generalized (Edge a) = Edge (Generalized a)
-instance Generalize a => Generalize  (Edge a) where generalize = wrapped %~ generalize
+--type instance            Generalized (Node a) = Node (Generalized a)
+--instance Generalize a => Generalize  (Node a) where generalize = wrapped %~ generalize
 
 
-newtype Hetero a = Hetero a deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
+--type instance            Generalized (Edge a) = Edge (Generalized a)
+--instance Generalize a => Generalize  (Edge a) where generalize = wrapped %~ generalize
+
+
+newtype Hetero a = Hetero a deriving (Show, Eq, Ord, Functor, Traversable, Foldable, Default)
 makeWrapped ''Hetero
 
-instance (HasRef (Node gen) a, BiCastable n gen, gen ~ Generalized n)
-      => HasRef (Node n) (Hetero a) where ref r = wrapped' ∘ ref (generalize r) ∘ casted ; {-# INLINE ref #-}
+
+type instance Prop p (Hetero a) = Prop p a
+
+instance Getter p a => Getter p (Hetero a) where getter p   = getter p ∘ unwrap'
+instance Setter p a => Setter p (Hetero a) where setter p v = wrapped' %~ setter p v
+
+-- | When referencing the Hetero graph, we query the underlying one for its native node and edge representations
+--   by using `NodeOf` and `EdgeOf` families respectively.
+
+instance (HasRef (Node n') a, BiCastable n n', n' ~ NodeOf a)
+      => HasRef (Node n) (Hetero a) where ref r = wrapped' ∘ ref (cast r :: Ref (Node n')) ∘ casted ; {-# INLINE ref #-}
 instance HasRef (Node I) (Hetero a) where ref   = impossible
 instance HasRef (Node n) (Hetero I) where ref   = impossible
 
-
-instance (HasRef (Edge gen) a, BiCastable e gen, gen ~ Generalized e)
-      => HasRef (Edge e) (Hetero a) where ref r = wrapped' ∘ ref (generalize r) ∘ casted ; {-# INLINE ref #-}
+instance (HasRef (Edge e') a, BiCastable e e', e' ~ EdgeOf a)
+      => HasRef (Edge e) (Hetero a) where ref r = wrapped' ∘ ref (cast r :: Ref (Edge e')) ∘ casted ; {-# INLINE ref #-}
 instance HasRef (Edge I) (Hetero a) where ref   = impossible
 instance HasRef (Edge e) (Hetero I) where ref   = impossible
 

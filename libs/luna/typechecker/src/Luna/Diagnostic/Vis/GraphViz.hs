@@ -106,7 +106,6 @@ gStyle name = [ GraphAttrs [ RankDir FromTop
 
 
 
-
 --check :: NetGraph a -> Coherence
 
 toGraphViz :: forall a. Show a => String -> NetGraph a -> DotGraph String
@@ -121,13 +120,13 @@ toGraphViz name net = DotGraph { strictGraph     = False
                                }
     where -- === Inputs === --
 
-          ng                = net ^. nodeGraph
-          eg                = net ^. edgeGraph
-          cg                = net ^. clusterGraph
+          ng                = net ^. wrapped' ∘ nodeGraph
+          eg                = net ^. wrapped' ∘ edgeGraph
+          cg                = net ^. wrapped' ∘ clusterGraph
           nodeIxs           = usedIxes ng :: [Int]
           edgeIxs           = usedIxes eg :: [Int]
           clrIxs            = usedIxes cg
-          clrs              = elems $ net ^. clusterGraph
+          clrs              = elems $ net ^. wrapped' ∘ clusterGraph
           clredNodeIxs      = zip (safeHead ∘ matchClusters clrIxs <$> nodeIxs) nodeIxs :: [(Maybe Int, Int)]
           clredNodeMap      = fromListWithReps clredNodeIxs :: Map (Maybe Int) [Int]
           rootNodeIxs       = case Map.lookup Nothing clredNodeMap of
@@ -161,8 +160,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
               validSource = edge' ^. source == node
               validTarget = edge `elem` (tgt' # Type) : (tgt' # Inputs)
 
-              edge2 = cast edge :: Ref (Edge (Link (NetLayers a :< Raw)))
-              edge' = cast $ net ^. ref edge2 :: Edge (Link (NetLayers a :< Draft Static))
+              edge' = net ^. ref edge :: Edge (Link (NetLayers a :< Draft Static))
               tgt   = edge' ^. target
               tgt'  = net # tgt
 
@@ -178,8 +176,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
               node     = draftNodeByIx nix
               ins      = node # Inputs
               succs    = node # Succs
-              succs2   = cast <$> succs :: [Ref $ Edge (Link (NetLayers a :< Raw))]
-              succs'   = cast ∘ (net ^.) ∘ ref <$> succs2 :: [Edge (Link (NetLayers a :< Draft Static))] -- (net #) <$> succs
+              succs'   = (net ^.) ∘ ref <$> succs :: [Edge (Link (NetLayers a :< Draft Static))]
 
               orphanTgts = selectOrphanTgts (Ref nix) succs -- FIXME[WD] ugliness
 
@@ -274,7 +271,7 @@ genInEdges (g :: NetGraph a) (n :: NetLayers a :< Draft Static) = displayEdges w
     inIdxs       = getTgtIdx <$> ins
     inEdges      = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) inIxs :: [(Int, [Attribute])]
     --inEdges      = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) [0..] :: [(Int, [Attribute])]
-    es           = g ^. edgeGraph
+    es           = g ^. wrapped' ∘ edgeGraph
     te           = n ^. prop Type
     t            = getTgt te
     tpEdge       = (getTgtIdx te, [GV.color typedArrClr, ArrowHead dotArrow, genLabel $ te ^. idx])

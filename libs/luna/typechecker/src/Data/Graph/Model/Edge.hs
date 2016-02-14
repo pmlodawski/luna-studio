@@ -8,7 +8,7 @@ import Prologue
 -- === Definitions === --
 
 newtype Edge a = Edge a deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
-
+type family EdgeOf a
 
 -- === Instances === --
 
