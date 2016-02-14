@@ -45,33 +45,33 @@ reconnect elRef lens input = do
 
 -- Construction
 
-instance (MonadBuilder n e m, Castable a n) => Constructor m (Ref $ Node a) where
+instance (MonadBuilder (Hetero (VectorGraph n e)) m, Castable a n) => Constructor m (Ref $ Node a) where
     construct n = Ref <$> modify (wrapped' ∘ nodeGraph $ swap ∘ ixed add (cast $ unwrap' n)) ; {-# INLINE construct #-}
 
-instance (MonadBuilder n e m, Castable (Edge e') e) => Constructor m (Ref $ Edge e') where
+instance (MonadBuilder (Hetero (VectorGraph n e)) m, Castable (Edge e') e) => Constructor m (Ref $ Edge e') where
     construct e = Ref <$> modify (wrapped' ∘ edgeGraph $ swap ∘ ixed add (cast e)) ; {-# INLINE construct #-}
 
-instance MonadBuilder n e m => Constructor m (Ref Cluster) where
+instance MonadBuilder (Hetero (VectorGraph n e)) m => Constructor m (Ref Cluster) where
     construct c = Ref <$> modify (wrapped' ∘ clusterGraph $ swap ∘ ixed add c) ; {-# INLINE construct #-}
 
 -- Accessors
 
-instance (MonadBuilder n e m, Castable n a)              => Reader m (Node a)       where read  = flip fmap get ∘ getter ; {-# INLINE read #-}
-instance (MonadBuilder n e m, Castable e e')             => Reader m (Edge e')      where read  = flip fmap get ∘ getter ; {-# INLINE read #-}
-instance  MonadBuilder n e m                             => Reader m Cluster        where read  = flip fmap get ∘ getter ; {-# INLINE read #-}
+instance (MonadBuilder (Hetero (VectorGraph n e)) m, Castable n a)              => Reader m (Node a)       where read  = flip fmap get ∘ getter ; {-# INLINE read #-}
+instance (MonadBuilder (Hetero (VectorGraph n e)) m, Castable e e')             => Reader m (Edge e')      where read  = flip fmap get ∘ getter ; {-# INLINE read #-}
+instance  MonadBuilder (Hetero (VectorGraph n e)) m                             => Reader m Cluster        where read  = flip fmap get ∘ getter ; {-# INLINE read #-}
 
-instance (MonadBuilder n e m, Castable a n)              => Writer m (Node a)       where write = modify_ ∘∘ setter ; {-# INLINE write #-}
-instance (MonadBuilder n e m, Castable e' e)             => Writer m (Edge e')      where write = modify_ ∘∘ setter ; {-# INLINE write #-}
-instance  MonadBuilder n e m                             => Writer m Cluster        where write = modify_ ∘∘ setter ; {-# INLINE write #-}
+instance (MonadBuilder (Hetero (VectorGraph n e)) m, Castable a n)              => Writer m (Node a)       where write = modify_ ∘∘ setter ; {-# INLINE write #-}
+instance (MonadBuilder (Hetero (VectorGraph n e)) m, Castable e' e)             => Writer m (Edge e')      where write = modify_ ∘∘ setter ; {-# INLINE write #-}
+instance  MonadBuilder (Hetero (VectorGraph n e)) m                             => Writer m Cluster        where write = modify_ ∘∘ setter ; {-# INLINE write #-}
 
 -- Unregistering
 
-instance MonadBuilder n e m => Unregister m (Ref $ Node node) where unregister ref = modify_ $ wrapped' ∘ nodeGraph %~ free (ref ^. idx)
-instance MonadBuilder n e m => Unregister m (Ref $ Edge edge) where unregister ref = modify_ $ wrapped' ∘ edgeGraph %~ free (ref ^. idx)
+instance MonadBuilder (Hetero (VectorGraph n e)) m => Unregister m (Ref $ Node node) where unregister ref = modify_ $ wrapped' ∘ nodeGraph %~ free (ref ^. idx)
+instance MonadBuilder (Hetero (VectorGraph n e)) m => Unregister m (Ref $ Edge edge) where unregister ref = modify_ $ wrapped' ∘ edgeGraph %~ free (ref ^. idx)
 
 -- Destruction
 
-instance (MonadBuilder n e m, Reader m (Node node), Getter Inputs node, Unregister m inp, Prop Inputs node ~ [inp], Destructor m node)
+instance (MonadBuilder (Hetero (VectorGraph n e)) m, Reader m (Node node), Getter Inputs node, Unregister m inp, Prop Inputs node ~ [inp], Destructor m node)
       => Destructor m (Ref $ Node node) where
     destruct ref = do
         n <- read ref

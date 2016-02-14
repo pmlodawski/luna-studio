@@ -35,6 +35,7 @@ import           Luna.Syntax.Model.Network.Term
 
 import           Control.Monad.Event                             (Dispatcher)
 import           Control.Monad.Trans.Identity
+import           Data.Graph.Backend.Vector
 
 
 #define PassCtxDirty(m, ls, term) ( ls   ~ NetLayers a                           \
@@ -42,7 +43,7 @@ import           Control.Monad.Trans.Identity
                                   , ne   ~ Link (ls :< term)                     \
                                   , Castable e ne                                \
                                   , MonadIO m                                    \
-                                  , MonadBuilder n e m                           \
+                                  , MonadBuilder ((Hetero (VectorGraph n e))) m  \
                                   , NodeInferable m (ls :< term)                 \
                                   , TermNode Lam  m (ls :< term)                 \
                                   , HasProp Dirty (ls :< term)                   \
@@ -89,7 +90,7 @@ markSuccessors ref = do
                              , ne   ~ Link (ls :< term)                     \
                              , Castable e ne                                \
                              , MonadIO (m)                                  \
-                             , MonadBuilder n e (m)                         \
+                             , MonadBuilder ((Hetero (VectorGraph n e))) (m)\
                              , NodeInferable (m) (ls :< term)               \
                              , TermNode Lam  (m) (ls :< term)               \
                              , HasProp Dirty (ls :< term)                   \

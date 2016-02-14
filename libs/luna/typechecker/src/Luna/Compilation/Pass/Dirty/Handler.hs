@@ -26,6 +26,7 @@ import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Builder.Node          (NodeInferable, TermNode)
 import           Luna.Syntax.Model.Network.Builder.Node.Inferred
 import           Luna.Syntax.Model.Network.Term
+import Data.Graph.Backend.Vector as Graph
 
 
 #define PassCtxDirty(m, ls, term) ( ls   ~ NetLayers a                           \
@@ -33,7 +34,7 @@ import           Luna.Syntax.Model.Network.Term
                                   , ne   ~ Link (ls :< term)                     \
                                   , Castable e ne                                \
                                   , MonadIO m                                    \
-                                  , MonadBuilder n e m                           \
+                                  , MonadBuilder (Hetero (VectorGraph n e)) m    \
                                   , NodeInferable m (ls :< term)                 \
                                   , TermNode Lam  m (ls :< term)                 \
                                   , HasProp Dirty (ls :< term)                   \

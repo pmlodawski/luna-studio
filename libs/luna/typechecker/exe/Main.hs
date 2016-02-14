@@ -118,7 +118,7 @@ input_g1_resolution_mock :: ( term ~ Draft Static
                             , TermNode Unify m (ls :< term)
                             , HasProp Type (ls :< term)
                             , Prop    Type (ls :< term) ~ er
-                            , Graph.MonadBuilder n e m
+                            , Graph.MonadBuilder (Hetero (VectorGraph n e)) m
                             , Castable e edge
                             ) => [nr] -> m [nr]
 input_g1_resolution_mock [f,g] = do
@@ -571,9 +571,9 @@ foo g = runNetworkBuilderT g
 cluster :: Constructor m (Ref Cluster) => m (Ref Cluster)
 cluster = constructLayer $ Cluster mempty
 
-includes :: Graph.MonadBuilder n e m => Ref Cluster -> Ref a -> m Bool
-include  :: Graph.MonadBuilder n e m => Ref a -> Ref Cluster -> m ()
-exclude  :: Graph.MonadBuilder n e m => Ref a -> Ref Cluster -> m ()
+includes :: Graph.MonadBuilder (Hetero (VectorGraph n e)) m => Ref Cluster -> Ref a -> m Bool
+include  :: Graph.MonadBuilder (Hetero (VectorGraph n e)) m => Ref a -> Ref Cluster -> m ()
+exclude  :: Graph.MonadBuilder (Hetero (VectorGraph n e)) m => Ref a -> Ref Cluster -> m ()
 
 includes cluster el = Cluster.member (el ^. idx) <$> read cluster
 include  el cluster = Ref.with cluster $ Cluster.add    (el ^. idx)

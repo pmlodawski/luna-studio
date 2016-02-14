@@ -44,7 +44,7 @@ import Control.Monad.Trans.Either
                            , Prop Succs  (ls :< term) ~ [Ref $ Edge $ ne]   \
                            , BiCastable     e ne                     \
                            , BiCastable     n (ls :< term)           \
-                           , MonadBuilder n e (m)                    \
+                           , MonadBuilder (Hetero (VectorGraph n e)) (m)                    \
                            , HasProp Type       (ls :< term)         \
                            , HasProp Succs      (ls :< term)         \
                            , NodeInferable  (m) (ls :< term)         \
@@ -307,7 +307,7 @@ resolveUnify2 uni = do
 --    --write input $ (input' & (prop Succs) %~ (: edge))
 --    return ()
 
---reroute :: (BiCastable n (ls :< term), BiCastable e (Link (ls :< term)), MonadBuilder n e m, Prop Succs (ls :< term) ~ [Ref (Link (ls :< term))])
+--reroute :: (BiCastable n (ls :< term), BiCastable e (Link (ls :< term)), MonadBuilder (Hetero (VectorGraph n e)) m, Prop Succs (ls :< term) ~ [Ref (Link (ls :< term))])
 --         => Ref (Node (ls :< term)) -> Ref (Link (ls :< term)) -> m ()
 reroute input edge = do
     el  <- read edge
@@ -339,7 +339,7 @@ makeLenses ''TCStatus
 
 -- FIXME[WD]: we should not return [Graph n e] from pass - we should use ~ IterativePassRunner instead which will handle iterations by itself
 run :: forall nodeRef m ls term n e ne.
-       (PassCtx(ResolutionT [nodeRef] m,ls,term), MonadBuilder n e m, nodeRef ~ Ref (Node $ (ls :< term))
+       (PassCtx(ResolutionT [nodeRef] m,ls,term), MonadBuilder (Hetero (VectorGraph n e)) m, nodeRef ~ Ref (Node $ (ls :< term))
        , MonadIO m, Show (ls :< term)
        , Getter Inputs (ls :< term), Prop Inputs (ls :< term) ~ [Ref (Link (ls :< term))])
     => [Int] -> [(Int,Int)] -> Int -> [nodeRef] -> m [Hetero $ VectorGraph n e]

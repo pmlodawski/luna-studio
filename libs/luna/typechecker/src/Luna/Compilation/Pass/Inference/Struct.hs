@@ -22,13 +22,13 @@ import Type.Inference
 
 import qualified Luna.Compilation.Stage.TypeCheck as TypeCheck
 import qualified Luna.Syntax.Name                 as Name
-
+import Data.Graph.Backend.Vector
 
 #define PassCtx(m,ls,term) ( term ~ Draft Static               \
                            , ne   ~ Link (ls :< term)          \
                            , Prop Type   (ls :< term) ~ Ref (Edge ne) \
                            , Castable       e ne               \
-                           , MonadBuilder n e m                \
+                           , MonadBuilder  (Hetero (VectorGraph n e)) m                \
                            , HasProp Type     (ls :< term)     \
                            , NodeInferable  m (ls :< term)     \
                            , TermNode Var   m (ls :< term)     \

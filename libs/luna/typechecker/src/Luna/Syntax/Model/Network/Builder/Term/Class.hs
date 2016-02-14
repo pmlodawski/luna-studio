@@ -265,7 +265,7 @@ class NetworkBuilderT net m n | m -> n, m -> net where runNetworkBuilderT :: net
 instance {-# OVERLAPPABLE #-} NetworkBuilderT I IM IM where runNetworkBuilderT = impossible
 instance {-# OVERLAPPABLE #-}
     ( m      ~ Listener CONNECTION SuccRegister m'
-    , m'     ~ GraphBuilder.BuilderT n e m''
+    , m'     ~ GraphBuilder.BuilderT (Hetero (VectorGraph n e)) m''
     , m''    ~ Listener ELEMENT (TypeConstraint Equality_Full (Ref $ Node $ NetNode a)) m'''
     , m'''   ~ Listener CONNECTION (TypeConstraint Equality_M1 (Ref c)) m''''
     , m''''  ~ Type.TypeBuilderT (Ref $ Node $ NetNode a) m'''''
