@@ -16,3 +16,7 @@ data Function n g = Function { _fptr  :: FunctionPtr n
                              , _graph :: g
                              } deriving (Show)
 makeLenses ''Function
+
+data Lambda n = Lambda { _lptr     :: FunctionPtr n
+                       , _subgraph :: Ref Cluster SubGraph
+                       } deriving (Show)

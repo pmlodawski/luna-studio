@@ -205,7 +205,7 @@ symbolMapTest = do
 
     renderAndOpen [("beforeInlining", g)]
 
-    (f, (g :: NetGraph ())) <- flip Symbol.evalT Map.empty $ runBuild g $ do
+    (f, (g :: NetGraph ())) <- flip Symbol.evalT def $ runBuild g $ do
         Symbol.loadSymbols StdLib.symbols
         r1 <- Inlining.processNode plus
         r2 <- Inlining.processNode sin
@@ -461,8 +461,8 @@ foo g = runNetworkBuilderT g
     print s1s
 
     title "subgraph definition"
-    sg1 <- subgraph
-    sg2 <- subgraph
+    sg1 <- subgraph "Subgraph 0"
+    sg2 <- subgraph "Subgraph 1"
     include s1 sg1
     include s2 sg1
     include s2 sg2

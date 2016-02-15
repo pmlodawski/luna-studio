@@ -10,8 +10,8 @@ import qualified Data.Graph.Backend.VectorGraph.SubGraph as SubGraph
 import qualified Data.Graph.Builder.Class                as Graph
 import qualified Data.Graph.Builder.Ref                  as Ref
 
-subgraph :: Constructor m (Ref Cluster SubGraph) => m (Ref Cluster SubGraph)
-subgraph = constructLayer $ SubGraph mempty
+subgraph :: Constructor m (Ref Cluster SubGraph) => String -> m (Ref Cluster SubGraph)
+subgraph = constructLayer . SubGraph mempty
 
 includes :: (Graph.MonadBuilder t m, Referred Cluster SubGraph t) => Ref Cluster SubGraph -> Ref Node a -> m Bool
 includes cluster el = SubGraph.member (el ^. idx) <$> Ref.read cluster

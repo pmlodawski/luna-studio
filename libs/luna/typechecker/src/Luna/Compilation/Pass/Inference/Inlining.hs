@@ -10,7 +10,7 @@ import Data.Prop
 import Data.Record
 import Luna.Evaluation.Runtime                      (Static, Dynamic)
 import Luna.Library.Symbol.Class                    (MonadSymbol, lookupSymbol)
-import Luna.Syntax.AST.Decl.Function                (Function, FunctionPtr)
+import Luna.Syntax.AST.Decl.Function                (Function, FunctionPtr, Lambda (..))
 import Luna.Syntax.AST.Term                         hiding (source)
 import Data.Graph.Builder                           as Graph hiding (run)
 import Data.Graph.Backend.VectorGraph               as Graph
@@ -71,16 +71,16 @@ lookupFunction ref = do
             lookupSymbol $ QualPath.mk n
         match $ \ANY -> return Nothing
 
-inlineFunction :: PassCtx => Function node graph -> m (FunctionPtr node, Ref Cluster SubGraph)
-inlineFunction fun = do
+importFunction :: PassCtx => Function node graph -> m (Lambda node)
+importFunction fun = do
     translations <- merge $ fun ^. Function.graph
-    cls <- subgraph
+    cls <- subgraph "myfun"
     mapM (flip include cls) $ Map.elems $ translations
     let unsafeTranslate i = fromJust $ Map.lookup i translations
         fptr = fun ^. Function.fptr & over (Function.self . mapped) unsafeTranslate
                                     & over (Function.args . mapped) unsafeTranslate
                                     & over Function.out unsafeTranslate
-    return (fptr, cls)
+    return $ Lambda fptr cls
 
 buildTypeRep :: PassCtx => FunctionPtr node -> m (Ref Node node)
 buildTypeRep fptr = do
@@ -93,7 +93,7 @@ buildTypeRep fptr = do
 processNode :: PassCtx => Ref Node node -> m (Maybe $ FunctionPtr node)
 processNode ref = runMaybeT $ do
     fun       <- MaybeT $ lookupFunction ref
-    (fptr, _) <- lift $ inlineFunction fun
+    Lambda fptr _ <- lift $ importFunction fun
     {-tpRep <- lift $ buildTypeRep fptr-}
     {-refTp <- follow (prop Type) ref >>= follow source-}
     {-uni   <- lift $ unify refTp tpRep-}
