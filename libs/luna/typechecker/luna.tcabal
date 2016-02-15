@@ -6,9 +6,18 @@ Author:         Flowbox <contact@flowbox.io>
 Maintainer:     Flowbox <contact@flowbox.io>
 Build-Type:     Simple
 
-Flag tcint
+Flag lunaExe
+  Description: Luna executable
+  Default:     True
+
+Flag infExe
+  Description: Inference test
+  Default:     True
+
+Flag intExe
   Description: Interpreter test
-  Default:     False
+  Default:     True
+
 
 Library
     Hs-Source-Dirs: src
@@ -85,12 +94,160 @@ Library
 
 
 Executable luna
-    if flag(tcint)
+    if flag(lunaExe)
+        Main-Is:        Main.hs
+        Hs-Source-Dirs: exe
+    else
+        Main-Is:        Dummy.hs
+        Hs-Source-Dirs: test
+
+    GHC-Options:
+                  -- -dshow-passes
+
+    -- -ddump-simpl -ddump-to-file
+
+    Extensions:   ConstraintKinds
+                  DataKinds
+                  DefaultSignatures
+                  DeriveDataTypeable
+                  DeriveFoldable
+                  DeriveFunctor
+                  DeriveGeneric
+                  DeriveTraversable
+                  DoAndIfThenElse
+                  EmptyDataDecls
+                  FlexibleContexts
+                  FlexibleInstances
+                  GeneralizedNewtypeDeriving
+                  InstanceSigs
+                  LambdaCase
+                  MultiParamTypeClasses
+                  NoImplicitPrelude
+                  OverloadedStrings
+                  ScopedTypeVariables
+                  StandaloneDeriving
+                  TemplateHaskell
+                  TupleSections
+                  TypeFamilies
+                  TypeOperators
+                  ViewPatterns
+
+    Other-Modules: Paths_luna
+    Build-Depends: luna
+                 , base
+                 , constraints
+                 , container
+                 , convert
+                 , data-member
+                 , data-base
+                 , data-construction
+                 , data-layer
+                 , error-util
+                 , errors
+                 , exceptions
+                 , extra
+                 , flowbox-utils
+                 , ghc
+                 , ghc-prim
+                 , ghc-session >= 0.1.2.0
+                 , graphviz >= 2999.17.0.2.2
+                 , lens
+                 , MissingH
+                 , mtl
+                 , placeholders
+                 , process
+                 , prologue
+                 , text
+                 , transformers
+                 , type-cache
+                 , typelevel
+                 , vector
+                 , data-result
+                 , split
+                 , dependent-state
+
+
+Executable luna-inf-test
+    if flag(infExe)
+        Main-Is:        InferenceTest.hs
+        Hs-Source-Dirs: test
+    else
+        Main-Is:        Dummy.hs
+        Hs-Source-Dirs: test
+
+    GHC-Options:
+                  -- -dshow-passes
+
+    -- -ddump-simpl -ddump-to-file
+
+    Extensions:   ConstraintKinds
+                  DataKinds
+                  DefaultSignatures
+                  DeriveDataTypeable
+                  DeriveFoldable
+                  DeriveFunctor
+                  DeriveGeneric
+                  DeriveTraversable
+                  DoAndIfThenElse
+                  EmptyDataDecls
+                  FlexibleContexts
+                  FlexibleInstances
+                  GeneralizedNewtypeDeriving
+                  InstanceSigs
+                  LambdaCase
+                  MultiParamTypeClasses
+                  NoImplicitPrelude
+                  OverloadedStrings
+                  ScopedTypeVariables
+                  StandaloneDeriving
+                  TemplateHaskell
+                  TupleSections
+                  TypeFamilies
+                  TypeOperators
+                  ViewPatterns
+
+    Other-Modules: Paths_luna
+    Build-Depends: luna
+                 , base
+                 , constraints
+                 , container
+                 , convert
+                 , data-member
+                 , data-base
+                 , data-construction
+                 , data-layer
+                 , error-util
+                 , errors
+                 , exceptions
+                 , extra
+                 , flowbox-utils
+                 , ghc
+                 , ghc-prim
+                 , ghc-session >= 0.1.2.0
+                 , graphviz >= 2999.17.0.2.2
+                 , lens
+                 , MissingH
+                 , mtl
+                 , placeholders
+                 , process
+                 , prologue
+                 , text
+                 , transformers
+                 , type-cache
+                 , typelevel
+                 , vector
+                 , data-result
+                 , split
+                 , dependent-state
+
+
+Executable luna-int-test
+    if flag(intExe)
         Main-Is:        InterpreterTest.hs
         Hs-Source-Dirs: test
     else
-        Main-Is:        Main.hs
-        Hs-Source-Dirs: exe
+        Main-Is:        Dummy.hs
+        Hs-Source-Dirs: test
 
     GHC-Options:
                   -- -dshow-passes

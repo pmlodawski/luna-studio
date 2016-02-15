@@ -20,8 +20,8 @@ import           Luna.Evaluation.Runtime                         (Dynamic, Stati
 import           Luna.Syntax.AST.Term                            hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
 import           Luna.Syntax.AST.Term                            hiding (source)
 import qualified Luna.Syntax.AST.Term                            as Term
-import           Luna.Syntax.Model.Graph
-import           Luna.Syntax.Model.Graph.Builder
+import           Data.Graph
+import           Data.Graph.Builder
 import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Builder.Node          (NodeInferable, TermNode)
 import           Luna.Syntax.Model.Network.Builder.Node.Class    (arg)
@@ -30,13 +30,22 @@ import           Luna.Syntax.Model.Network.Builder.Term.Class    (NetGraph, NetL
 import           Luna.Syntax.Model.Network.Class                 ()
 import           Luna.Syntax.Model.Network.Term
 
-import qualified Luna.Compilation.Pass.Dirty.Monad               as DirtyMonad
+import qualified Luna.Compilation.Pass.Dirty.Monad      as DirtyMonad
 
-import           Luna.Compilation.Pass.Dirty.Data.Label          (Dirty (Dirty), DirtyVal (DirtyVal))
-import qualified Luna.Compilation.Pass.Dirty.Data.Label          as Label
+import           Luna.Compilation.Pass.Dirty.Data.Label (Dirty (Dirty), DirtyVal (DirtyVal))
+import qualified Luna.Compilation.Pass.Dirty.Data.Label as Label
+
+import qualified Data.Graph.Builder.Class               as Graph
+import           Data.Graph.Backend.VectorGraph
 
 
-graph1 :: ( term ~ Draft Static
+graph1 :: forall term node edge nr er ls m n e. (term ~ Draft Static
+          , node ~ (ls :< term)
+          , edge ~ Link (ls :< term)
+          , nr   ~ Ref Node node
+          , er   ~ Ref Edge edge
+          , BiCastable     n (ls :< term)
+          , BiCastable     e edge
           , MonadIO       m
           , NodeInferable m (ls :< term)
           , TermNode Star m (ls :< term)
@@ -47,8 +56,9 @@ graph1 :: ( term ~ Draft Static
           , TermNode App  m (ls :< term)
           , HasProp Dirty (ls :< term)
           , Prop Dirty    (ls :< term) ~ DirtyVal
+          , Graph.MonadBuilder (Hetero (VectorGraph n e)) m
           )
-       => m (Ref (Node (ls :< term)))
+       => m nr
 graph1 = do
     i1 <- int 2
     i2 <- int 3
@@ -76,17 +86,18 @@ graph1 = do
     appPlus2   <- app accPlus2 [arg appLen]
 
 
-    let ref = appConc1b
-    node <- read ref
+    let ref = appConc1b :: Ref Node (ls :< term)
+    (node :: (ls :< term)) <- read ref
+
     write ref (node & prop Dirty . Label.required .~ True)
 
     return appConc1b
 
 
-prebuild :: Show a => IO (Ref $ Node (NetLayers a :< Draft Static), NetGraph a)
+prebuild :: Show a => IO (Ref Node (NetLayers a :< Draft Static), NetGraph a)
 prebuild = runBuild def star
 
-runBuild (g :: NetGraph a) m = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers a :< Draft Static)))
+runBuild (g :: NetGraph a) m = runInferenceT ELEMENT (Proxy :: Proxy (Ref Node (NetLayers a :< Draft Static)))
                              $ runNetworkBuilderT g m
 
 evalBuild = fmap snd ∘∘ runBuild
