@@ -203,19 +203,17 @@ function createPendingNode(widgetId, expr, x, y) {
   $$.registry[widgetId] = node;
 }
 
-function createNodeSearcher(expression, nodeId, left, top) {
+function createNodeSearcher(expression, nodeId, left, top, command) {
   var ns;
-  if (features.node_searcher) {
-    destroyNodeSearcher();
-    ns = new NodeSearcher();
-    $$.node_searcher = ns;
-    $('body').append(ns.el);
-    ns.init(nodeId);
-    ns.el.css({left: left, top: top});
-    if (expression)
-      ns.setExpression(expression);
-    return ns;
-  }
+  destroyNodeSearcher();
+  ns = new NodeSearcher();
+  $$.node_searcher = ns;
+  $('body').append(ns.el);
+  ns.init(nodeId, command);
+  ns.el.css({left: left, top: top});
+  if (expression)
+    ns.setExpression(expression);
+  return ns;
 }
 
 function destroyNodeSearcher() {

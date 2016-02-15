@@ -28,9 +28,13 @@ function shouldSplit(query) {
   return (query.indexOf('.') > -1 || query.indexOf(' ') > -1);
 }
 
-function splitExpression(expr) {
-  var prefix, query;
-  var idx = Math.max(expr.lastIndexOf('.'), expr.lastIndexOf(' '));
+function splitExpression(expr, command) {
+  var prefix, query, idx;
+  if (command) {
+    idx = Math.max(expr.lastIndexOf('.'), expr.indexOf(' '));
+  } else {
+    idx = Math.max(expr.lastIndexOf('.'), expr.lastIndexOf(' '));
+  }
   prefix = expr.substring(0, idx+1);
   query  = expr.substring(idx+1);
   return {prefix: prefix, query: query};
@@ -40,8 +44,19 @@ function NodeSearcher() {
   this.el = $('<div/>').addClass('node-searcher');
 }
 
-NodeSearcher.prototype.init = function (nodeId) {
+NodeSearcher.prototype.init = function (nodeId, command) {
   var self = this;
+  this.command = command;
+  if(command) {
+    this.actionTree   = 'treeCmd';
+    this.actionCreate = 'createCmd';
+    this.actionQuery  = 'queryCmd';
+    this.el.addClass('command');
+  } else {
+    this.actionTree   = 'tree';
+    this.actionCreate = 'create';
+    this.actionQuery  = 'query';
+  }
   this.prefix = "";
   this.nodeId = nodeId;
   this.initSearchbox();
@@ -124,7 +139,7 @@ NodeSearcher.prototype.expression = function () {
 };
 
 NodeSearcher.prototype.setExpression = function (expr) {
-  var split = splitExpression(expr);
+  var split = splitExpression(expr, this.command);
   this.prefix = split.prefix;
   this.searchbox.val(split.query);
   this.searchns.text(split.prefix);
@@ -144,7 +159,7 @@ NodeSearcher.prototype.performSearch = function () {
     this.clearResults();
     ev = new CustomEvent('ns_event', {
       detail: {
-        action: 'tree',
+        action: this.actionTree,
         expression: ""
       }
     });
@@ -153,7 +168,7 @@ NodeSearcher.prototype.performSearch = function () {
     this.firstColumn.addClass('types');
     ev = new CustomEvent('ns_event', {
       detail: {
-        action: 'query',
+        action: this.actionQuery,
         expression: this.expression()
       }
     });
@@ -213,13 +228,13 @@ NodeSearcher.prototype.isSearchboxActive = function () {
 NodeSearcher.prototype.createNode = function () {
   var ev = new CustomEvent('ns_event', {
     detail: {
-      action: 'create',
+      action: this.actionCreate,
       expression: this.expression(),
       node: this.nodeId
     }
   });
-  window.dispatchEvent(ev);
   this.destroy();
+  window.dispatchEvent(ev);
 };
 
 NodeSearcher.prototype.selectColumn = function (column) {
@@ -246,7 +261,7 @@ NodeSearcher.prototype.openColumn = function () {
 
   var ev = new CustomEvent('ns_event', {
     detail: {
-      action: 'tree',
+      action: this.actionTree,
       expression: this.currentSelection().data('match').fullname
     }
   });

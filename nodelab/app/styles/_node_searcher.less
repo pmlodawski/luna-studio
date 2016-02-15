@@ -12,7 +12,34 @@
 @focusColor: #FED546;
 @matchColor: @focusColor;
 
+@commandBackground: rgb(20%, 20%, 50%);
+@commandSelectedBackground: lighten(@commandBackground, 30%, relative);
 
+.columnColors(@amount, @background, @selectedBackground) {
+  color: darken(@itemColor, @amount, relative);
+
+  input.query {
+    background: @inputBackground;
+    text-shadow: 0 0 0 @itemColor;
+    border-bottom: 1px solid darken(@nsColor, @amount, relative);
+  }
+  .active input.query {
+    color: @itemColor;
+  }
+
+  background: darken(@background, @amount, relative);
+  .item {
+    &.active {
+      background: darken(@selectedBackground, @amount, relative);
+    }
+    .ns {
+      color: darken(@nsColor, @amount, relative);
+    }
+    em {
+      color: darken(@matchColor, @amount, relative);
+    }
+  }
+}
 
 .node-searcher {
   position: fixed;
@@ -32,45 +59,33 @@
   -webkit-flex-wrap: nowrap;
   flex-wrap: nowrap;
 
-
   // colors
   .column {
     border-right: 2px solid @dividerColor;
-
-    .columnColors(@amount) {
-      color: darken(@itemColor, @amount, relative);
-
-      input.query {
-        background: @inputBackground;
-        text-shadow: 0 0 0 @itemColor;
-        border-bottom: 1px solid darken(@nsColor, @amount, relative);
-      }
-      .active input.query {
-        color: @itemColor;
-      }
-
-      background: darken(@background, @amount, relative);
-      .item {
-        &.active {
-          background: darken(@selectedBackground, @amount, relative);
-        }
-        .ns {
-          color: darken(@nsColor, @amount, relative);
-        }
-        em {
-          color: darken(@matchColor, @amount, relative);
-        }
-      }
-    }
-
-    .columnColors(20%);
+    .columnColors(20%, @background, @selectedBackground);
     ul {
       .scrollbar(darken(@background, 20%, relative), darken(@background, 20%, relative), 8px);
     }
     &.current {
-      .columnColors(0%);
+      .columnColors(0%, @background, @selectedBackground);
       ul {
         .scrollbar(@background, @nsColor, 8px);
+      }
+    }
+  }
+
+  // colors
+
+  &.command .column {
+    border-right: 2px solid @dividerColor;
+    .columnColors(20%, @commandBackground, @commandSelectedBackground);
+    ul {
+      .scrollbar(darken(@commandBackground, 20%, relative), darken(@commandBackground, 20%, relative), 8px);
+    }
+    &.current {
+      .columnColors(0%, @commandBackground, @commandSelectedBackground);
+      ul {
+        .scrollbar(@commandBackground, @nsColor, 8px);
       }
     }
   }

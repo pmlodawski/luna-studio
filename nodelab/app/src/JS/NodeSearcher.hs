@@ -21,10 +21,10 @@ import           GHCJS.DOM.Types  ( UIEvent, Window, IsUIEvent, unUIEvent, toUIE
 
 
 
-foreign import javascript safe "app.createNodeSearcher($1, $2, $3, $4)"
-    initNodeSearcher' :: JSString -> Int -> Int -> Int-> IO ()
+foreign import javascript safe "app.createNodeSearcher($1, $2, $3, $4, $5)"
+    initNodeSearcher' :: JSString -> Int -> Int -> Int -> Bool -> IO ()
 
-initNodeSearcher :: Text -> Int -> Vector2 Int -> IO ()
+initNodeSearcher :: Text -> Int -> Vector2 Int -> Bool -> IO ()
 initNodeSearcher expr nodeId pos = initNodeSearcher' (lazyTextToJSString expr) nodeId (pos ^. x) (pos ^. y)
 
 foreign import javascript safe "app.destroyNodeSearcher()"

@@ -1,57 +1,111 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ViewPatterns      #-}
 
 module Reactive.Plugins.Core.Action.NodeSearcher where
 
-import           Utils.PreludePlus
+import           Data.Map                                           (Map)
+import qualified Data.Map                                           as Map
+import           Data.Text.Lazy                                     (Text, stripPrefix)
+import qualified Data.Text.Lazy                                     as Text
+import           Utils.PreludePlus                                  hiding (stripPrefix)
+import           Utils.Vector
 
-import qualified JS.NodeSearcher    as UI
+import qualified JS.NodeSearcher                                    as UI
 
-import qualified Object.Widget      as Widget
-import qualified Object.Node        as Node
-import qualified Object.Widget.Node as NodeModel
-import qualified Event.Keyboard     as Keyboard
-import qualified Event.NodeSearcher as NodeSearcher
-import           Event.Event        (Event(..))
+import           Event.Event                                        (Event (..))
+import qualified Event.Keyboard                                     as Keyboard
+import qualified Event.NodeSearcher                                 as NodeSearcher
+import qualified Object.Node                                        as Node
+import qualified Object.Widget                                      as Widget
+import qualified Object.Widget.Node                                 as NodeModel
 
-import qualified Reactive.State.Global          as Global
-import qualified Reactive.State.Graph           as Graph
-import qualified Reactive.State.UIRegistry      as UIRegistry
-import           Reactive.Commands.Command      (Command, performIO)
-import           Reactive.Commands.RegisterNode (registerNode)
-import           Reactive.Commands.UpdateNode   () -- FIXME: import some required, but  unrelated instance
+import           Reactive.Commands.Command                          (Command, performIO)
+import           Reactive.Commands.RegisterNode                     (registerNode)
+import           Reactive.Commands.UpdateNode                       ()
+import qualified Reactive.Plugins.Core.Action.NodeSearcher.Commands as Commands
+import qualified Reactive.State.Global                              as Global
+import qualified Reactive.State.Graph                               as Graph
+import qualified Reactive.State.UIRegistry                          as UIRegistry
 
-import qualified Reactive.Plugins.Core.Action.NodeSearcher.Mock as Mock
-import           Data.Text.Lazy (Text)
+import qualified Reactive.Plugins.Core.Action.NodeSearcher.Mock     as Mock
+import qualified Reactive.Plugins.Core.Action.NodeSearcher.Scope    as Scope
+
 
 toAction :: Event -> Maybe (Command Global.State ())
 toAction (NodeSearcher (NodeSearcher.Event "query" expr _))           = Just $ querySearch expr
 toAction (NodeSearcher (NodeSearcher.Event "tree"  expr _))           = Just $ queryTree expr
 toAction (NodeSearcher (NodeSearcher.Event "create" expr Nothing))    = Just $ registerNode expr
 -- toAction (NodeSearcher (NodeSearcher.Event "create" expr (Just nid))) = Just $ updateNode nid expr
-toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\t' mods))        = Just $ if mods ^. Keyboard.shift
-    then openEdit
-    else openFresh
+
+toAction (NodeSearcher (NodeSearcher.Event "queryCmd" expr _))           = Just $ querySearchCmd expr
+toAction (NodeSearcher (NodeSearcher.Event "treeCmd"  expr _))           = Just $ queryTreeCmd expr
+toAction (NodeSearcher (NodeSearcher.Event "createCmd" expr Nothing))    = Just $ parseExpr expr
+
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\t'    mods)) = Just $ openFresh
+toAction (Keyboard _ (Keyboard.Event Keyboard.Up    '\191' mods)) = Just $ openCommand -- 191 = /
 toAction _ = Nothing
 
-querySearch :: Text -> Command a ()
-querySearch = performIO . UI.displayQueryResults . Mock.getItemsSearch
-
-queryTree :: Text -> Command a ()
-queryTree = performIO . UI.displayTreeResults . Mock.getItemsTree
+searcherData :: Command Global.State Scope.LunaModule
+searcherData = do
+    let scopeItems = Mock.mockData
+    return $ Scope.LunaModule . Map.fromList $ scopeItems
 
 openFresh :: Command Global.State ()
 openFresh = do
     mousePos <- use Global.mousePos
-    performIO $ UI.initNodeSearcher "" 0 mousePos
+    performIO $ UI.initNodeSearcher "" 0 mousePos False
 
-openEdit :: Command Global.State ()
-openEdit = do
-    focusedWidget  <- use $ Global.uiRegistry . UIRegistry.focusedWidget
-    mousePos       <- use Global.mousePos
-    graph          <- use Global.graph
-    forM_ focusedWidget $ \focusedWidget -> do
-        nodeWidget <- zoom Global.uiRegistry $ UIRegistry.lookupTypedM focusedWidget
-        forM_ nodeWidget $ \nodeWidget -> do
-            performIO $ UI.initNodeSearcher (nodeWidget ^. Widget.widget . NodeModel.expression)
-                                            (nodeWidget ^. Widget.widget . NodeModel.nodeId)
-                                            mousePos
+querySearch :: Text -> Command Global.State ()
+querySearch query = do
+    sd <- searcherData
+    let items = Scope.searchInScope sd query
+    performIO $ UI.displayQueryResults items
+
+queryTree :: Text -> Command Global.State ()
+queryTree query = do
+    sd <- searcherData
+    let items = Scope.moduleItems sd query
+    performIO $ UI.displayTreeResults items
+
+openCommand :: Command Global.State ()
+openCommand = do
+    performIO $ UI.initNodeSearcher "" 0 (Vector2 200 200) True
+
+querySearchCmd :: Text -> Command Global.State ()
+querySearchCmd query = do
+    sd <- Commands.commands
+    let sd' = Scope.LunaModule $ Map.fromList sd
+    let items = Scope.searchInScope sd' query
+    performIO $ UI.displayQueryResults items
+
+queryTreeCmd :: Text -> Command Global.State ()
+queryTreeCmd query = do
+    sd <- Commands.commands
+    let sd' = Scope.LunaModule $ Map.fromList sd
+    let items = Scope.moduleItems sd' query
+    performIO $ UI.displayTreeResults items
+
+
+-- openEdit :: Command Global.State ()
+-- openEdit = do
+--     focusedWidget  <- use $ Global.uiRegistry . UIRegistry.focusedWidget
+--     mousePos       <- use Global.mousePos
+--     graph          <- use Global.graph
+--     forM_ focusedWidget $ \focusedWidget -> do
+--         nodeWidget <- zoom Global.uiRegistry $ UIRegistry.lookupTypedM focusedWidget
+--         forM_ nodeWidget $ \nodeWidget -> do
+--             performIO $ UI.initNodeSearcher (nodeWidget ^. Widget.widget . NodeModel.expression)
+--                                             (nodeWidget ^. Widget.widget . NodeModel.nodeId)
+--                                             mousePos
+
+
+parseExpr :: Text -> Command Global.State ()
+parseExpr "project.new" = do
+    performIO $ UI.initNodeSearcher "project.new untitled" 0 (Vector2 200 200) True
+parseExpr (stripPrefix "project.new "  -> Just name) = do
+    performIO $ putStrLn $ "CP"
+    performIO $ putStrLn $ Text.unpack $ name
+parseExpr (stripPrefix "project.open." -> Just name) = do
+    performIO $ putStrLn $ "OP"
+    performIO $ putStrLn $ Text.unpack $ name
+parseExpr _ = return ()
