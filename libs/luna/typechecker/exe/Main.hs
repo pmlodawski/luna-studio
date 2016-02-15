@@ -188,20 +188,32 @@ input_g1_resolution_mock [f,g] = do
 
 symbolMapTest :: IO ()
 symbolMapTest = do
+    title "Symbol map testing"
     (_, g :: NetGraph ()) <- prebuild
 
-    {-(f, (_ :: NetGraph ())) <- flip Symbol.evalT Map.empty $ runBuild g $ do-}
-        {-[>Symbol.loadSymbols StdLib.symbols<]-}
-        {-i1 <- int 1-}
-        {-i2 <- int 2-}
-        {-tint <- cons "Int"-}
-        {-reconnect i1 (prop Type) tint-}
-        {-reconnect i2 (prop Type) tint-}
-        {-plus <- acc "+" i1-}
-        {-return ()-}
-        {-[>Inlining.lookupFunction plus<]-}
+    (f, (g :: NetGraph ())) <- flip Symbol.evalT Map.empty $ runBuild g $ do
+        Symbol.loadSymbols StdLib.symbols
+        i1 <- int 1
+        i2 <- int 2
+        s1 <- str "hello world!"
+        tint <- cons "Int"
+        tstr <- cons "String"
+        reconnect i1 (prop Type) tint
+        reconnect i2 (prop Type) tint
+        reconnect s1 (prop Type) tstr
+        plus <- acc "+" i1
+        len  <- acc "length" s1
+        sin  <- var "sin"
+        funMay <- Inlining.lookupFunction plus
+        case funMay of
+            Just f -> do
+                fptr <- Inlining.inlineFunction f
+                r <- Inlining.buildTypeRep fptr
+                return $ Just r
+            _      -> return Nothing
 
-    {-print f-}
+    renderAndOpen [("symbolg", g)]
+    print f
     return ()
 
 
@@ -356,6 +368,7 @@ instance e ~ e' => Referenced Edge (VectorGraph n e) e' where refs = fmap Ref âˆ
 main :: IO ()
 main = do
     showcase
+    symbolMapTest
     --test1
     --test2
     --main2

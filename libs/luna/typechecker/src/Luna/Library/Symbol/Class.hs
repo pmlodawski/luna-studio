@@ -14,7 +14,7 @@ import           Luna.Library.Symbol.QualPath  (QualPath)
 
 -- === Definitions === --
 
-type SymbolMap n g = Map QualPath (Function n)
+type SymbolMap n g = Map QualPath (Function n g)
 
 
 ---- TODO: template haskellize
@@ -99,5 +99,5 @@ instance {-# OVERLAPPABLE #-} (MonadSymbol n g m, MonadTrans t, Monad (t m)) => 
 loadSymbols :: MonadSymbol n g m => SymbolMap n g -> m ()
 loadSymbols = modify_ . Map.union
 
-lookupSymbol :: MonadSymbol n g m => QualPath -> m (Maybe (Function n))
+lookupSymbol :: MonadSymbol n g m => QualPath -> m (Maybe (Function n g))
 lookupSymbol p = Map.lookup p <$> get

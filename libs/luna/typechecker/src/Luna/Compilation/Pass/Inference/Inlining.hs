@@ -28,24 +28,25 @@ import qualified Luna.Syntax.AST.Decl.Function    as Function
 
 
 
-#define PassCtx(m,ls,term) ( term ~ Draft Static                     \
-                           , ls   ~ NetLayers a                      \
-                           , ne   ~ Link (ls :< term)                \
-                           , node ~ (ls :< term)                     \
-                           , Prop Type   (ls :< term) ~ Ref Edge ne  \
-                           , BiCastable     e ne                     \
-                           , BiCastable     n (ls :< term)           \
-                           , MonadBuilder (Hetero (VectorGraph n e)) (m) \
-                           , HasProp Type       (ls :< term)         \
-                           , NodeInferable  (m) (ls :< term)         \
-                           , TermNode Var   (m) (ls :< term)         \
-                           , TermNode Acc   (m) (ls :< term)         \
-                           , TermNode Cons  (m) (ls :< term)         \
-                           , MonadSymbol n g (m)                     \
-                           )
--- CHECKME[WD -> AS]: ^^^ should we refer here to `n` or `node` in MonadSymbol premise ?
+#define PassCtx ( term  ~ Draft Static             \
+                , ls    ~ NetLayers a              \
+                , edge  ~ Link (ls :< term)        \
+                , node  ~ (ls :< term)             \
+                , graph ~ Hetero (VectorGraph n e) \
+                , BiCastable     e edge            \
+                , BiCastable     n node            \
+                , MonadBuilder graph (m)           \
+                , NodeInferable  (m) (ls :< term)  \
+                , TermNode Var   (m) (ls :< term)  \
+                , TermNode Acc   (m) (ls :< term)  \
+                , TermNode Cons  (m) (ls :< term)  \
+                , TermNode Lam   (m) (ls :< term)  \
+                , TermNode Unify (m) (ls :< term)  \
+                , MonadSymbol node graph (m)       \
+                , Referred Node n graph            \
+                )
 
-getTypeName :: PassCtx(m, ls, term) => Ref Node (ls :< term) -> m (Maybe String)
+getTypeName :: PassCtx => Ref Node node -> m (Maybe String)
 getTypeName ref = do
     node  <- read ref
     tpRef <- follow source $ node # Type
@@ -55,25 +56,30 @@ getTypeName ref = do
         match $ \ANY -> return Nothing
 
 
-lookupFunction :: PassCtx(m, ls, term) => Ref Node (ls :< term) -> m (Maybe $ Function n)
+lookupFunction :: PassCtx => Ref Node node -> m (Maybe $ Function node graph)
 lookupFunction ref = do
     node <- read ref
     caseTest (uncover node) $ do
         match $ \(Acc (Str n) t) -> do
             tpName <- getTypeName =<< follow source t
             let symbolName = (<> "." <> n) <$> tpName
-            case tpName of
-                Just tn -> lookupSymbol $ QualPath.mk symbolName
+            case symbolName of
+                Just tn -> lookupSymbol $ QualPath.mk tn
                 Nothing -> return Nothing
         match $ \(Var (Str n)) ->
             lookupSymbol $ QualPath.mk n
         match $ \ANY -> return Nothing
 
-inlineFunction :: PassCtx(m, ls, term) => Function n -> m (FunctionPtr n)
+inlineFunction :: PassCtx => Function node graph -> m (FunctionPtr node)
 inlineFunction fun = do
-    error "Commented out inlineFunction in Luna.Compilation.Pass.Inference.Inlining"
-    --translations <- merge $ fun ^. Function.graph
-    --let unsafeTranslate i = fromJust $ Map.lookup i translations
-    --return $ fun ^. Function.fptr & over (Function.self . mapped) unsafeTranslate
-    --                              & over (Function.args . mapped) unsafeTranslate
-    --                              & over Function.out unsafeTranslate
+    translations <- merge $ fun ^. Function.graph
+    let unsafeTranslate i = fromJust $ Map.lookup i translations
+    return $ fun ^. Function.fptr & over (Function.self . mapped) unsafeTranslate
+                                  & over (Function.args . mapped) unsafeTranslate
+                                  & over Function.out unsafeTranslate
+
+buildTypeRep :: PassCtx => FunctionPtr node -> m (Ref Node node)
+buildTypeRep fptr = do
+    case fptr ^. Function.args of
+        [] -> return $ fptr ^. Function.out
+        as -> lam (arg <$> as) $ fptr ^. Function.out

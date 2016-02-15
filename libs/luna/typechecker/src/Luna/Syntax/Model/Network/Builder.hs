@@ -26,21 +26,21 @@ import           Luna.Evaluation.Runtime        (Static)
 -- === Utils === --
 -------------------
 
-merge :: forall n e m a t.
-         ( n ~ (NetLayers a :< Draft Static)
-         , e ~ (Link n)
-         , MonadBuilder t m
-         , Referred Node n t
-         , Constructor m (Ref Node n)
-         , Constructor m (Ref Edge e)
-         , Getter (Ref Node n) (VectorGraph n e)
-         , Getter (Ref Edge e) (VectorGraph n e)
-         ) => VectorGraph n e -> m (Map (Ref Node n) (Ref Node n))
+merge :: ( node  ~ (NetLayers a :< Draft Static)
+         , edge  ~ (Link node)
+         , graph ~ Hetero (VectorGraph n e)
+         , BiCastable e edge
+         , BiCastable n node
+         , MonadBuilder graph m
+         , Referred Node n graph
+         , Constructor m (Ref Node node)
+         , Constructor m (Ref Edge edge)
+         ) => graph -> m (Map (Ref Node node) (Ref Node node))
 merge g = do
-    let foreignNodeRefs = Ref <$> usedIxes (g ^. nodeGraph)
-        foreignEdgeRefs = Ref <$> usedIxes (g ^. edgeGraph)
+    let foreignNodeRefs = Ref <$> usedIxes (g ^. wrapped . nodeGraph)
+        foreignEdgeRefs = Ref <$> usedIxes (g ^. wrapped . edgeGraph)
 
-    newNodeRefs <- forM foreignNodeRefs $ construct ∘ (flip view g ∘ focus)
+    newNodeRefs <- forM foreignNodeRefs $ construct . (flip view g . focus)
 
     let nodeTrans = Map.fromList $ zip foreignNodeRefs newNodeRefs
         foreignEs  = flip view g ∘ focus <$> foreignEdgeRefs
@@ -49,7 +49,7 @@ merge g = do
                    where
                    unsafeTranslateNode i = fromJust $ Map.lookup i nodeTrans
 
-    newEdgeRefs <- forM es construct :: m [Ref Edge e]
+    newEdgeRefs <- forM es construct
     let edgeTrans = Map.fromList $ zip foreignEdgeRefs newEdgeRefs
 
     forM newNodeRefs $ \ref -> do

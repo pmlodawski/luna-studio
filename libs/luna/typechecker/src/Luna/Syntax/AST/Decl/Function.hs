@@ -12,7 +12,7 @@ data FunctionPtr n = FunctionPtr { _self :: Maybe (Ref Node n)
                                  } deriving (Show)
 makeLenses ''FunctionPtr
 
-data Function n = Function { _fptr  :: FunctionPtr n
-                           , _graph :: Hetero (VectorGraph n (Link n))
-                           } deriving (Show)
+data Function n g = Function { _fptr  :: FunctionPtr n
+                             , _graph :: g
+                             } deriving (Show)
 makeLenses ''Function
