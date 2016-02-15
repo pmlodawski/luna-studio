@@ -123,7 +123,7 @@ instance ( name ~ NameInput a
 instance ( inp ~ Input a
          , MonadFix m
          , Connectible inp a m
-         , ElemBuilder (Lam $ Connection inp a) m a
+         , ElemBuilder (Lam $ Ref Edge $ Connection inp a) m a
          ) => TermBuilder Lam m a where
     buildTerm p (args,res) = mdo
         out   <- buildElem $ Lam cargs cres
@@ -150,7 +150,7 @@ instance {-# OVERLAPPABLE #-}
          , MonadFix m
          , Connectible     src  a m
          , ConnectibleName name a m
-         , ElemBuilder (Acc (NameConnection name a) (Connection src a)) m a
+         , ElemBuilder (Acc (NameConnection name a) (Ref Edge $ Connection src a)) m a
          ) => TermBuilder Acc m a where
     buildTerm p (name, src) = mdo
         out   <- buildElem $ Acc cname csrc
@@ -161,7 +161,7 @@ instance {-# OVERLAPPABLE #-}
 instance ( inp ~ Input a
          , MonadFix m
          , Connectible inp a m
-         , ElemBuilder (App $ Connection inp a) m a
+         , ElemBuilder (App $ Ref Edge $ Connection inp a) m a
          ) => TermBuilder App m a where
     buildTerm p (src,args) = mdo
         out   <- buildElem $ App csrc cargs
@@ -194,7 +194,7 @@ type instance BuildArgs Unify n = (Input n, Input n)
 instance ( inp ~ Input a
          , MonadFix m
          , Connectible inp a m
-         , ElemBuilder (Unify $ Connection inp a) m a
+         , ElemBuilder (Unify $ Ref Edge $ Connection inp a) m a
          ) => TermBuilder Unify m a where
     buildTerm p (a,b) = mdo
         out <- buildElem $ Unify ca cb

@@ -32,8 +32,8 @@ with ref = withM ref ∘ (return <$>)
 follow :: (MonadBuilder t m, Referred r a t) => Lens' a b -> Ref r a -> m b
 follow f ptr = view f <$> read ptr
 
-reconnect :: --(RefHandler m el, Connectible (Ref inp) (Ref el) m, conn ~ Connection (Ref inp) (Ref el), Unregister m conn)
-          (MonadBuilder t m, Referred r el t, Unregister m conn, Connectible' (Ref r inp) (Ref r el) m conn) => Ref r el -> Lens' el conn -> Ref r inp -> m conn
+reconnect :: (MonadBuilder t m, Referred r el t, Unregister m connRef, Connectible' (Ref r inp) (Ref r el) m conn, connRef ~ Ref Edge conn)
+          => Ref r el -> Lens' el connRef -> Ref r inp -> m connRef
 reconnect elRef lens input = do
     el  <- read elRef
     unregister $ el ^. lens

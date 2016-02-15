@@ -48,11 +48,11 @@ arrow = Arrow
 
 -- FIXME[WD]: refactor source / target to use the Data.Direction abstraction
 
-source :: Lens' (Arc src tgt) (Ref Node src)
-source = lens (\(Arc src _) -> src) (\(Arc _ tgt) src -> Arc src tgt)
+--source :: Lens' (Arc src tgt) (Ref Node src)
+--source = lens (\(Arc src _) -> src) (\(Arc _ tgt) src -> Arc src tgt)
 
-target :: Lens' (Arc src tgt) (Ref Node tgt)
-target = lens (\(Arc _ tgt) -> tgt) (\(Arc src _) tgt -> Arc src tgt)
+--target :: Lens' (Arc src tgt) (Ref Node tgt)
+--target = lens (\(Arc _ tgt) -> tgt) (\(Arc src _) tgt -> Arc src tgt)
 
 
 -- === Instances === --
@@ -67,20 +67,20 @@ instance Bifunctor Arc where bimap f g (Arc src tgt) = Arc (f <$> src) (g <$> tg
 type instance Prop Target (Ref Edge a) = Ref Node (a # Target)
 type instance Prop Source (Ref Edge a) = Ref Node (a # Source)
 
-type instance Prop Target (Arc src tgt) = tgt
-type instance Prop Source (Arc src tgt) = src
+--type instance Prop Target (Arc src tgt) = tgt
+--type instance Prop Source (Arc src tgt) = src
 
 
---type instance Prop Target (Arc src tgt) = (Ref Node tgt)
---type instance Prop Source (Arc src tgt) = (Ref Node src)
---instance      HasSource (Arc src tgt) where source = lens (\(Arc src _) -> src) (\(Arc _ tgt) src -> Arc src tgt)
---instance      HasTarget (Arc src tgt) where target = lens (\(Arc _ tgt) -> tgt) (\(Arc src _) tgt -> Arc src tgt)
+type instance Prop Target (Arc src tgt) = Ref Node tgt
+type instance Prop Source (Arc src tgt) = Ref Node src
+instance      HasSource (Arc src tgt) where source = lens (\(Arc src _) -> src) (\(Arc _ tgt) src -> Arc src tgt)
+instance      HasTarget (Arc src tgt) where target = lens (\(Arc _ tgt) -> tgt) (\(Arc src _) tgt -> Arc src tgt)
 
 type instance Prop Target (Arrow tgt) = (Ref Node tgt)
 
 -- Connections
 
-type instance Connection (Ref Node a) (Ref Node b) = Ref Edge (Arc a b)
+type instance Connection (Ref Node a) (Ref Node b) = Arc a b
 
 -- Conversions
 

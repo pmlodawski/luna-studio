@@ -62,7 +62,7 @@ instance Monad m => Creator m (Layer (Network ls) Succs a) where create = return
 
 type instance LayerData (Network ls) Type t = Ref Edge $ Link (Shelled t)
 
-instance (MonadSelfBuilder s m, Ref Edge (Link l) ~ Connection s (Ref Node l), Connectible s (Ref Node l) m, l ~ Shelled a)
+instance (MonadSelfBuilder s m, (Link l) ~ Connection s (Ref Node l), Connectible s (Ref Node l) m, l ~ Shelled a)
       => Creator m (Layer (Network ls) Type a) where
     create = Layer <$> do
         s <- self

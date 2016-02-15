@@ -36,7 +36,7 @@ type Linkable        t       m = Connectible      t   t   m
 type Connectible     src tgt m = Connectible'     src tgt m (Connection     src tgt)
 type ConnectibleName src tgt m = ConnectibleName' src tgt m (NameConnection src tgt)
 
-class ConCtx src tgt conn => Connectible'        src tgt m conn |    src tgt -> conn, conn     -> src tgt where connection      ::             src -> tgt -> m conn
+class ConCtx src tgt conn => Connectible'        src tgt m conn |    src tgt -> conn, conn     -> src tgt where connection      ::             src -> tgt -> m (Ref Edge conn)
 class                        ConnectibleName'    src tgt m conn |    src tgt -> conn, conn tgt -> src     where nameConnection  ::             src -> tgt -> m conn
 class                        ConnectibleNameH rt src tgt m conn | rt src tgt -> conn, conn rt  -> src     where nameConnectionH :: Proxy rt -> src -> tgt -> m conn
 
@@ -44,11 +44,11 @@ class                        ConnectibleNameH rt src tgt m conn | rt src tgt -> 
 -- === Instances === --
 
 
-instance (LayerConstructor m c, Dispatcher CONNECTION c m, c ~ Connection (Ref Node src) (Ref Node tgt)) -- Unlayered c ~ Arc src tgt
+instance (LayerConstructor m (Ref Edge c), Dispatcher CONNECTION (Ref Edge c) m, c ~ Connection (Ref Node src) (Ref Node tgt)) -- Unlayered c ~ Arc src tgt
       => Connectible' (Ref Node src) (Ref Node tgt) m c where
          connection src tgt = dispatch CONNECTION =<< constructLayer (arc src tgt)
 
 instance (ConnectibleNameH mod src tgt m conn
          , mod ~ Runtime.Model tgt)  => ConnectibleName'         src tgt m  conn where nameConnection          = nameConnectionH (Proxy :: Proxy mod) ; {-# INLINE nameConnection  #-}
 instance (Monad m, conn ~ src)       => ConnectibleNameH Static  src tgt m  conn where nameConnectionH _ src _ = return src                           ; {-# INLINE nameConnectionH #-}
-instance Connectible' src tgt m conn => ConnectibleNameH Dynamic src tgt m  conn where nameConnectionH _       = connection                           ; {-# INLINE nameConnectionH #-}
+instance Connectible' src tgt m conn => ConnectibleNameH Dynamic src tgt m  (Ref Edge conn) where nameConnectionH _       = connection                           ; {-# INLINE nameConnectionH #-}
