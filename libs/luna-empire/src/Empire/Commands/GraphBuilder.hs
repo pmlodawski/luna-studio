@@ -12,6 +12,7 @@ import           Data.Maybe                   (catMaybes, fromMaybe, maybeToList
 import qualified Data.Text.Lazy               as Text
 import           Data.Record                  (ANY (..), caseTest, match)
 import           Data.Layer.Cover             (uncover)
+import           Data.Graph                   (source)
 
 import           Empire.Data.Graph            (Graph)
 import qualified Empire.Data.Graph            as Graph
@@ -35,7 +36,6 @@ import           Empire.Empire
 
 import           Luna.Syntax.AST.Term         (Acc (..), App (..), Blank (..), Unify (..), Var (..), Num (..), Str (..))
 import qualified Luna.Syntax.Builder          as Builder
-import           Luna.Syntax.Builder          (source)
 
 type VarMap = Map NodeRef NodeId
 

@@ -7,6 +7,7 @@ import           Control.Monad.State
 import           Control.Monad.Error          (throwError)
 import           Data.Record                  (ANY (..), caseTest, match)
 import           Data.Prop                    (prop)
+import           Data.Graph                   (source)
 
 import           Empire.Empire
 import           Empire.API.Data.DefaultValue (PortDefault)
@@ -20,7 +21,7 @@ import qualified Empire.ASTOps.Print          as Printer
 import           Empire.ASTOps.Remove         (safeRemove)
 
 import qualified Luna.Syntax.Builder          as Builder
-import           Luna.Syntax.Builder          (Meta (..), source)
+import           Luna.Syntax.Builder          (Meta (..))
 
 meta :: Meta NodeMeta
 meta = Meta

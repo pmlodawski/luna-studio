@@ -7,6 +7,9 @@ import           Control.Monad.Error     (throwError)
 import           Data.Record             (match, caseTest, cons, ANY(..))
 import           Data.Prop               ((#))
 import           Data.Layer.Cover        (uncover, covered)
+import           Data.Graph              (Inputs (..))
+import           Data.Direction          (source)
+
 import           Empire.ASTOp            (ASTOp)
 import           Empire.ASTOps.Remove    (removeNode, safeRemove)
 import           Empire.Data.AST         (ASTEdge, ASTNode, EdgeRef, NodeRef)
@@ -14,7 +17,6 @@ import           Luna.Syntax.AST.Arg     (Arg)
 import qualified Luna.Syntax.AST.Arg     as Arg
 import           Luna.Syntax.AST.Term    (Acc (..), App (..), Blank (..), Unify (..), Var (..), Str (..))
 import qualified Luna.Syntax.Builder     as Builder
-import           Luna.Syntax.Builder     (Inputs, source)
 
 functionApplicationNode :: Lens' ASTNode EdgeRef
 functionApplicationNode = covered . lens getter setter where
