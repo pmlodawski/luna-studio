@@ -29,7 +29,7 @@ Library
 
   Build-Depends:  base,
                   bytestring,
-                  containers,
+                  container,
                   data-member,
                   data-construction,
                   data-layer,

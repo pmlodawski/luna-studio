@@ -4,13 +4,14 @@ import           Prologue
 import           Data.Record           (ANY (..), caseTest, match)
 import qualified Data.Text.Lazy        as Text
 import           Data.Layer.Cover      (uncover)
+import           Data.Direction        (source)
+
 import           Empire.ASTOp          (ASTOp)
 import           Empire.Data.AST       (NodeRef)
 import qualified Empire.ASTOps.Builder as ASTBuilder
 
 import           Luna.Syntax.AST.Term  (Acc (..), App (..), Blank (..), Unify (..), Var (..), Num (..), Str (..))
 import qualified Luna.Syntax.Builder   as Builder
-import           Luna.Syntax.Builder   (source)
 
 printExpression' :: ASTOp m => [NodeRef] -> NodeRef -> m String
 printExpression' shadowVars nodeRef = do

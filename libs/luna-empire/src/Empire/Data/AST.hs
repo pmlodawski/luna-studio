@@ -5,13 +5,13 @@ module Empire.Data.AST where
 
 import           Prologue
 
-import Luna.Syntax.Model.Graph                (Node, Link, Ref)
+import Data.Graph                             (Node, Link, Ref, Edge)
 import Luna.Syntax.Model.Network.Builder.Term (NetGraph, NetNode)
 import Empire.API.Data.NodeMeta               (NodeMeta)
 
-type ASTNode       = Node (NetNode NodeMeta)
+type ASTNode       = NetNode NodeMeta
 type ASTEdge       = Link (NetNode NodeMeta)
 type AST           = NetGraph NodeMeta
 
-type NodeRef       = Ref ASTNode
-type EdgeRef       = Ref ASTEdge
+type NodeRef       = Ref Node ASTNode
+type EdgeRef       = Ref Edge ASTEdge

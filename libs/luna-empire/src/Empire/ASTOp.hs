@@ -12,10 +12,8 @@ import           Empire.Data.AST                        (AST, ASTEdge, ASTNode, 
 import           Empire.API.Data.NodeMeta               (NodeMeta)
 import           Empire.Empire                          (Command, Error, empire)
 import           Data.Construction                      (Destructor, Unregister)
-import           Luna.Syntax.Model.Network.Builder.Self (MonadSelfBuilder)
-import           Luna.Syntax.Model.Network.Builder.Type (MonadTypeBuilder)
-import           Luna.Syntax.Model.Graph.Builder        (MonadBuilder, Reader, Writer)
-import           Luna.Syntax.Model.Graph.Edge           (Connectible)
+import           Data.Graph.Builder                     (MonadBuilder)
+import           Data.Graph.Builders                    (Connectible)
 import           Luna.Syntax.Model.Network.Builder.Term (TermBuilder, NetLayers, NetworkBuilderT, runNetworkBuilderT)
 import           Luna.Syntax.Model.Network.Term         (Raw)
 import           Luna.Syntax.AST.Term                   (Acc, App, Blank, Unify, Var, Str, Num)
@@ -25,11 +23,8 @@ type ASTOp m = ( MonadIO m
                , MonadFix m
                , MonadError Error m
                , Destructor m NodeRef
-               , Reader     m ASTNode
-               , Reader     m ASTEdge
-               , Writer     m ASTNode
-               , Writer     m ASTEdge
                , Unregister m EdgeRef
+               , MonadBuilder AST m
                , TermBuilder Blank m NodeRef
                , TermBuilder Num   m NodeRef
                , TermBuilder Str   m NodeRef
