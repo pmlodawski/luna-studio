@@ -19,6 +19,7 @@ import           Data.Attr                                       (attr)
 import           Data.Construction
 import           Data.Container                                  (elems, index_)
 import           Data.Container                                  hiding (impossible)
+import           Data.Graph.Builder
 import           Data.Graph.Query                                hiding (Graph)
 import qualified Data.Graph.Query                                as Sort
 import           Data.Index                                      (idx)
@@ -57,8 +58,6 @@ import           Luna.Syntax.Model.Network.Class                 (Network)
 import           Luna.Syntax.Model.Network.Term
 
 import Data.Graph.Backend.VectorGraph
-import qualified Data.Graph.Backend.VectorGraph.SubGraph as SubGraph
-
 
 title s = putStrLn $ "\n" <> "-- " <> s <> " --"
 
@@ -204,15 +203,17 @@ symbolMapTest = do
         sin  <- var "sin"
         return (plus, sin, err)
 
+    renderAndOpen [("beforeInlining", g)]
+
     (f, (g :: NetGraph ())) <- flip Symbol.evalT Map.empty $ runBuild g $ do
         Symbol.loadSymbols StdLib.symbols
         r1 <- Inlining.processNode plus
         r2 <- Inlining.processNode sin
         r3 <- Inlining.processNode err
-        return (r1, r2, r3)
+        return [r1, r2, r3]
 
-    renderAndOpen [("symbolg", g)]
-    print f
+    renderAndOpen [("afterInlining", g)]
+    mapM print f
     return ()
 
 
@@ -528,18 +529,6 @@ foo g = runNetworkBuilderT g
 
 --class WithElement' ctx rec a where withElement' :: Proxy ctx -> (forall v. ctx v a => v -> a) -> rec -> a
 --instance (MapTryingElemList els ctx rec a, els ~ Layout2 Variant (RecordOf rec)) => WithElement' ctx rec a where withElement' = mapTryingElemList (p :: P els)
-
-subgraph :: Constructor m (Ref Cluster SubGraph) => m (Ref Cluster SubGraph)
-subgraph = constructLayer $ SubGraph mempty
-
-includes :: (Graph.MonadBuilder t m, Referred Cluster SubGraph t) => Ref Cluster SubGraph -> Ref Node a -> m Bool
-includes cluster el = SubGraph.member (el ^. idx) <$> read cluster
-
-include :: (Referred Cluster SubGraph t, Graph.MonadBuilder t m) => Ref Node a -> Ref Cluster SubGraph -> m ()
-include el cluster = Ref.with cluster $ SubGraph.add   (el ^. idx)
-
-exclude :: (Referred Cluster SubGraph t, Graph.MonadBuilder t m) => Ref Node a -> Ref Cluster SubGraph -> m ()
-exclude el cluster = Ref.with cluster $ SubGraph.remove (el ^. idx)
 
 ----------------------------
 -- === Sorting stuff === ---

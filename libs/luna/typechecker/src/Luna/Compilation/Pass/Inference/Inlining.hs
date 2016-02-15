@@ -71,13 +71,16 @@ lookupFunction ref = do
             lookupSymbol $ QualPath.mk n
         match $ \ANY -> return Nothing
 
-inlineFunction :: PassCtx => Function node graph -> m (FunctionPtr node)
+inlineFunction :: PassCtx => Function node graph -> m (FunctionPtr node, Ref Cluster SubGraph)
 inlineFunction fun = do
     translations <- merge $ fun ^. Function.graph
+    cls <- subgraph
+    mapM (flip include cls) $ Map.elems $ translations
     let unsafeTranslate i = fromJust $ Map.lookup i translations
-    return $ fun ^. Function.fptr & over (Function.self . mapped) unsafeTranslate
-                                  & over (Function.args . mapped) unsafeTranslate
-                                  & over Function.out unsafeTranslate
+        fptr = fun ^. Function.fptr & over (Function.self . mapped) unsafeTranslate
+                                    & over (Function.args . mapped) unsafeTranslate
+                                    & over Function.out unsafeTranslate
+    return (fptr, cls)
 
 buildTypeRep :: PassCtx => FunctionPtr node -> m (Ref Node node)
 buildTypeRep fptr = do
@@ -87,11 +90,11 @@ buildTypeRep fptr = do
         [] -> return outType
         as -> lam (arg <$> as) outType
 
-processNode :: PassCtx => Ref Node node -> m (Maybe $ (FunctionPtr node, Ref Node node))
+processNode :: PassCtx => Ref Node node -> m (Maybe $ FunctionPtr node)
 processNode ref = runMaybeT $ do
-    fun   <- MaybeT $ lookupFunction ref
-    fptr  <- lift $ inlineFunction fun
-    tpRep <- lift $ buildTypeRep fptr
-    refTp <- follow (prop Type) ref >>= follow source
-    uni   <- lift $ unify refTp tpRep
-    return (fptr, uni)
+    fun       <- MaybeT $ lookupFunction ref
+    (fptr, _) <- lift $ inlineFunction fun
+    {-tpRep <- lift $ buildTypeRep fptr-}
+    {-refTp <- follow (prop Type) ref >>= follow source-}
+    {-uni   <- lift $ unify refTp tpRep-}
+    return fptr
