@@ -7,7 +7,7 @@ import Prelude.Luna
 import           Luna.Evaluation.Runtime        as Runtime
 import           Luna.Syntax.AST.Term           (Input)
 import           Luna.Syntax.Model.Layer        ((:<))
-import           Data.Graph.Referenced
+import           Data.Graph
 
 -- === Instances === --
 -- All the instances below implement Network relations on general Graph type.

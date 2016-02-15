@@ -16,7 +16,6 @@ import           Luna.Syntax.Model.Layer
 import qualified Luna.Syntax.Model.Network.Builder.Term  as Term
 import           Luna.Syntax.Model.Network.Builder.Term  as X (arg, TermBuilder)
 import           Type.Inference
-import           Data.Graph.Referenced
 
 
 
@@ -51,6 +50,7 @@ type LitLike a = ( Matches (Uncovered a) '[ANY, Star, Str, Term.Num], Covered a)
 node :: n ~ Ref Node (ls :< term) => m n -> m n
 node = id ; {-# INLINE node #-}
 
+--
 
 star :: NodeBuilder Star m (ls :< term) => m (Ref Node $ ls :< term)
 star  = node Term.star

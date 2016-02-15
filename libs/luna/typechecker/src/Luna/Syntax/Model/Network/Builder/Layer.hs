@@ -16,8 +16,7 @@ import           Luna.Syntax.Model.Layer
 import           Data.Graph.Builder.Ref                 as Ref
 import           Luna.Syntax.Model.Network.Class
 import           Data.Layer.Cover
-import           Data.Graph.Referenced
-
+import           Data.Graph
 
 --------------------------------
 -- === Succs registration === --

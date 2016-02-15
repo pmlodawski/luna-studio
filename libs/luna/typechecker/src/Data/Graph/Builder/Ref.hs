@@ -13,7 +13,7 @@ import Data.Index
 import Data.Container
 import Data.Graph.Builder.Class
 import Data.Graph.Backend.Vector
-import Data.Graph.Referenced
+import Data.Graph.Model
 
 
 -- === Utils === --

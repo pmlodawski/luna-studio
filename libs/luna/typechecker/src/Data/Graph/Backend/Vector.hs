@@ -1,7 +1,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Data.Graph.Backend.Vector where
+module Data.Graph.Backend.Vector (module Data.Graph.Backend.Vector, module X) where
 
 
 import Prologue                 hiding (Getter, Setter)
@@ -16,7 +16,7 @@ import Data.IntSet              (IntSet)
 
 import qualified Data.IntSet as IntSet
 
-import Data.Graph.Referenced
+import Data.Graph as X
 
 
 ----------------------------

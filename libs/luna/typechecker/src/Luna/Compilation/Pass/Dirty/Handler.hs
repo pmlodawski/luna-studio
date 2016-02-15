@@ -8,7 +8,6 @@ import           Prologue                                        hiding (Getter,
 
 import           Data.Graph.Backend.Vector                       as Graph
 import           Data.Graph.Builder
-import           Data.Graph.Referenced
 import           Luna.Compilation.Pass.Dirty.Data.Env            (Env)
 import           Luna.Compilation.Pass.Dirty.Data.Label          (Dirty (Dirty), DirtyVal (DirtyVal))
 import qualified Luna.Compilation.Pass.Dirty.Data.Env            as Env

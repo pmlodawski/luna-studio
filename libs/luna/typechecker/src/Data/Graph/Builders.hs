@@ -14,7 +14,6 @@ import Data.Container          hiding (Impossible)
 import Luna.Evaluation.Runtime as Runtime
 import Type.Bool
 import Data.Graph.Model
-import Data.Graph.Referenced
 
 ---------------------------------
 -- === Connection Building === --

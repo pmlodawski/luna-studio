@@ -28,7 +28,6 @@ import qualified Data.Graph.Builder               as Graph
 import qualified Luna.Compilation.Stage.TypeCheck as TypeCheck
 import qualified Luna.Syntax.Name                 as Name
 import Data.Graph.Backend.Vector as Graph
-import Data.Graph.Referenced
 
 
 --

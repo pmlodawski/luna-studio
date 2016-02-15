@@ -11,7 +11,6 @@ import           Data.Record                                     hiding (cons)
 import           Type.Inference
 import           Data.Graph.Builder
 import           Data.Graph.Backend.Vector as Graph
-import           Data.Graph.Referenced
 
 import           Luna.Diagnostic.Vis.GraphViz
 import           Luna.Evaluation.Runtime                         (Dynamic, Static)

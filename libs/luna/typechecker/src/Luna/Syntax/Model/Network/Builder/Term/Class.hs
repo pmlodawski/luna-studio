@@ -34,7 +34,6 @@ import           Luna.Syntax.Model.Network.Term
 import           Type.Bool
 
 import Data.Graph.Backend.Vector
-import Data.Graph.Referenced
 
 -------------------------------------
 -- === Term building utilities === --

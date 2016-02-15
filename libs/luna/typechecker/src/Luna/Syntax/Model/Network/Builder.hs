@@ -9,7 +9,8 @@ import           Luna.Syntax.Model.Network.Builder.Term as X
 
 import           Prologue                hiding (read, Getter)
 import           Control.Monad           (forM)
-import           Data.Graph.Builder.Ref
+import           Data.Graph.Builder
+import           Data.Graph.Backend.Vector
 import           Data.Container
 import           Data.Layer.Cover
 import           Data.Construction
@@ -19,8 +20,6 @@ import qualified Data.Map                as Map
 import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Term (Draft)
 import           Luna.Evaluation.Runtime        (Static)
-import           Data.Graph.Backend.Vector
-import           Data.Graph.Referenced
 
 
 -------------------
