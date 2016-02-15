@@ -106,8 +106,14 @@ instance {-# OVERLAPPABLE #-} (MonadSymbol n g m, MonadTrans t, Monad (t m)) => 
 
 -- === Behaviors === --
 
-loadSymbols :: MonadSymbol n g m => SymbolMap n g -> m ()
-loadSymbols s = modify_ $ symbols %~ Map.union s
+loadFunctions :: MonadSymbol n g m => SymbolMap n g -> m ()
+loadFunctions s = modify_ $ symbols %~ Map.union s
 
-lookupSymbol :: MonadSymbol n g m => QualPath -> m (Maybe (Function n g))
-lookupSymbol p = Map.lookup p  . view symbols <$> get
+lookupFunction :: MonadSymbol n g m => QualPath -> m (Maybe (Function n g))
+lookupFunction p = Map.lookup p  . view symbols <$> get
+
+loadLambda :: MonadSymbol n g m => QualPath -> Lambda n -> m ()
+loadLambda path lam = modify_ $ localSymbols %~ Map.insert path lam
+
+lookupLambda :: MonadSymbol n g m => QualPath -> m (Maybe (Lambda n))
+lookupLambda path = Map.lookup path . view localSymbols <$> get

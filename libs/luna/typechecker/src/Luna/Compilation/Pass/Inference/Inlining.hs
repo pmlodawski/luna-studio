@@ -4,12 +4,13 @@ module Luna.Compilation.Pass.Inference.Inlining where
 
 import Prelude.Luna
 
-import Control.Monad.Trans.Maybe                    (runMaybeT, MaybeT (..))
+import Control.Monad.Error                          (throwError, ErrorT, runErrorT, Error)
 import Data.Construction
 import Data.Prop
 import Data.Record
+import Data.Maybe                                   (fromMaybe)
 import Luna.Evaluation.Runtime                      (Static, Dynamic)
-import Luna.Library.Symbol.Class                    (MonadSymbol, lookupSymbol)
+import Luna.Library.Symbol.Class                    (MonadSymbol, lookupFunction, lookupLambda, loadLambda)
 import Luna.Syntax.AST.Decl.Function                (Function, FunctionPtr, Lambda (..))
 import Luna.Syntax.AST.Term                         hiding (source)
 import Data.Graph.Builder                           as Graph hiding (run)
@@ -47,40 +48,45 @@ import qualified Luna.Syntax.AST.Decl.Function    as Function
                 , Referred Node n graph            \
                 )
 
-getTypeName :: PassCtx => Ref Node node -> m (Maybe String)
+data ImportError = NotABindingNode | AmbiguousNodeType | SymbolNotFound deriving (Show)
+instance Error ImportError
+
+type ImportErrorT = ErrorT ImportError
+
+getTypeName :: PassCtx => Ref Node node -> ImportErrorT m String
 getTypeName ref = do
     node  <- read ref
     tpRef <- follow source $ node # Type
     tp    <- read tpRef
     caseTest (uncover tp) $ do
-        match $ \(Cons (Str n)) -> return $ Just n
-        match $ \ANY -> return Nothing
+        match $ \(Cons (Str n)) -> return n
+        match $ \ANY -> throwError AmbiguousNodeType
 
-
-lookupFunction :: PassCtx => Ref Node node -> m (Maybe $ Function node graph)
-lookupFunction ref = do
+getFunctionName :: PassCtx => Ref Node node -> ImportErrorT m String
+getFunctionName ref = do
     node <- read ref
     caseTest (uncover node) $ do
         match $ \(Acc (Str n) t) -> do
             tpName <- getTypeName =<< follow source t
-            let symbolName = (<> "." <> n) <$> tpName
-            case symbolName of
-                Just tn -> lookupSymbol $ QualPath.mk tn
-                Nothing -> return Nothing
-        match $ \(Var (Str n)) ->
-            lookupSymbol $ QualPath.mk n
-        match $ \ANY -> return Nothing
+            return $ tpName <> "." <> n
+        match $ \(Var (Str n)) -> return n
+        match $ \ANY -> throwError NotABindingNode
 
-importFunction :: PassCtx => Function node graph -> m (Lambda node)
-importFunction fun = do
+funLookup :: PassCtx => String -> ImportErrorT m (Function node graph)
+funLookup name = do
+    f <- lookupFunction $ QualPath.mk name
+    fromMaybe (throwError SymbolNotFound) (return <$> f)
+
+importFunction :: PassCtx => String -> Function node graph -> ImportErrorT m ()
+importFunction name fun = do
     translations <- merge $ fun ^. Function.graph
-    cls <- subgraph "myfun"
+    cls <- subgraph name
     mapM (flip include cls) $ Map.elems $ translations
     let unsafeTranslate i = fromJust $ Map.lookup i translations
         fptr = fun ^. Function.fptr & over (Function.self . mapped) unsafeTranslate
                                     & over (Function.args . mapped) unsafeTranslate
                                     & over Function.out unsafeTranslate
-    return $ Lambda fptr cls
+    loadLambda (QualPath.mk name) $ Lambda fptr cls
 
 buildTypeRep :: PassCtx => FunctionPtr node -> m (Ref Node node)
 buildTypeRep fptr = do
@@ -90,11 +96,18 @@ buildTypeRep fptr = do
         [] -> return outType
         as -> lam (arg <$> as) outType
 
-processNode :: PassCtx => Ref Node node -> m (Maybe $ FunctionPtr node)
-processNode ref = runMaybeT $ do
-    fun       <- MaybeT $ lookupFunction ref
-    Lambda fptr _ <- lift $ importFunction fun
+processNode :: PassCtx => Ref Node node -> m (Either ImportError ())
+processNode ref = runErrorT $ do
+    name   <- getFunctionName ref
+    lambda <- lookupLambda $ QualPath.mk name
+    case lambda of
+        Just l  -> return ()
+        Nothing -> do
+            fun <- funLookup name
+            importFunction name fun
+    {-fun       <- MaybeT $ lookupFunction ref-}
+    {-Lambda fptr _ <- lift $ importFunction fun-}
     {-tpRep <- lift $ buildTypeRep fptr-}
     {-refTp <- follow (prop Type) ref >>= follow source-}
     {-uni   <- lift $ unify refTp tpRep-}
-    return fptr
+    {-return fptr-}
