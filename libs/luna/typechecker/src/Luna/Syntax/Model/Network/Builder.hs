@@ -10,7 +10,7 @@ import           Luna.Syntax.Model.Network.Builder.Term as X
 import           Prologue                hiding (read, Getter)
 import           Control.Monad           (forM)
 import           Data.Graph.Builder
-import           Data.Graph.Backend.Vector
+import           Data.Graph.Backend.VectorGraph
 import           Data.Container
 import           Data.Layer.Cover
 import           Data.Construction

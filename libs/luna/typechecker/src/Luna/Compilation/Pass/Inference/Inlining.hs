@@ -15,7 +15,7 @@ import Luna.Library.Symbol.Class                    (MonadSymbol, lookupSymbol)
 import Luna.Syntax.AST.Decl.Function                (Function, FunctionPtr)
 import Luna.Syntax.AST.Term                         hiding (source)
 import Data.Graph.Builder                           as Graph hiding (run)
-import Data.Graph.Backend.Vector                    as Graph
+import Data.Graph.Backend.VectorGraph               as Graph
 import Luna.Syntax.Model.Layer
 import Luna.Syntax.Model.Network.Builder            (merge)
 import Luna.Syntax.Model.Network.Builder.Node

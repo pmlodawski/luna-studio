@@ -12,7 +12,7 @@ import Data.Prop
 import Data.Index
 import Data.Container
 import Data.Graph.Builder.Class
-import Data.Graph.Backend.Vector
+import Data.Graph.Backend.VectorGraph
 import Data.Graph.Model
 
 
@@ -60,8 +60,8 @@ instance (MonadBuilder (Hetero (VectorGraph n e)) m, Castable a n) => Constructo
 instance (MonadBuilder (Hetero (VectorGraph n e)) m, Castable a e) => Constructor m (Ref Edge a) where
     construct e = Ref <$> modify (wrapped' ∘ edgeGraph $ swap ∘ ixed add (cast e)) ; {-# INLINE construct #-}
 
-    --instance MonadBuilder (Hetero (VectorGraph n e)) m => Constructor m (Ref Cluster) where
-    --    construct c = Ref <$> modify (wrapped' ∘ clusterGraph $ swap ∘ ixed add c) ; {-# INLINE construct #-}
+instance MonadBuilder (Hetero (VectorGraph n e)) m => Constructor m (Ref Cluster SubGraph) where
+    construct c = Ref <$> modify (wrapped' ∘ subGraphs $ swap ∘ ixed add c) ; {-# INLINE construct #-}
 
 -- Accessors
 

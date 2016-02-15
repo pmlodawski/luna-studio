@@ -53,7 +53,8 @@ import           Luna.Syntax.Model.Network.Builder.Term.Class    (NetGraph, NetL
 import           Luna.Syntax.Model.Network.Class                 (Network)
 import           Luna.Syntax.Model.Network.Term
 
-import Data.Graph.Backend.Vector
+import Data.Graph.Backend.VectorGraph
+import qualified Data.Graph.Backend.VectorGraph.SubGraph as SubGraph
 
 
 title s = putStrLn $ "\n" <> "-- " <> s <> " --"
@@ -335,10 +336,10 @@ instance e ~ e' => Referenced Edge (VectorGraph n e) e' where refs = fmap Ref âˆ
 
 main :: IO ()
 main = do
-    --showcase
-    test1
+    showcase
+    --test1
     --test2
-    main2
+    --main2
     return ()
 
 
@@ -427,23 +428,21 @@ foo g = runNetworkBuilderT g
     print s1t
     print s1s
 
-            --title "cluster definition"
-            --cl1 <- cluster
-            --cl2 <- cluster
-            --include s1 cl1
-            --include s2 cl1
-            --include s2 cl2
-            --print "done"
+    title "subgraph definition"
+    sg1 <- subgraph
+    sg2 <- subgraph
+    include s1 sg1
+    include s2 sg1
+    include s2 sg2
+    print "done"
 
-            --title "cluster lookup"
-            --print =<< cl1 `includes` s2
+    title "subgraph lookup"
+    print =<< sg1 `includes` s2
 
-            --title "cluster modification"
-            --exclude s2 cl1
-            --print =<< cl1 `includes` s2
+    title "subgraph modification"
+    exclude s2 sg1
+    print =<< sg1 `includes` s2
 
-            --let x1 = s1_v :: Node $ (NetLayers a :< Draft Static)
-            --    x2 = fmapInputs id x1
     return s1
 
 
@@ -499,18 +498,17 @@ foo g = runNetworkBuilderT g
 --class WithElement' ctx rec a where withElement' :: Proxy ctx -> (forall v. ctx v a => v -> a) -> rec -> a
 --instance (MapTryingElemList els ctx rec a, els ~ Layout2 Variant (RecordOf rec)) => WithElement' ctx rec a where withElement' = mapTryingElemList (p :: P els)
 
+subgraph :: Constructor m (Ref Cluster SubGraph) => m (Ref Cluster SubGraph)
+subgraph = constructLayer $ SubGraph mempty
 
+includes :: (Graph.MonadBuilder t m, Referred Cluster SubGraph t) => Ref Cluster SubGraph -> Ref Node a -> m Bool
+includes cluster el = SubGraph.member (el ^. idx) <$> read cluster
 
-                --cluster :: Constructor m (Ref Cluster) => m (Ref Cluster)
-                --cluster = constructLayer $ Cluster mempty
+include :: (Referred Cluster SubGraph t, Graph.MonadBuilder t m) => Ref Node a -> Ref Cluster SubGraph -> m ()
+include el cluster = Ref.with cluster $ SubGraph.add   (el ^. idx)
 
-                --includes :: Graph.MonadBuilder (Hetero (VectorGraph n e)) m => Ref Cluster -> Ref a -> m Bool
-                --include  :: Graph.MonadBuilder (Hetero (VectorGraph n e)) m => Ref a -> Ref Cluster -> m ()
-                --exclude  :: Graph.MonadBuilder (Hetero (VectorGraph n e)) m => Ref a -> Ref Cluster -> m ()
-
-                --includes cluster el = Cluster.member (el ^. idx) <$> read cluster
-                --include  el cluster = Ref.with cluster $ Cluster.add    (el ^. idx)
-                --exclude  el cluster = Ref.with cluster $ Cluster.remove (el ^. idx)
+exclude :: (Referred Cluster SubGraph t, Graph.MonadBuilder t m) => Ref Node a -> Ref Cluster SubGraph -> m ()
+exclude el cluster = Ref.with cluster $ SubGraph.remove (el ^. idx)
 
 ----------------------------
 -- === Sorting stuff === ---

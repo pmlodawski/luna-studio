@@ -10,7 +10,7 @@ import           Data.Prop
 import           Data.Record                                     hiding (cons)
 import           Type.Inference
 import           Data.Graph.Builder
-import           Data.Graph.Backend.Vector as Graph
+import           Data.Graph.Backend.VectorGraph                  as Graph
 
 import           Luna.Diagnostic.Vis.GraphViz
 import           Luna.Evaluation.Runtime                         (Dynamic, Static)

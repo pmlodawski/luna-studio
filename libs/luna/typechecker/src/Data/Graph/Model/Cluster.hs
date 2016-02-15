@@ -2,33 +2,16 @@ module Data.Graph.Model.Cluster where
 
 import Prologue
 
+import Data.Prop
 
-type family ClusterOf a
+
+-- === Abstraction === --
+
+data Cluster = Cluster deriving (Show, Eq, Ord)
+
 
 class Clustered t where
-    clusters :: Lens' t [ClusterOf t]
-
-
-
---module Luna.Syntax.Model.Graph.Cluster where
-
---import Prelude.Luna
-
---import Data.Graph.Referenced
---import Luna.Syntax.Model.Graph.Class
-
---import Data.Container
---import Data.Index
---import Data.Prop
-
---import           Data.IntSet (IntSet)
---import qualified Data.IntSet as IntSet
-
---import Data.Graph.Backend.Vector
-
----- === Definitions === --
-
-----TODO[WD]: Refactor from Graph.hs
+    clusters :: Lens' t [t # Cluster]
 
 
 ---- === Utils === --

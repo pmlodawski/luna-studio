@@ -43,7 +43,9 @@ import Data.Index (idx)
 
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
-import Data.Graph.Backend.Vector
+import           Data.Graph.Backend.VectorGraph hiding (subGraphs)
+import qualified Data.Graph.Backend.VectorGraph as Graph
+import qualified Data.Graph.Backend.VectorGraph.SubGraph as SubGraph
 
 
 --instance Repr HeaderOnly Data where repr _ = "Data"
@@ -119,11 +121,11 @@ toGraphViz name net = DotGraph { strictGraph     = False
 
           ng                = net ^. wrapped' ∘ nodeGraph
           eg                = net ^. wrapped' ∘ edgeGraph
-          cg                = net ^. wrapped' ∘ clusterGraph
+          cg                = net ^. wrapped' ∘ Graph.subGraphs
           nodeIxs           = usedIxes ng :: [Int]
           edgeIxs           = usedIxes eg :: [Int]
           clrIxs            = usedIxes cg
-          clrs              = elems $ net ^. wrapped' ∘ clusterGraph
+          clrs              = elems $ net ^. wrapped' ∘ Graph.subGraphs
           clredNodeIxs      = zip (safeHead ∘ matchClusters clrIxs <$> nodeIxs) nodeIxs :: [(Maybe Int, Int)]
           clredNodeMap      = fromListWithReps clredNodeIxs :: Map (Maybe Int) [Int]
           rootNodeIxs       = case Map.lookup Nothing clredNodeMap of
@@ -166,8 +168,8 @@ toGraphViz name net = DotGraph { strictGraph     = False
           selectOrphanTgts nix  = catMaybes ∘ fmap (matchOrphanTgt nix)
 
 
-          labeledNode nix    = [ DotNode nodeId attrs
-                               ] <> orphanTgtNodes
+          labeledNode nix    = [ DotNode nodeId attrs ]
+                               -- <> orphanTgtNodes
               where
               nodeId   = nodeRef nix
               node     = draftNodeByIx nix
@@ -216,11 +218,11 @@ toGraphViz name net = DotGraph { strictGraph     = False
           mkEdge  (n,(a,attrs),b) = DotEdge (nodeRef a) (nodeRef b) $ HeadPort (LabelledPort (inPortName n) Nothing) : TailPort (LabelledPort "label" Nothing) : attrs
 
           draftNodeByIx ix   = cast $ index_ ix ng :: (NetLayers a :< Draft Static)
-          clusterByIx   ix   = index_ ix cg        :: Cluster
+          clusterByIx   ix   = index_ ix cg        :: SubGraph
           genNodeLabel  node = reprStyled HeaderOnly $ uncover node
 
           matchCluster :: Int -> Int -> Maybe Int
-          matchCluster clrIx  nix = error "undefined graphviz" -- if Cluster.member nix (clusterByIx clrIx) then Just clrIx else Nothing
+          matchCluster clrIx  nix = if SubGraph.member nix (clusterByIx clrIx) then Just clrIx else Nothing
           matchClusters :: [Int] -> Int -> [Int]
           matchClusters clrIxs nix = catMaybes $ flip matchCluster nix <$> clrIxs
 
@@ -236,7 +238,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
               , subGraphID    = Just $ Str $ fromString $ show sgIdx
               , subGraphStmts = DotStmts { attrStmts = gStyle ("Subgraph " <> show sgIdx)
                                          , subGraphs = []
-                                         , nodeStmts = [] -- concat $ labeledNode <$> nodeIxs
+                                         , nodeStmts = concat $ labeledNode <$> nodeIxs
                                          , edgeStmts = []
                                          }
               }

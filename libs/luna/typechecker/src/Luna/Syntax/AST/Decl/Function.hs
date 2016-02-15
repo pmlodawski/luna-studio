@@ -3,7 +3,7 @@
 module Luna.Syntax.AST.Decl.Function where
 
 import Prologue
-import Data.Graph.Backend.Vector
+import Data.Graph.Backend.VectorGraph
 
 
 data FunctionPtr n = FunctionPtr { _self :: Maybe (Ref Node n)

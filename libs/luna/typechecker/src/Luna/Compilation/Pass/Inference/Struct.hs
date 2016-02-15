@@ -21,7 +21,7 @@ import Type.Inference
 
 import qualified Luna.Compilation.Stage.TypeCheck as TypeCheck
 import qualified Luna.Syntax.Name                 as Name
-import Data.Graph.Backend.Vector
+import Data.Graph.Backend.VectorGraph
 
 
 #define PassCtx(m,ls,term) ( term ~ Draft Static               \

@@ -33,7 +33,7 @@ import qualified Luna.Syntax.Model.Network.Builder.Type  as Type
 import           Luna.Syntax.Model.Network.Term
 import           Type.Bool
 
-import Data.Graph.Backend.Vector
+import Data.Graph.Backend.VectorGraph
 
 -------------------------------------
 -- === Term building utilities === --

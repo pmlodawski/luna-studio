@@ -6,7 +6,7 @@ import           Data.Prop
 import           Development.Placeholders
 import           Prologue                                        hiding (Getter, Setter, read)
 
-import           Data.Graph.Backend.Vector                       as Graph
+import           Data.Graph.Backend.VectorGraph                  as Graph
 import           Data.Graph.Builder
 import           Luna.Compilation.Pass.Dirty.Data.Env            (Env)
 import           Luna.Compilation.Pass.Dirty.Data.Label          (Dirty (Dirty), DirtyVal (DirtyVal))

@@ -21,14 +21,10 @@ instance Setter p a => Setter p (Hetero a) where setter p v = wrapped' %~ setter
 -- Hetero reference handling
 
 -- | When referencing the Hetero graph, we query the underlying one for its native node and edge representations
---   by using `NodeOf` and `EdgeOf` families respectively.
+--   by using `# Node` and `# Edge` families respectively.
 
-instance (Referred Node n' a, BiCastable n n', n' ~ (a # Node))
-      =>  Referred Node n (Hetero a) where focus r = wrapped' ∘ focus (cast r :: Ref Node n') ∘ casted ; {-# INLINE focus #-}
-instance  Referred Node I (Hetero a) where focus   = impossible
-instance  Referred Node n (Hetero I) where focus   = impossible
-
-instance (Referred Edge e' a, BiCastable e e', e' ~ (a # Edge))
-      =>  Referred Edge e (Hetero a) where focus r = wrapped' ∘ focus (cast r :: Ref Edge e') ∘ casted ; {-# INLINE focus #-}
-instance  Referred Edge I (Hetero a) where focus   = impossible
-instance  Referred Edge e (Hetero I) where focus   = impossible
+instance (Referred r n' a, BiCastable n n', n' ~ (a # r))
+      =>  Referred r n (Hetero a) where focus r = wrapped' ∘ focus (cast r :: Ref r n') ∘ casted ; {-# INLINE focus #-}
+instance  Referred I n (Hetero a) where focus   = impossible
+instance  Referred r I (Hetero a) where focus   = impossible
+instance  Referred r n (Hetero I) where focus   = impossible
