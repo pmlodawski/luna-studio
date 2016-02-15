@@ -16,7 +16,7 @@ import Luna.Evaluation.Runtime                      (Static, Dynamic)
 import Data.Index
 import Luna.Syntax.AST.Term                         hiding (source)
 import Luna.Syntax.Model.Graph
-import Luna.Syntax.Model.Graph.Builder              hiding (run)
+import Data.Graph.Builder                           hiding (run)
 import Luna.Syntax.Model.Layer
 import Luna.Syntax.Model.Network.Builder.Node
 import Luna.Syntax.Model.Network.Builder.Term.Class (runNetworkBuilderT, NetGraph, NetLayers)
@@ -26,7 +26,7 @@ import Luna.Syntax.Name.Ident.Pool                  (MonadIdentPool, newVarIdent
 import Type.Inference
 
 import qualified Luna.Syntax.Model.Graph          as Graph
-import qualified Luna.Syntax.Model.Graph.Builder  as Graph
+import qualified Data.Graph.Builder               as Graph
 import qualified Luna.Compilation.Stage.TypeCheck as TypeCheck
 import qualified Luna.Syntax.Name                 as Name
 import Data.Graph.Backend.Vector as Graph
@@ -343,7 +343,7 @@ makeLenses ''TCStatus
 run :: forall nodeRef m ls term n e ne.
        (PassCtx(ResolutionT [nodeRef] m,ls,term), MonadBuilder (Hetero (VectorGraph n e)) m, nodeRef ~ Ref (Node $ (ls :< term))
        , MonadIO m, Show (ls :< term)
-       , Getter Inputs (ls :< term), Prop Inputs (ls :< term) ~ [Ref (Link (ls :< term))])
+       , Getter Inputs (ls :< term), Prop Inputs (ls :< term) ~ [Ref (Edge (Link (ls :< term)))])
     => [Int] -> [(Int,Int)] -> Int -> [nodeRef] -> m [Hetero $ VectorGraph n e]
 run debugits exc it unis = do
     g <- Graph.get

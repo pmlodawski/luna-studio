@@ -1,7 +1,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 
-module Luna.Syntax.Model.Graph.Builder.Class where
+module Data.Graph.Builder.Class where
 
 import Prologue hiding (Getter, Setter, read, (#))
 
@@ -13,7 +13,6 @@ import           Data.Index
 import           Luna.Syntax.Model.Graph
 import qualified Control.Monad.State            as State
 import           Data.Layer.Cover
-import           Data.Graph.Backend.Vector
 
 
 ---- TODO: template haskellize

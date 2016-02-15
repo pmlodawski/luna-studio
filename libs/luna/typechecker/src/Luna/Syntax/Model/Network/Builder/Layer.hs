@@ -12,10 +12,9 @@ import qualified Luna.Syntax.Model.Network.Builder.Type as Type
 import qualified Luna.Syntax.Model.Network.Builder.Self as Self
 import           Luna.Syntax.Model.Network.Builder.Self (MonadSelfBuilder, self)
 import           Luna.Syntax.Model.Graph
-import           Luna.Syntax.Model.Graph.Builder.Class
+import           Data.Graph.Builder.Class
 import           Luna.Syntax.Model.Layer
-import           Luna.Syntax.Model.Graph.Builder.Ref
-import qualified Luna.Syntax.Model.Graph.Builder.Ref as Ref
+import           Data.Graph.Builder.Ref                 as Ref
 import           Luna.Syntax.Model.Network.Class
 import           Data.Layer.Cover
 import           Data.Graph.Referenced
@@ -29,13 +28,13 @@ import           Data.Graph.Referenced
 
 data SuccRegister = SuccRegister deriving (Show)
 instance ( Monad  m
-         , Reader m (Edge (Arcx src tgt))
+         , Reader m (Edge (Arc src tgt))
          , Reader m (Node src)
          , Writer m (Node src)
          , Show src
-         , Prop Succs src ~ [Ref (Edge (Arcx src tgt))]
+         , Prop Succs src ~ [Ref (Edge (Arc src tgt))]
          , HasProp Succs src
-         ) => Handler t SuccRegister m (Ref (Edge (Arcx src tgt))) where
+         ) => Handler t SuccRegister m (Ref (Edge (Arc src tgt))) where
     handler e = do
         ve <- lift $ read e -- FIXME[WD]: remove the lift (it could be handy to disable the magic trans-instance in Graph.hs)
         lift $ Ref.with (ve ^. source) $ prop Succs %~ (e:)

@@ -119,6 +119,7 @@ instance r ~ e => HasRef (Edge r) (VectorGraph n e) where
     ref r = lens getter setter where
         getter t     = Edge $ index_ (r ^. idx) $ t ^. edgeGraph                           ; {-# INLINE getter #-}
         setter t val = t & edgeGraph %~ unchecked inplace insert_ (r ^. idx) (unwrap' val) ; {-# INLINE setter #-}
+    {-# INLINE ref #-}
 
 
 --instance Castable n node => Getter (Ref (Node node)) (VectorGraph n e) where getter ref     = Node ∘ cast ∘ index_ (ref ^. idx) ∘ view nodeGraph                       ; {-# INLINE getter #-}

@@ -3,12 +3,13 @@
 
 module Luna.Syntax.Model.Network.Builder (module Luna.Syntax.Model.Network.Builder, module X) where
 
-import           Luna.Syntax.Model.Graph.Builder.Class  as X
+import           Data.Graph.Builder.Class               as X
 import           Luna.Syntax.Model.Network.Builder.Term as X
 
 
 import           Prologue                hiding (read, Getter)
 import           Control.Monad           (forM)
+import           Data.Graph.Builder.Ref
 import           Data.Container
 import           Data.Layer.Cover
 import           Data.Construction
@@ -17,7 +18,6 @@ import           Data.Map                (Map)
 import qualified Data.Map                as Map
 import           Luna.Syntax.Model.Graph
 import           Luna.Syntax.Model.Layer
-import           Luna.Syntax.Model.Graph.Builder.Ref
 import           Luna.Syntax.Model.Network.Term (Draft)
 import           Luna.Evaluation.Runtime        (Static)
 import           Data.Graph.Backend.Vector

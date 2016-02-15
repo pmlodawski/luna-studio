@@ -1,7 +1,7 @@
 {-# LANGUAGE RankNTypes           #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Luna.Syntax.Model.Graph.Builder.Ref where
+module Data.Graph.Builder.Ref where
 
 import Prelude.Luna
 
@@ -11,8 +11,8 @@ import Luna.Syntax.Model.Graph
 import Data.Construction
 import Data.Prop
 import Data.Index
-import Luna.Syntax.Model.Graph.Builder.Class
 import Data.Container
+import Data.Graph.Builder.Class
 import Data.Graph.Backend.Vector
 import Data.Graph.Referenced
 
@@ -29,7 +29,7 @@ withM ref f = read ref >>= f >>= write ref
 with :: RefHandler m a => Ref a -> (a -> a) -> m ()
 with ref = withM ref ∘ (return <$>)
 
-follow :: Reader m (Edge (Arcx src tgt)) => Lens' (Edge (Arcx src tgt)) t -> Ref (Edge (Arcx src tgt)) -> m t
+follow :: Reader m (Edge (Arc src tgt)) => Lens' (Edge (Arc src tgt)) t -> Ref (Edge (Arc src tgt)) -> m t
 follow f ptr = view f <$> read ptr
 
 reconnect :: (RefHandler m el, Connectible (Ref inp) (Ref el) m, conn ~ Connection (Ref inp) (Ref el), Unregister m conn)

@@ -17,7 +17,6 @@ import qualified Luna.Compilation.Pass.Dirty.Data.Label          as Label
 import           Luna.Compilation.Pass.Dirty.Monad               (DirtyMonad, runDirtyT, DirtyT)
 import           Luna.Syntax.Builder
 import qualified Luna.Syntax.Model.Graph                         as G
-import           Luna.Syntax.Model.Graph.Builder.Class           (MonadBuilder)
 
 import           Luna.Evaluation.Runtime                         (Dynamic, Static)
 
@@ -27,7 +26,7 @@ import           Type.Inference
 
 import           Luna.Syntax.AST.Term.Class                      (Lam)
 import           Luna.Syntax.Model.Graph
-import           Luna.Syntax.Model.Graph.Builder
+import           Data.Graph.Builder
 import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Builder.Node          (NodeInferable, TermNode)
 import           Luna.Syntax.Model.Network.Builder.Node.Inferred

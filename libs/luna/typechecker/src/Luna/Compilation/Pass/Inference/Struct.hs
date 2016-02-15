@@ -8,10 +8,10 @@ import Prelude.Luna
 import Data.Construction
 import Data.Prop
 import Data.Record
+import Data.Graph.Builder
 import Luna.Evaluation.Runtime                      (Static, Dynamic)
 import Luna.Syntax.AST.Term                         hiding (source)
 import Luna.Syntax.Model.Graph
-import Luna.Syntax.Model.Graph.Builder
 import Luna.Syntax.Model.Layer
 import Luna.Syntax.Model.Network.Builder.Node
 import Luna.Syntax.Model.Network.Builder.Term.Class (runNetworkBuilderT, NetGraph, NetLayers)

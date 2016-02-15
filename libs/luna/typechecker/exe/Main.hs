@@ -42,8 +42,8 @@ import qualified Luna.Evaluation.Model                           as EvalModel
 import           Luna.Syntax.AST.Term                            hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target, Input)
 import qualified Luna.Syntax.AST.Term                            as Term
 import           Luna.Syntax.Model.Graph
-import           Luna.Syntax.Model.Graph.Builder.Ref             as Ref
-import qualified Luna.Syntax.Model.Graph.Builder.Class           as Graph
+import           Data.Graph.Builder.Ref                          as Ref
+import qualified Data.Graph.Builder.Class                        as Graph
 import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Builder               (rebuildNetwork')
 import           Luna.Syntax.Model.Network.Builder.Node
@@ -62,8 +62,8 @@ import Data.Graph.Referenced
 title s = putStrLn $ "\n" <> "-- " <> s <> " --"
 
 
-instance Castable (Arcx src tgt) (Arcx src' tgt') => Castable (Edge (Arcx src tgt)) (Arcx src' tgt') where cast (Edge e) = cast e
-instance Castable (Arcx src tgt) (Arcx src' tgt') => Castable (Arcx src tgt) (Edge (Arcx src' tgt')) where cast e = Edge $ cast e
+instance Castable (Arc src tgt) (Arc src' tgt') => Castable (Edge (Arc src tgt)) (Arc src' tgt') where cast (Edge e) = cast e
+instance Castable (Arc src tgt) (Arc src' tgt') => Castable (Arc src tgt) (Edge (Arc src' tgt')) where cast e = Edge $ cast e
 -- --------------------------------------
 --  !!! KEEP THIS ON THE BEGINNING !!! --
 -- --------------------------------------
@@ -199,99 +199,23 @@ test1 = do
         -- Running Type Checking compiler stage
         TypeCheck.runT $ do
             ((apps, accs, funcs), g01) <- runBuild g input_g1
-            (unis               , g02) <- runBuild  g01 $ StructInference.run apps accs
-            --(g03 :: NetGraph ())                        <- evalBuild g02 $ Unification.run [] [] 1 unis
-            --(unis               , g04) <- runBuild  g03 $ input_g1_resolution_mock funcs
-            ----(gs05, g05)                <- runBuild  g04 $ Unification.run [(2,13),(2,18),(2,21),(2,22),(2,23)] 1 unis
-            --(gs05, g05)                <- runBuild  g04 $ Unification.run [2,3] [(2,13),(3,13)] 1 unis
-            ----(gs05, g05)                <- runBuild  g04 $ Unification.run [(2,21)] 1 unis
-            --let gss = zipWith (,) (("g0" <>) ∘ show <$> [5..]) gs05
+            (unis :: [Ref (Node $ (NetLayers () :< Draft Static))]               , g02 :: NetGraph ()) <- runBuild  g01 $ StructInference.run apps accs
+            (g03 :: NetGraph ())                        <- evalBuild g02 $ Unification.run [] [] 1 unis
+            (unis               , g04) <- runBuild  g03 $ input_g1_resolution_mock funcs
+            --(gs05, g05)                <- runBuild  g04 $ Unification.run [(2,13),(2,18),(2,21),(2,22),(2,23)] 1 unis
+            (gs05, g05)                <- runBuild  g04 $ Unification.run [2,3] [(2,13),(3,13)] 1 unis
+            --(gs05, g05)                <- runBuild  g04 $ Unification.run [(2,21)] 1 unis
+            let gss = zipWith (,) (("g0" <>) ∘ show <$> [5..]) gs05
             renderAndOpen $ [ ("g01", g01)
                             , ("g02", g02)
-                            --, ("g03", g03)
-                            --, ("g04", g04)
-                            --, ("g05", g05)
-                            ] -- <> gss
+                            , ("g03", g03)
+                            , ("g04", g04)
+                            , ("g05", g05)
+                            ] <> gss
     print "end"
 
 
 
-
-
-
---deriving instance Show (Error node edge) => Show (Consistency node edge)
-
---deriving instance ( Show node, Show edge
---                  , Show (node # Input)
---                  , Show (node # Output)
---                  , Show (edge # Source)
---                  , Show (edge # Target)
---                  ) => Show (Error node edge)
-
-
-
-
---newtype GraphLike a = GraphLike a deriving (SHow, Functor, Traversable, Foldable)
-
-
---type instance Prop Homo.Node (GraphLike a) = Item a
-
---type GraphLike g = (g # Ref Homo.Node) ~ Ref (g # Homo.Node)
-
---check :: ( MonadIO m
---         , Show (g # Homo.Node)
-
---         , GraphLike g
---         , GetProps Homo.Node g
---         , GetProps Input (g # Homo.Node)
---         --, GetProps Input (g # Homo.Node)
---         , GetAttrs (Ref Homo.Node) g
---         ) => g -> m Bool
---check g = do
---    let nodes'  = g ## Homo.Node
---        nodes   = g ## (p :: P (Ref Homo.Node))
---    nres <- checkNode `mapM` nodes'
-
---    print nodes
---    return False
-
---    where
---    checkNode node = do
---        let ins = node ## Input
---        return False
-
-
-
-
---type instance Prop Homo.Node (Network' ls) = ls :< Draft Static
---type instance Prop (Ref a)   (Network' ls) = Ref (Prop a (Network' ls))
-
-
----- FIXME[WD]: the following contexts should not depend on layers `ls`. To be fixed after fixing the Castable instances for layers
----- FIXME[WD]: we should fix the implementation of fromList and toList for AutoVector
-----instance GetProps Homo.Node (Network' ls)
-----instance SetProps Homo.Node (Network' ls)
-----instance HasProps Homo.Node (Network' ls) where props _ = wrapped' ∘ Graph.nodes ∘ casted
---instance BiCastable (ls :< Raw) (ls :< Draft Static) => GetProps Homo.Node (Network' ls) where
---    getProps _ g = cast ∘ flip index_ ng <$> usedIxes ng where
---        ng  = unwrap' g ^. nodeGraph
-
-
---instance GetAttrs (Ref Homo.Node) (Network' ls) where
---    getAttrs _ g = Ref ∘ Ptr <$> usedIxes (unwrap' g ^. nodeGraph)
-
-
---type instance Prop Input (Term layout term rt) = Layout layout term rt
-
---instance ( Covered (ShellStructure ls (Draft Static ls))
---         , Uncovered (ShellStructure ls (Draft Static ls)) ~ Draft Static ls
---         , Prop Input (ShellStructure ls (Draft Static ls)) ~ (Ref $ Link (ls :< Draft Static))
---         ) => GetProps Input (ls :< Draft Static) where getProps _ = inputstmp ∘ unwrap' ∘ uncover
-
---instance GetProps Input (ls :< term) where getProps _ = inputstmp ∘ unwrap' ∘ uncover
-
-
---deriving instance Show (Unwrapped (Network' ls)) => Show (Network' ls)
 
 
 
@@ -314,7 +238,7 @@ data Error node edge = MissingInput  node (node # Input )
 
 
 
-newtype Network' ls = Network' (VectorGraph (ls :< Raw) (Link (ls :< Raw)))
+newtype Network' ls = Network' (Hetero (VectorGraph (ls :< Raw) (Link (ls :< Raw))))
 makeWrapped ''Network'
 
 
@@ -329,75 +253,31 @@ instance UnwrappedGetter sel p (Node a)  => Getter2 sel p (Node a)  where getter
 instance UnwrappedGetter sel p (ls :< t) => Getter2 sel p (ls :< t) where getter2 s = getter2 s ∘ unwrap'
 
 
-
---instance {-# OVERLAPPABLE #-} (Prop  a (Attached (Layer l a' t) base) ~ Prop a base, Getter2 a base)
---                           => Getter2 a (Attached (Layer l a' t) base) where getter2 a (Attached _ t) = getter2 a t ; {-# INLINE getter2 #-}
---instance {-# OVERLAPPABLE #-} Getter2 p (Attached (Layer l p  t) base) where getter2 _ (Attached d _) = unwrap' d  ; {-# INLINE getter2 #-}
-
-
-
---Ref $ Node $ General --> read
---      Node $ ls :< Draft
-
-
---Ref $ Node $ General --> read
---      Node $ General --> specialize
---      Node $ ls :< Draft Static
-
-
-
-
---class GraphC g where
---    xnodes :: Lens' g [Ref $ Node General]
---    xedges :: Lens' g [Ref $ Link General]
-
-
---data General = General deriving (Show)
-
-----nodes' :: Selector Every (Ref $ Node $ General)
-----nodes' = Selector
-
-
-----check :: ( MonadIO m
-----         , Show (g # Homo.Node)
-
-----         , GraphLike g
-----         , GetProps Homo.Node g
-----         , GetProps Input (g # Homo.Node)
-----         --, GetProps Input (g # Homo.Node)
-----         , GetAttrs (Ref Homo.Node) g
-----         ) => g -> m Bool
-
---check :: (Monad m, GraphC g) => g -> m [Ref $ Node $ General]
+--check :: (MonadIO m, Graph g) => g -> m ()
 --check g = do
---    let ns = g ^. xnodes
---    return ns
---        nodes   = g ## (p :: P (Ref Homo.Node))
---    nres <- checkNode `mapM` nodes'
-
---    print nodes
---    return False
-
---    where
---    checkNode node = do
---        let ins = node ## Input
---        return False
-
-
---main2 :: IO ()
---main2 = do
---    (node, g_ :: NetGraph ()) <- prebuild2
---    let g = Network' g_ :: Network' (NetLayers ())
-
---    --let ins = getter2 tp node
---    --print =<< check g
-
-
---    --print $ getter2 nodes'
-
-
-
+--    let ns = g ^. nodes
 --    return ()
+
+
+main2 :: IO ()
+main2 = do
+
+    return ()
+
+--Ref $ Node $ ls :< term --> read
+--      Node $ ls :< term
+
+--Ref $ Arc src tgt --> read
+--      Arc src tgt
+
+
+--Ref Node $ ls :< term --> read
+--         $ ls :< term
+
+--Ref Edge $ Arc src tgt --> read
+--           Arc src tgt
+
+--Ref Cluster $ Subgraph
 
 
 
@@ -406,7 +286,7 @@ main = do
     --showcase
     test1
     --test2
-    --main2
+    main2
     return ()
 
 

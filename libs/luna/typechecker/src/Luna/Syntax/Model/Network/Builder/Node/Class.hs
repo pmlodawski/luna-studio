@@ -8,11 +8,11 @@ import Prelude.Luna
 import           Data.Graph
 import           Data.Graph.Builders
 import           Data.Record                             (ANY, Matches)
+import           Data.Graph.Builder.Ref
 import           Luna.Syntax.AST.Arg
 import qualified Luna.Syntax.AST.Term                    as Term
 import           Luna.Syntax.AST.Term                    hiding (Val, Lit, Thunk, Expr, Draft, Source)
 import           Luna.Syntax.Model.Graph
-import           Luna.Syntax.Model.Graph.Builder.Ref
 import           Luna.Syntax.Model.Layer
 import qualified Luna.Syntax.Model.Network.Builder.Term  as Term
 import           Luna.Syntax.Model.Network.Builder.Term  as X (arg, TermBuilder)

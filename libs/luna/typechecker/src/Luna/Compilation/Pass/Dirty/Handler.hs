@@ -6,28 +6,24 @@ import           Data.Prop
 import           Development.Placeholders
 import           Prologue                                        hiding (Getter, Setter, read)
 
+import           Data.Graph.Backend.Vector                       as Graph
+import           Data.Graph.Builder
+import           Data.Graph.Referenced
 import           Luna.Compilation.Pass.Dirty.Data.Env            (Env)
-import qualified Luna.Compilation.Pass.Dirty.Data.Env            as Env
-import qualified Luna.Compilation.Pass.Dirty.Data.Env            as Env
 import           Luna.Compilation.Pass.Dirty.Data.Label          (Dirty (Dirty), DirtyVal (DirtyVal))
+import qualified Luna.Compilation.Pass.Dirty.Data.Env            as Env
+import qualified Luna.Compilation.Pass.Dirty.Data.Env            as Env
 import qualified Luna.Compilation.Pass.Dirty.Data.Label          as Label
 import qualified Luna.Compilation.Pass.Dirty.Dirty               as Dirty
 import           Luna.Compilation.Pass.Dirty.Monad               (DirtyMonad)
-import           Luna.Syntax.Builder
-import qualified Luna.Syntax.Model.Graph                         as G
-import           Luna.Syntax.Model.Graph.Builder.Class           (MonadBuilder)
-
 import           Luna.Evaluation.Runtime                         (Dynamic, Static)
-
 import           Luna.Syntax.AST.Term.Class                      (Lam)
-import           Luna.Syntax.Model.Graph
-import           Luna.Syntax.Model.Graph.Builder
+import           Luna.Syntax.Builder
+import           Luna.Syntax.Model.Graph                         as G
 import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Builder.Node          (NodeInferable, TermNode)
 import           Luna.Syntax.Model.Network.Builder.Node.Inferred
 import           Luna.Syntax.Model.Network.Term
-import Data.Graph.Backend.Vector as Graph
-import Data.Graph.Referenced
 
 
 #define PassCtxDirty(m, ls, term) ( ls   ~ NetLayers a                           \

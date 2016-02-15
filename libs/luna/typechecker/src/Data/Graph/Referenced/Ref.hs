@@ -18,10 +18,11 @@ import Data.Graph.Model
 
 -- === Definitions === --
 
+-- FIXME[WD]: Maybe we should parametrize the Ref to indicate the ref type, like Ref Node / Ref Edge / Ref Cluster / ...
+--            We can then introduce Ref and TypedRef (used with homo- and hetero- graphs)
 newtype Ref a = Ref Int deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
 
 class HasRef a t where ref :: Ref a -> Lens' t a
-
 
 
 -- === Instances === --
