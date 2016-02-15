@@ -8,11 +8,11 @@ import           Control.Monad.Trans.State
 import qualified Data.IntSet                                     as IntSet
 import           Data.Prop
 import           Development.Placeholders
-import           Prologue                                        hiding (Getter, Setter, pre, read, succ, ( # ))
+import           Prologue                                        hiding (Getter, Setter, pre, read, succ, (#))
 
 import           Luna.Compilation.Pass.Dirty.Data.Env            (Env)
 import qualified Luna.Compilation.Pass.Dirty.Data.Env            as Env
-import           Luna.Compilation.Pass.Dirty.Data.Label          (Dirty (Dirty), DirtyVal (DirtyVal))
+import           Luna.Compilation.Pass.Dirty.Data.Label          (Dirty(..), Required(..))
 import qualified Luna.Compilation.Pass.Dirty.Data.Label          as Label
 import           Luna.Compilation.Pass.Dirty.Monad               (DirtyMonad, runDirtyT, DirtyT)
 import           Luna.Syntax.Builder
@@ -44,10 +44,14 @@ import           Data.Graph.Backend.VectorGraph
                                   , MonadBuilder (Hetero (VectorGraph n e)) m    \
                                   , NodeInferable m (ls :< term)                 \
                                   , TermNode Lam  m (ls :< term)                 \
-                                  , HasProp Dirty (ls :< term)                   \
-                                  , Prop Dirty    (ls :< term) ~ DirtyVal        \
+                                  , HasProp Dirty    (ls :< term)                \
+                                  , HasProp Required (ls :< term)                \
+                                  , Prop Dirty       (ls :< term) ~ Bool         \
+                                  , Prop Required    (ls :< term) ~ Bool         \
                                   , DirtyMonad (Env (Ref Node (ls :< term))) m   \
                                   )
+
+
 
 pre :: PassCtxDirty(m, ls, term) => Ref Node (ls :< term) -> m [Ref Node (ls :< term)]
 pre ref = do
@@ -59,46 +63,53 @@ succ ref = do
     node <- read ref
     mapM (follow source) $ node ^. prop Succs
 
-isDirty :: (Prop Dirty n ~ DirtyVal, HasProp Dirty n) => n -> Bool
-isDirty node = node ^. prop Dirty . Label.dirty
+-- isDirty :: (Prop Dirty n ~ Bool, HasProp Dirty n) => n -> Bool
+-- isDirty node = node ^. prop Dirty
 
-isRequired :: (Prop Dirty n ~ DirtyVal, HasProp Dirty n) => n -> Bool
-isRequired node = node ^. prop Dirty . Label.required
+-- isRequired :: (Prop Required n ~ Bool, HasProp Required n) => n -> Bool
+-- isRequired node = node ^. prop Required
 
 followDirty :: PassCtxDirty(m, ls, term) => Ref Node (ls :< term) -> m ()
 followDirty ref = do
     Env.addReqNode ref
     prevs <- pre ref
-    forM_ prevs $ \ p ->
-        whenM (isDirty <$> read p) $
+    forM_ prevs $ \p -> do
+        nd <- read p
+        let dirty = nd # Dirty
+        when (dirty) $
             followDirty p
 
 markSuccessors :: PassCtxDirty(m, ls, term) => Ref Node (ls :< term) -> m ()
 markSuccessors ref = do
     node <- read ref
-    putStrLn $         "markSuccessors " <> show ref
-    unless (isDirty node) $ do
-        putStrLn $     "marking dirty  " <> show ref
-        write ref (node & prop Dirty . Label.dirty .~ True)
-        when (isRequired node) $ do
-            putStrLn $ "addReqNode     " <> show ref
+    -- putStrLn $         "markSuccessors " <> show ref
+    unless (node ^. prop Dirty) $ do
+        -- putStrLn $     "marking dirty  " <> show ref
+        write ref (node & prop Dirty .~ True)
+        when (node # Required) $ do
+            -- putStrLn $ "addReqNode     " <> show ref
             Env.addReqNode ref
             mapM_ markSuccessors =<< succ ref
 
 
-#define PassCtx(m, ls, term) ( ls   ~ NetLayers a                           \
-                             , term ~ Draft Static                          \
-                             , ne   ~ Link (ls :< term)                     \
-                             , BiCastable e ne                              \
-                             , BiCastable n (ls :< term)                    \
-                             , MonadIO (m)                                  \
-                             , MonadBuilder ((Hetero (VectorGraph n e))) (m)\
-                             , NodeInferable (m) (ls :< term)               \
-                             , TermNode Lam  (m) (ls :< term)               \
-                             , HasProp Dirty (ls :< term)                   \
-                             , Prop Dirty    (ls :< term) ~ DirtyVal        \
-                             , MonadFix (m)                                 \
+#define PassCtx(m, ls, term) ( ls   ~ NetLayers a                              \
+                             , term ~ Draft Static                             \
+                             , ne   ~ Link (ls :< term)                        \
+                             , BiCastable e ne                                 \
+                             , BiCastable n (ls :< term)                       \
+                             , MonadIO (m)                                     \
+                             , MonadBuilder ((Hetero (VectorGraph n e))) (m)   \
+                             , NodeInferable (m) (ls :< term)                  \
+                             , TermNode Lam  (m) (ls :< term)                  \
+                             , MonadFix (m)                                    \
+                             , HasProp Dirty    (ls :< term)                   \
+                             , HasProp Required (ls :< term)                   \
+                             , Prop Dirty       (ls :< term) ~ Bool            \
+                             , Prop Required    (ls :< term) ~ Bool            \
                              )
+
+                             -- , HasProp Dirty (ls :< term)                      \
+                             -- , HasProp Required (ls :< term)                   \
 
 run :: forall env m ls term ne a n e. (PassCtx(DirtyT env m, ls, term), MonadFix m, env ~ Env (Ref Node (ls :< term)))
     => Ref Node (ls :< term) -> m ()

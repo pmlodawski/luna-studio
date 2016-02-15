@@ -4,12 +4,12 @@ module Luna.Compilation.Pass.Dirty.Handler where
 
 import           Data.Prop
 import           Development.Placeholders
-import           Prologue                                        hiding (Getter, Setter, read)
+import           Prologue                                        hiding (Getter, Setter, read, (#))
 
 import           Data.Graph.Backend.VectorGraph                  as Graph
 import           Data.Graph.Builder
 import           Luna.Compilation.Pass.Dirty.Data.Env            (Env)
-import           Luna.Compilation.Pass.Dirty.Data.Label          (Dirty (Dirty), DirtyVal (DirtyVal))
+import           Luna.Compilation.Pass.Dirty.Data.Label          (Dirty(..), Required(..))
 import qualified Luna.Compilation.Pass.Dirty.Data.Env            as Env
 import qualified Luna.Compilation.Pass.Dirty.Data.Env            as Env
 import qualified Luna.Compilation.Pass.Dirty.Data.Label          as Label
@@ -33,8 +33,10 @@ import           Luna.Syntax.Model.Network.Term
                                   , MonadBuilder (Hetero (VectorGraph n e)) m    \
                                   , NodeInferable m (ls :< term)                 \
                                   , TermNode Lam  m (ls :< term)                 \
-                                  , HasProp Dirty (ls :< term)                   \
-                                  , Prop Dirty    (ls :< term) ~ DirtyVal        \
+                                  , HasProp Dirty    (ls :< term)                \
+                                  , HasProp Required (ls :< term)                \
+                                  , Prop Dirty       (ls :< term) ~ Bool         \
+                                  , Prop Required    (ls :< term) ~ Bool         \
                                   , DirtyMonad (Env (Ref Node (ls :< term))) m   \
                                   )
 
@@ -51,7 +53,9 @@ reset = Env.clearReqNodes
 
 connect :: PassCtxDirty(m, ls, term) => Ref Node (ls :< term) -> Ref Node (ls :< term) -> m ()
 connect prev next = do
-    isPrevDirty <- Dirty.isDirty <$> read prev
+    nd <- read prev
+    let isPrevDirty = nd # Dirty
+    -- isPrevDirty <- Dirty.isDirty <$> read prev
     Dirty.markSuccessors $ if isPrevDirty
         then prev
         else next

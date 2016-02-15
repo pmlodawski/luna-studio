@@ -32,7 +32,7 @@ import           Luna.Syntax.Model.Network.Term
 
 import qualified Luna.Compilation.Pass.Dirty.Monad      as DirtyMonad
 
-import           Luna.Compilation.Pass.Dirty.Data.Label (Dirty (Dirty), DirtyVal (DirtyVal))
+import           Luna.Compilation.Pass.Dirty.Data.Label (Required(..))
 import qualified Luna.Compilation.Pass.Dirty.Data.Label as Label
 
 import qualified Data.Graph.Builder.Class               as Graph
@@ -54,8 +54,8 @@ graph1 :: forall term node edge nr er ls m n e. (term ~ Draft Static
           , TermNode Str  m (ls :< term)
           , TermNode Acc  m (ls :< term)
           , TermNode App  m (ls :< term)
-          , HasProp Dirty (ls :< term)
-          , Prop Dirty    (ls :< term) ~ DirtyVal
+          , HasProp Required (ls :< term)
+          , Prop Required    (ls :< term) ~ Bool
           , Graph.MonadBuilder (Hetero (VectorGraph n e)) m
           )
        => m nr
@@ -86,10 +86,10 @@ graph1 = do
     appPlus2   <- app accPlus2 [arg appLen]
 
 
-    let ref = appConc1b :: Ref Node (ls :< term)
-    (node :: (ls :< term)) <- read ref
+    -- let ref = appConc1b :: Ref Node node
+    -- (nd :: (ls :< term)) <- read ref
 
-    write ref (node & prop Dirty . Label.required .~ True)
+    -- write ref (nd & prop Required .~ True)
 
     return appConc1b
 
