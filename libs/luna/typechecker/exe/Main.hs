@@ -190,9 +190,7 @@ symbolMapTest :: IO ()
 symbolMapTest = do
     title "Symbol map testing"
     (_, g :: NetGraph ()) <- prebuild
-
-    (f, (g :: NetGraph ())) <- flip Symbol.evalT Map.empty $ runBuild g $ do
-        Symbol.loadSymbols StdLib.symbols
+    ((plus, sin, err), (g :: NetGraph ())) <- runBuild g $ do
         i1 <- int 1
         i2 <- int 2
         s1 <- str "hello world!"
@@ -202,15 +200,16 @@ symbolMapTest = do
         reconnect i2 (prop Type) tint
         reconnect s1 (prop Type) tstr
         plus <- acc "+" i1
-        len  <- acc "length" s1
+        err  <- acc "noMethod" s1
         sin  <- var "sin"
-        funMay <- Inlining.lookupFunction plus
-        case funMay of
-            Just f -> do
-                fptr <- Inlining.inlineFunction f
-                r <- Inlining.buildTypeRep fptr
-                return $ Just r
-            _      -> return Nothing
+        return (plus, sin, err)
+
+    (f, (g :: NetGraph ())) <- flip Symbol.evalT Map.empty $ runBuild g $ do
+        Symbol.loadSymbols StdLib.symbols
+        r1 <- Inlining.processNode plus
+        r2 <- Inlining.processNode sin
+        r3 <- Inlining.processNode err
+        return (r1, r2, r3)
 
     renderAndOpen [("symbolg", g)]
     print f

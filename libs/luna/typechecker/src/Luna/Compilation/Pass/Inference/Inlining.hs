@@ -4,6 +4,7 @@ module Luna.Compilation.Pass.Inference.Inlining where
 
 import Prelude.Luna
 
+import Control.Monad.Trans.Maybe                    (runMaybeT, MaybeT (..))
 import Data.Construction
 import Data.Prop
 import Data.Record
@@ -80,6 +81,17 @@ inlineFunction fun = do
 
 buildTypeRep :: PassCtx => FunctionPtr node -> m (Ref Node node)
 buildTypeRep fptr = do
-    case fptr ^. Function.args of
-        [] -> return $ fptr ^. Function.out
-        as -> lam (arg <$> as) $ fptr ^. Function.out
+    argTypes <- mapM (follow (prop Type) >=> follow source) $ fptr ^. Function.args
+    outType  <- follow (prop Type) (fptr ^. Function.out) >>= follow source
+    case argTypes of
+        [] -> return outType
+        as -> lam (arg <$> as) outType
+
+processNode :: PassCtx => Ref Node node -> m (Maybe $ (FunctionPtr node, Ref Node node))
+processNode ref = runMaybeT $ do
+    fun   <- MaybeT $ lookupFunction ref
+    fptr  <- lift $ inlineFunction fun
+    tpRep <- lift $ buildTypeRep fptr
+    refTp <- follow (prop Type) ref >>= follow source
+    uni   <- lift $ unify refTp tpRep
+    return (fptr, uni)
