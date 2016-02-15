@@ -20,7 +20,7 @@ packages:
 - {location: ../../tools/batch/plugins/bus-logger}
 - {location: ../../tools/batch/plugins/luna-empire}
 - extra-dep: true
-  location: {commit: 41153d63e5b625c3ef153465622bebdbbafe549e, git: 'https://github.com/wdanilo/container.git'}
+  location: {commit: 8c1a0ef91a201102a8a0e4a450c3dc5cae582f28, git: 'https://github.com/wdanilo/container.git'}
 - extra-dep: true
   location: {commit: b55500e95a422ec29b1dba4fc9c0b8092669350b, git: 'https://github.com/wdanilo/convert.git'}
 - extra-dep: true
@@ -30,7 +30,7 @@ packages:
 - extra-dep: true
   location: {commit: 13c735377b61d6ab634f689e88612cf68d6a4111, git: 'https://github.com/wdanilo/data-construction.git'}
 - extra-dep: true
-  location: {commit: 739f5931184259b51ef4c7a7218d031e82203e02, git: 'https://github.com/wdanilo/data-layer.git'}
+  location: {commit: 89c3973c185959d60aa1710bbdaaf768ce41b0c3, git: 'https://github.com/wdanilo/data-layer.git'}
 - extra-dep: true
   location: {commit: 941777d7080fcb86fd50b982ed61eb040a5c03db, git: 'https://github.com/wdanilo/data-repr.git'}
 - extra-dep: true
@@ -53,5 +53,5 @@ packages:
   location: {commit: 7e91afcbb940eb9822e034577bf72397924d4599, git: 'https://github.com/wdanilo/typelevel.git'}
 - extra-dep: true
   location: {commit: 13c735377b61d6ab634f689e88612cf68d6a4111, git: 'https://github.com/wdanilo/data-construction.git'}
-- location: {commit: f3859bee900d6be95b1141e828acb2bb53821164, git: 'https://github.com/wdanilo/data-member.git'}
+- location: {commit: 4ab4cc65f6d04027416f16f761aad7adaef37a78, git: 'https://github.com/wdanilo/data-member.git'}
 resolver: lts-4.1
