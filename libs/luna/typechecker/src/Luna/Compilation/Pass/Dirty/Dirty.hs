@@ -78,9 +78,12 @@ followDirty ref = do
 markSuccessors :: PassCtxDirty(m, ls, term) => Ref (Node (ls :< term)) -> m ()
 markSuccessors ref = do
     node <- read ref
+    putStrLn $         "markSuccessors " <> show ref
     unless (isDirty node) $ do
+        putStrLn $     "marking dirty  " <> show ref
         write ref (node & prop Dirty . Label.dirty .~ True)
         when (isRequired node) $ do
+            putStrLn $ "addReqNode     " <> show ref
             Env.addReqNode ref
             mapM_ markSuccessors =<< succ ref
 
@@ -101,7 +104,7 @@ markSuccessors ref = do
 run :: forall env m ls term ne a n e. (PassCtx(DirtyT env m, ls, term), MonadFix m, env ~ Env (Ref (Node (ls :< term))))
     => Ref (Node (ls :< term)) -> m ()
 run ref = do
-    (a, env) <- flip runDirtyT (def :: env) $ markSuccessors ref
+    ((), env) <- flip runDirtyT (def :: env) $ markSuccessors ref
     return ()
 
 

@@ -80,14 +80,6 @@ stdlib/FlowboxM/Libs/Flowbox/Std.luna
 ### DEPRECATED ###
 # cabal-dev
 
-# assets for tests
-*.bmp
-*.jpg
-*.jpeg
-*.png
-
-test.html
-report.html
 build_*/**/.stack-work
 .autoenv.zsh
 
