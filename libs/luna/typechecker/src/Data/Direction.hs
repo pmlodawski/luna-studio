@@ -1,10 +1,14 @@
 module Data.Direction where
 
+import Prologue
+
 import Control.Lens
+import Data.Prop
 
 
-type family Source a
-type family Target a
+data Source = Source deriving (Show)
+data Target = Target deriving (Show)
 
-class HasSource a where source :: Lens' a (Source a)
-class HasTarget a where target :: Lens' a (Target a)
+class HasSource a where source :: Lens' a (a # Source)
+class HasTarget a where target :: Lens' a (a # Target)
+

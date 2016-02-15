@@ -1,12 +1,12 @@
 {-# LANGUAGE RankNTypes           #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Data.Graph.Referenced.Ref where
+module Data.Graph.Referenced.Ref (module Data.Graph.Referenced.Ref, module X) where
 
 import Prelude.Luna
 
 import Data.Construction
-import Data.Direction
+import Data.Direction    as X
 import Data.Index
 import Data.Layer
 import Data.Prop
@@ -21,8 +21,15 @@ import Data.Graph.Model
 -- FIXME[WD]: Maybe we should parametrize the Ref to indicate the ref type, like Ref Node / Ref Edge / Ref Cluster / ...
 --            We can then introduce Ref and TypedRef (used with homo- and hetero- graphs)
 newtype Ref r a = Ref Int deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
+newtype Ptr r   = Ptr Int deriving (Show, Eq, Ord)
 
-class HasRef r a t where ref :: Ref r a -> Lens' t a
+class Referred r a t where focus :: Ref r a -> Lens' t a
+
+
+-- === Utils === --
+
+retarget :: Ref r a -> Ref r a'
+retarget = rewrap
 
 
 -- === Instances === --
@@ -52,12 +59,12 @@ instance Constructor m (Ref r a) => LayerConstructor m (Ref r a) where
 -- | When referencing the Hetero graph, we query the underlying one for its native node and edge representations
 --   by using `NodeOf` and `EdgeOf` families respectively.
 
-instance (HasRef Node n' a, BiCastable n n', n' ~ (a # Node))
-      =>  HasRef Node n (Hetero a) where ref r = wrapped' ∘ ref (cast r :: Ref Node n') ∘ casted ; {-# INLINE ref #-}
-instance  HasRef Node I (Hetero a) where ref   = impossible
-instance  HasRef Node n (Hetero I) where ref   = impossible
+instance (Referred Node n' a, BiCastable n n', n' ~ (a # Node))
+      =>  Referred Node n (Hetero a) where focus r = wrapped' ∘ focus (cast r :: Ref Node n') ∘ casted ; {-# INLINE focus #-}
+instance  Referred Node I (Hetero a) where focus   = impossible
+instance  Referred Node n (Hetero I) where focus   = impossible
 
-instance (HasRef Edge e' a, BiCastable e e', e' ~ (a # Edge))
-      =>  HasRef Edge e (Hetero a) where ref r = wrapped' ∘ ref (cast r :: Ref Edge e') ∘ casted ; {-# INLINE ref #-}
-instance  HasRef Edge I (Hetero a) where ref   = impossible
-instance  HasRef Edge e (Hetero I) where ref   = impossible
+instance (Referred Edge e' a, BiCastable e e', e' ~ (a # Edge))
+      =>  Referred Edge e (Hetero a) where focus r = wrapped' ∘ focus (cast r :: Ref Edge e') ∘ casted ; {-# INLINE focus #-}
+instance  Referred Edge I (Hetero a) where focus   = impossible
+instance  Referred Edge e (Hetero I) where focus   = impossible

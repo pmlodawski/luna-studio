@@ -23,17 +23,17 @@ import Data.Graph.Referenced
 --class Monad m => Writer r m a where write :: Ref r a -> a -> m ()
 
 
-withM :: (MonadBuilder t m, HasRef r a t) => Ref r a -> (a -> m a) -> m ()
+withM :: (MonadBuilder t m, Referred r a t) => Ref r a -> (a -> m a) -> m ()
 withM ref f = read ref >>= f >>= write ref
 
-with :: (MonadBuilder t m, HasRef r a t) => Ref r a -> (a -> a) -> m ()
+with :: (MonadBuilder t m, Referred r a t) => Ref r a -> (a -> a) -> m ()
 with ref = withM ref ∘ (return <$>)
 
-follow :: (MonadBuilder t m, HasRef r a t) => Lens' a b -> Ref r a -> m b
+follow :: (MonadBuilder t m, Referred r a t) => Lens' a b -> Ref r a -> m b
 follow f ptr = view f <$> read ptr
 
 reconnect :: --(RefHandler m el, Connectible (Ref inp) (Ref el) m, conn ~ Connection (Ref inp) (Ref el), Unregister m conn)
-          (MonadBuilder t m, HasRef r el t, Unregister m conn, Connectible' (Ref r inp) (Ref r el) m conn) => Ref r el -> Lens' el conn -> Ref r inp -> m conn
+          (MonadBuilder t m, Referred r el t, Unregister m conn, Connectible' (Ref r inp) (Ref r el) m conn) => Ref r el -> Lens' el conn -> Ref r inp -> m conn
 reconnect elRef lens input = do
     el  <- read elRef
     unregister $ el ^. lens
@@ -42,13 +42,13 @@ reconnect elRef lens input = do
     return conn
 
 
---class HasRef r a t where ref :: Ref r a -> Lens' t a
+--class Referred r a t where ref :: Ref r a -> Lens' t a
 
-read :: (MonadBuilder t m, HasRef r a t) => Ref r a -> m a
-read r = view (ref r) <$> get
+read :: (MonadBuilder t m, Referred r a t) => Ref r a -> m a
+read ref = view (focus ref) <$> get
 
-write :: (MonadBuilder t m, HasRef r a t) => Ref r a -> a -> m ()
-write r = modify_ ∘ set (ref r)
+write :: (MonadBuilder t m, Referred r a t) => Ref r a -> a -> m ()
+write ref = modify_ ∘ set (focus ref)
 
 -- === Instances === --
 
@@ -81,7 +81,7 @@ instance MonadBuilder (Hetero (VectorGraph n e)) m => Unregister m (Ref Edge edg
 
 -- Destruction
 
-instance (MonadBuilder t m, Prop Inputs node ~ [inp], HasRef Node node t, Unregister m inp, Getter Inputs node, Destructor m node, Unregister m (Ref Node node))
+instance (MonadBuilder t m, Prop Inputs node ~ [inp], Referred Node node t, Unregister m inp, Getter Inputs node, Destructor m node, Unregister m (Ref Node node))
       => Destructor m (Ref Node node) where
     destruct ref = do
         n <- read ref

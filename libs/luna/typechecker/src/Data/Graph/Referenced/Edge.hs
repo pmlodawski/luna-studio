@@ -63,11 +63,20 @@ instance Bifunctor Arc where bimap f g (Arc src tgt) = Arc (f <$> src) (g <$> tg
 
 -- Directions
 
-type instance Target (Ref Edge a) = Ref Node (Target a)
-type instance Source (Ref Edge a) = Ref Node (Source a)
 
-type instance Target (Arc src tgt) = tgt
-type instance Source (Arc src tgt) = src
+type instance Prop Target (Ref Edge a) = Ref Node (a # Target)
+type instance Prop Source (Ref Edge a) = Ref Node (a # Source)
+
+type instance Prop Target (Arc src tgt) = tgt
+type instance Prop Source (Arc src tgt) = src
+
+
+--type instance Prop Target (Arc src tgt) = (Ref Node tgt)
+--type instance Prop Source (Arc src tgt) = (Ref Node src)
+--instance      HasSource (Arc src tgt) where source = lens (\(Arc src _) -> src) (\(Arc _ tgt) src -> Arc src tgt)
+--instance      HasTarget (Arc src tgt) where target = lens (\(Arc _ tgt) -> tgt) (\(Arc src _) tgt -> Arc src tgt)
+
+type instance Prop Target (Arrow tgt) = (Ref Node tgt)
 
 -- Connections
 

@@ -28,8 +28,8 @@ type family NameConnection src tgt where
 
 
 type ConCtx src tgt conn = ( conn ~ Connection src tgt
-                           , src  ~ Source conn
-                           , tgt  ~ Target conn
+                           , src  ~ (conn # Source)
+                           , tgt  ~ (conn # Target)
                            )
 
 type Linkable        t       m = Connectible      t   t   m

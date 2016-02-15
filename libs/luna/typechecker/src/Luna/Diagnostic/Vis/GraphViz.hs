@@ -14,7 +14,7 @@ import           Data.GraphViz
 import qualified Data.GraphViz.Attributes               as GV
 import qualified Data.GraphViz.Attributes.Colors        as GVC
 import qualified Data.GraphViz.Attributes.Colors.X11    as GVC
-import           Data.GraphViz.Attributes.Complete      hiding (Int, Label, Star)
+import           Data.GraphViz.Attributes.Complete      hiding (Int, Label, Star, focus)
 import qualified Data.GraphViz.Attributes.Complete      as GV
 import           Data.GraphViz.Commands
 import           Data.GraphViz.Printing                 (toDot)
@@ -159,9 +159,9 @@ toGraphViz name net = DotGraph { strictGraph     = False
               validSource = edge' ^. source == node
               validTarget = edge `elem` (tgt' # Type) : (tgt' # Inputs)
 
-              edge' = net ^. ref edge :: Link (NetLayers a :< Draft Static)
+              edge' = net ^. focus edge :: Link (NetLayers a :< Draft Static)
               tgt   = edge' ^. target
-              tgt'  = net ^. ref tgt
+              tgt'  = net ^. focus tgt
 
           matchOrphanTgt nix e = if isOrphanTgt nix e then Just e else Nothing
 
@@ -175,7 +175,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
               node     = draftNodeByIx nix
               ins      = node # Inputs
               succs    = node # Succs
-              succs'   = (net ^.) ∘ ref <$> succs :: [Link (NetLayers a :< Draft Static)]
+              succs'   = (net ^.) ∘ focus <$> succs :: [Link (NetLayers a :< Draft Static)]
 
               orphanTgts = selectOrphanTgts (Ref nix) succs -- FIXME[WD] ugliness
 

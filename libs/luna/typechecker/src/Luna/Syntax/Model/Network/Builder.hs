@@ -31,7 +31,7 @@ merge :: forall n e m a t.
          ( n ~ (NetLayers a :< Draft Static)
          , e ~ (Link n)
          , MonadBuilder t m
-         , HasRef Node n t
+         , Referred Node n t
          , Constructor m (Ref Node n)
          , Constructor m (Ref Edge e)
          , Getter (Ref Node n) (VectorGraph n e)
@@ -41,10 +41,10 @@ merge g = do
     let foreignNodeRefs = Ref <$> usedIxes (g ^. nodeGraph)
         foreignEdgeRefs = Ref <$> usedIxes (g ^. edgeGraph)
 
-    newNodeRefs <- forM foreignNodeRefs $ construct ∘ (flip view g ∘ ref)
+    newNodeRefs <- forM foreignNodeRefs $ construct ∘ (flip view g ∘ focus)
 
     let nodeTrans = Map.fromList $ zip foreignNodeRefs newNodeRefs
-        foreignEs  = flip view g ∘ ref <$> foreignEdgeRefs
+        foreignEs  = flip view g ∘ focus <$> foreignEdgeRefs
         es         = foreignEs & over (mapped . source) unsafeTranslateNode
                                & over (mapped . target) unsafeTranslateNode
                    where

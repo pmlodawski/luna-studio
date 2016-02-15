@@ -18,9 +18,9 @@ import           Control.Monad.Event
 import           Data.Attr                                       (attr)
 import           Data.Construction
 import           Data.Container                                  (elems, index_)
-import           Data.Container
-import           Data.Graph.Query                                 hiding (Graph)
-import qualified Data.Graph.Query                                 as Sort
+import           Data.Container                                  hiding (impossible)
+import           Data.Graph.Query                                hiding (Graph)
+import qualified Data.Graph.Query                                as Sort
 import           Data.Index                                      (idx)
 import           Data.Layer.Cover
 import           Data.Prop
@@ -221,8 +221,6 @@ test1 = do
 
 data Input  = Input  deriving (Show, Eq, Ord)
 data Output = Output deriving (Show, Eq, Ord)
-data Source = Source deriving (Show, Eq, Ord)
-data Target = Target deriving (Show, Eq, Ord)
 
 data Consistency node edge = Consistent
                            | Inconsistent (Error node edge)
@@ -241,28 +239,83 @@ data Error node edge = MissingInput  node (node # Input )
 newtype Network' ls = Network' (Hetero (VectorGraph (ls :< Raw) (Link (ls :< Raw))))
 makeWrapped ''Network'
 
+type instance Prop Node (Network' ls) = ls :< Draft Static
+type instance Prop Edge (Network' ls) = Link (ls :< Draft Static)
+
+
+
+class Referenced r t a where
+    refs :: t -> [Ref r a]
+
+type Referenced' r t = Referenced r t (t # r)
+
+refs' :: Referenced' r t => t -> [Ref r (t # r)]
+refs' = refs
+
+ref_nodes :: Referenced Node t a => t -> [Ref Node a]
+ref_nodes = refs
+
+ref_nodes' :: Referenced' Node t => t -> [Ref Node (t # Node)]
+ref_nodes' = refs'
+
+ref_edges' :: Referenced' Edge t => t -> [Ref Edge (t # Edge)]
+ref_edges' = refs'
 
 --inputs - combination of type and args
 
 tp :: Selector Single Type
 tp = Selector
 
+class KnownGraph2 g where
+    ref_nodes2' :: g -> [Ref Node (g # Node)]
+    ref_edges2' :: g -> [Ref Edge (g # Edge)]
 
+instance ( Referenced' Node g
+         , Referenced' Edge g
+         ) => KnownGraph2 g where
+    ref_nodes2' = ref_nodes' ; {-# INLINE ref_nodes2' #-}
+    ref_edges2' = ref_edges' ; {-# INLINE ref_edges2' #-}
+
+instance KnownGraph2 I where ref_nodes2' = impossible
 
 --instance UnwrappedGetter sel p (Node a)  => Getter2 sel p (Node a)  where getter2 s = getter2 s ∘ unwrap'
 --instance UnwrappedGetter sel p (ls :< t) => Getter2 sel p (ls :< t) where getter2 s = getter2 s ∘ unwrap'
 
 
---check :: (MonadIO m, Graph g) => g -> m ()
---check g = do
---    let ns = g ^. nodes
---    return ()
+check :: (MonadIO m, KnownGraph2 g) => g -> m ()
+check g = do
+    let nrs = ref_nodes2' g
+    print nrs
+    return ()
 
+
+nodes :: Selector Every Node
+nodes = Selector
+
+--a = nodes
 
 main2 :: IO ()
 main2 = do
-
+    (nr, g_ :: NetGraph ()) <- prebuild
+    let g = Network' g_
+    --print $ (refs g :: [Ref Node (NetLayers () :< Draft Static)])
+    check g
     return ()
+
+--instance Getter2 Every Node (NetGraph ()) where
+--    getter2 _ g = undefined where
+        --g' = unwrap' g :: _
+
+--instance Referenced Node (Network' ls) (ls :< Draft Static) where refs = fmap Ref ∘ usedIxes ∘ view (wrapped' ∘ wrapped' ∘ nodeGraph)
+instance Referenced Node (Network' ls) (ls :< Draft Static)        where refs = fmap retarget ∘ refs' ∘ unwrap'
+instance Referenced Edge (Network' ls) (Link (ls :< Draft Static)) where refs = fmap retarget ∘ refs' ∘ unwrap'
+
+instance Referenced r t a => Referenced r (Hetero t) a where refs = refs ∘ unwrap'
+
+instance n ~ n' => Referenced Node (VectorGraph n e) n' where refs = fmap Ref ∘ usedIxes ∘ view nodeGraph
+instance e ~ e' => Referenced Edge (VectorGraph n e) e' where refs = fmap Ref ∘ usedIxes ∘ view edgeGraph
+
+--g -> [Ref Node (g # Node)]
 
 --Ref $ Node $ ls :< term --> read
 --      Node $ ls :< term
@@ -476,7 +529,7 @@ foo g = runNetworkBuilderT g
 --        return $ node # Markable
 
 --instance Sort.Graph             (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
---    listNodes g = Ref <$> (usedIxes $ g ^. nodeGraph)
+--    listNodes g = Ref <$> (Ref <$> usedIxes $ $ g ^. nodeGraph)
 
 --instance Sort.ForwardEdgedGraph (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
 --    successors ref g = fst $ rebuildNetwork' g $ do

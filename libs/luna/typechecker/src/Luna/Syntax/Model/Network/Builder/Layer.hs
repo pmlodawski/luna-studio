@@ -27,8 +27,8 @@ import           Data.Graph.Referenced
 
 data SuccRegister = SuccRegister deriving (Show)
 instance ( MonadBuilder g m
-         , HasRef Edge (Arc src tgt) g
-         , HasRef Node src g
+         , Referred Edge (Arc src tgt) g
+         , Referred Node src g
          , Show src
          , Prop Succs src ~ [Ref Edge (Arc src tgt)]
          , HasProp Succs src
