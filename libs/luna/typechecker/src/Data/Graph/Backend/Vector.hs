@@ -73,8 +73,8 @@ makeLenses  ''VectorGraph
 
 -- Construction
 
-type instance NodeOf (VectorGraph n e) = n
-type instance EdgeOf (VectorGraph n e) = e
+type instance Prop Node (VectorGraph n e) = n
+type instance Prop Edge (VectorGraph n e) = e
 instance Default (VectorGraph n e) where def = VectorGraph (alloc 100) (alloc 100) (alloc 100)
 
 -- Graph class
@@ -109,16 +109,16 @@ instance Default (VectorGraph n e) where def = VectorGraph (alloc 100) (alloc 10
 
 -- References handling
 
-instance r ~ n => HasRef (Node r) (VectorGraph n e) where
+instance r ~ n => HasRef Node r (VectorGraph n e) where
     ref r = lens getter setter where
-        getter t     = Node $ index_ (r ^. idx) $ t ^. nodeGraph                           ; {-# INLINE getter #-}
-        setter t val = t & nodeGraph %~ unchecked inplace insert_ (r ^. idx) (unwrap' val) ; {-# INLINE setter #-}
+        getter t     = index_ (r ^. idx) $ t ^. nodeGraph                        ; {-# INLINE getter #-}
+        setter t val = t & nodeGraph %~ unchecked inplace insert_ (r ^. idx) val ; {-# INLINE setter #-}
     {-# INLINE ref #-}
 
-instance r ~ e => HasRef (Edge r) (VectorGraph n e) where
+instance r ~ e => HasRef Edge r (VectorGraph n e) where
     ref r = lens getter setter where
-        getter t     = Edge $ index_ (r ^. idx) $ t ^. edgeGraph                           ; {-# INLINE getter #-}
-        setter t val = t & edgeGraph %~ unchecked inplace insert_ (r ^. idx) (unwrap' val) ; {-# INLINE setter #-}
+        getter t     = index_ (r ^. idx) $ t ^. edgeGraph                        ; {-# INLINE getter #-}
+        setter t val = t & edgeGraph %~ unchecked inplace insert_ (r ^. idx) val ; {-# INLINE setter #-}
     {-# INLINE ref #-}
 
 

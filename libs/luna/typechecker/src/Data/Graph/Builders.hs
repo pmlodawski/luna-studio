@@ -44,9 +44,9 @@ class                        ConnectibleNameH rt src tgt m conn | rt src tgt -> 
 -- === Instances === --
 
 
-instance (LayerConstructor m c, Dispatcher CONNECTION c m, c ~ Connection (Ref (Node src)) (Ref (Node tgt))) -- Unlayered c ~ Arc src tgt
-      => Connectible' (Ref (Node src)) (Ref (Node tgt)) m c where
-         connection src tgt = dispatch CONNECTION =<< constructLayer (edge src tgt)
+instance (LayerConstructor m c, Dispatcher CONNECTION c m, c ~ Connection (Ref Node src) (Ref Node tgt)) -- Unlayered c ~ Arc src tgt
+      => Connectible' (Ref Node src) (Ref Node tgt) m c where
+         connection src tgt = dispatch CONNECTION =<< constructLayer (arc src tgt)
 
 instance (ConnectibleNameH mod src tgt m conn
          , mod ~ Runtime.Model tgt)  => ConnectibleName'         src tgt m  conn where nameConnection          = nameConnectionH (Proxy :: Proxy mod) ; {-# INLINE nameConnection  #-}

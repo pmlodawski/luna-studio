@@ -24,7 +24,6 @@ import           Luna.Evaluation.Runtime                 as Runtime
 import           Luna.Syntax.AST.Arg
 import           Luna.Syntax.AST.Term                    hiding (Val, Lit, Thunk, Expr, Draft, Source)
 import qualified Luna.Syntax.AST.Term                    as Term
-import           Luna.Syntax.Model.Graph
 import qualified Data.Graph.Builder                      as GraphBuilder
 import           Luna.Syntax.Model.Layer                 (Type, Succs, Markable, Meta, (:<))
 import           Luna.Compilation.Pass.Dirty.Data.Label  (Dirty)
@@ -251,10 +250,10 @@ buildNetwork  = runIdentity ∘ buildNetworkM
 buildNetworkM = rebuildNetworkM' (def :: NetGraph a)
 
 rebuildNetwork' = runIdentity .: rebuildNetworkM'
-rebuildNetworkM' (net :: NetGraph a) = flip Self.evalT (undefined ::        Ref $ Node $ NetNode a)
-                                     ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node $ NetNode a))
-                                     ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
-                                     ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref $ Node $ NetNode a)
+rebuildNetworkM' (net :: NetGraph a) = flip Self.evalT (undefined ::        Ref Node $ NetNode a)
+                                     ∘ flip Type.evalT (Nothing   :: Maybe (Ref Node $ NetNode a))
+                                     ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref Edge c)
+                                     ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref Node $ NetNode a)
                                      ∘ flip GraphBuilder.runT net
                                      ∘ registerSuccs   CONNECTION
 {-# INLINE   buildNetworkM #-}
@@ -267,18 +266,18 @@ instance {-# OVERLAPPABLE #-} NetworkBuilderT I IM IM where runNetworkBuilderT =
 instance {-# OVERLAPPABLE #-}
     ( m      ~ Listener CONNECTION SuccRegister m'
     , m'     ~ GraphBuilder.BuilderT (Hetero (VectorGraph n e)) m''
-    , m''    ~ Listener ELEMENT (TypeConstraint Equality_Full (Ref $ Node $ NetNode a)) m'''
-    , m'''   ~ Listener CONNECTION (TypeConstraint Equality_M1 (Ref c)) m''''
-    , m''''  ~ Type.TypeBuilderT (Ref $ Node $ NetNode a) m'''''
-    , m''''' ~ Self.SelfBuilderT (Ref $ Node $ NetNode a) m''''''
+    , m''    ~ Listener ELEMENT (TypeConstraint Equality_Full (Ref Node $ NetNode a)) m'''
+    , m'''   ~ Listener CONNECTION (TypeConstraint Equality_M1 (Ref Edge c)) m''''
+    , m''''  ~ Type.TypeBuilderT (Ref Node $ NetNode a) m'''''
+    , m''''' ~ Self.SelfBuilderT (Ref Node $ NetNode a) m''''''
     , Monad m'''''
     , Monad m''''''
     , net ~ Hetero (VectorGraph n e)
     ) => NetworkBuilderT net m m'''''' where
-    runNetworkBuilderT net = flip Self.evalT (undefined ::        Ref $ Node $ NetNode a)
-                           ∘ flip Type.evalT (Nothing   :: Maybe (Ref $ Node $ NetNode a))
-                           ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref c)
-                           ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref $ Node $ NetNode a)
+    runNetworkBuilderT net = flip Self.evalT (undefined ::        Ref Node $ NetNode a)
+                           ∘ flip Type.evalT (Nothing   :: Maybe (Ref Node $ NetNode a))
+                           ∘ constrainTypeM1 CONNECTION (Proxy :: Proxy $ Ref Edge c)
+                           ∘ constrainTypeEq ELEMENT    (Proxy :: Proxy $ Ref Node $ NetNode a)
                            ∘ flip GraphBuilder.runT net
                            ∘ registerSuccs   CONNECTION
 

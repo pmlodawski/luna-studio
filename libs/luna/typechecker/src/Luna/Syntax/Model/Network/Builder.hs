@@ -16,7 +16,6 @@ import           Data.Construction
 import           Data.Prop
 import           Data.Map                (Map)
 import qualified Data.Map                as Map
-import           Luna.Syntax.Model.Graph
 import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Term (Draft)
 import           Luna.Evaluation.Runtime        (Static)
@@ -28,29 +27,30 @@ import           Data.Graph.Referenced
 -- === Utils === --
 -------------------
 
-merge :: forall n e m a.
+merge :: forall n e m a t.
          ( n ~ (NetLayers a :< Draft Static)
-         , e ~ (Edge $ Link n)
-         , Constructor m (Ref (Node n))
-         , Constructor m (Ref e)
-         , Getter (Ref $ Node n) (VectorGraph n e)
-         , Getter (Ref e) (VectorGraph n e)
-         , RefHandler m (Node n)
-         ) => VectorGraph n e -> m (Map (Ref $ Node n) (Ref $ Node n))
+         , e ~ (Link n)
+         , MonadBuilder t m
+         , HasRef Node n t
+         , Constructor m (Ref Node n)
+         , Constructor m (Ref Edge e)
+         , Getter (Ref Node n) (VectorGraph n e)
+         , Getter (Ref Edge e) (VectorGraph n e)
+         ) => VectorGraph n e -> m (Map (Ref Node n) (Ref Node n))
 merge g = do
     let foreignNodeRefs = Ref <$> usedIxes (g ^. nodeGraph)
         foreignEdgeRefs = Ref <$> usedIxes (g ^. edgeGraph)
 
-    newNodeRefs <- forM foreignNodeRefs $ construct . flip getter g
+    newNodeRefs <- forM foreignNodeRefs $ construct ∘ (flip view g ∘ ref)
 
     let nodeTrans = Map.fromList $ zip foreignNodeRefs newNodeRefs
-        foreignEs  = flip getter g <$> foreignEdgeRefs
+        foreignEs  = flip view g ∘ ref <$> foreignEdgeRefs
         es         = foreignEs & over (mapped . source) unsafeTranslateNode
                                & over (mapped . target) unsafeTranslateNode
                    where
                    unsafeTranslateNode i = fromJust $ Map.lookup i nodeTrans
 
-    newEdgeRefs <- forM es construct :: m [Ref e]
+    newEdgeRefs <- forM es construct :: m [Ref Edge e]
     let edgeTrans = Map.fromList $ zip foreignEdgeRefs newEdgeRefs
 
     forM newNodeRefs $ \ref -> do

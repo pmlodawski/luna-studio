@@ -16,7 +16,6 @@ import           Data.Graph.Referenced
 import           Luna.Diagnostic.Vis.GraphViz
 import           Luna.Evaluation.Runtime                         (Dynamic, Static)
 import           Luna.Syntax.AST.Term                            hiding (source)
-import           Luna.Syntax.Model.Graph
 import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Builder.Node          (NodeInferable, TermNode)
 import           Luna.Syntax.Model.Network.Builder.Node.Class    (arg)
@@ -29,7 +28,8 @@ import           Luna.Syntax.Model.Network.Term
 #define PassCtx(m, ls, term) ( ls   ~ NetLayers a           \
                              , term ~ Draft Static          \
                              , ne   ~ Link (ls :< term)     \
-                             , Castable e ne                \
+                             , BiCastable    e ne           \
+                             , BiCastable    n (ls :< term) \
                              , MonadIO m                    \
                              , MonadBuilder (Hetero (VectorGraph n e)) m           \
                              , NodeInferable m (ls :< term) \
@@ -38,9 +38,9 @@ import           Luna.Syntax.Model.Network.Term
                              )
 
 assignLiteralType :: PassCtx(m, ls, term)
-                  => Ref (Node $ (ls :< term))
-                  -> Ref (Node $ (ls :< term))
-                  -> Ref (Node $ (ls :< term))
+                  => Ref Node (ls :< term)
+                  -> Ref Node (ls :< term)
+                  -> Ref Node (ls :< term)
                   -> m ()
 assignLiteralType consIntRef consStrRef ref = do
     node <- read ref
@@ -50,13 +50,13 @@ assignLiteralType consIntRef consStrRef ref = do
         match $ \(Num num) -> process consIntRef
         match $ \ANY       -> return ()
 
-createLiteralTypes :: PassCtx(m, ls, term) => m (Ref (Node $ (ls :< term)), Ref (Node $ (ls :< term)))
+createLiteralTypes :: PassCtx(m, ls, term) => m (Ref Node (ls :< term), Ref Node (ls :< term))
 createLiteralTypes = do
     consIntRef <- cons "Int"
     consStrRef <- cons "String"
     return (consIntRef, consStrRef)
 
-run :: PassCtx(m, ls, term) => [Ref (Node $ (ls :< term))] -> m ()
+run :: PassCtx(m, ls, term) => [Ref Node (ls :< term)] -> m ()
 run literals = do
     (consIntRef, consStrRef) <- createLiteralTypes
     mapM_ (assignLiteralType consIntRef consStrRef) literals

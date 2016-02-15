@@ -15,7 +15,6 @@ import           Data.Record                    (HasRecord, RecordOf, IsRecord, 
 import qualified Data.Record                    as Record
 import           Data.Reprx                     (Repr, repr)
 import           Luna.Syntax.AST.Term           hiding (Val, Lit, Thunk, Expr, Draft)
-import           Luna.Syntax.Model.Graph
 import           Luna.Syntax.Model.Layer
 import           Luna.Evaluation.Runtime        as Runtime
 import           Luna.Syntax.AST.Arg
@@ -30,7 +29,7 @@ import Data.Prop
 -- === Network layout definition === --
 ---------------------------------------
 
-type instance Layout (Network ls) term rt = Ref $ Edge $ Link (ls :< TermWrapper term rt)
+type instance Layout (Network ls) term rt = Ref Edge $ Link (ls :< TermWrapper term rt)
 
 type family TermWrapper (a :: *) :: * -> [*] -> *
 

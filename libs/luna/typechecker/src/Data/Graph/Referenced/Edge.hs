@@ -22,8 +22,8 @@ import Type.Bool
 
 -- === Definitions === --
 
-newtype Arrow tgt     = Arrow (Ref tgt)           deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
-data    Arc   src tgt = Arc   (Ref src) (Ref tgt) deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
+newtype Arrow tgt     = Arrow (Ref Node tgt)                deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
+data    Arc   src tgt = Arc   (Ref Node src) (Ref Node tgt) deriving (Show, Eq, Ord, Functor, Traversable, Foldable)
 type    Link  a       = Arc   a a
 
 type family Connection src tgt
@@ -33,42 +33,48 @@ type family Connection src tgt
 
 --class HasSource a where
 
-arc :: Ref (Node src) -> Ref (Node tgt) -> Arc src tgt
-arc src tgt = Arc (rewrap src) (rewrap tgt)
+arc :: Ref Node src -> Ref Node tgt -> Arc src tgt
+arc = Arc
 
-link :: Ref (Node t) -> Ref (Node t) -> Link t
+link :: Ref Node t -> Ref Node t -> Link t
 link = arc
 
-arrow :: Ref (Node tgt) -> Arrow tgt
-arrow tgt = Arrow (rewrap tgt)
+arrow :: Ref Node tgt -> Arrow tgt
+arrow = Arrow
 
-edge :: Ref (Node src) -> Ref (Node tgt) -> Edge $ Arc src tgt
-edge src tgt = Edge $ Arc (rewrap src) (rewrap tgt)
+--edge :: Ref Node src -> Ref Node tgt -> Edge $ Arc src tgt
+--edge = Edge ∘ arc
 
 
 -- FIXME[WD]: refactor source / target to use the Data.Direction abstraction
 
-source :: Lens' (Edge (Arc src tgt)) (Ref (Node src))
-source = lens (\(Edge (Arc src _)) -> rewrap src) (\(Edge (Arc _ tgt)) src -> Edge $ Arc (rewrap src) tgt)
+source :: Lens' (Arc src tgt) (Ref Node src)
+source = lens (\(Arc src _) -> src) (\(Arc _ tgt) src -> Arc src tgt)
 
-target :: Lens' (Edge (Arc src tgt)) (Ref (Node tgt))
-target = lens (\(Edge (Arc _ tgt)) -> rewrap tgt) (\(Edge (Arc src _)) tgt -> Edge $ Arc src (rewrap tgt))
+target :: Lens' (Arc src tgt) (Ref Node tgt)
+target = lens (\(Arc _ tgt) -> tgt) (\(Arc src _) tgt -> Arc src tgt)
 
 
 -- === Instances === --
 
--- Primitive
+-- Functors
 
-type instance Target (Ref (Edge (Arc src tgt))) = Ref (Node tgt)
-type instance Source (Ref (Edge (Arc src tgt))) = Ref (Node src)
+instance Bifunctor Arc where bimap f g (Arc src tgt) = Arc (f <$> src) (g <$> tgt) ; {-# INLINE bimap #-}
+
+-- Directions
+
+type instance Target (Ref Edge a) = Ref Node (Target a)
+type instance Source (Ref Edge a) = Ref Node (Source a)
+
+type instance Target (Arc src tgt) = tgt
+type instance Source (Arc src tgt) = src
 
 -- Connections
 
-type instance Connection (Ref  a) (Ref  b) = Ref (Connection a b)
-type instance Connection (Node a) (Node b) = Edge $ Arc a b
+type instance Connection (Ref Node a) (Ref Node b) = Ref Edge (Arc a b)
 
 -- Conversions
 
-instance (Castable (Ref src) (Ref src'), Castable (Ref tgt) (Ref tgt')) => Castable (Arc src tgt) (Arc src' tgt') where
+instance (Castable src src', Castable tgt tgt') => Castable (Arc src tgt) (Arc src' tgt') where
     cast (Arc src tgt) = Arc (cast src) (cast tgt) ; {-# INLINE cast #-}
 

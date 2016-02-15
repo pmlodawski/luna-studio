@@ -3,14 +3,13 @@
 module Luna.Syntax.AST.Decl.Function where
 
 import Prologue
-import Luna.Syntax.Model.Graph
 import Data.Graph.Backend.Vector
 import Data.Graph.Referenced
 
 
-data FunctionPtr n = FunctionPtr { _self :: Maybe (Ref $ Node n)
-                                 , _args :: [Ref $ Node n]
-                                 , _out  :: Ref $ Node n
+data FunctionPtr n = FunctionPtr { _self :: Maybe (Ref Node n)
+                                 , _args :: [Ref Node n]
+                                 , _out  :: Ref Node n
                                  } deriving (Show)
 makeLenses ''FunctionPtr
 

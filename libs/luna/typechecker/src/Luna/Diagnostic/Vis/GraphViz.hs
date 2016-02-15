@@ -25,7 +25,6 @@ import           Luna.Syntax.Repr.Styles                (HeaderOnly (..), Simple
 import           Data.Container
 
 import           Data.Record
-import           Luna.Syntax.Model.Graph
 import           Luna.Syntax.Model.Network.Builder
 
 import           Data.Container.Class
@@ -37,11 +36,9 @@ import           Data.Layer.Cover                       (uncover)
 import           Data.Prop
 import           Luna.Evaluation.Runtime                (Dynamic, Static)
 import qualified Luna.Syntax.AST.Term                   as Term
-import           Luna.Syntax.Model.Graph
 import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Builder.Term
 import           Luna.Syntax.Model.Network.Term
-import qualified Luna.Syntax.Model.Graph.Cluster as Cluster
 import qualified Data.GraphViz.Attributes.HTML as Html
 import Data.Index (idx)
 
@@ -156,15 +153,15 @@ toGraphViz name net = DotGraph { strictGraph     = False
           --    colors = nodeColorAttr node
           --    attrs  = label : colors
 
-          isOrphanTgt (node :: Ref (Node $ NetLayers a :< Draft Static)) (edge :: Ref (Edge (Link (NetLayers a :< Draft Static))))
+          isOrphanTgt (node :: Ref Node (NetLayers a :< Draft Static)) (edge :: Ref Edge (Link (NetLayers a :< Draft Static)))
                     = not $ existing && validSource && validTarget where
               existing    = (edge ^. idx) `elem` edgeIxs
               validSource = edge' ^. source == node
               validTarget = edge `elem` (tgt' # Type) : (tgt' # Inputs)
 
-              edge' = net ^. ref edge :: Edge (Link (NetLayers a :< Draft Static))
+              edge' = net ^. ref edge :: Link (NetLayers a :< Draft Static)
               tgt   = edge' ^. target
-              tgt'  = net # tgt
+              tgt'  = net ^. ref tgt
 
           matchOrphanTgt nix e = if isOrphanTgt nix e then Just e else Nothing
 
@@ -178,7 +175,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
               node     = draftNodeByIx nix
               ins      = node # Inputs
               succs    = node # Succs
-              succs'   = (net ^.) ∘ ref <$> succs :: [Edge (Link (NetLayers a :< Draft Static))]
+              succs'   = (net ^.) ∘ ref <$> succs :: [Link (NetLayers a :< Draft Static)]
 
               orphanTgts = selectOrphanTgts (Ref nix) succs -- FIXME[WD] ugliness
 
@@ -225,7 +222,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
           genNodeLabel  node = reprStyled HeaderOnly $ uncover node
 
           matchCluster :: Int -> Int -> Maybe Int
-          matchCluster clrIx  nix = if Cluster.member nix (clusterByIx clrIx) then Just clrIx else Nothing
+          matchCluster clrIx  nix = error "undefined graphviz" -- if Cluster.member nix (clusterByIx clrIx) then Just clrIx else Nothing
           matchClusters :: [Int] -> Int -> [Int]
           matchClusters clrIxs nix = catMaybes $ flip matchCluster nix <$> clrIxs
 
@@ -280,7 +277,7 @@ genInEdges (g :: NetGraph a) (n :: NetLayers a :< Draft Static) = displayEdges w
 
     addColor (idx, attrs) = (idx, GV.color arrClr : attrs)
     getTgtIdx             = view idx ∘ getTgt
-    getTgt    inp         = view source $ Edge $ index (inp ^. idx) es
+    getTgt    inp         = view source $ index (inp ^. idx) es
 
 
 

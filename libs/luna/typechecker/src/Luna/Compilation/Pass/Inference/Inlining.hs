@@ -14,7 +14,6 @@ import Luna.Evaluation.Runtime                      (Static, Dynamic)
 import Luna.Library.Symbol.Class                    (MonadSymbol, lookupSymbol)
 import Luna.Syntax.AST.Decl.Function                (Function, FunctionPtr)
 import Luna.Syntax.AST.Term                         hiding (source)
-import Luna.Syntax.Model.Graph
 import Data.Graph.Referenced
 import Data.Graph.Builder                           as Graph hiding (run)
 import Data.Graph.Backend.Vector                    as Graph
@@ -31,15 +30,14 @@ import qualified Data.Map as Map
 
 import qualified Luna.Library.Symbol.QualPath     as QualPath
 import qualified Luna.Syntax.AST.Decl.Function    as Function
-import qualified Luna.Syntax.Model.Graph          as Graph
 
 
 
 #define PassCtx(m,ls,term) ( term ~ Draft Static                     \
                            , ls   ~ NetLayers a                      \
                            , ne   ~ Link (ls :< term)                \
-                           , n    ~ (ls :< term)                     \
-                           , Prop Type   (ls :< term) ~ Ref (Edge ne)\
+                           , node ~ (ls :< term)                     \
+                           , Prop Type   (ls :< term) ~ Ref Edge ne  \
                            , BiCastable     e ne                     \
                            , BiCastable     n (ls :< term)           \
                            , MonadBuilder (Hetero (VectorGraph n e)) (m) \
@@ -50,8 +48,9 @@ import qualified Luna.Syntax.Model.Graph          as Graph
                            , TermNode Cons  (m) (ls :< term)         \
                            , MonadSymbol n  (m)                      \
                            )
+-- CHECKME[WD -> AS]: ^^^ should we refer here to `n` or `node` in MonadSymbol premise ?
 
-getTypeName :: PassCtx(m, ls, term) => Ref (Node $ ls :< term) -> m (Maybe String)
+getTypeName :: PassCtx(m, ls, term) => Ref Node (ls :< term) -> m (Maybe String)
 getTypeName ref = do
     node  <- read ref
     tpRef <- follow source $ node # Type
@@ -61,7 +60,7 @@ getTypeName ref = do
         match $ \ANY -> return Nothing
 
 
-lookupFunction :: PassCtx(m, ls, term) => Ref (Node $ ls :< term) -> m (Maybe $ Function n)
+lookupFunction :: PassCtx(m, ls, term) => Ref Node (ls :< term) -> m (Maybe $ Function n)
 lookupFunction ref = do
     node <- read ref
     caseTest (uncover node) $ do

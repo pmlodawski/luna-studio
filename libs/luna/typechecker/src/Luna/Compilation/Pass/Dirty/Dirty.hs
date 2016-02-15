@@ -16,7 +16,6 @@ import           Luna.Compilation.Pass.Dirty.Data.Label          (Dirty (Dirty),
 import qualified Luna.Compilation.Pass.Dirty.Data.Label          as Label
 import           Luna.Compilation.Pass.Dirty.Monad               (DirtyMonad, runDirtyT, DirtyT)
 import           Luna.Syntax.Builder
-import qualified Luna.Syntax.Model.Graph                         as G
 
 import           Luna.Evaluation.Runtime                         (Dynamic, Static)
 
@@ -25,7 +24,6 @@ import           Data.Record                                     hiding (cons)
 import           Type.Inference
 
 import           Luna.Syntax.AST.Term.Class                      (Lam)
-import           Luna.Syntax.Model.Graph
 import           Data.Graph.Builder
 import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Builder.Node          (NodeInferable, TermNode)
@@ -41,22 +39,23 @@ import Data.Graph.Referenced
 #define PassCtxDirty(m, ls, term) ( ls   ~ NetLayers a                           \
                                   , term ~ Draft Static                          \
                                   , ne   ~ Link (ls :< term)                     \
-                                  , Castable e ne                                \
+                                  , BiCastable e ne                              \
+                                  , BiCastable n (ls :< term)                    \
                                   , MonadIO m                                    \
-                                  , MonadBuilder ((Hetero (VectorGraph n e))) m  \
+                                  , MonadBuilder (Hetero (VectorGraph n e)) m    \
                                   , NodeInferable m (ls :< term)                 \
                                   , TermNode Lam  m (ls :< term)                 \
                                   , HasProp Dirty (ls :< term)                   \
                                   , Prop Dirty    (ls :< term) ~ DirtyVal        \
-                                  , DirtyMonad (Env (Ref (Node (ls :< term)))) m \
+                                  , DirtyMonad (Env (Ref Node (ls :< term))) m   \
                                   )
 
-pre :: PassCtxDirty(m, ls, term) => Ref (Node (ls :< term)) -> m [Ref (Node (ls :< term))]
+pre :: PassCtxDirty(m, ls, term) => Ref Node (ls :< term) -> m [Ref Node (ls :< term)]
 pre ref = do
     node <- read ref
     mapM (follow target) $ node # Inputs
 
-succ :: PassCtxDirty(m, ls, term) => Ref (Node (ls :< term)) -> m [Ref (Node (ls :< term))]
+succ :: PassCtxDirty(m, ls, term) => Ref Node (ls :< term) -> m [Ref Node (ls :< term)]
 succ ref = do
     node <- read ref
     mapM (follow source) $ node ^. prop Succs
@@ -67,7 +66,7 @@ isDirty node = node ^. prop Dirty . Label.dirty
 isRequired :: (Prop Dirty n ~ DirtyVal, HasProp Dirty n) => n -> Bool
 isRequired node = node ^. prop Dirty . Label.required
 
-followDirty :: PassCtxDirty(m, ls, term) => Ref (Node (ls :< term)) -> m ()
+followDirty :: PassCtxDirty(m, ls, term) => Ref Node (ls :< term) -> m ()
 followDirty ref = do
     Env.addReqNode ref
     prevs <- pre ref
@@ -75,7 +74,7 @@ followDirty ref = do
         whenM (isDirty <$> read p) $
             followDirty p
 
-markSuccessors :: PassCtxDirty(m, ls, term) => Ref (Node (ls :< term)) -> m ()
+markSuccessors :: PassCtxDirty(m, ls, term) => Ref Node (ls :< term) -> m ()
 markSuccessors ref = do
     node <- read ref
     putStrLn $         "markSuccessors " <> show ref
@@ -91,7 +90,8 @@ markSuccessors ref = do
 #define PassCtx(m, ls, term) ( ls   ~ NetLayers a                           \
                              , term ~ Draft Static                          \
                              , ne   ~ Link (ls :< term)                     \
-                             , Castable e ne                                \
+                             , BiCastable e ne                              \
+                             , BiCastable n (ls :< term)                    \
                              , MonadIO (m)                                  \
                              , MonadBuilder ((Hetero (VectorGraph n e))) (m)\
                              , NodeInferable (m) (ls :< term)               \
@@ -101,8 +101,8 @@ markSuccessors ref = do
                              , MonadFix (m)                                 \
                              )
 
-run :: forall env m ls term ne a n e. (PassCtx(DirtyT env m, ls, term), MonadFix m, env ~ Env (Ref (Node (ls :< term))))
-    => Ref (Node (ls :< term)) -> m ()
+run :: forall env m ls term ne a n e. (PassCtx(DirtyT env m, ls, term), MonadFix m, env ~ Env (Ref Node (ls :< term)))
+    => Ref Node (ls :< term) -> m ()
 run ref = do
     ((), env) <- flip runDirtyT (def :: env) $ markSuccessors ref
     return ()

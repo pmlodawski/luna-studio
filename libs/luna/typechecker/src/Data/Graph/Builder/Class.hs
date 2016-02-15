@@ -10,7 +10,6 @@ import           Control.Monad.Catch            (MonadMask, MonadCatch, MonadThr
 import           Data.Construction
 import           Data.Container
 import           Data.Index
-import           Luna.Syntax.Model.Graph
 import qualified Control.Monad.State            as State
 import           Data.Layer.Cover
 

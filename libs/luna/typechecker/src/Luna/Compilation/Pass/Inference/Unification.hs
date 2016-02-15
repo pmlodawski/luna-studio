@@ -15,7 +15,6 @@ import Data.Record
 import Luna.Evaluation.Runtime                      (Static, Dynamic)
 import Data.Index
 import Luna.Syntax.AST.Term                         hiding (source)
-import Luna.Syntax.Model.Graph
 import Data.Graph.Builder                           hiding (run)
 import Luna.Syntax.Model.Layer
 import Luna.Syntax.Model.Network.Builder.Node
@@ -25,7 +24,6 @@ import Luna.Syntax.Model.Network.Term
 import Luna.Syntax.Name.Ident.Pool                  (MonadIdentPool, newVarIdent')
 import Type.Inference
 
-import qualified Luna.Syntax.Model.Graph          as Graph
 import qualified Data.Graph.Builder               as Graph
 import qualified Luna.Compilation.Stage.TypeCheck as TypeCheck
 import qualified Luna.Syntax.Name                 as Name
@@ -42,8 +40,8 @@ import Control.Monad.Trans.Either
 
 #define PassCtx(m,ls,term) ( term ~ Draft Static                     \
                            , ne   ~ Link (ls :< term)                \
-                           , Prop Type   (ls :< term) ~ Ref (Edge ne)       \
-                           , Prop Succs  (ls :< term) ~ [Ref $ Edge $ ne]   \
+                           , Prop Type   (ls :< term) ~ Ref Edge ne  \
+                           , Prop Succs  (ls :< term) ~ [Ref Edge $ ne]   \
                            , BiCastable     e ne                     \
                            , BiCastable     n (ls :< term)           \
                            , MonadBuilder (Hetero (VectorGraph n e)) (m)                    \
@@ -55,7 +53,7 @@ import Control.Monad.Trans.Either
                            , TermNode Unify (m) (ls :< term)         \
                            , TermNode Acc   (m) (ls :< term)         \
                            , MonadIdentPool (m)                      \
-                           , Destructor     (m) (Ref $ Node (ls :< term)) \
+                           , Destructor     (m) (Ref Node (ls :< term)) \
                            )
 
 
@@ -179,7 +177,7 @@ data Resolution r u = Resolved   r
 
 resolve_ = resolve []
 
-resolveUnify :: forall m ls term nodeRef ne ter n e. (PassCtx(m,ls,term), nodeRef ~ Ref (Node $ (ls :< term))
+resolveUnify :: forall m ls term nodeRef ne ter n e. (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :< term)
                 , MonadIO m, Show (ls :< term), MonadResolution [nodeRef] m)
              => nodeRef -> m ()
 resolveUnify uni = do
@@ -234,7 +232,7 @@ resolveUnify uni = do
                     resolve unis
 
 
-resolveUnify2 :: forall m ls term nodeRef ne ter n e. (PassCtx(m,ls,term), nodeRef ~ Ref (Node $ (ls :< term))
+resolveUnify2 :: forall m ls term nodeRef ne ter n e. (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :< term)
                 , MonadIO m, Show (ls :< term), MonadResolution [nodeRef] m)
              => nodeRef -> m ()
 resolveUnify2 uni = do
@@ -341,9 +339,9 @@ makeLenses ''TCStatus
 
 -- FIXME[WD]: we should not return [Graph n e] from pass - we should use ~ IterativePassRunner instead which will handle iterations by itself
 run :: forall nodeRef m ls term n e ne.
-       (PassCtx(ResolutionT [nodeRef] m,ls,term), MonadBuilder (Hetero (VectorGraph n e)) m, nodeRef ~ Ref (Node $ (ls :< term))
+       (PassCtx(ResolutionT [nodeRef] m,ls,term), MonadBuilder (Hetero (VectorGraph n e)) m, nodeRef ~ Ref Node (ls :< term)
        , MonadIO m, Show (ls :< term)
-       , Getter Inputs (ls :< term), Prop Inputs (ls :< term) ~ [Ref (Edge (Link (ls :< term)))])
+       , Getter Inputs (ls :< term), Prop Inputs (ls :< term) ~ [Ref Edge (Link (ls :< term))])
     => [Int] -> [(Int,Int)] -> Int -> [nodeRef] -> m [Hetero $ VectorGraph n e]
 run debugits exc it unis = do
     g <- Graph.get

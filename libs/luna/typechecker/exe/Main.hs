@@ -42,7 +42,6 @@ import qualified Luna.Evaluation.Runtime                         as Runtime
 import qualified Luna.Evaluation.Model                           as EvalModel
 import           Luna.Syntax.AST.Term                            hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target, Input)
 import qualified Luna.Syntax.AST.Term                            as Term
-import           Luna.Syntax.Model.Graph
 import           Data.Graph.Builder.Ref                          as Ref
 import qualified Data.Graph.Builder.Class                        as Graph
 import           Luna.Syntax.Model.Layer
@@ -54,8 +53,6 @@ import           Luna.Syntax.Model.Network.Builder.Term.Class    (NetGraph, NetL
 import           Luna.Syntax.Model.Network.Class                 (Network)
 import           Luna.Syntax.Model.Network.Term
 
-import qualified Luna.Syntax.Model.Graph.Cluster as Cluster
-import qualified Luna.Syntax.Model.Graph         as Graph
 import Data.Graph.Backend.Vector
 import Data.Graph.Referenced
 
@@ -63,27 +60,27 @@ import Data.Graph.Referenced
 title s = putStrLn $ "\n" <> "-- " <> s <> " --"
 
 
-instance Castable (Arc src tgt) (Arc src' tgt') => Castable (Edge (Arc src tgt)) (Arc src' tgt') where cast (Edge e) = cast e
-instance Castable (Arc src tgt) (Arc src' tgt') => Castable (Arc src tgt) (Edge (Arc src' tgt')) where cast e = Edge $ cast e
+--instance Castable (Arc src tgt) (Arc src' tgt') => Castable (Arc src tgt) (Arc src' tgt') where cast (Edge e) = cast e
+--instance Castable (Arc src tgt) (Arc src' tgt') => Castable (Arc src tgt) (Arc src' tgt') where cast e = Edge $ cast e
 -- --------------------------------------
 --  !!! KEEP THIS ON THE BEGINNING !!! --
 -- --------------------------------------
 -- - vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv ---
-prebuild :: Show a => IO (Ref $ Node (NetLayers a :< Draft Static), NetGraph a)
+prebuild :: Show a => IO (Ref Node (NetLayers a :< Draft Static), NetGraph a)
 prebuild = runBuild def star
 
-prebuild2 :: Show a => IO (Node (NetLayers a :< Draft Static), NetGraph a)
+prebuild2 :: Show a => IO (NetLayers a :< Draft Static, NetGraph a)
 prebuild2 = runBuild def  (read =<< star)
 
 
-runBuild (g :: NetGraph a) m = runInferenceT ELEMENT (Proxy :: Proxy (Ref $ Node (NetLayers a :< Draft Static)))
+runBuild (g :: NetGraph a) m = runInferenceT ELEMENT (Proxy :: Proxy (Ref Node (NetLayers a :< Draft Static)))
                              $ runNetworkBuilderT g m
 
 evalBuild = fmap snd ∘∘ runBuild
 
 
 input_g1 :: ( term ~ Draft Static
-            , nr   ~ Ref (Node $ (ls :< term))
+            , nr   ~ Ref Node (ls :< term)
             , MonadIO       m
             , NodeInferable m (ls :< term)
             , TermNode Star m (ls :< term)
@@ -105,10 +102,12 @@ input_g1 = do
 
 
 input_g1_resolution_mock :: ( term ~ Draft Static
-                            , node ~ Node (ls :< term)
+                            , node ~ (ls :< term)
                             , edge ~ Link (ls :< term)
-                            , nr   ~ Ref node
-                            , er   ~ Ref (Edge edge)
+                            , nr   ~ Ref Node node
+                            , er   ~ Ref Edge edge
+                            , BiCastable     n (ls :< term)
+                            , BiCastable     e edge
                             , MonadIO        m
                             , NodeInferable  m (ls :< term)
                             , TermNode Star  m (ls :< term)
@@ -200,7 +199,7 @@ test1 = do
         -- Running Type Checking compiler stage
         TypeCheck.runT $ do
             ((apps, accs, funcs), g01) <- runBuild g input_g1
-            (unis :: [Ref (Node $ (NetLayers () :< Draft Static))]               , g02 :: NetGraph ()) <- runBuild  g01 $ StructInference.run apps accs
+            (unis :: [Ref Node (NetLayers () :< Draft Static)]               , g02 :: NetGraph ()) <- runBuild  g01 $ StructInference.run apps accs
             (g03 :: NetGraph ())                        <- evalBuild g02 $ Unification.run [] [] 1 unis
             (unis               , g04) <- runBuild  g03 $ input_g1_resolution_mock funcs
             --(gs05, g05)                <- runBuild  g04 $ Unification.run [(2,13),(2,18),(2,21),(2,22),(2,23)] 1 unis
@@ -250,8 +249,8 @@ tp = Selector
 
 
 
-instance UnwrappedGetter sel p (Node a)  => Getter2 sel p (Node a)  where getter2 s = getter2 s ∘ unwrap'
-instance UnwrappedGetter sel p (ls :< t) => Getter2 sel p (ls :< t) where getter2 s = getter2 s ∘ unwrap'
+--instance UnwrappedGetter sel p (Node a)  => Getter2 sel p (Node a)  where getter2 s = getter2 s ∘ unwrap'
+--instance UnwrappedGetter sel p (ls :< t) => Getter2 sel p (ls :< t) where getter2 s = getter2 s ∘ unwrap'
 
 
 --check :: (MonadIO m, Graph g) => g -> m ()
@@ -329,7 +328,7 @@ showcase = do
     renderAndOpen [ ("g", g')
                   ]
 
-foo :: forall a. Show a => NetGraph a -> IO (Ref $ Node (NetLayers a :< Draft Static), NetGraph a)
+foo :: forall a. Show a => NetGraph a -> IO (Ref Node (NetLayers a :< Draft Static), NetGraph a)
 --foo :: NetGraph -> IO ((), NetGraph)
 foo g = runNetworkBuilderT g
     $ do
@@ -363,7 +362,7 @@ foo g = runNetworkBuilderT g
 
     title "complex element building"
     u1 <- unify s1 s2
-    print (u1 :: Ref $ Node (NetLayers a :< Draft Static))
+    print (u1 :: Ref Node (NetLayers a :< Draft Static))
     u1_v <- read u1
 
     title "inputs reading"
@@ -376,23 +375,23 @@ foo g = runNetworkBuilderT g
     print s1t
     print s1s
 
-    title "cluster definition"
-    cl1 <- cluster
-    cl2 <- cluster
-    include s1 cl1
-    include s2 cl1
-    include s2 cl2
-    print "done"
+            --title "cluster definition"
+            --cl1 <- cluster
+            --cl2 <- cluster
+            --include s1 cl1
+            --include s2 cl1
+            --include s2 cl2
+            --print "done"
 
-    title "cluster lookup"
-    print =<< cl1 `includes` s2
+            --title "cluster lookup"
+            --print =<< cl1 `includes` s2
 
-    title "cluster modification"
-    exclude s2 cl1
-    print =<< cl1 `includes` s2
+            --title "cluster modification"
+            --exclude s2 cl1
+            --print =<< cl1 `includes` s2
 
-    let x1 = s1_v :: Node $ (NetLayers a :< Draft Static)
-        x2 = fmapInputs id x1
+            --let x1 = s1_v :: Node $ (NetLayers a :< Draft Static)
+            --    x2 = fmapInputs id x1
     return s1
 
 
@@ -450,16 +449,16 @@ foo g = runNetworkBuilderT g
 
 
 
-cluster :: Constructor m (Ref Cluster) => m (Ref Cluster)
-cluster = constructLayer $ Cluster mempty
+                --cluster :: Constructor m (Ref Cluster) => m (Ref Cluster)
+                --cluster = constructLayer $ Cluster mempty
 
-includes :: Graph.MonadBuilder (Hetero (VectorGraph n e)) m => Ref Cluster -> Ref a -> m Bool
-include  :: Graph.MonadBuilder (Hetero (VectorGraph n e)) m => Ref a -> Ref Cluster -> m ()
-exclude  :: Graph.MonadBuilder (Hetero (VectorGraph n e)) m => Ref a -> Ref Cluster -> m ()
+                --includes :: Graph.MonadBuilder (Hetero (VectorGraph n e)) m => Ref Cluster -> Ref a -> m Bool
+                --include  :: Graph.MonadBuilder (Hetero (VectorGraph n e)) m => Ref a -> Ref Cluster -> m ()
+                --exclude  :: Graph.MonadBuilder (Hetero (VectorGraph n e)) m => Ref a -> Ref Cluster -> m ()
 
-includes cluster el = Cluster.member (el ^. idx) <$> read cluster
-include  el cluster = Ref.with cluster $ Cluster.add    (el ^. idx)
-exclude  el cluster = Ref.with cluster $ Cluster.remove (el ^. idx)
+                --includes cluster el = Cluster.member (el ^. idx) <$> read cluster
+                --include  el cluster = Ref.with cluster $ Cluster.add    (el ^. idx)
+                --exclude  el cluster = Ref.with cluster $ Cluster.remove (el ^. idx)
 
 ----------------------------
 -- === Sorting stuff === ---

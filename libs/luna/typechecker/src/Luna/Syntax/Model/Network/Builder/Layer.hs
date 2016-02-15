@@ -11,7 +11,6 @@ import           Data.Construction
 import qualified Luna.Syntax.Model.Network.Builder.Type as Type
 import qualified Luna.Syntax.Model.Network.Builder.Self as Self
 import           Luna.Syntax.Model.Network.Builder.Self (MonadSelfBuilder, self)
-import           Luna.Syntax.Model.Graph
 import           Data.Graph.Builder.Class
 import           Luna.Syntax.Model.Layer
 import           Data.Graph.Builder.Ref                 as Ref
@@ -27,14 +26,13 @@ import           Data.Graph.Referenced
 -- === Definitions === ---
 
 data SuccRegister = SuccRegister deriving (Show)
-instance ( Monad  m
-         , Reader m (Edge (Arc src tgt))
-         , Reader m (Node src)
-         , Writer m (Node src)
+instance ( MonadBuilder g m
+         , HasRef Edge (Arc src tgt) g
+         , HasRef Node src g
          , Show src
-         , Prop Succs src ~ [Ref (Edge (Arc src tgt))]
+         , Prop Succs src ~ [Ref Edge (Arc src tgt)]
          , HasProp Succs src
-         ) => Handler t SuccRegister m (Ref (Edge (Arc src tgt))) where
+         ) => Handler t SuccRegister m (Ref Edge (Arc src tgt)) where
     handler e = do
         ve <- lift $ read e -- FIXME[WD]: remove the lift (it could be handy to disable the magic trans-instance in Graph.hs)
         lift $ Ref.with (ve ^. source) $ prop Succs %~ (e:)
@@ -56,19 +54,19 @@ registerSuccs _ = unwrap'
 
 -- === Succs layer === --
 
-type instance LayerData (Network ls) Succs t = [Ref $ Edge $ Link (Shelled t)]
+type instance LayerData (Network ls) Succs t = [Ref Edge $ Link (Shelled t)]
 instance Monad m => Creator m (Layer (Network ls) Succs a) where create = return $ Layer []
 
 
 -- === Type layer === --
 
-type instance LayerData (Network ls) Type t = Ref $ Edge $ Link (Shelled t)
+type instance LayerData (Network ls) Type t = Ref Edge $ Link (Shelled t)
 
-instance (MonadSelfBuilder s m, Ref (Edge (Link l)) ~ Connection s (Ref $ Node l), Connectible s (Ref $ Node l) m, l ~ Shelled a)
+instance (MonadSelfBuilder s m, Ref Edge (Link l) ~ Connection s (Ref Node l), Connectible s (Ref Node l) m, l ~ Shelled a)
       => Creator m (Layer (Network ls) Type a) where
     create = Layer <$> do
         s <- self
-        let tgt = Ref 0 :: Ref $ Node l -- FIXME[WD]: Pure magic. 0 is the ID of Star
+        let tgt = Ref 0 :: Ref Node l -- FIXME[WD]: Pure magic. 0 is the ID of Star
         connection tgt s
 
 instance (Monad m, Unregister m (LayerData (Network ls) Type a)) => Destructor m (Layer (Network ls) Type a) where
