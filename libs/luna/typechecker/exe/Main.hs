@@ -23,6 +23,7 @@ import           Data.Graph.Query                                hiding (Graph)
 import qualified Data.Graph.Query                                as Sort
 import           Data.Index                                      (idx)
 import           Data.Layer.Cover
+import qualified Data.Map                                        as Map
 import           Data.Prop
 import           Data.Record                                     hiding (Layout, cons)
 import           Data.Version.Semantic
@@ -40,6 +41,8 @@ import           Luna.Diagnostic.Vis.GraphViz
 import           Luna.Evaluation.Runtime                         (Dynamic, Static)
 import qualified Luna.Evaluation.Runtime                         as Runtime
 import qualified Luna.Evaluation.Model                           as EvalModel
+import qualified Luna.Library.StdLib                             as StdLib
+import qualified Luna.Library.Symbol.Class                       as Symbol
 import           Luna.Syntax.AST.Term                            hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target, Input)
 import qualified Luna.Syntax.AST.Term                            as Term
 import           Data.Graph.Builder.Ref                          as Ref
@@ -182,13 +185,29 @@ input_g1_resolution_mock [f,g] = do
 --           )
 
 
+symbolMapTest :: IO ()
+symbolMapTest = do
+    (_, g :: NetGraph ()) <- prebuild
 
+    {-(f, (_ :: NetGraph ())) <- flip Symbol.evalT Map.empty $ runBuild g $ do-}
+        {-[>Symbol.loadSymbols StdLib.symbols<]-}
+        {-i1 <- int 1-}
+        {-i2 <- int 2-}
+        {-tint <- cons "Int"-}
+        {-reconnect i1 (prop Type) tint-}
+        {-reconnect i2 (prop Type) tint-}
+        {-plus <- acc "+" i1-}
+        {-return ()-}
+        {-[>Inlining.lookupFunction plus<]-}
 
+    {-print f-}
+    return ()
 
 
 test1 :: IO ()
 test1 = do
     (_,  g :: NetGraph () ) <- prebuild
+
 
     -- Running compiler environment
     flip Env.evalT def $ do

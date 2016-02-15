@@ -140,8 +140,9 @@ lam = curryN $ buildTerm (Proxy :: Proxy Lam)
 
 -- === Thunk === --
 
-type instance BuildArgs Acc n = (NameInput n, Input n)
-type instance BuildArgs App n = (Input n, [Arg (Input n)])
+type instance BuildArgs Acc n    = (NameInput n, Input n)
+type instance BuildArgs App n    = (Input n, [Arg (Input n)])
+type instance BuildArgs Native n = (NameInput n, [Input n])
 
 instance {-# OVERLAPPABLE #-}
          ( src  ~ Input a
@@ -168,12 +169,27 @@ instance ( inp ~ Input a
         cargs <- (mapM ∘ mapM) (flip connection out) args
         return out
 
+instance ( name ~ NameInput a
+         , inp  ~ Input a
+         , ConnectibleName name a m
+         , Connectible     inp  a m
+         , ElemBuilder (Native (NameConnection name a) (Ref Edge $ Connection inp a)) m a
+         , MonadFix m
+         ) => TermBuilder Native m a where
+    buildTerm p (name, args) = mdo
+        out   <- buildElem $ Native cname cargs
+        cname <- nameConnection name out
+        cargs <- mapM (flip connection out) args
+        return out
+
 acc :: TermBuilder Acc m a => NameInput a -> Input a -> m a
 acc = curryN $ buildTerm (Proxy :: Proxy Acc)
 
 app :: TermBuilder App m a => Input a -> [Arg $ Input a] -> m a
 app = curryN $ buildTerm (Proxy :: Proxy App)
 
+native :: TermBuilder Native m a => NameInput a -> [Input a] -> m a
+native = curryN $ buildTerm (Proxy :: Proxy Native)
 
 -- === Expr === --
 

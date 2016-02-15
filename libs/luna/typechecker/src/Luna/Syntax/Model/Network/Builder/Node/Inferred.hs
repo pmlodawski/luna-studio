@@ -18,3 +18,4 @@ app    = inferNodeM ∘∘ Node.app
 var    = inferNodeM ∘  Node.var
 unify  = inferNodeM ∘∘ Node.unify
 blank  = inferNodeM    Node.blank
+native = inferNodeM ∘∘ Node.native

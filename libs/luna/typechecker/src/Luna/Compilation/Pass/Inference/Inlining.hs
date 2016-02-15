@@ -4,10 +4,7 @@ module Luna.Compilation.Pass.Inference.Inlining where
 
 import Prelude.Luna
 
-import Prelude.Luna
-
 import Data.Construction
-import Data.Container                               hiding (impossible)
 import Data.Prop
 import Data.Record
 import Luna.Evaluation.Runtime                      (Static, Dynamic)
@@ -22,7 +19,6 @@ import Luna.Syntax.Model.Network.Builder.Node
 import Luna.Syntax.Model.Network.Builder.Term.Class (runNetworkBuilderT, NetGraph, NetLayers)
 import Luna.Syntax.Model.Network.Class              ()
 import Luna.Syntax.Model.Network.Term
-import Luna.Syntax.Name.Ident.Pool                  (MonadIdentPool, newVarIdent')
 import Type.Inference
 
 import qualified Data.Map as Map
@@ -45,7 +41,7 @@ import qualified Luna.Syntax.AST.Decl.Function    as Function
                            , TermNode Var   (m) (ls :< term)         \
                            , TermNode Acc   (m) (ls :< term)         \
                            , TermNode Cons  (m) (ls :< term)         \
-                           , MonadSymbol n  (m)                      \
+                           , MonadSymbol n g (m)                     \
                            )
 -- CHECKME[WD -> AS]: ^^^ should we refer here to `n` or `node` in MonadSymbol premise ?
 
