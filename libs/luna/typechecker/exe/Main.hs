@@ -35,7 +35,7 @@ import qualified Luna.Compilation.Env.Class                      as Env
 import           Luna.Compilation.Pass.Inference.Literals        as LiteralsAssignement
 import qualified Luna.Compilation.Pass.Inference.Struct          as StructInference
 import qualified Luna.Compilation.Pass.Inference.Unification     as Unification
-import qualified Luna.Compilation.Pass.Inference.Inlining        as Inlining
+import qualified Luna.Compilation.Pass.Inference.Importing       as Importing
 import           Luna.Compilation.Pass.Utils.Literals            as LiteralsUtils
 import qualified Luna.Compilation.Stage.TypeCheck                as TypeCheck
 import           Luna.Diagnostic.Vis.GraphViz
@@ -209,15 +209,15 @@ symbolMapTest = do
         sin  <- var "sin"
         return (plus, sin, err, l1, l2)
 
-    renderAndOpen [("beforeInlining", g)]
+    renderAndOpen [("beforeImporting", g)]
 
     (f, (g :: NetGraph ())) <- flip Symbol.evalT def $ runBuild g $ do
         Symbol.loadFunctions StdLib.symbols
-        mapM Inlining.processNode [plus, sin, err, l1, l2]
+        mapM Importing.processNode [plus, sin, err, l1, l2]
 
     mapM print f
 
-    renderAndOpen [("afterInlining", g)]
+    renderAndOpen [("afterImporting", g)]
     return ()
 
 

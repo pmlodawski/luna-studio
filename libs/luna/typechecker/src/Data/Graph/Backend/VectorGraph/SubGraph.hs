@@ -24,6 +24,9 @@ remove el = members %~ IntSet.delete el
 member :: Int -> SubGraph -> Bool
 member el = IntSet.member el ∘ view members
 
+nodes :: SubGraph -> [Int]
+nodes = IntSet.toList . view members
+
 
 -- === Instances === --
 

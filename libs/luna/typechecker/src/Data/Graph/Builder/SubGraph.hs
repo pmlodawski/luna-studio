@@ -16,6 +16,9 @@ subgraph = constructLayer . SubGraph mempty
 includes :: (Graph.MonadBuilder t m, Referred Cluster SubGraph t) => Ref Cluster SubGraph -> Ref Node a -> m Bool
 includes cluster el = SubGraph.member (el ^. idx) <$> Ref.read cluster
 
+members :: (Graph.MonadBuilder t m, Referred Cluster SubGraph t) => Ref Cluster SubGraph -> m [Ref Node a]
+members cluster = fmap Ref <$> SubGraph.nodes <$> Ref.read cluster
+
 include :: (Referred Cluster SubGraph t, Graph.MonadBuilder t m) => Ref Node a -> Ref Cluster SubGraph -> m ()
 include el cluster = Ref.with cluster $ SubGraph.add   (el ^. idx)
 

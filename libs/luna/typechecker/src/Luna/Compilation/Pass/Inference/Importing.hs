@@ -1,6 +1,7 @@
-{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE CPP                 #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
-module Luna.Compilation.Pass.Inference.Inlining where
+module Luna.Compilation.Pass.Inference.Importing where
 
 import Prelude.Luna
 
@@ -16,7 +17,7 @@ import Luna.Syntax.AST.Term                         hiding (source)
 import Data.Graph.Builder                           as Graph hiding (run)
 import Data.Graph.Backend.VectorGraph               as Graph
 import Luna.Syntax.Model.Layer
-import Luna.Syntax.Model.Network.Builder            (merge)
+import Luna.Syntax.Model.Network.Builder            (merge, dupCluster)
 import Luna.Syntax.Model.Network.Builder.Node
 import Luna.Syntax.Model.Network.Builder.Term.Class (runNetworkBuilderT, NetGraph, NetLayers)
 import Luna.Syntax.Model.Network.Class              ()
@@ -30,22 +31,25 @@ import qualified Luna.Syntax.AST.Decl.Function    as Function
 
 
 
-#define PassCtx ( term  ~ Draft Static             \
-                , ls    ~ NetLayers a              \
-                , edge  ~ Link (ls :< term)        \
-                , node  ~ (ls :< term)             \
-                , graph ~ Hetero (VectorGraph n e) \
-                , BiCastable     e edge            \
-                , BiCastable     n node            \
-                , MonadBuilder graph (m)           \
-                , NodeInferable  (m) (ls :< term)  \
-                , TermNode Var   (m) (ls :< term)  \
-                , TermNode Acc   (m) (ls :< term)  \
-                , TermNode Cons  (m) (ls :< term)  \
-                , TermNode Lam   (m) (ls :< term)  \
-                , TermNode Unify (m) (ls :< term)  \
-                , MonadSymbol node graph (m)       \
-                , Referred Node n graph            \
+#define PassCtx forall node edge ls term graph e n m a . \
+                ( term  ~ Draft Static                   \
+                , ls    ~ NetLayers a                    \
+                , edge  ~ Link (ls :< term)              \
+                , node  ~ (ls :< term)                   \
+                , graph ~ Hetero (VectorGraph n e)       \
+                , BiCastable     e edge                  \
+                , BiCastable     n node                  \
+                , MonadBuilder graph (m)                 \
+                , NodeInferable  (m) (ls :< term)        \
+                , TermNode Var   (m) (ls :< term)        \
+                , TermNode Acc   (m) (ls :< term)        \
+                , TermNode Cons  (m) (ls :< term)        \
+                , TermNode Lam   (m) (ls :< term)        \
+                , TermNode Unify (m) (ls :< term)        \
+                , MonadSymbol node graph (m)             \
+                , Referred Node n graph                  \
+                , MonadIO m \
+                , Show a \
                 )
 
 data ImportError = NotABindingNode | AmbiguousNodeType | SymbolNotFound deriving (Show)
@@ -77,7 +81,7 @@ funLookup name = do
     f <- lookupFunction $ QualPath.mk name
     fromMaybe (throwError SymbolNotFound) (return <$> f)
 
-importFunction :: PassCtx => String -> Function node graph -> ImportErrorT m ()
+importFunction :: PassCtx => String -> Function node graph -> ImportErrorT m (Lambda node)
 importFunction name fun = do
     translations <- merge $ fun ^. Function.graph
     cls <- subgraph name
@@ -87,6 +91,7 @@ importFunction name fun = do
                                     & over (Function.args . mapped) unsafeTranslate
                                     & over Function.out unsafeTranslate
     loadLambda (QualPath.mk name) $ Lambda fptr cls
+    return $ Lambda fptr cls
 
 buildTypeRep :: PassCtx => FunctionPtr node -> m (Ref Node node)
 buildTypeRep fptr = do
@@ -100,11 +105,13 @@ processNode :: PassCtx => Ref Node node -> m (Either ImportError ())
 processNode ref = runErrorT $ do
     name   <- getFunctionName ref
     lambda <- lookupLambda $ QualPath.mk name
-    case lambda of
-        Just l  -> return ()
+    lamb <- case lambda of
+        Just l  -> return l
         Nothing -> do
             fun <- funLookup name
             importFunction name fun
+    (_, _ :: Map.Map (Ref Node node) (Ref Node node)) <- dupCluster (lamb ^. Function.subgraph) $ name <> " @ " <> (show ref)
+    return ()
     {-fun       <- MaybeT $ lookupFunction ref-}
     {-Lambda fptr _ <- lift $ importFunction fun-}
     {-tpRep <- lift $ buildTypeRep fptr-}

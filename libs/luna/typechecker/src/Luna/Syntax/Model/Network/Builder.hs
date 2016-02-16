@@ -7,16 +7,19 @@ import           Data.Graph.Builder.Class               as X
 import           Luna.Syntax.Model.Network.Builder.Term as X
 
 
-import           Prologue                hiding (read, Getter)
+import           Prologue                hiding (read, Getter, (#))
 import           Control.Monad           (forM)
 import           Data.Graph.Builder
 import           Data.Graph.Backend.VectorGraph
 import           Data.Container
 import           Data.Layer.Cover
 import           Data.Construction
+import           Data.Index              (idx)
 import           Data.Prop
 import           Data.Map                (Map)
 import qualified Data.Map                as Map
+import qualified Data.IntSet             as IntSet
+
 import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Term (Draft)
 import           Luna.Evaluation.Runtime        (Static)
@@ -26,24 +29,28 @@ import           Luna.Evaluation.Runtime        (Static)
 -- === Utils === --
 -------------------
 
-merge :: ( node  ~ (NetLayers a :< Draft Static)
-         , edge  ~ (Link node)
-         , graph ~ Hetero (VectorGraph n e)
-         , BiCastable e edge
-         , BiCastable n node
-         , MonadBuilder graph m
-         , Referred Node n graph
-         , Constructor m (Ref Node node)
-         , Constructor m (Ref Edge edge)
-         ) => graph -> m (Map (Ref Node node) (Ref Node node))
-merge g = do
-    let foreignNodeRefs = Ref <$> usedIxes (g ^. wrapped . nodeGraph)
-        foreignEdgeRefs = Ref <$> usedIxes (g ^. wrapped . edgeGraph)
+importStructure :: ( node  ~ (NetLayers a :< Draft Static)
+                   , edge  ~ (Link node)
+                   , graph ~ Hetero (VectorGraph n e)
+                   , BiCastable e edge
+                   , BiCastable n node
+                   , MonadBuilder graph m
+                   , Referred Node n graph
+                   , Constructor m (Ref Node node)
+                   , Constructor m (Ref Edge edge)
+                   , MonadIO m
+                   , Show a
+                   ) => [(Ref Node node, node)] -> [(Ref Edge edge, edge)] -> m (Map (Ref Node node) (Ref Node node))
+importStructure nodes edges = do
+    liftIO $ mapM print nodes
+    liftIO $ mapM print edges
+    let foreignNodeRefs = fst <$> nodes
+        foreignEdgeRefs = fst <$> edges
 
-    newNodeRefs <- forM foreignNodeRefs $ construct . (flip view g . focus)
+    newNodeRefs <- mapM construct $ snd <$> nodes
 
     let nodeTrans = Map.fromList $ zip foreignNodeRefs newNodeRefs
-        foreignEs  = flip view g ∘ focus <$> foreignEdgeRefs
+        foreignEs  = snd <$> edges
         es         = foreignEs & over (mapped . source) unsafeTranslateNode
                                & over (mapped . target) unsafeTranslateNode
                    where
@@ -62,3 +69,45 @@ merge g = do
         write ref nodeWithFixedEdges
 
     return nodeTrans
+
+merge :: ( node  ~ (NetLayers a :< Draft Static)
+         , edge  ~ (Link node)
+         , graph ~ Hetero (VectorGraph n e)
+         , BiCastable e edge
+         , BiCastable n node
+         , MonadBuilder graph m
+         , Referred Node n graph
+         , Constructor m (Ref Node node)
+         , Constructor m (Ref Edge edge)
+         , MonadIO m
+         , Show a
+         ) => graph -> m (Map (Ref Node node) (Ref Node node))
+merge g = do
+    let foreignNodeRefs = Ref <$> usedIxes (g ^. wrapped . nodeGraph)
+        foreignEdgeRefs = Ref <$> usedIxes (g ^. wrapped . edgeGraph)
+        foreignNodes    = flip view g . focus <$> foreignNodeRefs
+        foreignEdges    = flip view g . focus <$> foreignEdgeRefs
+    importStructure (zip foreignNodeRefs foreignNodes) (zip foreignEdgeRefs foreignEdges)
+
+dupCluster :: forall node edge a e n m graph . ( node  ~ (NetLayers a :< Draft Static)
+              , edge  ~ (Link node)
+              , graph ~ Hetero (VectorGraph n e)
+              , BiCastable e edge
+              , BiCastable n node
+              , MonadBuilder graph m
+              , Referred Node n graph
+              , Constructor m (Ref Node node)
+              , Constructor m (Ref Edge edge)
+              , MonadIO m
+              , Show a
+              ) => Ref Cluster SubGraph -> String -> m (Ref Cluster SubGraph, Map (Ref Node node) (Ref Node node))
+dupCluster cluster name = do
+    nodeRefs <- members cluster
+    (nodes :: [node]) <- mapM read nodeRefs
+    let gatherEdges n = foldr IntSet.insert mempty (view idx <$> ((n # Inputs) ++ [n ^. prop Type]))
+    let edgeRefs = Ref <$> (IntSet.toList $ foldr IntSet.union mempty (gatherEdges <$> nodes))
+    edges <- mapM read edgeRefs
+    trans <- importStructure (zip nodeRefs nodes) (zip edgeRefs edges)
+    cl <- subgraph name
+    mapM (flip include cl) $ Map.elems trans
+    return (cl, trans)
