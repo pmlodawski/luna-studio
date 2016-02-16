@@ -85,27 +85,10 @@ queryTreeCmd query = do
     let items = Scope.moduleItems sd' query
     performIO $ UI.displayTreeResults items
 
-
--- openEdit :: Command Global.State ()
--- openEdit = do
---     focusedWidget  <- use $ Global.uiRegistry . UIRegistry.focusedWidget
---     mousePos       <- use Global.mousePos
---     graph          <- use Global.graph
---     forM_ focusedWidget $ \focusedWidget -> do
---         nodeWidget <- zoom Global.uiRegistry $ UIRegistry.lookupTypedM focusedWidget
---         forM_ nodeWidget $ \nodeWidget -> do
---             performIO $ UI.initNodeSearcher (nodeWidget ^. Widget.widget . NodeModel.expression)
---                                             (nodeWidget ^. Widget.widget . NodeModel.nodeId)
---                                             mousePos
-
-
 parseExpr :: Text -> Command Global.State ()
-parseExpr "project.new" = do
-    performIO $ UI.initNodeSearcher "project.new untitled" 0 (Vector2 200 200) True
-parseExpr (stripPrefix "project.new "  -> Just name) = do
-    performIO $ putStrLn $ "CP"
-    performIO $ putStrLn $ Text.unpack $ name
-parseExpr (stripPrefix "project.open." -> Just name) = do
-    performIO $ putStrLn $ "OP"
-    performIO $ putStrLn $ Text.unpack $ name
+parseExpr "project.new" = performIO $ UI.initNodeSearcher "project.new untitled" 0 (Vector2 200 200) True
+parseExpr (stripPrefix "project.new "  -> Just name) = Commands.createProject name
+parseExpr (stripPrefix "project.open." -> Just name) = Commands.openProject name
+parseExpr "help"     = Commands.help
+parseExpr "feedback" = Commands.feedback
 parseExpr _ = return ()

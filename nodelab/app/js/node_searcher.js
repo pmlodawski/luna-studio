@@ -374,6 +374,9 @@ NodeSearcher.prototype.onEnter = function (ev) {
   var current, data;
 
   if (this.searchrow.hasClass('active')) {
+    if (this.command) {
+      this.onTab(ev);
+    }
     this.createNode(this.prefix + this.searchbox.val());
   } else {
     current = this.currentSelection();

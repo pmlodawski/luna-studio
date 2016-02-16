@@ -2,15 +2,16 @@
 
 module Reactive.Plugins.Core.Action.NodeSearcher.Scope where
 
-import           Utils.PreludePlus hiding ( Item )
+import           Utils.PreludePlus                                  hiding (Item)
 
-import qualified Data.Map as Map
-import           Data.Map ( Map )
+import           Data.Map                                           (Map)
+import qualified Data.Map                                           as Map
+import           GHC.Exts                                            (sortWith)
 
 import           JS.NodeSearcher
 
-import qualified Data.Text.Lazy as Text
-import           Data.Text.Lazy             ( Text )
+import           Data.Text.Lazy                                     (Text)
+import qualified Data.Text.Lazy                                     as Text
 
 import           Reactive.Plugins.Core.Action.NodeSearcher.Searcher
 
@@ -92,7 +93,7 @@ moduleItems root path = fmap toQueryResult $ items where
     toQueryResult (name, t)  = QueryResult path name (appendPath path name) [] (jsItemType t)
     items :: [(Text, Item)]
     items = case moduleByPath root (pathFromText path) of
-        Just (LunaModule it) -> Map.toList it
+        Just (LunaModule it) -> sortWith fst $ Map.toList it
         Nothing              -> []
 
 toHighlight :: Submatch -> Highlight

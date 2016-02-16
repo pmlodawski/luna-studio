@@ -10,8 +10,10 @@ import qualified Data.Text.Lazy                                  as Text
 import           Utils.PreludePlus                               hiding (Item)
 
 import qualified Batch.Workspace                                 as Workspace
+import qualified BatchConnector.Commands                         as BatchCmd
 import qualified Empire.API.Data.Project                         as Project
-import           Reactive.Commands.Command                       (Command)
+import           Reactive.Commands.Command                       (Command, performIO)
+import           Reactive.Commands.ProjectManager                (loadProject)
 import           Reactive.Plugins.Core.Action.NodeSearcher.Scope (Item (..), LunaModule (..))
 import qualified Reactive.State.Global                           as Global
 
@@ -29,3 +31,23 @@ commands = do
            , ("feedback", Function)
            , ("help",     Function)
            ]
+
+
+createProject :: Text -> Command Global.State ()
+createProject name = performIO $ BatchCmd.createProject name $ name <> ".luna"
+
+openProject :: Text -> Command Global.State ()
+openProject name = do
+    projs <- use $ Global.workspace . Workspace.projects
+    let mayProject = find (\(_,p) -> p ^. Project.name == (Just $ Text.unpack name)) (IntMap.toList projs)
+    case mayProject of
+        Just (projectId, project) -> loadProject projectId
+        Nothing                   -> performIO $ putStrLn "Project not found"
+
+
+
+help :: Command Global.State ()
+help = return ()
+
+feedback :: Command Global.State ()
+feedback = return ()
