@@ -32,15 +32,28 @@ with ref = withM ref ∘ (return <$>)
 follow :: (MonadBuilder t m, Referred r a t) => Lens' a b -> Ref r a -> m b
 follow f ptr = view f <$> read ptr
 
-reconnect :: (MonadBuilder t m, Referred r el t, Unregister m connRef, Connectible' (Ref r inp) (Ref r el) m conn, connRef ~ Ref Edge conn)
-          => Ref r el -> Lens' el connRef -> Ref r inp -> m connRef
-reconnect elRef lens input = do
-    el  <- read elRef
-    unregister $ el ^. lens
-    conn <- connection input elRef
-    write elRef $ el & lens .~ conn
-    return conn
+-- === Reconnects === --
 
+class Reconnectible m r el store inp where
+    reconnect :: Ref r el -> Lens' el store -> Ref r inp -> m store
+
+instance (MonadBuilder t m, Referred r el t, Unregister m (Ref Edge conn), Connectible' (Ref r inp) (Ref r el) m conn)
+      => Reconnectible m r el (Ref Edge conn) inp where
+    reconnect elRef lens input = do
+        el  <- read elRef
+        unregister $ el ^. lens
+        conn <- connection input elRef
+        write elRef $ el & lens .~ conn
+        return conn
+
+instance (MonadBuilder t m, Referred r el t, Unregister m connRef, Connectible' (Ref r inp) (Ref r el) m conn, connRef ~ Ref Edge conn)
+      => Reconnectible m r el (Maybe connRef) inp where
+    reconnect elRef lens input = do
+        el  <- read elRef
+        mapM_ unregister $ el ^. lens
+        conn <- connection input elRef
+        write elRef $ el & lens ?~ conn
+        return $ Just conn
 
 --class Referred r a t where ref :: Ref r a -> Lens' t a
 

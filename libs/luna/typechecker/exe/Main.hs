@@ -207,6 +207,9 @@ symbolMapTest = do
         l1   <- acc "length" s2
         l2   <- acc "length" s3
         sin  <- var "sin"
+        reconnect s1 (prop Redirect) err
+        {-write s1 $ s & prop Redirect .~ t-}
+
         return (plus, sin, err, l1, l2)
 
     renderAndOpen [("beforeImporting", g)]

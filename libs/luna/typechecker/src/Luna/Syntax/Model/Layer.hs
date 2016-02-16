@@ -121,13 +121,15 @@ instance (HasRecord (Uncovered (ls :< t)), Uncovered (Unwrapped (ls :< t)) ~ t l
 
 -- === Layout-specific === --
 
-data Type  = Type  deriving (Show, Eq, Ord)
-data Succs = Succs deriving (Show, Eq, Ord)
+data Type     = Type     deriving (Show, Eq, Ord)
+data Succs    = Succs    deriving (Show, Eq, Ord)
+data Redirect = Redirect deriving (Show, Eq, Ord)
 
 -- === Universal === --
 
 instance Castable Bool Bool where cast = id
 instance Castable (Maybe a) (Maybe a) where cast = id
+instance {-# OVERLAPPABLE #-} Castable a a' => Castable (Maybe a) (Maybe a') where cast = fmap cast
 
 -- Note layer
 data Note = Note deriving (Show, Eq, Ord)

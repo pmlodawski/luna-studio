@@ -72,6 +72,15 @@ instance (Monad m, Unregister m (LayerData (Network ls) Type a)) => Destructor m
     destruct (Layer ref) = unregister ref
 
 
+-- === Redirects layer === --
+
+type instance LayerData (Network ls) Redirect t = Maybe $ Ref Edge $ Link (Shelled t)
+instance Monad m => Creator m (Layer (Network ls) Redirect a) where
+    create = return $ Layer Nothing
+
+instance (Monad m, Unregister m (Ref Edge $ Link (Shelled a)))
+      => Destructor m (Layer (Network ls) Redirect a) where
+    destruct (Layer r) = mapM_ unregister r
 
 ------------------------------------------
 -- === Layer building & destruction === --

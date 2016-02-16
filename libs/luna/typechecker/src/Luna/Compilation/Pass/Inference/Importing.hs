@@ -48,8 +48,6 @@ import qualified Luna.Syntax.AST.Decl.Function    as Function
                 , TermNode Unify (m) (ls :< term)        \
                 , MonadSymbol node graph (m)             \
                 , Referred Node n graph                  \
-                , MonadIO m \
-                , Show a \
                 )
 
 data ImportError = NotABindingNode | AmbiguousNodeType | SymbolNotFound deriving (Show)

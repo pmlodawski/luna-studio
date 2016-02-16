@@ -38,12 +38,8 @@ importStructure :: ( node  ~ (NetLayers a :< Draft Static)
                    , Referred Node n graph
                    , Constructor m (Ref Node node)
                    , Constructor m (Ref Edge edge)
-                   , MonadIO m
-                   , Show a
                    ) => [(Ref Node node, node)] -> [(Ref Edge edge, edge)] -> m (Map (Ref Node node) (Ref Node node))
 importStructure nodes edges = do
-    liftIO $ mapM print nodes
-    liftIO $ mapM print edges
     let foreignNodeRefs = fst <$> nodes
         foreignEdgeRefs = fst <$> edges
 
@@ -79,8 +75,6 @@ merge :: ( node  ~ (NetLayers a :< Draft Static)
          , Referred Node n graph
          , Constructor m (Ref Node node)
          , Constructor m (Ref Edge edge)
-         , MonadIO m
-         , Show a
          ) => graph -> m (Map (Ref Node node) (Ref Node node))
 merge g = do
     let foreignNodeRefs = Ref <$> usedIxes (g ^. wrapped . nodeGraph)
@@ -98,8 +92,6 @@ dupCluster :: forall node edge a e n m graph . ( node  ~ (NetLayers a :< Draft S
               , Referred Node n graph
               , Constructor m (Ref Node node)
               , Constructor m (Ref Edge edge)
-              , MonadIO m
-              , Show a
               ) => Ref Cluster SubGraph -> String -> m (Ref Cluster SubGraph, Map (Ref Node node) (Ref Node node))
 dupCluster cluster name = do
     nodeRefs <- members cluster

@@ -23,6 +23,7 @@ import           Luna.Syntax.Repr.Styles                (HeaderOnly (..), Simple
 
 import           Data.Container
 
+import           Data.Maybe                             (maybeToList)
 import           Data.Record
 import           Luna.Syntax.Model.Network.Builder
 
@@ -58,6 +59,7 @@ gClr          = GVC.Gray30
 
 typedArrClr   = GVC.Firebrick
 namedArrClr   = GVC.Turquoise
+redirectClr   = GVC.LightPink
 accArrClr     = GVC.Yellow
 arrClr        = GVC.DarkOrange
 
@@ -263,7 +265,7 @@ fromListWithReps lst = foldr update (Map.fromList initLst) lst where
 
 genInEdges (g :: NetGraph a) (n :: NetLayers a :< Draft Static) = displayEdges where
     --displayEdges = tpEdge : (addColor <$> inEdges)
-    displayEdges = ($ (addColor <$> inEdges)) $ if t == universe then id else (<> [tpEdge])
+    displayEdges = ($ (addColor <$> inEdges) ++ redirEdge) $ if t == universe then id else (<> [tpEdge])
     genLabel     = GV.Label . StrLabel . fromString . show
     ins          = n # Inputs
     inIxs        = view idx <$> ins
@@ -274,7 +276,9 @@ genInEdges (g :: NetGraph a) (n :: NetLayers a :< Draft Static) = displayEdges w
     te           = n ^. prop Type
     t            = getTgt te
     tpEdge       = (getTgtIdx te, [GV.color typedArrClr, ArrowHead dotArrow, genLabel $ te ^. idx])
+    redirEdge    = maybeToList $ makeRedirEdge <$> n ^. prop Redirect
 
+    makeRedirEdge e       = (getTgtIdx e, [GV.color redirectClr, Dir Back, Style [SItem Dashed []]])
     addColor (idx, attrs) = (idx, GV.color arrClr : attrs)
     getTgtIdx             = view idx ∘ getTgt
     getTgt    inp         = view source $ index (inp ^. idx) es
