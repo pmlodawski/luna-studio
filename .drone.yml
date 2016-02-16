@@ -8,7 +8,7 @@ build:
     - scripts/genproto > /dev/null
     - scripts/gencabal
     - cd $DRONE_DIR/build_7.10/backend
-    - stack build --copy-bins
+    - stack build --copy-bins --fast
     - cd $DRONE_DIR
     - 'if [ "$DRONE_BRANCH" = production -o "$DRONE_BRANCH" = fogger ]; then ./upload_backend.sh; fi'
     - cd $DRONE_DIR/nodelab

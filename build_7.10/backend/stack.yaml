@@ -2,9 +2,6 @@ extra-deps: [ghc-session-0.1.2.0, graphviz-2999.18.0.2, string-qq-0.0.2, error-u
   cond-0.4.1.1, tuple-0.3.0.2, OneTuple-0.2.1, docopt-0.7.0.4, saltine-0.0.0.4]
 ghc-options:
   '*': -DFastCompilation -threaded -O
-  'luna': -DFastCompilation -threaded -O0
-  'luna-empire': -DFastCompilation -threaded -O0
-  'batch-plugin-luna-empire': -DFastCompilation -threaded -O0
 local-bin-path: ../../dist/bin
 packages:
 - {extra-dep: true, location: ../../libs/bus}
