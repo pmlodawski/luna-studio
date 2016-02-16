@@ -2,7 +2,6 @@
 
 var $$             = require('common'),
     config         = require('config'),
-    features       = require('features'),
     brunch         = require('brunch'),
     raycaster      = require('raycaster'),
     GraphNode      = require('Widget/Node'),
