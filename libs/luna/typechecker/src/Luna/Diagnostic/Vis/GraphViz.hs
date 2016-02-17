@@ -220,11 +220,11 @@ toGraphViz name net = DotGraph { strictGraph     = False
           mkEdge  (n,(a,attrs),b) = DotEdge (nodeRef a) (nodeRef b) $ HeadPort (LabelledPort (inPortName n) Nothing) : TailPort (LabelledPort "label" Nothing) : attrs
 
           draftNodeByIx ix   = cast $ index_ ix ng :: (NetLayers a :<: Draft Static)
-          clusterByIx   ix   = index_ ix cg        :: SubGraph
+          clusterByIx   ix   = index_ ix cg        :: NetCluster
           genNodeLabel  node = reprStyled HeaderOnly $ uncover node
 
           matchCluster :: Int -> Int -> Maybe Int
-          matchCluster clrIx  nix = if SubGraph.member nix (clusterByIx clrIx) then Just clrIx else Nothing
+          matchCluster clrIx  nix = if SubGraph.member nix (uncover $ clusterByIx clrIx) then Just clrIx else Nothing
           matchClusters :: [Int] -> Int -> [Int]
           matchClusters clrIxs nix = catMaybes $ flip matchCluster nix <$> clrIxs
 
@@ -238,7 +238,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
           genSubGraph sgIdx nodeIxs = DotSG
               { isCluster     = True
               , subGraphID    = Just $ Str $ fromString $ show sgIdx
-              , subGraphStmts = DotStmts { attrStmts = gStyle $ view SubGraph.label $ clusterByIx sgIdx
+              , subGraphStmts = DotStmts { attrStmts = gStyle $ clusterByIx sgIdx # Name
                                          , subGraphs = []
                                          , nodeStmts = concat $ labeledNode <$> nodeIxs
                                          , edgeStmts = []

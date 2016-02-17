@@ -10,17 +10,20 @@ import qualified Data.Graph.Backend.VectorGraph.SubGraph as SubGraph
 import qualified Data.Graph.Builder.Class                as Graph
 import qualified Data.Graph.Builder.Ref                  as Ref
 
-subgraph :: Constructor m (Ref Cluster SubGraph) => String -> m (Ref Cluster SubGraph)
-subgraph = constructLayer . SubGraph mempty
+subgraph' :: (CoverConstructor m c, Covered c, Uncovered c ~ SubGraph) => m c
+subgraph' = constructCover $ SubGraph mempty
 
-includes :: (Graph.MonadBuilder t m, Referred Cluster SubGraph t) => Ref Cluster SubGraph -> Ref Node a -> m Bool
-includes cluster el = SubGraph.member (el ^. idx) <$> Ref.read cluster
+subgraph :: (CoverConstructor m c, Constructor m (Ref Cluster c), Covered c, Uncovered c ~ SubGraph) => m (Ref Cluster c)
+subgraph = constructLayer =<< subgraph'
 
-members :: (Graph.MonadBuilder t m, Referred Cluster SubGraph t) => Ref Cluster SubGraph -> m [Ref Node a]
-members cluster = fmap Ref <$> SubGraph.nodes <$> Ref.read cluster
+includes :: (Graph.MonadBuilder t m, Referred Cluster c t, Covered c, Uncovered c ~ SubGraph) => Ref Cluster c -> Ref Node a -> m Bool
+includes cluster el = SubGraph.member (el ^. idx) . uncover <$> Ref.read cluster
 
-include :: (Referred Cluster SubGraph t, Graph.MonadBuilder t m) => Ref Node a -> Ref Cluster SubGraph -> m ()
-include el cluster = Ref.with cluster $ SubGraph.add   (el ^. idx)
+members :: (Graph.MonadBuilder t m, Referred Cluster c t, Covered c, Uncovered c ~ SubGraph) => Ref Cluster c -> m [Ref Node a]
+members cluster = fmap Ref <$> SubGraph.nodes . uncover <$> Ref.read cluster
 
-exclude :: (Referred Cluster SubGraph t, Graph.MonadBuilder t m) => Ref Node a -> Ref Cluster SubGraph -> m ()
-exclude el cluster = Ref.with cluster $ SubGraph.remove (el ^. idx)
+include :: (Graph.MonadBuilder t m, Referred Cluster c t, Covered c, Uncovered c ~ SubGraph) => Ref Node a -> Ref Cluster c -> m ()
+include el cluster = Ref.with cluster $ covered %~ SubGraph.add (el ^. idx)
+
+exclude :: (Graph.MonadBuilder t m, Referred Cluster c t, Covered  c, Uncovered c ~ SubGraph) => Ref Node a -> Ref Cluster c -> m ()
+exclude el cluster = Ref.with cluster $ covered %~ SubGraph.remove (el ^. idx)

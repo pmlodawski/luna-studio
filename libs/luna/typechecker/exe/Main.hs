@@ -468,8 +468,8 @@ foo g = runNetworkBuilderT g
     print s1s
 
     title "subgraph definition"
-    sg1 <- subgraph "Subgraph 0"
-    sg2 <- subgraph "Subgraph 1"
+    sg1 :: Ref Cluster NetCluster <- subgraph
+    sg2 :: Ref Cluster NetCluster <- subgraph
     include s1 sg1
     include s2 sg1
     include s2 sg2

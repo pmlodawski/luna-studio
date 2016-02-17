@@ -34,19 +34,19 @@ import qualified Luna.Syntax.AST.Decl.Function    as Function
 #define PassCtx forall node edge ls term graph e n m a c. \
                 ( term  ~ Draft Static                    \
                 , ls    ~ NetLayers a                     \
-                , edge  ~ Link (ls :<: term)               \
-                , node  ~ (ls :<: term)                    \
+                , edge  ~ Link (ls :<: term)              \
+                , node  ~ (ls :<: term)                   \
                 , c     ~ NetCluster                      \
                 , graph ~ Hetero (VectorGraph n e c)      \
                 , BiCastable     e edge                   \
                 , BiCastable     n node                   \
                 , MonadBuilder graph (m)                  \
-                , NodeInferable  (m) (ls :<: term)         \
-                , TermNode Var   (m) (ls :<: term)         \
-                , TermNode Acc   (m) (ls :<: term)         \
-                , TermNode Cons  (m) (ls :<: term)         \
-                , TermNode Lam   (m) (ls :<: term)         \
-                , TermNode Unify (m) (ls :<: term)         \
+                , NodeInferable  (m) (ls :<: term)        \
+                , TermNode Var   (m) (ls :<: term)        \
+                , TermNode Acc   (m) (ls :<: term)        \
+                , TermNode Cons  (m) (ls :<: term)        \
+                , TermNode Lam   (m) (ls :<: term)        \
+                , TermNode Unify (m) (ls :<: term)        \
                 , MonadSymbol node graph (m)              \
                 , Referred Node n graph                   \
                 )
@@ -83,14 +83,15 @@ funLookup name = do
 importFunction :: PassCtx => String -> Function node graph -> ImportErrorT m (Lambda node)
 importFunction name fun = do
     translations <- merge $ fun ^. Function.graph
-    cls <- subgraph name
+    cls :: Ref Cluster c <- subgraph
+    withRef cls $ prop Name .~ name
     mapM (flip include cls) $ Map.elems $ translations
     let unsafeTranslate i = fromJust $ Map.lookup i translations
         fptr = fun ^. Function.fptr & over (Function.self . mapped) unsafeTranslate
                                     & over (Function.args . mapped) unsafeTranslate
                                     & over Function.out unsafeTranslate
-    loadLambda (QualPath.mk name) $ Lambda fptr cls
-    return $ Lambda fptr cls
+    loadLambda (QualPath.mk name) $ Lambda fptr ()
+    return $ Lambda fptr ()
 
 buildTypeRep :: PassCtx => FunctionPtr node -> m (Ref Node node)
 buildTypeRep fptr = do
@@ -109,7 +110,6 @@ processNode ref = runErrorT $ do
         Nothing -> do
             fun <- funLookup name
             importFunction name fun
-    (_, _ :: Map.Map (Ref Node node) (Ref Node node)) <- dupCluster (lamb ^. Function.subgraph) $ name <> " @ " <> (show ref)
     return ()
     {-fun       <- MaybeT $ lookupFunction ref-}
     {-Lambda fptr _ <- lift $ importFunction fun-}

@@ -92,9 +92,10 @@ dupCluster :: forall node edge a e n m graph c .
               , BiCastable n node
               , MonadBuilder graph m
               , Referred Node n graph
-              , Constructor m (Ref Node node)
-              , Constructor m (Ref Edge edge)
-              ) => Ref Cluster SubGraph -> String -> m (Ref Cluster SubGraph, Map (Ref Node node) (Ref Node node))
+              , Constructor m (Ref Node    node)
+              , Constructor m (Ref Edge    edge)
+              , Constructor m (Ref Cluster c)
+              ) => Ref Cluster c -> String -> m (Ref Cluster c, Map (Ref Node node) (Ref Node node))
 dupCluster cluster name = do
     nodeRefs <- members cluster
     (nodes :: [node]) <- mapM read nodeRefs
@@ -102,6 +103,7 @@ dupCluster cluster name = do
     let edgeRefs = Ref <$> (IntSet.toList $ foldr IntSet.union mempty (gatherEdges <$> nodes))
     edges <- mapM read edgeRefs
     trans <- importStructure (zip nodeRefs nodes) (zip edgeRefs edges)
-    cl <- subgraph name
+    cl <- subgraph
+    withRef cl $ prop Name .~ name
     mapM (flip include cl) $ Map.elems trans
     return (cl, trans)

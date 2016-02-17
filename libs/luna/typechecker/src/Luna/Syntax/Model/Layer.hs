@@ -129,6 +129,7 @@ data Redirect = Redirect deriving (Show, Eq, Ord)
 
 instance Castable Bool Bool where cast = id
 instance Castable (Maybe a) (Maybe a) where cast = id
+instance Castable Char Char where cast = id
 instance {-# OVERLAPPABLE #-} Castable a a' => Castable (Maybe a) (Maybe a') where cast = fmap cast
 
 -- Note layer
@@ -136,6 +137,11 @@ data Note = Note deriving (Show, Eq, Ord)
 type instance LayerData l Note t = String
 instance Monad m => Creator m (Layer l Note a) where create = return $ Layer ""
 
+-- Name layer
+data Name = Name deriving (Show, Eq, Ord)
+type instance LayerData l Name t = String
+instance Monad m => Creator    m (Layer l Name a) where create     = return $ Layer ""
+instance Monad m => Destructor m (Layer l Name a) where destruct _ = return ()
 
 -- TODO: move it to a specific modules
 

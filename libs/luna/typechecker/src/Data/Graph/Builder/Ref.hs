@@ -11,7 +11,7 @@ import Data.Construction
 import Data.Prop
 import Data.Index
 import Data.Container
-import Data.Graph.Builder.Class
+import Data.Graph.Builder.Class       hiding (with)
 import Data.Graph.Backend.VectorGraph
 import Data.Graph.Model
 
@@ -28,6 +28,9 @@ withM ref f = read ref >>= f >>= write ref
 
 with :: (MonadBuilder t m, Referred r a t) => Ref r a -> (a -> a) -> m ()
 with ref = withM ref ∘ (return <$>)
+
+withRef :: (MonadBuilder t m, Referred r a t) => Ref r a -> (a -> a) -> m ()
+withRef = with
 
 follow :: (MonadBuilder t m, Referred r a t) => Lens' a b -> Ref r a -> m b
 follow f ptr = view f <$> read ptr

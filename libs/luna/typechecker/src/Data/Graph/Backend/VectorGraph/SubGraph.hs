@@ -8,24 +8,22 @@ import qualified Data.IntSet as IntSet
 
 -- === Definitions === --
 
-data SubGraph = SubGraph { _members :: IntSet
-                         , _label   :: String
-                         } deriving (Show)
-makeLenses  ''SubGraph
+newtype SubGraph = SubGraph IntSet deriving (Show)
+makeWrapped ''SubGraph
 
 -- === Utils === --
 
 add :: Int -> SubGraph -> SubGraph
-add el = members %~ IntSet.insert el
+add el = wrapped %~ IntSet.insert el
 
 remove :: Int -> SubGraph -> SubGraph
-remove el = members %~ IntSet.delete el
+remove el = wrapped %~ IntSet.delete el
 
 member :: Int -> SubGraph -> Bool
-member el = IntSet.member el ∘ view members
+member el = IntSet.member el ∘ unwrap
 
 nodes :: SubGraph -> [Int]
-nodes = IntSet.toList . view members
+nodes = IntSet.toList . unwrap
 
 
 -- === Instances === --
