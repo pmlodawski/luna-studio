@@ -6,11 +6,13 @@ import Prologue hiding (read)
 
 import           Data.Graph.Builders
 import           Control.Monad.Event
+import           Data.Graph.Backend.VectorGraph         (SubGraph)
 import           Data.Prop
 import           Data.Construction
 import qualified Luna.Syntax.Model.Network.Builder.Type as Type
 import qualified Luna.Syntax.Model.Network.Builder.Self as Self
 import           Luna.Syntax.Model.Network.Builder.Self (MonadSelfBuilder, self)
+import           Luna.Syntax.AST.Decl.Function          (FunctionPtr)
 import           Data.Graph.Builder.Class
 import           Luna.Syntax.Model.Layer
 import           Data.Graph.Builder.Ref                 as Ref
@@ -81,6 +83,14 @@ instance Monad m => Creator m (Layer (Network ls) Redirect a) where
 instance (Monad m, Unregister m (Ref Edge $ Link (Shelled a)))
       => Destructor m (Layer (Network ls) Redirect a) where
     destruct (Layer r) = mapM_ unregister r
+
+-- === Lambda layer === --
+
+type instance LayerData l Lambda1 (SubGraph n) = Maybe $ FunctionPtr n
+instance Monad m => Creator m (Layer l Lambda1 (SubGraph n)) where
+    create = return $ Layer Nothing
+instance Monad m => Destructor m (Layer l Lambda1 (SubGraph n)) where
+    destruct _ = return ()
 
 ------------------------------------------
 -- === Layer building & destruction === --

@@ -12,13 +12,16 @@ data FunctionPtr n = FunctionPtr { _self :: Maybe (Ref Node n)
                                  } deriving (Show)
 makeLenses ''FunctionPtr
 
+instance Castable n n' => Castable (FunctionPtr n) (FunctionPtr n') where
+    cast (FunctionPtr s a o) = FunctionPtr (fmap cast s) (fmap cast a) (cast o)
+
 data Function n g = Function { _fptr  :: FunctionPtr n
                              , _graph :: g
                              } deriving (Show)
 makeLenses ''Function
 
-data Lambda n = Lambda { _lptr     :: FunctionPtr n
-                       , _subgraph :: ()
-                       } deriving (Show)
+data Lambda n  = Lambda { _lptr     :: FunctionPtr n
+                         , _subgraph :: ()
+                         } deriving (Show)
 
 makeLenses ''Lambda

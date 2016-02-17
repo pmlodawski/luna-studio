@@ -23,7 +23,8 @@ import           Luna.Syntax.Repr.Styles                (HeaderOnly (..), Simple
 
 import           Data.Container
 
-import           Data.Maybe                             (maybeToList)
+import           Data.Maybe                             (maybeToList, isJust)
+import           Data.List                              (find)
 import           Data.Record
 import           Luna.Syntax.Model.Network.Builder
 
@@ -36,6 +37,7 @@ import           Data.Layer.Cover                       (uncover)
 import           Data.Prop
 import           Luna.Evaluation.Runtime                (Dynamic, Static)
 import qualified Luna.Syntax.AST.Term                   as Term
+import           Luna.Syntax.AST.Decl.Function          (FunctionPtr (..))
 import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Builder.Term
 import           Luna.Syntax.Model.Network.Term
@@ -71,6 +73,10 @@ valStrNodeClr = HSV 0.3 0.6 0.8
 valUnkNodeClr = GVC.Red
 dirtyClr      = GVC.MediumOrchid
 checkedClr    = GVC.MediumOrchid
+
+selfClr       = GVC.White
+argClr        = GVC.LightYellow3
+outClr        = GVC.LightPink
 
 graphLabelClr = GVC.Gray30
 nodeLabelClr  = GVC.Gray8
@@ -139,7 +145,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
 
           inEdges           = concat $ fmap nodeInEdges nodeIxs
           edgeStmts         = fmap mkEdge inEdges
-          nodeStmts         = concat $ labeledNode <$> rootNodeIxs
+          nodeStmts         = concat $ labeledNode Nothing <$> rootNodeIxs
           subGraphs         = uncurry genSubGraph ∘ (_1 %~ fromJust) <$> Map.assocs (Map.delete Nothing clredNodeMap)
 
 
@@ -170,7 +176,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
           selectOrphanTgts nix  = catMaybes ∘ fmap (matchOrphanTgt nix)
 
 
-          labeledNode nix    = [ DotNode nodeId attrs ]
+          labeledNode fptr nix = [ DotNode nodeId attrs ]
                                -- <> orphanTgtNodes
               where
               nodeId   = nodeRef nix
@@ -207,7 +213,9 @@ toGraphViz name net = DotGraph { strictGraph     = False
               starColor      = toColorList [starClr]
               nodeColor      = toColorList [color]
               bgColor'       = toColorList [GVC.X11Color bgClr]
-              color          = getNodeColor node
+              color          = case fptr >>= getLambdaNodeColor nix of
+                  Just c  -> GVC.X11Color c
+                  Nothing -> getNodeColor node
               --attrs   = GV.color color : shAttrs
               --attrs   = Color (toColorList [color]) : shAttrs
               attrs = specAttrs
@@ -234,13 +242,21 @@ toGraphViz name net = DotGraph { strictGraph     = False
                                 match $ \(Term.Num n) -> valIntNodeClr
                                 match $ \ANY          -> nodeClr
 
+          getLambdaNodeColor n (FunctionPtr s a o) = if ((== n) . view idx <$> s) == Just True
+            then Just selfClr
+            else if isJust $ find ((== n) . view idx) a
+              then Just argClr
+              else if o ^. idx == n
+                then Just outClr
+                else Nothing
+
           genSubGraph :: Int -> [Int] -> DotSubGraph String
           genSubGraph sgIdx nodeIxs = DotSG
               { isCluster     = True
               , subGraphID    = Just $ Str $ fromString $ show sgIdx
               , subGraphStmts = DotStmts { attrStmts = gStyle $ clusterByIx sgIdx # Name
                                          , subGraphs = []
-                                         , nodeStmts = concat $ labeledNode <$> nodeIxs
+                                         , nodeStmts = concat $ labeledNode (clusterByIx sgIdx # Lambda1)  <$> nodeIxs
                                          , edgeStmts = []
                                          }
               }

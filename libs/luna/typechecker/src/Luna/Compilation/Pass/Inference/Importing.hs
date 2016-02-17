@@ -91,6 +91,7 @@ importFunction name fun = do
         fptr = fun ^. Function.fptr & over (Function.self . mapped) unsafeTranslate
                                     & over (Function.args . mapped) unsafeTranslate
                                     & over Function.out unsafeTranslate
+    withRef cls $ prop Lambda1 ?~ fptr
     loadLambda (QualPath.mk name) $ Lambda fptr ()
     return $ Lambda fptr ()
 

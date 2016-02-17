@@ -124,6 +124,7 @@ instance (HasRecord (Uncovered (ls :< t)), Uncovered (Unwrapped (ls :< t)) ~ t, 
 data Type     = Type     deriving (Show, Eq, Ord)
 data Succs    = Succs    deriving (Show, Eq, Ord)
 data Redirect = Redirect deriving (Show, Eq, Ord)
+data Lambda1  = Lambda1  deriving (Show, Eq, Ord)
 
 -- === Universal === --
 
@@ -139,7 +140,7 @@ instance Monad m => Creator m (Layer l Note a) where create = return $ Layer ""
 
 -- Name layer
 data Name = Name deriving (Show, Eq, Ord)
-type instance LayerData l Name t = String
+type instance LayerData l Name a = String
 instance Monad m => Creator    m (Layer l Name a) where create     = return $ Layer ""
 instance Monad m => Destructor m (Layer l Name a) where destruct _ = return ()
 
