@@ -12,7 +12,7 @@ import Data.Record
 import Data.Maybe                                   (fromMaybe)
 import Luna.Evaluation.Runtime                      (Static, Dynamic)
 import Luna.Library.Symbol.Class                    (MonadSymbol, lookupFunction, lookupLambda, loadLambda)
-import Luna.Syntax.AST.Decl.Function                (Function, FunctionPtr, Lambda (..))
+import Luna.Syntax.AST.Decl.Function                (Function, FunctionPtr)
 import Luna.Syntax.AST.Term                         hiding (source)
 import Data.Graph.Builder                           as Graph hiding (run)
 import Data.Graph.Backend.VectorGraph               as Graph
@@ -48,7 +48,7 @@ import qualified Luna.Syntax.AST.Decl.Function    as Function
                 , TermNode Cons  (m) (ls :<: term)             \
                 , TermNode Lam   (m) (ls :<: term)             \
                 , TermNode Unify (m) (ls :<: term)             \
-                , MonadSymbol node graph (m)                   \
+                , MonadSymbol node clus graph (m)              \
                 , Referred Node n graph                        \
                 )
 
@@ -81,19 +81,19 @@ funLookup name = do
     f <- lookupFunction $ QualPath.mk name
     fromMaybe (throwError SymbolNotFound) (return <$> f)
 
-importFunction :: PassCtx => String -> Function node graph -> ImportErrorT m (Lambda node)
+importFunction :: PassCtx => String -> Function node graph -> ImportErrorT m (Ref Cluster clus)
 importFunction name fun = do
     translations <- merge $ fun ^. Function.graph
-    cls :: Ref Cluster clus <- subgraph
-    withRef cls $ prop Name .~ name
+    cls <- subgraph
     mapM (flip include cls) $ Map.elems $ translations
     let unsafeTranslate i = fromJust $ Map.lookup i translations
         fptr = fun ^. Function.fptr & over (Function.self . mapped) unsafeTranslate
                                     & over (Function.args . mapped) unsafeTranslate
                                     & over Function.out unsafeTranslate
-    withRef cls $ prop Lambda1 ?~ fptr
-    loadLambda (QualPath.mk name) $ Lambda fptr ()
-    return $ Lambda fptr ()
+    withRef cls $ (prop Lambda  ?~ fptr)
+                . (prop Name    .~ name)
+    loadLambda (QualPath.mk name) cls
+    return cls
 
 buildTypeRep :: PassCtx => FunctionPtr node -> m (Ref Node node)
 buildTypeRep fptr = do

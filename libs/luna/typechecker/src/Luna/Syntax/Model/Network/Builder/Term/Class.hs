@@ -25,7 +25,7 @@ import           Luna.Syntax.AST.Arg
 import           Luna.Syntax.AST.Term                    hiding (Val, Lit, Thunk, Expr, Draft, Source, Name)
 import qualified Luna.Syntax.AST.Term                    as Term
 import qualified Data.Graph.Builder                      as GraphBuilder
-import           Luna.Syntax.Model.Layer                 (Type, Succs, Markable, Redirect, Meta, Name, Lambda1, (:<:), (:<))
+import           Luna.Syntax.Model.Layer                 (Type, Succs, Markable, Redirect, Meta, Name, Lambda, (:<:), (:<))
 import           Luna.Compilation.Pass.Dirty.Data.Label  (Dirty, Required)
 import           Luna.Syntax.Model.Network.Builder.Layer
 import qualified Luna.Syntax.Model.Network.Builder.Self  as Self
@@ -256,7 +256,7 @@ matchTypeM _ = id
 -- === Network Building === --
 ------------------------------
 
-type NetClusterLayers = '[Lambda1, Name]
+type NetClusterLayers = '[Lambda, Name]
 type NetLayers     a  = '[Type, Succs, Redirect, Dirty, Required, Meta a]
 type NetNode       a  = NetLayers a :<: Draft Static
 type NetRawNode    a  = NetLayers a :<: Raw

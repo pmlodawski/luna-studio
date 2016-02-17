@@ -86,10 +86,10 @@ instance (Monad m, Unregister m (Ref Edge $ Link (Shelled a)))
 
 -- === Lambda layer === --
 
-type instance LayerData l Lambda1 (SubGraph n) = Maybe $ FunctionPtr n
-instance Monad m => Creator m (Layer l Lambda1 (SubGraph n)) where
+type instance LayerData l Lambda (SubGraph n) = Maybe $ FunctionPtr n
+instance Monad m => Creator m (Layer l Lambda (SubGraph n)) where
     create = return $ Layer Nothing
-instance Monad m => Destructor m (Layer l Lambda1 (SubGraph n)) where
+instance Monad m => Destructor m (Layer l Lambda (SubGraph n)) where
     destruct _ = return ()
 
 ------------------------------------------

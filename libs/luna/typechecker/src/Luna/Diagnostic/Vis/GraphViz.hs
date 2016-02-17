@@ -256,7 +256,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
               , subGraphID    = Just $ Str $ fromString $ show sgIdx
               , subGraphStmts = DotStmts { attrStmts = gStyle $ clusterByIx sgIdx # Name
                                          , subGraphs = []
-                                         , nodeStmts = concat $ labeledNode (clusterByIx sgIdx # Lambda1)  <$> nodeIxs
+                                         , nodeStmts = concat $ labeledNode (clusterByIx sgIdx # Lambda)  <$> nodeIxs
                                          , edgeStmts = []
                                          }
               }

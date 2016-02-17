@@ -124,7 +124,7 @@ instance (HasRecord (Uncovered (ls :< t)), Uncovered (Unwrapped (ls :< t)) ~ t, 
 data Type     = Type     deriving (Show, Eq, Ord)
 data Succs    = Succs    deriving (Show, Eq, Ord)
 data Redirect = Redirect deriving (Show, Eq, Ord)
-data Lambda1  = Lambda1  deriving (Show, Eq, Ord)
+data Lambda   = Lambda   deriving (Show, Eq, Ord)
 
 -- === Universal === --
 

@@ -5,25 +5,26 @@ module Luna.Library.Symbol.Class where
 
 import Prologue  hiding (Symbol)
 
-import qualified Control.Monad.State           as State
-import           Control.Monad.Catch           (MonadMask, MonadCatch, MonadThrow)
-import           Data.Map                      (Map)
-import qualified Data.Map                      as Map
-import           Luna.Syntax.AST.Decl.Function (Function, Lambda)
-import           Luna.Library.Symbol.QualPath  (QualPath)
+import qualified Control.Monad.State            as State
+import           Control.Monad.Catch            (MonadMask, MonadCatch, MonadThrow)
+import           Data.Map                       (Map)
+import qualified Data.Map                       as Map
+import           Luna.Syntax.AST.Decl.Function  (Function)
+import           Luna.Library.Symbol.QualPath   (QualPath)
+import           Data.Graph.Backend.VectorGraph (Ref, Cluster)
 
 -- === Definitions === --
 
 type SymbolMap n g = Map QualPath (Function n g)
-type LocalMap  n   = Map QualPath (Lambda   n)
+type LocalMap  c   = Map QualPath (Ref Cluster c)
 
-data Env n g = Env { _symbols      :: SymbolMap n g
-                   , _localSymbols :: LocalMap n
-                   } deriving (Show)
+data Env n c g = Env { _symbols      :: SymbolMap n g
+                     , _localSymbols :: LocalMap  c
+                     } deriving (Show)
 
 makeLenses ''Env
 
-instance Default (Env n g) where
+instance Default (Env n c g) where
     def = Env def def
 
 
@@ -32,8 +33,8 @@ instance Default (Env n g) where
 
 -- === Declarations === --
 
-type    Symbol  n g     = SymbolT n g Identity
-newtype SymbolT n g m a = SymbolT (State.StateT (Env n g) m a)
+type    Symbol  n c g     = SymbolT n c g Identity
+newtype SymbolT n c g m a = SymbolT (State.StateT (Env n c g) m a)
                               deriving ( Functor, Monad, Applicative, MonadIO, MonadPlus, MonadTrans
                                        , Alternative, MonadFix, MonadMask, MonadCatch, MonadThrow)
 
@@ -42,23 +43,23 @@ makeWrapped ''SymbolT
 
 -- === Utils === --
 
-runT  ::            SymbolT n g m a -> Env n g -> m (a, Env n g)
-evalT :: Monad m => SymbolT n g m a -> Env n g -> m a
-execT :: Monad m => SymbolT n g m a -> Env n g -> m (Env n g)
+runT  ::            SymbolT n c g m a -> Env n c g -> m (a, Env n c g)
+evalT :: Monad m => SymbolT n c g m a -> Env n c g -> m a
+execT :: Monad m => SymbolT n c g m a -> Env n c g -> m (Env n c g)
 
 runT  = State.runStateT  . unwrap' ; {-# INLINE runT  #-}
 evalT = State.evalStateT . unwrap' ; {-# INLINE evalT #-}
 execT = State.execStateT . unwrap' ; {-# INLINE execT #-}
 
-run  :: Symbol n g a -> Env n g -> (a, Env n g)
-eval :: Symbol n g a -> Env n g -> a
-exec :: Symbol n g a -> Env n g -> Env n g
+run  :: Symbol n c g a -> Env n c g -> (a, Env n c g)
+eval :: Symbol n c g a -> Env n c g -> a
+exec :: Symbol n c g a -> Env n c g -> Env n c g
 
 run   = runIdentity .: runT  ; {-# INLINE run  #-}
 eval  = runIdentity .: evalT ; {-# INLINE eval #-}
 exec  = runIdentity .: execT ; {-# INLINE exec #-}
 
-with :: MonadSymbol n g m => (Env n g -> Env n g) -> m a -> m a
+with :: MonadSymbol n c g m => (Env n c g -> Env n c g) -> m a -> m a
 with f m = do
     s <- get
     put $ f s
@@ -67,11 +68,11 @@ with f m = do
     return out
 {-# INLINE with #-}
 
-modify :: MonadSymbol n g m => (Env n g -> (a, Env n g)) -> m a
+modify :: MonadSymbol n c g m => (Env n c g -> (a, Env n c g)) -> m a
 modify = modifyM . fmap return
 {-# INLINE modify #-}
 
-modifyM :: MonadSymbol n g m => (Env n g -> m (a, Env n g)) -> m a
+modifyM :: MonadSymbol n c g m => (Env n c g -> m (a, Env n c g)) -> m a
 modifyM f = do
     s <- get
     (a, s') <- f s
@@ -79,26 +80,26 @@ modifyM f = do
     return a
 {-# INLINE modifyM #-}
 
-modify_ :: MonadSymbol n g m => (Env n g -> Env n g) -> m ()
+modify_ :: MonadSymbol n c g m => (Env n c g -> Env n c g) -> m ()
 modify_ = modify . fmap ((),)
 {-# INLINE modify_ #-}
 
 
 -- === Instances === --
 
-class Monad m => MonadSymbol n g m | m -> n, m -> g where
-    get :: m (Env n g)
-    put :: Env n g -> m ()
+class Monad m => MonadSymbol n c g m | m -> n, m -> g, m -> c where
+    get :: m (Env n c g)
+    put :: Env n c g -> m ()
 
-instance Monad m => MonadSymbol n g (SymbolT n g m) where
+instance Monad m => MonadSymbol n c g (SymbolT n c g m) where
     get = SymbolT   State.get ; {-# INLINE get #-}
     put = SymbolT . State.put ; {-# INLINE put #-}
 
-instance State.MonadState s m => State.MonadState s (SymbolT n g m) where
+instance State.MonadState s m => State.MonadState s (SymbolT n c g m) where
     get = SymbolT $ lift   State.get ; {-# INLINE get #-}
     put = SymbolT . lift . State.put ; {-# INLINE put #-}
 
-instance {-# OVERLAPPABLE #-} (MonadSymbol n g m, MonadTrans t, Monad (t m)) => MonadSymbol n g (t m) where
+instance {-# OVERLAPPABLE #-} (MonadSymbol n c g m, MonadTrans t, Monad (t m)) => MonadSymbol n c g (t m) where
     get = lift get   ; {-# INLINE get #-}
     put = lift . put ; {-# INLINE put #-}
 
@@ -106,14 +107,14 @@ instance {-# OVERLAPPABLE #-} (MonadSymbol n g m, MonadTrans t, Monad (t m)) => 
 
 -- === Behaviors === --
 
-loadFunctions :: MonadSymbol n g m => SymbolMap n g -> m ()
+loadFunctions :: MonadSymbol n c g m => SymbolMap n g -> m ()
 loadFunctions s = modify_ $ symbols %~ Map.union s
 
-lookupFunction :: MonadSymbol n g m => QualPath -> m (Maybe (Function n g))
+lookupFunction :: MonadSymbol n c g m => QualPath -> m (Maybe (Function n g))
 lookupFunction p = Map.lookup p  . view symbols <$> get
 
-loadLambda :: MonadSymbol n g m => QualPath -> Lambda n -> m ()
+loadLambda :: MonadSymbol n c g m => QualPath -> Ref Cluster c -> m ()
 loadLambda path lam = modify_ $ localSymbols %~ Map.insert path lam
 
-lookupLambda :: MonadSymbol n g m => QualPath -> m (Maybe (Lambda n))
+lookupLambda :: MonadSymbol n c g m => QualPath -> m (Maybe $ Ref Cluster c)
 lookupLambda path = Map.lookup path . view localSymbols <$> get
