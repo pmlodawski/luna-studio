@@ -8,6 +8,7 @@
 module Luna.Diagnostic.Vis.GraphViz where
 
 import           Prelude.Luna                           hiding (index)
+import Debug.Trace (traceShowId)
 
 import           Data.GraphViz
 import qualified Data.GraphViz.Attributes               as GV
@@ -16,14 +17,14 @@ import qualified Data.GraphViz.Attributes.Colors.X11    as GVC
 import           Data.GraphViz.Attributes.Complete      hiding (Int, Label, Star, focus)
 import qualified Data.GraphViz.Attributes.Complete      as GV
 import           Data.GraphViz.Commands
-import           Data.GraphViz.Printing                 (toDot)
+import           Data.GraphViz.Printing                 (toDot, renderDot)
 import           Data.GraphViz.Printing                 (PrintDot)
 import           Data.GraphViz.Types.Canonical
 import           Luna.Syntax.Repr.Styles                (HeaderOnly (..), Simple (..))
 
 import           Data.Container
 
-import           Data.Maybe                             (maybeToList, isJust)
+import           Data.Maybe                             (maybeToList, maybe)
 import           Data.List                              (find)
 import           Data.Record
 import           Luna.Syntax.Model.Network.Builder
@@ -96,6 +97,7 @@ gStyle name = [ GraphAttrs [ RankDir FromTop
                            , fontColor graphLabelClr
                            , FontName fontName
                            , FontSize fontSize
+                           , Compound True
                            , bgColor  bgClr
                            , color    gClr
                            , GV.Label $ StrLabel $ fromString name
@@ -243,18 +245,15 @@ toGraphViz name net = DotGraph { strictGraph     = False
                                 match $ \(Term.Num n) -> valIntNodeClr
                                 match $ \ANY          -> nodeClr
 
-          getLambdaNodeColor n (FunctionPtr s a o) = if ((== n) . view idx <$> s) == Just True
-            then Just selfClr
-            else if isJust $ find ((== n) . view idx) a
-              then Just argClr
-              else if o ^. idx == n
-                then Just outClr
-                else Nothing
+          getLambdaNodeColor n (FunctionPtr s a o) = whenSelf <|> whenArg <|> whenOut where
+              whenSelf = maybe Nothing (\x -> if x ^. idx == n then Just selfClr else Nothing) s
+              whenArg  = argClr <$ find ((== n) . view idx) a
+              whenOut  = if o ^. idx == n then Just outClr else Nothing
 
           genSubGraph :: Int -> [Int] -> DotSubGraph String
           genSubGraph sgIdx nodeIxs = DotSG
               { isCluster     = True
-              , subGraphID    = Just $ Str $ fromString $ show sgIdx
+              , subGraphID    = traceShowId (Just $ Str $ fromString $ show sgIdx)
               , subGraphStmts = DotStmts { attrStmts = gStyle $ clusterByIx sgIdx # Name
                                          , subGraphs = []
                                          , nodeStmts = concat $ labeledNode (clusterByIx sgIdx # Lambda)  <$> nodeIxs
@@ -298,7 +297,7 @@ genInEdges (g :: NetGraph a) (n :: NetLayers a :<: Draft Static) = displayEdges 
 
     makeRedirEdge e       = (getTgtIdx e, [GV.color redirectClr, Dir Back, Style [SItem Dashed []]])
     makeReplEdge c        = (view (Function.out . idx) $ fromJust $ view (prop Lambda) $ clusterByIx $ c ^. idx,
-                            [GV.color redirectClr, Dir Back, Style [SItem Dashed []], LTail $ fromString $ "cluster_0"])
+                            [GV.color redirectClr, Dir Back, Style [SItem Dashed []], LTail $ fromString $ "cluster_" ++ (show $ c ^. idx)])
     addColor (idx, attrs) = (idx, GV.color arrClr : attrs)
     getTgtIdx             = view idx ∘ getTgt
     getTgt    inp         = view source $ index (inp ^. idx) es
