@@ -26,22 +26,22 @@ import           Luna.Syntax.Model.Network.Term
 
 #define PassCtxDirty(m, ls, term) ( ls   ~ NetLayers a                           \
                                   , term ~ Draft Static                          \
-                                  , ne   ~ Link (ls :< term)                     \
+                                  , ne   ~ Link (ls :<: term)                     \
                                   , BiCastable     e ne                          \
-                                  , BiCastable     n (ls :< term)                \
+                                  , BiCastable     n (ls :<: term)                \
                                   , MonadIO m                                    \
                                   , MonadBuilder (Hetero (VectorGraph n e c)) m  \
-                                  , NodeInferable m (ls :< term)                 \
-                                  , TermNode Lam  m (ls :< term)                 \
-                                  , HasProp Dirty    (ls :< term)                \
-                                  , HasProp Required (ls :< term)                \
-                                  , Prop Dirty       (ls :< term) ~ Bool         \
-                                  , Prop Required    (ls :< term) ~ Bool         \
-                                  , DirtyMonad (Env (Ref Node (ls :< term))) m   \
+                                  , NodeInferable m (ls :<: term)                 \
+                                  , TermNode Lam  m (ls :<: term)                 \
+                                  , HasProp Dirty    (ls :<: term)                \
+                                  , HasProp Required (ls :<: term)                \
+                                  , Prop Dirty       (ls :<: term) ~ Bool         \
+                                  , Prop Required    (ls :<: term) ~ Bool         \
+                                  , DirtyMonad (Env (Ref Node (ls :<: term))) m   \
                                   )
 
 
-nodesToExecute :: PassCtxDirty(m, ls, term) =>  m [Ref Node (ls :< term)]
+nodesToExecute :: PassCtxDirty(m, ls, term) =>  m [Ref Node (ls :<: term)]
 nodesToExecute = do
     mapM_ Dirty.followDirty =<< Env.getReqNodes
     Env.getReqNodes
@@ -51,7 +51,7 @@ reset :: DirtyMonad (Env node) m => m ()
 reset = Env.clearReqNodes
 
 
-connect :: PassCtxDirty(m, ls, term) => Ref Node (ls :< term) -> Ref Node (ls :< term) -> m ()
+connect :: PassCtxDirty(m, ls, term) => Ref Node (ls :<: term) -> Ref Node (ls :<: term) -> m ()
 connect prev next = do
     nd <- read prev
     let isPrevDirty = nd # Dirty
@@ -61,5 +61,5 @@ connect prev next = do
         else next
 
 
-markModified :: PassCtxDirty(m, ls, term) => Ref Node (ls :< term) -> m ()
+markModified :: PassCtxDirty(m, ls, term) => Ref Node (ls :<: term) -> m ()
 markModified = Dirty.markSuccessors

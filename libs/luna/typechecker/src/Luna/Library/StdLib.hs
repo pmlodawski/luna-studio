@@ -28,7 +28,7 @@ import qualified Data.Map as Map
 import qualified Luna.Library.Symbol.QualPath     as QualPath
 import qualified Luna.Syntax.AST.Decl.Function    as Function
 
-#define FunBuilderCtx(m) ( n ~ (NetLayers a :< Draft Static)             \
+#define FunBuilderCtx(m) ( n ~ (NetLayers a :<: Draft Static)             \
                          , nodeRef ~ Ref Node n                          \
                          , TermNode Cons   m n                           \
                          , TermNode Blank  m n                           \
@@ -63,7 +63,7 @@ makeNativeFun name selfTypeStr argTypesStr outTypeStr = do
     native <- native (fromString name) nativeArgs `typed` outType
     return (self, args, native)
 
-symbols :: Show a => SymbolMap (NetLayers a :< Draft Static) (NetGraph a)
+symbols :: Show a => SymbolMap (NetLayers a :<: Draft Static) (NetGraph a)
 symbols = Map.fromList $ fmap (\(n, b) -> (QualPath.mk (n :: String), makeFunction b))
     [ ("Int.+",          makeNativeFun "(+)"  (Just "Int") ["Int"] "Int")
     , ("Int.*",          makeNativeFun "(*)"  (Just "Int") ["Int"] "Int")

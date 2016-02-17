@@ -68,27 +68,27 @@ title s = putStrLn $ "\n" <> "-- " <> s <> " --"
 --  !!! KEEP THIS ON THE BEGINNING !!! --
 -- --------------------------------------
 -- - vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv ---
-prebuild :: Show a => IO (Ref Node (NetLayers a :< Draft Static), NetGraph a)
+prebuild :: Show a => IO (Ref Node (NetLayers a :<: Draft Static), NetGraph a)
 prebuild = runBuild def star
 
-prebuild2 :: Show a => IO (NetLayers a :< Draft Static, NetGraph a)
+prebuild2 :: Show a => IO (NetLayers a :<: Draft Static, NetGraph a)
 prebuild2 = runBuild def  (read =<< star)
 
 
-runBuild (g :: NetGraph a) m = runInferenceT ELEMENT (Proxy :: Proxy (Ref Node (NetLayers a :< Draft Static)))
+runBuild (g :: NetGraph a) m = runInferenceT ELEMENT (Proxy :: Proxy (Ref Node (NetLayers a :<: Draft Static)))
                              $ runNetworkBuilderT g m
 
 evalBuild = fmap snd ∘∘ runBuild
 
 
 input_g1 :: ( term ~ Draft Static
-            , nr   ~ Ref Node (ls :< term)
+            , nr   ~ Ref Node (ls :<: term)
             , MonadIO       m
-            , NodeInferable m (ls :< term)
-            , TermNode Star m (ls :< term)
-            , TermNode Var  m (ls :< term)
-            , TermNode App  m (ls :< term)
-            , TermNode Acc  m (ls :< term)
+            , NodeInferable m (ls :<: term)
+            , TermNode Star m (ls :<: term)
+            , TermNode Var  m (ls :<: term)
+            , TermNode App  m (ls :<: term)
+            , TermNode Acc  m (ls :<: term)
             ) => m ([nr],[nr],[nr])
 input_g1 = do
     f  <- var' "f"
@@ -104,23 +104,23 @@ input_g1 = do
 
 
 input_g1_resolution_mock :: ( term ~ Draft Static
-                            , node ~ (ls :< term)
-                            , edge ~ Link (ls :< term)
+                            , node ~ (ls :<: term)
+                            , edge ~ Link (ls :<: term)
                             , nr   ~ Ref Node node
                             , er   ~ Ref Edge edge
-                            , BiCastable     n (ls :< term)
+                            , BiCastable     n (ls :<: term)
                             , BiCastable     e edge
                             , MonadIO        m
-                            , NodeInferable  m (ls :< term)
-                            , TermNode Star  m (ls :< term)
-                            , TermNode Var   m (ls :< term)
-                            , TermNode App   m (ls :< term)
-                            , TermNode Acc   m (ls :< term)
-                            , TermNode Cons  m (ls :< term)
-                            , TermNode Lam   m (ls :< term)
-                            , TermNode Unify m (ls :< term)
-                            , HasProp Type (ls :< term)
-                            , Prop    Type (ls :< term) ~ er
+                            , NodeInferable  m (ls :<: term)
+                            , TermNode Star  m (ls :<: term)
+                            , TermNode Var   m (ls :<: term)
+                            , TermNode App   m (ls :<: term)
+                            , TermNode Acc   m (ls :<: term)
+                            , TermNode Cons  m (ls :<: term)
+                            , TermNode Lam   m (ls :<: term)
+                            , TermNode Unify m (ls :<: term)
+                            , HasProp Type (ls :<: term)
+                            , Prop    Type (ls :<: term) ~ er
                             , Graph.MonadBuilder (Hetero (VectorGraph n e c)) m
                             , Castable e edge
                             ) => [nr] -> m [nr]
@@ -141,15 +141,15 @@ input_g1_resolution_mock [f,g] = do
 
 --input_g2 :: ( ls   ~ NetLayers ()
 --            , term ~ Draft Static
---            , nr   ~ Ref (Node $ (ls :< term))
+--            , nr   ~ Ref (Node $ (ls :<: term))
 --            , MonadIO       m
---            , NodeInferable m (ls :< term)
---            , TermNode Star m (ls :< term)
---            , TermNode Var  m (ls :< term)
---            , TermNode Num  m (ls :< term)
---            , TermNode Str  m (ls :< term)
---            , TermNode Acc  m (ls :< term)
---            , TermNode App  m (ls :< term)
+--            , NodeInferable m (ls :<: term)
+--            , TermNode Star m (ls :<: term)
+--            , TermNode Var  m (ls :<: term)
+--            , TermNode Num  m (ls :<: term)
+--            , TermNode Str  m (ls :<: term)
+--            , TermNode Acc  m (ls :<: term)
+--            , TermNode App  m (ls :<: term)
 --            )
 --         => m (nr, ([nr], [nr]))
 --input_g2 = do
@@ -237,7 +237,7 @@ test1 = do
         -- Running Type Checking compiler stage
         TypeCheck.runT $ do
             ((apps, accs, funcs), g01) <- runBuild g input_g1
-            (unis :: [Ref Node (NetLayers () :< Draft Static)]               , g02 :: NetGraph ()) <- runBuild  g01 $ StructInference.run apps accs
+            (unis :: [Ref Node (NetLayers () :<: Draft Static)]               , g02 :: NetGraph ()) <- runBuild  g01 $ StructInference.run apps accs
             (g03 :: NetGraph ())                        <- evalBuild g02 $ Unification.run [] [] 1 unis
             (unis               , g04) <- runBuild  g03 $ input_g1_resolution_mock funcs
             --(gs05, g05)                <- runBuild  g04 $ Unification.run [(2,13),(2,18),(2,21),(2,22),(2,23)] 1 unis
@@ -274,11 +274,11 @@ data Error node edge = MissingInput  node (node # Input )
 
 
 
-newtype Network' ls = Network' (Hetero (VectorGraph (ls :< Raw) (Link (ls :< Raw)) NetCluster))
+newtype Network' ls = Network' (Hetero (VectorGraph (ls :<: Raw) (Link (ls :<: Raw)) NetCluster))
 makeWrapped ''Network'
 
-type instance Prop Node (Network' ls) = ls :< Draft Static
-type instance Prop Edge (Network' ls) = Link (ls :< Draft Static)
+type instance Prop Node (Network' ls) = ls :<: Draft Static
+type instance Prop Edge (Network' ls) = Link (ls :<: Draft Static)
 
 
 
@@ -317,7 +317,7 @@ instance ( Referenced' Node g
 instance KnownGraph2 I where ref_nodes2' = impossible
 
 --instance UnwrappedGetter sel p (Node a)  => Getter2 sel p (Node a)  where getter2 s = getter2 s ∘ unwrap'
---instance UnwrappedGetter sel p (ls :< t) => Getter2 sel p (ls :< t) where getter2 s = getter2 s ∘ unwrap'
+--instance UnwrappedGetter sel p (ls :<: t) => Getter2 sel p (ls :<: t) where getter2 s = getter2 s ∘ unwrap'
 
 
 check :: (MonadIO m, KnownGraph2 g) => g -> m ()
@@ -336,7 +336,7 @@ main2 :: IO ()
 main2 = do
     (nr, g_ :: NetGraph ()) <- prebuild
     let g = Network' g_
-    --print $ (refs g :: [Ref Node (NetLayers () :< Draft Static)])
+    --print $ (refs g :: [Ref Node (NetLayers () :<: Draft Static)])
     check g
     return ()
 
@@ -344,9 +344,9 @@ main2 = do
 --    getter2 _ g = undefined where
         --g' = unwrap' g :: _
 
---instance Referenced Node (Network' ls) (ls :< Draft Static) where refs = fmap Ref ∘ usedIxes ∘ view (wrapped' ∘ wrapped' ∘ nodeGraph)
-instance Referenced Node (Network' ls) (ls :< Draft Static)        where refs = fmap retarget ∘ refs' ∘ unwrap'
-instance Referenced Edge (Network' ls) (Link (ls :< Draft Static)) where refs = fmap retarget ∘ refs' ∘ unwrap'
+--instance Referenced Node (Network' ls) (ls :<: Draft Static) where refs = fmap Ref ∘ usedIxes ∘ view (wrapped' ∘ wrapped' ∘ nodeGraph)
+instance Referenced Node (Network' ls) (ls :<: Draft Static)        where refs = fmap retarget ∘ refs' ∘ unwrap'
+instance Referenced Edge (Network' ls) (Link (ls :<: Draft Static)) where refs = fmap retarget ∘ refs' ∘ unwrap'
 
 instance Referenced r t a => Referenced r (Hetero t) a where refs = refs ∘ unwrap'
 
@@ -355,15 +355,15 @@ instance e ~ e' => Referenced Edge (VectorGraph n e c) e' where refs = fmap Ref 
 
 --g -> [Ref Node (g # Node)]
 
---Ref $ Node $ ls :< term --> read
---      Node $ ls :< term
+--Ref $ Node $ ls :<: term --> read
+--      Node $ ls :<: term
 
 --Ref $ Arc src tgt --> read
 --      Arc src tgt
 
 
---Ref Node $ ls :< term --> read
---         $ ls :< term
+--Ref Node $ ls :<: term --> read
+--         $ ls :<: term
 
 --Ref Edge $ Arc src tgt --> read
 --           Arc src tgt
@@ -420,7 +420,7 @@ showcase = do
     renderAndOpen [ ("g", g')
                   ]
 
-foo :: forall a. Show a => NetGraph a -> IO (Ref Node (NetLayers a :< Draft Static), NetGraph a)
+foo :: forall a. Show a => NetGraph a -> IO (Ref Node (NetLayers a :<: Draft Static), NetGraph a)
 --foo :: NetGraph -> IO ((), NetGraph)
 foo g = runNetworkBuilderT g
     $ do
@@ -454,7 +454,7 @@ foo g = runNetworkBuilderT g
 
     title "complex element building"
     u1 <- unify s1 s2
-    print (u1 :: Ref Node (NetLayers a :< Draft Static))
+    print (u1 :: Ref Node (NetLayers a :<: Draft Static))
     u1_v <- read u1
 
     title "inputs reading"
@@ -541,21 +541,21 @@ foo g = runNetworkBuilderT g
 -- === Sorting stuff === ---
 ----------------------------
 
---type instance Item (NetGraph a) = Ref $ Node (NetLayers a :< Draft Static)
+--type instance Item (NetGraph a) = Ref $ Node (NetLayers a :<: Draft Static)
 
---instance Sort.CompleteGraph     (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw)))
+--instance Sort.CompleteGraph     (VectorGraph (NetLayers a :<: Raw) (Link (NetLayers a :<: Raw)))
 
---instance Sort.MarkableGraph     (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
+--instance Sort.MarkableGraph     (VectorGraph (NetLayers a :<: Raw) (Link (NetLayers a :<: Raw))) where
 --    markNode ref g = snd $ rebuildNetwork' g $ do
 --        Ref.with ref $ prop Markable .~ True
 --    isMarked ref g = fst $ rebuildNetwork' g $ do
 --        node <- read ref
 --        return $ node # Markable
 
---instance Sort.Graph             (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
+--instance Sort.Graph             (VectorGraph (NetLayers a :<: Raw) (Link (NetLayers a :<: Raw))) where
 --    listNodes g = Ref <$> (Ref <$> usedIxes $ $ g ^. nodeGraph)
 
---instance Sort.ForwardEdgedGraph (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw))) where
+--instance Sort.ForwardEdgedGraph (VectorGraph (NetLayers a :<: Raw) (Link (NetLayers a :<: Raw))) where
 --    successors ref g = fst $ rebuildNetwork' g $ do
 --        node <- read ref
 --        mapM (follow target) $ node ^. prop Succs

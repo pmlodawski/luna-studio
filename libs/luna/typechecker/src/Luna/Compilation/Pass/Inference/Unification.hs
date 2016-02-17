@@ -38,25 +38,25 @@ import Control.Monad (liftM, MonadPlus(..))
 import Control.Monad.Trans.Either
 
 #define PassCtx(m,ls,term) ( term ~ Draft Static                           \
-                           , ne   ~ Link (ls :< term)                      \
-                           , Prop Type   (ls :< term) ~ Ref Edge ne        \
-                           , Prop Succs  (ls :< term) ~ [Ref Edge $ ne]    \
+                           , ne   ~ Link (ls :<: term)                      \
+                           , Prop Type   (ls :<: term) ~ Ref Edge ne        \
+                           , Prop Succs  (ls :<: term) ~ [Ref Edge $ ne]    \
                            , BiCastable     e ne                           \
-                           , BiCastable     n (ls :< term)                 \
+                           , BiCastable     n (ls :<: term)                 \
                            , MonadBuilder (Hetero (VectorGraph n e c)) (m) \
-                           , HasProp Type       (ls :< term)               \
-                           , HasProp Succs      (ls :< term)               \
-                           , NodeInferable  (m) (ls :< term)               \
-                           , TermNode Var   (m) (ls :< term)               \
-                           , TermNode Lam   (m) (ls :< term)               \
-                           , TermNode Unify (m) (ls :< term)               \
-                           , TermNode Acc   (m) (ls :< term)               \
+                           , HasProp Type       (ls :<: term)               \
+                           , HasProp Succs      (ls :<: term)               \
+                           , NodeInferable  (m) (ls :<: term)               \
+                           , TermNode Var   (m) (ls :<: term)               \
+                           , TermNode Lam   (m) (ls :<: term)               \
+                           , TermNode Unify (m) (ls :<: term)               \
+                           , TermNode Acc   (m) (ls :<: term)               \
                            , MonadIdentPool (m)                            \
-                           , Destructor     (m) (Ref Node (ls :< term))    \
+                           , Destructor     (m) (Ref Node (ls :<: term))    \
                            )
 
 
---buildAppType :: (PassCtx(m,ls,term), nodeRef ~ Ref (Node $ (ls :< term))) => nodeRef -> m [nodeRef]
+--buildAppType :: (PassCtx(m,ls,term), nodeRef ~ Ref (Node $ (ls :<: term))) => nodeRef -> m [nodeRef]
 --buildAppType appRef = do
 --    appNode <- read appRef
 --    caseTest (uncover appNode) $ do
@@ -84,7 +84,7 @@ import Control.Monad.Trans.Either
 --        match $ \ANY -> impossible
 
 
---buildAccType :: (PassCtx(m,ls,term), nodeRef ~ Ref (Node $ (ls :< term))) => nodeRef -> m [nodeRef]
+--buildAccType :: (PassCtx(m,ls,term), nodeRef ~ Ref (Node $ (ls :<: term))) => nodeRef -> m [nodeRef]
 --buildAccType accRef = do
 --    appNode <- read accRef
 --    caseTest (uncover appNode) $ do
@@ -176,8 +176,8 @@ data Resolution r u = Resolved   r
 
 resolve_ = resolve []
 
-resolveUnify :: forall m ls term nodeRef ne ter n e c. (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :< term)
-                , MonadIO m, Show (ls :< term), MonadResolution [nodeRef] m)
+resolveUnify :: forall m ls term nodeRef ne ter n e c. (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :<: term)
+                , MonadIO m, Show (ls :<: term), MonadResolution [nodeRef] m)
              => nodeRef -> m ()
 resolveUnify uni = do
     uni' <- read uni
@@ -231,8 +231,8 @@ resolveUnify uni = do
                     resolve unis
 
 
-resolveUnify2 :: forall m ls term nodeRef ne ter n e c. (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :< term)
-                , MonadIO m, Show (ls :< term), MonadResolution [nodeRef] m)
+resolveUnify2 :: forall m ls term nodeRef ne ter n e c. (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :<: term)
+                , MonadIO m, Show (ls :<: term), MonadResolution [nodeRef] m)
              => nodeRef -> m ()
 resolveUnify2 uni = do
     putStrLn $ "resolveUnify2 for" <> show uni
@@ -306,8 +306,8 @@ resolveUnify2 uni = do
 --    --write input $ (input' & (prop Succs) %~ (: edge))
 --    return ()
 
---reroute :: (BiCastable n (ls :< term), BiCastable e (Link (ls :< term)), MonadBuilder (Hetero (VectorGraph n e)) m, Prop Succs (ls :< term) ~ [Ref (Link (ls :< term))])
---         => Ref (Node (ls :< term)) -> Ref (Link (ls :< term)) -> m ()
+--reroute :: (BiCastable n (ls :<: term), BiCastable e (Link (ls :<: term)), MonadBuilder (Hetero (VectorGraph n e)) m, Prop Succs (ls :<: term) ~ [Ref (Link (ls :<: term))])
+--         => Ref (Node (ls :<: term)) -> Ref (Link (ls :<: term)) -> m ()
 reroute input edge = do
     el  <- read edge
     write edge $ el & source .~ input
@@ -321,7 +321,7 @@ whenMatched a f = caseTest a $ do
 
 -- | Returns a concrete type of a node
 --   If the type is just universe, create a new type variable
---getTypeSpec :: PassCtx(m,ls,term) => Ref (Node $ (ls :< term)) -> m (Ref (Node $ (ls :< term)))
+--getTypeSpec :: PassCtx(m,ls,term) => Ref (Node $ (ls :<: term)) -> m (Ref (Node $ (ls :<: term)))
 --getTypeSpec ref = do
 --    val <- read ref
 --    tp  <- follow source $ val # Type
@@ -338,9 +338,9 @@ makeLenses ''TCStatus
 
 -- FIXME[WD]: we should not return [Graph n e] from pass - we should use ~ IterativePassRunner instead which will handle iterations by itself
 run :: forall nodeRef m ls term n e ne c.
-       (PassCtx(ResolutionT [nodeRef] m,ls,term), MonadBuilder (Hetero (VectorGraph n e c)) m, nodeRef ~ Ref Node (ls :< term)
-       , MonadIO m, Show (ls :< term)
-       , Getter Inputs (ls :< term), Prop Inputs (ls :< term) ~ [Ref Edge (Link (ls :< term))])
+       (PassCtx(ResolutionT [nodeRef] m,ls,term), MonadBuilder (Hetero (VectorGraph n e c)) m, nodeRef ~ Ref Node (ls :<: term)
+       , MonadIO m, Show (ls :<: term)
+       , Getter Inputs (ls :<: term), Prop Inputs (ls :<: term) ~ [Ref Edge (Link (ls :<: term))])
     => [Int] -> [(Int,Int)] -> Int -> [nodeRef] -> m [Hetero $ VectorGraph n e c]
 run debugits exc it unis = do
     g <- Graph.get
@@ -352,12 +352,12 @@ run debugits exc it unis = do
     --    putStrLn ""
     --    putStrLn $ ">>>> " <> show it
     --    putStrLn $ "    " <> show (fmap (^. idx) unis)
-    --    let n_13 = cast $ index_ 13 $ g ^. Graph.nodeGraph :: ls :< term
+    --    let n_13 = cast $ index_ 13 $ g ^. Graph.nodeGraph :: ls :<: term
     --        n_13_ins = n_13 # Inputs
-    --        n_13_es  = (cast ∘ flip index_ (g ^. Graph.edgeGraph) ∘ view idx) <$> n_13_ins :: [Link (ls :< term)]
-    --    let n_21 = cast $ index_ 21 $ g ^. Graph.nodeGraph :: ls :< term
+    --        n_13_es  = (cast ∘ flip index_ (g ^. Graph.edgeGraph) ∘ view idx) <$> n_13_ins :: [Link (ls :<: term)]
+    --    let n_21 = cast $ index_ 21 $ g ^. Graph.nodeGraph :: ls :<: term
     --        n_21_ins = n_21 # Inputs
-    --        n_21_es  = (cast ∘ flip index_ (g ^. Graph.edgeGraph) ∘ view idx) <$> n_21_ins :: [Link (ls :< term)]
+    --        n_21_es  = (cast ∘ flip index_ (g ^. Graph.edgeGraph) ∘ view idx) <$> n_21_ins :: [Link (ls :<: term)]
     --    putStrLn $ "    13 ins: " <> show (n_13_ins)
     --    putStrLn $ "    13 es : " <> show (n_13_es)
     --    when (it == 2) $ do
@@ -388,7 +388,7 @@ run debugits exc it unis = do
 universe = Ref 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?
 
 ---- FIXME[WD]: Change the implementation to list builder
---resolveUnifyX :: (PassCtx(ResolutionT [nodeRef] m,ls,term), nodeRef ~ Ref (Node $ (ls :< term)), MonadIO m, Show (ls :< term))
+--resolveUnifyX :: (PassCtx(ResolutionT [nodeRef] m,ls,term), nodeRef ~ Ref (Node $ (ls :<: term)), MonadIO m, Show (ls :<: term))
 --              => nodeRef -> m [nodeRef]
 --resolveUnifyX uni = (runResolutionT ∘ resolveUnify) uni >>= return ∘ \case
 --    Resolved unis -> unis

@@ -34,19 +34,19 @@ import qualified Luna.Syntax.AST.Decl.Function    as Function
 #define PassCtx forall node edge ls term graph e n m a c. \
                 ( term  ~ Draft Static                    \
                 , ls    ~ NetLayers a                     \
-                , edge  ~ Link (ls :< term)               \
-                , node  ~ (ls :< term)                    \
+                , edge  ~ Link (ls :<: term)               \
+                , node  ~ (ls :<: term)                    \
                 , c     ~ NetCluster                      \
                 , graph ~ Hetero (VectorGraph n e c)      \
                 , BiCastable     e edge                   \
                 , BiCastable     n node                   \
                 , MonadBuilder graph (m)                  \
-                , NodeInferable  (m) (ls :< term)         \
-                , TermNode Var   (m) (ls :< term)         \
-                , TermNode Acc   (m) (ls :< term)         \
-                , TermNode Cons  (m) (ls :< term)         \
-                , TermNode Lam   (m) (ls :< term)         \
-                , TermNode Unify (m) (ls :< term)         \
+                , NodeInferable  (m) (ls :<: term)         \
+                , TermNode Var   (m) (ls :<: term)         \
+                , TermNode Acc   (m) (ls :<: term)         \
+                , TermNode Cons  (m) (ls :<: term)         \
+                , TermNode Lam   (m) (ls :<: term)         \
+                , TermNode Unify (m) (ls :<: term)         \
                 , MonadSymbol node graph (m)              \
                 , Referred Node n graph                   \
                 )

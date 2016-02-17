@@ -26,20 +26,20 @@ import           Luna.Syntax.Model.Network.Term
 
 #define PassCtx(m, ls, term) ( ls   ~ NetLayers a                          \
                              , term ~ Draft Static                         \
-                             , ne   ~ Link (ls :< term)                    \
+                             , ne   ~ Link (ls :<: term)                    \
                              , BiCastable    e ne                          \
-                             , BiCastable    n (ls :< term)                \
+                             , BiCastable    n (ls :<: term)                \
                              , MonadIO m                                   \
                              , MonadBuilder (Hetero (VectorGraph n e c)) m \
-                             , NodeInferable m (ls :< term)                \
-                             , TermNode Cons m (ls :< term)                \
-                             , TermNode Lam  m (ls :< term)                \
+                             , NodeInferable m (ls :<: term)                \
+                             , TermNode Cons m (ls :<: term)                \
+                             , TermNode Lam  m (ls :<: term)                \
                              )
 
-pre :: PassCtx(m, ls, term) => Ref Node (ls :< term) -> m [Ref Node (ls :< term)]
+pre :: PassCtx(m, ls, term) => Ref Node (ls :<: term) -> m [Ref Node (ls :<: term)]
 pre ref = mapM (follow source) =<< (# Inputs) <$> read ref
 
-collectLiterals :: PassCtx(m, ls, term) => Ref Node (ls :< term) -> m [Ref Node (ls :< term)]
+collectLiterals :: PassCtx(m, ls, term) => Ref Node (ls :<: term) -> m [Ref Node (ls :<: term)]
 collectLiterals ref = do
     prev  <- pre ref
     lists <- mapM collectLiterals prev
@@ -50,5 +50,5 @@ collectLiterals ref = do
         match $ \(Num num) -> return $ ref : list
         match $ \ANY       -> return list
 
-run :: PassCtx(m, ls, term) => Ref Node (ls :< term) -> m [Ref Node (ls :< term)]
+run :: PassCtx(m, ls, term) => Ref Node (ls :<: term) -> m [Ref Node (ls :<: term)]
 run root = collectLiterals root

@@ -40,22 +40,22 @@ import           Data.Graph.Backend.VectorGraph
 
 
 graph1 :: forall term node edge nr er ls m n e c. (term ~ Draft Static
-          , node ~ (ls :< term)
-          , edge ~ Link (ls :< term)
+          , node ~ (ls :<: term)
+          , edge ~ Link (ls :<: term)
           , nr   ~ Ref Node node
           , er   ~ Ref Edge edge
-          , BiCastable     n (ls :< term)
+          , BiCastable     n (ls :<: term)
           , BiCastable     e edge
           , MonadIO       m
-          , NodeInferable m (ls :< term)
-          , TermNode Star m (ls :< term)
-          , TermNode Var  m (ls :< term)
-          , TermNode Num  m (ls :< term)
-          , TermNode Str  m (ls :< term)
-          , TermNode Acc  m (ls :< term)
-          , TermNode App  m (ls :< term)
-          , HasProp Required (ls :< term)
-          , Prop Required    (ls :< term) ~ Bool
+          , NodeInferable m (ls :<: term)
+          , TermNode Star m (ls :<: term)
+          , TermNode Var  m (ls :<: term)
+          , TermNode Num  m (ls :<: term)
+          , TermNode Str  m (ls :<: term)
+          , TermNode Acc  m (ls :<: term)
+          , TermNode App  m (ls :<: term)
+          , HasProp Required (ls :<: term)
+          , Prop Required    (ls :<: term) ~ Bool
           , Graph.MonadBuilder (Hetero (VectorGraph n e c)) m
           )
        => m nr
@@ -87,17 +87,17 @@ graph1 = do
 
 
     -- let ref = appConc1b :: Ref Node node
-    -- (nd :: (ls :< term)) <- read ref
+    -- (nd :: (ls :<: term)) <- read ref
 
     -- write ref (nd & prop Required .~ True)
 
     return appConc1b
 
 
-prebuild :: Show a => IO (Ref Node (NetLayers a :< Draft Static), NetGraph a)
+prebuild :: Show a => IO (Ref Node (NetLayers a :<: Draft Static), NetGraph a)
 prebuild = runBuild def star
 
-runBuild (g :: NetGraph a) m = runInferenceT ELEMENT (Proxy :: Proxy (Ref Node (NetLayers a :< Draft Static)))
+runBuild (g :: NetGraph a) m = runInferenceT ELEMENT (Proxy :: Proxy (Ref Node (NetLayers a :<: Draft Static)))
                              $ runNetworkBuilderT g m
 
 evalBuild = fmap snd ∘∘ runBuild

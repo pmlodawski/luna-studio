@@ -66,7 +66,7 @@ instance {-# OVERLAPPABLE #-} Setter a (Attached (Layer l a  t) base) where sett
 -- === Shell === ---
 --------------------
 
-data (layers :: [*]) :< (a :: [*] -> *) = Shell (ShellStructure layers (a layers))
+data (layers :: [*]) :<: (a :: [*] -> *) = Shell (ShellStructure layers (a layers))
 
 type family ShellStructure ls a where
     ShellStructure '[]       a = Cover a
@@ -77,43 +77,43 @@ type AttachedLayer t a = Attached (Layer (LayoutType (Uncovered a)) t (Uncovered
 
 -- === Utils === ---
 
-type family Shelled a where Shelled (t ls) = ls :< t
+type family Shelled a where Shelled (t ls) = ls :<: t
 
 
 -- === Instances === --
 
 -- Primitive
-deriving instance Show (Unwrapped (ls :< a)) => Show (ls :< a)
+deriving instance Show (Unwrapped (ls :<: a)) => Show (ls :<: a)
 
 -- Wrappers
-makeWrapped ''(:<)
-type instance Uncovered (ls :< a) = a ls
-type instance Unlayered (ls :< a) = Unwrapped (ls :< a)
-instance      Layered   (ls :< a)
+makeWrapped ''(:<:)
+type instance Uncovered (ls :<: a) = a ls
+type instance Unlayered (ls :<: a) = Unwrapped (ls :<: a)
+instance      Layered   (ls :<: a)
 
 -- Layouts
---type instance LayoutOf (ls :< a) = LayoutOf (Unlayered (ls :< a))
+--type instance LayoutOf (ls :<: a) = LayoutOf (Unlayered (ls :<: a))
 --type instance LayoutOf (Cover a) = LayoutOf (Unlayered (Cover a))
 
 -- Construction
-instance Monad m => LayerConstructor m (ls :< a) where constructLayer = return ∘ wrap'   ; {-# INLINE constructLayer #-}
-instance Monad m => LayerDestructor  m (ls :< a) where destructLayer  = return ∘ unwrap' ; {-# INLINE destructLayer  #-}
+instance Monad m => LayerConstructor m (ls :<: a) where constructLayer = return ∘ wrap'   ; {-# INLINE constructLayer #-}
+instance Monad m => LayerDestructor  m (ls :<: a) where destructLayer  = return ∘ unwrap' ; {-# INLINE destructLayer  #-}
 
 -- Conversion
 -- FIXME[WD]: change the implementation to be independent from layers. Wee need to implement full-lens Layered and Covered type classes
-instance Castable (Unwrapped (ls :< a)) (Unwrapped (ls' :< a')) => Castable (ls :< a) (ls' :< a') where
+instance Castable (Unwrapped (ls :<: a)) (Unwrapped (ls' :<: a')) => Castable (ls :<: a) (ls' :<: a') where
     cast = wrapped %~ cast ; {-# INLINE cast #-}
 
 
 -- Attributes
-type instance                                Prop a (ls :< t) = Prop a (Unwrapped (ls :< t))
-instance Getter a (Unwrapped (ls :< t)) => Getter a (ls :< t) where getter a = getter a ∘ unwrap'      ; {-# INLINE getter #-}
-instance Setter a (Unwrapped (ls :< t)) => Setter a (ls :< t) where setter   = over wrapped' ∘∘ setter ; {-# INLINE setter #-}
+type instance                                Prop a (ls :<: t) = Prop a (Unwrapped (ls :<: t))
+instance Getter a (Unwrapped (ls :<: t)) => Getter a (ls :<: t) where getter a = getter a ∘ unwrap'      ; {-# INLINE getter #-}
+instance Setter a (Unwrapped (ls :<: t)) => Setter a (ls :<: t) where setter   = over wrapped' ∘∘ setter ; {-# INLINE setter #-}
 
 -- Records
-type instance RecordOf (ls :< t) = RecordOf (t ls)
-instance (HasRecord (Uncovered (ls :< t)), Uncovered (Unwrapped (ls :< t)) ~ t ls, Covered (Unwrapped (ls :< t)))
-      => HasRecord (ls :< t) where record = covered ∘ record
+type instance RecordOf (ls :<: t) = RecordOf (t ls)
+instance (HasRecord (Uncovered (ls :<: t)), Uncovered (Unwrapped (ls :<: t)) ~ t ls, Covered (Unwrapped (ls :<: t)))
+      => HasRecord (ls :<: t) where record = covered ∘ record
 
 ---------------------------
 -- === Native layers === --

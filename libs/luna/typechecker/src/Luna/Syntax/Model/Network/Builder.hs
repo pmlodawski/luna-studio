@@ -29,7 +29,7 @@ import           Luna.Evaluation.Runtime        (Static)
 -- === Utils === --
 -------------------
 
-importStructure :: ( node  ~ (NetLayers a :< Draft Static)
+importStructure :: ( node  ~ (NetLayers a :<: Draft Static)
                    , edge  ~ (Link node)
                    , graph ~ Hetero (VectorGraph n e c)
                    , BiCastable e edge
@@ -66,7 +66,7 @@ importStructure nodes edges = do
 
     return nodeTrans
 
-merge :: ( node  ~ (NetLayers a :< Draft Static)
+merge :: ( node  ~ (NetLayers a :<: Draft Static)
          , edge  ~ (Link node)
          , graph ~ Hetero (VectorGraph n e c)
          , BiCastable e edge
@@ -84,7 +84,7 @@ merge g = do
     importStructure (zip foreignNodeRefs foreignNodes) (zip foreignEdgeRefs foreignEdges)
 
 dupCluster :: forall node edge a e n m graph c .
-              ( node  ~ (NetLayers a :< Draft Static)
+              ( node  ~ (NetLayers a :<: Draft Static)
               , edge  ~ (Link node)
               , c     ~ NetCluster
               , graph ~ Hetero (VectorGraph n e c)

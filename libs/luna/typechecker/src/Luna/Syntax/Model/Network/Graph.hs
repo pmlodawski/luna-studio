@@ -6,7 +6,7 @@ import Prelude.Luna
 
 import           Luna.Evaluation.Runtime        as Runtime
 import           Luna.Syntax.AST.Term           (Input)
-import           Luna.Syntax.Model.Layer        ((:<))
+import           Luna.Syntax.Model.Layer        ((:<:))
 import           Data.Graph
 
 -- === Instances === --
@@ -18,4 +18,4 @@ import           Data.Graph
 type instance Input (Ref Node a) = Ref Node a
 
 type instance Runtime.Model (Ref Node a) = Runtime.Model (Unlayered (Ref Node a))
-type instance Runtime.Model (ls :< a) = Runtime.Model (Uncovered (ls :< a))
+type instance Runtime.Model (ls :<: a) = Runtime.Model (Uncovered (ls :<: a))

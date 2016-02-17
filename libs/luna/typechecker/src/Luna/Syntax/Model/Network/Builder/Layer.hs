@@ -86,4 +86,4 @@ instance (Monad m, Unregister m (Ref Edge $ Link (Shelled a)))
 -- === Layer building & destruction === --
 ------------------------------------------
 
-instance CoverDestructor m (ls :< a) => Destructor m (ls :< a) where destruct a = () <$ destructCover a
+instance CoverDestructor m (ls :<: a) => Destructor m (ls :<: a) where destruct a = () <$ destructCover a

@@ -29,7 +29,7 @@ import Data.Prop
 -- === Network layout definition === --
 ---------------------------------------
 
-type instance Layout (Network ls) term rt = Ref Edge $ Link (ls :< TermWrapper term rt)
+type instance Layout (Network ls) term rt = Ref Edge $ Link (ls :<: TermWrapper term rt)
 
 type family TermWrapper (a :: *) :: * -> [*] -> *
 

@@ -155,13 +155,13 @@ toGraphViz name net = DotGraph { strictGraph     = False
           --    colors = nodeColorAttr node
           --    attrs  = label : colors
 
-          isOrphanTgt (node :: Ref Node (NetLayers a :< Draft Static)) (edge :: Ref Edge (Link (NetLayers a :< Draft Static)))
+          isOrphanTgt (node :: Ref Node (NetLayers a :<: Draft Static)) (edge :: Ref Edge (Link (NetLayers a :<: Draft Static)))
                     = not $ existing && validSource && validTarget where
               existing    = (edge ^. idx) `elem` edgeIxs
               validSource = edge' ^. source == node
               validTarget = edge `elem` (tgt' # Type) : (tgt' # Inputs)
 
-              edge' = net ^. focus edge :: Link (NetLayers a :< Draft Static)
+              edge' = net ^. focus edge :: Link (NetLayers a :<: Draft Static)
               tgt   = edge' ^. target
               tgt'  = net ^. focus tgt
 
@@ -177,7 +177,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
               node     = draftNodeByIx nix
               ins      = node # Inputs
               succs    = node # Succs
-              succs'   = (net ^.) ∘ focus <$> succs :: [Link (NetLayers a :< Draft Static)]
+              succs'   = (net ^.) ∘ focus <$> succs :: [Link (NetLayers a :<: Draft Static)]
 
               orphanTgts = selectOrphanTgts (Ref nix) succs -- FIXME[WD] ugliness
 
@@ -216,10 +216,10 @@ toGraphViz name net = DotGraph { strictGraph     = False
                   --match $ \(Term.Unify a b) -> [Color nodeColor, shape DoubleCircle , unifyLabel, FixedSize SetNodeSize, Width 0.2, Height 0.2, fontColor unifyLabelClr]
                   match $ \ANY              -> [Color nodeColor, shape PlainText   , nodeLabel ]
 
-          nodeInEdges   n   = zip3 ([0..] :: [Int]) (genInEdges net $ (cast $ index n ng :: NetLayers a :< Draft Static)) (repeat n)
+          nodeInEdges   n   = zip3 ([0..] :: [Int]) (genInEdges net $ (cast $ index n ng :: NetLayers a :<: Draft Static)) (repeat n)
           mkEdge  (n,(a,attrs),b) = DotEdge (nodeRef a) (nodeRef b) $ HeadPort (LabelledPort (inPortName n) Nothing) : TailPort (LabelledPort "label" Nothing) : attrs
 
-          draftNodeByIx ix   = cast $ index_ ix ng :: (NetLayers a :< Draft Static)
+          draftNodeByIx ix   = cast $ index_ ix ng :: (NetLayers a :<: Draft Static)
           clusterByIx   ix   = index_ ix cg        :: SubGraph
           genNodeLabel  node = reprStyled HeaderOnly $ uncover node
 
@@ -228,7 +228,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
           matchClusters :: [Int] -> Int -> [Int]
           matchClusters clrIxs nix = catMaybes $ flip matchCluster nix <$> clrIxs
 
-          --nodeColor :: (NetLayers a :< Draft Static) -> Attribute
+          --nodeColor :: (NetLayers a :<: Draft Static) -> Attribute
           getNodeColor n = caseTest (uncover n) $ do
                                 match $ \(Term.Str s) -> valStrNodeClr
                                 match $ \(Term.Num n) -> valIntNodeClr
@@ -263,7 +263,7 @@ fromListWithReps lst = foldr update (Map.fromList initLst) lst where
     update (k,v) = Map.adjust (v:) k
 
 
-genInEdges (g :: NetGraph a) (n :: NetLayers a :< Draft Static) = displayEdges where
+genInEdges (g :: NetGraph a) (n :: NetLayers a :<: Draft Static) = displayEdges where
     --displayEdges = tpEdge : (addColor <$> inEdges)
     displayEdges = ($ (addColor <$> inEdges) ++ redirEdge) $ if t == universe then id else (<> [tpEdge])
     genLabel     = GV.Label . StrLabel . fromString . show

@@ -47,40 +47,40 @@ type LitLike a = ( Matches (Uncovered a) '[ANY, Star, Str, Term.Num], Covered a)
 
 -- === Utils === --
 
-node :: n ~ Ref Node (ls :< term) => m n -> m n
+node :: n ~ Ref Node (ls :<: term) => m n -> m n
 node = id ; {-# INLINE node #-}
 
 --
 
-star :: NodeBuilder Star m (ls :< term) => m (Ref Node $ ls :< term)
+star :: NodeBuilder Star m (ls :<: term) => m (Ref Node $ ls :<: term)
 star  = node Term.star
 
-str :: NodeBuilder Str m (ls :< term) => String -> m (Ref Node $ ls :< term)
+str :: NodeBuilder Str m (ls :<: term) => String -> m (Ref Node $ ls :<: term)
 str   = node ∘ Term.str
 
-int :: NodeBuilder Term.Num m (ls :< term) => Int -> m (Ref Node $ ls :< term)
+int :: NodeBuilder Term.Num m (ls :<: term) => Int -> m (Ref Node $ ls :<: term)
 int = node ∘ Term.int
 
-cons :: NodeBuilder Cons m (ls :< term) => NameInput (Ref Node $ ls :< term) -> m (Ref Node $ ls :< term)
+cons :: NodeBuilder Cons m (ls :<: term) => NameInput (Ref Node $ ls :<: term) -> m (Ref Node $ ls :<: term)
 cons = node ∘ Term.cons
 
-lam :: NodeBuilder Lam m (ls :< term) => [Arg $ Ref Node $ ls :< term] -> Ref Node $ ls :< term -> m (Ref Node $ ls :< term)
+lam :: NodeBuilder Lam m (ls :<: term) => [Arg $ Ref Node $ ls :<: term] -> Ref Node $ ls :<: term -> m (Ref Node $ ls :<: term)
 lam = node ∘∘ Term.lam
 
-acc :: NodeBuilder Acc m (ls :< term) => NameInput (Ref Node $ ls :< term) -> Ref Node $ ls :< term -> m (Ref Node $ ls :< term)
+acc :: NodeBuilder Acc m (ls :<: term) => NameInput (Ref Node $ ls :<: term) -> Ref Node $ ls :<: term -> m (Ref Node $ ls :<: term)
 acc = node ∘∘ Term.acc
 
-app :: NodeBuilder App m (ls :< term) => Ref Node $ ls :< term -> [Arg $ Ref Node $ ls :< term] -> m (Ref Node $ ls :< term)
+app :: NodeBuilder App m (ls :<: term) => Ref Node $ ls :<: term -> [Arg $ Ref Node $ ls :<: term] -> m (Ref Node $ ls :<: term)
 app = node ∘∘ Term.app
 
-var :: NodeBuilder Var m (ls :< term) => NameInput (Ref Node $ ls :< term) -> m (Ref Node $ ls :< term)
+var :: NodeBuilder Var m (ls :<: term) => NameInput (Ref Node $ ls :<: term) -> m (Ref Node $ ls :<: term)
 var = Term.var
 
-unify :: NodeBuilder Unify m (ls :< term) => Ref Node $ ls :< term -> Ref Node $ ls :< term -> m (Ref Node $ ls :< term)
+unify :: NodeBuilder Unify m (ls :<: term) => Ref Node $ ls :<: term -> Ref Node $ ls :<: term -> m (Ref Node $ ls :<: term)
 unify = Term.unify
 
-blank :: NodeBuilder Blank m (ls :< term) => m (Ref Node $ ls :< term)
+blank :: NodeBuilder Blank m (ls :<: term) => m (Ref Node $ ls :<: term)
 blank = Term.blank
 
-native :: NodeBuilder Native m (ls :< term) => NameInput (Ref Node $ ls :< term) -> [Ref Node $ ls :< term] ->  m (Ref Node $ ls :< term)
+native :: NodeBuilder Native m (ls :<: term) => NameInput (Ref Node $ ls :<: term) -> [Ref Node $ ls :<: term] ->  m (Ref Node $ ls :<: term)
 native = node ∘∘ Term.native

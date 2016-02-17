@@ -25,22 +25,22 @@ import Data.Graph.Backend.VectorGraph
 
 
 #define PassCtx(m,ls,term) ( term ~ Draft Static                           \
-                           , ne   ~ Link (ls :< term)                      \
-                           , Prop Type   (ls :< term) ~ Ref Edge ne        \
+                           , ne   ~ Link (ls :<: term)                      \
+                           , Prop Type   (ls :<: term) ~ Ref Edge ne        \
                            , BiCastable     e ne                           \
-                           , BiCastable     n (ls :< term)                 \
+                           , BiCastable     n (ls :<: term)                 \
                            , MonadBuilder  (Hetero (VectorGraph n e c)) m  \
-                           , HasProp Type     (ls :< term)                 \
-                           , NodeInferable  m (ls :< term)                 \
-                           , TermNode Var   m (ls :< term)                 \
-                           , TermNode Lam   m (ls :< term)                 \
-                           , TermNode Unify m (ls :< term)                 \
-                           , TermNode Acc   m (ls :< term)                 \
+                           , HasProp Type     (ls :<: term)                 \
+                           , NodeInferable  m (ls :<: term)                 \
+                           , TermNode Var   m (ls :<: term)                 \
+                           , TermNode Lam   m (ls :<: term)                 \
+                           , TermNode Unify m (ls :<: term)                 \
+                           , TermNode Acc   m (ls :<: term)                 \
                            , MonadIdentPool m                              \
                            )
 
 
-buildAppType :: (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :< term)) => nodeRef -> m [nodeRef]
+buildAppType :: (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :<: term)) => nodeRef -> m [nodeRef]
 buildAppType appRef = do
     appNode <- read appRef
     caseTest (uncover appNode) $ do
@@ -68,7 +68,7 @@ buildAppType appRef = do
         match $ \ANY -> impossible
 
 
-buildAccType :: (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :< term)) => nodeRef -> m [nodeRef]
+buildAccType :: (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :<: term)) => nodeRef -> m [nodeRef]
 buildAccType accRef = do
     appNode <- read accRef
     caseTest (uncover appNode) $ do
@@ -87,7 +87,7 @@ buildAccType accRef = do
 
 -- | Returns a concrete type of a node
 --   If the type is just universe, create a new type variable
-getTypeSpec :: PassCtx(m,ls,term) => Ref Node (ls :< term) -> m (Ref Node (ls :< term))
+getTypeSpec :: PassCtx(m,ls,term) => Ref Node (ls :<: term) -> m (Ref Node (ls :<: term))
 getTypeSpec ref = do
     val <- read ref
     tp  <- follow source $ val # Type
@@ -96,7 +96,7 @@ getTypeSpec ref = do
         reconnect ref (prop Type) ntp
         return ntp
 
-run :: (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :< term)) => [nodeRef] -> [nodeRef] -> m [nodeRef]
+run :: (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :<: term)) => [nodeRef] -> [nodeRef] -> m [nodeRef]
 run apps accs = do
     appUnis <- concat <$> mapM buildAppType apps
     accUnis <- concat <$> mapM buildAccType accs
