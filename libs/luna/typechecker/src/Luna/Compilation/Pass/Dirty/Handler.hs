@@ -9,7 +9,7 @@ import           Prologue                                        hiding (Getter,
 import           Data.Graph.Backend.VectorGraph                  as Graph
 import           Data.Graph.Builder
 import           Luna.Compilation.Pass.Dirty.Data.Env            (Env)
-import           Luna.Compilation.Pass.Dirty.Data.Label          (Dirty(..), Required(..))
+import           Luna.Compilation.Pass.Dirty.Data.Label          (Interpreter(..), InterpreterLayer(..))
 import qualified Luna.Compilation.Pass.Dirty.Data.Env            as Env
 import qualified Luna.Compilation.Pass.Dirty.Data.Env            as Env
 import qualified Luna.Compilation.Pass.Dirty.Data.Label          as Label
@@ -33,10 +33,8 @@ import           Luna.Syntax.Model.Network.Term
                                   , MonadBuilder (Hetero (VectorGraph n e c)) m  \
                                   , NodeInferable m (ls :<: term)                 \
                                   , TermNode Lam  m (ls :<: term)                 \
-                                  , HasProp Dirty    (ls :<: term)                \
-                                  , HasProp Required (ls :<: term)                \
-                                  , Prop Dirty       (ls :<: term) ~ Bool         \
-                                  , Prop Required    (ls :<: term) ~ Bool         \
+                                  , HasProp Interpreter    (ls :<: term)                \
+                                  , Prop Interpreter       (ls :<: term) ~ InterpreterLayer         \
                                   , DirtyMonad (Env (Ref Node (ls :<: term))) m   \
                                   )
 
@@ -54,8 +52,8 @@ reset = Env.clearReqNodes
 connect :: PassCtxDirty(m, ls, term) => Ref Node (ls :<: term) -> Ref Node (ls :<: term) -> m ()
 connect prev next = do
     nd <- read prev
-    let isPrevDirty = nd # Dirty
-    -- isPrevDirty <- Dirty.isDirty <$> read prev
+    -- let isPrevDirty = nd # Dirty
+    isPrevDirty <- Dirty.isDirty <$> read prev
     Dirty.markSuccessors $ if isPrevDirty
         then prev
         else next

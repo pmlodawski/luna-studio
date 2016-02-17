@@ -32,11 +32,12 @@ import           Luna.Syntax.Model.Network.Term
 
 import qualified Luna.Compilation.Pass.Dirty.Monad      as DirtyMonad
 
-import           Luna.Compilation.Pass.Dirty.Data.Label (Required(..))
+import           Luna.Compilation.Pass.Dirty.Data.Label (Interpreter (..), InterpreterLayer)
 import qualified Luna.Compilation.Pass.Dirty.Data.Label as Label
 
-import qualified Data.Graph.Builder.Class               as Graph
 import           Data.Graph.Backend.VectorGraph
+import qualified Data.Graph.Builder.Class               as Graph
+
 
 
 graph1 :: forall term node edge nr er ls m n e c. (term ~ Draft Static
@@ -54,8 +55,8 @@ graph1 :: forall term node edge nr er ls m n e c. (term ~ Draft Static
           , TermNode Str  m (ls :<: term)
           , TermNode Acc  m (ls :<: term)
           , TermNode App  m (ls :<: term)
-          , HasProp Required (ls :<: term)
-          , Prop Required    (ls :<: term) ~ Bool
+          , HasProp Interpreter (ls :<: term)
+          , Prop Interpreter    (ls :<: term) ~ InterpreterLayer
           , Graph.MonadBuilder (Hetero (VectorGraph n e c)) m
           )
        => m nr

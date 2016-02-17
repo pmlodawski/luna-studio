@@ -12,7 +12,7 @@ import           Prologue                                        hiding (Getter,
 
 import           Luna.Compilation.Pass.Dirty.Data.Env            (Env)
 import qualified Luna.Compilation.Pass.Dirty.Data.Env            as Env
-import           Luna.Compilation.Pass.Dirty.Data.Label          (Dirty(..), Required(..))
+import           Luna.Compilation.Pass.Dirty.Data.Label          (Interpreter(..), InterpreterLayer)
 import qualified Luna.Compilation.Pass.Dirty.Data.Label          as Label
 import           Luna.Compilation.Pass.Dirty.Monad               (DirtyMonad, runDirtyT, DirtyT)
 import           Luna.Syntax.Builder
@@ -35,20 +35,18 @@ import           Control.Monad.Trans.Identity
 import           Data.Graph.Backend.VectorGraph
 
 
-#define PassCtxDirty(m, ls, term) ( ls   ~ NetLayers a                             \
-                                  , term ~ Draft Static                            \
-                                  , ne   ~ Link (ls :<: term)                       \
-                                  , BiCastable e ne                                \
-                                  , BiCastable n (ls :<: term)                      \
-                                  , MonadIO m                                      \
-                                  , MonadBuilder (Hetero (VectorGraph n e c)) m    \
-                                  , NodeInferable m (ls :<: term)                   \
-                                  , TermNode Lam  m (ls :<: term)                   \
-                                  , HasProp Dirty    (ls :<: term)                  \
-                                  , HasProp Required (ls :<: term)                  \
-                                  , Prop Dirty       (ls :<: term) ~ Bool           \
-                                  , Prop Required    (ls :<: term) ~ Bool           \
-                                  , DirtyMonad (Env (Ref Node (ls :<: term))) m     \
+#define PassCtxDirty(m, ls, term) ( ls   ~ NetLayers a                                    \
+                                  , term ~ Draft Static                                   \
+                                  , ne   ~ Link (ls :<: term)                             \
+                                  , BiCastable e ne                                       \
+                                  , BiCastable n (ls :<: term)                            \
+                                  , MonadIO m                                             \
+                                  , MonadBuilder (Hetero (VectorGraph n e c)) m           \
+                                  , NodeInferable m (ls :<: term)                         \
+                                  , TermNode Lam  m (ls :<: term)                         \
+                                  , HasProp Interpreter (ls :<: term)                     \
+                                  , Prop Interpreter    (ls :<: term) ~ InterpreterLayer  \
+                                  , DirtyMonad (Env (Ref Node (ls :<: term))) m           \
                                   )
 
 
@@ -63,11 +61,14 @@ succ ref = do
     node <- read ref
     mapM (follow source) $ node ^. prop Succs
 
--- isDirty :: (Prop Dirty n ~ Bool, HasProp Dirty n) => n -> Bool
--- isDirty node = node ^. prop Dirty
 
--- isRequired :: (Prop Required n ~ Bool, HasProp Required n) => n -> Bool
--- isRequired node = node ^. prop Required
+isDirty :: (Prop Interpreter n ~ InterpreterLayer, HasProp Interpreter n) => n -> Bool
+isDirty node = node ^. prop Interpreter . Label.dirty
+
+
+isRequired :: (Prop Interpreter n ~ InterpreterLayer, HasProp Interpreter n) => n -> Bool
+isRequired node = node ^. prop Interpreter . Label.required
+
 
 followDirty :: PassCtxDirty(m, ls, term) => Ref Node (ls :<: term) -> m ()
 followDirty ref = do
@@ -75,37 +76,40 @@ followDirty ref = do
     prevs <- pre ref
     forM_ prevs $ \p -> do
         nd <- read p
-        let dirty = nd # Dirty
-        when (dirty) $
+        -- let dirty = nd # Dirty
+        -- when (dirty) $
+        whenM (isDirty <$> read p) $
             followDirty p
+
 
 markSuccessors :: PassCtxDirty(m, ls, term) => Ref Node (ls :<: term) -> m ()
 markSuccessors ref = do
     node <- read ref
     -- putStrLn $         "markSuccessors " <> show ref
-    unless (node ^. prop Dirty) $ do
+    unless (isDirty node) $ do
+    -- unless (node ^. prop Dirty) $ do
         -- putStrLn $     "marking dirty  " <> show ref
-        write ref (node & prop Dirty .~ True)
-        when (node # Required) $ do
+        -- write ref (node & prop Dirty .~ True)
+        write ref (node & prop Interpreter . Label.dirty .~ True)
+        -- when (node # Required) $ do
+        when (isRequired node) $ do
             -- putStrLn $ "addReqNode     " <> show ref
             Env.addReqNode ref
             mapM_ markSuccessors =<< succ ref
 
 
-#define PassCtx(m, ls, term) ( ls   ~ NetLayers a                              \
-                             , term ~ Draft Static                             \
-                             , ne   ~ Link (ls :<: term)                        \
-                             , BiCastable e ne                                 \
-                             , BiCastable n (ls :<: term)                       \
-                             , MonadIO (m)                                     \
-                             , MonadBuilder ((Hetero (VectorGraph n e c))) (m) \
-                             , NodeInferable (m) (ls :<: term)                  \
-                             , TermNode Lam  (m) (ls :<: term)                  \
-                             , MonadFix (m)                                    \
-                             , HasProp Dirty    (ls :<: term)                   \
-                             , HasProp Required (ls :<: term)                   \
-                             , Prop Dirty       (ls :<: term) ~ Bool            \
-                             , Prop Required    (ls :<: term) ~ Bool            \
+#define PassCtx(m, ls, term) ( ls   ~ NetLayers a                                      \
+                             , term ~ Draft Static                                     \
+                             , ne   ~ Link (ls :<: term)                               \
+                             , BiCastable e ne                                         \
+                             , BiCastable n (ls :<: term)                              \
+                             , MonadIO (m)                                             \
+                             , MonadBuilder ((Hetero (VectorGraph n e c))) (m)         \
+                             , NodeInferable (m) (ls :<: term)                         \
+                             , TermNode Lam  (m) (ls :<: term)                         \
+                             , MonadFix (m)                                            \
+                             , HasProp Interpreter    (ls :<: term)                    \
+                             , Prop Interpreter       (ls :<: term) ~ InterpreterLayer \
                              )
 
                              -- , HasProp Dirty (ls :<: term)                      \
