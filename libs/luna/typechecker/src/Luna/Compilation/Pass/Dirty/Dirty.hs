@@ -35,20 +35,20 @@ import           Control.Monad.Trans.Identity
 import           Data.Graph.Backend.VectorGraph
 
 
-#define PassCtxDirty(m, ls, term) ( ls   ~ NetLayers a                           \
-                                  , term ~ Draft Static                          \
-                                  , ne   ~ Link (ls :< term)                     \
-                                  , BiCastable e ne                              \
-                                  , BiCastable n (ls :< term)                    \
-                                  , MonadIO m                                    \
-                                  , MonadBuilder (Hetero (VectorGraph n e)) m    \
-                                  , NodeInferable m (ls :< term)                 \
-                                  , TermNode Lam  m (ls :< term)                 \
-                                  , HasProp Dirty    (ls :< term)                \
-                                  , HasProp Required (ls :< term)                \
-                                  , Prop Dirty       (ls :< term) ~ Bool         \
-                                  , Prop Required    (ls :< term) ~ Bool         \
-                                  , DirtyMonad (Env (Ref Node (ls :< term))) m   \
+#define PassCtxDirty(m, ls, term) ( ls   ~ NetLayers a                             \
+                                  , term ~ Draft Static                            \
+                                  , ne   ~ Link (ls :< term)                       \
+                                  , BiCastable e ne                                \
+                                  , BiCastable n (ls :< term)                      \
+                                  , MonadIO m                                      \
+                                  , MonadBuilder (Hetero (VectorGraph n e c)) m    \
+                                  , NodeInferable m (ls :< term)                   \
+                                  , TermNode Lam  m (ls :< term)                   \
+                                  , HasProp Dirty    (ls :< term)                  \
+                                  , HasProp Required (ls :< term)                  \
+                                  , Prop Dirty       (ls :< term) ~ Bool           \
+                                  , Prop Required    (ls :< term) ~ Bool           \
+                                  , DirtyMonad (Env (Ref Node (ls :< term))) m     \
                                   )
 
 
@@ -98,7 +98,7 @@ markSuccessors ref = do
                              , BiCastable e ne                                 \
                              , BiCastable n (ls :< term)                       \
                              , MonadIO (m)                                     \
-                             , MonadBuilder ((Hetero (VectorGraph n e))) (m)   \
+                             , MonadBuilder ((Hetero (VectorGraph n e c))) (m) \
                              , NodeInferable (m) (ls :< term)                  \
                              , TermNode Lam  (m) (ls :< term)                  \
                              , MonadFix (m)                                    \
@@ -111,7 +111,7 @@ markSuccessors ref = do
                              -- , HasProp Dirty (ls :< term)                      \
                              -- , HasProp Required (ls :< term)                   \
 
-run :: forall env m ls term ne a n e. (PassCtx(DirtyT env m, ls, term), MonadFix m, env ~ Env (Ref Node (ls :< term)))
+run :: forall env m ls term ne a n e c. (PassCtx(DirtyT env m, ls, term), MonadFix m, env ~ Env (Ref Node (ls :< term)))
     => Ref Node (ls :< term) -> m ()
 run ref = do
     ((), env) <- flip runDirtyT (def :: env) $ markSuccessors ref

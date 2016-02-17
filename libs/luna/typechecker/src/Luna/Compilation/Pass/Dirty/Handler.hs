@@ -30,7 +30,7 @@ import           Luna.Syntax.Model.Network.Term
                                   , BiCastable     e ne                          \
                                   , BiCastable     n (ls :< term)                \
                                   , MonadIO m                                    \
-                                  , MonadBuilder (Hetero (VectorGraph n e)) m    \
+                                  , MonadBuilder (Hetero (VectorGraph n e c)) m  \
                                   , NodeInferable m (ls :< term)                 \
                                   , TermNode Lam  m (ls :< term)                 \
                                   , HasProp Dirty    (ls :< term)                \

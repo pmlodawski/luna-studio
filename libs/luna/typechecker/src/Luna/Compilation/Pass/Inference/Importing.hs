@@ -19,7 +19,7 @@ import Data.Graph.Backend.VectorGraph               as Graph
 import Luna.Syntax.Model.Layer
 import Luna.Syntax.Model.Network.Builder            (merge, dupCluster)
 import Luna.Syntax.Model.Network.Builder.Node
-import Luna.Syntax.Model.Network.Builder.Term.Class (runNetworkBuilderT, NetGraph, NetLayers)
+import Luna.Syntax.Model.Network.Builder.Term.Class (runNetworkBuilderT, NetGraph, NetLayers, NetCluster)
 import Luna.Syntax.Model.Network.Class              ()
 import Luna.Syntax.Model.Network.Term
 import Type.Inference
@@ -31,23 +31,24 @@ import qualified Luna.Syntax.AST.Decl.Function    as Function
 
 
 
-#define PassCtx forall node edge ls term graph e n m a . \
-                ( term  ~ Draft Static                   \
-                , ls    ~ NetLayers a                    \
-                , edge  ~ Link (ls :< term)              \
-                , node  ~ (ls :< term)                   \
-                , graph ~ Hetero (VectorGraph n e)       \
-                , BiCastable     e edge                  \
-                , BiCastable     n node                  \
-                , MonadBuilder graph (m)                 \
-                , NodeInferable  (m) (ls :< term)        \
-                , TermNode Var   (m) (ls :< term)        \
-                , TermNode Acc   (m) (ls :< term)        \
-                , TermNode Cons  (m) (ls :< term)        \
-                , TermNode Lam   (m) (ls :< term)        \
-                , TermNode Unify (m) (ls :< term)        \
-                , MonadSymbol node graph (m)             \
-                , Referred Node n graph                  \
+#define PassCtx forall node edge ls term graph e n m a c. \
+                ( term  ~ Draft Static                    \
+                , ls    ~ NetLayers a                     \
+                , edge  ~ Link (ls :< term)               \
+                , node  ~ (ls :< term)                    \
+                , c     ~ NetCluster                      \
+                , graph ~ Hetero (VectorGraph n e c)      \
+                , BiCastable     e edge                   \
+                , BiCastable     n node                   \
+                , MonadBuilder graph (m)                  \
+                , NodeInferable  (m) (ls :< term)         \
+                , TermNode Var   (m) (ls :< term)         \
+                , TermNode Acc   (m) (ls :< term)         \
+                , TermNode Cons  (m) (ls :< term)         \
+                , TermNode Lam   (m) (ls :< term)         \
+                , TermNode Unify (m) (ls :< term)         \
+                , MonadSymbol node graph (m)              \
+                , Referred Node n graph                   \
                 )
 
 data ImportError = NotABindingNode | AmbiguousNodeType | SymbolNotFound deriving (Show)

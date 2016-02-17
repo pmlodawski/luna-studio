@@ -53,7 +53,7 @@ import           Luna.Syntax.Model.Network.Builder               (rebuildNetwork
 import           Luna.Syntax.Model.Network.Builder.Node
 import           Luna.Syntax.Model.Network.Builder.Node.Class    ()
 import qualified Luna.Syntax.Model.Network.Builder.Node.Inferred as Inf
-import           Luna.Syntax.Model.Network.Builder.Term.Class    (NetGraph, NetLayers, runNetworkBuilderT, fmapInputs, inputstmp)
+import           Luna.Syntax.Model.Network.Builder.Term.Class    (NetGraph, NetLayers, NetCluster, runNetworkBuilderT, fmapInputs, inputstmp)
 import           Luna.Syntax.Model.Network.Class                 (Network)
 import           Luna.Syntax.Model.Network.Term
 
@@ -121,7 +121,7 @@ input_g1_resolution_mock :: ( term ~ Draft Static
                             , TermNode Unify m (ls :< term)
                             , HasProp Type (ls :< term)
                             , Prop    Type (ls :< term) ~ er
-                            , Graph.MonadBuilder (Hetero (VectorGraph n e)) m
+                            , Graph.MonadBuilder (Hetero (VectorGraph n e c)) m
                             , Castable e edge
                             ) => [nr] -> m [nr]
 input_g1_resolution_mock [f,g] = do
@@ -274,7 +274,7 @@ data Error node edge = MissingInput  node (node # Input )
 
 
 
-newtype Network' ls = Network' (Hetero (VectorGraph (ls :< Raw) (Link (ls :< Raw))))
+newtype Network' ls = Network' (Hetero (VectorGraph (ls :< Raw) (Link (ls :< Raw)) NetCluster))
 makeWrapped ''Network'
 
 type instance Prop Node (Network' ls) = ls :< Draft Static
@@ -350,8 +350,8 @@ instance Referenced Edge (Network' ls) (Link (ls :< Draft Static)) where refs = 
 
 instance Referenced r t a => Referenced r (Hetero t) a where refs = refs ∘ unwrap'
 
-instance n ~ n' => Referenced Node (VectorGraph n e) n' where refs = fmap Ref ∘ usedIxes ∘ view nodeGraph
-instance e ~ e' => Referenced Edge (VectorGraph n e) e' where refs = fmap Ref ∘ usedIxes ∘ view edgeGraph
+instance n ~ n' => Referenced Node (VectorGraph n e c) n' where refs = fmap Ref ∘ usedIxes ∘ view nodeGraph
+instance e ~ e' => Referenced Edge (VectorGraph n e c) e' where refs = fmap Ref ∘ usedIxes ∘ view edgeGraph
 
 --g -> [Ref Node (g # Node)]
 

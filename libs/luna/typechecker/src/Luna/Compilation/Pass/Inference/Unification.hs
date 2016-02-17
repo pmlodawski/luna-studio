@@ -37,22 +37,22 @@ import Control.Monad (liftM, MonadPlus(..))
 
 import Control.Monad.Trans.Either
 
-#define PassCtx(m,ls,term) ( term ~ Draft Static                     \
-                           , ne   ~ Link (ls :< term)                \
-                           , Prop Type   (ls :< term) ~ Ref Edge ne  \
-                           , Prop Succs  (ls :< term) ~ [Ref Edge $ ne]   \
-                           , BiCastable     e ne                     \
-                           , BiCastable     n (ls :< term)           \
-                           , MonadBuilder (Hetero (VectorGraph n e)) (m)                    \
-                           , HasProp Type       (ls :< term)         \
-                           , HasProp Succs      (ls :< term)         \
-                           , NodeInferable  (m) (ls :< term)         \
-                           , TermNode Var   (m) (ls :< term)         \
-                           , TermNode Lam   (m) (ls :< term)         \
-                           , TermNode Unify (m) (ls :< term)         \
-                           , TermNode Acc   (m) (ls :< term)         \
-                           , MonadIdentPool (m)                      \
-                           , Destructor     (m) (Ref Node (ls :< term)) \
+#define PassCtx(m,ls,term) ( term ~ Draft Static                           \
+                           , ne   ~ Link (ls :< term)                      \
+                           , Prop Type   (ls :< term) ~ Ref Edge ne        \
+                           , Prop Succs  (ls :< term) ~ [Ref Edge $ ne]    \
+                           , BiCastable     e ne                           \
+                           , BiCastable     n (ls :< term)                 \
+                           , MonadBuilder (Hetero (VectorGraph n e c)) (m) \
+                           , HasProp Type       (ls :< term)               \
+                           , HasProp Succs      (ls :< term)               \
+                           , NodeInferable  (m) (ls :< term)               \
+                           , TermNode Var   (m) (ls :< term)               \
+                           , TermNode Lam   (m) (ls :< term)               \
+                           , TermNode Unify (m) (ls :< term)               \
+                           , TermNode Acc   (m) (ls :< term)               \
+                           , MonadIdentPool (m)                            \
+                           , Destructor     (m) (Ref Node (ls :< term))    \
                            )
 
 
@@ -176,7 +176,7 @@ data Resolution r u = Resolved   r
 
 resolve_ = resolve []
 
-resolveUnify :: forall m ls term nodeRef ne ter n e. (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :< term)
+resolveUnify :: forall m ls term nodeRef ne ter n e c. (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :< term)
                 , MonadIO m, Show (ls :< term), MonadResolution [nodeRef] m)
              => nodeRef -> m ()
 resolveUnify uni = do
@@ -231,7 +231,7 @@ resolveUnify uni = do
                     resolve unis
 
 
-resolveUnify2 :: forall m ls term nodeRef ne ter n e. (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :< term)
+resolveUnify2 :: forall m ls term nodeRef ne ter n e c. (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :< term)
                 , MonadIO m, Show (ls :< term), MonadResolution [nodeRef] m)
              => nodeRef -> m ()
 resolveUnify2 uni = do
@@ -337,11 +337,11 @@ data TCStatus = TCStatus { _terms     :: Int
 makeLenses ''TCStatus
 
 -- FIXME[WD]: we should not return [Graph n e] from pass - we should use ~ IterativePassRunner instead which will handle iterations by itself
-run :: forall nodeRef m ls term n e ne.
-       (PassCtx(ResolutionT [nodeRef] m,ls,term), MonadBuilder (Hetero (VectorGraph n e)) m, nodeRef ~ Ref Node (ls :< term)
+run :: forall nodeRef m ls term n e ne c.
+       (PassCtx(ResolutionT [nodeRef] m,ls,term), MonadBuilder (Hetero (VectorGraph n e c)) m, nodeRef ~ Ref Node (ls :< term)
        , MonadIO m, Show (ls :< term)
        , Getter Inputs (ls :< term), Prop Inputs (ls :< term) ~ [Ref Edge (Link (ls :< term))])
-    => [Int] -> [(Int,Int)] -> Int -> [nodeRef] -> m [Hetero $ VectorGraph n e]
+    => [Int] -> [(Int,Int)] -> Int -> [nodeRef] -> m [Hetero $ VectorGraph n e c]
 run debugits exc it unis = do
     g <- Graph.get
     let tcs = TCStatus (length (usedIxes $ g ^. wrapped' ∘ Graph.nodeGraph)) (length unis)

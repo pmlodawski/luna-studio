@@ -258,8 +258,9 @@ matchTypeM _ = id
 
 type NetLayers a = '[Type, Succs, Redirect, Dirty, Required, Meta a]
 type NetNode   a = NetLayers a :< Draft Static
+type NetCluster  = SubGraph
 
-type NetGraph a = Hetero (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw)))
+type NetGraph a = Hetero (VectorGraph (NetLayers a :< Raw) (Link (NetLayers a :< Raw)) NetCluster)
 
 buildNetwork  = runIdentity ∘ buildNetworkM
 buildNetworkM = rebuildNetworkM' (def :: NetGraph a)
@@ -280,14 +281,14 @@ class NetworkBuilderT net m n | m -> n, m -> net where runNetworkBuilderT :: net
 instance {-# OVERLAPPABLE #-} NetworkBuilderT I IM IM where runNetworkBuilderT = impossible
 instance {-# OVERLAPPABLE #-}
     ( m      ~ Listener CONNECTION SuccRegister m'
-    , m'     ~ GraphBuilder.BuilderT (Hetero (VectorGraph n e)) m''
+    , m'     ~ GraphBuilder.BuilderT (Hetero (VectorGraph n e c)) m''
     , m''    ~ Listener ELEMENT (TypeConstraint Equality_Full (Ref Node $ NetNode a)) m'''
     , m'''   ~ Listener CONNECTION (TypeConstraint Equality_M1 (Ref Edge c)) m''''
     , m''''  ~ Type.TypeBuilderT (Ref Node $ NetNode a) m'''''
     , m''''' ~ Self.SelfBuilderT (Ref Node $ NetNode a) m''''''
     , Monad m'''''
     , Monad m''''''
-    , net ~ Hetero (VectorGraph n e)
+    , net ~ Hetero (VectorGraph n e c)
     ) => NetworkBuilderT net m m'''''' where
     runNetworkBuilderT net = flip Self.evalT (undefined ::        Ref Node $ NetNode a)
                            ∘ flip Type.evalT (Nothing   :: Maybe (Ref Node $ NetNode a))

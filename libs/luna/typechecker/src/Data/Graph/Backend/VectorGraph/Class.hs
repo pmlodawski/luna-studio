@@ -51,10 +51,10 @@ instance Monad m => IsContainerM  m (AutoVector a) where
 -------------------------
 
 
-data VectorGraph node edge = VectorGraph { _nodeGraph :: !(AutoVector node)
-                                         , _edgeGraph :: !(AutoVector edge)
-                                         , _subGraphs :: !(AutoVector SubGraph)
-                                         } deriving (Show)
+data VectorGraph node edge cluster = VectorGraph { _nodeGraph :: !(AutoVector node)
+                                                 , _edgeGraph :: !(AutoVector edge)
+                                                 , _subGraphs :: !(AutoVector cluster)
+                                                 } deriving (Show)
 
 
 makeLenses  ''VectorGraph
@@ -64,26 +64,26 @@ makeLenses  ''VectorGraph
 
 -- Construction
 
-type instance Prop Node    (VectorGraph n e) = n
-type instance Prop Edge    (VectorGraph n e) = e
-type instance Prop Cluster (VectorGraph n e) = SubGraph
-instance Default (VectorGraph n e) where def = VectorGraph (alloc 100) (alloc 100) (alloc 100)
+type instance Prop Node    (VectorGraph n e c) = n
+type instance Prop Edge    (VectorGraph n e c) = e
+type instance Prop Cluster (VectorGraph n e c) = c
+instance Default (VectorGraph n e c) where def = VectorGraph (alloc 100) (alloc 100) (alloc 100)
 
 -- References handling
 
-instance r ~ n => Referred Node r (VectorGraph n e) where
+instance r ~ n => Referred Node r (VectorGraph n e c) where
     focus r = lens getter setter where
         getter t     = index_ (r ^. idx) $ t ^. nodeGraph                        ; {-# INLINE getter #-}
         setter t val = t & nodeGraph %~ unchecked inplace insert_ (r ^. idx) val ; {-# INLINE setter #-}
     {-# INLINE focus #-}
 
-instance r ~ e => Referred Edge r (VectorGraph n e) where
+instance r ~ e => Referred Edge r (VectorGraph n e c) where
     focus r = lens getter setter where
         getter t     = index_ (r ^. idx) $ t ^. edgeGraph                        ; {-# INLINE getter #-}
         setter t val = t & edgeGraph %~ unchecked inplace insert_ (r ^. idx) val ; {-# INLINE setter #-}
     {-# INLINE focus #-}
 
-instance r ~ SubGraph => Referred Cluster r (VectorGraph n e) where
+instance r ~ c => Referred Cluster r (VectorGraph n e c) where
     focus r = lens getter setter where
         getter t     = index_ (r ^. idx) $ t ^. subGraphs                        ; {-# INLINE getter #-}
         setter t val = t & subGraphs %~ unchecked inplace insert_ (r ^. idx) val ; {-# INLINE setter #-}

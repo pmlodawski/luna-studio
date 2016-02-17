@@ -67,14 +67,14 @@ write ref = modify_ ∘ set (focus ref)
 
 -- Construction
 
-instance (MonadBuilder (Hetero (VectorGraph n e)) m, Castable a n) => Constructor m (Ref Node a) where
+instance (MonadBuilder (Hetero (VectorGraph n e c)) m, Castable a n) => Constructor m (Ref Node a) where
     construct n = Ref <$> modify (wrapped' ∘ nodeGraph $ swap ∘ ixed add (cast n)) ; {-# INLINE construct #-}
 
-instance (MonadBuilder (Hetero (VectorGraph n e)) m, Castable a e) => Constructor m (Ref Edge a) where
+instance (MonadBuilder (Hetero (VectorGraph n e c)) m, Castable a e) => Constructor m (Ref Edge a) where
     construct e = Ref <$> modify (wrapped' ∘ edgeGraph $ swap ∘ ixed add (cast e)) ; {-# INLINE construct #-}
 
-instance MonadBuilder (Hetero (VectorGraph n e)) m => Constructor m (Ref Cluster SubGraph) where
-    construct c = Ref <$> modify (wrapped' ∘ subGraphs $ swap ∘ ixed add c) ; {-# INLINE construct #-}
+instance (MonadBuilder (Hetero (VectorGraph n e c)) m, Castable a c) => Constructor m (Ref Cluster a) where
+    construct c = Ref <$> modify (wrapped' ∘ subGraphs $ swap ∘ ixed add (cast c)) ; {-# INLINE construct #-}
 
 -- Accessors
 
@@ -89,8 +89,9 @@ instance MonadBuilder (Hetero (VectorGraph n e)) m => Constructor m (Ref Cluster
 -- Unregistering
 
 -- FXIME[WD]: hardcoded graph type
-instance MonadBuilder (Hetero (VectorGraph n e)) m => Unregister m (Ref Node node) where unregister ref = modify_ $ wrapped' ∘ nodeGraph %~ free (ref ^. idx)
-instance MonadBuilder (Hetero (VectorGraph n e)) m => Unregister m (Ref Edge edge) where unregister ref = modify_ $ wrapped' ∘ edgeGraph %~ free (ref ^. idx)
+instance MonadBuilder (Hetero (VectorGraph n e c)) m => Unregister m (Ref Node    node)    where unregister ref = modify_ $ wrapped' ∘ nodeGraph %~ free (ref ^. idx)
+instance MonadBuilder (Hetero (VectorGraph n e c)) m => Unregister m (Ref Edge    edge)    where unregister ref = modify_ $ wrapped' ∘ edgeGraph %~ free (ref ^. idx)
+instance MonadBuilder (Hetero (VectorGraph n e c)) m => Unregister m (Ref Cluster cluster) where unregister ref = modify_ $ wrapped' ∘ subGraphs %~ free (ref ^. idx)
 
 -- Destruction
 

@@ -31,7 +31,7 @@ import           Luna.Evaluation.Runtime        (Static)
 
 importStructure :: ( node  ~ (NetLayers a :< Draft Static)
                    , edge  ~ (Link node)
-                   , graph ~ Hetero (VectorGraph n e)
+                   , graph ~ Hetero (VectorGraph n e c)
                    , BiCastable e edge
                    , BiCastable n node
                    , MonadBuilder graph m
@@ -68,7 +68,7 @@ importStructure nodes edges = do
 
 merge :: ( node  ~ (NetLayers a :< Draft Static)
          , edge  ~ (Link node)
-         , graph ~ Hetero (VectorGraph n e)
+         , graph ~ Hetero (VectorGraph n e c)
          , BiCastable e edge
          , BiCastable n node
          , MonadBuilder graph m
@@ -83,9 +83,11 @@ merge g = do
         foreignEdges    = flip view g . focus <$> foreignEdgeRefs
     importStructure (zip foreignNodeRefs foreignNodes) (zip foreignEdgeRefs foreignEdges)
 
-dupCluster :: forall node edge a e n m graph . ( node  ~ (NetLayers a :< Draft Static)
+dupCluster :: forall node edge a e n m graph c .
+              ( node  ~ (NetLayers a :< Draft Static)
               , edge  ~ (Link node)
-              , graph ~ Hetero (VectorGraph n e)
+              , c     ~ NetCluster
+              , graph ~ Hetero (VectorGraph n e c)
               , BiCastable e edge
               , BiCastable n node
               , MonadBuilder graph m

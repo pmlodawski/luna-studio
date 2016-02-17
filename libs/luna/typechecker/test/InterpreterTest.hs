@@ -39,7 +39,7 @@ import qualified Data.Graph.Builder.Class               as Graph
 import           Data.Graph.Backend.VectorGraph
 
 
-graph1 :: forall term node edge nr er ls m n e. (term ~ Draft Static
+graph1 :: forall term node edge nr er ls m n e c. (term ~ Draft Static
           , node ~ (ls :< term)
           , edge ~ Link (ls :< term)
           , nr   ~ Ref Node node
@@ -56,7 +56,7 @@ graph1 :: forall term node edge nr er ls m n e. (term ~ Draft Static
           , TermNode App  m (ls :< term)
           , HasProp Required (ls :< term)
           , Prop Required    (ls :< term) ~ Bool
-          , Graph.MonadBuilder (Hetero (VectorGraph n e)) m
+          , Graph.MonadBuilder (Hetero (VectorGraph n e c)) m
           )
        => m nr
 graph1 = do
