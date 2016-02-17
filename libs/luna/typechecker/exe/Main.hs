@@ -274,11 +274,11 @@ data Error node edge = MissingInput  node (node # Input )
 
 
 
-newtype Network' ls = Network' (Hetero (VectorGraph (ls :<: Raw) (Link (ls :<: Raw)) NetCluster))
+newtype Network' ls cls = Network' (Hetero (VectorGraph (ls :<: Raw) (Link (ls :<: Raw)) (cls :< SubGraph (ls :<: Raw))))
 makeWrapped ''Network'
 
-type instance Prop Node (Network' ls) = ls :<: Draft Static
-type instance Prop Edge (Network' ls) = Link (ls :<: Draft Static)
+type instance Prop Node (Network' ls cls) = ls :<: Draft Static
+type instance Prop Edge (Network' ls cls) = Link (ls :<: Draft Static)
 
 
 
@@ -345,8 +345,8 @@ main2 = do
         --g' = unwrap' g :: _
 
 --instance Referenced Node (Network' ls) (ls :<: Draft Static) where refs = fmap Ref ∘ usedIxes ∘ view (wrapped' ∘ wrapped' ∘ nodeGraph)
-instance Referenced Node (Network' ls) (ls :<: Draft Static)        where refs = fmap retarget ∘ refs' ∘ unwrap'
-instance Referenced Edge (Network' ls) (Link (ls :<: Draft Static)) where refs = fmap retarget ∘ refs' ∘ unwrap'
+instance Referenced Node (Network' ls cls) (ls :<: Draft Static)        where refs = fmap retarget ∘ refs' ∘ unwrap'
+instance Referenced Edge (Network' ls cls) (Link (ls :<: Draft Static)) where refs = fmap retarget ∘ refs' ∘ unwrap'
 
 instance Referenced r t a => Referenced r (Hetero t) a where refs = refs ∘ unwrap'
 
@@ -468,8 +468,8 @@ foo g = runNetworkBuilderT g
     print s1s
 
     title "subgraph definition"
-    sg1 :: Ref Cluster NetCluster <- subgraph
-    sg2 :: Ref Cluster NetCluster <- subgraph
+    sg1 :: Ref Cluster $ NetCluster a <- subgraph
+    sg2 :: Ref Cluster $ NetCluster a <- subgraph
     include s1 sg1
     include s2 sg1
     include s2 sg2

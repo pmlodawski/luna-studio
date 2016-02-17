@@ -83,19 +83,20 @@ merge g = do
         foreignEdges    = flip view g . focus <$> foreignEdgeRefs
     importStructure (zip foreignNodeRefs foreignNodes) (zip foreignEdgeRefs foreignEdges)
 
-dupCluster :: forall node edge a e n m graph c .
-              ( node  ~ (NetLayers a :<: Draft Static)
+dupCluster :: forall graph node edge clus n e c a m .
+              ( node  ~ NetNode a
               , edge  ~ (Link node)
-              , c     ~ NetCluster
+              , clus  ~ NetCluster a
               , graph ~ Hetero (VectorGraph n e c)
               , BiCastable e edge
               , BiCastable n node
+              , BiCastable c clus
               , MonadBuilder graph m
               , Referred Node n graph
               , Constructor m (Ref Node    node)
               , Constructor m (Ref Edge    edge)
-              , Constructor m (Ref Cluster c)
-              ) => Ref Cluster c -> String -> m (Ref Cluster c, Map (Ref Node node) (Ref Node node))
+              , Constructor m (Ref Cluster clus)
+              ) => Ref Cluster clus -> String -> m (Ref Cluster clus, Map (Ref Node node) (Ref Node node))
 dupCluster cluster name = do
     nodeRefs <- members cluster
     (nodes :: [node]) <- mapM read nodeRefs

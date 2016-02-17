@@ -8,21 +8,21 @@ import qualified Data.IntSet as IntSet
 
 -- === Definitions === --
 
-newtype SubGraph = SubGraph IntSet deriving (Show)
+newtype SubGraph n = SubGraph IntSet deriving (Show)
 makeWrapped ''SubGraph
 
 -- === Utils === --
 
-add :: Int -> SubGraph -> SubGraph
+add :: Int -> SubGraph n -> SubGraph n
 add el = wrapped %~ IntSet.insert el
 
-remove :: Int -> SubGraph -> SubGraph
+remove :: Int -> SubGraph n -> SubGraph n
 remove el = wrapped %~ IntSet.delete el
 
-member :: Int -> SubGraph -> Bool
+member :: Int -> SubGraph n -> Bool
 member el = IntSet.member el ∘ unwrap
 
-nodes :: SubGraph -> [Int]
+nodes :: SubGraph n -> [Int]
 nodes = IntSet.toList . unwrap
 
 
@@ -30,7 +30,7 @@ nodes = IntSet.toList . unwrap
 
 -- Cast
 
-instance Castable SubGraph SubGraph where cast = id
+instance Castable n n' => Castable (SubGraph n) (SubGraph n') where cast (SubGraph s) = SubGraph s
 
 ---- Wrappers
 --makeWrapped ''Cluster

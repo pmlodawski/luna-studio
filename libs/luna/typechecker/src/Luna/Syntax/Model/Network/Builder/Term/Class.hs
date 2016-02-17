@@ -256,11 +256,14 @@ matchTypeM _ = id
 -- === Network Building === --
 ------------------------------
 
-type NetLayers a = '[Type, Succs, Redirect, Dirty, Required, Meta a]
-type NetNode   a = NetLayers a :<: Draft Static
-type NetCluster  = '[Name] :< SubGraph
+type NetClusterLayers = '[Name]
+type NetLayers     a  = '[Type, Succs, Redirect, Dirty, Required, Meta a]
+type NetNode       a  = NetLayers a :<: Draft Static
+type NetRawNode    a  = NetLayers a :<: Raw
+type NetCluster    a  = NetClusterLayers :< SubGraph (NetNode a)
+type NetRawCluster a  = NetClusterLayers :< SubGraph (NetRawNode a)
 
-type NetGraph a = Hetero (VectorGraph (NetLayers a :<: Raw) (Link (NetLayers a :<: Raw)) NetCluster)
+type NetGraph a = Hetero (VectorGraph (NetRawNode a) (Link (NetRawNode a)) (NetRawCluster a))
 
 buildNetwork  = runIdentity ∘ buildNetworkM
 buildNetworkM = rebuildNetworkM' (def :: NetGraph a)

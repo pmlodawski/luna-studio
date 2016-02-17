@@ -31,24 +31,25 @@ import qualified Luna.Syntax.AST.Decl.Function    as Function
 
 
 
-#define PassCtx forall node edge ls term graph e n m a c. \
-                ( term  ~ Draft Static                    \
-                , ls    ~ NetLayers a                     \
-                , edge  ~ Link (ls :<: term)              \
-                , node  ~ (ls :<: term)                   \
-                , c     ~ NetCluster                      \
-                , graph ~ Hetero (VectorGraph n e c)      \
-                , BiCastable     e edge                   \
-                , BiCastable     n node                   \
-                , MonadBuilder graph (m)                  \
-                , NodeInferable  (m) (ls :<: term)        \
-                , TermNode Var   (m) (ls :<: term)        \
-                , TermNode Acc   (m) (ls :<: term)        \
-                , TermNode Cons  (m) (ls :<: term)        \
-                , TermNode Lam   (m) (ls :<: term)        \
-                , TermNode Unify (m) (ls :<: term)        \
-                , MonadSymbol node graph (m)              \
-                , Referred Node n graph                   \
+#define PassCtx forall node edge clus ls term graph e n m a c. \
+                ( term  ~ Draft Static                         \
+                , ls    ~ NetLayers a                          \
+                , edge  ~ Link (ls :<: term)                   \
+                , node  ~ (ls :<: term)                        \
+                , clus  ~ NetCluster a                         \
+                , graph ~ Hetero (VectorGraph n e c)           \
+                , BiCastable     e edge                        \
+                , BiCastable     n node                        \
+                , BiCastable     c clus                        \
+                , MonadBuilder graph (m)                       \
+                , NodeInferable  (m) (ls :<: term)             \
+                , TermNode Var   (m) (ls :<: term)             \
+                , TermNode Acc   (m) (ls :<: term)             \
+                , TermNode Cons  (m) (ls :<: term)             \
+                , TermNode Lam   (m) (ls :<: term)             \
+                , TermNode Unify (m) (ls :<: term)             \
+                , MonadSymbol node graph (m)                   \
+                , Referred Node n graph                        \
                 )
 
 data ImportError = NotABindingNode | AmbiguousNodeType | SymbolNotFound deriving (Show)
@@ -83,7 +84,7 @@ funLookup name = do
 importFunction :: PassCtx => String -> Function node graph -> ImportErrorT m (Lambda node)
 importFunction name fun = do
     translations <- merge $ fun ^. Function.graph
-    cls :: Ref Cluster c <- subgraph
+    cls :: Ref Cluster clus <- subgraph
     withRef cls $ prop Name .~ name
     mapM (flip include cls) $ Map.elems $ translations
     let unsafeTranslate i = fromJust $ Map.lookup i translations

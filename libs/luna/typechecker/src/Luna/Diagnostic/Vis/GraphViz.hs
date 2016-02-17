@@ -220,7 +220,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
           mkEdge  (n,(a,attrs),b) = DotEdge (nodeRef a) (nodeRef b) $ HeadPort (LabelledPort (inPortName n) Nothing) : TailPort (LabelledPort "label" Nothing) : attrs
 
           draftNodeByIx ix   = cast $ index_ ix ng :: (NetLayers a :<: Draft Static)
-          clusterByIx   ix   = index_ ix cg        :: NetCluster
+          clusterByIx   ix   = cast $ index_ ix cg :: NetCluster a
           genNodeLabel  node = reprStyled HeaderOnly $ uncover node
 
           matchCluster :: Int -> Int -> Maybe Int
