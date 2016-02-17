@@ -38,6 +38,7 @@ import           Data.Prop
 import           Luna.Evaluation.Runtime                (Dynamic, Static)
 import qualified Luna.Syntax.AST.Term                   as Term
 import           Luna.Syntax.AST.Decl.Function          (FunctionPtr (..))
+import qualified Luna.Syntax.AST.Decl.Function          as Function
 import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Builder.Term
 import           Luna.Syntax.Model.Network.Term
@@ -281,7 +282,7 @@ fromListWithReps lst = foldr update (Map.fromList initLst) lst where
 
 genInEdges (g :: NetGraph a) (n :: NetLayers a :<: Draft Static) = displayEdges where
     --displayEdges = tpEdge : (addColor <$> inEdges)
-    displayEdges = ($ (addColor <$> inEdges) ++ redirEdge) $ if t == universe then id else (<> [tpEdge])
+    displayEdges = ($ (addColor <$> inEdges) ++ redirEdge ++ replEdge) $ if t == universe then id else (<> [tpEdge])
     genLabel     = GV.Label . StrLabel . fromString . show
     ins          = n # Inputs
     inIxs        = view idx <$> ins
@@ -293,11 +294,16 @@ genInEdges (g :: NetGraph a) (n :: NetLayers a :<: Draft Static) = displayEdges 
     t            = getTgt te
     tpEdge       = (getTgtIdx te, [GV.color typedArrClr, ArrowHead dotArrow, genLabel $ te ^. idx])
     redirEdge    = maybeToList $ makeRedirEdge <$> n ^. prop Redirect
+    replEdge     = maybeToList $ makeReplEdge  <$> n ^. prop Replacement
 
     makeRedirEdge e       = (getTgtIdx e, [GV.color redirectClr, Dir Back, Style [SItem Dashed []]])
+    makeReplEdge c        = (view (Function.out . idx) $ fromJust $ view (prop Lambda) $ clusterByIx $ c ^. idx,
+                            [GV.color redirectClr, Dir Back, Style [SItem Dashed []], LTail $ fromString $ "cluster_0"])
     addColor (idx, attrs) = (idx, GV.color arrClr : attrs)
     getTgtIdx             = view idx ∘ getTgt
     getTgt    inp         = view source $ index (inp ^. idx) es
+    clusterByIx ix        = cast $ index_ ix cg :: NetCluster a
+    cg                    = g ^. wrapped . Graph.subGraphs
 
 
 

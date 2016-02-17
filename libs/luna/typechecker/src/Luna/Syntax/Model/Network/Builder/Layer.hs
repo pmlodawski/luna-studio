@@ -9,6 +9,7 @@ import           Control.Monad.Event
 import           Data.Graph.Backend.VectorGraph         (SubGraph)
 import           Data.Prop
 import           Data.Construction
+import           Data.Graph.Backend.VectorGraph
 import qualified Luna.Syntax.Model.Network.Builder.Type as Type
 import qualified Luna.Syntax.Model.Network.Builder.Self as Self
 import           Luna.Syntax.Model.Network.Builder.Self (MonadSelfBuilder, self)
@@ -74,7 +75,7 @@ instance (Monad m, Unregister m (LayerData (Network ls) Type a)) => Destructor m
     destruct (Layer ref) = unregister ref
 
 
--- === Redirects layer === --
+-- === Redirect layer === --
 
 type instance LayerData (Network ls) Redirect t = Maybe $ Ref Edge $ Link (Shelled t)
 instance Monad m => Creator m (Layer (Network ls) Redirect a) where
@@ -84,6 +85,7 @@ instance (Monad m, Unregister m (Ref Edge $ Link (Shelled a)))
       => Destructor m (Layer (Network ls) Redirect a) where
     destruct (Layer r) = mapM_ unregister r
 
+
 -- === Lambda layer === --
 
 type instance LayerData l Lambda (SubGraph n) = Maybe $ FunctionPtr n
@@ -91,6 +93,14 @@ instance Monad m => Creator m (Layer l Lambda (SubGraph n)) where
     create = return $ Layer Nothing
 instance Monad m => Destructor m (Layer l Lambda (SubGraph n)) where
     destruct _ = return ()
+
+-- === Replacement layer === --
+
+type instance LayerData (Network ls) Replacement t = Maybe $ Ptr Cluster
+instance Monad m => Creator m (Layer (Network ls) Replacement a) where
+    create = return $ Layer Nothing
+instance Monad m => Destructor m (Layer (Network ls) Replacement a) where
+    destruct (Layer r) = return ()
 
 ------------------------------------------
 -- === Layer building & destruction === --

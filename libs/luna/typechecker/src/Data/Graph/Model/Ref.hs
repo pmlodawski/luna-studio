@@ -35,6 +35,7 @@ retarget = rewrap
 
 -- Wrappers
 makeWrapped ''Ref
+makeWrapped ''Ptr
 
 -- Ref primitive instances
 type instance Uncovered     (Ref r a) = Uncovered a
@@ -44,9 +45,13 @@ type instance Deconstructed (Ref r a) = a
 -- Index
 type instance Index  (Ref r a) = Int
 instance      HasIdx (Ref r a) where idx = wrapped' ; {-# INLINE idx #-}
+type instance Index  (Ptr r)   = Int
+instance      HasIdx (Ptr r)   where idx = wrapped' ; {-# INLINE idx #-}
 
 -- Conversions
 instance Castable a a' => Castable (Ref r a) (Ref r' a') where cast = rewrap ; {-# INLINE cast #-}
+instance Castable (Ref r a) (Ptr r)   where cast (Ref x) = Ptr x ; {-# INLINE cast #-}
+instance Castable (Ptr r)   (Ref r a) where cast (Ptr x) = Ref x ; {-# INLINE cast #-}
 
 -- Construction
 instance Constructor m (Ref r a) => LayerConstructor m (Ref r a) where

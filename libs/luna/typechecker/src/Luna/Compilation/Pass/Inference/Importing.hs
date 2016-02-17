@@ -112,7 +112,9 @@ processNode ref = runErrorT $ do
         Nothing -> do
             fun <- funLookup name
             importFunction name fun
+    withRef ref $ prop Replacement ?~ cast lamb
     return ()
+    {-(_, _ :: Map.Map (Ref Node node) (Ref Node node)) <- dupCluster (lamb ^. Function.subgraph) $ name <> " @ " <> (show ref)-}
     {-fun       <- MaybeT $ lookupFunction ref-}
     {-Lambda fptr _ <- lift $ importFunction fun-}
     {-tpRep <- lift $ buildTypeRep fptr-}
