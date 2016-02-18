@@ -8,7 +8,6 @@
 module Luna.Diagnostic.Vis.GraphViz where
 
 import           Prelude.Luna                           hiding (index)
-import Debug.Trace (traceShowId)
 
 import           Data.GraphViz
 import qualified Data.GraphViz.Attributes               as GV
@@ -253,7 +252,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
           genSubGraph :: Int -> [Int] -> DotSubGraph String
           genSubGraph sgIdx nodeIxs = DotSG
               { isCluster     = True
-              , subGraphID    = traceShowId (Just $ Str $ fromString $ show sgIdx)
+              , subGraphID    = Just $ Str $ fromString $ show sgIdx
               , subGraphStmts = DotStmts { attrStmts = gStyle $ clusterByIx sgIdx # Name
                                          , subGraphs = []
                                          , nodeStmts = concat $ labeledNode (clusterByIx sgIdx # Lambda)  <$> nodeIxs
