@@ -10,6 +10,7 @@ import Data.Graph.Model.Edge
 
 data Inputs  = Inputs  deriving (Show)
 data Outputs = Outputs deriving (Show)
+data Succs   = Succs   deriving (Show)
 
 data ELEMENT    = ELEMENT    deriving (Show)
 data CONNECTION = CONNECTION deriving (Show)

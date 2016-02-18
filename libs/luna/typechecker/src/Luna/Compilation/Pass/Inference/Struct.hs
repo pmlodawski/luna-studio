@@ -27,10 +27,12 @@ import Data.Graph.Backend.VectorGraph
 #define PassCtx(m,ls,term) ( term ~ Draft Static                           \
                            , ne   ~ Link (ls :<: term)                      \
                            , Prop Type   (ls :<: term) ~ Ref Edge ne        \
+                           , Prop Succs  (ls :<: term) ~ [Ref Edge ne]        \
                            , BiCastable     e ne                           \
                            , BiCastable     n (ls :<: term)                 \
                            , MonadBuilder  (Hetero (VectorGraph n e c)) m  \
                            , HasProp Type     (ls :<: term)                 \
+                           , HasProp Succs    (ls :<: term)                 \
                            , NodeInferable  m (ls :<: term)                 \
                            , TermNode Var   m (ls :<: term)                 \
                            , TermNode Lam   m (ls :<: term)                 \

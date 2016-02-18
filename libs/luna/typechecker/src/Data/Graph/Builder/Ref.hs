@@ -5,6 +5,7 @@ module Data.Graph.Builder.Ref where
 
 import Prelude.Luna
 
+import Data.List                      (delete)
 import Data.Graph.Builders
 import Data.Graph
 import Data.Construction
@@ -40,20 +41,20 @@ follow f ptr = view f <$> read ptr
 class Reconnectible m r el store inp where
     reconnect :: Ref r el -> Lens' el store -> Ref r inp -> m store
 
-instance (MonadBuilder t m, Referred r el t, Unregister m (Ref Edge conn), Connectible' (Ref r inp) (Ref r el) m conn)
+instance (MonadBuilder t m, Referred r el t, Destructor m (Ref Edge conn), Connectible' (Ref r inp) (Ref r el) m conn)
       => Reconnectible m r el (Ref Edge conn) inp where
     reconnect elRef lens input = do
         el  <- read elRef
-        unregister $ el ^. lens
+        destruct $ el ^. lens
         conn <- connection input elRef
         write elRef $ el & lens .~ conn
         return conn
 
-instance (MonadBuilder t m, Referred r el t, Unregister m connRef, Connectible' (Ref r inp) (Ref r el) m conn, connRef ~ Ref Edge conn)
+instance (MonadBuilder t m, Referred r el t, Destructor m connRef, Connectible' (Ref r inp) (Ref r el) m conn, connRef ~ Ref Edge conn)
       => Reconnectible m r el (Maybe connRef) inp where
     reconnect elRef lens input = do
         el  <- read elRef
-        mapM_ unregister $ el ^. lens
+        mapM_ destruct $ el ^. lens
         conn <- connection input elRef
         write elRef $ el & lens ?~ conn
         return $ Just conn
@@ -104,6 +105,14 @@ instance (MonadBuilder t m, Prop Inputs node ~ [inp], Referred Node node t, Unre
         n <- read ref
         mapM_ unregister $ n # Inputs
         destruct n
+        unregister ref
+    {-# INLINE destruct #-}
+
+instance (MonadBuilder t m, Prop Succs node ~ [Ref Edge edge], edge ~ Arc node node, HasProp Succs node, Referred Node node t, Referred Edge edge t, Unregister m (Ref Edge edge))
+      => Destructor m (Ref Edge edge) where
+    destruct ref = do
+        s <- follow source ref
+        withRef s $ prop Succs %~ delete ref
         unregister ref
     {-# INLINE destruct #-}
 

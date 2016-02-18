@@ -122,7 +122,6 @@ instance (HasRecord (Uncovered (ls :< t)), Uncovered (Unwrapped (ls :< t)) ~ t, 
 -- === Layout-specific === --
 
 data Type        = Type        deriving (Show, Eq, Ord)
-data Succs       = Succs       deriving (Show, Eq, Ord)
 data Redirect    = Redirect    deriving (Show, Eq, Ord)
 data Lambda      = Lambda      deriving (Show, Eq, Ord)
 data Replacement = Replacement deriving (Show, Eq, Ord)

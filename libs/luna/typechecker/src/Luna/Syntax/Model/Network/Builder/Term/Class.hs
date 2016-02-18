@@ -25,7 +25,7 @@ import           Luna.Syntax.AST.Arg
 import           Luna.Syntax.AST.Term                    hiding (Val, Lit, Thunk, Expr, Draft, Source, Name)
 import qualified Luna.Syntax.AST.Term                    as Term
 import qualified Data.Graph.Builder                      as GraphBuilder
-import           Luna.Syntax.Model.Layer                 (Type, Succs, Markable, Redirect, Replacement, Meta, Name, Lambda, (:<:), (:<))
+import           Luna.Syntax.Model.Layer                 (Type, Markable, Redirect, Replacement, Meta, Name, Lambda, (:<:), (:<))
 import           Luna.Compilation.Pass.Dirty.Data.Label  (Interpreter)
 import           Luna.Syntax.Model.Network.Builder.Layer
 import qualified Luna.Syntax.Model.Network.Builder.Self  as Self
