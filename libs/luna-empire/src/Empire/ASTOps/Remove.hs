@@ -6,13 +6,13 @@ import           Prologue                      hiding ((#))
 import           Data.Construction             (destruct)
 import           Data.Prop                     ((#))
 import           Data.Layer.Cover              (uncover)
-import           Data.Graph                    (Inputs (..))
+import           Data.Graph                    (Inputs (..), Succs (..))
 import           Data.Direction                (source)
 
 import           Empire.ASTOp                  (ASTOp)
 import           Empire.Data.AST               (NodeRef)
 import qualified Luna.Syntax.Builder as Builder
-import           Luna.Syntax.Builder (Type (..), Succs (..))
+import           Luna.Syntax.Builder (Type (..))
 
 removeNode :: ASTOp m => NodeRef -> m ()
 removeNode ref = do
