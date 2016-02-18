@@ -71,8 +71,8 @@ instance (MonadSelfBuilder s m, (Link l) ~ Connection s (Ref Node l), Connectibl
         let tgt = Ref 0 :: Ref Node l -- FIXME[WD]: Pure magic. 0 is the ID of Star
         connection tgt s
 
-instance (Monad m, Unregister m (LayerData (Network ls) Type a)) => Destructor m (Layer (Network ls) Type a) where
-    destruct (Layer ref) = unregister ref
+instance (Monad m, Destructor m (LayerData (Network ls) Type a)) => Destructor m (Layer (Network ls) Type a) where
+    destruct (Layer ref) = destruct ref
 
 
 -- === Redirect layer === --

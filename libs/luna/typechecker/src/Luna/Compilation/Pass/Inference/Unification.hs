@@ -150,7 +150,6 @@ replaceNode oldRef newRef = do
     forM (oldNode ^. prop Succs) $ \e -> do
         withRef e      $ source     .~ newRef
         withRef newRef $ prop Succs %~ (e :)
-    destruct $ oldNode ^. prop Type
     destruct oldRef
 
 whenMatched a f = caseTest a $ do
