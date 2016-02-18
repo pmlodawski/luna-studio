@@ -76,8 +76,6 @@ followDirty ref = do
     prevs <- pre ref
     forM_ prevs $ \p -> do
         nd <- read p
-        -- let dirty = nd # Dirty
-        -- when (dirty) $
         whenM (isDirty <$> read p) $
             followDirty p
 
@@ -87,11 +85,8 @@ markSuccessors ref = do
     node <- read ref
     -- putStrLn $         "markSuccessors " <> show ref
     unless (isDirty node) $ do
-    -- unless (node ^. prop Dirty) $ do
         -- putStrLn $     "marking dirty  " <> show ref
-        -- write ref (node & prop Dirty .~ True)
         write ref (node & prop Interpreter . Label.dirty .~ True)
-        -- when (node # Required) $ do
         when (isRequired node) $ do
             -- putStrLn $ "addReqNode     " <> show ref
             Env.addReqNode ref

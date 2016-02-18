@@ -24,18 +24,18 @@ import           Luna.Syntax.Model.Network.Builder.Node.Inferred
 import           Luna.Syntax.Model.Network.Term
 
 
-#define PassCtxDirty(m, ls, term) ( ls   ~ NetLayers a                           \
-                                  , term ~ Draft Static                          \
-                                  , ne   ~ Link (ls :<: term)                     \
-                                  , BiCastable     e ne                          \
-                                  , BiCastable     n (ls :<: term)                \
-                                  , MonadIO m                                    \
-                                  , MonadBuilder (Hetero (VectorGraph n e c)) m  \
-                                  , NodeInferable m (ls :<: term)                 \
-                                  , TermNode Lam  m (ls :<: term)                 \
-                                  , HasProp Interpreter    (ls :<: term)                \
-                                  , Prop Interpreter       (ls :<: term) ~ InterpreterLayer         \
-                                  , DirtyMonad (Env (Ref Node (ls :<: term))) m   \
+#define PassCtxDirty(m, ls, term) ( ls   ~ NetLayers a                                      \
+                                  , term ~ Draft Static                                     \
+                                  , ne   ~ Link (ls :<: term)                               \
+                                  , BiCastable     e ne                                     \
+                                  , BiCastable     n (ls :<: term)                          \
+                                  , MonadIO m                                               \
+                                  , MonadBuilder (Hetero (VectorGraph n e c)) m             \
+                                  , NodeInferable m (ls :<: term)                           \
+                                  , TermNode Lam  m (ls :<: term)                           \
+                                  , HasProp Interpreter    (ls :<: term)                    \
+                                  , Prop Interpreter       (ls :<: term) ~ InterpreterLayer \
+                                  , DirtyMonad (Env (Ref Node (ls :<: term))) m             \
                                   )
 
 
@@ -52,7 +52,6 @@ reset = Env.clearReqNodes
 connect :: PassCtxDirty(m, ls, term) => Ref Node (ls :<: term) -> Ref Node (ls :<: term) -> m ()
 connect prev next = do
     nd <- read prev
-    -- let isPrevDirty = nd # Dirty
     isPrevDirty <- Dirty.isDirty <$> read prev
     Dirty.markSuccessors $ if isPrevDirty
         then prev

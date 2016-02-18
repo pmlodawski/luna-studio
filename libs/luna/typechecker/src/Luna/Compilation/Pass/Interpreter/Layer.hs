@@ -1,4 +1,4 @@
-module Luna.Compilation.Pass.Dirty.Data.Label where
+module Luna.Compilation.Pass.Interpreter.Layer where
 
 import           Luna.Compilation.Pass.Dirty.Data.CallPointPath (CallPointPath)
 
@@ -18,8 +18,6 @@ import           Luna.Syntax.AST.Term                           (Term)
 data InterpreterLayer = InterpreterLayer { _dirty    :: Bool
                                          , _required :: Bool
                                          , _value    :: Maybe Int
-                                         -- , _userNode :: Bool
-                                         -- , _location :: CallPointPath
                                          } deriving Show
 
 makeLenses ''InterpreterLayer

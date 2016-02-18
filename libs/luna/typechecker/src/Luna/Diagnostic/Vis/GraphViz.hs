@@ -51,6 +51,9 @@ import           Data.Graph.Backend.VectorGraph hiding (subGraphs)
 import qualified Data.Graph.Backend.VectorGraph as Graph
 import qualified Data.Graph.Backend.VectorGraph.SubGraph as SubGraph
 
+import           Luna.Compilation.Pass.Dirty.Data.Label  (Interpreter (..))
+import qualified Luna.Compilation.Pass.Dirty.Data.Label  as Label
+
 
 --instance Repr HeaderOnly Data where repr _ = "Data"
 --instance Repr HeaderOnly (Draft l v) where repr _ = "Draft"
@@ -185,6 +188,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
               node     = draftNodeByIx nix
               ins      = node # Inputs
               succs    = node # Succs
+              dirty    = if (node # Interpreter) ^. Label.dirty then " dirty" else " clean"
               succs'   = (net ^.) ∘ focus <$> succs :: [Link (NetLayers a :<: Draft Static)]
 
               orphanTgts = selectOrphanTgts (Ref nix) succs -- FIXME[WD] ugliness
@@ -198,7 +202,8 @@ toGraphViz name net = DotGraph { strictGraph     = False
               emptyLabel = GV.Label  ∘ StrLabel ∘ fromString $ ""
               idlabel    = GV.XLabel ∘ StrLabel ∘ fromString ∘ show $ nix
               --htmlCells  = Html.Cells [idCell $ show nix, labelCell width $ fromString $ genNodeLabel node <> show (length orphanTgts)] where
-              htmlCells  = Html.Cells [idCell $ show nix, labelCell width $ fromString $ genNodeLabel node <> "(" <> show (length orphanTgts) <> ") " <> show (view idx <$> node # Succs)] where
+
+              htmlCells  = Html.Cells [idCell $ show nix, labelCell width $ fromString $ genNodeLabel node <> "(" <> show (length orphanTgts) <> ") " <> show (view idx <$> node # Succs) <> dirty] where
                   width  = if null inPorts then 1 else fromIntegral inPortsNum
 
 
