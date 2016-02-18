@@ -222,8 +222,8 @@ toGraphViz name net = DotGraph { strictGraph     = False
               --attrs   = Color (toColorList [color]) : shAttrs
               attrs = specAttrs
               specAttrs = caseTest (uncover node) $ do
-                  --match $ \Term.Star        -> [Color bgColor' , shape Star        , emptyLabel, FixedSize SetNodeSize, Width 0.4, Height 0.4, PenWidth 6, FillColor starColor, Style [SItem Filled []]]
-                  --match $ \(Term.Unify a b) -> [Color nodeColor, shape DoubleCircle , unifyLabel, FixedSize SetNodeSize, Width 0.2, Height 0.2, fontColor unifyLabelClr]
+                  {-match $ \Term.Star        -> [Color bgColor' , shape Star        , emptyLabel, FixedSize SetNodeSize, Width 0.4, Height 0.4, PenWidth 6, FillColor starColor, Style [SItem Filled []]]-}
+                  match $ \(Term.Unify a b) -> [Color nodeColor, shape DoubleCircle , unifyLabel, FixedSize SetNodeSize, Width 0.2, Height 0.2, fontColor unifyLabelClr]
                   match $ \ANY              -> [Color nodeColor, shape PlainText   , nodeLabel ]
 
           nodeInEdges   n   = zip3 ([0..] :: [Int]) (genInEdges net $ (cast $ index n ng :: NetLayers a :<: Draft Static)) (repeat n)

@@ -238,12 +238,13 @@ test1 = do
         TypeCheck.runT $ do
             ((apps, accs, funcs), g01) <- runBuild g input_g1
             (unis :: [Ref Node (NetLayers () :<: Draft Static)]               , g02 :: NetGraph ()) <- runBuild  g01 $ StructInference.run apps accs
-            (g03 :: NetGraph ())                        <- evalBuild g02 $ Unification.run [] [] 1 unis
+            (g03 :: NetGraph ())                        <- evalBuild g02 $ Unification.run unis
             (unis               , g04) <- runBuild  g03 $ input_g1_resolution_mock funcs
-            --(gs05, g05)                <- runBuild  g04 $ Unification.run [(2,13),(2,18),(2,21),(2,22),(2,23)] 1 unis
-            (gs05, g05)                <- runBuild  g04 $ Unification.run [2,3] [(2,13),(3,13)] 1 unis
+            {-(gs05, g05)                <- runBuild  g04 $ Unification.run [(2,13),(2,18),(2,21),(2,22),(2,23)] 1 unis-}
+            (gs05, g05)                <- runBuild  g04 $ Unification.run unis
             --(gs05, g05)                <- runBuild  g04 $ Unification.run [(2,21)] 1 unis
-            let gss = zipWith (,) (("g0" <>) ∘ show <$> [5..]) gs05
+            {-let gss = zipWith (,) (("g0" <>) ∘ show <$> [5..]) gs05-}
+            let gss = []
             renderAndOpen $ [ ("g01", g01)
                             , ("g02", g02)
                             , ("g03", g03)
@@ -375,8 +376,8 @@ instance e ~ e' => Referenced Edge (VectorGraph n e c) e' where refs = fmap Ref 
 main :: IO ()
 main = do
     showcase
-    symbolMapTest
-    --test1
+    {-symbolMapTest-}
+    test1
     --test2
     --main2
     return ()

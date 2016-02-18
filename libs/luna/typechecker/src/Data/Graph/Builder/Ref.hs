@@ -99,11 +99,11 @@ instance MonadBuilder (Hetero (VectorGraph n e c)) m => Unregister m (Ref Cluste
 
 -- Destruction
 
-instance (MonadBuilder t m, Prop Inputs node ~ [inp], Referred Node node t, Unregister m inp, Getter Inputs node, Destructor m node, Unregister m (Ref Node node))
+instance (MonadBuilder t m, Prop Inputs node ~ [inp], Referred Node node t, Destructor m inp, Getter Inputs node, Destructor m node, Unregister m (Ref Node node))
       => Destructor m (Ref Node node) where
     destruct ref = do
         n <- read ref
-        mapM_ unregister $ n # Inputs
+        mapM_ destruct $ n # Inputs
         destruct n
         unregister ref
     {-# INLINE destruct #-}
