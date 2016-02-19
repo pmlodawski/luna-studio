@@ -33,7 +33,7 @@ import           Type.Inference
 
 import qualified Luna.Compilation.Env.Class                      as Env
 import           Luna.Compilation.Pass.Inference.Literals        as LiteralsAssignement
-import qualified Luna.Compilation.Pass.Inference.Struct          as StructInference
+import           Luna.Compilation.Pass.Inference.Struct          (StructuralInferencePass (..))
 import           Luna.Compilation.Pass.Inference.Unification     (UnificationPass (..))
 import qualified Luna.Compilation.Pass.Inference.Importing       as Importing
 import           Luna.Compilation.Pass.Utils.Literals            as LiteralsUtils
@@ -239,11 +239,13 @@ test1 = do
         -- Running Type Checking compiler stage
         TypeCheck.runT $ do
             ((apps, accs, funcs), g01) <- runBuild g input_g1
-            (unis :: [Ref Node (NetLayers () :<: Draft Static)]               , g02 :: NetGraph ()) <- runBuild  g01 $ StructInference.run apps accs
 
-            TypeCheckState.modify_ $ TypeCheckState.unresolvedUnis .~ unis
+            TypeCheckState.modify_ $ (TypeCheckState.untypedApps .~ apps)
+                                   . (TypeCheckState.untypedAccs .~ accs)
 
-            (status, g03 :: NetGraph ())                        <- runBuild g02 $ TypeCheck.runTCPass UnificationPass
+            g02 :: NetGraph () <- evalBuild  g01 $ TypeCheck.runTCPass StructuralInferencePass
+
+            (status, g03 :: NetGraph ()) <- runBuild g02 $ TypeCheck.runTCPass UnificationPass
             putStrLn $ "Unis run status: " ++ show status
             print =<< (view TypeCheckState.unresolvedUnis <$> TypeCheckState.get)
             (unis , g04) <- runBuild  g03 $ input_g1_resolution_mock funcs

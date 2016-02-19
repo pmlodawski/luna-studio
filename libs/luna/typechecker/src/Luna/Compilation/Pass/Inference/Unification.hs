@@ -58,14 +58,12 @@ import Control.Monad.Trans.Either
                            , MonadTypeCheck (ls :<: term) (m)               \
                            )
 
-
-class Monad m => MonadResolution r m | m -> r where
-    resolve :: r -> m ()
-
-
 -------------------------
 -- === ResolutionT === --
 -------------------------
+
+class Monad m => MonadResolution r m | m -> r where
+    resolve :: r -> m ()
 
 newtype ResolutionT r m u = ResolutionT (EitherT r m u) deriving (Functor, Applicative, Monad, MonadFix, MonadIO, MonadTrans)
 makeWrapped ''ResolutionT
@@ -174,23 +172,6 @@ run :: forall nodeRef m ls term n e ne c.
 run unis = forM unis $ \u -> fmap (resolveUnifyY u) $ runResolutionT $ resolveUnify u
 
 
-data UnificationPass = UnificationPass
-
-instance ( PassCtx(ResolutionT [nodeRef] m,ls,term)
-         , MonadBuilder (Hetero (VectorGraph n e c)) m
-         , MonadTypeCheck (ls :<: term) m
-         ) => TypeCheckerPass UnificationPass m where
-    hasJobs _ = not . null . view TypeCheck.unresolvedUnis <$> TypeCheck.get
-
-    runTCPass _ = do
-        unis <- view TypeCheck.unresolvedUnis <$> TypeCheck.get
-        results <- run unis
-        let newUnis = catUnresolved results ++ (concat $ catResolved results)
-        TypeCheck.modify_ $ TypeCheck.unresolvedUnis .~ newUnis
-        case catResolved results of
-            [] -> return Stuck
-            _  -> return Progressed
-
 universe = Ref 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?
 
 ---- FIXME[WD]: Change the implementation to list builder
@@ -223,4 +204,25 @@ catResolved (a : as) = ($ (catResolved as)) $ case a of
 -- User - nody i inputy do funkcji bedace varami sa teraz zjadane, moze warto dac im specjalny typ?
 -- pogadac z Marcinem o tym
 
--- cos jest zle z wynikowym unifikatorem
+-----------------------------
+-- === TypeCheckerPass === --
+-----------------------------
+
+data UnificationPass = UnificationPass deriving (Show, Eq)
+
+instance ( PassCtx(ResolutionT [nodeRef] m,ls,term)
+         , MonadBuilder (Hetero (VectorGraph n e c)) m
+         , MonadTypeCheck (ls :<: term) m
+         ) => TypeCheckerPass UnificationPass m where
+    hasJobs _ = not . null . view TypeCheck.unresolvedUnis <$> TypeCheck.get
+
+    runTCPass _ = do
+        unis <- view TypeCheck.unresolvedUnis <$> TypeCheck.get
+        results <- run unis
+        let newUnis = catUnresolved results ++ (concat $ catResolved results)
+        TypeCheck.modify_ $ TypeCheck.unresolvedUnis .~ newUnis
+        case catResolved results of
+            [] -> return Stuck
+            _  -> return Progressed
+
+

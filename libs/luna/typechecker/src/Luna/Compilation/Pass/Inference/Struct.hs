@@ -1,5 +1,6 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE CPP                       #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Luna.Compilation.Pass.Inference.Struct where
 
@@ -17,30 +18,61 @@ import Luna.Syntax.Model.Network.Builder.Term.Class (runNetworkBuilderT, NetGrap
 import Luna.Syntax.Model.Network.Class              ()
 import Luna.Syntax.Model.Network.Term
 import Luna.Syntax.Name.Ident.Pool                  (MonadIdentPool, newVarIdent')
+import Luna.Compilation.Stage.TypeCheck             (ProgressStatus (..), TypeCheckerPass, hasJobs, runTCPass)
+import Luna.Compilation.Stage.TypeCheck.Class       (MonadTypeCheck)
 import Type.Inference
 
-import qualified Luna.Compilation.Stage.TypeCheck as TypeCheck
-import qualified Luna.Syntax.Name                 as Name
+import qualified Luna.Compilation.Stage.TypeCheck.Class as TypeCheck
+import qualified Luna.Syntax.Name                       as Name
 import Data.Graph.Backend.VectorGraph
 
 
 #define PassCtx(m,ls,term) ( term ~ Draft Static                           \
-                           , ne   ~ Link (ls :<: term)                      \
-                           , Prop Type   (ls :<: term) ~ Ref Edge ne        \
-                           , Prop Succs  (ls :<: term) ~ [Ref Edge ne]        \
+                           , ne   ~ Link (ls :<: term)                     \
+                           , Prop Type   (ls :<: term) ~ Ref Edge ne       \
+                           , Prop Succs  (ls :<: term) ~ [Ref Edge ne]     \
                            , BiCastable     e ne                           \
-                           , BiCastable     n (ls :<: term)                 \
+                           , BiCastable     n (ls :<: term)                \
                            , MonadBuilder  (Hetero (VectorGraph n e c)) m  \
-                           , HasProp Type     (ls :<: term)                 \
-                           , HasProp Succs    (ls :<: term)                 \
-                           , NodeInferable  m (ls :<: term)                 \
-                           , TermNode Var   m (ls :<: term)                 \
-                           , TermNode Lam   m (ls :<: term)                 \
-                           , TermNode Unify m (ls :<: term)                 \
-                           , TermNode Acc   m (ls :<: term)                 \
+                           , HasProp Type     (ls :<: term)                \
+                           , HasProp Succs    (ls :<: term)                \
+                           , NodeInferable  m (ls :<: term)                \
+                           , TermNode Var   m (ls :<: term)                \
+                           , TermNode Lam   m (ls :<: term)                \
+                           , TermNode Unify m (ls :<: term)                \
+                           , TermNode Acc   m (ls :<: term)                \
                            , MonadIdentPool m                              \
                            )
 
+-----------------------------
+-- === TypeCheckerPass === --
+-----------------------------
+
+data StructuralInferencePass = StructuralInferencePass deriving (Show, Eq)
+
+instance ( PassCtx(m, ls, term)
+         , MonadTypeCheck (ls :<: term) m
+         ) => TypeCheckerPass StructuralInferencePass m where
+    hasJobs _ = do
+        tcState <- TypeCheck.get
+        return $ (not . null $ tcState ^. TypeCheck.untypedApps)
+              || (not . null $ tcState ^. TypeCheck.untypedAccs)
+
+    runTCPass _ = do
+        tcState <- TypeCheck.get
+        let apps = tcState ^. TypeCheck.untypedApps
+            accs = tcState ^. TypeCheck.untypedAccs
+        newUnis <- runPass apps accs
+        TypeCheck.put $ tcState & TypeCheck.untypedApps   .~ []
+                                & TypeCheck.untypedAccs   .~ []
+                                & TypeCheck.unresolvedUnis %~ (newUnis ++)
+        if (not $ null apps) || (not $ null accs)
+            then return Progressed
+            else return Stuck
+
+---------------------------------
+-- === Pass Implementation === --
+---------------------------------
 
 buildAppType :: (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :<: term)) => nodeRef -> m [nodeRef]
 buildAppType appRef = do
@@ -98,12 +130,12 @@ getTypeSpec ref = do
         reconnect ref (prop Type) ntp
         return ntp
 
-run :: (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :<: term)) => [nodeRef] -> [nodeRef] -> m [nodeRef]
-run apps accs = do
+runPass :: (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :<: term)) => [nodeRef] -> [nodeRef] -> m [nodeRef]
+runPass apps accs = do
     appUnis <- concat <$> mapM buildAppType apps
     accUnis <- concat <$> mapM buildAccType accs
     return $ appUnis <> accUnis -- FIXME[WD]: use monadic element registration instead
 
-
-
 universe = Ref 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?
+
+
