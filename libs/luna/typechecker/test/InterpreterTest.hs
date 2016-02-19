@@ -5,14 +5,16 @@ module Main where
 
 import           Prelude.Luna                                    hiding (Num)
 
+import           Control.Monad                                   (forM_)
 import           Data.Construction
 import           Data.Prop
 import           Data.Record                                     hiding (cons)
 import           Data.Version.Semantic                           (showVersion, version)
 import           Type.Inference
 
+import           Data.Graph
+import           Data.Graph.Builder
 import qualified Luna.Compilation.Env.Class                      as Env
-import           Luna.Compilation.Pass.Dirty.Dirty               as Dirty
 import qualified Luna.Compilation.Stage.TypeCheck                as TypeCheck
 import           Luna.Diagnostic.Vis.GraphViz
 import           Luna.Diagnostic.Vis.GraphViz
@@ -20,8 +22,6 @@ import           Luna.Evaluation.Runtime                         (Dynamic, Stati
 import           Luna.Syntax.AST.Term                            hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target)
 import           Luna.Syntax.AST.Term                            hiding (source)
 import qualified Luna.Syntax.AST.Term                            as Term
-import           Data.Graph
-import           Data.Graph.Builder
 import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Builder.Node          (NodeInferable, TermNode)
 import           Luna.Syntax.Model.Network.Builder.Node.Class    (arg)
@@ -30,36 +30,36 @@ import           Luna.Syntax.Model.Network.Builder.Term.Class    (NetGraph, NetL
 import           Luna.Syntax.Model.Network.Class                 ()
 import           Luna.Syntax.Model.Network.Term
 
-import qualified Luna.Compilation.Pass.Dirty.Monad      as DirtyMonad
-
-import           Luna.Compilation.Pass.Dirty.Data.Label (Interpreter (..), InterpreterLayer)
-import qualified Luna.Compilation.Pass.Dirty.Data.Label as Label
+import           Luna.Compilation.Pass.Interpreter.Layer         (Interpreter (..), InterpreterLayer)
+import qualified Luna.Compilation.Pass.Interpreter.Layer         as Layer
+import           Luna.Compilation.Pass.Interpreter.Interpreter   as Interpreter
 
 import           Data.Graph.Backend.VectorGraph
-import qualified Data.Graph.Builder.Class               as Graph
+import qualified Data.Graph.Builder.Class                        as Graph
 
 
 
-graph1 :: forall term node edge nr er ls m n e c. (term ~ Draft Static
-          , node ~ (ls :<: term)
-          , edge ~ Link (ls :<: term)
-          , nr   ~ Ref Node node
-          , er   ~ Ref Edge edge
-          , BiCastable     n (ls :<: term)
-          , BiCastable     e edge
-          , MonadIO       m
-          , NodeInferable m (ls :<: term)
-          , TermNode Star m (ls :<: term)
-          , TermNode Var  m (ls :<: term)
-          , TermNode Num  m (ls :<: term)
-          , TermNode Str  m (ls :<: term)
-          , TermNode Acc  m (ls :<: term)
-          , TermNode App  m (ls :<: term)
-          , HasProp Interpreter (ls :<: term)
-          , Prop Interpreter    (ls :<: term) ~ InterpreterLayer
-          , Graph.MonadBuilder (Hetero (VectorGraph n e c)) m
-          )
-       => m nr
+
+graph1 :: forall term node edge nr er ls m n e c. ( term ~ Draft Static
+                                                  , node ~ (ls :<: term)
+                                                  , edge ~ Link (ls :<: term)
+                                                  , nr   ~ Ref Node node
+                                                  , er   ~ Ref Edge edge
+                                                  , BiCastable     n (ls :<: term)
+                                                  , BiCastable     e edge
+                                                  , MonadIO       m
+                                                  , NodeInferable m (ls :<: term)
+                                                  , TermNode Star m (ls :<: term)
+                                                  , TermNode Var  m (ls :<: term)
+                                                  , TermNode Num  m (ls :<: term)
+                                                  , TermNode Str  m (ls :<: term)
+                                                  , TermNode Acc  m (ls :<: term)
+                                                  , TermNode App  m (ls :<: term)
+                                                  , HasProp Interpreter (ls :<: term)
+                                                  , Prop    Interpreter (ls :<: term) ~ InterpreterLayer
+                                                  , Graph.MonadBuilder (Hetero (VectorGraph n e c)) m
+                                                  )
+       => m ([nr])
 graph1 = do
     i1 <- int 2
     i2 <- int 3
@@ -86,13 +86,14 @@ graph1 = do
     accPlus2   <- acc "+" appPlus1b
     appPlus2   <- app accPlus2 [arg appLen]
 
+    let refsToEval = [appConc1b, appPlus1a]
 
-    -- let ref = appConc1b :: Ref Node node
-    -- (nd :: (ls :<: term)) <- read ref
+    forM_ refsToEval (\ref -> do
+            (nd :: (ls :<: term)) <- read ref
+            write ref (nd & prop Interpreter . Layer.required .~ True)
+        )
 
-    -- write ref (nd & prop Required .~ True)
-
-    return appConc1b
+    return refsToEval
 
 
 prebuild :: Show a => IO (Ref Node (NetLayers a :<: Draft Static), NetGraph a)
@@ -112,8 +113,8 @@ main = do
         v <- view version <$> Env.get
         putStrLn $ "Luna compiler version " <> showVersion v
         TypeCheck.runT $ do
-            (root,     g01) <- runBuild  g00 graph1
-            g02             <- evalBuild g01 $ Dirty.run root
+            (refsToEval, g01) <- runBuild  g00 graph1
+            g02               <- evalBuild g01 $ Interpreter.run refsToEval
             renderAndOpen [ ("g1", g01)
                           ]
     putStrLn "done"
