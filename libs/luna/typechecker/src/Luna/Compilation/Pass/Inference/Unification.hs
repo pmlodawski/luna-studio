@@ -109,6 +109,7 @@ resolveUnify uni = do
 
             symmetrical (resolveStar uni) l r
             symmetrical (resolveVar  uni) l r
+            symmetrical (resolveAcc  uni) l r
             resolveLams uni l r
 
         match $ \ANY -> impossible
@@ -124,7 +125,14 @@ resolveUnify uni = do
 
           resolveVar uni a b = do
               a'   <- read (a :: nodeRef)
-              whenMatched (uncover a') $ \(Var v) -> do
+              whenMatched (uncover a') $ \(Var _) -> do
+                  replaceNode uni b
+                  replaceNode a   b
+                  resolve_
+
+          resolveAcc uni a b = do -- treat Acc as a Var: the importer will take care of this later on
+              a'   <- read (a :: nodeRef)
+              whenMatched (uncover a') $ \(Acc _ _) -> do
                   replaceNode uni b
                   replaceNode a   b
                   resolve_

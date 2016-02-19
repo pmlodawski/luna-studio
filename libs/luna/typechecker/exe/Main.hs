@@ -34,10 +34,11 @@ import           Development.Placeholders
 import           Type.Inference
 
 import qualified Luna.Compilation.Env.Class                      as Env
-import           Luna.Compilation.Pass.Inference.Literals        as LiteralsAssignement
+import           Luna.Compilation.Pass.Inference.Literals        (LiteralsPass (..))
 import           Luna.Compilation.Pass.Inference.Struct          (StructuralInferencePass (..))
 import           Luna.Compilation.Pass.Inference.Unification     (UnificationPass (..))
 import qualified Luna.Compilation.Pass.Inference.Importing       as Importing
+import           Luna.Compilation.Pass.Inference.Importing       (SymbolImportingPass (..))
 import           Luna.Compilation.Pass.Utils.Literals            as LiteralsUtils
 import qualified Luna.Compilation.Stage.TypeCheck                as TypeCheck
 import           Luna.Compilation.Stage.TypeCheck                (Loop (..))
@@ -105,6 +106,29 @@ input_g1 = do
     g  <- var' "g"
     r2 <- app' g [arg x]
     return ([r1,r2], [x], [f,g])
+
+input_g2 :: ( term ~ Draft Static
+            , nr   ~ Ref Node (ls :<: term)
+            , MonadIO       m
+            , NodeInferable m (ls :<: term)
+            , TermNode Star m (ls :<: term)
+            , TermNode Var  m (ls :<: term)
+            , TermNode App  m (ls :<: term)
+            , TermNode Acc  m (ls :<: term)
+            , TermNode Num  m (ls :<: term)
+            ) => m ([nr],[nr],[nr],[nr])
+input_g2 = do
+    -- The expression here is `(1.+ 2).toString.length`
+    n1  <- int 1
+    n2  <- int 2
+    pl  <- acc "+" n1
+    br  <- app pl [arg n2]
+    ts  <- acc "toString" br
+    tsa <- app ts []
+    le  <- acc "length" tsa
+    lea <- app le []
+
+    return ([n1, n2], [br, tsa, lea], [pl, ts, le], [pl, ts, le])
 
 
 input_g1_resolution_mock :: ( term ~ Draft Static
@@ -243,19 +267,25 @@ test1 = do
 
         -- Running Type Checking compiler stage
         (gs, _) <- TypeCheck.runT $ runBuild g $ Writer.execWriterT $ do
-            (apps, accs, funcs) <- input_g1
+            (lits, apps, accs, funcs) <- input_g2
             collectGraph "Initial"
 
-            TypeCheckState.modify_ $ (TypeCheckState.untypedApps .~ apps)
-                                   . (TypeCheckState.untypedAccs .~ accs)
+            Symbol.loadFunctions StdLib.symbols
+            TypeCheckState.modify_ $ (TypeCheckState.untypedApps       .~ apps)
+                                   . (TypeCheckState.untypedAccs       .~ accs)
+                                   . (TypeCheckState.untypedLits       .~ lits)
+                                   . (TypeCheckState.unresolvedSymbols .~ funcs)
 
+
+            TypeCheck.runTCWithArtifacts LiteralsPass            collectGraph
             TypeCheck.runTCWithArtifacts StructuralInferencePass collectGraph
             TypeCheck.runTCWithArtifacts UnificationPass         collectGraph
+            TypeCheck.runTCWithArtifacts SymbolImportingPass     collectGraph
 
-            unis <- input_g1_resolution_mock funcs
-            collectGraph "ResolutionMock"
+            {-unis <- input_g1_resolution_mock funcs-}
+            {-collectGraph "ResolutionMock"-}
 
-            TypeCheckState.modify_ $ TypeCheckState.unresolvedUnis %~ (unis ++)
+            {-TypeCheckState.modify_ $ TypeCheckState.unresolvedUnis %~ (unis ++)-}
 
             TypeCheck.runTCWithArtifacts (Loop UnificationPass) collectGraph
 

@@ -1,5 +1,6 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE CPP                       #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Luna.Compilation.Pass.Inference.Literals where
 
@@ -20,6 +21,9 @@ import           Luna.Syntax.Model.Network.Builder.Node          (NodeInferable,
 import           Luna.Syntax.Model.Network.Builder.Node.Class    (arg)
 import           Luna.Syntax.Model.Network.Builder.Node.Inferred
 import           Luna.Syntax.Model.Network.Builder.Term.Class    (NetGraph, NetLayers, runNetworkBuilderT)
+import           Luna.Compilation.Stage.TypeCheck                (ProgressStatus (..), TypeCheckerPass, hasJobs, runTCPass)
+import           Luna.Compilation.Stage.TypeCheck.Class          (MonadTypeCheck)
+import qualified Luna.Compilation.Stage.TypeCheck.Class          as TypeCheck
 import           Luna.Syntax.Model.Network.Class                 ()
 import           Luna.Syntax.Model.Network.Term
 
@@ -55,7 +59,27 @@ createLiteralTypes = do
     consStrRef <- cons "String"
     return (consIntRef, consStrRef)
 
-run :: PassCtx(m, ls, term) => [Ref Node (ls :<: term)] -> m ()
-run literals = do
+runPass :: PassCtx(m, ls, term) => [Ref Node (ls :<: term)] -> m ()
+runPass literals = do
     (consIntRef, consStrRef) <- createLiteralTypes
     mapM_ (assignLiteralType consIntRef consStrRef) literals
+
+-----------------------------
+-- === TypeCheckerPass === --
+-----------------------------
+
+data LiteralsPass = LiteralsPass deriving (Show, Eq)
+
+instance ( PassCtx(m, ls, term)
+         , MonadTypeCheck (ls :<: term) m
+         ) => TypeCheckerPass LiteralsPass m where
+    hasJobs _ = not . null . view TypeCheck.untypedLits <$> TypeCheck.get
+
+    runTCPass _ = do
+        lits <- view TypeCheck.untypedLits <$> TypeCheck.get
+        TypeCheck.modify_ $ TypeCheck.untypedLits .~ []
+        runPass lits
+        case lits of
+            [] -> return Stuck
+            _  -> return Progressed
+

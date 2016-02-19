@@ -11,15 +11,17 @@ import           Data.Graph.Model               (Ref, Node)
 
 -- === Definitions === --
 
-data TCState n = TCState { _unresolvedUnis :: [Ref Node n]
-                         , _untypedApps    :: [Ref Node n]
-                         , _untypedAccs    :: [Ref Node n]
+data TCState n = TCState { _unresolvedUnis    :: [Ref Node n]
+                         , _unresolvedSymbols :: [Ref Node n]
+                         , _untypedApps       :: [Ref Node n]
+                         , _untypedAccs       :: [Ref Node n]
+                         , _untypedLits       :: [Ref Node n]
                          } deriving (Show, Eq)
 
 makeLenses ''TCState
 
 instance Default (TCState n) where
-    def = TCState def def def
+    def = TCState def def def def def
 
 
 ---- TODO: template haskellize

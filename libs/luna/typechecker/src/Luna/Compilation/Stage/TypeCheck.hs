@@ -12,24 +12,27 @@ import           Luna.Syntax.Name.Ident.Pool  (IdentPoolT)
 import           Luna.Compilation.Stage.TypeCheck.Class (TypeCheckT)
 import qualified Luna.Compilation.Stage.TypeCheck.Class as TypeCheck
 
+import qualified Luna.Library.Symbol.Class as Symbol
+import           Luna.Library.Symbol.Class (SymbolT)
+
 
 -- === Definitions === --
 
-data TypeCheck t = TypeCheck deriving (Show)
+data TypeCheck n c g = TypeCheck deriving (Show)
 
 -- === Evaluation === --
 
-type instance StageMonadT (TypeCheck t) m = TypeCheckT t $ IdentPoolT m
+type instance StageMonadT (TypeCheck n c g) m = TypeCheckT n $ IdentPoolT $ SymbolT n c g m
 
-instance Monad m => MonadStageT (TypeCheck t) m where
-    runT _ = flip IdentPool.evalT def . flip TypeCheck.evalT def
+instance Monad m => MonadStageT (TypeCheck n c g) m where
+    runT _ = flip Symbol.evalT def . flip IdentPool.evalT def . flip TypeCheck.evalT def
 
 -- === Utils === --
 
-runT :: MonadStageT (TypeCheck t) m => StageMonadT (TypeCheck t) m a -> m a
+runT :: MonadStageT (TypeCheck n c g) m => StageMonadT (TypeCheck n c g) m a -> m a
 runT = Stage.runT TypeCheck
 
-run :: MonadStage (TypeCheck t) => StageMonad (TypeCheck t) a -> a
+run :: MonadStage (TypeCheck n c g) => StageMonad (TypeCheck n c g) a -> a
 run = Stage.run TypeCheck
 
 -- === Pass Runner === --
