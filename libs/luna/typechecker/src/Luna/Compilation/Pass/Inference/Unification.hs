@@ -19,16 +19,17 @@ import Luna.Syntax.AST.Term                         hiding (source, target)
 import Data.Graph.Builder                           hiding (run)
 import Luna.Syntax.Model.Layer
 import Luna.Syntax.Model.Network.Builder.Node
-import Luna.Syntax.Model.Network.Builder.Term.Class (runNetworkBuilderT, NetGraph, NetLayers)
 import Luna.Syntax.Model.Network.Class              ()
 import Luna.Syntax.Model.Network.Term
 import Luna.Syntax.Name.Ident.Pool                  (MonadIdentPool, newVarIdent')
 import Type.Inference
 
-import qualified Data.Graph.Builder               as Graph
-import qualified Luna.Compilation.Stage.TypeCheck as TypeCheck
-import qualified Luna.Syntax.Name                 as Name
-import Data.Graph.Backend.VectorGraph             as Graph
+import qualified Data.Graph.Builder                     as Graph
+import           Luna.Compilation.Stage.TypeCheck       (ProgressStatus (..), TypeCheckerPass, hasJobs, runTCPass)
+import           Luna.Compilation.Stage.TypeCheck.Class (MonadTypeCheck)
+import qualified Luna.Compilation.Stage.TypeCheck.Class as TypeCheck
+import qualified Luna.Syntax.Name                       as Name
+import Data.Graph.Backend.VectorGraph                   as Graph
 
 
 
@@ -37,13 +38,14 @@ import Control.Monad (liftM, MonadPlus(..))
 
 import Control.Monad.Trans.Either
 
-#define PassCtx(m,ls,term) ( term ~ Draft Static                           \
+#define PassCtx(m,ls,term) ( term ~ Draft Static                            \
                            , ne   ~ Link (ls :<: term)                      \
+                           , nodeRef ~ Ref Node (ls :<: term)               \
                            , Prop Type   (ls :<: term) ~ Ref Edge ne        \
-                           , Prop Succs  (ls :<: term) ~ [Ref Edge $ ne]    \
-                           , BiCastable     e ne                           \
+                           , Prop Succs  (ls :<: term) ~ [Ref Edge ne]      \
+                           , BiCastable     e ne                            \
                            , BiCastable     n (ls :<: term)                 \
-                           , MonadBuilder (Hetero (VectorGraph n e c)) (m) \
+                           , MonadBuilder (Hetero (VectorGraph n e c)) (m)  \
                            , HasProp Type       (ls :<: term)               \
                            , HasProp Succs      (ls :<: term)               \
                            , NodeInferable  (m) (ls :<: term)               \
@@ -51,8 +53,9 @@ import Control.Monad.Trans.Either
                            , TermNode Lam   (m) (ls :<: term)               \
                            , TermNode Unify (m) (ls :<: term)               \
                            , TermNode Acc   (m) (ls :<: term)               \
-                           , MonadIdentPool (m)                            \
+                           , MonadIdentPool (m)                             \
                            , Destructor     (m) (Ref Node (ls :<: term))    \
+                           , MonadTypeCheck (ls :<: term) (m)               \
                            )
 
 
@@ -96,8 +99,8 @@ data Resolution r u = Resolved   r
 
 resolve_ = resolve []
 
-resolveUnify :: forall m ls term nodeRef ne ter n e c. (PassCtx(m,ls,term), nodeRef ~ Ref Node (ls :<: term)
-                , MonadIO m, Show (ls :<: term), MonadResolution [nodeRef] m)
+resolveUnify :: forall m ls term nodeRef ne ter n e c. (PassCtx(m,ls,term),
+                MonadResolution [nodeRef] m)
              => nodeRef -> m ()
 resolveUnify uni = do
     uni' <- read uni
@@ -165,20 +168,28 @@ makeLenses ''TCStatus
 
 -- FIXME[WD]: we should not return [Graph n e] from pass - we should use ~ IterativePassRunner instead which will handle iterations by itself
 run :: forall nodeRef m ls term n e ne c.
-       (PassCtx(ResolutionT [nodeRef] m,ls,term), MonadBuilder (Hetero (VectorGraph n e c)) m, nodeRef ~ Ref Node (ls :<: term)
-       , MonadIO m, Show (ls :<: term)
-       , Getter Inputs (ls :<: term), Prop Inputs (ls :<: term) ~ [Ref Edge (Link (ls :<: term))])
-    => [nodeRef] -> m [Hetero $ VectorGraph n e c]
-run unis = do
-    g <- Graph.get
-    let tcs = TCStatus (length (usedIxes $ g ^. wrapped' ∘ Graph.nodeGraph)) (length unis)
-    putStrLn $ "Running Inference.Unification:"
-    print tcs
-
-    results <- forM unis $ \u -> fmap (resolveUnifyY u) $ runResolutionT $ resolveUnify u
-    return []
+       ( PassCtx(ResolutionT [nodeRef] m,ls,term)
+       , MonadBuilder (Hetero (VectorGraph n e c)) m
+       ) => [nodeRef] -> m [Resolution [nodeRef] nodeRef]
+run unis = forM unis $ \u -> fmap (resolveUnifyY u) $ runResolutionT $ resolveUnify u
 
 
+data UnificationPass = UnificationPass
+
+instance ( PassCtx(ResolutionT [nodeRef] m,ls,term)
+         , MonadBuilder (Hetero (VectorGraph n e c)) m
+         , MonadTypeCheck (ls :<: term) m
+         ) => TypeCheckerPass UnificationPass m where
+    hasJobs _ = not . null . view TypeCheck.unresolvedUnis <$> TypeCheck.get
+
+    runTCPass _ = do
+        unis <- view TypeCheck.unresolvedUnis <$> TypeCheck.get
+        results <- run unis
+        let newUnis = catUnresolved results ++ (concat $ catResolved results)
+        TypeCheck.modify_ $ TypeCheck.unresolvedUnis .~ newUnis
+        case catResolved results of
+            [] -> return Stuck
+            _  -> return Progressed
 
 universe = Ref 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?
 

@@ -34,10 +34,12 @@ import           Type.Inference
 import qualified Luna.Compilation.Env.Class                      as Env
 import           Luna.Compilation.Pass.Inference.Literals        as LiteralsAssignement
 import qualified Luna.Compilation.Pass.Inference.Struct          as StructInference
-import qualified Luna.Compilation.Pass.Inference.Unification     as Unification
+import           Luna.Compilation.Pass.Inference.Unification     (UnificationPass (..))
 import qualified Luna.Compilation.Pass.Inference.Importing       as Importing
 import           Luna.Compilation.Pass.Utils.Literals            as LiteralsUtils
 import qualified Luna.Compilation.Stage.TypeCheck                as TypeCheck
+import           Luna.Compilation.Stage.TypeCheck                (Loop (..))
+import qualified Luna.Compilation.Stage.TypeCheck.Class          as TypeCheckState
 import           Luna.Diagnostic.Vis.GraphViz
 import           Luna.Evaluation.Runtime                         (Dynamic, Static)
 import qualified Luna.Evaluation.Runtime                         as Runtime
@@ -238,19 +240,26 @@ test1 = do
         TypeCheck.runT $ do
             ((apps, accs, funcs), g01) <- runBuild g input_g1
             (unis :: [Ref Node (NetLayers () :<: Draft Static)]               , g02 :: NetGraph ()) <- runBuild  g01 $ StructInference.run apps accs
-            (g03 :: NetGraph ())                        <- evalBuild g02 $ Unification.run unis
-            (unis               , g04) <- runBuild  g03 $ input_g1_resolution_mock funcs
-            {-(gs05, g05)                <- runBuild  g04 $ Unification.run [(2,13),(2,18),(2,21),(2,22),(2,23)] 1 unis-}
-            (gs05, g05)                <- runBuild  g04 $ Unification.run unis
-            --(gs05, g05)                <- runBuild  g04 $ Unification.run [(2,21)] 1 unis
-            {-let gss = zipWith (,) (("g0" <>) ∘ show <$> [5..]) gs05-}
-            let gss = []
+
+            TypeCheckState.modify_ $ TypeCheckState.unresolvedUnis .~ unis
+
+            (status, g03 :: NetGraph ())                        <- runBuild g02 $ TypeCheck.runTCPass UnificationPass
+            putStrLn $ "Unis run status: " ++ show status
+            print =<< (view TypeCheckState.unresolvedUnis <$> TypeCheckState.get)
+            (unis , g04) <- runBuild  g03 $ input_g1_resolution_mock funcs
+
+            TypeCheckState.modify_ $ TypeCheckState.unresolvedUnis %~ (unis ++)
+
+            (status, g05 :: NetGraph ())                        <- runBuild g04 $ TypeCheck.runTCPass (Loop UnificationPass)
+            putStrLn $ "Looped unis run status: " ++ show status
+            print =<< (view TypeCheckState.unresolvedUnis <$> TypeCheckState.get)
+
             renderAndOpen $ [ ("g01", g01)
                             , ("g02", g02)
                             , ("g03", g03)
                             , ("g04", g04)
                             , ("g05", g05)
-                            ] <> gss
+                            ]
     print "end"
 
 
