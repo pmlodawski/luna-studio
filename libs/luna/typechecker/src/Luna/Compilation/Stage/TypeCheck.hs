@@ -17,17 +17,6 @@ import qualified Luna.Compilation.Stage.TypeCheck.Class as TypeCheck
 
 data TypeCheck t = TypeCheck deriving (Show)
 
-class Monad m => TypeCheckerPass p m where
-    hasJobs :: p -> m Bool
-
-    runTCPass :: p -> m ProgressStatus
-    runTCPass p = runTCWithArtifacts p $ return ()
-
-    runTCWithArtifacts :: p -> m () -> m ProgressStatus
-    runTCWithArtifacts p art = (runTCPass p) <* art
-
-data ProgressStatus = Progressed | Stuck deriving (Show, Eq)
-
 -- === Evaluation === --
 
 type instance StageMonadT (TypeCheck t) m = TypeCheckT t $ IdentPoolT m
@@ -43,11 +32,31 @@ runT = Stage.runT TypeCheck
 run :: MonadStage (TypeCheck t) => StageMonad (TypeCheck t) a -> a
 run = Stage.run TypeCheck
 
+-- === Pass Runner === --
+
+class HasTag p t where
+    tag :: p -> t
+
+instance Show p => HasTag p String where
+    tag = show
+
+class (HasTag p PassTag, Monad m) => TypeCheckerPass p m where
+    hasJobs :: p -> m Bool
+
+    runTCPass :: p -> m ProgressStatus
+    runTCPass p = runTCWithArtifacts p $ const $ return ()
+
+    runTCWithArtifacts :: p -> (PassTag -> m ()) -> m ProgressStatus
+    runTCWithArtifacts p art = (runTCPass p) <* (art $ tag p)
+
+data ProgressStatus = Progressed | Stuck deriving (Show, Eq)
+type PassTag = String
+
 -- === Pass Combinators === --
 
 data Loop a = Loop a deriving (Show, Eq)
 
-instance TypeCheckerPass a m => TypeCheckerPass (Loop a) m where
+instance (HasTag (Loop a) PassTag, TypeCheckerPass a m) => TypeCheckerPass (Loop a) m where
     hasJobs (Loop a) = hasJobs a
 
     runTCWithArtifacts (Loop a) art = do

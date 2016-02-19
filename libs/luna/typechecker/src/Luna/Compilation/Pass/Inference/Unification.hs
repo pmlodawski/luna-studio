@@ -221,7 +221,7 @@ instance ( PassCtx(ResolutionT [nodeRef] m,ls,term)
         results <- run unis
         let newUnis = catUnresolved results ++ (concat $ catResolved results)
         TypeCheck.modify_ $ TypeCheck.unresolvedUnis .~ newUnis
-        case catResolved results of
+        case concat $ catResolved results of
             [] -> return Stuck
             _  -> return Progressed
 

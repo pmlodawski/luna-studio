@@ -14,6 +14,8 @@ import           Data.Graph
 import           Data.Graph.Builders
 import           Prologue                                        hiding (Version, cons, read, ( # ), Num, Cons)
 
+import           Text.Printf                                     (printf)
+import qualified Control.Monad.Writer                            as Writer
 import           Control.Monad.Event
 import           Data.Attr                                       (attr)
 import           Data.Construction
@@ -225,6 +227,9 @@ symbolMapTest = do
     renderAndOpen [("afterImporting", g)]
     return ()
 
+collectGraph tag = do
+    g <- Graph.get
+    Writer.tell [(tag, g)]
 
 test1 :: IO ()
 test1 = do
@@ -237,31 +242,25 @@ test1 = do
         putStrLn $ "Luna compiler version " <> showVersion v
 
         -- Running Type Checking compiler stage
-        TypeCheck.runT $ do
-            ((apps, accs, funcs), g01) <- runBuild g input_g1
+        (gs, _) <- TypeCheck.runT $ runBuild g $ Writer.execWriterT $ do
+            (apps, accs, funcs) <- input_g1
+            collectGraph "Initial"
 
             TypeCheckState.modify_ $ (TypeCheckState.untypedApps .~ apps)
                                    . (TypeCheckState.untypedAccs .~ accs)
 
-            g02 :: NetGraph () <- evalBuild  g01 $ TypeCheck.runTCPass StructuralInferencePass
+            TypeCheck.runTCWithArtifacts StructuralInferencePass collectGraph
+            TypeCheck.runTCWithArtifacts UnificationPass         collectGraph
 
-            (status, g03 :: NetGraph ()) <- runBuild g02 $ TypeCheck.runTCPass UnificationPass
-            putStrLn $ "Unis run status: " ++ show status
-            print =<< (view TypeCheckState.unresolvedUnis <$> TypeCheckState.get)
-            (unis , g04) <- runBuild  g03 $ input_g1_resolution_mock funcs
+            unis <- input_g1_resolution_mock funcs
+            collectGraph "ResolutionMock"
 
             TypeCheckState.modify_ $ TypeCheckState.unresolvedUnis %~ (unis ++)
 
-            (status, g05 :: NetGraph ())                        <- runBuild g04 $ TypeCheck.runTCPass (Loop UnificationPass)
-            putStrLn $ "Looped unis run status: " ++ show status
-            print =<< (view TypeCheckState.unresolvedUnis <$> TypeCheckState.get)
+            TypeCheck.runTCWithArtifacts (Loop UnificationPass) collectGraph
 
-            renderAndOpen $ [ ("g01", g01)
-                            , ("g02", g02)
-                            , ("g03", g03)
-                            , ("g04", g04)
-                            , ("g05", g05)
-                            ]
+        let names = printf "%02d" <$> ([0..] :: [Int])
+        renderAndOpen $ zipWith (\ord (tag, g) -> (ord <> "_" <> tag, g)) names gs
     print "end"
 
 
