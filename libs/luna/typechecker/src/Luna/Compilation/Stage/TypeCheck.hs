@@ -68,3 +68,20 @@ instance (HasTag (Loop a) PassTag, TypeCheckerPass a m) => TypeCheckerPass (Loop
         case res of
             Stuck -> return Stuck
             _     -> runTCWithArtifacts (Loop a) art
+
+
+data Sequence a b = Sequence a b deriving (Show, Eq)
+
+instance (HasTag (Sequence a b) PassTag, TypeCheckerPass a m, TypeCheckerPass b m) => TypeCheckerPass (Sequence a b) m where
+    hasJobs (Sequence a b) = (||) <$> hasJobs a <*> hasJobs b
+
+    runTCWithArtifacts (Sequence a b) art = do
+        shouldStartA <- hasJobs a
+        resA <- if shouldStartA then runTCWithArtifacts a art else return Stuck
+
+        shouldStartB <- hasJobs b
+        resB <- if shouldStartB then runTCWithArtifacts b art else return Stuck
+
+        return $ if resA == Progressed || resB == Progressed
+            then Progressed
+            else Stuck

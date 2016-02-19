@@ -110,6 +110,7 @@ resolveUnify uni = do
             symmetrical (resolveStar uni) l r
             symmetrical (resolveVar  uni) l r
             symmetrical (resolveAcc  uni) l r
+            resolveConses uni l r
             resolveLams uni l r
 
         match $ \ANY -> impossible
@@ -136,6 +137,18 @@ resolveUnify uni = do
                   replaceNode uni b
                   replaceNode a   b
                   resolve_
+
+          resolveConses uni a b = do
+              uni' <- read uni
+              a'   <- read (a :: nodeRef)
+              b'   <- read (b :: nodeRef)
+              whenMatched (uncover a') $ \(Cons an) ->
+                  whenMatched (uncover b') $ \(Cons bn) -> if an == bn
+                      then do
+                          replaceNode uni b
+                          replaceNode a   b
+                          resolve_
+                      else return ()
 
           resolveLams uni a b = do
               uni' <- read uni

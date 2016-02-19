@@ -108,9 +108,7 @@ attachTypeRepr :: PassCtx(ImportErrorT m) => FunctionPtr node -> Ref Node node -
 attachTypeRepr fptr ref = do
     argTypes <- mapM (follow (prop Type) >=> follow source) $ fptr ^. Function.args
     outType  <- follow (prop Type) (fptr ^. Function.out) >>= follow source
-    tp <- case argTypes of
-        [] -> return outType
-        as -> lam (arg <$> as) outType
+    tp <- lam (arg <$> argTypes) outType
     currentTp <- follow (prop Type) ref >>= follow source
     uni <- unify tp currentTp
     reconnect ref (prop Type) uni

@@ -41,7 +41,7 @@ import qualified Luna.Compilation.Pass.Inference.Importing       as Importing
 import           Luna.Compilation.Pass.Inference.Importing       (SymbolImportingPass (..))
 import           Luna.Compilation.Pass.Utils.Literals            as LiteralsUtils
 import qualified Luna.Compilation.Stage.TypeCheck                as TypeCheck
-import           Luna.Compilation.Stage.TypeCheck                (Loop (..))
+import           Luna.Compilation.Stage.TypeCheck                (Loop (..), Sequence (..))
 import qualified Luna.Compilation.Stage.TypeCheck.Class          as TypeCheckState
 import           Luna.Diagnostic.Vis.GraphViz
 import           Luna.Evaluation.Runtime                         (Dynamic, Static)
@@ -276,18 +276,12 @@ test1 = do
                                    . (TypeCheckState.untypedLits       .~ lits)
                                    . (TypeCheckState.unresolvedSymbols .~ funcs)
 
+            let tc = Sequence LiteralsPass
+                            $ Sequence StructuralInferencePass
+                                     $ Loop $ Sequence (Loop UnificationPass)
+                                                       SymbolImportingPass
 
-            TypeCheck.runTCWithArtifacts LiteralsPass            collectGraph
-            TypeCheck.runTCWithArtifacts StructuralInferencePass collectGraph
-            TypeCheck.runTCWithArtifacts UnificationPass         collectGraph
-            TypeCheck.runTCWithArtifacts SymbolImportingPass     collectGraph
-
-            {-unis <- input_g1_resolution_mock funcs-}
-            {-collectGraph "ResolutionMock"-}
-
-            {-TypeCheckState.modify_ $ TypeCheckState.unresolvedUnis %~ (unis ++)-}
-
-            TypeCheck.runTCWithArtifacts (Loop UnificationPass) collectGraph
+            TypeCheck.runTCWithArtifacts tc collectGraph
 
         let names = printf "%02d" <$> ([0..] :: [Int])
         renderAndOpen $ zipWith (\ord (tag, g) -> (ord <> "_" <> tag, g)) names gs
