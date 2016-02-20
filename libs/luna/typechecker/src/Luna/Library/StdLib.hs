@@ -34,6 +34,7 @@ import qualified Luna.Syntax.AST.Decl.Function    as Function
                          , TermNode Blank  m n                           \
                          , TermNode Native m n                           \
                          , TermNode Star   m n                           \
+                         , TermNode Var    m n                           \
                          , MonadFix m                                    \
                          , NetworkBuilderT (NetGraph a) m Identity       \
                          , MonadBuilder (NetGraph a) m                   \
@@ -63,6 +64,13 @@ makeNativeFun name selfTypeStr argTypesStr outTypeStr = do
     native <- native (fromString name) nativeArgs `typed` outType
     return (self, args, native)
 
+
+makeId :: FunBuilderCtx(m) => m (Maybe nodeRef, [nodeRef], nodeRef)
+makeId = do
+    tpV <- var "#idTp1"
+    n   <- blank `typed` tpV
+    return (Nothing, [n], n)
+
 symbols :: Show a => SymbolMap (NetLayers a :<: Draft Static) (NetGraph a)
 symbols = Map.fromList $ fmap (\(n, b) -> (QualPath.mk (n :: String), makeFunction b))
     [ ("Int.+",          makeNativeFun "(+)"  (Just "Int") ["Int"] "Int")
@@ -77,4 +85,5 @@ symbols = Map.fromList $ fmap (\(n, b) -> (QualPath.mk (n :: String), makeFuncti
     , ("sin"         ,   makeNativeFun "(sin)"   Nothing ["Double"] "Double")
     , ("range"       ,   makeNativeFun "enumFromTo" Nothing ["Int", "Int"] "[Int]")
     , ("[Double]./"  ,   makeNativeFun "(flip $ map . flip (/))" (Just "[Double]") ["Double"] "[Double]")
+    , ("id"          ,   makeId)
     ]

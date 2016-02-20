@@ -118,17 +118,21 @@ input_g2 :: ( term ~ Draft Static
             , TermNode Num  m (ls :<: term)
             ) => m ([nr],[nr],[nr],[nr])
 input_g2 = do
-    -- The expression here is `(1.+ 2).toString.length`
+    -- The expression here is `(id (1.+ (id 2)).toString).length`
     n1  <- int 1
     n2  <- int 2
     pl  <- acc "+" n1
-    br  <- app pl [arg n2]
+    id1 <- var "id"
+    id2 <- var "id"
+    apid2 <- app id1 [arg n2]
+    br  <- app pl [arg apid2]
     ts  <- acc "toString" br
     tsa <- app ts []
-    le  <- acc "length" tsa
+    idtsa <- app id2 [arg tsa]
+    le  <- acc "length" idtsa
     lea <- app le []
 
-    return ([n1, n2], [br, tsa, lea], [pl, ts, le], [pl, ts, le])
+    return ([n1, n2], [br, tsa, lea, apid2, idtsa], [pl, ts, le], [pl, ts, le, id1, id2])
 
 
 input_g1_resolution_mock :: ( term ~ Draft Static
