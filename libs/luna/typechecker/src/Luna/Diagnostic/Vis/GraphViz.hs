@@ -7,52 +7,51 @@
 
 module Luna.Diagnostic.Vis.GraphViz where
 
-import           Prelude.Luna                           hiding (index)
-
-import           Data.GraphViz
-import qualified Data.GraphViz.Attributes               as GV
-import qualified Data.GraphViz.Attributes.Colors        as GVC
-import qualified Data.GraphViz.Attributes.Colors.X11    as GVC
-import           Data.GraphViz.Attributes.Complete      hiding (Int, Label, Star, focus)
-import qualified Data.GraphViz.Attributes.Complete      as GV
-import           Data.GraphViz.Commands
-import           Data.GraphViz.Printing                 (toDot, renderDot)
-import           Data.GraphViz.Printing                 (PrintDot)
-import           Data.GraphViz.Types.Canonical
-import           Luna.Syntax.Repr.Styles                (HeaderOnly (..), Simple (..))
+import           Prelude.Luna                            hiding (index)
 
 import           Data.Container
-
-import           Data.Maybe                             (maybeToList, maybe)
-import           Data.List                              (find)
-import           Data.Record
-import           Luna.Syntax.Model.Network.Builder
-
 import           Data.Container.Class
-import           Data.Reprx
-import           System.Platform
-import           System.Process                         (createProcess, shell)
-
-import           Data.Layer.Cover                       (uncover)
+import           Data.Index                              (idx)
+import           Data.Layer.Cover                        (uncover)
+import           Data.List                               (find)
+import           Data.Map.Strict                         (Map)
+import qualified Data.Map.Strict                         as Map
+import           Data.Maybe                              (maybe, maybeToList, fromMaybe)
 import           Data.Prop
-import           Luna.Evaluation.Runtime                (Dynamic, Static)
-import qualified Luna.Syntax.AST.Term                   as Term
-import           Luna.Syntax.AST.Decl.Function          (FunctionPtr (..))
-import qualified Luna.Syntax.AST.Decl.Function          as Function
+import           Data.Record
+import           Data.Reprx
+
+import           Data.Graph.Backend.VectorGraph          hiding (subGraphs)
+import qualified Data.Graph.Backend.VectorGraph          as Graph
+import qualified Data.Graph.Backend.VectorGraph.SubGraph as SubGraph
+import           Data.GraphViz
+import qualified Data.GraphViz.Attributes                as GV
+import qualified Data.GraphViz.Attributes.Colors         as GVC
+import qualified Data.GraphViz.Attributes.Colors.X11     as GVC
+import           Data.GraphViz.Attributes.Complete       hiding (Int, Label, Star, focus)
+import qualified Data.GraphViz.Attributes.Complete       as GV
+import qualified Data.GraphViz.Attributes.HTML           as Html
+import           Data.GraphViz.Commands
+import           Data.GraphViz.Printing                  (renderDot, toDot)
+import           Data.GraphViz.Printing                  (PrintDot)
+import           Data.GraphViz.Types.Canonical
+
+import           Luna.Compilation.Pass.Interpreter.Layer (Interpreter (..))
+import qualified Luna.Compilation.Pass.Interpreter.Layer as InterpreterLayer
+import           Luna.Evaluation.Runtime                 (Dynamic, Static)
+import           Luna.Syntax.AST.Decl.Function           (FunctionPtr (..))
+import qualified Luna.Syntax.AST.Decl.Function           as Function
+import qualified Luna.Syntax.AST.Term                    as Term
 import           Luna.Syntax.Model.Layer
+import           Luna.Syntax.Model.Network.Builder
 import           Luna.Syntax.Model.Network.Builder.Term
 import           Luna.Syntax.Model.Network.Term
-import qualified Data.GraphViz.Attributes.HTML as Html
-import Data.Index (idx)
+import           Luna.Syntax.Repr.Styles                 (HeaderOnly (..), Simple (..))
 
-import           Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
-import           Data.Graph.Backend.VectorGraph hiding (subGraphs)
-import qualified Data.Graph.Backend.VectorGraph as Graph
-import qualified Data.Graph.Backend.VectorGraph.SubGraph as SubGraph
+import           System.Platform
+import           System.Process                          (createProcess, shell)
 
-import           Luna.Compilation.Pass.Interpreter.Layer  (Interpreter (..))
-import qualified Luna.Compilation.Pass.Interpreter.Layer  as InterpreterLayer
+
 
 
 --instance Repr HeaderOnly Data where repr _ = "Data"
@@ -190,6 +189,8 @@ toGraphViz name net = DotGraph { strictGraph     = False
               succs    = node # Succs
               dirty    = if (node # Interpreter) ^. InterpreterLayer.dirty    then " dirty" else " clean"
               required = if (node # Interpreter) ^. InterpreterLayer.required then " req"   else ""
+              value    = fromMaybe "" $ (\v -> " " <> show v) <$> (node # Interpreter) ^. InterpreterLayer.value
+              interpr  = dirty <> required <> value
               succs'   = (net ^.) ∘ focus <$> succs :: [Link (NetLayers a :<: Draft Static)]
 
               orphanTgts = selectOrphanTgts (Ref nix) succs -- FIXME[WD] ugliness
@@ -207,7 +208,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
               htmlCells  = Html.Cells [idCell $ show nix, labelCell width $ fromString $ genNodeLabel node
                                             <> "(" <> show (length orphanTgts) <> ") "
                                             <> show (view idx <$> node # Succs)
-                                            <> dirty <> required] where
+                                            <> interpr] where
                   width  = if null inPorts then 1 else fromIntegral inPortsNum
 
 

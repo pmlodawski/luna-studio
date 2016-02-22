@@ -61,12 +61,16 @@ succ ref = do
     node <- read ref
     mapM (follow source) $ node # Succs
 
-
 isDirty :: (Prop Interpreter n ~ InterpreterLayer, HasProp Interpreter n) => n -> Bool
 isDirty node = (node # Interpreter) ^. Layer.dirty
 
 isRequired :: (Prop Interpreter n ~ InterpreterLayer, HasProp Interpreter n) => n -> Bool
 isRequired node = (node # Interpreter) ^. Layer.required
+
+markDirty :: InterpreterCtx(m, ls, term) => Ref Node (ls :<: term) -> m ()
+markDirty ref = do
+    node <- read ref
+    write ref (node & prop Interpreter . Layer.dirty .~ True)
 
 followDirty :: InterpreterCtx(m, ls, term) => Ref Node (ls :<: term) -> m ()
 followDirty ref = do
@@ -77,18 +81,23 @@ followDirty ref = do
         whenM (isDirty <$> read p) $
             followDirty p
 
-
 markSuccessors :: InterpreterCtx(m, ls, term) => Ref Node (ls :<: term) -> m ()
 markSuccessors ref = do
     node <- read ref
-    -- putStrLn $         "markSuccessors " <> show ref
     unless (isDirty node) $ do
-        -- putStrLn $     "marking dirty  " <> show ref
-        write ref (node & prop Interpreter . Layer.dirty .~ True)
+        markDirty ref
         when (isRequired node) $ do
-            -- putStrLn $ "addReqNode     " <> show ref
             Env.addReqNode ref
             mapM_ markSuccessors =<< succ ref
+
+-- interpreter
+
+evaluateNode :: InterpreterCtx(m, ls, term) => Ref Node (ls :<: term) -> m ()
+evaluateNode ref = do
+    return ()
+
+evaluateNodes :: InterpreterCtx(m, ls, term) => [Ref Node (ls :<: term)] -> m ()
+evaluateNodes = mapM_ evaluateNode
 
 
 #define PassCtx(m, ls, term) ( ls   ~ NetLayers a                                   \
@@ -109,4 +118,5 @@ run :: forall env m ls term ne a n e c. (PassCtx(InterpreterT env m, ls, term), 
     => [Ref Node (ls :<: term)] -> m ()
 run refsToEval = do
     -- ((), env) <- flip runInterpreterT (def :: env) $ markSuccessors ref
+    ((), env) <- flip runInterpreterT (def :: env) $ evaluateNodes refsToEval
     return ()
