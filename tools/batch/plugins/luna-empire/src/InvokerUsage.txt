@@ -10,6 +10,7 @@ Usage:
   luna-empire-invoker libraries      <pid>
   luna-empire-invoker projects
   luna-empire-invoker dump
+  luna-empire-invoker graphviz       <pid> <lid>
 
 Options:
   <outPort>          All  or an integer value

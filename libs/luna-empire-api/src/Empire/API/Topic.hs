@@ -51,3 +51,5 @@ listLibrariesRequest   = "empire.library.list.request"
 listLibrariesStatus    = "empire.library.list.status"
 
 logEnvDebug            = "empire.environment.debug"
+
+logEnvDebugGraphViz    = "empire.environment.debug.graphviz.request"

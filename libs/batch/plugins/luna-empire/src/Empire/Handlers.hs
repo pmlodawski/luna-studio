@@ -25,6 +25,7 @@ handlersMap = Map.fromList
     , (Topic.disconnectRequest,      Graph.handleDisconnect)
     , (Topic.setDefaultValueRequest, Graph.handleSetDefaultValue)
     , (Topic.programRequest,         Graph.handleGetProgram)
+    , (Topic.logEnvDebugGraphViz,    Graph.handleDumpGraphViz)
     , (Topic.createProjectRequest,   Project.handleCreateProject)
     , (Topic.listProjectsRequest,    Project.handleListProjects)
     , (Topic.createLibraryRequest,   Library.handleCreateLibrary)

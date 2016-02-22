@@ -23,6 +23,7 @@ import qualified Empire.API.Graph.CodeUpdate       as CodeUpdate
 import qualified Empire.API.Graph.Connect          as Connect
 import qualified Empire.API.Graph.Disconnect       as Disconnect
 import qualified Empire.API.Graph.GetProgram       as GetProgram
+import qualified Empire.API.Graph.DumpGraphViz     as DumpGraphViz
 import qualified Empire.API.Graph.NodeResultUpdate as NodeResultUpdate
 import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
 import qualified Empire.API.Graph.RemoveNode       as RemoveNode
@@ -237,3 +238,12 @@ handleGetProgram content = do
             let update = Update.Update request $ GetProgram.Status graph (Text.pack code)
             sendToBus Topic.programStatus update
             notifyNodeResultUpdates location
+
+handleDumpGraphViz :: ByteString -> StateT Env BusT ()
+handleDumpGraphViz content = do
+    print content
+    print "GRAPHVIZING"
+    let request = Bin.decode . fromStrict $ content :: DumpGraphViz.Request
+        location = request ^. DumpGraphViz.location
+    currentEmpireEnv <- use Env.empireEnv
+    void $ liftIO $ Empire.runEmpire currentEmpireEnv $ withGraphLocation Graph.dumpGraphViz location

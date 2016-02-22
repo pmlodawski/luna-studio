@@ -32,6 +32,7 @@ import qualified Empire.API.Graph.Connect         as Connect
 import qualified Empire.API.Graph.Disconnect      as Disconnect
 import qualified Empire.API.Graph.UpdateNodeMeta  as UpdateNodeMeta
 import qualified Empire.API.Graph.GetProgram      as GetProgram
+import qualified Empire.API.Graph.DumpGraphViz    as DumpGraphViz
 import qualified Empire.API.Project.CreateProject as CreateProject
 import qualified Empire.API.Project.ListProjects  as ListProjects
 import qualified Empire.API.Library.CreateLibrary as CreateLibrary
@@ -106,6 +107,10 @@ main = do
         listLibraries endPoints $ read pid
     when (args `isPresent` (command "dump")) $ do
         environmentDump endPoints
+    when (args `isPresent` (command "graphviz")) $ do
+        pid       <- args `getArgOrExit` (argument "pid")
+        lid       <- args `getArgOrExit` (argument "lid")
+        environmentDumpGraphviz endPoints $ toGraphLocation pid lid
 
 addNode :: EP.BusEndPoints -> GraphLocation -> String -> Double -> Double -> Int -> IO ()
 addNode endPoints graphLocation expression x y tag = do
@@ -161,3 +166,8 @@ environmentDump :: EP.BusEndPoints -> IO ()
 environmentDump endPoints = do
     let content = toStrict . Bin.encode $ ("" :: String)
     void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.logEnvDebug content
+
+environmentDumpGraphviz :: EP.BusEndPoints -> GraphLocation -> IO ()
+environmentDumpGraphviz endPoints loc = do
+    let content = toStrict . Bin.encode $ DumpGraphViz.Request loc
+    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.logEnvDebugGraphViz content

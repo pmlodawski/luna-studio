@@ -21,7 +21,9 @@ import qualified Empire.ASTOps.Print          as Printer
 import           Empire.ASTOps.Remove         (safeRemove)
 
 import qualified Luna.Syntax.Builder          as Builder
+import qualified Data.Graph.Builder           as Builder
 import           Luna.Syntax.Builder          (Meta (..))
+import           Luna.Diagnostic.Vis.GraphViz (renderAndOpen)
 
 meta :: Meta NodeMeta
 meta = Meta
@@ -75,3 +77,8 @@ replaceTargetNode :: NodeRef -> NodeRef -> Command AST ()
 replaceTargetNode unifyNodeId newTargetId = runASTOp $ do
     Builder.reconnect unifyNodeId ASTBuilder.rightUnifyOperand newTargetId
     return ()
+
+dumpGraphViz :: Command AST ()
+dumpGraphViz = do
+    g <- runASTOp Builder.get
+    liftIO $ renderAndOpen [("g", g)]

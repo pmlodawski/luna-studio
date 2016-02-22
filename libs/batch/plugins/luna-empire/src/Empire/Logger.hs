@@ -121,6 +121,7 @@ loggFormattersMap = Map.fromList
     , (Topic.listLibrariesStatus,    \display content -> display (Bin.decode . fromStrict $ content :: ListLibraries.Update))
     , (Topic.setDefaultValueRequest, \display content -> display (Bin.decode . fromStrict $ content :: SetDefaultValue.Request))
     , (Topic.logEnvDebug,            \display content -> "Log environment")
+    , (Topic.logEnvDebugGraphViz,    \display content -> "Dump graphviz")
     ]
 
 defaultLogFormatter :: LogFormatter
