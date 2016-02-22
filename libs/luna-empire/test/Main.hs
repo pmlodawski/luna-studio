@@ -20,7 +20,7 @@ import           Empire.Data.AST              (ASTNode)
 import           Empire.Data.Graph
 import           Empire.Data.Library
 import           Empire.Empire
-import           Luna.Diagnostic.Vis.GraphViz (render, toGraphViz)
+import           Luna.Diagnostic.Vis.GraphViz (renderAndOpen, toGraphViz)
 
 
 
@@ -29,36 +29,45 @@ test = do
     (pid, _) <- createProject (Just "dupa") "/no/elo"
     (lid, _) <- createLibrary pid (Just "xd") "/xd/xd"
 
-    print "tutti"
-    n1 <- (view nodeId) <$> Graph.addNode pid lid "1"     (NodeMeta (1.0, 4.0))
-    print "tutti"
-    n2 <- (view nodeId) <$> Graph.addNode pid lid "2"     (NodeMeta (2.0, 3.0))
-    print "tutti"
-    np <- (view nodeId) <$> Graph.addNode pid lid "_.+ _"     (NodeMeta (3.0, 2.0))
-    nt <- (view nodeId) <$> Graph.addNode pid lid "_.toString" def
-    print "tutti"
+    Graph.addNode pid lid "3.floor.toString" def
+
+
+    n1 <- view nodeId <$> Graph.addNode pid lid "3" def
+    n2 <- view nodeId <$> Graph.addNode pid lid "6" def
+    np <- view nodeId <$> Graph.addNode pid lid "_.+ _" def
     Graph.connect pid lid (OutPortRef n1 All) (InPortRef np Self)
-    Graph.connect pid lid (OutPortRef n2 All) (InPortRef np (Arg 0))
-    Graph.connect pid lid (OutPortRef n1 All) (InPortRef nt Self)
-    print "tutti"
+    Graph.connect pid lid (OutPortRef n2 All) (InPortRef np $ Arg 0)
+
+    {-print "tutti"-}
+    {-n1 <- (view nodeId) <$> Graph.addNode pid lid "1"     (NodeMeta (1.0, 4.0))-}
+    {-print "tutti"-}
+    {-n2 <- (view nodeId) <$> Graph.addNode pid lid "2"     (NodeMeta (2.0, 3.0))-}
+    {-print "tutti"-}
+    {-np <- (view nodeId) <$> Graph.addNode pid lid "_.+ _"     (NodeMeta (3.0, 2.0))-}
+    {-nt <- (view nodeId) <$> Graph.addNode pid lid "_.toString" def-}
+    {-print "tutti"-}
+    {-Graph.connect pid lid (OutPortRef n1 All) (InPortRef np Self)-}
+    {-Graph.connect pid lid (OutPortRef n2 All) (InPortRef np (Arg 0))-}
+    {-Graph.connect pid lid (OutPortRef n1 All) (InPortRef nt Self)-}
+    {-print "tutti"-}
     {-Graph.renameNode pid lid n1 "dupcia"-}
 
 
-    npi <- (view nodeId) <$> Graph.addNode pid lid "zero2pi" def
-    nvs <- (view nodeId) <$> Graph.addNode pid lid "vsin _" def
-    Graph.connect pid lid (OutPortRef npi All) (InPortRef nvs (Arg 0))
+    {-npi <- (view nodeId) <$> Graph.addNode pid lid "zero2pi" def-}
+    {-nvs <- (view nodeId) <$> Graph.addNode pid lid "vsin _" def-}
+    {-Graph.connect pid lid (OutPortRef npi All) (InPortRef nvs (Arg 0))-}
 
-    nr1 <- (view nodeId) <$> Graph.addNode pid lid "range 0 10" def
-    nr2 <- (view nodeId) <$> Graph.addNode pid lid "_.toDouble" def
-    nr3 <- (view nodeId) <$> Graph.addNode pid lid "10.toDouble" def
-    nr4 <- (view nodeId) <$> Graph.addNode pid lid "_./ _" def
-    nr5 <- (view nodeId) <$> Graph.addNode pid lid "vsin _" def
+    {-nr1 <- (view nodeId) <$> Graph.addNode pid lid "range 0 10" def-}
+    {-nr2 <- (view nodeId) <$> Graph.addNode pid lid "_.toDouble" def-}
+    {-nr3 <- (view nodeId) <$> Graph.addNode pid lid "10.toDouble" def-}
+    {-nr4 <- (view nodeId) <$> Graph.addNode pid lid "_./ _" def-}
+    {-nr5 <- (view nodeId) <$> Graph.addNode pid lid "vsin _" def-}
 
-    Graph.connect pid lid (OutPortRef nr1 All) (InPortRef nr2 Self)
-    Graph.connect pid lid (OutPortRef nr2 All) (InPortRef nr4 Self)
-    Graph.connect pid lid (OutPortRef nr3 All) (InPortRef nr4 (Arg 0))
+    {-Graph.connect pid lid (OutPortRef nr1 All) (InPortRef nr2 Self)-}
+    {-Graph.connect pid lid (OutPortRef nr2 All) (InPortRef nr4 Self)-}
+    {-Graph.connect pid lid (OutPortRef nr3 All) (InPortRef nr4 (Arg 0))-}
     {-Graph.connect pid lid (OutPortRef nr2 All) (InPortRef nr3 (Arg 1))-}
-    Graph.connect pid lid (OutPortRef nr4 All) (InPortRef nr5 (Arg 0))
+    {-Graph.connect pid lid (OutPortRef nr4 All) (InPortRef nr5 (Arg 0))-}
 
 
     {-fstNode <- (view nodeId) <$> Graph.addNode pid lid "+"   (NodeMeta (3.14, 3.14))-}
@@ -107,5 +116,5 @@ main = do
     (graph, st) <- runEmpire def test
     case graph of
         Left err -> putStrLn err
-        Right g  -> render "g" $ toGraphViz "g" g
+        Right g  -> renderAndOpen [("g", g)]
 {-main = return ()-}

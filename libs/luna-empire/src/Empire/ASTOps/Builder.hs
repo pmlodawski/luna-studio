@@ -98,17 +98,19 @@ makeAccessorRec targetNodeRef namingNodeRef seenApp = do
     caseTest (uncover namingNode) $ do
         match $ \(Var name) -> do
             accNode <- Builder.acc name targetNodeRef
+            safeRemove namingNodeRef
             if seenApp
                 then return accNode
                 else Builder.app accNode ([] :: [Arg NodeRef])
         match $ \(App t _) -> do
             newNamingNodeRef <- Builder.follow source t
             replacementRef <- makeAccessorRec targetNodeRef newNamingNodeRef True
+            oldAccessor    <- Builder.follow source =<< Builder.follow functionApplicationNode namingNodeRef
             Builder.reconnect namingNodeRef functionApplicationNode replacementRef
+            safeRemove oldAccessor
             return namingNodeRef
         match $ \(Acc name t) -> do
             oldTargetRef <- Builder.follow source t
-            safeRemove oldTargetRef
             Builder.acc name targetNodeRef
         match $ \ANY -> throwError "Invalid node type"
 
@@ -133,7 +135,7 @@ unAcc ref = do
 
 unifyWithName :: forall m. ASTOp m => String -> NodeRef -> m NodeRef
 unifyWithName name node = do
-    nameVar <- Builder.var (Str name) :: m NodeRef
+    nameVar <- Builder.var (fromString name) :: m NodeRef
     Builder.unify nameVar node
 
 rightUnifyOperand :: Lens' ASTNode (EdgeRef)

@@ -12,6 +12,7 @@ import qualified Empire.Data.Graph       as Graph
 import           Empire.API.Data.Node    (NodeId)
 import qualified Empire.Commands.AST     as AST
 import qualified Empire.ASTOp            as AST
+import           Empire.ASTOps.Remove    (safeRemove)
 
 getASTPointer :: NodeId -> Command Graph NodeRef
 getASTPointer nodeId = use (Graph.nodeMapping . at nodeId) <?!> "Node does not exist"

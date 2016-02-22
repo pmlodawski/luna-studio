@@ -16,7 +16,6 @@ import           Luna.Syntax.Builder (Type (..))
 
 removeNode :: ASTOp m => NodeRef -> m ()
 removeNode ref = do
-    node <- Builder.read ref
     void $ destruct ref
 
 safeRemove :: ASTOp m => NodeRef -> m ()
