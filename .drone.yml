@@ -4,6 +4,7 @@ build:
     - AWS_ACCESS_KEY_ID=$$AWS_ACCESS_KEY_ID
     - AWS_SECRET_ACCESS_KEY=$$AWS_SECRET_ACCESS_KEY
   commands:
+    - date
     - mkdir -p dist/proto
     - scripts/genproto > /dev/null
     - scripts/gencabal
@@ -18,6 +19,7 @@ build:
     - touch .stack-work/install/x86_64-osx/custom-nbo-gui-20160201/ghcjs-0.2.0.20160201_ghc-7.10.3/bin/nodelab.jsexe/all.js
     - brunch build # --env production
     - 'if [ "$DRONE_BRANCH" = production -o "$DRONE_BRANCH" = fogger ]; then ./upload_dist.sh; fi'
+    - date
 
 notify:
   slack:
