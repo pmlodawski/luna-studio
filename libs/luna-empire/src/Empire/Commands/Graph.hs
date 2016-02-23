@@ -163,14 +163,14 @@ unApp nodeId pos = do
 
 makeAcc :: NodeId -> NodeId -> Command Graph ()
 makeAcc src dst = do
-    srcAst <- GraphUtils.getASTVar src
+    srcAst <- GraphUtils.getASTPointer src
     dstAst <- GraphUtils.getASTTarget dst
     newNodeRef <- zoom Graph.ast $ AST.makeAccessor srcAst dstAst
     GraphUtils.rewireNode dst newNodeRef
 
 makeApp :: NodeId -> NodeId -> Int -> Command Graph ()
 makeApp src dst pos = do
-    srcAst <- GraphUtils.getASTVar src
+    srcAst <- GraphUtils.getASTPointer src
     dstAst <- GraphUtils.getASTTarget dst
     newNodeRef <- zoom Graph.ast $ AST.applyFunction dstAst srcAst pos
     GraphUtils.rewireNode dst newNodeRef
