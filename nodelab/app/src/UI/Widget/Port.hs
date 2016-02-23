@@ -27,19 +27,27 @@ import           UI.Widget                    (UIContainer (..), UIWidget (..))
 import           UI.Widget                    (GenericWidget (..))
 import qualified UI.Widget                    as Widget
 
+import           Empire.API.Data.Port (PortId (InPortId), InPort (Self))
+import           Empire.API.Data.PortRef (AnyPortRef (InPortRef'), InPortRef(..))
+
 newtype Port = Port { unPort :: JSVal } deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget Port
 
-foreign import javascript safe "new Port($1)"         create'  :: WidgetId         -> IO Port
-foreign import javascript safe "$1.setAngle($2, $3)"  setAngle :: Port -> Double  -> Int -> IO ()
-foreign import javascript safe "$1.setColor($2)"      setColor :: Port -> Int      -> IO ()
-foreign import javascript safe "$1.setHighlight($2)"  setHighlight :: Port -> Bool      -> IO ()
+foreign import javascript safe "new Port($1, $2)"     create'      :: WidgetId -> Bool   -> IO Port
+foreign import javascript safe "$1.setAngle($2, $3)"  setAngle     :: Port     -> Double -> Int -> IO ()
+foreign import javascript safe "$1.setColor($2)"      setColor     :: Port     -> Int    -> IO ()
+foreign import javascript safe "$1.setHighlight($2)"  setHighlight :: Port     -> Bool   -> IO ()
+
+
+isSelf :: AnyPortRef -> Bool
+isSelf (InPortRef' (InPortRef _ Self)) = True
+isSelf _ = False
 
 create :: WidgetId -> Model.Port -> IO Port
 create id model = do
-    port <- create' id
-    setAngle port (model ^. Model.angle) (-id)
+    port <- create' id (isSelf $ model ^. Model.portRef)
+    setAngle port (model ^. Model.angle) (model ^. Model.portCount)
     setColor port $ model ^. Model.color
     setHighlight port $ model ^. Model.highlight
     return port
@@ -53,7 +61,7 @@ instance UIDisplayObject Model.Port where
 
     updateUI id old model = do
         port <- UIR.lookup id :: IO Port
-        setAngle port (model ^. Model.angle) id
+        setAngle port (model ^. Model.angle) (model ^. Model.portCount)
         setColor port $ model ^. Model.color
         setHighlight port $ model ^. Model.highlight
 

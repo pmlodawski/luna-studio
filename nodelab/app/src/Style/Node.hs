@@ -12,12 +12,12 @@ import qualified UI.Layout           as Layout
 nodeRadius = 30.0
 
 expressionLabel = Label.Label position size align  where
-    position = Vector2 (-50.0) (-50.0)
-    size     = Vector2 100.0 20.0
+    position = Vector2 (-150.0) (-50.0)
+    size     = Vector2 300.0 20.0
     align    = Label.Center
 
 nameLabel = Label.Label position size align  where
-    position = Vector2 (-40.0) (-10.0)
+    position = Vector2 (-40.0) (50.0)
     size     = Vector2 80.0 20.0
     align    = Label.Center
 

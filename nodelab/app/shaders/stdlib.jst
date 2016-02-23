@@ -7,6 +7,8 @@ uniform vec3  objectId;
 uniform vec2  size;
 varying vec2  luv;
 
+#define M_PI 3.1415926535897932384626433832795
+
 
 //////////////////////////////////////
 // Combine distance field functions //
@@ -44,7 +46,7 @@ float sdf_shrink    (float size, float d)  { return d + size; }
 //////////////////////////////
 
 float sdf_pie(vec2 p, float angle) {
-    angle = radians(angle) / 2.0;
+    angle = angle / 2.0;
     vec2 n = vec2(cos(angle), sin(angle));
     return abs(p).x * n.x + p.y*n.y;
 }
@@ -204,6 +206,14 @@ vec3 hsv2rgb(vec3 c) {
 float sdf_aa(float d) {
     float anti = fwidth(d) * aa;
     return 1.0 - smoothstep(-anti, anti, d);
+}
+
+float sdf_sharp(float d) {
+    if (d < 0.5) {
+        return 1.0;
+    } else {
+        return 0.0;
+    }
 }
 
 vec2 cartesian2polar (vec2 p) {

@@ -1,26 +1,32 @@
 $$         = require('common')
 colors     = require('colors')
-vs         = require('shaders/port.vert')()
+vs         = require('shaders/sdf.vert')()
 fs         = require('shaders/port.frag')()
+fs_self    = require('shaders/port_self.frag')()
 
-nodeRadius = 30.0
+nodeRadius = 25.0
 colorFar   = colors[2]
-height     = 30.0
-width      = 30.0
 halfWidth  = width / 2.0
 margin     = 0.0
 dist       = nodeRadius + halfWidth + margin
 nodeSize   = 30.0
 
+height     = 50.0
+width      = 50.0
+
 class Port
-  constructor: (widgetId) ->
+  constructor: (widgetId, isSelf) ->
+    @isSelf = isSelf
     @uniforms =
+      size:      { type: 'v2', value: new THREE.Vector2(width, height) }
       color:     {type: 'v4', value: new (THREE.Color)('red')}
       colorFar:  {type: 'v4', value: colorFar}
       highlight: {type: 'i',  value: 0}
       mouseDist: {type: 'f',  value: 0.0}
       nodeSize:  {type: 'f',  value: nodeSize}
       portSize:  {type: 'f',  value: height}
+      portCount: {type: 'i',  value: 1}
+      angle:     {type: 'f',  value: 1}
       objectId:  {type: 'v3', value: new (THREE.Vector3)(widgetId % 256 / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0)}
 
     @uniforms[k] = v for k, v of $$.commonUniforms
@@ -28,18 +34,18 @@ class Port
     @mesh = new (THREE.Mesh)(new (THREE.PlaneBufferGeometry)(width, height), new (THREE.ShaderMaterial)(
       uniforms: @uniforms
       vertexShader: vs
-      fragmentShader: fs
+      fragmentShader: if isSelf then fs_self else fs
       transparent: true
       blending: THREE.NormalBlending
-      side: THREE.DoubleSide))
+      side: THREE.DoubleSide
+      derivatives:    true
+      ))
 
     @setAngle 0
 
-  setAngle: (angle) ->
-    @angle = angle
-    @mesh.position.x = Math.cos(angle) * dist
-    @mesh.position.y = Math.sin(angle) * dist
-    @mesh.rotation.z = angle
+  setAngle: (angle, count) ->
+    @uniforms.angle.value     = angle
+    @uniforms.portCount.value = count
 
   setColor:        (color)     -> @uniforms.color.value     = colors[color]
   setHighlight:    (val)       -> @uniforms.highlight.value = if val then 1 else 0

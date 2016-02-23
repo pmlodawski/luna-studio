@@ -16,6 +16,7 @@ import qualified JS.Widget                as UI
 
 data Port = Port { _portRef     :: AnyPortRef
                  , _angleVector :: Vector2 Double
+                 , _portCount   :: Int
                  , _color       :: Int
                  , _highlight   :: Bool
                  } deriving (Eq, Show, Typeable, Generic)

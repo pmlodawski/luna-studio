@@ -32,6 +32,7 @@ import           Reactive.State.Global         (State)
 import qualified BatchConnector.Commands       as BatchCmd
 
 import           Empire.API.Data.PortRef (InPortRef(..), OutPortRef(..), AnyPortRef(..))
+import           Empire.API.Data.Port    (InPort (Self))
 import qualified Empire.API.Data.Node    as Node
 
 
@@ -84,13 +85,16 @@ handleMove coord (Connecting sourceRef sourceWidget sourceVector nodePos _ (Drag
     start'   <- zoom Global.camera $ Camera.screenToWorkspaceM start
     current' <- zoom Global.camera $ Camera.screenToWorkspaceM coord
     zoom Global.uiRegistry $ do
-        let newVector = sourceVector + (current' - nodePos)
-        UICmd.update sourceWidget (PortModel.angleVector .~ newVector)
-        let startLine = Vector2 sx sy where
-            angle     = toAngle newVector
-            sx        = (nodePos ^. x) + outerPos * cos angle
-            sy        = (nodePos ^. y) + outerPos * sin angle
-            outerPos  = portOuterBorder + distFromPort
+        startLine <- case sourceRef of
+            (InPortRef' (InPortRef _ Self)) -> return $ nodePos
+            _                   -> do
+                newVector <- UICmd.get sourceWidget PortModel.angleVector
+                let
+                    angle     = toAngle $ newVector
+                    sx        = (nodePos ^. x) + outerPos * cos angle
+                    sy        = (nodePos ^. y) + outerPos * sin angle
+                    outerPos  = 22.0
+                return $ Vector2 sx sy
         showCurrentConnection startLine current'
     updateConnections
 

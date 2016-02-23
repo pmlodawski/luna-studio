@@ -1,128 +1,44 @@
 #ifdef GL_ES
 precision highp float;
 #endif
-
-varying vec2  pos;
-
-uniform float camFactor;
 uniform int   selected;
-uniform float mouseDist;
-uniform vec2  nodeSize;
 
-uniform vec3  insideColor;
 uniform vec3  unselectedColor;
 uniform vec3  selectedColor;
-uniform vec3  focusedColor;
-
-uniform float radiusTop;
-uniform float radiusBottom;
-
-uniform int   antialias;
-uniform int   objectMap;
-uniform vec3  objectId;
-
-uniform float  alpha;
-
-void main() {
-    float bg_gray    = 0.1;
-    vec3  color      = unselectedColor;
-    float brighterBy = 0.7;
-
-    if (selected == 1) {
-        brighterBy = 0.3;
-        color      = selectedColor;
-    } else if (selected == 2) {
-        brighterBy = 0.2;
-        color      = focusedColor;
-    }
-
-    float distMix    =  0.0;
-    float gradRange  = 60.0;
-    float colorRange = 27.0;
-
-    if (mouseDist < colorRange) {
-        distMix = 1.0;
-    } else if (mouseDist < gradRange) {
-        float coef  = (mouseDist - colorRange) / (gradRange - colorRange);
-        float coefR = 1.0 - coef;
-        distMix = coefR * coefR * coefR;
-    }
-    color *= 1.0 + distMix * brighterBy;
-
-    vec4 colorShow = vec4(color, 1.0);
-
-    // node geometry starts here
-
-    float camFactorDelta = camFactor - 1.0;
-    float rimCamFactor   = 1.0;
-    float blurCamFactor  = 1.0;
-
-    if (camFactorDelta > 0.0) {
-        rimCamFactor  += camFactorDelta / 50.0;
-        blurCamFactor += camFactorDelta /  1.5;
-    } else if (camFactorDelta < 0.0) {
-        rimCamFactor  += camFactorDelta / 10.0;
-        blurCamFactor += camFactorDelta /  1.1;
-    }
-
-    vec2  posN         = pos * nodeSize;
-    float dist_squared = dot(posN, posN);
-
-    float r            = min(min(posN.x, posN.y), min(nodeSize.x - posN.x, nodeSize.y - posN.y));
-
-    vec2 posE;
-    if(posN.x < radiusTop && posN.y < radiusTop) { // TOP LEFT
-        posE = posN + vec2(-radiusTop , -radiusTop);
-        r    = radiusTop - sqrt(dot(posE, posE));
-    } else if(posN.x < radiusBottom && posN.y > nodeSize.y - radiusBottom) { // BOTTOM LEFT
-        posE = posN + vec2(-radiusBottom, -nodeSize.y + radiusBottom);
-        r    = radiusBottom - sqrt(dot(posE, posE));
-    } else if(posN.x > nodeSize.x - radiusTop && posN.y < radiusTop) { // TOP RIGHT
-        posE = posN + vec2(-nodeSize.x + radiusTop, - radiusTop);
-        r    = radiusTop - sqrt(dot(posE, posE));
-    } else if(posN.x > nodeSize.x - radiusBottom && posN.y > nodeSize.y - radiusBottom) { // BOTTOM RIGHT
-        posE = posN + vec2(-nodeSize.x + radiusBottom, -nodeSize.y + radiusBottom);
-        r    = radiusBottom - sqrt(dot(posE, posE));
-    }
-
-    float blurWidth  =  1.0;
-    float rimWidth   =  5.0;
-    float r4         =  0.0;
-    float r3         =      blurWidth / blurCamFactor;
-    float r2         = r3 +  rimWidth /  rimCamFactor;
-    float r1         = r2 + blurWidth / blurCamFactor;
-
-    float d_blur_r34 = 1.0;
-    float d_blur_r12 = 0.0;
 
 
+precision mediump float;
 
-    if (antialias != 0) {
-        d_blur_r34 = 1.0 - (r - r3) / (r4 - r3);
-        d_blur_r12 =       (r - r1) / (r2 - r1);
-    }
+uniform float angle;
+uniform int portCount;
+uniform vec4 color;
 
-    if (objectMap == 0) {
-        if (r > r1) {
-            colorShow = vec4(insideColor, 1.0);
-        } else if (r > r2) {
-            vec3 mix = insideColor * (1.0 - d_blur_r12) + color * d_blur_r12;
-            colorShow = vec4(mix, 1.0);
-        } else if (r > r3) {
-            colorShow = vec4(color, 1.0);
-        } else if (r > r4) {
-            colorShow = vec4(color, d_blur_r34);
-        } else {
-            // colorShow = vec4(0.1, 0.1, 0.0, 1.0);
-            discard;
-        }
+<%= require('shaders/stdlib')() %>
+
+void main(void) {
+
+    vec3 local   = vec3(luv * size, 0.0);
+    vec3 ulocal  = local * dpr;
+    vec2 p       = ulocal.xy - size / 2.0;
+
+
+    if (objectMap == 1) {
+        gl_FragColor = vec4(objectId, sdf_sharp(sdf_ball(p, 20.0)));
     } else {
-        if (r > r4) {
-            colorShow = vec4(objectId, 1.0);
-        } else {
-            discard;
-        }
-    }
 
-    gl_FragColor = vec4(colorShow.xyz, colorShow.w * alpha);
+        float selectedShape = sdf_merge(
+                sdf_ring(p, 25.0, 3.0),
+                sdf_intersect(
+                    sdf_pie(sdf_rotateCCW(p, 1.0 * M_PI / 4.0), M_PI / 2.0),
+                    sdf_subtract(
+                      sdf_ball(p, 22.0),
+                      sdf_rect(p + vec2(-12.5, 12.5), vec2(25.0, 25.0), vec4(0.0, 0.0, 0.0, 5.0))
+
+                    )
+                )
+            );
+        vec4 portRing = vec4(unselectedColor, sdf_aa(sdf_ring(p, 20.0, 3.0)));
+        gl_FragColor = portRing;
+        gl_FragColor = mix(gl_FragColor, vec4(selectedColor, 1.0), float(selected) * sdf_aa(selectedShape));
+    }
 }

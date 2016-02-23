@@ -9,6 +9,7 @@ import qualified Utils.Nodes                   as NodeUtils
 import           Data.IntMap.Lazy              (IntMap(..))
 import qualified Data.IntMap.Lazy              as IntMap
 import           Data.Map                      (Map)
+import           Data.Hashable                 (hash)
 import qualified Data.Map                      as Map
 import           Data.Ord                      (comparing)
 import           Data.Fixed                    (mod')
@@ -50,6 +51,18 @@ import qualified Empire.API.Data.Connection    as Connection
 import           Empire.API.Data.ValueType     (ValueType)
 import           Empire.API.Data.Port          (PortId(..))
 import qualified Empire.API.Data.Port          as Port
+import qualified Empire.API.Data.ValueType       as ValueType
+
+
+vtToColor vt = case vt ^. ValueType.toEnum of
+     ValueType.DiscreteNumber -> 1
+     ValueType.ContinuousNumber -> 2
+     ValueType.String -> 3
+     ValueType.Bool -> 4
+     ValueType.Other -> hash (vt ^. ValueType.valueTypeName) `mod` 16
+
+colorPort port = vtToColor $ port ^. Port.valueType
+
 
 updateConnNodes :: [NodeId] -> Command Global.State ()
 updateConnNodes nodeIds = pureCommand $ \state -> let
@@ -83,20 +96,22 @@ updateConnections = do
                                                       . (ConnectionModel.visible .~ visible)
                                                       . (ConnectionModel.color   .~ color)
 
-colorVT _ = 11
+outerPos (InPortRef _ Port.Self) = 0.0
+outerPos _ = 22.0
 
 getConnectionLine :: IntMap (Vector2 Double) -> Map AnyPortRef Double -> Map AnyPortRef ValueType -> OutPortRef  -> InPortRef -> (Vector2 Double, Vector2 Double, Bool, Int)
 getConnectionLine nodePos portAngles portTypes srcPortRef dstPortRef = (srcWs, dstWs, visible, color) where
     srcNWs@(Vector2 xSrcN ySrcN) = nodePos IntMap.! (srcPortRef ^. PortRef.srcNodeId)
     dstNWs@(Vector2 xDstN yDstN) = nodePos IntMap.! (dstPortRef ^. PortRef.dstNodeId)
-    outerPos                     = portOuterBorder + distFromPort
+    outerSrcPos                  = 20.0
+    outerDstPos                  = outerPos dstPortRef
     angleSrc                     = Map.findWithDefault missingPortPos (OutPortRef' srcPortRef) portAngles
     angleDst                     = Map.findWithDefault missingPortPos (InPortRef' dstPortRef) portAngles
-    srcWs                        = Vector2 (xSrcN + outerPos * cos angleSrc) (ySrcN + outerPos * sin angleSrc)
-    dstWs                        = Vector2 (xDstN + outerPos * cos angleDst) (yDstN + outerPos * sin angleDst)
+    srcWs                        = Vector2 (xSrcN + outerSrcPos * cos angleSrc) (ySrcN + outerSrcPos * sin angleSrc)
+    dstWs                        = Vector2 (xDstN + outerDstPos * cos angleDst) (yDstN + outerDstPos * sin angleDst)
     delta                        = dstNWs - srcNWs
     visible                      = lengthSquared delta > 4 * portOuterBorderSquared
-    color                        = fromMaybe missingPortColor $ colorVT <$> portTypes ^? ix (OutPortRef' srcPortRef)
+    color                        = fromMaybe missingPortColor $ vtToColor <$> portTypes ^? ix (OutPortRef' srcPortRef)
     missingPortPos               = -pi / 2.0
     missingPortColor             = 13
 
@@ -148,25 +163,24 @@ connectionVector map src dst = dstPos - srcPos where
 angleToDimVec :: Double -> Vector2 Double
 angleToDimVec angle = (/ 10.0) <$> Vector2 (cos angle) (-sin angle)
 
-portDefaultAngle :: Int -> PortId -> Int -> Vector2 Double
-portDefaultAngle numPorts (OutPortId _) _ = angleToDimVec angleMod where
-    angleMod = 0.0 -- TODO: only one out port supported for now
-portDefaultAngle numPorts (InPortId portId) portNum = angleToDimVec angleMod where
-    angleMod = angle `mod'` (2.0 * pi)
-    angle = (fromIntegral portNum) * (pi / (fromIntegral $ numPorts + 1)) + delta
-    delta = pi / 2.0 -- TODO: OutputPort -> 3.0 * pi / 2.0
+portDefaultAngle :: Int -> PortId -> Vector2 Double
+portDefaultAngle numPorts (OutPortId _) = angleToDimVec $ 0.0
+portDefaultAngle numPorts (InPortId (Port.Arg portNum)) = angleToDimVec angle where
+    angle = delta * (fromIntegral portNum) + delta / 2.0 + pi / 2.0
+    delta = pi / (fromIntegral numPorts)
+portDefaultAngle numPorts (InPortId (Port.Self)) = angleToDimVec 0.0
 
-defaultAngles :: Command Global.State (Map AnyPortRef (Vector2 Double))
-defaultAngles = do
-    nodes <- use $ Global.graph . Graph.nodes
-
-    let angles = calculateAngles <$> nodes where
-            calculateAngles node = portAngle <$> (zip [1..] $ Map.keys $ node ^. Node.ports) where
-                portAngle (portIx, portId) = (PortRef.toAnyPortRef nodeId portId, portDefaultAngle portNum portId portIx) where
-                nodeId = node ^. Node.nodeId
-                portNum = length $ node ^. Node.ports
-
-    return $ Map.fromList $ concat $ angles
+-- defaultAngles :: Command Global.State (Map AnyPortRef (Vector2 Double))
+-- defaultAngles = do
+--     nodes <- use $ Global.graph . Graph.nodes
+--
+--     let angles = calculateAngles <$> nodes where
+--             calculateAngles node = portAngle <$> (zip [1..] $ Map.keys $ node ^. Node.ports) where
+--                 portAngle (portIx, portId) = (PortRef.toAnyPortRef nodeId portId, portDefaultAngle portNum portId portIx) where
+--                 nodeId = node ^. Node.nodeId
+--                 portNum = length $ node ^. Node.ports
+--
+--     return $ Map.fromList $ concat $ angles
 
 portTypes :: Command Global.State (Map AnyPortRef ValueType)
 portTypes = do
@@ -178,25 +192,25 @@ portTypes = do
                 nodeId = node ^. Node.nodeId
 
 updatePortAngles :: Command Global.State ()
-updatePortAngles = do
-    connectionsMap <- use $ Global.graph . Graph.connectionsMap
-    nodePositions  <- zoom Global.uiRegistry nodePositionMap
-
-    let connectionTuples conn          = [ (OutPortRef' $ conn ^. Connection.src, InPortRef'  $ conn ^. Connection.dst)
-                                         , (InPortRef'  $ conn ^. Connection.dst, OutPortRef' $ conn ^. Connection.src) ]
-        connections                    = sortAndGroup . concat $ connectionTuples <$> connectionsMap
-
-    let calculateAngle portRef targets = sum $ fmap explode $ connectionVector nodePositions portRef <$> targets
-        connectedAngles                = Map.mapWithKey calculateAngle connections
-
-    defAngles <- defaultAngles
-
-    let angles = Map.union connectedAngles defAngles
-    portWidgets <- zoom Global.uiRegistry portRefToWidgetMap
-
-    forM_ (Map.toList angles) $ \(portRef, vector) -> do
-        let widgetId = portWidgets ^? ix portRef
-        forM_ widgetId $ \widgetId -> zoom Global.uiRegistry $ UICmd.update widgetId (PortModel.angleVector .~ vector)
+updatePortAngles = return () -- FIXME: WYRZUĆ MNIE
+    -- connectionsMap <- use $ Global.graph . Graph.connectionsMap
+    -- nodePositions  <- zoom Global.uiRegistry nodePositionMap
+    --
+    -- let connectionTuples conn          = [ (OutPortRef' $ conn ^. Connection.src, InPortRef'  $ conn ^. Connection.dst)
+    --                                      , (InPortRef'  $ conn ^. Connection.dst, OutPortRef' $ conn ^. Connection.src) ]
+    --     connections                    = sortAndGroup . concat $ connectionTuples <$> connectionsMap
+    --
+    -- let calculateAngle portRef targets = sum $ fmap explode $ connectionVector nodePositions portRef <$> targets
+    --     connectedAngles                = Map.mapWithKey calculateAngle connections
+    --
+    -- defAngles <- defaultAngles
+    --
+    -- let angles = Map.union connectedAngles defAngles
+    -- portWidgets <- zoom Global.uiRegistry portRefToWidgetMap
+    --
+    -- forM_ (Map.toList angles) $ \(portRef, vector) -> do
+    --     let widgetId = portWidgets ^? ix portRef
+    --     forM_ widgetId $ \widgetId -> zoom Global.uiRegistry $ UICmd.update widgetId (PortModel.angleVector .~ vector)
 
 allNodes :: Command UIRegistry.State [WidgetFile Model.Node]
 allNodes = UIRegistry.lookupAllM

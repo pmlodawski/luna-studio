@@ -3,7 +3,7 @@
 var $$       = require('common');
 var features = require('features');
 
-var vs = require('shaders/node.vert')();
+var vs = require('shaders/sdf.vert')();
 var fs = require('shaders/node.frag')();
 
 var evs = require('shaders/expandedNode.vert')();
@@ -37,7 +37,7 @@ function Node(id, position, z, widgetId) {
     selected:          { type: 'i',  value:                               0 },
     mouseDist:         { type: 'f',  value:                             0.0 },
     expanded:          { type: 'f',  value:                             0.0 },
-    nodeSize:          { type: 'v2', value: new THREE.Vector2(2 * collapsedRadius, 2 * collapsedRadius) },
+    size:              { type: 'v2', value: new THREE.Vector2(60.0, 60.0) },
     radiusTop:         { type: 'f',  value:                 collapsedRadius },
     radiusBottom:      { type: 'f',  value:                 collapsedRadius },
     insideColor:       { type: 'c',  value:                     insideColor },
@@ -71,7 +71,8 @@ function Node(id, position, z, widgetId) {
       fragmentShader: fs,
       transparent:    true,
       blending:       THREE.NormalBlending,
-      side:           THREE.DoubleSide
+      side:           THREE.DoubleSide,
+      derivatives:    true
     })
   );
   this.node.position.set(-30, -30, 0);
@@ -104,7 +105,7 @@ function Node(id, position, z, widgetId) {
   this.moveTo(position.x, position.y);
   // this.updateMouse(position.x - 1000.0, position.y - 1000.0);
 
-  this.collapsedNodeSize = new THREE.Vector2( 2 * collapsedRadius,  2 * collapsedRadius);
+  this.collapsedNodeSize = new THREE.Vector2(60.0, 60.0);
   this.expandedNodeSize  = new THREE.Vector2(200.0, 180.0);
 
   this.node.scale.x = this.collapsedNodeSize.x;

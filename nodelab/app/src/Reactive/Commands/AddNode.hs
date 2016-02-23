@@ -9,6 +9,7 @@ import           Utils.PreludePlus
 import           Utils.Vector
 
 import           Control.Monad.State             hiding (State)
+import           Data.Hashable                   (hash)
 import qualified Data.Map.Lazy                   as Map
 import qualified Data.Text.Lazy                  as Text
 import           GHC.Float                       (double2Float)
@@ -39,7 +40,7 @@ import qualified UI.Handlers.Toggle              as Toggle
 import           Reactive.Commands.Command       (Command, performIO)
 import           Reactive.Commands.EnterNode     (enterNode)
 import           Reactive.Commands.Graph         (focusNode, nodeIdToWidgetId, portDefaultAngle, updateNodeMeta,
-                                                  updatePortAngles)
+                                                  updatePortAngles, colorPort)
 -- import           Reactive.Commands.PendingNode   (unrenderPending)
 import           Reactive.Commands.RemoveNode    (removeSelectedNodes)
 import qualified Reactive.Commands.UIRegistry    as UICmd
@@ -71,7 +72,7 @@ import           Empire.API.Data.DefaultValue    (Value (..))
 import qualified Empire.API.Data.DefaultValue    as DefaultValue
 import           Empire.API.Data.Node            (Node, NodeId)
 import qualified Empire.API.Data.Node            as Node
-import           Empire.API.Data.Port            (InPort (..), Port (..), PortId (..))
+import           Empire.API.Data.Port            (InPort (..), InPort (..), OutPort (..), Port (..), PortId (..))
 import qualified Empire.API.Data.Port            as Port
 import           Empire.API.Data.PortRef         (AnyPortRef (..), InPortRef (..), toAnyPortRef)
 import           Empire.API.Data.ValueType       (ValueType (..))
@@ -84,10 +85,6 @@ addNode node = do
     zoom Global.graph $ modify (Graph.addNode node)
     zoom Global.uiRegistry $ registerNode node
     updatePortAngles
-
-colorVT _ = 11
-colorPort (Port.InPortId Port.Self) = 12
-colorPort _ = 11
 
 registerNode :: Node -> Command UIRegistry.State ()
 registerNode node = do
@@ -104,11 +101,24 @@ nodePorts id = do
     filterM isPort children
 
 makePorts :: Node -> [PortModel.Port]
-makePorts node = makePort <$> (zip [1..] $ Map.elems $ node ^. Node.ports) where
+makePorts node = makePort <$> ports where
     nodeId  = node ^. Node.nodeId
-    makePort (portIx, port) = PortModel.Port portRef angle (colorPort $ port ^. Port.portId ) False where
-        portRef = toAnyPortRef nodeId (port ^. Port.portId)
-        angle   = portDefaultAngle ((length $ node ^. Node.ports) - 1) (port ^. Port.portId) portIx
+    makePort port = PortModel.Port portRef angle (portCount portId) (colorPort port) False where
+        portRef = toAnyPortRef nodeId portId
+        angle   = portDefaultAngle (portCount portId) (port ^. Port.portId)
+        portId  = port ^. Port.portId
+    ports = Map.elems $ node ^. Node.ports
+    portIds = Map.keys $  node ^. Node.ports
+    portCount :: PortId -> Int
+    portCount (OutPortId _) = sum $ fmap isOut portIds
+    portCount (InPortId  _) = sum $ fmap isIn  portIds
+    isIn :: PortId -> Int
+    isIn (OutPortId _) = 0
+    isIn (InPortId (Arg _)) = 1
+    isIn (InPortId Self) = 0
+    isOut :: PortId -> Int
+    isOut (OutPortId _) = 1
+    isOut (InPortId  _) = 0
 
 displayPorts :: WidgetId -> Node -> Command UIRegistry.State ()
 displayPorts id node = do
