@@ -3,6 +3,7 @@ precision mediump float;
 uniform float angle;
 uniform int portCount;
 uniform vec4 color;
+uniform int highlight;
 
 <%= require('shaders/stdlib')() %>
 
@@ -16,6 +17,6 @@ void main(void) {
     if (objectMap == 1) {
         gl_FragColor = vec4(objectId, sdf_sharp(opacity));
     } else {
-        gl_FragColor = vec4(color.xyz, sdf_aa(opacity));
+        gl_FragColor = vec4(color.xyz + vec3(0.3,0.3,0.3) * float(highlight), sdf_aa(opacity));
     }
 }

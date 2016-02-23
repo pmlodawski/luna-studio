@@ -17,11 +17,21 @@ void main(void) {
     float span = M_PI / float(portCount);
     p = sdf_rotateCCW(p, angle + M_PI / 2.0);
 
-    float opacity = sdf_intersect(sdf_pie(p, span*0.8), sdf_ring(p, 20.0 + float(objectMap)*5.0, 3.0 + float(objectMap)*10.0));
+    float spacing = 2.0;
+    float opacity = sdf_intersect(
+        sdf_halfplaneRight(sdf_rotateCCW(p, span / 2.0) + vec2(spacing, 0.0)),
+        sdf_intersect(
+			sdf_halfplaneLeft(sdf_rotateCW(p, span / 2.0) - vec2(spacing, 0.0)),
+	        sdf_intersect(
+    	        sdf_pie(p, span),
+        	    sdf_ring(p, 20.0 + float(objectMap)*10.0, 3.0 + float(objectMap)*10.0)
+	        )
+        )
+    );
 
     if (objectMap == 1) {
         gl_FragColor = vec4(objectId, sdf_sharp(opacity));
     } else {
-        gl_FragColor = vec4(color.xyz + 0.1 * float(highlight), sdf_aa(opacity));
+        gl_FragColor = vec4(color.xyz + vec3(0.3,0.3,0.3) * float(highlight), sdf_aa(opacity));
     }
 }
