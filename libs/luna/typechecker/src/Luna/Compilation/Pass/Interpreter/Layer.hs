@@ -23,11 +23,11 @@ makeLenses ''InterpreterLayer
 instance Default InterpreterLayer where
     def = InterpreterLayer True False Nothing
 
-data Interpreter = Interpreter deriving (Show, Eq, Ord)
+data InterpreterData = InterpreterData deriving (Show, Eq, Ord)
 
-type instance LayerData layout Interpreter t = InterpreterLayer
+type instance LayerData layout InterpreterData t = InterpreterLayer
 
-instance Monad m => Creator    m (Layer layout Interpreter a) where create = return $ Layer def
-instance Monad m => Destructor m (Layer layout Interpreter t) where destruct _ = return ()
+instance Monad m => Creator    m (Layer layout InterpreterData a) where create = return $ Layer def
+instance Monad m => Destructor m (Layer layout InterpreterData t) where destruct _ = return ()
 
 instance Castable InterpreterLayer InterpreterLayer where cast = id ; {-# INLINE cast #-}

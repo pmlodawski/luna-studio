@@ -36,7 +36,7 @@ import           Data.GraphViz.Printing                  (renderDot, toDot)
 import           Data.GraphViz.Printing                  (PrintDot)
 import           Data.GraphViz.Types.Canonical
 
-import           Luna.Compilation.Pass.Interpreter.Layer (Interpreter (..))
+import           Luna.Compilation.Pass.Interpreter.Layer (InterpreterData (..))
 import qualified Luna.Compilation.Pass.Interpreter.Layer as InterpreterLayer
 import           Luna.Evaluation.Runtime                 (Dynamic, Static)
 import           Luna.Syntax.AST.Decl.Function           (FunctionPtr (..))
@@ -187,9 +187,9 @@ toGraphViz name net = DotGraph { strictGraph     = False
               node     = draftNodeByIx nix
               ins      = node # Inputs
               succs    = node # Succs
-              dirty    = if (node # Interpreter) ^. InterpreterLayer.dirty    then " dirty" else " clean"
-              required = if (node # Interpreter) ^. InterpreterLayer.required then " req"   else ""
-              value    = fromMaybe "" $ (\v -> " " <> show v) <$> (node # Interpreter) ^. InterpreterLayer.value
+              dirty    = if (node # InterpreterData) ^. InterpreterLayer.dirty    then " dirty" else " clean"
+              required = if (node # InterpreterData) ^. InterpreterLayer.required then " req"   else ""
+              value    = fromMaybe "" $ (\v -> " " <> show v) <$> (node # InterpreterData) ^. InterpreterLayer.value
               interpr  = dirty <> required <> value
               succs'   = (net ^.) ∘ focus <$> succs :: [Link (NetLayers a :<: Draft Static)]
 

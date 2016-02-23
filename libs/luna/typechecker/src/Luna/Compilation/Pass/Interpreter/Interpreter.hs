@@ -20,7 +20,7 @@ import           Development.Placeholders
 import           Luna.Compilation.Pass.Interpreter.Env           (Env)
 import qualified Luna.Compilation.Pass.Interpreter.Env           as Env
 import           Luna.Compilation.Pass.Interpreter.Class         (InterpreterMonad, InterpreterT, runInterpreterT)
-import           Luna.Compilation.Pass.Interpreter.Layer         (Interpreter (..), InterpreterLayer)
+import           Luna.Compilation.Pass.Interpreter.Layer         (InterpreterData (..), InterpreterLayer)
 import qualified Luna.Compilation.Pass.Interpreter.Layer         as Layer
 
 import           Luna.Evaluation.Runtime                         (Dynamic, Static)
@@ -35,18 +35,18 @@ import           Type.Inference
 
 
 
-#define InterpreterCtx(m, ls, term) ( ls   ~ NetLayers a                                    \
-                                    , term ~ Draft Static                                   \
-                                    , ne   ~ Link (ls :<: term)                             \
-                                    , BiCastable e ne                                       \
-                                    , BiCastable n (ls :<: term)                            \
-                                    , MonadIO m                                             \
-                                    , MonadBuilder (Hetero (VectorGraph n e c)) m           \
-                                    , NodeInferable m (ls :<: term)                         \
-                                    , TermNode Lam  m (ls :<: term)                         \
-                                    , HasProp Interpreter (ls :<: term)                     \
-                                    , Prop    Interpreter (ls :<: term) ~ InterpreterLayer  \
-                                    , InterpreterMonad (Env (Ref Node (ls :<: term))) m     \
+#define InterpreterCtx(m, ls, term) ( ls   ~ NetLayers a                                        \
+                                    , term ~ Draft Static                                       \
+                                    , ne   ~ Link (ls :<: term)                                 \
+                                    , BiCastable e ne                                           \
+                                    , BiCastable n (ls :<: term)                                \
+                                    , MonadIO m                                                 \
+                                    , MonadBuilder (Hetero (VectorGraph n e c)) m               \
+                                    , NodeInferable m (ls :<: term)                             \
+                                    , TermNode Lam  m (ls :<: term)                             \
+                                    , HasProp InterpreterData (ls :<: term)                     \
+                                    , Prop    InterpreterData (ls :<: term) ~ InterpreterLayer  \
+                                    , InterpreterMonad (Env (Ref Node (ls :<: term))) m         \
                                     )
 
 
@@ -61,16 +61,16 @@ succ ref = do
     node <- read ref
     mapM (follow source) $ node # Succs
 
-isDirty :: (Prop Interpreter n ~ InterpreterLayer, HasProp Interpreter n) => n -> Bool
-isDirty node = (node # Interpreter) ^. Layer.dirty
+isDirty :: (Prop InterpreterData n ~ InterpreterLayer, HasProp InterpreterData n) => n -> Bool
+isDirty node = (node # InterpreterData) ^. Layer.dirty
 
-isRequired :: (Prop Interpreter n ~ InterpreterLayer, HasProp Interpreter n) => n -> Bool
-isRequired node = (node # Interpreter) ^. Layer.required
+isRequired :: (Prop InterpreterData n ~ InterpreterLayer, HasProp InterpreterData n) => n -> Bool
+isRequired node = (node # InterpreterData) ^. Layer.required
 
 markDirty :: InterpreterCtx(m, ls, term) => Ref Node (ls :<: term) -> m ()
 markDirty ref = do
     node <- read ref
-    write ref (node & prop Interpreter . Layer.dirty .~ True)
+    write ref (node & prop InterpreterData . Layer.dirty .~ True)
 
 followDirty :: InterpreterCtx(m, ls, term) => Ref Node (ls :<: term) -> m ()
 followDirty ref = do
@@ -100,18 +100,18 @@ evaluateNodes :: InterpreterCtx(m, ls, term) => [Ref Node (ls :<: term)] -> m ()
 evaluateNodes = mapM_ evaluateNode
 
 
-#define PassCtx(m, ls, term) ( ls   ~ NetLayers a                                   \
-                             , term ~ Draft Static                                  \
-                             , ne   ~ Link (ls :<: term)                            \
-                             , BiCastable e ne                                      \
-                             , BiCastable n (ls :<: term)                           \
-                             , MonadIO (m)                                          \
-                             , MonadBuilder ((Hetero (VectorGraph n e c))) (m)      \
-                             , NodeInferable (m) (ls :<: term)                      \
-                             , TermNode Lam  (m) (ls :<: term)                      \
-                             , MonadFix (m)                                         \
-                             , HasProp Interpreter (ls :<: term)                    \
-                             , Prop    Interpreter (ls :<: term) ~ InterpreterLayer \
+#define PassCtx(m, ls, term) ( ls   ~ NetLayers a                                       \
+                             , term ~ Draft Static                                      \
+                             , ne   ~ Link (ls :<: term)                                \
+                             , BiCastable e ne                                          \
+                             , BiCastable n (ls :<: term)                               \
+                             , MonadIO (m)                                              \
+                             , MonadBuilder ((Hetero (VectorGraph n e c))) (m)          \
+                             , NodeInferable (m) (ls :<: term)                          \
+                             , TermNode Lam  (m) (ls :<: term)                          \
+                             , MonadFix (m)                                             \
+                             , HasProp InterpreterData (ls :<: term)                    \
+                             , Prop    InterpreterData (ls :<: term) ~ InterpreterLayer \
                              )
 
 run :: forall env m ls term ne a n e c. (PassCtx(InterpreterT env m, ls, term), MonadFix m, env ~ Env (Ref Node (ls :<: term)))

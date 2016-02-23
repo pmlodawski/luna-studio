@@ -30,7 +30,7 @@ import           Luna.Syntax.Model.Network.Builder.Term.Class    (NetGraph, NetL
 import           Luna.Syntax.Model.Network.Class                 ()
 import           Luna.Syntax.Model.Network.Term
 
-import           Luna.Compilation.Pass.Interpreter.Layer         (Interpreter (..), InterpreterLayer)
+import           Luna.Compilation.Pass.Interpreter.Layer         (InterpreterData (..), InterpreterLayer)
 import qualified Luna.Compilation.Pass.Interpreter.Layer         as Layer
 import           Luna.Compilation.Pass.Interpreter.Interpreter   as Interpreter
 
@@ -55,8 +55,8 @@ graph1 :: forall term node edge nr er ls m n e c. ( term ~ Draft Static
                                                   , TermNode Str  m (ls :<: term)
                                                   , TermNode Acc  m (ls :<: term)
                                                   , TermNode App  m (ls :<: term)
-                                                  , HasProp Interpreter (ls :<: term)
-                                                  , Prop    Interpreter (ls :<: term) ~ InterpreterLayer
+                                                  , HasProp InterpreterData (ls :<: term)
+                                                  , Prop    InterpreterData (ls :<: term) ~ InterpreterLayer
                                                   , Graph.MonadBuilder (Hetero (VectorGraph n e c)) m
                                                   )
        => m ([nr])
@@ -90,7 +90,7 @@ graph1 = do
 
     forM_ refsToEval (\ref -> do
             (nd :: (ls :<: term)) <- read ref
-            write ref (nd & prop Interpreter . Layer.required .~ True)
+            write ref (nd & prop InterpreterData . Layer.required .~ True)
         )
 
     return refsToEval
