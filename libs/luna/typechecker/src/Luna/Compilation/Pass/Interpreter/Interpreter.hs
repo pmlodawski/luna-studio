@@ -7,7 +7,7 @@ import           Prologue                                        hiding (Getter,
 import           Control.Monad                                   (forM_)
 import           Control.Monad.Event                             (Dispatcher)
 import           Control.Monad.Trans.Identity
-import           Control.Monad.Trans.State
+import           Control.Monad.Trans.State                       hiding (get)
 import           Data.Construction
 import           Data.Graph
 import           Data.Graph.Backend.VectorGraph
@@ -54,12 +54,12 @@ import           Type.Inference
 pre :: InterpreterCtx(m, ls, term) => Ref Node (ls :<: term) -> m [Ref Node (ls :<: term)]
 pre ref = do
     node <- read ref
-    mapM (follow target) $ node # Inputs
+    mapM (follow source) $ node # Inputs
 
 succ :: InterpreterCtx(m, ls, term) => Ref Node (ls :<: term) -> m [Ref Node (ls :<: term)]
 succ ref = do
     node <- read ref
-    mapM (follow source) $ node # Succs
+    mapM (follow target) $ node # Succs
 
 isDirty :: (Prop InterpreterData n ~ InterpreterLayer, HasProp InterpreterData n) => n -> Bool
 isDirty node = (node # InterpreterData) ^. Layer.dirty
@@ -74,7 +74,8 @@ markDirty ref = do
 
 followDirty :: InterpreterCtx(m, ls, term) => Ref Node (ls :<: term) -> m ()
 followDirty ref = do
-    Env.addReqNode ref
+    Env.addNodeToEval ref
+    putStrLn $ "ref " <> show ref
     prevs <- pre ref
     forM_ prevs $ \p -> do
         nd <- read p
@@ -84,11 +85,40 @@ followDirty ref = do
 markSuccessors :: InterpreterCtx(m, ls, term) => Ref Node (ls :<: term) -> m ()
 markSuccessors ref = do
     node <- read ref
+    -- putStrLn $         "markSuccessors " <> show ref
     unless (isDirty node) $ do
+        -- putStrLn $     "marking dirty  " <> show ref
         markDirty ref
         when (isRequired node) $ do
-            Env.addReqNode ref
+            -- putStrLn $ "addReqNode     " <> show ref
+            Env.addNodeToEval ref
             mapM_ markSuccessors =<< succ ref
+
+-- handler
+
+
+nodesToExecute :: InterpreterCtx(m, ls, term) =>  m [Ref Node (ls :<: term)]
+nodesToExecute = do
+    mapM_ followDirty =<< Env.getNodesToEval
+    Env.getNodesToEval
+
+
+reset :: InterpreterMonad (Env node) m => m ()
+reset = Env.clearNodesToEval
+
+
+connect :: InterpreterCtx(m, ls, term) => Ref Node (ls :<: term) -> Ref Node (ls :<: term) -> m ()
+connect prev next = do
+    nd <- read prev
+    isPrevDirty <- isDirty <$> read prev
+    markSuccessors $ if isPrevDirty
+        then prev
+        else next
+
+
+markModified :: InterpreterCtx(m, ls, term) => Ref Node (ls :<: term) -> m ()
+markModified = markSuccessors
+
 
 -- interpreter
 
@@ -114,9 +144,12 @@ evaluateNodes = mapM_ evaluateNode
                              , Prop    InterpreterData (ls :<: term) ~ InterpreterLayer \
                              )
 
-run :: forall env m ls term ne a n e c. (PassCtx(InterpreterT env m, ls, term), MonadFix m, env ~ Env (Ref Node (ls :<: term)))
+run :: forall env m ls term ne a n e c. (PassCtx(InterpreterT env m, ls, term), MonadIO m, MonadFix m, env ~ Env (Ref Node (ls :<: term)))
     => [Ref Node (ls :<: term)] -> m ()
 run refsToEval = do
-    -- ((), env) <- flip runInterpreterT (def :: env) $ markSuccessors ref
-    ((), env) <- flip runInterpreterT (def :: env) $ evaluateNodes refsToEval
+    -- putStrLn $ "g " <> show g
+    putStrLn $ "refsToEval " <> show refsToEval
+    ((), env) <- flip runInterpreterT (def :: env) $ followDirty (head refsToEval)
+    -- ((), env) <- flip runInterpreterT (def :: env) $ evaluateNodes refsToEval
+    putStrLn $ "followDirty " <> show env
     return ()

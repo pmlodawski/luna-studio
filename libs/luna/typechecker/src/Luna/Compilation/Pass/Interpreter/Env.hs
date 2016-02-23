@@ -5,20 +5,20 @@ import           Prologue
 import           Luna.Compilation.Pass.Interpreter.Class
 
 
-data Env node = Env { _reqNodes :: [node]
+data Env node = Env { _nodesToEval :: [node]
                     } deriving Show
 
 makeLenses ''Env
 
 
-addReqNode :: InterpreterMonad (Env node) m => node -> m ()
-addReqNode node = modify_ (over reqNodes (node :))
+addNodeToEval :: InterpreterMonad (Env node) m => node -> m ()
+addNodeToEval node = modify_ (over nodesToEval (node :))
 
-clearReqNodes :: InterpreterMonad (Env node) m => m ()
-clearReqNodes = modify_ (set reqNodes def)
+clearNodesToEval :: InterpreterMonad (Env node) m => m ()
+clearNodesToEval = modify_ (set nodesToEval def)
 
-getReqNodes :: InterpreterMonad (Env node) m => m [node]
-getReqNodes = view reqNodes <$> get
+getNodesToEval :: InterpreterMonad (Env node) m => m [node]
+getNodesToEval = view nodesToEval <$> get
 
 
 instance Default (Env node) where

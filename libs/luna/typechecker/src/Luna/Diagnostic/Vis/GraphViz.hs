@@ -190,7 +190,7 @@ toGraphViz name net = DotGraph { strictGraph     = False
               dirty    = if (node # InterpreterData) ^. InterpreterLayer.dirty    then " dirty" else " clean"
               required = if (node # InterpreterData) ^. InterpreterLayer.required then " req"   else ""
               value    = fromMaybe "" $ (\v -> " " <> show v) <$> (node # InterpreterData) ^. InterpreterLayer.value
-              interpr  = dirty <> required <> value
+              interpr  = " Ref " <> show nix <> dirty <> required <> value
               succs'   = (net ^.) ∘ focus <$> succs :: [Link (NetLayers a :<: Draft Static)]
 
               orphanTgts = selectOrphanTgts (Ref nix) succs -- FIXME[WD] ugliness
