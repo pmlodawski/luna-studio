@@ -5,7 +5,7 @@ import           Empire.Data.Project     (Project)
 import           Empire.API.Data.Project (ProjectId)
 
 import           Control.Monad.State
-import           Control.Monad.Error     (ErrorT(..), runErrorT, throwError)
+import           Control.Monad.Error     (ErrorT(..), runErrorT, throwError, MonadError)
 import           Data.IntMap             (IntMap)
 import qualified Data.IntMap             as IntMap
 
@@ -34,5 +34,5 @@ empire :: (s -> IO (Either Error a, s)) -> Command s a
 empire = ErrorT . StateT
 
 infixr 4 <?!>
-(<?!>) :: Command s (Maybe a) -> Error -> Command s a
+(<?!>) :: MonadError Error m => m (Maybe a) -> Error -> m a
 (<?!>) cmd err = cmd >>= maybe (throwError err) return

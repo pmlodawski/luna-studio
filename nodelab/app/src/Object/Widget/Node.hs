@@ -39,7 +39,7 @@ fromNode :: N.Node -> Node
 fromNode n = case n ^. N.nodeType of
     N.ExpressionNode expression -> Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 expression (n ^. N.name) "" Nothing False False False
     N.InputNode inputIx         -> Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 (Text.pack $ "Input " <> show inputIx) (n ^. N.name) "" (Just tpe) False False False where
-        tpe = Text.pack $ fromMaybe "?" $ n ^? N.ports . ix (P.OutPortId P.All) . P.valueType . VT.valueTypeName
+        tpe = Text.pack $ fromMaybe "?" $ show <$> n ^? N.ports . ix (P.OutPortId P.All) . P.valueType
     N.OutputNode outputIx       -> Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 (Text.pack $ "Output " <> show outputIx) (n ^. N.name) "" Nothing False False False
     N.ModuleNode                -> Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 "Module"              (n ^. N.name) "" Nothing False False False
     N.FunctionNode tpeSig       -> Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 "Function"            (n ^. N.name) (Text.pack $ intercalate " -> " tpeSig) Nothing False False False

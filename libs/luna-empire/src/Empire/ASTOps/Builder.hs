@@ -11,8 +11,9 @@ import           Data.Graph              (Inputs (..))
 import           Data.Direction          (source)
 
 import           Empire.ASTOp            (ASTOp)
+import           Empire.Empire           ((<?!>))
 import           Empire.ASTOps.Remove    (removeNode, safeRemove)
-import           Empire.Data.AST         (ASTEdge, ASTNode, EdgeRef, NodeRef)
+import           Empire.Data.AST         (ASTEdge, ASTNode, EdgeRef, NodeRef, UncoveredNode)
 import           Luna.Syntax.AST.Arg     (Arg)
 import qualified Luna.Syntax.AST.Arg     as Arg
 import           Luna.Syntax.AST.Term    (Acc (..), App (..), Blank (..), Unify (..), Var (..), Str (..))
@@ -22,6 +23,11 @@ functionApplicationNode :: Lens' ASTNode EdgeRef
 functionApplicationNode = covered . lens getter setter where
     getter a   = caseTest a $ match $ \(App f _   ) -> f
     setter a f = caseTest a $ match $ \(App _ args) -> cons $ App f args
+
+accessorTarget :: Lens' ASTNode EdgeRef
+accessorTarget = covered . lens getter setter where
+    getter (a :: UncoveredNode)   = caseTest a $ match $ \(Acc _ t) -> t :: EdgeRef
+    setter (a :: UncoveredNode) t = caseTest a $ match $ \(Acc n _) -> cons $ Acc n t :: UncoveredNode
 
 unpackArguments :: ASTOp m => [Arg (EdgeRef)] -> m [NodeRef]
 unpackArguments args = mapM (Builder.follow source . Arg.__arec) args
@@ -98,7 +104,7 @@ makeAccessorRec targetNodeRef namingNodeRef seenApp = do
     caseTest (uncover namingNode) $ do
         match $ \(Var name) -> do
             accNode <- Builder.acc name targetNodeRef
-            safeRemove namingNodeRef
+            removeNode namingNodeRef
             if seenApp
                 then return accNode
                 else Builder.app accNode ([] :: [Arg NodeRef])
@@ -117,21 +123,32 @@ makeAccessorRec targetNodeRef namingNodeRef seenApp = do
 makeAccessor :: ASTOp m => NodeRef -> NodeRef -> m NodeRef
 makeAccessor targetNodeRef namingNodeRef = makeAccessorRec targetNodeRef namingNodeRef False
 
-unAcc :: forall m. ASTOp m => NodeRef -> m NodeRef
-unAcc ref = do
+unAccRec :: forall m. ASTOp m => NodeRef -> m (Maybe NodeRef)
+unAccRec ref = do
     node <- Builder.read ref
     caseTest (uncover node) $ do
         match $ \(Acc n t) -> do
-            freshBlank <- Builder.blank :: m NodeRef
-            removeNode ref
-            Builder.acc n freshBlank
-        match $ \(App t args) -> do
-            target <- Builder.follow source t
-            replacementRef <- unAcc target
-            case args of
-                [] -> removeNode ref >> return replacementRef
-                as -> Builder.reconnect ref functionApplicationNode replacementRef >> return ref
-        match $ \ANY -> throwError "Self port not connected"
+            oldTarget <- Builder.follow source t
+            replacement <- unAccRec =<< Builder.follow source t
+            case replacement of
+                Just r  -> do
+                    Builder.reconnect ref accessorTarget r
+                    safeRemove oldTarget
+                    return $ Just ref
+                Nothing -> Just <$> Builder.var n
+        match $ \(App t _) -> do
+            oldTarget   <- Builder.follow source t
+            replacement <- unAccRec oldTarget
+            case replacement of
+                Just r -> do
+                    Builder.reconnect ref functionApplicationNode r
+                    safeRemove oldTarget
+                    return $ Just ref
+                Nothing -> throwError "Self port not connected"
+        match $ \ANY -> return Nothing
+
+unAcc :: ASTOp m => NodeRef -> m NodeRef
+unAcc ref = unAccRec ref <?!> "Self port not connected"
 
 unifyWithName :: forall m. ASTOp m => String -> NodeRef -> m NodeRef
 unifyWithName name node = do

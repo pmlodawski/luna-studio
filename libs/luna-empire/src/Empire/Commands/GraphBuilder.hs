@@ -81,15 +81,23 @@ getPortState varMap ref
             match $ \ANY     -> Print.printExpression ref >>= return . WithDefault . Expression
 
 buildPort :: ASTOp m => VarMap -> (PortId, NodeRef) -> m Port
-buildPort varMap (portId, ref) = Port portId (ValueType "Int") <$> getPortState varMap ref
+buildPort varMap (portId, ref) = Port portId (TypeIdent "Int") <$> getPortState varMap ref
+
+buildSelfPort :: ASTOp m => VarMap -> NodeRef -> m (Maybe Port)
+buildSelfPort varMap nodeRef = do
+    node <- Builder.read nodeRef
+    caseTest (uncover node) $ do
+        match $ \(Acc _ t) -> Builder.follow source t >>= fmap Just . buildPort varMap . ((,) $ InPortId Self)
+        match $ \(App t _) -> Builder.follow source t >>= buildSelfPort varMap
+        match $ \(Var _)   -> return . Just $ Port (InPortId Self) AnyType NotConnected
+        match $ \ANY       -> return Nothing
 
 buildPorts :: VarMap -> NodeRef -> Command Graph [Port]
 buildPorts varMap ref = zoom Graph.ast $ runASTOp $ do
-    selfRef  <- maybeToList <$> getSelfNodeRef ref
     args     <- getPositionalNodeRefs ref
-    selfPort <- mapM (buildPort varMap) $ zip [InPortId Self] selfRef
+    selfPort <- maybeToList <$> buildSelfPort varMap ref
     argPorts <- mapM (buildPort varMap) $ zip (InPortId . Arg <$> [0..]) args
-    return $ selfPort ++ argPorts ++ [Port (OutPortId All) (ValueType "Int") NotConnected]
+    return $ selfPort ++ argPorts ++ [Port (OutPortId All) (TypeIdent "Int") NotConnected]
 
 buildConnections :: Command Graph [(OutPortRef, InPortRef)]
 buildConnections = do
