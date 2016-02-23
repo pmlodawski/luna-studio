@@ -47,7 +47,11 @@ openProject name = do
 
 
 help :: Command Global.State ()
-help = return ()
+help = performIO $ openHelp'
 
 feedback :: Command Global.State ()
-feedback = return ()
+feedback = performIO $ openFeedback'
+
+
+foreign import javascript unsafe "_urq.push(['Feedback_Open'])" openFeedback' :: IO ()
+foreign import javascript unsafe "$('.tutorial-box').show()"    openHelp' :: IO ()
