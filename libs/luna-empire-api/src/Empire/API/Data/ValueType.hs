@@ -1,7 +1,10 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Empire.API.Data.ValueType where
 
 import           Data.Binary (Binary)
 import           Prologue
+import           Data.Hashable (Hashable)
 
 data ValueType = AnyType | TypeIdent String deriving (Show, Eq, Generic)
 
@@ -14,6 +17,7 @@ data ValueTypeEnum = DiscreteNumber
 
 instance Binary ValueType
 instance Binary ValueTypeEnum
+instance Hashable ValueType
 makeLenses ''ValueType
 
 toEnum' :: ValueType -> ValueTypeEnum

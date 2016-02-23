@@ -51,7 +51,7 @@ import qualified Empire.API.Data.Connection    as Connection
 import           Empire.API.Data.ValueType     (ValueType)
 import           Empire.API.Data.Port          (PortId(..))
 import qualified Empire.API.Data.Port          as Port
-import qualified Empire.API.Data.ValueType       as ValueType
+import qualified Empire.API.Data.ValueType     as ValueType
 
 
 vtToColor vt = case vt ^. ValueType.toEnum of
@@ -59,7 +59,7 @@ vtToColor vt = case vt ^. ValueType.toEnum of
      ValueType.ContinuousNumber -> 2
      ValueType.String -> 3
      ValueType.Bool -> 4
-     ValueType.Other -> hash (vt ^. ValueType.valueTypeName) `mod` 16
+     ValueType.Other -> hash vt `mod` 16
 
 colorPort port = vtToColor $ port ^. Port.valueType
 
