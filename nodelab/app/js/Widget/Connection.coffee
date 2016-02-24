@@ -43,8 +43,7 @@ class Connection
     @mesh.position.x = dist * x_r + x0 + x_r * scale
     @mesh.position.y = dist * y_r + y0 + y_r * scale
 
-  setVisible: (visible) ->
-    @mesh.visible = visible
+  setVisible: (visible) -> @mesh.visible = visible
   setColor:   (colorId) -> @mesh.material.uniforms.color.value = colors[colorId]
   setFocused: (focused) -> @uniforms.focused.value = if focused then 1 else 0
 
