@@ -12,6 +12,7 @@ data Connection = Connection { _connectionId :: ConnectionId
                              , _visible      :: Bool
                              , _from         :: Vector2 Double
                              , _to           :: Vector2 Double
+                             , _arrow        :: Bool
                              , _color        :: Int
                              } deriving (Eq, Show, Typeable, Generic)
 

@@ -26,16 +26,18 @@ newtype Connection = Connection { unConnection :: JSVal } deriving (PToJSVal, PF
 
 instance UIWidget Connection
 
-foreign import javascript safe "new Connection($1)"         create'    :: WidgetId   -> IO Connection
-foreign import javascript safe "$1.setPos($2, $3, $4, $5, $6)"  setPos     :: Connection -> Double -> Double -> Double -> Double -> Int -> IO ()
-foreign import javascript safe "$1.setVisible($2)"          setVisible :: Connection -> Bool    -> IO ()
-foreign import javascript safe "$1.setColor($2)"            setColor   :: Connection -> Int    -> IO ()
+foreign import javascript safe "new Connection($1)"            create'    :: WidgetId   -> IO Connection
+foreign import javascript safe "$1.setPos($2, $3, $4, $5, $6)" setPos     :: Connection -> Double -> Double -> Double -> Double -> Int -> IO ()
+foreign import javascript safe "$1.setVisible($2)"             setVisible :: Connection -> Bool    -> IO ()
+foreign import javascript safe "$1.setColor($2)"               setColor   :: Connection -> Int     -> IO ()
+foreign import javascript safe "$1.setArrow($2)"               setArrow   :: Connection -> Bool    -> IO ()
 
 create :: WidgetId -> Model.Connection -> IO Connection
 create id model = do
     connection <- create' id
     setPos     connection (model ^. Model.from . x)  (model ^. Model.from . y)  (model ^. Model.to . x)  (model ^. Model.to . y) id
     setVisible connection (model ^. Model.visible)
+    setArrow   connection (model ^. Model.arrow)
     setColor   connection (model ^. Model.color)
     return connection
 
@@ -50,6 +52,7 @@ instance UIDisplayObject Model.Connection where
         connection <- UIR.lookup id :: IO Connection
         setPos     connection (model ^. Model.from . x)  (model ^. Model.from . y)  (model ^. Model.to . x)  (model ^. Model.to . y) id
         setVisible connection (model ^. Model.visible)
+        setArrow   connection (model ^. Model.arrow)
         setColor   connection (model ^. Model.color)
 
 instance UIDisplayObject Model.CurrentConnection where

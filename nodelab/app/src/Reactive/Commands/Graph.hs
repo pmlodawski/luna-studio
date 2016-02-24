@@ -130,13 +130,18 @@ addConnectionM src dst = do
     Global.graph .= newGraph
     return connId
 
+withArrow :: Getter InPortRef Bool
+withArrow = to $ \ref -> case ref of
+    InPortRef _ Port.Self -> False
+    _                     -> True
+
 localConnectNodes :: OutPortRef -> InPortRef -> Command Global.State ()
 localConnectNodes src dst = do
     connectionId <- addConnectionM src dst
     forM_ connectionId $ \connectionId -> do
         nodePositions  <- zoom Global.uiRegistry nodePositionMap
         portAngles     <- zoom Global.uiRegistry portRefToAngleMap
-        zoom Global.uiRegistry $ UICmd.register_ sceneGraphId (ConnectionModel.Connection connectionId True def def def) def
+        zoom Global.uiRegistry $ UICmd.register_ sceneGraphId (ConnectionModel.Connection connectionId True def def (dst ^. withArrow) def) def
     updateConnections
 
 sortAndGroup assocs = Map.fromListWith (++) [(k, [v]) | (k, v) <- assocs]

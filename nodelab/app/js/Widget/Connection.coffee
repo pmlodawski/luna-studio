@@ -14,6 +14,7 @@ class Connection
       connecting: {type: 'i',  value: if widgetId == 3 then 1 else 0}
       size:       {type: 'v2', value: new THREE.Vector2(1.0, 16.0)}
       focused:    {type: 'i',  value: 0}
+      arrow:      {type: 'i',  value: 1}
       objectId:   {type: 'v3', value: new (THREE.Vector3)(widgetId % 256 / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0)}
 
     @uniforms[k] = v for k, v of $$.commonUniforms
@@ -43,9 +44,10 @@ class Connection
     @mesh.position.x = dist * x_r + x0 + x_r * scale
     @mesh.position.y = dist * y_r + y0 + y_r * scale
 
-  setVisible: (visible) -> @mesh.visible = visible
-  setColor:   (colorId) -> @mesh.material.uniforms.color.value = colors[colorId]
+  setVisible: (visible) -> @mesh.visible           = visible
+  setColor:   (colorId) -> @uniforms.color.value   = colors[colorId]
   setFocused: (focused) -> @uniforms.focused.value = if focused then 1 else 0
+  setArrow:   (arrow)   -> @uniforms.arrow.value   = if arrow then 1 else 0
 
 module.exports = Connection
 
