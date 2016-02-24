@@ -97,7 +97,9 @@ handleMove coord (Connecting sourceRef sourceWidget sourceVector nodePos _ (Drag
                     sy        = (nodePos ^. y) + outerPos * sin angle
                     outerPos  = 22.0
                 return $ Vector2 sx sy
-        showCurrentConnection startLine current'
+        case sourceRef of
+            InPortRef'   _ -> showCurrentConnection current' startLine
+            OutPortRef'  _ -> showCurrentConnection startLine current'
     updateConnections
 
 stopDrag' :: Connect.Connecting -> Command State ()

@@ -1,18 +1,18 @@
 $$ = require('common')
 colors = require('colors')
-vs = require('shaders/connection.vert')()
+vs = require('shaders/sdf.vert')()
 fs = require('shaders/connection.frag')()
 
 
 class Connection
   constructor: (widgetId) ->
-    @geometry = new (THREE.PlaneBufferGeometry)(1.0, 10.0)
+    @geometry = new (THREE.PlaneBufferGeometry)(1.0, 16.0)
 
     @uniforms =
       color:      {type: 'v4', value: colors[5]}
       visible:    {type: 'f',  value: 0}
       connecting: {type: 'i',  value: if widgetId == 3 then 1 else 0}
-      len:        {type: 'f',  value: 0}
+      size:       {type: 'v2', value: new THREE.Vector2(1.0, 16.0)}
       focused:    {type: 'i',  value: 0}
       objectId:   {type: 'v3', value: new (THREE.Vector3)(widgetId % 256 / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0)}
 
@@ -24,7 +24,8 @@ class Connection
       fragmentShader: fs
       transparent: true
       blending: THREE.NormalBlending
-      side: THREE.DoubleSide))
+      side: THREE.DoubleSide
+      derivatives: true))
 
     @mesh.position.z = 100
 
@@ -35,7 +36,7 @@ class Connection
     r = Math.sqrt(x * x + y * y)
     x_r = x / r
     y_r = y / r
-    @mesh.material.uniforms.len.value = r
+    @mesh.material.uniforms.size.value.x = r
     @mesh.scale.x = Math.max(r - (2 * dist), 0)
     scale = @mesh.scale.x / 2
     @mesh.rotation.z = Math.sign(y) * Math.acos(x_r)
@@ -43,7 +44,7 @@ class Connection
     @mesh.position.y = dist * y_r + y0 + y_r * scale
 
   setVisible: (visible) ->
-    @mesh.material.uniforms.visible.value = visible
+    @mesh.visible = visible
   setColor:   (colorId) -> @mesh.material.uniforms.color.value = colors[colorId]
   setFocused: (focused) -> @uniforms.focused.value = if focused then 1 else 0
 

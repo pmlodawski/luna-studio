@@ -1,90 +1,25 @@
-#ifdef GL_ES
-precision highp float;
-#endif
+precision mediump float;
 
-varying float distance;
-varying float distanceV;
+uniform vec4 color;
+uniform int  highlight;
 
-uniform vec4  color;
-uniform float visible;
-uniform float camFactor;
-uniform float len;
-uniform int   connecting;
+<%= require('shaders/stdlib')() %>
 
-uniform int   antialias;
-uniform int   focused;
+void main(void) {
 
-uniform int   objectMap;
-uniform vec3  objectId;
+    vec3 local   = vec3(luv * size, 0.0);
+    vec3 ulocal  = local * dpr;
+    vec2 p       = ulocal.xy - size / 2.0;
 
-void main() {
-    if (visible < 1.0) discard;
+    float line = sdf_rect(p, vec2(size.x - 10.0, 3.0));
 
-    float v = abs(distanceV);
+    line = sdf_merge(line, sdf_triangle(sdf_rotateCCW(p - vec2(size.x / 2.0 - 6.0, 0.0), M_PI/6.0), 6.0));
 
+    float bg   = sdf_rect(p, vec2(size.x - 10.0, 5.0));
     if (objectMap == 1) {
-        if (connecting == 1) discard;
-        if (v * len > (len - 25.0)) discard;
-    }
-
-    float origAlpha = color.w;
-    vec3  colorShow = color.xyz;
-
-    if (focused == 1) {
-        colorShow *= 1.3;
-    }
-
-    float alphaShow = 1.0;
-
-    float d = abs(distance);
-
-    float camFactorDelta = camFactor - 1.0;
-    float rimCamFactor  = 1.0;
-    float blurCamFactor = 1.0;
-
-    if (camFactorDelta > 0.0) {
-      rimCamFactor  += camFactorDelta / 25.0;
-      blurCamFactor += camFactorDelta / 1.0;
-    } else if (camFactorDelta < 0.0) {
-      rimCamFactor  += camFactorDelta / 5.0;
-      blurCamFactor += camFactorDelta / 1.0;
-    }
-
-    float blurRef = 0.25;
-    float  rimRef = 0.18;
-
-    float blurWidth = blurRef / blurCamFactor;
-    float r1 =         rimRef /  rimCamFactor;
-    float r2 = r1 + blurWidth;
-
-    float alpha  = 1.0;
-    float alphaV = 1.0;
-
-    if (d < r1) {
-        alpha = 1.0;
-    } else if (d < r2 && antialias != 0) {
-        alpha = (r2 - d) / blurWidth;
-        // colorShow = vec3(alpha, 0.0, 0.0); alpha = 1.0; // for test
+        gl_FragColor = vec4(objectId, sdf_sharp(line));
     } else {
-        alpha = 0.0;
-        // colorShow = vec3(0.0, 1.0, 0.0); alpha = 1.0; // for test
-    }
-
-    if (antialias != 0) {
-        float sideWidth = 150.0 * blurWidth;
-        float vr = rimRef /  rimCamFactor;
-        float vm = len * (1.0 - v) / sideWidth;
-
-        if (vm <= vr) {
-            float mod = (vr - vm) / vr;
-            alphaV = 1.0 - mod * mod;
-            // colorShow = vec3(alphaV, 0.0, 0.0); alphaV = 1.0; // for test
-        }
-    }
-    alphaShow = alpha * alphaV;
-    if (objectMap == 1) {
-        gl_FragColor = vec4(objectId, 1.0);
-    } else  {
-        gl_FragColor = vec4(colorShow, alphaShow * origAlpha);
+        gl_FragColor = vec4(0.0, 0.0, 0.0,      sdf_aa(bg));
+        gl_FragColor = mix(gl_FragColor, color, sdf_aa(line));
     }
 }
