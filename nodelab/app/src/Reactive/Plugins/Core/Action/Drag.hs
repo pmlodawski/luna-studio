@@ -80,20 +80,23 @@ moveNodes delta = do
 
 stopDrag :: Command State ()
 stopDrag = do
-    Global.drag . Drag.history .= Nothing
+    dragHistory <- use $ Global.drag . Drag.history
 
-    widgets <- zoom Global.uiRegistry allNodes
-    let selected = filter (^. widget . Model.isSelected) widgets
-        nodesToUpdate = (\w -> (w ^. widget . Model.nodeId, w ^. widget . widgetPosition)) <$> selected
+    withJust dragHistory $ \(DragHistory start current _) -> do
+        Global.drag . Drag.history .= Nothing
+        when (start /= current) $ do
+            widgets <- zoom Global.uiRegistry allNodes
+            let selected = filter (^. widget . Model.isSelected) widgets
+                nodesToUpdate = (\w -> (w ^. widget . Model.nodeId, w ^. widget . widgetPosition)) <$> selected
 
-    nodes <- forM nodesToUpdate $ \(id, pos) -> do
-        Global.graph . Graph.nodesMap . ix id . Node.position .= toTuple pos
-        newMeta <- preuse $ Global.graph . Graph.nodesMap . ix id . Node.nodeMeta
-        forM_ newMeta $ \newMeta -> do
-            workspace <- use $ Global.workspace
-            performIO $ BatchCmd.updateNodeMeta workspace id newMeta
+            nodes <- forM nodesToUpdate $ \(id, pos) -> do
+                Global.graph . Graph.nodesMap . ix id . Node.position .= toTuple pos
+                newMeta <- preuse $ Global.graph . Graph.nodesMap . ix id . Node.nodeMeta
+                forM_ newMeta $ \newMeta -> do
+                    workspace <- use $ Global.workspace
+                    performIO $ BatchCmd.updateNodeMeta workspace id newMeta
 
-    updateConnections
+            updateConnections
 
 scaledDelta :: Vector2 Int -> Command State (Vector2 Double)
 scaledDelta delta = do

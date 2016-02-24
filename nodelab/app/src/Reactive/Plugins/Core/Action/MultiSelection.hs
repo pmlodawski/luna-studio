@@ -91,8 +91,8 @@ drawSelectionBox start end = do
 
 stopDrag :: Command State ()
 stopDrag = do
-    selection <- use $ Global.multiSelection . MultiSelection.history
-    forM_ selection $ \_ -> do
+    wasSelecting <- uses (Global.multiSelection . MultiSelection.history) isJust
+    when wasSelecting $ do
         Global.multiSelection . MultiSelection.history .= Nothing
         performIO hideSelectionBox
         zoom Global.uiRegistry focusSelectedNode
