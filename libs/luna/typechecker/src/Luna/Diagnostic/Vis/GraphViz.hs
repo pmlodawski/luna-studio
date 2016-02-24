@@ -50,8 +50,7 @@ import           Luna.Syntax.Repr.Styles                 (HeaderOnly (..), Simpl
 
 import           System.Platform
 import           System.Process                          (createProcess, shell)
-
-
+import           Data.Tuple.Select                       (sel1)
 
 
 --instance Repr HeaderOnly Data where repr _ = "Data"
@@ -87,6 +86,7 @@ unifyLabelClr = GVC.Gray60
 edgeLabelClr  = GVC.Gray40
 
 portClr = HSV 0.0 0.0 0.25
+portClr2 = HSV 0.0 0.0 1.00
 
 fontName = "arial"
 fontSize = 10.0
@@ -198,11 +198,13 @@ toGraphViz name net = DotGraph { strictGraph     = False
               orphanTgtNodes = flip DotNode [shape PointShape, emptyLabel] ∘ ((nodeId <> "orphanTgt ") <>) ∘ show <$> orphanTgts
 
 
-              inPortsNum = length ins
-              inPorts    = port <$> [0 .. inPortsNum - 1]
-              inLayout   = if length inPorts < 1 then [] else [Html.Cells $ blankCell : inPorts]
-              emptyLabel = GV.Label  ∘ StrLabel ∘ fromString $ ""
-              idlabel    = GV.XLabel ∘ StrLabel ∘ fromString ∘ show $ nix
+              inPortsNum  = length ins
+              inPorts     = port        <$> [0 .. inPortsNum - 1]
+              phInPorts   = phantomPort <$> [0 .. inPortsNum - 1]
+              subInLayout = if length inPorts < 1 then [] else [Html.Cells $ phInPorts]
+              recInLayout = if length inPorts < 1 then [] else [Html.Cells $ blankCell : inPorts]
+              emptyLabel  = GV.Label  ∘ StrLabel ∘ fromString $ ""
+              idlabel     = GV.XLabel ∘ StrLabel ∘ fromString ∘ show $ nix
               --htmlCells  = Html.Cells [idCell $ show nix, labelCell width $ fromString $ genNodeLabel node <> show (length orphanTgts)] where
 
               htmlCells  = Html.Cells [idCell $ show nix, labelCell width $ fromString $ genNodeLabel node
@@ -212,13 +214,15 @@ toGraphViz name net = DotGraph { strictGraph     = False
                   width  = if null inPorts then 1 else fromIntegral inPortsNum
 
 
-              labelCell cs s = Html.LabelCell [Html.ColSpan cs, Html.BGColor $ color, Html.Port "label"] $ Html.Text [Html.Str $ fromString s]
-              idCell       s = Html.LabelCell [Html.ColSpan 1 , Html.Border 0, Html.Port "id"]    $ Html.Text [Html.Font [Html.Color idClr] [Html.Str $ fromString s]]
-              blankCell      = Html.LabelCell [Html.Border 0] ""
-              spacerCell   w = Html.LabelCell [Html.Border 0, Html.Width w] ""
-              port num       = Html.LabelCell [Html.ColSpan 1 , Html.Height 2, Html.Border 0, Html.Port $ inPortName num, Html.BGColor $ portClr] ""
+              labelCell cs s  = Html.LabelCell [Html.ColSpan cs, Html.BGColor $ color, Html.Port "label"] $ Html.Text [Html.Str $ fromString s]
+              idCell       s  = Html.LabelCell [Html.ColSpan 1 , Html.Border 0, Html.Port "id"]    $ Html.Text [Html.Font [Html.Color idClr] [Html.Str $ fromString s]]
+              blankCell       = Html.LabelCell [Html.Border 0] ""
+              spacerCell   w  = Html.LabelCell [Html.Border 0, Html.Width w] ""
+              port        num = Html.LabelCell [Html.ColSpan 1 , Html.Height 2, Html.Border 0, Html.Port $ inPortName num, Html.BGColor $ portClr] ""
+              phantomPort num = Html.LabelCell [Html.ColSpan 1 , Html.Height 0, Html.Width 0, Html.Border 0, Html.Port $ inPortName num] ""
 
-              nodeLabel      = GV.Label $ HtmlLabel $ Html.Table $ Html.HTable Nothing [Html.CellSpacing 3, Html.CellBorder 1, Html.Border 0] $ inLayout <> [htmlCells]
+              recordLabel    = GV.Label $ HtmlLabel $ Html.Table $ Html.HTable Nothing [Html.CellSpacing 3, Html.CellBorder 1, Html.Border 0] $ recInLayout <> [htmlCells]
+              subLabel       = GV.Label $ HtmlLabel $ Html.Table $ Html.HTable Nothing [Html.CellSpacing 10, Html.CellBorder 1, Html.Border 0] $ subInLayout
               unifyLabel     = GV.Label $ HtmlLabel $ Html.Table $ Html.HTable Nothing [Html.CellSpacing 3, Html.CellBorder 1, Html.Border 0] $ [cells] where
                                cells = Html.Cells [idCell $ show nix, spacerCell 40]
 
@@ -232,9 +236,10 @@ toGraphViz name net = DotGraph { strictGraph     = False
               --attrs   = Color (toColorList [color]) : shAttrs
               attrs = specAttrs
               specAttrs = caseTest (uncover node) $ do
-                  {-match $ \Term.Star        -> [Color bgColor' , shape Star        , emptyLabel, FixedSize SetNodeSize, Width 0.4, Height 0.4, PenWidth 6, FillColor starColor, Style [SItem Filled []]]-}
-                  match $ \(Term.Unify a b) -> [Color nodeColor, shape DoubleCircle , unifyLabel, FixedSize SetNodeSize, Width 0.2, Height 0.2, fontColor unifyLabelClr]
-                  match $ \ANY              -> [Color nodeColor, shape PlainText   , nodeLabel ]
+                  match $ \Term.Star        -> [Color bgColor' , shape Star         , emptyLabel  , FixedSize SetNodeSize, Width 0.4, Height 0.4, PenWidth 6, FillColor starColor, Style [SItem Filled []]]
+                  match $ \(Term.Unify a b) -> [Color nodeColor, shape DoubleCircle , unifyLabel  , FixedSize SetNodeSize, Width 0.2, Height 0.2, fontColor unifyLabelClr]
+                  match $ \(Term.Sub   a b) -> [Color nodeColor, shape RArrow       , subLabel    , FixedSize SetNodeSize, Width 0.2, Height 0.2, fontColor unifyLabelClr]
+                  match $ \ANY              -> [Color nodeColor, shape PlainText    , recordLabel ]
 
           nodeInEdges   n   = zip3 ([0..] :: [Int]) (genInEdges net $ (cast $ index n ng :: NetLayers a :<: Draft Static)) (repeat n)
           mkEdge  (n,(a,attrs),b) = DotEdge (nodeRef a) (nodeRef b) $ HeadPort (LabelledPort (inPortName n) Nothing) : TailPort (LabelledPort "label" Nothing) : attrs
@@ -369,5 +374,5 @@ instance (MonadIO m, Ord a, PrintDot a) => Displayable m (DotGraph a) where
 -- === Utils === --
 
 renderAndOpen lst = do
-    flip mapM_ lst $ \(name, g) -> render name $ toGraphViz name g
-    open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
+    flip mapM_ lst $ \(fname, gname, g) -> render fname $ toGraphViz gname g
+    open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap sel1 lst)

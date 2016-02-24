@@ -72,6 +72,9 @@ varAs t = inferM t ∘ Term.var
 unifyAs :: TermBuilderAs t Unify m a => t -> Input a -> Input a -> m a
 unifyAs t = inferM t ∘∘ Term.unify
 
+subAs :: TermBuilderAs t Sub m a => t -> Input a -> Input a -> m a
+subAs t = inferM t ∘∘ Term.sub
+
 
 -- === Draft === --
 
@@ -113,9 +116,11 @@ app    = appAs   ELEMENT
 
 var   :: TermBuilder Var   m a => NameInput a -> m a
 unify :: TermBuilder Unify m a => Input a -> Input a -> m a
+sub   :: TermBuilder Sub   m a => Input a -> Input a -> m a
 
 var    = varAs   ELEMENT
 unify  = unifyAs ELEMENT
+sub    = subAs   ELEMENT
 
 
 -- === Draft === --

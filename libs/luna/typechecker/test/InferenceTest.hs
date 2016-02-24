@@ -103,6 +103,6 @@ main = do
             (root,     g01) <- runBuild  g00 graph1
             (literals, g02) <- runBuild  g01 $ LiteralsUtils.run root
             g03             <- evalBuild g02 $ LiteralsAssignement.runPass literals
-            renderAndOpen [ ("g1", g03)
+            renderAndOpen [ ("g1", "g1", g03)
                           ]
     putStrLn "done"

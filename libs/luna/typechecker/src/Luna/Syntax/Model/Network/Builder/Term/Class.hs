@@ -217,11 +217,26 @@ instance ( inp ~ Input a
         cb  <- connection b out
         return out
 
+type instance BuildArgs Sub n = (Input n, Input n)
+instance ( inp ~ Input a
+         , MonadFix m
+         , Connectible inp a m
+         , ElemBuilder (Sub $ Ref Edge $ Connection inp a) m a
+         ) => TermBuilder Sub m a where
+    buildTerm p (a,b) = mdo
+        out <- buildElem $ Sub ca cb
+        ca  <- connection a out
+        cb  <- connection b out
+        return out
+
 var :: TermBuilder Var m a => NameInput a -> m a
 var = curryN $ buildTerm (Proxy :: Proxy Var)
 
 unify :: TermBuilder Unify m a => Input a -> Input a -> m a
 unify = curryN $ buildTerm (Proxy :: Proxy Unify)
+
+sub :: TermBuilder Sub m a => Input a -> Input a -> m a
+sub = curryN $ buildTerm (Proxy :: Proxy Sub)
 
 
 -- === Draft === --

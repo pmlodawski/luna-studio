@@ -64,6 +64,8 @@ runPass literals = do
     (consIntRef, consStrRef) <- createLiteralTypes
     mapM_ (assignLiteralType consIntRef consStrRef) literals
 
+
+
 -----------------------------
 -- === TypeCheckerPass === --
 -----------------------------

@@ -53,9 +53,11 @@ import Control.Monad.Trans.Either
                            , TermNode Lam   (m) (ls :<: term)               \
                            , TermNode Unify (m) (ls :<: term)               \
                            , TermNode Acc   (m) (ls :<: term)               \
+                           , TermNode Sub   (m) (ls :<: term)               \
                            , MonadIdentPool (m)                             \
                            , Destructor     (m) (Ref Node (ls :<: term))    \
                            , MonadTypeCheck (ls :<: term) (m)               \
+                           , MonadIO (m) \
                            )
 
 -------------------------
@@ -89,7 +91,7 @@ instance Monad m => MonadResolution r (ResolutionT r m) where
 
 data Resolution r u = Resolved   r
                     | Unresolved u
-                    deriving (Show)
+                    deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 
 
 
@@ -109,9 +111,9 @@ resolveUnify uni = do
 
             symmetrical (resolveStar uni) l r
             symmetrical (resolveVar  uni) l r
-            symmetrical (resolveAcc  uni) l r
+            --symmetrical (resolveAcc  uni) l r
             resolveConses uni l r
-            resolveLams uni l r
+            resolveLams   uni l r
 
         match $ \ANY -> impossible
 
@@ -131,12 +133,14 @@ resolveUnify uni = do
                   replaceNode a   b
                   resolve_
 
-          resolveAcc uni a b = do -- treat Acc as a Var: the importer will take care of this later on
-              a'   <- read (a :: nodeRef)
-              whenMatched (uncover a') $ \(Acc _ _) -> do
-                  replaceNode uni b
-                  replaceNode a   b
-                  resolve_
+          --                        -- THIS IS WRONG! we cannot unify Acc with anything!
+          --resolveAcc uni a b = do -- treat Acc as a Var: the importer will take care of this later on
+          --                        -- FIXME[WD->MK]: The above comment cannot be understand without context
+          --    a'   <- read (a :: nodeRef)
+          --    whenMatched (uncover a') $ \(Acc _ _) -> do
+          --        replaceNode uni b
+          --        replaceNode a   b
+          --        resolve_
 
           resolveConses uni a b = do
               uni' <- read uni
@@ -148,7 +152,7 @@ resolveUnify uni = do
                           replaceNode uni b
                           replaceNode a   b
                           resolve_
-                      else return ()
+                      else return () -- FIXME[WD->MK]: should report error!
 
           resolveLams uni a b = do
               uni' <- read uni
@@ -165,6 +169,62 @@ resolveUnify uni = do
                     replaceNode uni a
                     replaceNode b   a
                     resolve unis
+
+
+resolveSub :: forall m ls term nodeRef ne ter n e c. (PassCtx(m,ls,term),
+                MonadResolution [nodeRef] m)
+             => nodeRef -> m ()
+resolveSub sb = do
+    sb' <- read sb
+    caseTest (uncover sb') $ do
+        match $ \(Sub srcRef tgtRef) -> do
+            src <- follow source srcRef
+            tgt <- follow source tgtRef
+
+            --resolveVar    sb tgt src
+            --resolveConses sb src tgt
+            --resolveLams   sb src tgt
+            return ()
+
+        match $ \ANY -> impossible
+
+    where symmetrical f a b = f a b *> f b a
+
+          --resolveConses s a b = do
+          --    s' <- read s
+          --    a' <- read (a :: nodeRef)
+          --    b' <- read (b :: nodeRef)
+          --    whenMatched (uncover a') $ \(Cons an) ->
+          --        whenMatched (uncover b') $ \(Cons bn) -> if an == bn
+          --            then do
+          --                replaceNode s b
+          --                replaceNode a b
+          --                resolve_
+          --            else return () -- FIXME[WD->MK]: should report error!
+
+          --resolveLams s a b = do
+          --    s' <- read s
+          --    a' <- read (a :: nodeRef)
+          --    b' <- read (b :: nodeRef)
+          --    whenMatched (uncover a') $ \(Lam cargs cout) ->
+          --        whenMatched (uncover b') $ \(Lam cargs' cout') -> do
+          --          let cRawArgs  = unlayer <$> cargs
+          --          let cRawArgs' = unlayer <$> cargs'
+          --          args  <- mapM (follow source) (cout  : cRawArgs )
+          --          args' <- mapM (follow source) (cout' : cRawArgs')
+          --          subs  <- zipWithM sub args args'
+
+          --          replaceNode s a
+          --          replaceNode b a
+          --          resolve subs
+
+          --resolveVar uni a b = do
+          --    a'   <- read (a :: nodeRef)
+          --    whenMatched (uncover a') $ \(Var _) -> do
+          --        replaceNode uni b
+          --        replaceNode a   b
+          --        resolve_
+
 
 
 replaceNode oldRef newRef = do
@@ -185,26 +245,20 @@ data TCStatus = TCStatus { _terms     :: Int
 
 makeLenses ''TCStatus
 
--- FIXME[WD]: we should not return [Graph n e] from pass - we should use ~ IterativePassRunner instead which will handle iterations by itself
+-- CHECKME[WD]: for now this pass handles both unifications and substitutions. If we will be sure that they don't affect each other, we should partition it to 2 passes
+--              in order to slightly improve performance (sometimes this pass would be called after only substitutions updates)
 run :: forall nodeRef m ls term n e ne c.
        ( PassCtx(ResolutionT [nodeRef] m,ls,term)
-       , MonadBuilder (Hetero (VectorGraph n e c)) m
-       ) => [nodeRef] -> m [Resolution [nodeRef] nodeRef]
-run unis = forM unis $ \u -> fmap (resolveUnifyY u) $ runResolutionT $ resolveUnify u
+       , MonadBuilder (Hetero (VectorGraph n e c)) m, MonadIO m
+       ) => [nodeRef] -> [nodeRef] -> m ([Resolution [nodeRef] nodeRef], [Resolution [nodeRef] nodeRef])
+run unis subs = do
+    uniRes <- forM unis $ \u -> fmap (fmap $ const u) $ runResolutionT $ resolveUnify u
+    subRes <- forM subs $ \s -> fmap (fmap $ const s) $ runResolutionT $ resolveSub   s
+    return (uniRes, subRes)
 
 
 universe = Ref 0 -- FIXME [WD]: Implement it in safe way. Maybe "star" should always result in the top one?
 
----- FIXME[WD]: Change the implementation to list builder
---resolveUnifyX :: (PassCtx(ResolutionT [nodeRef] m,ls,term), nodeRef ~ Ref (Node $ (ls :<: term)), MonadIO m, Show (ls :<: term))
---              => nodeRef -> m [nodeRef]
---resolveUnifyX uni = (runResolutionT ∘ resolveUnify) uni >>= return ∘ \case
---    Resolved unis -> unis
---    Unresolved _  -> [uni]
-
-resolveUnifyY uni = \case
-    Resolved unis -> Resolved   unis
-    Unresolved _  -> Unresolved uni
 
 
 catUnresolved [] = []
@@ -218,12 +272,6 @@ catResolved (a : as) = ($ (catResolved as)) $ case a of
     Resolved   r -> (r :)
 
 
---------------------------
--- !!!!!!!!!!!!!!!!!!!! --
---------------------------
-
--- User - nody i inputy do funkcji bedace varami sa teraz zjadane, moze warto dac im specjalny typ?
--- pogadac z Marcinem o tym
 
 -----------------------------
 -- === TypeCheckerPass === --
@@ -234,16 +282,25 @@ data UnificationPass = UnificationPass deriving (Show, Eq)
 instance ( PassCtx(ResolutionT [nodeRef] m,ls,term)
          , MonadBuilder (Hetero (VectorGraph n e c)) m
          , MonadTypeCheck (ls :<: term) m
+         , MonadIO m
          ) => TypeCheckerPass UnificationPass m where
-    hasJobs _ = not . null . view TypeCheck.unresolvedUnis <$> TypeCheck.get
+    hasJobs _ = do
+        t1 <- not . null . view TypeCheck.unresolvedUnis <$> TypeCheck.get
+        t2 <- not . null . view TypeCheck.unresolvedSubs <$> TypeCheck.get
+        return $ t1 || t2
+
+
 
     runTCPass _ = do
         unis <- view TypeCheck.unresolvedUnis <$> TypeCheck.get
-        results <- run unis
-        let newUnis = catUnresolved results ++ (concat $ catResolved results)
-        TypeCheck.modify_ $ TypeCheck.unresolvedUnis .~ newUnis
-        case concat $ catResolved results of
-            [] -> return Stuck
-            _  -> return Progressed
+        subs <- view TypeCheck.unresolvedSubs <$> TypeCheck.get
+        (uniRes, subRes) <- run unis subs
+        let newUnis = concat $ catResolved uniRes
+            newSubs = concat $ catResolved subRes
+            unis' = catUnresolved uniRes ++ newUnis
+            subs' = catUnresolved subRes ++ newSubs
+        TypeCheck.modify_ $ (TypeCheck.unresolvedUnis .~ unis')
+                          . (TypeCheck.unresolvedSubs .~ subs')
+        return $ if (null newUnis && null newSubs) then Stuck else Progressed
 
 

@@ -105,6 +105,7 @@ newtype Cons  n    = Cons    n             deriving (Show, Eq, Ord, Functor, Fol
 data    Acc   n t  = Acc    !n !t          deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 data    App     t  = App       !t ![Arg t] deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 data    Unify   t  = Unify     !t !t       deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    Sub     t  = Sub       !t !t       deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 data    Lam     t  = Lam       ![Arg t] !t deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 data    Native n t = Native !n ![t]        deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 data    Blank      = Blank                 deriving (Show, Eq, Ord)
@@ -129,6 +130,7 @@ instance {-# OVERLAPPABLE #-}           TFoldable t (Cons n   )   where foldrT _
 instance {-# OVERLAPPABLE #-} t ~ t' => TFoldable t (Acc  n t')   where foldrT   = foldr ; {-# INLINE foldrT #-}
 instance {-# OVERLAPPABLE #-} t ~ t' => TFoldable t (App    t')   where foldrT   = foldr ; {-# INLINE foldrT #-}
 instance {-# OVERLAPPABLE #-} t ~ t' => TFoldable t (Unify  t')   where foldrT   = foldr ; {-# INLINE foldrT #-}
+instance {-# OVERLAPPABLE #-} t ~ t' => TFoldable t (Sub    t')   where foldrT   = foldr ; {-# INLINE foldrT #-}
 instance {-# OVERLAPPABLE #-} t ~ t' => TFoldable t (Lam    t')   where foldrT   = foldr ; {-# INLINE foldrT #-}
 instance {-# OVERLAPPABLE #-} t ~ t' => TFoldable t (Native n t') where foldrT   = foldr ; {-# INLINE foldrT #-}
 
@@ -146,6 +148,7 @@ type instance Base (Acc   n t)  = Proxy Acc
 type instance Base (App     t)  = Proxy App
 type instance Base (Var   n  )  = Proxy Var
 type instance Base (Unify   t)  = Proxy Unify
+type instance Base (Sub     t)  = Proxy Sub
 type instance Base Blank        = Proxy Blank
 type instance Base (Native n t) = Proxy Native
 
@@ -161,8 +164,10 @@ type instance Name   (Native n t) = n
 type instance Source (Acc    n t) = t
 type instance Source (App      t) = t
 type instance Source (Unify    t) = t
+type instance Source (Sub      t) = t
 type instance Target (Lam      t) = t
 type instance Target (Unify    t) = t
+type instance Target (Sub      t) = t
 type instance Args   (App      t) = [Arg t]
 type instance Args   (Lam      t) = [Arg t]
 type instance Args   (Native n t) = [t]
@@ -174,8 +179,10 @@ instance HasName   (Native n t) where name   = lens (\(Native n _) -> n) (\(Nati
 instance HasSource (Acc    n t) where source = lens (\(Acc    _ s) -> s) (\(Acc    n _) s -> Acc   n s)  ; {-# INLINE source #-}
 instance HasSource (App      t) where source = lens (\(App    s _) -> s) (\(App    _ a) s -> App   s a)  ; {-# INLINE source #-}
 instance HasSource (Unify    t) where source = lens (\(Unify  s _) -> s) (\(Unify  _ t) s -> Unify s t)  ; {-# INLINE source #-}
+instance HasSource (Sub      t) where source = lens (\(Sub    s _) -> s) (\(Sub    _ t) s -> Sub   s t)  ; {-# INLINE source #-}
 instance HasTarget (Lam      t) where target = lens (\(Lam    _ t) -> t) (\(Lam    s _) t -> Lam   s t)  ; {-# INLINE target #-}
 instance HasTarget (Unify    t) where target = lens (\(Unify  _ t) -> t) (\(Unify  s _) t -> Unify s t)  ; {-# INLINE target #-}
+instance HasTarget (Sub      t) where target = lens (\(Sub    _ t) -> t) (\(Sub    s _) t -> Sub   s t)  ; {-# INLINE target #-}
 instance HasArgs   (App      t) where args   = lens (\(App    _ a) -> a) (\(App    s _) a -> App   s a)  ; {-# INLINE args   #-}
 instance HasArgs   (Lam      t) where args   = lens (\(Lam    a _) -> a) (\(Lam    _ o) a -> Lam   a o)  ; {-# INLINE args   #-}
 instance HasArgs   (Native n t) where args   = lens (\(Native _ a) -> a) (\(Native n _) a -> Native n a) ; {-# INLINE args   #-}
@@ -188,6 +195,7 @@ instance n ~ n' => NFunctor n m (Native n' t) (Native m t) where fmapN f (Native
 instance           NFunctor n m (Lam       t) (Lam      t) where fmapN = flip const                    ; {-# INLINE fmapN #-}
 instance           NFunctor n m (App       t) (App      t) where fmapN = flip const                    ; {-# INLINE fmapN #-}
 instance           NFunctor n m (Unify     t) (Unify    t) where fmapN = flip const                    ; {-# INLINE fmapN #-}
+instance           NFunctor n m (Sub       t) (Sub      t) where fmapN = flip const                    ; {-# INLINE fmapN #-}
 instance           NFunctor n m Blank         Blank        where fmapN = flip const                    ; {-# INLINE fmapN #-}
 
 instance t ~ t' => TFunctor t r (Lam      t') (Lam      r) where fmapT = fmap       ; {-# INLINE fmapT #-}
@@ -195,6 +203,7 @@ instance t ~ t' => TFunctor t r (Acc    n t') (Acc    n r) where fmapT = fmap   
 instance t ~ t' => TFunctor t r (Native n t') (Native n r) where fmapT = fmap       ; {-# INLINE fmapT #-}
 instance t ~ t' => TFunctor t r (App      t') (App      r) where fmapT = fmap       ; {-# INLINE fmapT #-}
 instance t ~ t' => TFunctor t r (Unify    t') (Unify    r) where fmapT = fmap       ; {-# INLINE fmapT #-}
+instance t ~ t' => TFunctor t r (Sub      t') (Sub      r) where fmapT = fmap       ; {-# INLINE fmapT #-}
 instance           TFunctor t r (Var    n   ) (Var    n  ) where fmapT = flip const ; {-# INLINE fmapT #-}
 instance           TFunctor t r (Cons   n   ) (Cons   n  ) where fmapT = flip const ; {-# INLINE fmapT #-}
 instance           TFunctor t r Blank         Blank        where fmapT = flip const ; {-# INLINE fmapT #-}
@@ -207,6 +216,7 @@ instance t ~ t' => MonoTFunctor t (Acc    n t') where monoTMap = fmap       ; {-
 instance t ~ t' => MonoTFunctor t (Native n t') where monoTMap = fmap       ; {-# INLINE monoTMap #-}
 instance t ~ t' => MonoTFunctor t (App      t') where monoTMap = fmap       ; {-# INLINE monoTMap #-}
 instance t ~ t' => MonoTFunctor t (Unify    t') where monoTMap = fmap       ; {-# INLINE monoTMap #-}
+instance t ~ t' => MonoTFunctor t (Sub      t') where monoTMap = fmap       ; {-# INLINE monoTMap #-}
 instance           MonoTFunctor t (Var    n   ) where monoTMap = flip const ; {-# INLINE monoTMap #-}
 instance           MonoTFunctor t (Cons   n   ) where monoTMap = flip const ; {-# INLINE monoTMap #-}
 instance           MonoTFunctor t Blank         where monoTMap = flip const ; {-# INLINE monoTMap #-}
@@ -223,6 +233,7 @@ instance {-# OVERLAPPABLE #-} Repr  s t      => Repr s (Lam      t) where repr (
 instance {-# OVERLAPPABLE #-} Reprs s '[n,t] => Repr s (Acc    n t) where repr (Acc    n s) = "Acc"    <+> repr n <+> repr s
 instance {-# OVERLAPPABLE #-} Repr  s t      => Repr s (App      t) where repr (App    s a) = "App"    <+> repr s <+> repr a
 instance {-# OVERLAPPABLE #-} Repr  s t      => Repr s (Unify    t) where repr (Unify  s t) = "Unify"  <+> repr s <+> repr t
+instance {-# OVERLAPPABLE #-} Repr  s t      => Repr s (Sub      t) where repr (Sub    s t) = "Sub"    <+> repr s <+> repr t
 instance {-# OVERLAPPABLE #-} Reprs s '[n,t] => Repr s (Native n t) where repr (Native n a) = "Native" <+> repr n <+> repr a
 instance {-# OVERLAPPABLE #-}                   Repr s  Blank       where repr _            = "Blank"
 
@@ -235,6 +246,7 @@ instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Acc    n   t) where repr _ = "Acc
 instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Acc    Str t) where repr (Acc (Str m) s) = fromString $ "Acc " <>  show m
 instance {-# OVERLAPPABLE #-} Repr HeaderOnly (App        t) where repr _ = "App"
 instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Unify      t) where repr _ = "Unify"
+instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Sub        t) where repr _ = "Sub"
 instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Native n   t) where repr _ = "Native"
 instance {-# OVERLAPPABLE #-} Repr HeaderOnly (Native Str t) where repr (Native (Str n) _) = fromString $ "Native " <> show n
 
@@ -273,15 +285,15 @@ instance Castable  d (ASTRecord gs vs t d)   where cast    = wrap'   ; {-# INLIN
 
 
 
-class TermCons n t term a | a -> n t where termCons :: term -> a
+--class TermCons n t term a | a -> n t where termCons :: term -> a
 
-instance (t ~ t', n ~ NameByRuntime rt t, t ~ Layout tp term rt, SmartCons (Unify t') (Term tp term rt))
-      => TermCons n t (Unify t') (Term tp term rt) where termCons = cons
+--instance (t ~ t', n ~ NameByRuntime rt t, t ~ Layout tp term rt, SmartCons (Unify t') (Term tp term rt))
+--      => TermCons n t (Unify t') (Term tp term rt) where termCons = cons
 
-class TermCons2 a cls term rt where termCons2 :: a -> Term cls term rt
+--class TermCons2 a cls term rt where termCons2 :: a -> Term cls term rt
 
-instance (t ~ t', n ~ NameByRuntime rt t, t ~ Layout cls term rt, SmartCons (Unify t') (Term cls term rt))
-      => TermCons2 (Unify t) cls term rt where termCons2 = cons
+--instance (t ~ t', n ~ NameByRuntime rt t, t ~ Layout cls term rt, SmartCons (Unify t') (Term cls term rt))
+--      => TermCons2 (Unify t) cls term rt where termCons2 = cons
 
 
 -------------------------
@@ -332,6 +344,7 @@ type instance Elems Thunk n t = Acc         n t
 
 type instance Elems Expr  n t = Var         n
                              ': Unify         t
+                             ': Sub           t
                              ': Elems Thunk n t
 
 type instance Elems Draft n t = Blank
@@ -469,30 +482,34 @@ type VariantList_MANUAL_CACHE t = [ {-  9 -} Star
                                   , {- 24 -} Native     (Layout t Thunk Dynamic) (Layout t Thunk Dynamic)
                                   , {- 25 -} Var   Str
                                   , {- 26 -} Unify      (Layout t Expr  Static )
-                                  , {- 27 -} Acc   Str  (Layout t Expr  Static )
-                                  , {- 28 -} App        (Layout t Expr  Static )
-                                  , {- 29 -} Lam        (Layout t Expr  Static )
-                                  , {- 30 -} Native Str (Layout t Expr  Static )
-                                  , {- 31 -} Var        (Layout t Expr  Dynamic)
-                                  , {- 32 -} Unify      (Layout t Expr  Dynamic)
-                                  , {- 33 -} Acc        (Layout t Expr  Dynamic) (Layout t Expr  Dynamic)
-                                  , {- 34 -} App        (Layout t Expr  Dynamic)
-                                  , {- 35 -} Cons       (Layout t Expr  Dynamic)
-                                  , {- 36 -} Lam        (Layout t Expr  Dynamic)
-                                  , {- 37 -} Native     (Layout t Expr  Dynamic) (Layout t Expr  Dynamic)
-                                  , {- 38 -} Blank
-                                  , {- 39 -} Unify      (Layout t Draft Static )
-                                  , {- 40 -} Acc   Str  (Layout t Draft Static )
-                                  , {- 41 -} App        (Layout t Draft Static )
-                                  , {- 42 -} Lam        (Layout t Draft Static )
-                                  , {- 43 -} Native Str (Layout t Draft Static )
-                                  , {- 44 -} Var        (Layout t Draft Dynamic)
-                                  , {- 45 -} Unify      (Layout t Draft Dynamic)
-                                  , {- 46 -} Acc        (Layout t Draft Dynamic) (Layout t Draft Dynamic)
-                                  , {- 47 -} App        (Layout t Draft Dynamic)
-                                  , {- 48 -} Cons       (Layout t Draft Dynamic)
-                                  , {- 49 -} Lam        (Layout t Draft Dynamic)
-                                  , {- 50 -} Native     (Layout t Draft Dynamic) (Layout t Draft Dynamic)
+                                  , {- 27 -} Sub        (Layout t Expr  Static )
+                                  , {- 28 -} Acc   Str  (Layout t Expr  Static )
+                                  , {- 29 -} App        (Layout t Expr  Static )
+                                  , {- 30 -} Lam        (Layout t Expr  Static )
+                                  , {- 31 -} Native Str (Layout t Expr  Static )
+                                  , {- 32 -} Var        (Layout t Expr  Dynamic)
+                                  , {- 33 -} Unify      (Layout t Expr  Dynamic)
+                                  , {- 34 -} Sub        (Layout t Expr  Dynamic)
+                                  , {- 35 -} Acc        (Layout t Expr  Dynamic) (Layout t Expr  Dynamic)
+                                  , {- 36 -} App        (Layout t Expr  Dynamic)
+                                  , {- 37 -} Cons       (Layout t Expr  Dynamic)
+                                  , {- 38 -} Lam        (Layout t Expr  Dynamic)
+                                  , {- 39 -} Native     (Layout t Expr  Dynamic) (Layout t Expr  Dynamic)
+                                  , {- 40 -} Blank
+                                  , {- 41 -} Unify      (Layout t Draft Static )
+                                  , {- 42 -} Sub        (Layout t Draft Static )
+                                  , {- 43 -} Acc   Str  (Layout t Draft Static )
+                                  , {- 44 -} App        (Layout t Draft Static )
+                                  , {- 45 -} Lam        (Layout t Draft Static )
+                                  , {- 46 -} Native Str (Layout t Draft Static )
+                                  , {- 47 -} Var        (Layout t Draft Dynamic)
+                                  , {- 48 -} Unify      (Layout t Draft Dynamic)
+                                  , {- 49 -} Sub        (Layout t Draft Dynamic)
+                                  , {- 50 -} Acc        (Layout t Draft Dynamic) (Layout t Draft Dynamic)
+                                  , {- 51 -} App        (Layout t Draft Dynamic)
+                                  , {- 52 -} Cons       (Layout t Draft Dynamic)
+                                  , {- 53 -} Lam        (Layout t Draft Dynamic)
+                                  , {- 54 -} Native     (Layout t Draft Dynamic) (Layout t Draft Dynamic)
                                   ]
 
 #ifndef CachedTypeFamilies
@@ -550,30 +567,34 @@ type DecodeMap_MANUAL_CACHE t =
          , {- 24 -} '( Native     (Layout t Thunk Dynamic) (Layout t Thunk Dynamic) , 24 )
          , {- 25 -} '( Var   Str                                                    , 25 )
          , {- 26 -} '( Unify      (Layout t Expr  Static )                          , 26 )
-         , {- 27 -} '( Acc   Str  (Layout t Expr  Static )                          , 27 )
-         , {- 28 -} '( App        (Layout t Expr  Static )                          , 28 )
-         , {- 29 -} '( Lam        (Layout t Expr  Static )                          , 29 )
-         , {- 30 -} '( Native Str (Layout t Expr  Static )                          , 30 )
-         , {- 31 -} '( Var        (Layout t Expr  Dynamic)                          , 31 )
-         , {- 32 -} '( Unify      (Layout t Expr  Dynamic)                          , 32 )
-         , {- 33 -} '( Acc        (Layout t Expr  Dynamic) (Layout t Expr  Dynamic) , 33 )
-         , {- 34 -} '( App        (Layout t Expr  Dynamic)                          , 34 )
-         , {- 35 -} '( Cons       (Layout t Expr  Dynamic)                          , 35 )
-         , {- 36 -} '( Lam        (Layout t Expr  Dynamic)                          , 36 )
-         , {- 37 -} '( Native     (Layout t Expr  Dynamic) (Layout t Expr  Dynamic) , 37 )
-         , {- 38 -} '( Blank                                                        , 38 )
-         , {- 39 -} '( Unify      (Layout t Draft Static )                          , 39 )
-         , {- 40 -} '( Acc   Str  (Layout t Draft Static )                          , 40 )
-         , {- 41 -} '( App        (Layout t Draft Static )                          , 41 )
-         , {- 42 -} '( Lam        (Layout t Draft Static )                          , 42 )
-         , {- 43 -} '( Native Str (Layout t Draft Static )                          , 43 )
-         , {- 44 -} '( Var        (Layout t Draft Dynamic)                          , 44 )
-         , {- 45 -} '( Unify      (Layout t Draft Dynamic)                          , 45 )
-         , {- 46 -} '( Acc        (Layout t Draft Dynamic) (Layout t Draft Dynamic) , 46 )
-         , {- 47 -} '( App        (Layout t Draft Dynamic)                          , 47 )
-         , {- 48 -} '( Cons       (Layout t Draft Dynamic)                          , 48 )
-         , {- 49 -} '( Lam        (Layout t Draft Dynamic)                          , 49 )
-         , {- 50 -} '( Native     (Layout t Draft Dynamic) (Layout t Draft Dynamic) , 50 )
+         , {- 27 -} '( Sub        (Layout t Expr  Static )                          , 27 )
+         , {- 28 -} '( Acc   Str  (Layout t Expr  Static )                          , 28 )
+         , {- 29 -} '( App        (Layout t Expr  Static )                          , 29 )
+         , {- 30 -} '( Lam        (Layout t Expr  Static )                          , 30 )
+         , {- 31 -} '( Native Str (Layout t Expr  Static )                          , 31 )
+         , {- 32 -} '( Var        (Layout t Expr  Dynamic)                          , 32 )
+         , {- 33 -} '( Unify      (Layout t Expr  Dynamic)                          , 33 )
+         , {- 34 -} '( Sub        (Layout t Expr  Dynamic)                          , 34 )
+         , {- 35 -} '( Acc        (Layout t Expr  Dynamic) (Layout t Expr  Dynamic) , 35 )
+         , {- 36 -} '( App        (Layout t Expr  Dynamic)                          , 36 )
+         , {- 37 -} '( Cons       (Layout t Expr  Dynamic)                          , 37 )
+         , {- 38 -} '( Lam        (Layout t Expr  Dynamic)                          , 38 )
+         , {- 39 -} '( Native     (Layout t Expr  Dynamic) (Layout t Expr  Dynamic) , 39 )
+         , {- 40 -} '( Blank                                                        , 40 )
+         , {- 41 -} '( Unify      (Layout t Draft Static )                          , 41 )
+         , {- 42 -} '( Sub        (Layout t Draft Static )                          , 42 )
+         , {- 43 -} '( Acc   Str  (Layout t Draft Static )                          , 43 )
+         , {- 44 -} '( App        (Layout t Draft Static )                          , 44 )
+         , {- 45 -} '( Lam        (Layout t Draft Static )                          , 45 )
+         , {- 46 -} '( Native Str (Layout t Draft Static )                          , 46 )
+         , {- 47 -} '( Var        (Layout t Draft Dynamic)                          , 47 )
+         , {- 48 -} '( Unify      (Layout t Draft Dynamic)                          , 48 )
+         , {- 49 -} '( Sub        (Layout t Draft Dynamic)                          , 49 )
+         , {- 50 -} '( Acc        (Layout t Draft Dynamic) (Layout t Draft Dynamic) , 50 )
+         , {- 51 -} '( App        (Layout t Draft Dynamic)                          , 51 )
+         , {- 52 -} '( Cons       (Layout t Draft Dynamic)                          , 52 )
+         , {- 53 -} '( Lam        (Layout t Draft Dynamic)                          , 53 )
+         , {- 54 -} '( Native     (Layout t Draft Dynamic) (Layout t Draft Dynamic) , 54 )
          ]
 
 #ifndef CachedTypeFamilies
@@ -614,30 +635,34 @@ type EncodeMap_MANUAL_CACHE t =
          , {- 24 -} '( Native     (Layout t Thunk Dynamic) (Layout t Thunk Dynamic) , '[ 24 , 4,6,8             ] )
          , {- 25 -} '( Var    Str                                                   , '[ 25 , 5,6,7,8           ] )
          , {- 26 -} '( Unify      (Layout t Expr  Static )                          , '[ 26 , 5,6,7,8           ] )
-         , {- 27 -} '( Acc    Str (Layout t Expr  Static )                          , '[ 27 , 5,6,7,8           ] )
-         , {- 28 -} '( App        (Layout t Expr  Static )                          , '[ 28 , 5,6,7,8           ] )
-         , {- 29 -} '( Lam        (Layout t Expr  Static )                          , '[ 29 , 5,6,7,8           ] )
-         , {- 30 -} '( Native Str (Layout t Expr  Static )                          , '[ 30 , 5,6,7,8           ] )
-         , {- 31 -} '( Var        (Layout t Expr  Dynamic)                          , '[ 31 , 6,8               ] )
-         , {- 32 -} '( Unify      (Layout t Expr  Dynamic)                          , '[ 32 , 6,8               ] )
-         , {- 33 -} '( Acc        (Layout t Expr  Dynamic) (Layout t Expr  Dynamic) , '[ 33 , 6,8               ] )
-         , {- 34 -} '( App        (Layout t Expr  Dynamic)                          , '[ 34 , 6,8               ] )
-         , {- 35 -} '( Cons       (Layout t Expr  Dynamic)                          , '[ 35 , 6,8               ] )
-         , {- 36 -} '( Lam        (Layout t Expr  Dynamic)                          , '[ 36 , 6,8               ] )
-         , {- 37 -} '( Native     (Layout t Expr  Dynamic) (Layout t Expr  Dynamic) , '[ 37 , 6,8               ] )
-         , {- 38 -} '( Blank                                                        , '[ 38 , 7,8               ] )
-         , {- 39 -} '( Unify      (Layout t Draft Static )                          , '[ 39 , 7,8               ] )
-         , {- 40 -} '( Acc    Str (Layout t Draft Static )                          , '[ 40 , 7,8               ] )
-         , {- 41 -} '( App        (Layout t Draft Static )                          , '[ 41 , 7,8               ] )
-         , {- 42 -} '( Lam        (Layout t Draft Static )                          , '[ 42 , 7,8               ] )
-         , {- 43 -} '( Native Str (Layout t Draft Static )                          , '[ 43 , 7,8               ] )
-         , {- 44 -} '( Var        (Layout t Draft Dynamic)                          , '[ 44 , 8                 ] )
-         , {- 45 -} '( Unify      (Layout t Draft Dynamic)                          , '[ 45 , 8                 ] )
-         , {- 46 -} '( Acc        (Layout t Draft Dynamic) (Layout t Draft Dynamic) , '[ 46 , 8                 ] )
-         , {- 47 -} '( App        (Layout t Draft Dynamic)                          , '[ 47 , 8                 ] )
-         , {- 48 -} '( Cons       (Layout t Draft Dynamic)                          , '[ 48 , 8                 ] )
-         , {- 49 -} '( Lam        (Layout t Draft Dynamic)                          , '[ 49 , 8                 ] )
-         , {- 50 -} '( Native     (Layout t Draft Dynamic) (Layout t Draft Dynamic) , '[ 50 , 8                 ] )
+         , {- 27 -} '( Sub        (Layout t Expr  Static )                          , '[ 27 , 5,6,7,8           ] )
+         , {- 28 -} '( Acc    Str (Layout t Expr  Static )                          , '[ 28 , 5,6,7,8           ] )
+         , {- 29 -} '( App        (Layout t Expr  Static )                          , '[ 29 , 5,6,7,8           ] )
+         , {- 30 -} '( Lam        (Layout t Expr  Static )                          , '[ 30 , 5,6,7,8           ] )
+         , {- 31 -} '( Native Str (Layout t Expr  Static )                          , '[ 31 , 5,6,7,8           ] )
+         , {- 32 -} '( Var        (Layout t Expr  Dynamic)                          , '[ 32 , 6,8               ] )
+         , {- 33 -} '( Unify      (Layout t Expr  Dynamic)                          , '[ 33 , 6,8               ] )
+         , {- 34 -} '( Sub        (Layout t Expr  Dynamic)                          , '[ 34 , 6,8               ] )
+         , {- 35 -} '( Acc        (Layout t Expr  Dynamic) (Layout t Expr  Dynamic) , '[ 35 , 6,8               ] )
+         , {- 36 -} '( App        (Layout t Expr  Dynamic)                          , '[ 36 , 6,8               ] )
+         , {- 37 -} '( Cons       (Layout t Expr  Dynamic)                          , '[ 37 , 6,8               ] )
+         , {- 38 -} '( Lam        (Layout t Expr  Dynamic)                          , '[ 38 , 6,8               ] )
+         , {- 39 -} '( Native     (Layout t Expr  Dynamic) (Layout t Expr  Dynamic) , '[ 39 , 6,8               ] )
+         , {- 40 -} '( Blank                                                        , '[ 40 , 7,8               ] )
+         , {- 41 -} '( Unify      (Layout t Draft Static )                          , '[ 41 , 7,8               ] )
+         , {- 42 -} '( Sub        (Layout t Draft Static )                          , '[ 42 , 7,8               ] )
+         , {- 43 -} '( Acc    Str (Layout t Draft Static )                          , '[ 43 , 7,8               ] )
+         , {- 44 -} '( App        (Layout t Draft Static )                          , '[ 44 , 7,8               ] )
+         , {- 45 -} '( Lam        (Layout t Draft Static )                          , '[ 45 , 7,8               ] )
+         , {- 46 -} '( Native Str (Layout t Draft Static )                          , '[ 46 , 7,8               ] )
+         , {- 47 -} '( Var        (Layout t Draft Dynamic)                          , '[ 47 , 8                 ] )
+         , {- 48 -} '( Unify      (Layout t Draft Dynamic)                          , '[ 48 , 8                 ] )
+         , {- 49 -} '( Sub        (Layout t Draft Dynamic)                          , '[ 49 , 8                 ] )
+         , {- 50 -} '( Acc        (Layout t Draft Dynamic) (Layout t Draft Dynamic) , '[ 50 , 8                 ] )
+         , {- 51 -} '( App        (Layout t Draft Dynamic)                          , '[ 51 , 8                 ] )
+         , {- 52 -} '( Cons       (Layout t Draft Dynamic)                          , '[ 52 , 8                 ] )
+         , {- 53 -} '( Lam        (Layout t Draft Dynamic)                          , '[ 53 , 8                 ] )
+         , {- 54 -} '( Native     (Layout t Draft Dynamic) (Layout t Draft Dynamic) , '[ 54 , 8                 ] )
          ]
 
 #ifndef CachedTypeFamilies

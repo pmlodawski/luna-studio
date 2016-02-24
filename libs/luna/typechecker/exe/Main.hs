@@ -47,7 +47,7 @@ import           Luna.Diagnostic.Vis.GraphViz
 import           Luna.Evaluation.Runtime                         (Dynamic, Static)
 import qualified Luna.Evaluation.Runtime                         as Runtime
 import qualified Luna.Evaluation.Model                           as EvalModel
-import qualified Luna.Library.StdLib                             as StdLib
+import qualified Luna.Library.Standard                           as StdLib
 import qualified Luna.Library.Symbol.Class                       as Symbol
 import           Luna.Syntax.AST.Term                            hiding (Draft, Expr, Lit, Source, Target, Thunk, Val, source, target, Input)
 import qualified Luna.Syntax.AST.Term                            as Term
@@ -123,16 +123,83 @@ input_g2 = do
     n2  <- int 2
     pl  <- acc "+" n1
     id1 <- var "id"
-    id2 <- var "id"
+    --id2 <- var "id"
     apid2 <- app id1 [arg n2]
     br  <- app pl [arg apid2]
     ts  <- acc "toString" br
     tsa <- app ts []
-    idtsa <- app id2 [arg tsa]
+    idtsa <- app id1 [arg tsa]
     le  <- acc "length" idtsa
     lea <- app le []
 
-    return ([n1, n2], [br, tsa, lea, apid2, idtsa], [pl, ts, le], [pl, ts, le, id1, id2])
+    return ([n1, n2], [br, tsa, lea, apid2, idtsa], [pl, ts, le], [pl, ts, le, id1])
+
+input_g3 :: ( term ~ Draft Static
+            , nr   ~ Ref Node (ls :<: term)
+            , MonadIO       m
+            , NodeInferable m (ls :<: term)
+            , TermNode Star m (ls :<: term)
+            , TermNode Var  m (ls :<: term)
+            , TermNode App  m (ls :<: term)
+            , TermNode Acc  m (ls :<: term)
+            , TermNode Num  m (ls :<: term)
+            , TermNode Str  m (ls :<: term)
+            ) => m ([nr],[nr],[nr],[nr])
+input_g3 = do
+    -- The expression here is `(id (1.+ (id 2)).toString).length`
+    n1  <- int 1
+    s1  <- str "Str!"
+    foo <- var "foo"
+    a1  <- app foo [arg n1]
+    a2  <- app foo [arg s1]
+
+    --n2  <- int 2
+    --bar <- var "bar"
+    --a3  <- app bar [arg n2]
+
+    return ([n1, s1], [a1, a2], [], [foo])
+    --return ([n1, s1, n2], [a1, a2, a3], [], [foo, bar])
+
+input_simple1 :: ( term ~ Draft Static
+                 , nr   ~ Ref Node (ls :<: term)
+                 , MonadIO       m
+                 , NodeInferable m (ls :<: term)
+                 , TermNode Star m (ls :<: term)
+                 , TermNode Var  m (ls :<: term)
+                 , TermNode App  m (ls :<: term)
+                 , TermNode Acc  m (ls :<: term)
+                 , TermNode Num  m (ls :<: term)
+                 ) => m ([nr],[nr],[nr],[nr])
+input_simple1 = do
+    -- The expression here is `(id (1.+ (id 2)).toString).length`
+    n1  <- int 1
+    n2  <- int 2
+    pl  <- acc "+" n1
+    br  <- app pl [arg n2]
+
+    return ([n1, n2], [br], [pl], [pl])
+
+
+input_simple2 :: ( term ~ Draft Static
+            , nr   ~ Ref Node (ls :<: term)
+            , MonadIO       m
+            , NodeInferable m (ls :<: term)
+            , TermNode Star m (ls :<: term)
+            , TermNode Var  m (ls :<: term)
+            , TermNode App  m (ls :<: term)
+            , TermNode Acc  m (ls :<: term)
+            , TermNode Num  m (ls :<: term)
+            , TermNode Str  m (ls :<: term)
+            ) => m ([nr],[nr],[nr],[nr])
+input_simple2 = do
+    -- The expression here is `(id (1.+ (id 2)).toString).length`
+    n1  <- int 1
+    s1  <- str "s"
+    fid <- var "id"
+    appIdN <- app fid [arg n1]
+    appIdS <- app fid [arg s1]
+
+    return ([n1, s1], [appIdN, appIdS], [], [fid])
 
 
 input_g1_resolution_mock :: ( term ~ Draft Static
@@ -244,7 +311,7 @@ symbolMapTest = do
 
         return (plus, sin, err, l1, l2)
 
-    renderAndOpen [("beforeImporting", g)]
+    renderAndOpen [("beforeImporting", "beforeImporting", g)]
 
     (f, (g :: NetGraph ())) <- flip Symbol.evalT def $ runBuild g $ do
         Symbol.loadFunctions StdLib.symbols
@@ -252,7 +319,7 @@ symbolMapTest = do
 
     mapM print f
 
-    renderAndOpen [("afterImporting", g)]
+    renderAndOpen [("afterImporting", "afterImporting", g)]
     return ()
 
 collectGraph tag = do
@@ -271,24 +338,26 @@ test1 = do
 
         -- Running Type Checking compiler stage
         (gs, _) <- TypeCheck.runT $ runBuild g $ Writer.execWriterT $ do
-            (lits, apps, accs, funcs) <- input_g2
+            --(lits, apps, accs, funcs) <- input_g2
+            --(lits, apps, accs, funcs) <- input_simple1
+            (lits, apps, accs, funcs) <- input_simple2
             collectGraph "Initial"
 
             Symbol.loadFunctions StdLib.symbols
-            TypeCheckState.modify_ $ (TypeCheckState.untypedApps       .~ apps)
-                                   . (TypeCheckState.untypedAccs       .~ accs)
-                                   . (TypeCheckState.untypedLits       .~ lits)
+            TypeCheckState.modify_ $ (TypeCheckState.untypedApps       .~ apps )
+                                   . (TypeCheckState.untypedAccs       .~ accs )
+                                   . (TypeCheckState.untypedLits       .~ lits )
                                    . (TypeCheckState.unresolvedSymbols .~ funcs)
 
             let tc = Sequence LiteralsPass
-                            $ Sequence StructuralInferencePass
-                                     $ Loop $ Sequence (Loop UnificationPass)
-                                                       SymbolImportingPass
+                   $ Sequence StructuralInferencePass
+                   $ Loop $ Sequence (Loop UnificationPass)
+                          $ SymbolImportingPass
 
             TypeCheck.runTCWithArtifacts tc collectGraph
 
         let names = printf "%02d" <$> ([0..] :: [Int])
-        renderAndOpen $ zipWith (\ord (tag, g) -> (ord <> "_" <> tag, g)) names gs
+        renderAndOpen $ zipWith (\ord (tag, g) -> (ord, ord <> "_" <> tag, g)) names gs
     print "end"
 
 
@@ -413,7 +482,7 @@ instance e ~ e' => Referenced Edge (VectorGraph n e c) e' where refs = fmap Ref 
 
 main :: IO ()
 main = do
-    showcase
+    --showcase
     {-symbolMapTest-}
     test1
     --test2
@@ -456,7 +525,7 @@ showcase :: IO ()
 showcase = do
     (_,  g :: NetGraph () ) <- prebuild
     (_, g') <- foo g
-    renderAndOpen [ ("g", g')
+    renderAndOpen [ ("g", "g", g')
                   ]
 
 foo :: forall a. Show a => NetGraph a -> IO (Ref Node (NetLayers a :<: Draft Static), NetGraph a)

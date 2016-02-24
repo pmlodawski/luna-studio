@@ -17,5 +17,6 @@ acc    = inferNodeM ∘∘ Node.acc
 app    = inferNodeM ∘∘ Node.app
 var    = inferNodeM ∘  Node.var
 unify  = inferNodeM ∘∘ Node.unify
+sub    = inferNodeM ∘∘ Node.sub
 blank  = inferNodeM    Node.blank
 native = inferNodeM ∘∘ Node.native

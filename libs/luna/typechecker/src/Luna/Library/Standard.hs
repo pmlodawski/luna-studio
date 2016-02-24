@@ -2,7 +2,7 @@
 {-# LANGUAGE CPP                 #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Luna.Library.StdLib where
+module Luna.Library.Standard where
 
 import Prelude.Luna
 
@@ -73,17 +73,17 @@ makeId = do
 
 symbols :: Show a => SymbolMap (NetLayers a :<: Draft Static) (NetGraph a)
 symbols = Map.fromList $ fmap (\(n, b) -> (QualPath.mk (n :: String), makeFunction b))
-    [ ("Int.+",          makeNativeFun "(+)"  (Just "Int") ["Int"] "Int")
-    , ("Int.*",          makeNativeFun "(*)"  (Just "Int") ["Int"] "Int")
-    , ("Int.toString",   makeNativeFun "show" (Just "Int") []      "String")
-    , ("String.length",  makeNativeFun "length" (Just "String") [] "Int")
-    , ("replicate"   ,   makeNativeFun "replicate" Nothing ["Int", "Double"] "[Double]")
-    , ("Int.toDouble",   makeNativeFun "fromIntegral" (Just "Int") [] "Double")
-    , ("[Int].toDouble", makeNativeFun "(map fromIntegral)" (Just "[Int]") [] "[Double]")
-    , ("zero2pi"     ,   makeNativeFun "[0.0,0.1 .. 3.14]"      Nothing [] "[Double]")
-    , ("vsin"        ,   makeNativeFun "(map sin)"   Nothing ["[Double]"] "[Double]")
-    , ("sin"         ,   makeNativeFun "(sin)"   Nothing ["Double"] "Double")
-    , ("range"       ,   makeNativeFun "enumFromTo" Nothing ["Int", "Int"] "[Int]")
-    , ("[Double]./"  ,   makeNativeFun "(flip $ map . flip (/))" (Just "[Double]") ["Double"] "[Double]")
+    [ ("Int.+",          makeNativeFun "(+)"                     (Just "Int")      ["Int"]           "Int"      )
+    , ("Int.*",          makeNativeFun "(*)"                     (Just "Int")      ["Int"]           "Int"      )
+    , ("Int.toString",   makeNativeFun "show"                    (Just "Int")      []                "String"   )
+    , ("String.length",  makeNativeFun "length"                  (Just "String")   []                "Int"      )
+    , ("replicate"   ,   makeNativeFun "replicate"               Nothing           ["Int", "Double"] "[Double]" )
+    , ("Int.toDouble",   makeNativeFun "fromIntegral"            (Just "Int")      []                "Double"   )
+    , ("[Int].toDouble", makeNativeFun "(map fromIntegral)"      (Just "[Int]")    []                "[Double]" )
+    , ("zero2pi"     ,   makeNativeFun "[0.0,0.1 .. 3.14]"       Nothing           []                "[Double]" )
+    , ("vsin"        ,   makeNativeFun "(map sin)"               Nothing           ["[Double]"]      "[Double]" )
+    , ("sin"         ,   makeNativeFun "(sin)"                   Nothing           ["Double"]        "Double"   )
+    , ("range"       ,   makeNativeFun "enumFromTo"              Nothing           ["Int", "Int"]    "[Int]"    )
+    , ("[Double]./"  ,   makeNativeFun "(flip $ map . flip (/))" (Just "[Double]") ["Double"]        "[Double]" )
     , ("id"          ,   makeId)
     ]

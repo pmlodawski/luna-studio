@@ -115,7 +115,7 @@ main = do
         TypeCheck.runT $ do
             (refsToEval, g01) <- runBuild  g00 graph1
             g02               <- evalBuild g01 $ Interpreter.run refsToEval
-            renderAndOpen [ ("g1", g01)
+            renderAndOpen [ ("g1", "g1", g01)
                           ]
     putStrLn "done"
 
