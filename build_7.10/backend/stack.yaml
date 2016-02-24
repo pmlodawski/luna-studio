@@ -1,7 +1,6 @@
 extra-deps: [ghc-session-0.1.2.0, graphviz-2999.18.0.2, string-qq-0.0.2, error-util-0.0.1.1,
   cond-0.4.1.1, tuple-0.3.0.2, OneTuple-0.2.1, docopt-0.7.0.4, saltine-0.0.0.4]
-ghc-options:
-  '*': -DFastCompilation -threaded -O
+ghc-options: {'*': -DFastCompilation -threaded -O}
 local-bin-path: ../../dist/bin
 packages:
 - {extra-dep: true, location: ../../libs/bus}
@@ -51,7 +50,7 @@ packages:
 - extra-dep: true
   location: {commit: eee76a96bdd1d442299cecdcd1e445d76eef3b1a, git: 'https://github.com/wdanilo/type-cache.git'}
 - extra-dep: true
-  location: {commit: 7e91afcbb940eb9822e034577bf72397924d4599, git: 'https://github.com/wdanilo/typelevel.git'}
+  location: {commit: 360c6001179284a97068ce79a41e6deaba6ac67b, git: 'https://github.com/wdanilo/typelevel.git'}
 - extra-dep: true
   location: {commit: 13c735377b61d6ab634f689e88612cf68d6a4111, git: 'https://github.com/wdanilo/data-construction.git'}
 - location: {commit: 4ab4cc65f6d04027416f16f761aad7adaef37a78, git: 'https://github.com/wdanilo/data-member.git'}

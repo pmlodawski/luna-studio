@@ -94,7 +94,7 @@ def main():
         print "--- %s ---" % path
         print "Running global gencabal"
         gencabal()
-        
+
         path = os.path.abspath(path)
         os.chdir(path)
         cabalPaths = glob (path + "/**/*.tcabal")
@@ -105,7 +105,7 @@ def main():
             libPath = os.path.dirname(cabalPath)
             (version, conf, match) = readConf(cabalPath)
             print "\n[%s/%s] >> " % (i + 1, total) + libPath + " (" + showVersion(version) + ")"
-            
+
             os.chdir(libPath)
             gencabal()
             if not checkPublic():
@@ -129,7 +129,7 @@ def main():
                 else:
                     print "Git status:"
                     print status
-            
+
                 simpleRepl()
 
 
@@ -188,7 +188,7 @@ def main():
                         print "\nEnabling recovery shell access:"
                         simpleRepl()
 
-            
+
             if ask ('Upload to hackage?'):
                 if (status or args.upload_missing) and not args.no_hackage:
                     while True:
@@ -248,10 +248,13 @@ def main():
                 if isinstance(loc, dict):
                     gitloc = loc['git']
                     (pkgname,_) = os.path.splitext(gitloc.split('/')[-1])
-                    ref = libRefs[pkgname]
-                    if loc['commit'] != ref:
-                        diffs.append(pkgname)
-                    loc['commit'] = ref
+                    if pkgname in libRefs:
+                        ref = libRefs[pkgname]
+                        if loc['commit'] != ref:
+                            diffs.append(pkgname)
+                        loc['commit'] = ref
+                    else:
+                        print "Skipping %s" % pkgname
 
             print "Following packages were found with obsolete references:"
             for pkg in diffs:
@@ -260,7 +263,7 @@ def main():
             print "Writing new configuration"
             with open(yamlPath, 'w') as file:
                 file.write(yaml.dump(conf))
-            
+
     print "DONE!"
 
 

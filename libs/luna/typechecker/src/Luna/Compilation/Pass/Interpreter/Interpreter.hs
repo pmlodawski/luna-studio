@@ -46,6 +46,7 @@ import           GHC.Prim                    (Any)
 import           Control.Monad.Catch         (MonadCatch, MonadMask, catchAll)
 import           Language.Haskell.Session    (GhcMonad)
 import qualified Language.Haskell.Session    as HS
+import  Control.Monad.Ghc (GhcT)
 
 
 #define InterpreterCtx(m, ls, term) ( ls   ~ NetLayers a                                       \
@@ -60,6 +61,7 @@ import qualified Language.Haskell.Session    as HS
                                     , HasProp InterpreterData (ls :<: term)                    \
                                     , Prop    InterpreterData (ls :<: term) ~ InterpreterLayer \
                                     , InterpreterMonad (Env (Ref Node (ls :<: term))) (m)      \
+                                    , MonadMask (m)                                            \
                                     )
 
 
@@ -153,7 +155,9 @@ collectNodesToEval ref = do
             collectNodesToEval p
 
 
-evaluateNode :: InterpreterCtx(m, ls, term) => Ref Node (ls :<: term) -> m ()
+-- run :: (MonadIO m, MonadMask m, Functor m) => GhcT m a -> m a
+
+evaluateNode :: (InterpreterCtx(m, ls, term), HS.SessionMonad (GhcT m)) => Ref Node (ls :<: term) -> m ()
 evaluateNode ref = do
     node <- read ref
     putStrLn $ "evaluating " <> show ref
@@ -173,10 +177,10 @@ evaluateNode ref = do
             putStrLn $ "App " <> show funRep <> " (" <> name <> ") " <> show unpackedArgs
             -- putStrLn $ "funNode " <> show funNode
             values <- argumentsValues unpackedArgs
-            -- res <- flip catchAll (\e -> return $ Session.toAny (-1)) $ HS.run $ do
-            --     fun <- Session.findSymbol name tpString
-            --     let res = foldl Session.appArg fun $ Session.toAny <$> values
-            --     return res
+            res <- flip catchAll (\e -> return $ Session.toAny (-1)) $ HS.run $ do
+                fun <- Session.findSymbol name tpString
+                let res = foldl Session.appArg fun $ Session.toAny <$> values
+                return res
             -- putStrLn $ "res " <> show ((Session.unsafeCast res) :: Int)
             return ()
             -- GHC.Prim.Any
@@ -206,6 +210,7 @@ evaluateNodes reqRefs = do
                              , MonadFix (m)                                             \
                              , HasProp InterpreterData (ls :<: term)                    \
                              , Prop    InterpreterData (ls :<: term) ~ InterpreterLayer \
+                             , MonadMask (m)                                            \
                              )
 
 run :: forall env m ls term ne a n e c. (PassCtx(InterpreterT env m, ls, term), MonadIO m, MonadFix m, env ~ Env (Ref Node (ls :<: term)))

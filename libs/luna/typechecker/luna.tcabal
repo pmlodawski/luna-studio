@@ -91,6 +91,7 @@ Library
                  , dependent-state
                  , lens-utils
                  , data-pool
+                 , ghc-mtl
 
 
 Executable luna
@@ -165,6 +166,7 @@ Executable luna
                  , data-result
                  , split
                  , dependent-state
+                 , ghc-mtl
 
 
 Executable luna-inf-test
@@ -239,6 +241,7 @@ Executable luna-inf-test
                  , data-result
                  , split
                  , dependent-state
+                 , ghc-mtl
 
 
 Executable luna-int-test
@@ -313,4 +316,5 @@ Executable luna-int-test
                  , data-result
                  , split
                  , dependent-state
+                 , ghc-mtl
 
