@@ -99,20 +99,22 @@ updateConnections = do
 outerPos (InPortRef _ Port.Self) = 0.0
 outerPos _ = 22.0
 
-getConnectionLine :: IntMap (Vector2 Double) -> Map AnyPortRef Double -> Map AnyPortRef ValueType -> OutPortRef  -> InPortRef -> (Vector2 Double, Vector2 Double, Bool, Int)
+getConnectionLine :: IntMap (Vector2 Double) -> Map AnyPortRef (Double, Int) -> Map AnyPortRef ValueType -> OutPortRef  -> InPortRef -> (Vector2 Double, Vector2 Double, Bool, Int)
 getConnectionLine nodePos portAngles portTypes srcPortRef dstPortRef = (srcWs, dstWs, visible, color) where
     srcNWs@(Vector2 xSrcN ySrcN) = nodePos IntMap.! (srcPortRef ^. PortRef.srcNodeId)
     dstNWs@(Vector2 xDstN yDstN) = nodePos IntMap.! (dstPortRef ^. PortRef.dstNodeId)
     outerSrcPos                  = 20.0
     outerDstPos                  = outerPos dstPortRef
-    angleSrc                     = Map.findWithDefault missingPortPos (OutPortRef' srcPortRef) portAngles
-    angleDst                     = Map.findWithDefault missingPortPos (InPortRef' dstPortRef) portAngles
+    (angleSrcPort, srcPortCount) = Map.findWithDefault missingPortPos (OutPortRef' srcPortRef) portAngles
+    (angleDstPort, dstPortCount) = Map.findWithDefault missingPortPos (InPortRef' dstPortRef) portAngles
+    angleSrc                     = boundedAngle angleSrcPort srcPortCount srcNWs dstNWs
+    angleDst                     = boundedAngle angleDstPort dstPortCount dstNWs srcNWs
     srcWs                        = Vector2 (xSrcN + outerSrcPos * cos angleSrc) (ySrcN + outerSrcPos * sin angleSrc)
     dstWs                        = Vector2 (xDstN + outerDstPos * cos angleDst) (yDstN + outerDstPos * sin angleDst)
     delta                        = dstNWs - srcNWs
     visible                      = lengthSquared delta > 4 * portOuterBorderSquared
     color                        = fromMaybe missingPortColor $ vtToColor <$> portTypes ^? ix (OutPortRef' srcPortRef)
-    missingPortPos               = -pi / 2.0
+    missingPortPos               = (-pi / 2.0, 1)
     missingPortColor             = 13
 
 
@@ -145,10 +147,10 @@ portRefToWidgetMap = do
     ports <- allPorts
     return $ Map.fromList $ (\file -> (file ^. widget . PortModel.portRef, file ^. objectId)) <$> ports
 
-portRefToAngleMap :: Command UIRegistry.State (Map AnyPortRef Double)
+portRefToAngleMap :: Command UIRegistry.State (Map AnyPortRef (Double, Int))
 portRefToAngleMap = do
     ports <- allPorts
-    return $ Map.fromList $ (\file -> (file ^. widget . PortModel.portRef, file ^. widget . PortModel.angle)) <$> ports
+    return $ Map.fromList $ (\file -> (file ^. widget . PortModel.portRef, (file ^. widget . PortModel.angle, file ^. widget . PortModel.portCount))) <$> ports
 
 nodePositionMap :: Command UIRegistry.State (IntMap (Vector2 Double))
 nodePositionMap = do

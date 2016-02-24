@@ -171,8 +171,8 @@ onValueChanged h = addHandler (ValueChangedHandler h) mempty
 
 makePortControl :: WidgetId -> NodeId -> Port -> Command UIRegistry.State ()
 makePortControl parent nodeId port = case port ^. Port.portId of
-    OutPortId _ -> return ()
-    InPortId inPort -> makeInPortControl parent nodeId inPort port
+    InPortId (Arg ix) -> makeInPortControl parent nodeId (Arg ix) port
+    _ -> return ()
 
 makeInPortControl :: WidgetId -> NodeId -> InPort -> Port -> Command UIRegistry.State ()
 makeInPortControl parent nodeId inPort port = case port ^. Port.state of
