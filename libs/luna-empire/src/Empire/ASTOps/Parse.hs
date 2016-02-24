@@ -47,7 +47,7 @@ parseAcc expr = do
         []       -> throwError "Can't parse: empty expression"
         t : accs -> do
             target <- parseInitial t
-            as     <- mapM Builder.var (fromString <$> accs :: [Str])
+            as     <- mapM (Builder.var >=> flip Builder.app []) (fromString <$> accs :: [Str])
             buildAccs target as
 
 buildAccs :: ASTOp m => NodeRef -> [NodeRef] -> m NodeRef

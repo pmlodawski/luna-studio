@@ -14,7 +14,7 @@ type Type = String
 
 
 findSymbol :: HS.SessionMonad m => Name -> Type -> m Any
-findSymbol n t =  unsafeCoerce <$> HEval.interpretTyped n t
+findSymbol n t = unsafeCoerce <$> HEval.interpretTyped n t
 
 appArg :: Any -> Any -> Any
 appArg = unsafeCoerce

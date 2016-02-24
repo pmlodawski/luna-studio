@@ -37,7 +37,7 @@ import           Luna.Compilation.Pass.Interpreter.Interpreter   as Interpreter
 import           Data.Graph.Backend.VectorGraph
 import qualified Data.Graph.Builder.Class                        as Graph
 
-
+import           Control.Monad.Catch         (MonadCatch, MonadMask, catchAll)
 
 
 graph1 :: forall term node edge nr er ls m n e c. ( term ~ Draft Static
@@ -68,6 +68,13 @@ graph1 = do
     s2 <- str "def"
     s3 <- str "ghi"
 
+    j1 <- int 6
+    j2 <- int 7
+    plus <- str "+"
+
+
+    appPlus0   <- app plus [arg j1, arg j2]
+
     accPlus1a  <- acc "+" i1
     appPlus1a  <- app accPlus1a [arg i2]
 
@@ -86,7 +93,8 @@ graph1 = do
     accPlus2   <- acc "+" appPlus1b
     appPlus2   <- app accPlus2 [arg appLen]
 
-    let refsToEval = [appConc1b, appPlus1a]
+    -- let refsToEval = [appConc1b, appPlus1a]
+    let refsToEval = [appPlus0]
 
     forM_ refsToEval (\ref -> do
             (nd :: (ls :<: term)) <- read ref
@@ -109,13 +117,13 @@ main :: IO ()
 main = do
     putStrLn "Interpreter test"
     (_,  g00 :: NetGraph ()) <- prebuild
-    flip Env.evalT def $ do
+    flip catchAll (\e -> return ()) $ flip Env.evalT def $ do
         v <- view version <$> Env.get
         putStrLn $ "Luna compiler version " <> showVersion v
-        TypeCheck.runT $ do
+        flip catchAll (\e -> return ()) $ TypeCheck.runT $ do
             (refsToEval, g01) <- runBuild  g00 graph1
             g02               <- evalBuild g01 $ Interpreter.run refsToEval
-            renderAndOpen [ ("g1", "g1", g01)
+            renderAndOpen [ ("g2", "g2", g02)
                           ]
     putStrLn "done"
 

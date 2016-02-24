@@ -13,19 +13,18 @@ import qualified Empire.ASTOps.Builder as ASTBuilder
 import           Luna.Syntax.AST.Term  (Acc (..), App (..), Blank (..), Unify (..), Var (..), Num (..), Str (..))
 import qualified Luna.Syntax.Builder   as Builder
 
-printExpression' :: ASTOp m => [NodeRef] -> NodeRef -> m String
-printExpression' shadowVars nodeRef = do
-    let recur = printExpression' shadowVars
+printExpression' :: ASTOp m => Bool -> NodeRef -> m String
+printExpression' printEquations nodeRef = do
+    let recur = printExpression' printEquations
     node <- Builder.read nodeRef
     caseTest (uncover node) $ do
-        match $ \(Unify l r) -> do
-            leftRep  <- Builder.follow source l >>= recur
-            rightRep <- Builder.follow source r >>= recur
-            return $ leftRep ++ " = " ++ rightRep
-        match $ \(Var n) ->
-            if elem nodeRef shadowVars
-                then return "_"
-                else return $ toString n
+        match $ \(Unify l r) -> if printEquations
+            then do
+                leftRep  <- Builder.follow source l >>= recur
+                rightRep <- Builder.follow source r >>= recur
+                return $ leftRep ++ " = " ++ rightRep
+            else return "_"
+        match $ \(Var n) -> return $ toString n
         match $ \(Acc n t) -> do
             targetRep <- Builder.follow source t >>= recur
             return $ targetRep ++ "." ++ toString n
@@ -42,7 +41,7 @@ printExpression' shadowVars nodeRef = do
         match $ \ANY -> return ""
 
 printExpression :: ASTOp m => NodeRef -> m String
-printExpression = printExpression' []
+printExpression = printExpression' True
 
-printNodeExpression :: ASTOp m => [NodeRef] -> NodeRef -> m String
-printNodeExpression = printExpression'
+printNodeExpression :: ASTOp m => NodeRef -> m String
+printNodeExpression = printExpression' False

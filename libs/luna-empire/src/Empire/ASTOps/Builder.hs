@@ -98,30 +98,27 @@ reapply funRef args = do
         match $ \ANY -> return funRef
     Builder.app fun $ Builder.arg <$> args
 
-makeAccessorRec :: ASTOp m => NodeRef -> NodeRef -> Bool -> m NodeRef
-makeAccessorRec targetNodeRef namingNodeRef seenApp = do
+makeAccessorRec :: ASTOp m => Bool -> NodeRef -> NodeRef -> m NodeRef
+makeAccessorRec seenApp targetNodeRef namingNodeRef = do
     namingNode <- Builder.read namingNodeRef
     caseTest (uncover namingNode) $ do
         match $ \(Var name) -> do
-            accNode <- Builder.acc name targetNodeRef
             removeNode namingNodeRef
-            if seenApp
-                then return accNode
-                else Builder.app accNode ([] :: [Arg NodeRef])
+            Builder.acc name targetNodeRef >>= (if seenApp then return else flip Builder.app [])
         match $ \(App t _) -> do
             newNamingNodeRef <- Builder.follow source t
-            replacementRef <- makeAccessorRec targetNodeRef newNamingNodeRef True
-            oldAccessor    <- Builder.follow source =<< Builder.follow functionApplicationNode namingNodeRef
+            replacementRef <- makeAccessorRec True targetNodeRef newNamingNodeRef
             Builder.reconnect namingNodeRef functionApplicationNode replacementRef
-            safeRemove oldAccessor
             return namingNodeRef
         match $ \(Acc name t) -> do
-            oldTargetRef <- Builder.follow source t
-            Builder.acc name targetNodeRef
+            newNamingNodeRef <- Builder.follow source t
+            replacement <- makeAccessorRec False targetNodeRef newNamingNodeRef
+            Builder.reconnect namingNodeRef accessorTarget replacement
+            return namingNodeRef
         match $ \ANY -> throwError "Invalid node type"
 
 makeAccessor :: ASTOp m => NodeRef -> NodeRef -> m NodeRef
-makeAccessor targetNodeRef namingNodeRef = makeAccessorRec targetNodeRef namingNodeRef False
+makeAccessor = makeAccessorRec False
 
 unAccRec :: forall m. ASTOp m => NodeRef -> m (Maybe NodeRef)
 unAccRec ref = do
@@ -133,19 +130,24 @@ unAccRec ref = do
             case replacement of
                 Just r  -> do
                     Builder.reconnect ref accessorTarget r
-                    safeRemove oldTarget
                     return $ Just ref
-                Nothing -> Just <$> Builder.var n
-        match $ \(App t _) -> do
+                Nothing -> removeNode ref >> Just <$> Builder.var n
+        match $ \(App t args) -> do
             oldTarget   <- Builder.follow source t
             replacement <- unAccRec oldTarget
             case replacement of
                 Just r -> do
-                    Builder.reconnect ref functionApplicationNode r
-                    safeRemove oldTarget
-                    return $ Just ref
+                    repl <- Builder.read r
+                    caseTest (uncover repl) $ do
+                        match $ \(Var _) -> if null args
+                            then removeNode ref >> return (Just r)
+                            else Builder.reconnect ref functionApplicationNode r >> return (Just ref)
+                        match $ \ANY -> do
+                            Builder.reconnect ref functionApplicationNode r
+                            return $ Just ref
                 Nothing -> throwError "Self port not connected"
-        match $ \ANY -> return Nothing
+        match $ \(Unify _ _) -> return Nothing
+        match $ \ANY -> removeNode ref >> return Nothing
 
 unAcc :: ASTOp m => NodeRef -> m NodeRef
 unAcc ref = unAccRec ref <?!> "Self port not connected"
