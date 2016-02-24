@@ -38,6 +38,7 @@ Library
                     flowbox-utils,
                     mtl,
                     optparse-applicative,
+                    stm,
                     time,
                     transformers,
                     luna-empire,

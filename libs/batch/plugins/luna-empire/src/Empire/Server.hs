@@ -1,10 +1,14 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RankNTypes       #-}
 {-# LANGUAGE TemplateHaskell  #-}
 
 module Empire.Server where
 
+import           Control.Concurrent.STM.TChan  (TChan, newTChan, readTChan)
+import           Control.Concurrent            (forkIO)
 import           Control.Monad                 (forever)
 import           Control.Monad.State           (StateT, evalStateT)
+import           Control.Monad.STM             (atomically)
 import           Data.ByteString               (ByteString)
 import           Data.ByteString.Char8         (unpack)
 import qualified Data.Map.Strict               as Map
@@ -16,9 +20,12 @@ import qualified Empire.Env                    as Env
 import qualified Empire.Handlers               as Handlers
 import qualified Empire.Server.Server          as Server
 import qualified Empire.Utils                  as Utils
+import           Flowbox.Bus.Bus               (Bus)
 import qualified Flowbox.Bus.Bus               as Bus
 import           Flowbox.Bus.BusT              (BusT (..))
 import qualified Flowbox.Bus.BusT              as BusT
+import qualified Flowbox.Bus.Data.Flag         as Flag
+import           Flowbox.Bus.Data.Message      (Message)
 import qualified Flowbox.Bus.Data.Message      as Message
 import           Flowbox.Bus.Data.MessageFrame (MessageFrame (MessageFrame))
 import           Flowbox.Bus.Data.Topic        (Topic)
@@ -31,17 +38,25 @@ logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)
 
 run :: BusEndPoints -> [Topic] -> Bool -> IO (Either Bus.Error ())
-run endPoints topics formatted = Bus.runBus endPoints $ do
+run endPoints topics formatted = do
     logger Logger.info $ "Subscribing to topics: " <> show topics
     logger Logger.info $ (Utils.display formatted) endPoints
-    mapM_ Bus.subscribe topics
-    BusT.runBusT $ evalStateT (runBus formatted) def
+    toBusChan <- atomically newTChan
+    forkIO $ void $ Bus.runBus endPoints $ startToBusWorker toBusChan
+    Bus.runBus endPoints $ do
+        mapM_ Bus.subscribe topics
+        BusT.runBusT $ evalStateT (runBus formatted) $ Env.make toBusChan
 
 runBus :: Bool -> StateT Env BusT ()
 runBus formatted = do
     Env.formatted .= formatted
     createDefaultState
     forever handleMessage
+
+startToBusWorker :: TChan Message -> Bus ()
+startToBusWorker toBusChan = forever $ do
+    msg <- liftIO $ atomically $ readTChan toBusChan
+    Bus.send Flag.Enable msg
 
 createDefaultState :: StateT Env BusT ()
 createDefaultState = do

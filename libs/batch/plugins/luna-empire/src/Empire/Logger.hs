@@ -31,10 +31,9 @@ import qualified Empire.API.Topic                  as Topic
 import qualified Empire.Commands.Library           as Library
 import qualified Empire.Commands.Project           as Project
 import qualified Empire.Empire                     as Empire
-import           Empire.Env                        (Env)
+import           Empire.Env                        (LoggerEnv)
 import qualified Empire.Env                        as Env
 import qualified Empire.Handlers                   as Handlers
-import qualified Empire.Server.Server              as Server
 import qualified Empire.Utils                      as Utils
 import qualified Flowbox.Bus.Bus                   as Bus
 import           Flowbox.Bus.BusT                  (BusT (..))
@@ -57,12 +56,12 @@ run endPoints topics formatted = Bus.runBus endPoints $ do
     mapM_ Bus.subscribe topics
     Bus.runBusT $ evalStateT (runBus formatted) def
 
-runBus :: Bool -> StateT Env BusT ()
+runBus :: Bool -> StateT LoggerEnv BusT ()
 runBus formatted = do
-    Env.formatted .= formatted
+    Env.formatLog .= formatted
     forever handleMessage
 
-handleMessage :: StateT Env BusT ()
+handleMessage :: StateT LoggerEnv BusT ()
 handleMessage = do
     msgFrame <- lift $ BusT Bus.receive'
     case msgFrame of
@@ -84,9 +83,9 @@ handleMessage = do
 
 type LogFormatter = (forall a. Show a => a -> String) -> ByteString -> String
 
-logMessage :: String -> String -> ByteString -> StateT Env BusT ()
+logMessage :: String -> String -> ByteString -> StateT LoggerEnv BusT ()
 logMessage logMsg topic content = do
-    formatted <- use Env.formatted
+    formatted <- use Env.formatLog
     logger Logger.info logMsg
     let logFormatter = Map.findWithDefault defaultLogFormatter topic loggFormattersMap
     logger Logger.debug $ logFormatter (Utils.display formatted) content
