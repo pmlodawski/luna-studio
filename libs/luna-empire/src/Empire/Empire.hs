@@ -17,13 +17,13 @@ type Error = String
 type ProjectManager = IntMap Project
 
 newtype Env = Env { _projectManager :: ProjectManager } deriving Show
+makeLenses ''Env
 
 instance Default Env where
     def = Env IntMap.empty
 
-makeLenses ''Env
-
 newtype NotifierEnv = NotifierEnv { _updatesChan :: TChan AsyncUpdate }
+makeLenses ''NotifierEnv
 
 instance Show NotifierEnv where
     show _ = "NotifierEnv"

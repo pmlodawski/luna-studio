@@ -45,6 +45,7 @@ import           Empire.Commands.Library      (withLibrary)
 import qualified Empire.Commands.AST          as AST
 import qualified Empire.Commands.GraphUtils   as GraphUtils
 import qualified Empire.Commands.GraphBuilder as GraphBuilder
+import qualified Empire.Commands.Publisher    as Publisher
 
 addNode :: GraphLocation -> Text -> NodeMeta -> Empire Node
 addNode loc expr meta = withGraph loc $ do
@@ -58,7 +59,7 @@ removeNode :: GraphLocation -> NodeId -> Empire ()
 removeNode loc nodeId = withGraph loc $ do
     astRef <- GraphUtils.getASTPointer nodeId
     obsoleteEdges <- getOutEdges nodeId
-    mapM_ disconnectPort obsoleteEdges
+    mapM_ (disconnectPort $ Publisher.notifyNodeUpdate loc) obsoleteEdges
     zoom Graph.ast $ AST.removeSubtree astRef
     Graph.nodeMapping %= IntMap.delete nodeId
 
@@ -67,15 +68,15 @@ updateNodeMeta loc nodeId meta = withGraph loc $ do
     ref <- GraphUtils.getASTPointer nodeId
     zoom Graph.ast $ AST.writeMeta ref $ Just meta
 
-connect :: GraphLocation -> OutPortRef -> InPortRef -> Empire Node
+connect :: GraphLocation -> OutPortRef -> InPortRef -> Empire ()
 connect loc (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) = withGraph loc $ do
     case dstPort of
         Self    -> makeAcc srcNodeId dstNodeId
         Arg num -> makeApp srcNodeId dstNodeId num
-    GraphBuilder.buildNode dstNodeId
+    GraphBuilder.buildNode dstNodeId >>= Publisher.notifyNodeUpdate loc
 connect _ _ _ = throwError "Source port should be All"
 
-setDefaultValue :: GraphLocation -> InPortRef -> PortDefault -> Empire Node
+setDefaultValue :: GraphLocation -> InPortRef -> PortDefault -> Empire ()
 setDefaultValue loc (InPortRef nodeId port) val = withGraph loc $ do
     ref <- GraphUtils.getASTTarget nodeId
     parsed <- zoom Graph.ast $ AST.addDefault val
@@ -83,12 +84,12 @@ setDefaultValue loc (InPortRef nodeId port) val = withGraph loc $ do
         Self    -> AST.makeAccessor parsed ref
         Arg num -> AST.applyFunction ref parsed num
     GraphUtils.rewireNode nodeId newRef
-    GraphBuilder.buildNode nodeId
+    node <- GraphBuilder.buildNode nodeId
+    Publisher.notifyNodeUpdate loc node
 
-disconnect :: GraphLocation -> InPortRef -> Empire Node
+disconnect :: GraphLocation -> InPortRef -> Empire ()
 disconnect loc port@(InPortRef dstNodeId dstPort) = withGraph loc $ do
-    disconnectPort port
-    GraphBuilder.buildNode dstNodeId
+    disconnectPort (Publisher.notifyNodeUpdate loc) port
 
 getCode :: GraphLocation -> Empire String
 getCode loc = withGraph loc $ do
@@ -125,6 +126,7 @@ renameNode :: GraphLocation -> NodeId -> Text -> Empire ()
 renameNode loc nid name = withGraph loc $ do
     vref <- GraphUtils.getASTVar nid
     zoom Graph.ast $ AST.renameVar vref (Text.unpack name)
+    GraphBuilder.buildNode nid >>= Publisher.notifyNodeUpdate loc
 
 dumpGraphViz :: GraphLocation -> Empire ()
 dumpGraphViz loc = withGraph loc $ zoom Graph.ast $ AST.dumpGraphViz
@@ -144,11 +146,12 @@ getOutEdges nodeId = do
         filtered = filter (\(opr, _) -> opr ^. PortRef.srcNodeId == nodeId) edges
     return $ view _2 <$> filtered
 
-disconnectPort :: InPortRef -> Command Graph ()
-disconnectPort (InPortRef dstNodeId dstPort) = do
+disconnectPort :: (Node -> Command Graph ()) -> InPortRef -> Command Graph ()
+disconnectPort notif (InPortRef dstNodeId dstPort) = do
     case dstPort of
         Self    -> unAcc dstNodeId
         Arg num -> unApp dstNodeId num
+    GraphBuilder.buildNode dstNodeId >>= notif
 
 unAcc :: NodeId -> Command Graph ()
 unAcc nodeId = do
