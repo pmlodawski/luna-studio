@@ -134,6 +134,8 @@ graph2 = do
 
     appPlus1   <- native (fromString "(+)") [i1, i2]
 
+    appPlus2   <- native (fromString "(+)") [appPlus1, i3]
+
     let refsToEval = [appPlus1]
 
     forM_ refsToEval (\ref -> do

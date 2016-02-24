@@ -334,10 +334,10 @@ type instance Elems Lit   n t = Star
                              ': '[]
 
 type instance Elems Val   n t = Cons        n
-                             ': Lam           t
+                             ': Lam           t -- x?
                              ': Elems Lit   n t
 
-type instance Elems Thunk n t = Acc         n t
+type instance Elems Thunk n t = Acc         n t -- x
                              ': App           t
                              ': Native      n t
                              ': Elems Val   n t
