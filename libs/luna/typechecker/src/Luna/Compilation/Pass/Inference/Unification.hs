@@ -226,7 +226,6 @@ resolveSub sb = do
           --        resolve_
 
 
-
 replaceNode oldRef newRef = do
     oldNode <- read oldRef
     forM (oldNode ^. prop Succs) $ \e -> do
