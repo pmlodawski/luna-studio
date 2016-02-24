@@ -6,6 +6,7 @@ module Empire.Commands.Project
 
 import           Control.Monad.Error     (throwError)
 import           Control.Monad.State
+import           Control.Monad.Reader
 import           Prologue
 
 import           Empire.API.Data.Project (ProjectId)
@@ -30,11 +31,12 @@ listProjects = uses Empire.projectManager IntMap.toList
 withProject :: ProjectId -> Command Project a -> Empire a
 withProject pid cmd = zoom (Empire.projectManager . at pid) $ do
     projectMay <- get
+    notifEnv   <- ask
     case projectMay of
         Nothing      -> throwError $ "Project " ++ (show pid) ++ " does not exist."
         Just project -> do
-            let result = (_2 %~ Just) <$> Empire.runEmpire project cmd
-            Empire.empire $ const result
+            let result = (_2 %~ Just) <$> Empire.runEmpire notifEnv project cmd
+            Empire.empire $ const $ const result
 
 -- internal
 

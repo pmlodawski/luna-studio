@@ -12,6 +12,11 @@ import           Control.Monad.STM             (atomically)
 import           Data.ByteString               (ByteString)
 import           Data.ByteString.Char8         (unpack)
 import qualified Data.Map.Strict               as Map
+
+import           Empire.API.Data.AsyncUpdate   (AsyncUpdate (..))
+import qualified Empire.API.Topic              as Topic
+import qualified Empire.API.Graph.NodeUpdate   as NodeUpdate
+
 import qualified Empire.Commands.Library       as Library
 import qualified Empire.Commands.Project       as Project
 import qualified Empire.Empire                 as Empire
@@ -41,11 +46,14 @@ run :: BusEndPoints -> [Topic] -> Bool -> IO (Either Bus.Error ())
 run endPoints topics formatted = do
     logger Logger.info $ "Subscribing to topics: " <> show topics
     logger Logger.info $ (Utils.display formatted) endPoints
-    toBusChan <- atomically newTChan
+    toBusChan      <- atomically newTChan
+    fromEmpireChan <- atomically newTChan
+    let env = Env.make toBusChan fromEmpireChan
+    forkIO $ void $ Bus.runBus endPoints $ BusT.runBusT $ evalStateT (startAsyncUpdateWorker fromEmpireChan) env
     forkIO $ void $ Bus.runBus endPoints $ startToBusWorker toBusChan
     Bus.runBus endPoints $ do
         mapM_ Bus.subscribe topics
-        BusT.runBusT $ evalStateT (runBus formatted) $ Env.make toBusChan
+        BusT.runBusT $ evalStateT (runBus formatted) env
 
 runBus :: Bool -> StateT Env BusT ()
 runBus formatted = do
@@ -58,6 +66,12 @@ startToBusWorker toBusChan = forever $ do
     msg <- liftIO $ atomically $ readTChan toBusChan
     Bus.send Flag.Enable msg
 
+startAsyncUpdateWorker :: TChan AsyncUpdate -> StateT Env BusT ()
+startAsyncUpdateWorker asyncChan = forever $ do
+    update <- liftIO $ atomically $ readTChan asyncChan
+    case update of
+        NodeUpdate loc n -> Server.sendToBus Topic.nodeUpdate $ NodeUpdate.Update loc n
+
 createDefaultState :: StateT Env BusT ()
 createDefaultState = do
     let projectName = Just "default project"
@@ -65,8 +79,9 @@ createDefaultState = do
         libraryName = Just "default library"
         libraryPath = "main.luna"
     currentEmpireEnv <- use Env.empireEnv
+    empireNotifEnv   <- use Env.empireNotif
     formatted        <- use Env.formatted
-    (resultProject, newEmpireEnv1) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Project.createProject
+    (resultProject, newEmpireEnv1) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Project.createProject
         projectName (fromString projectPath)
     case resultProject of
         Left err -> logger Logger.error $ Server.errorMessage <> err
@@ -74,7 +89,7 @@ createDefaultState = do
             logger Logger.info $ "Created project " <> show projectId
             logger Logger.debug $ (Utils.display formatted) project
             Env.empireEnv .= newEmpireEnv1
-            (resultLibrary, newEmpireEnv2) <- liftIO $ Empire.runEmpire newEmpireEnv1 $ Library.createLibrary
+            (resultLibrary, newEmpireEnv2) <- liftIO $ Empire.runEmpire empireNotifEnv newEmpireEnv1 $ Library.createLibrary
                 projectId libraryName (fromString libraryPath)
             case resultLibrary of
                 Left err -> logger Logger.error $ Server.errorMessage <> err

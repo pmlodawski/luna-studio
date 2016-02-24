@@ -22,9 +22,5 @@ sendToBus topic bin = do
     chan <- use Env.toBusChan
     liftIO $ atomically $ writeTChan chan $ Message.Message topic $ toStrict $ Bin.encode bin
 
-withGraphLocation :: (ProjectId -> LibraryId -> a) -> GraphLocation -> a
-withGraphLocation f graphLocation = f (graphLocation ^. GraphLocation.projectId)
-                                      (graphLocation ^. GraphLocation.libraryId)
-
 errorMessage :: String
 errorMessage = "Error processing request: "

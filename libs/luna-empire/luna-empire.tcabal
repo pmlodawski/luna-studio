@@ -41,6 +41,7 @@ Library
                   luna-empire-api,
                   luna,
                   mtl,
+                  stm,
                   prologue,
                   text,
                   typelevel
@@ -59,4 +60,5 @@ Executable luna-empire-lib-test
                   flowbox-utils,
                   luna-empire-api,
                   luna,
+                  stm,
                   prologue

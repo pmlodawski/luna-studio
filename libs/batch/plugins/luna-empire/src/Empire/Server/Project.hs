@@ -29,7 +29,8 @@ handleCreateProject :: ByteString -> StateT Env BusT ()
 handleCreateProject content = do
     let request = Bin.decode . fromStrict $ content :: CreateProject.Request
     currentEmpireEnv <- use Env.empireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ do
+    empireNotifEnv   <- use Env.empireNotif
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ do
       (projectId, project) <- Project.createProject (request ^. CreateProject.projectName) (fromString $ request ^. CreateProject.path)
       (libraryId, library) <- Library.createLibrary projectId (Just "Main") "Main.luna"
 
@@ -46,7 +47,8 @@ handleListProjects :: ByteString -> StateT Env BusT ()
 handleListProjects content = do
     let request = Bin.decode . fromStrict $ content :: ListProjects.Request
     currentEmpireEnv <- use Env.empireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Project.listProjects
+    empireNotifEnv   <- use Env.empireNotif
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Project.listProjects
     case result of
         Left err -> logger Logger.error $ errorMessage <> err
         Right projectList -> do

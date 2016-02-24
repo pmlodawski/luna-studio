@@ -1,13 +1,16 @@
 module Empire.Empire where
 
 import           Prologue
-import           Empire.Data.Project     (Project)
-import           Empire.API.Data.Project (ProjectId)
+import           Empire.Data.Project          (Project)
+import           Empire.API.Data.Project      (ProjectId)
+import           Empire.API.Data.AsyncUpdate  (AsyncUpdate)
 
 import           Control.Monad.State
-import           Control.Monad.Error     (ErrorT(..), runErrorT, throwError, MonadError)
-import           Data.IntMap             (IntMap)
-import qualified Data.IntMap             as IntMap
+import           Control.Monad.Reader
+import           Control.Monad.Error          (ErrorT(..), runErrorT, throwError, MonadError)
+import           Data.IntMap                  (IntMap)
+import qualified Data.IntMap                  as IntMap
+import           Control.Concurrent.STM.TChan (TChan)
 
 type Error = String
 
@@ -20,18 +23,25 @@ instance Default Env where
 
 makeLenses ''Env
 
-type Command s a = ErrorT Error (StateT s IO) a
+newtype NotifierEnv = NotifierEnv { _updatesChan :: TChan AsyncUpdate }
+
+instance Show NotifierEnv where
+    show _ = "NotifierEnv"
+
+type Command s a = ErrorT Error (ReaderT NotifierEnv (StateT s IO)) a
 
 type Empire a = Command Env a
 
-runEmpire :: s -> Command s a -> IO (Either Error a, s)
-runEmpire st cmd = runStateT (runErrorT cmd) st
+runEmpire :: NotifierEnv -> s -> Command s a -> IO (Either Error a, s)
+runEmpire notif st cmd = runStateT (runReaderT (runErrorT cmd) notif) st
 
-execEmpire :: s -> Command s a -> IO (Either Error a)
-execEmpire st cmd = fst <$> runEmpire st cmd
+execEmpire :: NotifierEnv -> s -> Command s a -> IO (Either Error a)
+execEmpire = fmap fst .:. runEmpire
 
-empire :: (s -> IO (Either Error a, s)) -> Command s a
-empire = ErrorT . StateT
+empire :: (NotifierEnv -> s -> IO (Either Error a, s)) -> Command s a
+empire f = ErrorT readered where
+    readered = ReaderT stated
+    stated   = fmap StateT f
 
 infixr 4 <?!>
 (<?!>) :: MonadError Error m => m (Maybe a) -> Error -> m a

@@ -10,6 +10,8 @@ import           Empire.API.Data.DefaultValue (PortDefault (..), Value (..))
 import           Empire.API.Data.Node
 import           Empire.API.Data.NodeMeta
 import           Empire.API.Data.Port
+import           Empire.API.Data.GraphLocation
+import           Empire.API.Data.Breadcrumb
 import           Empire.API.Data.PortRef      (InPortRef (..), OutPortRef (..))
 import           Empire.Commands.AST
 import           Empire.Commands.Graph        as Graph
@@ -20,6 +22,8 @@ import           Empire.Data.AST              (ASTNode)
 import           Empire.Data.Graph
 import           Empire.Data.Library
 import           Empire.Empire
+import           Control.Concurrent.STM.TChan (newTChan)
+import           Control.Concurrent.STM       (atomically)
 import           Luna.Diagnostic.Vis.GraphViz (renderAndOpen, toGraphViz)
 
 
@@ -29,14 +33,16 @@ test = do
     (pid, _) <- createProject (Just "dupa") "/no/elo"
     (lid, _) <- createLibrary pid (Just "xd") "/xd/xd"
 
-    Graph.addNode pid lid "3.floor.toString" def
+    let loc = GraphLocation pid lid $ Breadcrumb []
+
+    Graph.addNode loc "3.floor.toString" def
 
 
-    n1 <- view nodeId <$> Graph.addNode pid lid "3" def
-    n2 <- view nodeId <$> Graph.addNode pid lid "6" def
-    np <- view nodeId <$> Graph.addNode pid lid "_.+ _" def
-    Graph.connect pid lid (OutPortRef n1 All) (InPortRef np Self)
-    Graph.connect pid lid (OutPortRef n2 All) (InPortRef np $ Arg 0)
+    n1 <- view nodeId <$> Graph.addNode loc "3" def
+    n2 <- view nodeId <$> Graph.addNode loc "6" def
+    np <- view nodeId <$> Graph.addNode loc "_.+ _" def
+    Graph.connect loc (OutPortRef n1 All) (InPortRef np Self)
+    Graph.connect loc (OutPortRef n2 All) (InPortRef np $ Arg 0)
 
     {-print "tutti"-}
     {-n1 <- (view nodeId) <$> Graph.addNode pid lid "1"     (NodeMeta (1.0, 4.0))-}
@@ -98,22 +104,23 @@ test = do
     putStrLn "NOW RUNNING"
     putStrLn "------------------------"
 
-    runGraph pid lid >>= print
+    runGraph loc >>= print
 
     putStrLn "------------------------"
     putStrLn "RUN DONE"
 
-    code <- Graph.getCode pid lid
+    code <- Graph.getCode loc
     putStrLn code
 
-    graph <- Graph.getGraph pid lid
+    graph <- Graph.getGraph loc
     print graph
 
     withLibrary pid lid (use $ body . ast)
 
 main :: IO ()
 main = do
-    (graph, st) <- runEmpire def test
+    dummyNotif <- atomically newTChan
+    (graph, st) <- runEmpire (NotifierEnv dummyNotif) def test
     case graph of
         Left err -> putStrLn err
         Right g  -> renderAndOpen [("g", "g", g)]

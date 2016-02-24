@@ -28,7 +28,8 @@ handleCreateLibrary :: ByteString -> StateT Env BusT ()
 handleCreateLibrary content = do
     let request = Bin.decode . fromStrict $ content :: CreateLibrary.Request
     currentEmpireEnv <- use Env.empireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Library.createLibrary
+    empireNotifEnv   <- use Env.empireNotif
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Library.createLibrary
         (request ^. CreateLibrary.projectId)
         (request ^. CreateLibrary.libraryName)
         (fromString $ request ^. CreateLibrary.path)
@@ -43,7 +44,8 @@ handleListLibraries :: ByteString -> StateT Env BusT ()
 handleListLibraries content = do
     let request = Bin.decode . fromStrict $ content :: ListLibraries.Request
     currentEmpireEnv <- use Env.empireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Library.listLibraries
+    empireNotifEnv   <- use Env.empireNotif
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Library.listLibraries
         (request ^. ListLibraries.projectId)
     case result of
         Left err -> logger Logger.error $ errorMessage <> err

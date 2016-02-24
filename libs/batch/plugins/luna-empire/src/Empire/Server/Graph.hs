@@ -36,7 +36,7 @@ import qualified Empire.Commands.Graph             as Graph
 import qualified Empire.Empire                     as Empire
 import           Empire.Env                        (Env)
 import qualified Empire.Env                        as Env
-import           Empire.Server.Server              (errorMessage, sendToBus, withGraphLocation)
+import           Empire.Server.Server              (errorMessage, sendToBus)
 import           Flowbox.Bus.BusT                  (BusT (..))
 import qualified Flowbox.System.Log.Logger         as Logger
 
@@ -46,22 +46,19 @@ logger = Logger.getLoggerIO $(Logger.moduleName)
 notifyCodeUpdate :: GraphLocation -> StateT Env BusT ()
 notifyCodeUpdate location = do
     currentEmpireEnv <- use Env.empireEnv
-    (resultCode, _) <- liftIO $ Empire.runEmpire currentEmpireEnv $ withGraphLocation Graph.getCode location
+    empireNotifEnv   <- use Env.empireNotif
+    (resultCode, _) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.getCode location
     case resultCode of
         Left err -> logger Logger.error $ errorMessage <> err
         Right code -> do
             let update = CodeUpdate.Update location $ Text.pack code
             sendToBus Topic.codeUpdate update
 
-notifyNodeUpdate :: GraphLocation -> Node -> StateT Env BusT ()
-notifyNodeUpdate location node = do
-    let update = NodeUpdate.Update location node
-    sendToBus Topic.nodeUpdate update
-
 notifyNodeResultUpdates :: GraphLocation -> StateT Env BusT ()
 notifyNodeResultUpdates location = do
     currentEmpireEnv <- use Env.empireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ withGraphLocation Graph.runGraph location
+    empireNotifEnv   <- use Env.empireNotif
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.runGraph location
     case result of
         Left err -> logger Logger.error $ errorMessage <> err
         Right valuesMap -> do
@@ -92,9 +89,10 @@ handleAddNode content = do
     let request  = Bin.decode . fromStrict $ content :: AddNode.Request
         location = request ^. AddNode.location
     currentEmpireEnv <- use Env.empireEnv
+    empireNotifEnv   <- use Env.empireNotif
     (result, newEmpireEnv) <- case request ^. AddNode.nodeType of
       AddNode.ExpressionNode expression -> case parseExpr expression of
-        Expression expression -> liftIO $ Empire.runEmpire currentEmpireEnv $ withGraphLocation Graph.addNode
+        Expression expression -> liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.addNode
                                                                                                 location
                                                                                                 (Text.pack $ expression)
                                                                                                 (request ^. AddNode.nodeMeta)
@@ -123,7 +121,8 @@ handleRemoveNode content = do
     let request = Bin.decode . fromStrict $ content :: RemoveNode.Request
         location = request ^. RemoveNode.location
     currentEmpireEnv <- use Env.empireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ withGraphLocation Graph.removeNode
+    empireNotifEnv   <- use Env.empireNotif
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.removeNode
         location
         (request ^. RemoveNode.nodeId)
     case result of
@@ -140,7 +139,8 @@ handleUpdateNodeMeta content = do
     let request = Bin.decode . fromStrict $ content :: UpdateNodeMeta.Request
         nodeMeta = request ^. UpdateNodeMeta.nodeMeta
     currentEmpireEnv <- use Env.empireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ withGraphLocation Graph.updateNodeMeta
+    empireNotifEnv   <- use Env.empireNotif
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.updateNodeMeta
         (request ^. UpdateNodeMeta.location)
         (request ^. UpdateNodeMeta.nodeId)
         nodeMeta
@@ -156,7 +156,8 @@ handleRenameNode content = do
     let request  = Bin.decode . fromStrict $ content :: RenameNode.Request
         location = request ^. RenameNode.location
     currentEmpireEnv <- use Env.empireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ withGraphLocation Graph.renameNode
+    empireNotifEnv   <- use Env.empireNotif
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.renameNode
         (request ^. RenameNode.location)
         (request ^. RenameNode.nodeId)
         (request ^. RenameNode.name)
@@ -173,7 +174,8 @@ handleConnect content = do
     let request = Bin.decode . fromStrict $ content :: Connect.Request
         location = request ^. Connect.location
     currentEmpireEnv <- use Env.empireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ withGraphLocation Graph.connect
+    empireNotifEnv   <- use Env.empireNotif
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.connect
         location
         (request ^. Connect.src)
         (request ^. Connect.dst)
@@ -183,7 +185,6 @@ handleConnect content = do
             Env.empireEnv .= newEmpireEnv
             let update = Update.Update request $ Update.Ok
             sendToBus Topic.connectUpdate update
-            notifyNodeUpdate location node
             notifyCodeUpdate location
             notifyNodeResultUpdates location
 
@@ -192,7 +193,8 @@ handleDisconnect content = do
     let request = Bin.decode . fromStrict $ content :: Disconnect.Request
         location = request ^. Disconnect.location
     currentEmpireEnv <- use Env.empireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ withGraphLocation Graph.disconnect
+    empireNotifEnv   <- use Env.empireNotif
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.disconnect
         location
         (request ^. Disconnect.dst)
     case result of
@@ -201,7 +203,6 @@ handleDisconnect content = do
             Env.empireEnv .= newEmpireEnv
             let update = Update.Update request $ Update.Ok
             sendToBus Topic.disconnectUpdate update
-            notifyNodeUpdate location node
             notifyCodeUpdate location
             notifyNodeResultUpdates location
 
@@ -210,7 +211,8 @@ handleSetDefaultValue content = do
     let request = Bin.decode . fromStrict $ content :: SetDefaultValue.Request
         location = request ^. SetDefaultValue.location
     currentEmpireEnv <- use Env.empireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ withGraphLocation Graph.setDefaultValue
+    empireNotifEnv   <- use Env.empireNotif
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.setDefaultValue
         location
         (request ^. SetDefaultValue.portRef)
         (request ^. SetDefaultValue.defaultValue)
@@ -220,7 +222,6 @@ handleSetDefaultValue content = do
             Env.empireEnv .= newEmpireEnv
             let update = Update.Update request $ Update.Ok
             sendToBus Topic.setDefaultValueUpdate update
-            notifyNodeUpdate location node
             notifyCodeUpdate location
             notifyNodeResultUpdates location
 
@@ -229,8 +230,9 @@ handleGetProgram content = do
     let request = Bin.decode . fromStrict $ content :: GetProgram.Request
         location = request ^. GetProgram.location
     currentEmpireEnv <- use Env.empireEnv
-    (resultGraph, _) <- liftIO $ Empire.runEmpire currentEmpireEnv $ withGraphLocation Graph.getGraph location
-    (resultCode,  _) <- liftIO $ Empire.runEmpire currentEmpireEnv $ withGraphLocation Graph.getCode  location
+    empireNotifEnv   <- use Env.empireNotif
+    (resultGraph, _) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.getGraph location
+    (resultCode,  _) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.getCode  location
     case (resultGraph, resultCode) of
         (Left err, _) -> logger Logger.error $ errorMessage <> err
         (_, Left err) -> logger Logger.error $ errorMessage <> err
@@ -244,4 +246,5 @@ handleDumpGraphViz content = do
     let request = Bin.decode . fromStrict $ content :: DumpGraphViz.Request
         location = request ^. DumpGraphViz.location
     currentEmpireEnv <- use Env.empireEnv
-    void $ liftIO $ Empire.runEmpire currentEmpireEnv $ withGraphLocation Graph.dumpGraphViz location
+    empireNotifEnv   <- use Env.empireNotif
+    void $ liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.dumpGraphViz location

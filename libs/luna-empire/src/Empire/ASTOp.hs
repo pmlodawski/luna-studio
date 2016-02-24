@@ -40,4 +40,4 @@ runGraph cmd g = runNetworkBuilderT g
                $ runErrorT cmd
 
 runASTOp :: NetworkBuilderT AST m IO => ErrorT Error m a -> Command AST a
-runASTOp = empire . runGraph
+runASTOp = empire . const . runGraph

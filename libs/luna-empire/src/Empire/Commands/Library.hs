@@ -6,6 +6,7 @@ module Empire.Commands.Library
 
 import           Control.Monad.Error     (throwError)
 import           Control.Monad.State
+import           Control.Monad.Reader
 import qualified Data.IntMap             as IntMap
 import           Prologue
 import           System.Path             (Path)
@@ -36,11 +37,12 @@ withLibrary :: ProjectId -> LibraryId -> Command Library a -> Empire a
 withLibrary pid lid cmd = withProject pid $ do
     zoom (Project.libs . at lid) $ do
         libMay <- get
+        notifEnv <- ask
         case libMay of
             Nothing  -> throwError $ "Library " ++ (show lid) ++ " does not exist."
             Just lib -> do
-                let result = (_2 %~ Just) <$> Empire.runEmpire lib cmd
-                Empire.empire $ const result
+                let result = (_2 %~ Just) <$> Empire.runEmpire notifEnv lib cmd
+                Empire.empire $ const $ const result
 
 -- internal
 
