@@ -81,4 +81,4 @@ replaceTargetNode unifyNodeId newTargetId = runASTOp $ do
 dumpGraphViz :: Command AST ()
 dumpGraphViz = do
     g <- runASTOp Builder.get
-    liftIO $ renderAndOpen [("g", g)]
+    liftIO $ renderAndOpen [("g", "g", g)]

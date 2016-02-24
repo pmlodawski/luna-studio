@@ -116,5 +116,5 @@ main = do
     (graph, st) <- runEmpire def test
     case graph of
         Left err -> putStrLn err
-        Right g  -> renderAndOpen [("g", g)]
+        Right g  -> renderAndOpen [("g", "g", g)]
 {-main = return ()-}
