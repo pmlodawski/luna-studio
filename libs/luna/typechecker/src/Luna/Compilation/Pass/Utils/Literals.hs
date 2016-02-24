@@ -14,26 +14,26 @@ import           Type.Inference
 
 import           Luna.Diagnostic.Vis.GraphViz
 import           Luna.Evaluation.Runtime                         (Dynamic, Static)
-import           Luna.Syntax.AST.Term                            hiding (source)
+import           Luna.Syntax.AST.Term                            (Lam, Str(..), Num(..), Cons)
 import           Luna.Syntax.Model.Layer
 import           Luna.Syntax.Model.Network.Builder.Node          (NodeInferable, TermNode)
 import           Luna.Syntax.Model.Network.Builder.Node.Class    (arg)
 import           Luna.Syntax.Model.Network.Builder.Node.Inferred
 import           Luna.Syntax.Model.Network.Builder.Term.Class    (NetGraph, NetLayers, runNetworkBuilderT)
 import           Luna.Syntax.Model.Network.Class                 ()
-import           Luna.Syntax.Model.Network.Term
+import           Luna.Syntax.Model.Network.Term                  (Draft)
 
 
 #define PassCtx(m, ls, term) ( ls   ~ NetLayers a                          \
                              , term ~ Draft Static                         \
-                             , ne   ~ Link (ls :<: term)                    \
+                             , ne   ~ Link (ls :<: term)                   \
                              , BiCastable    e ne                          \
-                             , BiCastable    n (ls :<: term)                \
+                             , BiCastable    n (ls :<: term)               \
                              , MonadIO m                                   \
                              , MonadBuilder (Hetero (VectorGraph n e c)) m \
-                             , NodeInferable m (ls :<: term)                \
-                             , TermNode Cons m (ls :<: term)                \
-                             , TermNode Lam  m (ls :<: term)                \
+                             , NodeInferable m (ls :<: term)               \
+                             , TermNode Cons m (ls :<: term)               \
+                             , TermNode Lam  m (ls :<: term)               \
                              )
 
 pre :: PassCtx(m, ls, term) => Ref Node (ls :<: term) -> m [Ref Node (ls :<: term)]
