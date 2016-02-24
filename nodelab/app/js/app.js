@@ -121,6 +121,7 @@ function initTerminal() {
 function initCommonWidgets() {
   var colorId = 10;
   $$.currentConnection = new Connection(3, -1, colorId);
+  $$.currentConnection.setVisible(false);
   $$.registry[3] = $$.currentConnection;
   $$.selectionBox      = new SelectionBox();
 
