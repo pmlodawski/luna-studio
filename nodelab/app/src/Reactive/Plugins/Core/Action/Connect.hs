@@ -44,10 +44,11 @@ toAction (Mouse _ event@(Mouse.Event Mouse.Moved    _   _                _ _)) =
 toAction (Mouse _ event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just $ whileConnecting $ stopDrag event
 toAction _                                                                     = Nothing
 
-showCurrentConnection :: Vector2 Double -> Vector2 Double -> Command UIRegistry.State ()
-showCurrentConnection from to = UICmd.update_ UIRegistry.currentConnectionId $ (UIConnection.currentFrom    .~ from)
-                                                                             . (UIConnection.currentTo      .~ to  )
-                                                                             . (UIConnection.currentVisible .~ True)
+showCurrentConnection :: Vector2 Double -> Vector2 Double -> Bool -> Command UIRegistry.State ()
+showCurrentConnection from to arrow = UICmd.update_ UIRegistry.currentConnectionId $ (UIConnection.currentFrom    .~ from)
+                                                                                   . (UIConnection.currentTo      .~ to  )
+                                                                                   . (UIConnection.currentVisible .~ True)
+                                                                                   . (UIConnection.currentArrow   .~ arrow)
 
 setCurrentConnectionColor :: Int -> Command UIRegistry.State ()
 setCurrentConnectionColor color = UICmd.update_ UIRegistry.currentConnectionId $ UIConnection.currentColor .~ color
@@ -98,8 +99,9 @@ handleMove coord (Connecting sourceRef sourceWidget sourceVector nodePos _ (Drag
                     outerPos  = 22.0
                 return $ Vector2 sx sy
         case sourceRef of
-            InPortRef'   _ -> showCurrentConnection current' startLine
-            OutPortRef'  _ -> showCurrentConnection startLine current'
+            InPortRef'   (InPortRef _ Self) -> showCurrentConnection current' startLine False
+            InPortRef'   (InPortRef _ _)    -> showCurrentConnection current' startLine True
+            OutPortRef'  _                  -> showCurrentConnection startLine current' True
     updateConnections
 
 stopDrag' :: Connect.Connecting -> Command State ()

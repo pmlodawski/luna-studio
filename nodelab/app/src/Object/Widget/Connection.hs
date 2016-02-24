@@ -29,6 +29,7 @@ instance IsDisplayObject Connection where
 data CurrentConnection = CurrentConnection { _currentVisible      :: Bool
                                            , _currentFrom         :: Vector2 Double
                                            , _currentTo           :: Vector2 Double
+                                           , _currentArrow        :: Bool
                                            , _currentColor        :: Int
                                            } deriving (Eq, Show, Typeable, Generic)
 

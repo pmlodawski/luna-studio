@@ -61,6 +61,7 @@ instance UIDisplayObject Model.CurrentConnection where
         connection <- UIR.lookup id :: IO Connection
         setPos     connection (model ^. Model.currentFrom . x)  (model ^. Model.currentFrom . y)  (model ^. Model.currentTo . x)  (model ^. Model.currentTo . y) id
         setVisible connection (model ^. Model.currentVisible)
+        setArrow   connection (model ^. Model.currentArrow)
         setColor   connection (model ^. Model.currentColor)
 
 instance CompositeWidget Model.Connection
