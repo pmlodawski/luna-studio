@@ -104,7 +104,6 @@ stopDrag' :: Connect.Connecting -> Command State ()
 stopDrag' _ = do
     Global.connect . Connect.connecting .= Nothing
     zoom Global.uiRegistry hideCurrentConnection
-    updatePortAngles
 
 toValidConnection :: AnyPortRef -> AnyPortRef -> Maybe (OutPortRef, InPortRef)
 toValidConnection (OutPortRef' a) (InPortRef' b) = Just (a, b)
@@ -125,5 +124,4 @@ stopDrag event@(Mouse.Event _ coord _ _ mayEvWd) (Connecting sourceRef _ _ _ _ (
             let srcDstMay = toValidConnection sourceRef destinationRef
             forM_ srcDstMay $ \(src, dst) -> do
                 batchConnectNodes src dst
-    updatePortAngles
     updateConnections

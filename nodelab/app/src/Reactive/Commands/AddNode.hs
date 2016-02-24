@@ -39,8 +39,8 @@ import qualified UI.Handlers.Toggle              as Toggle
 
 import           Reactive.Commands.Command       (Command, performIO)
 import           Reactive.Commands.EnterNode     (enterNode)
-import           Reactive.Commands.Graph         (focusNode, nodeIdToWidgetId, portDefaultAngle, updateNodeMeta,
-                                                  updatePortAngles, colorPort)
+import           Reactive.Commands.Graph         (colorPort, focusNode, nodeIdToWidgetId, portDefaultAngle,
+                                                  updateNodeMeta)
 -- import           Reactive.Commands.PendingNode   (unrenderPending)
 import           Reactive.Commands.RemoveNode    (removeSelectedNodes)
 import qualified Reactive.Commands.UIRegistry    as UICmd
@@ -84,7 +84,6 @@ addNode node = do
     -- unrenderPending node
     zoom Global.graph $ modify (Graph.addNode node)
     zoom Global.uiRegistry $ registerNode node
-    updatePortAngles
 
 registerNode :: Node -> Command UIRegistry.State ()
 registerNode node = do
@@ -158,7 +157,6 @@ updateNode node = do
     forM_ maybeWidgetId $ \widgetId -> do
         updateNodeMeta nodeId $ node ^. Node.nodeMeta
         inRegistry $ displayPorts widgetId node
-        updatePortAngles
 
         case node ^. Node.nodeType of
             Node.ExpressionNode expression -> do

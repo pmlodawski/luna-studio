@@ -22,5 +22,4 @@ renderGraph nodes edges = do
     -- Global.workspace . Workspace.shouldLayout .= False
     -- when reLayout layoutGraph
 
-    Graph.updatePortAngles
     Graph.updateConnections

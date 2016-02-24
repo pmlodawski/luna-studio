@@ -6,8 +6,7 @@ import qualified Data.IntMap.Lazy             as IntMap
 import qualified Data.Map.Lazy                as Map
 
 import           Reactive.Commands.Command    (Command, performIO)
-import           Reactive.Commands.Graph      (connectionIdToWidgetId, updateConnNodes, updateConnections,
-                                               updatePortAngles)
+import           Reactive.Commands.Graph      (connectionIdToWidgetId, updateConnNodes, updateConnections)
 import           Reactive.Commands.UIRegistry (removeWidget)
 import           Reactive.State.Global        (State)
 import qualified Reactive.State.Global        as Global
@@ -40,7 +39,6 @@ localDisconnectAll connectionIds = do
     zoom Global.uiRegistry $ mapM removeWidget $ catMaybes widgetIds
     Global.graph           %= Graph.removeConnections connectionIds
     updateConnNodes changedNodes
-    updatePortAngles
     updateConnections
 
 connectionToRefs :: Connection -> (OutPortRef, InPortRef)

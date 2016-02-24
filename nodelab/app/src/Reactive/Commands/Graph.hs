@@ -112,7 +112,7 @@ getConnectionLine nodePos portAngles portTypes srcPortRef dstPortRef = (srcWs, d
     srcWs                        = Vector2 (xSrcN + outerSrcPos * cos angleSrc) (ySrcN + outerSrcPos * sin angleSrc)
     dstWs                        = Vector2 (xDstN + outerDstPos * cos angleDst) (yDstN + outerDstPos * sin angleDst)
     delta                        = dstNWs - srcNWs
-    visible                      = lengthSquared delta > 4 * portOuterBorderSquared
+    visible                      = lengthSquared delta > 4 * 25
     color                        = fromMaybe missingPortColor $ vtToColor <$> portTypes ^? ix (OutPortRef' srcPortRef)
     missingPortPos               = (-pi / 2.0, 1)
     missingPortColor             = 13
@@ -137,7 +137,6 @@ localConnectNodes src dst = do
         nodePositions  <- zoom Global.uiRegistry nodePositionMap
         portAngles     <- zoom Global.uiRegistry portRefToAngleMap
         zoom Global.uiRegistry $ UICmd.register_ sceneGraphId (ConnectionModel.Connection connectionId True def def def) def
-    updatePortAngles
     updateConnections
 
 sortAndGroup assocs = Map.fromListWith (++) [(k, [v]) | (k, v) <- assocs]
@@ -193,27 +192,6 @@ portTypes = do
                 portVT (portId, port) = (PortRef.toAnyPortRef nodeId portId, port ^. Port.valueType) where
                 nodeId = node ^. Node.nodeId
 
-updatePortAngles :: Command Global.State ()
-updatePortAngles = return () -- FIXME: WYRZUĆ MNIE
-    -- connectionsMap <- use $ Global.graph . Graph.connectionsMap
-    -- nodePositions  <- zoom Global.uiRegistry nodePositionMap
-    --
-    -- let connectionTuples conn          = [ (OutPortRef' $ conn ^. Connection.src, InPortRef'  $ conn ^. Connection.dst)
-    --                                      , (InPortRef'  $ conn ^. Connection.dst, OutPortRef' $ conn ^. Connection.src) ]
-    --     connections                    = sortAndGroup . concat $ connectionTuples <$> connectionsMap
-    --
-    -- let calculateAngle portRef targets = sum $ fmap explode $ connectionVector nodePositions portRef <$> targets
-    --     connectedAngles                = Map.mapWithKey calculateAngle connections
-    --
-    -- defAngles <- defaultAngles
-    --
-    -- let angles = Map.union connectedAngles defAngles
-    -- portWidgets <- zoom Global.uiRegistry portRefToWidgetMap
-    --
-    -- forM_ (Map.toList angles) $ \(portRef, vector) -> do
-    --     let widgetId = portWidgets ^? ix portRef
-    --     forM_ widgetId $ \widgetId -> zoom Global.uiRegistry $ UICmd.update widgetId (PortModel.angleVector .~ vector)
-
 allNodes :: Command UIRegistry.State [WidgetFile Model.Node]
 allNodes = UIRegistry.lookupAllM
 
@@ -234,23 +212,6 @@ connectionIdToWidgetId connectionId = do
     files <- allConnections
     let matching = find (\file -> (file ^. widget . ConnectionModel.connectionId) == connectionId) files
     return (view objectId <$> matching)
-
--- TODO: Clever algorithm taking radius into account
-
-nodeRadius        = 30.0
-portSize          = 3.0
-portDistFromRim   = 1.0
-distFromPort      = 0.3
-
-radiusSquared = nodeRadius * nodeRadius
-radiusShadow  = sqrt $ radiusSquared / 2.0
-
-portWidth         = 4.0
-portOuterBorder   = nodeRadius + portDistFromRim + portWidth
-
-portOuterBorderSquared = portOuterBorder * portOuterBorder
-
-closenestFactor        = 0.25
 
 focusNode :: WidgetId -> Command UIRegistry.State ()
 focusNode id = do
@@ -273,7 +234,6 @@ updateNodeMeta nodeId meta = do
 
         forM_ widgetId $ flip UICmd.move (fromTuple $  meta ^. NodeMeta.position)
 
-    updatePortAngles
     updateConnections
 
 

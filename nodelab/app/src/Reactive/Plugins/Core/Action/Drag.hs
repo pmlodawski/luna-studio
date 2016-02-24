@@ -76,7 +76,6 @@ moveNodes delta = do
     delta'  <- scaledDelta delta
     let selectedIds = (^. objectId) <$> widgets
     forM_ selectedIds $ \id -> zoom Global.uiRegistry $ UICmd.moveBy id delta'
-    updatePortAngles
     updateConnections
 
 stopDrag :: Command State ()
@@ -95,7 +94,6 @@ stopDrag = do
             performIO $ BatchCmd.updateNodeMeta workspace id newMeta
 
     updateConnections
-    updatePortAngles
 
 scaledDelta :: Vector2 Int -> Command State (Vector2 Double)
 scaledDelta delta = do
