@@ -5,7 +5,7 @@ var commonUniforms =  {
   antialias:  {type: 'i',  value: 0},
   objectMap:  {type: 'i',  value: 0},
   dpr:        { type: 'f',  value: 1.0 }, // TODO: js_devicePixelRatio
-  aa:         { type: 'f',  value: 1.0 },
+  aa:         { type: 'f',  value: 0.8 },
   zoomScaling:{ type: 'i',  value: 0 }
 };
 
