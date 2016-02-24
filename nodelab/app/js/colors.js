@@ -1,6 +1,6 @@
 "use strict";
 
-var colors = [];
+var colors = [hslToVec(0,0.0,0.5)];
 
 var start = 90.6 / (2 * Math.PI),
     steps = 16,

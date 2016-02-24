@@ -54,11 +54,12 @@ import qualified Empire.API.Data.Port          as Port
 import qualified Empire.API.Data.ValueType     as ValueType
 
 
-vtToColor vt = case vt ^. ValueType.toEnum of
-     ValueType.DiscreteNumber -> 1
-     ValueType.ContinuousNumber -> 2
-     ValueType.String -> 3
-     ValueType.Bool -> 4
+vtToColor ValueType.AnyType = 0
+vtToColor vt = 1 + case vt ^. ValueType.toEnum of
+     ValueType.DiscreteNumber -> 0
+     ValueType.ContinuousNumber -> 1
+     ValueType.String -> 2
+     ValueType.Bool -> 3
      ValueType.Other -> hash vt `mod` 16
 
 colorPort port = vtToColor $ port ^. Port.valueType
