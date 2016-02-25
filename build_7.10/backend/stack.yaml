@@ -9,7 +9,6 @@ packages:
 - {extra-dep: true, location: ../../libs/luna-empire-api}
 - {extra-dep: true, location: ../../libs/luna-empire}
 - {extra-dep: true, location: ../../libs/luna-empire-api-json}
-- {extra-dep: true, location: ../../libs/luna/typechecker}
 - {extra-dep: true, location: ../../libs/old-utils}
 - {extra-dep: true, location: ../../libs/rpc}
 - {extra-dep: true, location: ../../libs/utils}
@@ -19,6 +18,13 @@ packages:
 - {location: ../../tools/batch/plugins/broker}
 - {location: ../../tools/batch/plugins/bus-logger}
 - {location: ../../tools/batch/plugins/luna-empire}
+- extra-dep: true
+  location:
+    git: 'git@bitbucket.org:NewByteOrder/luna.git'
+    commit: 9959b87c26f19b88c2e7eaa0043d4046957a2444
+  subdirs:
+  - lunac
+  - luna-core
 - extra-dep: true
   location: {commit: 8c1a0ef91a201102a8a0e4a450c3dc5cae582f28, git: 'https://github.com/wdanilo/container.git'}
 - extra-dep: true

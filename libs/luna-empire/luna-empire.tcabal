@@ -39,7 +39,8 @@ Library
                   flowbox-config,
                   flowbox-utils,
                   luna-empire-api,
-                  luna,
+                  luna-core,
+                  lunac,
                   mtl,
                   stm,
                   prologue,
@@ -59,6 +60,7 @@ Executable luna-empire-lib-test
                   luna-empire,
                   flowbox-utils,
                   luna-empire-api,
-                  luna,
+                  luna-core,
+                  lunac,
                   stm,
                   prologue
