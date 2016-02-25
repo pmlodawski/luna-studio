@@ -26,5 +26,5 @@ Executable ws-connector
                   flowbox-ws-connector,
                   flowbox-bus-binary,
                   flowbox-config,
-                  flowbox-utils-old,
+                  flowbox-utils,
                   zeromq4-haskell

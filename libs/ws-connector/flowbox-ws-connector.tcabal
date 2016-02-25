@@ -31,7 +31,7 @@ Library
                   exceptions,
                   flowbox-bus-binary,
                   flowbox-config,
-                  flowbox-utils-old,
+                  flowbox-utils,
                   mtl,
                   websockets,
                   stm,

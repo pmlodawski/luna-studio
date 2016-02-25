@@ -13,29 +13,29 @@ Library
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude,
                   TemplateHaskell
-  
+
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
-  
+
   Build-Depends:  base,
                   configurator,
                   either,
-                  flowbox-utils-old,
+                  flowbox-utils,
                   transformers
 
 
 -- Executable config
 --   Main-Is:        Main.hs
 --   Hs-Source-Dirs: tests
--- 
+--
 --   GHC-Options:    -Wall -O2
--- 
+--
 --   Extensions:     DoAndIfThenElse
 --                   MultiParamTypeClasses
 --                   NoImplicitPrelude
--- 
+--
 --   Build-Depends:  base,
 --                   configurator,
 --                   flowbox-config,
---                   flowbox-utils-old
+--                   flowbox-utils
 

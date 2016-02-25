@@ -20,7 +20,7 @@ import qualified Flowbox.Bus.EndPoint                as EP
 import qualified Flowbox.Config.Config               as Config
 import           Flowbox.Options.Applicative         hiding (info)
 import qualified Flowbox.Options.Applicative         as Opt
-import           Flowbox.Prelude                     hiding (error)
+import           Flowbox.Prelude                     hiding (error, switch)
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.ZMQ.RPC.Server.Server       as RPC
 

@@ -18,7 +18,7 @@ import qualified Flowbox.Bus.Logger.Version  as Version
 import qualified Flowbox.Config.Config       as Config
 import           Flowbox.Options.Applicative hiding (info)
 import qualified Flowbox.Options.Applicative as Opt
-import           Flowbox.Prelude
+import           Flowbox.Prelude             hiding (switch)
 import           Flowbox.System.Log.Logger
 
 

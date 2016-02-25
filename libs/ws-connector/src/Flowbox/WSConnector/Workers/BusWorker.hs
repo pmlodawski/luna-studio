@@ -3,7 +3,6 @@
 
 module Flowbox.WSConnector.Workers.BusWorker (start) where
 
-import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
@@ -62,6 +61,13 @@ toBus chan idChan = do
     forever $ do
         msg <- liftIO $ atomically $ readTChan chan
         dispatchMessage msg
+
+
+eitherToM :: (Monad m, Show a) => Either a b -> m b
+eitherToM = either (fail . show) return
+
+eitherToM' :: (Monad m, Show a) => m (Either a b) -> m b
+eitherToM' action = action >>= eitherToM
 
 start :: BusEndPoints -> TChan WSMessage -> TChan WSMessage -> IO ()
 start busEndPoints fromBusChan toBusChan = do

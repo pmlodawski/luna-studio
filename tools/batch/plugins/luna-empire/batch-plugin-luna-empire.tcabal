@@ -28,8 +28,8 @@ Executable luna-empire
                     binary,
                     flowbox-bus-binary,
                     flowbox-config,
-                    flowbox-utils-old,
-                    optparse-applicative
+                    optparse-applicative,
+                    flowbox-utils
 
 Executable luna-empire-logger
     Hs-Source-Dirs: src
@@ -48,7 +48,7 @@ Executable luna-empire-logger
                     binary,
                     flowbox-bus-binary,
                     flowbox-config,
-                    flowbox-utils-old,
+                    flowbox-utils,
                     optparse-applicative
 
 Executable luna-empire-invoker

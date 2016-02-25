@@ -29,7 +29,7 @@ import           Flowbox.Bus.EndPoint                   (BusEndPoints)
 import           Flowbox.Bus.Logger.Env                 (Env)
 import qualified Flowbox.Bus.Logger.Env                 as Env
 import           Flowbox.Bus.RPC.Types                  (Response (Response), Result (ErrorResult, Status), Value (Value))
-import           Flowbox.Control.Monad.Error            (MonadError)
+import           Control.Monad.Error                    (MonadError)
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                        hiding (error)
 import           Flowbox.System.Log.Logger

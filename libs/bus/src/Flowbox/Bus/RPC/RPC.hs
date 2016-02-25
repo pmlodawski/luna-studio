@@ -13,7 +13,7 @@ import           Control.Exception         (SomeException)
 import qualified Control.Monad.Catch       as Catch
 import           Control.Monad.Trans.State
 
-import           Flowbox.Control.Error
+import           Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
