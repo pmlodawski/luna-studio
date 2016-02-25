@@ -159,9 +159,6 @@ instance CompositeWidget Model.Node where
         let label  = Style.expressionLabel $ model ^. Model.expression
         UICmd.register id label def
 
-        let label = Style.nameLabel (model ^. Model.name)
-        UICmd.register id label def
-
         let group  = Group.create & Group.position .~ Style.controlsPosition
         controlGroups <- UICmd.register id group Style.controlsLayout
 
@@ -192,7 +189,6 @@ instance CompositeWidget Model.Node where
     updateWidget id old model = do
         controlsId <- expandedGroupId id
         exprId     <- expressionId    id
-        nameId     <- nameLabelId     id
         nameTbId   <- nameTextBoxId   id
         valueId    <- valueLabelId    id
         valueVisId <- valueGroupId    id
@@ -201,7 +197,6 @@ instance CompositeWidget Model.Node where
         UICmd.update_ controlsId $ Group.visible .~ (model ^. Model.isExpanded)
         UICmd.update_ valueVisId $ Group.visible .~ (model ^. Model.isExpanded)
         UICmd.update_ exprId     $ Label.label   .~ (model ^. Model.expression)
-        UICmd.update_ nameId     $ Label.label   .~ (model ^. Model.name)
         UICmd.update_ nameTbId   $ LabeledTextBox.value .~ (model ^. Model.name)
         UICmd.update_ valueId    $ Label.label   .~ (model ^. Model.value)
         withJust (model ^. Model.tpe) $ \tpe -> do
@@ -249,7 +244,7 @@ typeTextBoxId id = do
 
 expandedGroupId :: WidgetId -> Command UIRegistry.State WidgetId
 expandedGroupId id = do
-    (_:_:groupId:_) <- UICmd.children id
+    (_:groupId:_) <- UICmd.children id
     (expandedId:_) <- UICmd.children groupId
     return expandedId
 
@@ -258,19 +253,14 @@ expressionId id = do
     (exprId:_) <- UICmd.children id
     return exprId
 
-nameLabelId :: WidgetId -> Command UIRegistry.State WidgetId
-nameLabelId id = do
-    (_:nameId:_) <- UICmd.children id
-    return nameId
-
 valueGroupId :: WidgetId -> Command UIRegistry.State WidgetId
 valueGroupId id = do
-    (_:_:groupId:_) <- UICmd.children id
+    (_:groupId:_) <- UICmd.children id
     (_:_:valGrpId:_) <- UICmd.children groupId
     return valGrpId
 
 valueLabelId :: WidgetId -> Command UIRegistry.State WidgetId
 valueLabelId id = do
-    (_:_:groupId:_) <- UICmd.children id
+    (_:groupId:_) <- UICmd.children id
     (_:valLabelId:_) <- UICmd.children groupId
     return valLabelId

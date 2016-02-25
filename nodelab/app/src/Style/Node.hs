@@ -9,19 +9,14 @@ import qualified Object.Widget.Group as Group
 import qualified Object.Widget.Label as Label
 import qualified UI.Layout           as Layout
 
-nodeRadius = 30.0
+nodeRadius = 25.0
 
 expressionLabel = Label.Label position size align  where
     position = Vector2 (-150.0) (-50.0)
     size     = Vector2 300.0 20.0
     align    = Label.Center
 
-nameLabel = Label.Label position size align  where
-    position = Vector2 (-40.0) (50.0)
-    size     = Vector2 80.0 20.0
-    align    = Label.Center
-
-controlsPosition = Vector2 (-nodeRadius) 50.0
+controlsPosition = Vector2 (-nodeRadius) 35.0
 controlsLayout   = Layout.verticalLayoutHandler 5.0
 
 expandedGroupStyle = def & Group.background ?~ (0.2, 0.2, 0.2)
