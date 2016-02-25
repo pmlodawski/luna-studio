@@ -8,7 +8,6 @@ import qualified Event.Window                     as Window
 import           Object.UITypes                   (WidgetId)
 import qualified Object.Widget.Group              as Group
 import           Reactive.Commands.Command        (Command)
-import           Reactive.Commands.ProjectManager (initProjectChooser)
 import qualified Reactive.Commands.UIRegistry     as UICmd
 import qualified Reactive.State.Camera            as Camera
 import           Reactive.State.Global            (State, inRegistry)

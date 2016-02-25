@@ -7,7 +7,7 @@ import           Utils.Vector                     (Vector2 (..))
 import           Object.UITypes                   (WidgetId)
 import qualified Object.Widget.Group              as Group
 import           Reactive.Commands.Command        (Command, execCommand, performIO)
-import           Reactive.Commands.ProjectManager (displayCurrentBreadcrumb, initProjectChooser)
+import           Reactive.Commands.ProjectManager (displayCurrentBreadcrumb)
 import qualified Reactive.Commands.UIRegistry     as UICmd
 import           Reactive.State.Global            (State, inRegistry)
 import qualified Reactive.State.Global            as Global
@@ -37,5 +37,4 @@ initBreadcrumb = do
 initialize :: Command State ()
 initialize = do
     sidebarId <- initSidebar
-    initProjectChooser
     initBreadcrumb

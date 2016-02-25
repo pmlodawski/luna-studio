@@ -38,22 +38,11 @@ destroyBreadcrumbs = do
     breadcrumbItems <- inRegistry $ UICmd.children breadcrumbs
     inRegistry  $ mapM_ UICmd.removeWidget breadcrumbItems
 
-toggleProjectList :: Command State ()
-toggleProjectList = do
-    projectList <- use $ Global.uiElements . UIElements.projectChooser . UIElements.pcContainer
-    inRegistry $ UICmd.update_ projectList $ Group.visible %~ not
-
 displayBreadcrumbs :: (Breadcrumb -> Command State ()) -> Command State ()
 displayBreadcrumbs enterBreadcrumbs = do
     group <- use $ Global.uiElements . UIElements.breadcrumbs
 
     currentBreadcrumb <- use $ Global.workspace . Workspace.currentLocation . GraphLocation.breadcrumb . Breadcrumb.items
-
-    let widget = Button.create Style.breadcrumbItemSize "Projects"
-               & Button.style .~ Style.breadcrumbItemStyle
-        handlers = addHandler (ClickedHandler $ \_ -> toggleProjectList) mempty
-    inRegistry $ UICmd.register group widget handlers
-
     currentProjectName <- use $ Global.workspace . Workspace.currentProject . Project.name
 
     inRegistry $ do

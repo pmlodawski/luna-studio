@@ -7,7 +7,7 @@ import qualified Event.Batch                      as Batch
 import           Event.Event                      (Event (Init, Batch))
 
 import           Reactive.Commands.Command        (Command, execCommand, performIO)
-import           Reactive.Commands.ProjectManager (updateProjectList, loadGraph, loadProject)
+import           Reactive.Commands.ProjectManager (loadGraph, loadProject)
 import           Reactive.Commands.RenderGraph    (renderGraph)
 import           Reactive.State.Global            (State)
 import qualified Reactive.State.Global            as Global
@@ -39,7 +39,6 @@ toAction (Batch (Batch.ProjectList response)) = Just $ do
 
     loc <- use $ Global.workspace . Workspace.currentLocation
 
-    updateProjectList
     loadGraph loc
 
 toAction (Batch (Batch.ProjectCreated response)) = Just $ do
@@ -48,8 +47,6 @@ toAction (Batch (Batch.ProjectCreated response)) = Just $ do
     Global.workspace . Workspace.projects . at pid ?= project
 
     projs <- use $ Global.workspace . Workspace.projects
-
-    updateProjectList
 
     loadProject pid
 toAction _ = Nothing

@@ -35,18 +35,11 @@ import           UI.Handlers.Button              (ClickedHandler (..))
 import           UI.Instances
 import qualified UI.Layout                       as Layout
 
-hideProjectList :: Command State ()
-hideProjectList = do
-    projectList <- use $ Global.uiElements . UIElements.projectChooser . UIElements.pcContainer
-    inRegistry $ UICmd.update_ projectList $ Group.visible .~ False
-
 
 loadProject :: ProjectId -> Command State ()
 loadProject projId = do
     let newLocation = GraphLocation projId 0 (Breadcrumb [])
     navigateToGraph newLocation
-    updateProjectList
-    hideProjectList
 
 loadGraph :: GraphLocation -> Command State ()
 loadGraph location = do
@@ -73,68 +66,7 @@ enterBreadcrumbs newBc = do
     let newLocation = location & GraphLocation.breadcrumb .~ newBc
     navigateToGraph newLocation
 
-
 saveCurrentLocation :: Command State ()
 saveCurrentLocation = do
     workspace <- use $ Global.workspace
     performIO $ JS.saveLocation $ workspace ^. Workspace.uiGraphLocation
-
-initProjectChooser :: Command State ()
-initProjectChooser = do
-    let group = Group.create & Group.position . x .~ Style.sidebarWidth
-                             & Group.position . y .~ 30
-                             & Group.visible      .~ False
-                             & Group.style        .~ Style.projectChooserStyle
-
-    container <- inRegistry $ UICmd.register sceneInterfaceId group (Layout.verticalLayoutHandler 5.0)
-
-    let button = Button.create Style.createProjectButtonSize "Create project"
-    inRegistry $ UICmd.register container button (handle $ ClickedHandler $ const openAddProjectDialog)
-
-    let group = Group.create & Group.position . y .~ 40.0
-                             & Group.style        .~ Style.projectChooser
-
-    list <- inRegistry $ UICmd.register container group (Layout.verticalLayoutHandler 5.0)
-
-    Global.uiElements . UIElements.projectChooser . UIElements.pcContainer .= container
-    Global.uiElements . UIElements.projectChooser . UIElements.pcList      .= list
-
-emptyProjectChooser :: Command State ()
-emptyProjectChooser = do
-    pc <- use $ Global.uiElements . UIElements.projectChooser . UIElements.pcList
-    inRegistry $ do
-        children <- UICmd.children pc
-        mapM_ UICmd.removeWidget children
-
-openAddProjectDialog :: Command State ()
-openAddProjectDialog = inRegistry $ do
-    let group = Group.create & Group.position .~ Style.createProjectDialogPosition
-                             & Group.style    .~ Style.createProjectDialogStyle
-    groupId <- UICmd.register sceneInterfaceId group (Layout.horizontalLayoutHandler 5.0)
-
-    let tb = LabeledTextBox.create Style.createProjectDialogTextBoxSize "Name" "Untitled"
-    tbId <- UICmd.register groupId tb def
-
-    let button = Button.create Style.createProjectDialogOKSize "Create"
-    UICmd.register_ groupId button $ handle $ ClickedHandler $ const $ do
-        name <- inRegistry $ UICmd.get tbId LabeledTextBox.value
-        inRegistry $ UICmd.removeWidget groupId
-        performIO $ BatchCmd.createProject name $ name <> ".luna"
-
-    let button = Button.create Style.createProjectDialogCancelSize "Cancel"
-    UICmd.register_ groupId button $ handle $ ClickedHandler $ const $ do
-        inRegistry $ UICmd.removeWidget groupId
-
-updateProjectList :: Command State ()
-updateProjectList = do
-    groupId <- use $ Global.uiElements . UIElements.projectChooser . UIElements.pcList
-
-    emptyProjectChooser
-
-    currentProjectId <- use $ Global.workspace . Workspace.currentLocation . GraphLocation.projectId
-
-    projects <- use $ Global.workspace . Workspace.projects
-    forM_ (IntMap.toList projects) $ \(id, project) -> do
-        let isCurrent = if (currentProjectId == id) then "> " else ""
-        let button = Button.create Style.projectListItemSize $ (isCurrent <> (Text.pack $ fromMaybe "(no name)" $ project ^. Project.name))
-        inRegistry $ UICmd.register groupId button (handle $ ClickedHandler $ const (loadProject id))
