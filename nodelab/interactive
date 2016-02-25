@@ -2,6 +2,8 @@
 
 # TODO: use `stack ghci`
 
+stack build --only-dependencies
+
 export PATH=`stack path --bin-path`
 
 ghcjs  -package-db $(stack path --snapshot-pkg-db) \
@@ -19,7 +21,6 @@ ghcjs  -package-db $(stack path --snapshot-pkg-db) \
        -package containers \
        -package random \
        -package pretty-show \
-       -package flowbox-utils \
        -package convert \
        -package process \
        -package constraints \
