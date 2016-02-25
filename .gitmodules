@@ -1,30 +1,4 @@
-[submodule "third-party/cufft"]
-    path = third-party/cufft
-    url = https://github.com/flowbox-public/cufft.git
-[submodule "third-party/fgl"]
-	path = third-party/fgl
-	url = https://github.com/pmlodawski/fgl.git
+[submodule "scripts"]
+	path = scripts
+	url = git@bitbucket.org:NewByteOrder/workflow.git
 	branch = master
-[submodule "third-party/HMap"]
-	path = third-party/HMap
-	url = https://github.com/pmlodawski/HMap.git
-	branch = master
-[submodule "third-party/mainland-pretty"]
-	path = third-party/mainland-pretty
-	url = https://github.com/flowbox-public/mainland-pretty.git
-	branch = master
-[submodule "third-party/imagemagick"]
-	path = third-party/imagemagick
-	url = https://github.com/flowbox-public/imagemagick.git
-	branch = master
-[submodule "third-party/algebraic"]
-	path = third-party/algebraic
-	url = https://github.com/wdanilo/algebraic.git
-	branch = master
-[submodule "third-party/binary"]
-	path = third-party/binary
-	url = https://github.com/flowbox-public/binary
-	branch = master
-[submodule "third-party/HaskellBooster"]
-	path = third-party/HaskellBooster
-	url = https://github.com/wdanilo/HaskellBooster.git
