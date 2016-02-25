@@ -21,7 +21,7 @@ class Button extends BaseWidget
       size:      { type: 'v2', value: new THREE.Vector2(width, height) }
       focus:     { type: 'i',  value: 0 }
       rounded:   { type: 'i',  value: 1 }
-      color:     { type: 'v3', value: new THREE.Vector3(0.18, 0.18, 0.18)}
+      color:     { type: 'v4', value: new THREE.Vector4(0.18, 0.18, 0.18, 1.0)}
       objectId:  { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
 
     @uniforms[k] = v for k, v of $$.commonUniforms
@@ -51,9 +51,9 @@ class Button extends BaseWidget
     @labelText = ""
     @relayout()
 
-  setBgColor: (r, g, b) -> @uniforms.color.value.set(r, g, b)
-  setEnabled: (value)   -> @uniforms.enabled.value = value ? 1 : 0
-  setRounded: (value)   -> @uniforms.rounded.value = value ? 1 : 0
+  setBgColor: (r, g, b, a) -> @uniforms.color.value.set(r, g, b, a)
+  setEnabled: (value)      -> @uniforms.enabled.value = value ? 1 : 0
+  setRounded: (value)      -> @uniforms.rounded.value = value ? 1 : 0
 
   setLabel: (text) ->
      @labelText = text

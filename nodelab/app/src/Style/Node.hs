@@ -19,7 +19,7 @@ expressionLabel = Label.Label position size align  where
 controlsPosition = Vector2 (-nodeRadius) 35.0
 controlsLayout   = Layout.verticalLayoutHandler 5.0
 
-expandedGroupStyle = def & Group.background ?~ (0.2, 0.2, 0.2)
+expandedGroupStyle = def & Group.background ?~ Color 0.2 0.2 0.2 1.0
                          & Group.padding .~ uniformPadding 5.0
 
 -- controlsPosition = Vector2 (-30.0) (-30.0)
@@ -36,7 +36,7 @@ valueLabel = Label.Label position size align  where
     size     = Vector2 100.0 20.0
     align    = Label.Left
 
-visualizationGroupStyle = def & Group.background ?~ (0.2, 0.2, 0.2)
+visualizationGroupStyle = def & Group.background ?~ Color 0.2 0.2 0.2 1.0
 plotSize = Vector2 200.0 150.0
 
 portControlSize = Vector2 200.0 20.0

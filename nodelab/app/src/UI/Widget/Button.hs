@@ -18,17 +18,18 @@ import qualified UI.Generic                    as UI
 import qualified UI.Registry                   as UI
 import           UI.Widget                     (UIWidget (..))
 import qualified UI.Widget                     as Widget
+import Style.Types (Color(..))
 
 newtype Button = Button JSVal deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget Button
 
-foreign import javascript safe "new Button($1, $2, $3)"    create'     :: Int    -> Double -> Double  -> IO Button
-foreign import javascript safe "$1.setLabel($2)"           setLabel'   :: Button -> JSString          -> IO ()
-foreign import javascript safe "$1.setIcon($2)"            setIcon'    :: Button -> Nullable JSString -> IO ()
-foreign import javascript safe "$1.setEnabled($2)"         setEnabled' :: Button -> Bool              -> IO ()
-foreign import javascript safe "$1.setRounded($2)"         setRounded' :: Button -> Bool              -> IO ()
-foreign import javascript safe "$1.setBgColor($2, $3, $4)" setBgColor' :: Button -> Double -> Double -> Double -> IO ()
+foreign import javascript safe "new Button($1, $2, $3)"        create'     :: Int    -> Double -> Double  -> IO Button
+foreign import javascript safe "$1.setLabel($2)"               setLabel'   :: Button -> JSString          -> IO ()
+foreign import javascript safe "$1.setIcon($2)"                setIcon'    :: Button -> Nullable JSString -> IO ()
+foreign import javascript safe "$1.setEnabled($2)"             setEnabled' :: Button -> Bool              -> IO ()
+foreign import javascript safe "$1.setRounded($2)"             setRounded' :: Button -> Bool              -> IO ()
+foreign import javascript safe "$1.setBgColor($2, $3, $4, $5)" setBgColor' :: Button -> Double -> Double -> Double -> Double -> IO ()
 
 
 create :: WidgetId -> Model.Button -> IO Button
@@ -49,7 +50,7 @@ setRounded :: Model.Button -> Button -> IO ()
 setRounded model widget = setRounded' widget $ model ^. Model.style . Model.rounded
 
 setBgColor :: Model.Button -> Button -> IO ()
-setBgColor model widget = setBgColor' widget r g b where (r, g, b) =  model ^. Model.style . Model.background
+setBgColor model widget = setBgColor' widget r g b a where (Color r g b a) =  model ^. Model.style . Model.background
 
 setIcon :: Model.Button -> Button -> IO ()
 setIcon model widget = setIcon' widget $ maybeToNullable (lazyTextToJSString <$> model ^. Model.icon)

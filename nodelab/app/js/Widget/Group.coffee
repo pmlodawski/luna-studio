@@ -13,7 +13,7 @@ class Group extends BaseWidget
     @bgUniforms =
       size:      { type: 'v2', value: new THREE.Vector2(width, height) }
       objectId:  { type: 'v3', value: new THREE.Vector3(0, 0, 0) }
-      color:     { type: 'v3', value: new THREE.Vector3(1.0, 0, 0) }
+      color:     { type: 'v4', value: new THREE.Vector4(1.0, 0, 0, 1.0) }
       radius:    { type: 'v4', value: new THREE.Vector4(10.0, 10.0, 10.0, 10.0) }
 
     @bgUniforms[k] = v for k, v of $$.commonUniforms
@@ -40,7 +40,7 @@ class Group extends BaseWidget
 
     @mesh.add @bg
 
-  setBgColor: (r, g, b) -> @bgUniforms.color.value.set(r, g, b)
+  setBgColor: (r, g, b, a) -> @bgUniforms.color.value.set(r, g, b, a)
   setBorderRadius: (a, b, c, d) -> @bgUniforms.radius.value.set(a, b, c, d)
   setPadding: (t, r, b, l) ->
     @padding = {top: t, right:r, bottom: b, left: l}

@@ -1,7 +1,7 @@
 precision mediump float;
 
 uniform float value;
-uniform vec3 color;
+uniform vec4 color;
 uniform vec4 radius;
 
 <%= require('shaders/stdlib')() %>
@@ -23,5 +23,5 @@ void main(void) {
 
     float gBg  = sdf_aa(gRect);
 
-    gl_FragColor = vec4(color, gBg);
+    gl_FragColor = vec4(color.xyz, gBg);
 }

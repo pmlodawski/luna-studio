@@ -13,7 +13,7 @@ import qualified Object.Widget.Group          as Model
 import qualified Reactive.Commands.UIRegistry as UICmd
 import qualified Reactive.State.UIRegistry    as UIRegistry
 
-import           Style.Types                  (Padding(..))
+import           Style.Types                  (Padding(..), Color(..))
 import           UI.Generic                   (whenChanged)
 import qualified UI.Generic                   as UI
 import qualified UI.Registry                  as UI
@@ -29,12 +29,12 @@ foreign import javascript safe "$1.setVisible($2)"             setVisible'   :: 
 foreign import javascript safe "$1.setBgVisible($2)"           setBgVisible' :: Group -> Bool -> IO ()
 foreign import javascript safe "$1.setBorderRadius($2, $3, $4, $5)" setBorderRadius' :: Group -> Double -> Double -> Double -> Double -> IO ()
 foreign import javascript safe "$1.setPadding($2, $3, $4, $5)" setPadding'   :: Group -> Double -> Double -> Double -> Double -> IO ()
-foreign import javascript safe "$1.setBgColor($2, $3, $4)"     setBgColor'   :: Group -> Double -> Double -> Double -> IO ()
+foreign import javascript safe "$1.setBgColor($2, $3, $4, $5)" setBgColor'   :: Group -> Double -> Double -> Double -> Double -> IO ()
 
 setBgColor :: Group -> Model.Group -> IO ()
 setBgColor group model = case model ^. Model.style . Model.background of
-    Just (r, g, b) -> do
-        setBgColor' group r g b
+    Just (Color r g b a) -> do
+        setBgColor' group r g b a
         setBgVisible' group True
     Nothing -> setBgVisible' group False
 

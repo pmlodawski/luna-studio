@@ -1,8 +1,16 @@
 module Style.Types where
 
 import Utils.PreludePlus
+import Data.Aeson (ToJSON)
 
-type Color   = (Double, Double, Double)
+data Color   = Color { _r :: Double
+                     , _g :: Double
+                     , _b :: Double
+                     , _a :: Double
+                     } deriving (Show, Eq, Generic)
+
+instance ToJSON Color
+
 data Padding = Padding { _top    :: Double
                        , _right  :: Double
                        , _bottom :: Double
