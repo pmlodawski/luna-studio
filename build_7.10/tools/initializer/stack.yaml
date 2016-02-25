@@ -1,8 +1,0 @@
-packages:
-- ../../../libs/config
-- ../../../libs/luna/initializer
-- ../../../libs/utils
-- ../../../third-party/fgl
-- ../../../tools/initializer
-resolver: nightly-2015-07-24
-

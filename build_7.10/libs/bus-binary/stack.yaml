@@ -1,7 +1,0 @@
-packages:
-- ../../../libs/bus-binary
-- ../../../libs/bus
-- ../../../libs/config
-- ../../../libs/rpc
-- ../../../libs/old-utils
-resolver: lts-3.14

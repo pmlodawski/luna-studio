@@ -1,7 +1,0 @@
-packages:
-- ../../../libs/config
-- ../../../libs/utils
-- ../../../third-party/fgl
-- ../../../tools/wrappers
-resolver: nightly-2015-07-24
-

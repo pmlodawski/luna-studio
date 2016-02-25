@@ -1,8 +1,0 @@
-packages:
-- ../../../../libs/aws
-- ../../../../libs/rpc
-- ../../../../libs/utils
-- ../../../../third-party/fgl
-- ../../../../tools/aws/account-manager-mock
-resolver: nightly-2015-07-24
-

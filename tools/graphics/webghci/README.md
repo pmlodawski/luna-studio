@@ -1,4 +1,0 @@
-WebGHCI
-=======
-
-Testing app

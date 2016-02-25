@@ -1,6 +1,0 @@
-packages:
-- ../../../libs/config
-- ../../../libs/utils
-- ../../../third-party/fgl
-resolver: nightly-2015-07-24
-
