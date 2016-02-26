@@ -23,5 +23,5 @@ void main(void) {
 
     float gBg  = sdf_aa(gRect);
 
-    gl_FragColor = vec4(color.xyz, gBg);
+    gl_FragColor = vec4(color.xyz, color.a * gBg);
 }

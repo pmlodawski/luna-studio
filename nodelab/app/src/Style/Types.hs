@@ -9,6 +9,8 @@ data Color   = Color { _r :: Double
                      , _a :: Double
                      } deriving (Show, Eq, Generic)
 
+transparent = Color 0.0 0.0 0.0 0.0
+
 instance ToJSON Color
 
 data Padding = Padding { _top    :: Double

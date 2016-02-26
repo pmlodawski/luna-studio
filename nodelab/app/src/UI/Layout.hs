@@ -55,14 +55,16 @@ verticalLayout spacing id = do
     heights <- mapM getHeight widgets
     void $ foldM (moveY spacing) 0.0 heights
 
-horizontalLayoutHandler spacing = addHandler (UICmd.ChildrenResizedHandler $ horizontalLayoutHandler' spacing) mempty
+horizontalLayoutHandler spacing = addHandler (UICmd.ChildrenResizedHandler $ horizontalLayoutHandler' spacing True) mempty
 
-horizontalLayoutHandler' :: Double -> WidgetId -> WidgetId -> Command UIRegistry.State ()
-horizontalLayoutHandler' spacing id _ = do
+horizontalLayoutHandlerNoResize spacing = addHandler (UICmd.ChildrenResizedHandler $ horizontalLayoutHandler' spacing False) mempty
+
+horizontalLayoutHandler' :: Double -> Bool -> WidgetId -> WidgetId -> Command UIRegistry.State ()
+horizontalLayoutHandler' spacing resize id _ = do
     horizontalLayout spacing id
     maybePadding <- UICmd.maybeGet id $ Group.style . Group.padding
     let padding = fromMaybe def maybePadding
-    Group.updateSize padding id
+    when resize $ Group.updateSize padding id
 
 horizontalLayout :: Double -> WidgetId -> Command UIRegistry.State ()
 horizontalLayout spacing id = do

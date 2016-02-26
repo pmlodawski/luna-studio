@@ -43,6 +43,7 @@ displayBreadcrumbs enterBreadcrumbs = do
     group <- use $ Global.uiElements . UIElements.breadcrumbs
 
     currentBreadcrumb <- use $ Global.workspace . Workspace.currentLocation . GraphLocation.breadcrumb . Breadcrumb.items
+
     currentProjectName <- use $ Global.workspace . Workspace.currentProject . Project.name
 
     inRegistry $ do

@@ -9,6 +9,9 @@ textMaterial = require('font/text_material').hud
 layoutText   = require('bmfont').layout
 
 BaseWidget   = require ('Widget/BaseWidget')
+Label        = require ('Widget/Label')
+
+
 
 calculateTextWidth = (txt) -> layoutText({font: font, text: txt}).width
 
@@ -48,30 +51,43 @@ class Button extends BaseWidget
 
     @mesh.add @bg
 
-    @labelText = ""
+    @text = ""
+    @alignment = 'Center'
     @relayout()
 
   setBgColor: (r, g, b, a) -> @uniforms.color.value.set(r, g, b, a)
   setEnabled: (value)      -> @uniforms.enabled.value = value ? 1 : 0
   setRounded: (value)      -> @uniforms.rounded.value = value ? 1 : 0
 
+  setAlignment: (align) ->
+    @alignment = align
+    @setLabel @text
+
   setLabel: (text) ->
-     @labelText = text
-     @mesh.remove @label if @label
+    @text = text
+    @mesh.remove @label if @label
+    if @text
+      layout =
+        text: text
+        font: font
+        align: @alignment
+        mode: 'pre'
+      width = layoutText(layout).width * config.fontSize
+      layout.width = @width / (config.fontSize)
+      width = Math.min width, @width
+      geometry = createText layout
+      material = textMaterial()
 
-     geometry = createText
-       text:  text
-       font:  font
-       align: 'center'
+      @label = new THREE.Mesh(geometry, material)
+      @label.scale.multiplyScalar config.fontSize
+      @label.position.y = 5 + @height / 2.0
+      @label.position.x = switch @alignment
+        when 'Left'   then  0
+        when 'Right'  then  @width - width
+        when 'Center' then (@width - width) / 2.0
+        else throw 'Invalid text alignment'
 
-     @labelTextWidth = calculateTextWidth(text) * config.fontSize
-
-     material = textMaterial()
-     @label = new THREE.Mesh geometry, material
-     @label.scale.multiplyScalar config.fontSize
-     @mesh.add(@label)
-
-     @relayout()
+      @mesh.add @label
 
   setIcon: (icon) ->
      @iconShader = icon
@@ -99,8 +115,7 @@ class Button extends BaseWidget
 
     @iconUniforms.size.value.set @height, @height
     if @label
-      @label.position.x = @width / 2.0 - @labelTextWidth / 2.0
-      @label.position.y = @height/ 2.0 + 5.0
+      @setLabel @text
 
     if @icon
       @icon.scale.set @height, @height, 1.0

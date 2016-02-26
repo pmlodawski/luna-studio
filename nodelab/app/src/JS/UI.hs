@@ -1,4 +1,5 @@
 {-# LANGUAGE JavaScriptFFI #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module JS.UI where
 
@@ -25,8 +26,6 @@ foreign import javascript safe "window.dispatchEvent(new Event('resize'))"
 foreign import javascript safe "app.shouldRender()"
     shouldRender :: IO ()
 
-foreign import javascript safe "$('#htmlcanvas-pan').css({cursor: $1})"
-    setCursor :: JSString -> IO ()
 
 foreign import javascript safe "app.displayRejectedMessage()"
     displayRejectedMessage :: IO ()

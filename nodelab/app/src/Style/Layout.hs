@@ -5,6 +5,7 @@ import           Utils.Vector
 
 import qualified Object.Widget.Button as Button
 import qualified Object.Widget.Group  as Group
+import qualified Object.Widget.Label  as Label
 import           Style.Types
 
 sidebarPadding                 = 10.0
@@ -19,13 +20,16 @@ sidebarWidth                   = 0
 breadcrumbBackground           = sidebarBackground
 breadcrumbPosition             = Vector2 sidebarWidth 0.0
 
-breadcrumbStyle                = def & Group.background   ?~ sidebarBackground
-                                     & Group.padding      .~ xyPadding 5.0 5.0
-                                     & Group.borderRadius .~ (0, 10, 0, 0)
+breadcrumbStyle                = def & Group.background   ?~ Color 1.0 1.0 1.0 0.05
+                                     & Group.padding      .~ xyPadding 5.0 0.0
+                                     & Group.borderRadius .~ (0, 0, 0, 0)
 
+breadcrumbsHeight              = 20.0
 
 breadcrumbItemSize             = Vector2 150.0 20.0
-breadcrumbItemStyle            = def & Button.rounded   .~ False
+breadcrumbItemStyle            = def & Button.rounded    .~ False
+                                     & Button.background .~ transparent
+                                     & Button.alignment  .~ Label.Left
 
 projectChooser                 = def & Group.padding    .~ uniformPadding 5.0
                                      & Group.background ?~ sidebarBackground

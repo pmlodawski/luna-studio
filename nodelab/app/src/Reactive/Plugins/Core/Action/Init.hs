@@ -31,7 +31,7 @@ initBreadcrumb :: Command State ()
 initBreadcrumb = do
     let group = Group.create & Group.position  .~ Style.breadcrumbPosition
                              & Group.style     .~ Style.breadcrumbStyle
-    groupId <- inRegistry $ UICmd.register sceneInterfaceId group (Layout.horizontalLayoutHandler 5.0)
+    groupId <- inRegistry $ UICmd.register sceneInterfaceId group (Layout.horizontalLayoutHandlerNoResize 5.0)
     Global.uiElements . UIElements.breadcrumbs .= groupId
 
 initialize :: Command State ()

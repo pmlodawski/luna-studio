@@ -4,13 +4,14 @@ import           Utils.PreludePlus
 
 import           Data.HMap.Lazy               (TypeKey (..))
 
-import           Object.Widget                (WidgetId, ClickHandler, click, UIHandlers)
+import           Object.Widget                (ClickHandler, UIHandlers, WidgetId, click, mouseOver, mouseOut)
 import qualified Object.Widget.Button         as Model
-import           Reactive.Commands.Command    (Command)
+import           Reactive.Commands.Command    (Command, performIO)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import           Reactive.State.Global        (inRegistry)
 import qualified Reactive.State.Global        as Global
 
+import           JS.Cursor                    (setCursor, Cursor(Normal, Pointer))
 import           UI.Widget.Toggle             ()
 
 newtype ClickedHandler = ClickedHandler (WidgetId -> Command Global.State ())
@@ -25,4 +26,6 @@ clickHandler :: ClickHandler Global.State
 clickHandler _ _ id = triggerClicked id
 
 widgetHandlers :: UIHandlers Global.State
-widgetHandlers = def & click .~ clickHandler
+widgetHandlers = def & click     .~ clickHandler
+                     & mouseOver .~ (\_ _ -> performIO $ setCursor Pointer)
+                     & mouseOut  .~ (\_ _ -> performIO $ setCursor Normal)
