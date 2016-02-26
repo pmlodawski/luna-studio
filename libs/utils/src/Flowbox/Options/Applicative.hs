@@ -22,8 +22,8 @@ optIntFlag mlongName shortName baseval defval helpmsg =
                      lvl     = if explvl < 0 then baselvl else explvl
                  in lvl
     )
-    <$> switch    ( longName <> short shortName <> help helpmsg )
-    <*> strOption ( short shortName <> value "-1" <> hidden     ) where
+    <$> switch    ( longName <> help helpmsg )
+    <*> strOption ( short shortName <> value "-1") where
     longName = case mlongName of
         Just n  -> long n
         Nothing -> idm
