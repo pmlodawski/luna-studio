@@ -34,7 +34,8 @@ import qualified Empire.Commands.AST          as AST
 import qualified Empire.Commands.GraphUtils   as GraphUtils
 import           Empire.Empire
 
-import           Luna.Syntax.AST.Term         (Acc (..), App (..), Blank (..), Unify (..), Var (..), Num (..), Str (..))
+import           Luna.Syntax.AST.Term         (Acc (..), App (..), Blank (..), Unify (..), Var (..))
+import qualified Luna.Syntax.AST.Lit          as Lit
 import qualified Luna.Syntax.Builder          as Builder
 
 type UniMap = Map NodeRef NodeId
@@ -75,8 +76,10 @@ getPortState uniMap ref
     | otherwise             = do
         node <- Builder.read ref
         caseTest (uncover node) $ do
-            match $ \(Str s) -> return . WithDefault . Constant . StringValue $ s
-            match $ \(Num i) -> return . WithDefault . Constant . IntValue    $ i
+            match $ \(Lit.String s)   -> return . WithDefault . Constant . StringValue $ s
+            match $ \(Lit.Number _ n) -> return . WithDefault . Constant $ case n of
+                Lit.Integer  i -> IntValue $ fromIntegral i
+                Lit.Rational r -> RationalValue r
             match $ \Blank   -> return NotConnected
             match $ \ANY     -> Print.printExpression ref >>= return . WithDefault . Expression
 

@@ -16,8 +16,9 @@ import           Data.Graph.Builder                     (MonadBuilder)
 import           Data.Graph.Builders                    (Connectible)
 import           Luna.Syntax.Model.Network.Builder.Term (TermBuilder, NetLayers, NetworkBuilderT, runNetworkBuilderT)
 import           Luna.Syntax.Model.Network.Term         (Raw)
-import           Luna.Syntax.AST.Term                   (Acc, App, Blank, Unify, Var, Str, Num)
+import           Luna.Syntax.AST.Term                   (Acc, App, Blank, Unify, Var)
 import           Luna.Syntax.Model.Layer                ((:<:))
+import qualified Luna.Syntax.AST.Lit                    as Lit
 
 type ASTOp m = ( MonadIO m
                , MonadFix m
@@ -25,13 +26,13 @@ type ASTOp m = ( MonadIO m
                , Destructor m NodeRef
                , Unregister m EdgeRef
                , MonadBuilder AST m
-               , TermBuilder Blank m NodeRef
-               , TermBuilder Num   m NodeRef
-               , TermBuilder Str   m NodeRef
-               , TermBuilder Acc   m NodeRef
-               , TermBuilder App   m NodeRef
-               , TermBuilder Unify m NodeRef
-               , TermBuilder Var   m NodeRef
+               , TermBuilder Blank      m NodeRef
+               , TermBuilder Lit.Number m NodeRef
+               , TermBuilder Lit.String m NodeRef
+               , TermBuilder Acc        m NodeRef
+               , TermBuilder App        m NodeRef
+               , TermBuilder Unify      m NodeRef
+               , TermBuilder Var        m NodeRef
                , Connectible NodeRef NodeRef m
                )
 

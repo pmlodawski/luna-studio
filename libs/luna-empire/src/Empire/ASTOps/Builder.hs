@@ -16,7 +16,8 @@ import           Empire.ASTOps.Remove    (removeNode, safeRemove)
 import           Empire.Data.AST         (ASTEdge, ASTNode, EdgeRef, NodeRef, UncoveredNode)
 import           Luna.Syntax.AST.Arg     (Arg)
 import qualified Luna.Syntax.AST.Arg     as Arg
-import           Luna.Syntax.AST.Term    (Acc (..), App (..), Blank (..), Unify (..), Var (..), Str (..))
+import           Luna.Syntax.AST.Term    (Acc (..), App (..), Blank (..), Unify (..), Var (..))
+import qualified Luna.Syntax.AST.Lit     as Lit
 import qualified Luna.Syntax.Builder     as Builder
 
 functionApplicationNode :: Lens' ASTNode EdgeRef
@@ -108,12 +109,12 @@ makeAccessorRec seenApp targetNodeRef namingNodeRef = do
         match $ \(App t _) -> do
             newNamingNodeRef <- Builder.follow source t
             replacementRef <- makeAccessorRec True targetNodeRef newNamingNodeRef
-            Builder.reconnect namingNodeRef functionApplicationNode replacementRef
+            Builder.reconnect functionApplicationNode namingNodeRef replacementRef
             return namingNodeRef
         match $ \(Acc name t) -> do
             newNamingNodeRef <- Builder.follow source t
             replacement <- makeAccessorRec False targetNodeRef newNamingNodeRef
-            Builder.reconnect namingNodeRef accessorTarget replacement
+            Builder.reconnect accessorTarget namingNodeRef replacement
             return namingNodeRef
         match $ \ANY -> throwError "Invalid node type"
 
@@ -129,7 +130,7 @@ unAccRec ref = do
             replacement <- unAccRec =<< Builder.follow source t
             case replacement of
                 Just r  -> do
-                    Builder.reconnect ref accessorTarget r
+                    Builder.reconnect accessorTarget ref r
                     return $ Just ref
                 Nothing -> removeNode ref >> Just <$> Builder.var n
         match $ \(App t args) -> do
@@ -141,9 +142,9 @@ unAccRec ref = do
                     caseTest (uncover repl) $ do
                         match $ \(Var _) -> if null args
                             then removeNode ref >> return (Just r)
-                            else Builder.reconnect ref functionApplicationNode r >> return (Just ref)
+                            else Builder.reconnect functionApplicationNode ref r >> return (Just ref)
                         match $ \ANY -> do
-                            Builder.reconnect ref functionApplicationNode r
+                            Builder.reconnect functionApplicationNode ref r
                             return $ Just ref
                 Nothing -> throwError "Self port not connected"
         match $ \(Unify _ _) -> return Nothing
@@ -169,8 +170,8 @@ leftUnifyOperand = covered . lens rightGetter rightSetter where
 
 varName :: Lens' ASTNode String
 varName = covered . lens nameGetter nameSetter where
-    nameGetter v   = caseTest v $ match $ \(Var (Str n)) -> n
-    nameSetter v n = caseTest v $ match $ \(Var (_ :: Str)) -> (cons $ Var (Str n))
+    nameGetter v   = caseTest v $ match $ \(Var (n :: Lit.String)) -> toString n
+    nameSetter v n = caseTest v $ match $ \(Var (_ :: Lit.String)) -> (cons $ Var $ (fromString n :: Lit.String))
 
 renameVar :: ASTOp m => NodeRef -> String -> m ()
 renameVar vref name = do

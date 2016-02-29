@@ -17,11 +17,11 @@ import           Empire.Utils.ParserMock      as Parser
 import           Empire.API.Data.DefaultValue (PortDefault (..), Value (..))
 
 import qualified Luna.Syntax.Builder          as Builder
-import           Luna.Syntax.AST.Term         (Str)
+import qualified Luna.Syntax.AST.Lit          as Lit
 
 parsePortDefault :: ASTOp m => PortDefault -> m NodeRef
 parsePortDefault (Expression expr)          = parseFragment expr
-parsePortDefault (Constant (IntValue i))    = Builder.int i
+parsePortDefault (Constant (IntValue i))    = Builder.int $ fromIntegral i
 parsePortDefault (Constant (StringValue s)) = Builder.str s
 
 parseFragment :: ASTOp m => String -> m NodeRef
@@ -47,14 +47,14 @@ parseAcc expr = do
         []       -> throwError "Can't parse: empty expression"
         t : accs -> do
             target <- parseInitial t
-            as     <- mapM (Builder.var >=> flip Builder.app []) (fromString <$> accs :: [Str])
+            as     <- mapM (Builder.var >=> flip Builder.app []) (fromString <$> accs :: [Lit.String])
             buildAccs target as
 
 buildAccs :: ASTOp m => NodeRef -> [NodeRef] -> m NodeRef
 buildAccs = foldM ASTBuilder.makeAccessor
 
 parseInitial :: ASTOp m => String -> m NodeRef
-parseInitial expr = fromMaybe (Builder.var (fromString expr :: Str)) (whenBlank <|> whenString <|> whenInt) where
+parseInitial expr = fromMaybe (Builder.var (fromString expr :: Lit.String)) (whenBlank <|> whenString <|> whenInt) where
     whenString = Builder.str <$> Parser.asString  expr
-    whenInt    = Builder.int <$> Parser.asInteger expr
+    whenInt    = Builder.int . fromIntegral <$> Parser.asInteger expr
     whenBlank  = if expr == "_" then Just Builder.blank else Nothing

@@ -10,7 +10,8 @@ import           Empire.ASTOp          (ASTOp)
 import           Empire.Data.AST       (NodeRef)
 import qualified Empire.ASTOps.Builder as ASTBuilder
 
-import           Luna.Syntax.AST.Term  (Acc (..), App (..), Blank (..), Unify (..), Var (..), Num (..), Str (..))
+import           Luna.Syntax.AST.Term  (Acc (..), App (..), Blank (..), Unify (..), Var (..))
+import qualified Luna.Syntax.AST.Lit   as Lit
 import qualified Luna.Syntax.Builder   as Builder
 
 printExpression' :: ASTOp m => Bool -> NodeRef -> m String
@@ -36,8 +37,10 @@ printExpression' printEquations nodeRef = do
                 [] -> return funRep
                 _  -> return $ funRep ++ " " ++ (intercalate " " argsRep)
         match $ \Blank -> return "_"
-        match $ \(Num i) -> return $ show i
-        match $ \(Str s) -> return $ show s
+        match $ \(Lit.Number _ s) -> return $ case s of
+            Lit.Rational r -> show r
+            Lit.Integer  i -> show i
+        match $ \(Lit.String s) -> return $ show s
         match $ \ANY -> return ""
 
 printExpression :: ASTOp m => NodeRef -> m String

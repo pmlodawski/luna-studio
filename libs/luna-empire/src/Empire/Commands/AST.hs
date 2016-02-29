@@ -75,7 +75,7 @@ getVarNode nodeRef = runASTOp $ Builder.read nodeRef
 
 replaceTargetNode :: NodeRef -> NodeRef -> Command AST ()
 replaceTargetNode unifyNodeId newTargetId = runASTOp $ do
-    Builder.reconnect unifyNodeId ASTBuilder.rightUnifyOperand newTargetId
+    Builder.reconnect ASTBuilder.rightUnifyOperand unifyNodeId newTargetId
     return ()
 
 dumpGraphViz :: Command AST ()
