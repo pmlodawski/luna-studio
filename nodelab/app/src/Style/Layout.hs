@@ -28,7 +28,7 @@ breadcrumbsHeight              = 20.0
 
 breadcrumbItemSize             = Vector2 150.0 20.0
 breadcrumbItemStyle            = def & Button.rounded    .~ False
-                                     & Button.background .~ transparent
+                                     & Button.background .~ Color 1.0 0.0 0.0 0.3
                                      & Button.alignment  .~ Label.Left
 
 projectChooser                 = def & Group.padding    .~ uniformPadding 5.0

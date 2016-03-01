@@ -7,6 +7,7 @@ import           Utils.PreludePlus
 import           Utils.Vector
 import           GHCJS.Foreign
 import           GHCJS.Types (JSString)
+import           Data.JSString.Text  (lazyTextToJSString)
 
 foreign import javascript safe "window.innerWidth"
     innerWidth :: IO Int
@@ -33,3 +34,7 @@ foreign import javascript safe "app.displayRejectedMessage()"
 foreign import javascript safe "app.displayConnectionClosedMessage()"
     displayConnectionClosedMessage :: IO ()
 
+foreign import javascript safe "breadcrumb.calculateTextWidth($1)" calculateTextWidth' :: JSString -> Int
+
+calculateTextWidth :: Text -> Int
+calculateTextWidth = calculateTextWidth' . lazyTextToJSString

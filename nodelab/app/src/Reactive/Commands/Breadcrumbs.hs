@@ -31,6 +31,7 @@ import qualified Style.Layout                  as Style
 import           UI.Handlers.Button            (ClickedHandler (..))
 import           UI.Instances
 import qualified UI.Layout                     as Layout
+import qualified JS.UI                         as JS
 
 destroyBreadcrumbs :: Command State ()
 destroyBreadcrumbs = do
@@ -53,8 +54,10 @@ displayBreadcrumbs enterBreadcrumbs = do
                         Breadcrumb.Function name -> name
                         Breadcrumb.Module   name -> name
                     [] -> fromMaybe "(untitled project)" currentProjectName
-                widget = Button.create Style.breadcrumbItemSize (Text.pack name)
+                name'  = Text.pack name
+                widget = Button.create Style.breadcrumbItemSize name'
                        & Button.style .~ Style.breadcrumbItemStyle
+                       & Button.size  . x .~ (fromIntegral $ 5 + JS.calculateTextWidth name')
                 handlers = addHandler (ClickedHandler $ \_ -> enterBreadcrumbs $ Breadcrumb bc) mempty
             UICmd.register group widget handlers
 
