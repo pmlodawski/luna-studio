@@ -34,6 +34,7 @@ import qualified BatchConnector.Commands      as BatchCmd
 import qualified Empire.API.Data.Node         as Node
 import           Empire.API.Data.Port         (InPort (Self))
 import           Empire.API.Data.PortRef      (AnyPortRef (..), InPortRef (..), OutPortRef (..))
+import qualified Empire.API.Data.PortRef      as PortRef (srcNodeId, dstNodeId)
 
 
 
@@ -110,9 +111,13 @@ stopDrag' _ = do
     zoom Global.uiRegistry hideCurrentConnection
 
 toValidConnection :: AnyPortRef -> AnyPortRef -> Maybe (OutPortRef, InPortRef)
-toValidConnection (OutPortRef' a) (InPortRef' b) = Just (a, b)
-toValidConnection (InPortRef' a) (OutPortRef' b) = Just (b, a)
-toValidConnection _ _ = Nothing
+toValidConnection a b = (normalize a b) >>= toOtherNode where
+    normalize (OutPortRef' a) (InPortRef' b) = Just (a, b)
+    normalize (InPortRef' a) (OutPortRef' b) = Just (b, a)
+    normalize _ _ = Nothing
+    toOtherNode (a, b)
+        | a ^. PortRef.srcNodeId /= b ^. PortRef.dstNodeId = Just (a, b)
+        | otherwise                                        = Nothing
 
 stopDrag :: Mouse.RawEvent -> Connect.Connecting -> Command State ()
 stopDrag event@(Mouse.Event _ coord _ _ mayEvWd) (Connecting sourceRef _ _ _ _ (DragHistory start current)) = do
@@ -123,9 +128,9 @@ stopDrag event@(Mouse.Event _ coord _ _ mayEvWd) (Connecting sourceRef _ _ _ _ (
     nodesMap <- use $ Global.graph . Graph.nodesMap
     forM_ mayEvWd $ \evWd -> do
         destinationFile <- zoom Global.uiRegistry $ getPortWidgetUnderCursor evWd
-        forM_ destinationFile $ \destinationFile -> do
+        withJust destinationFile $ \destinationFile -> do
             let destinationRef = destinationFile ^. widget . PortModel.portRef
             let srcDstMay = toValidConnection sourceRef destinationRef
-            forM_ srcDstMay $ \(src, dst) -> do
+            withJust srcDstMay $ \(src, dst) -> do
                 batchConnectNodes src dst
     updateConnections
