@@ -38,7 +38,6 @@ import           Luna.Syntax.AST.Term         (Acc (..), App (..), Blank (..), U
 import qualified Luna.Syntax.AST.Lit          as Lit
 import qualified Luna.Syntax.Builder          as Builder
 
-type UniMap = Map NodeRef NodeId
 
 buildGraph :: Command Graph API.Graph
 buildGraph = API.Graph <$> buildNodes <*> buildConnections
@@ -46,22 +45,18 @@ buildGraph = API.Graph <$> buildNodes <*> buildConnections
 buildNodes :: Command Graph [API.Node]
 buildNodes = do
     allNodeIds <- uses Graph.nodeMapping IntMap.keys
-    uniMap     <- getUniMap
-    mapM (buildNode' uniMap) allNodeIds
+    mapM buildNode allNodeIds
 
 buildNode :: NodeId -> Command Graph API.Node
-buildNode nid = getUniMap >>= flip buildNode' nid
-
-buildNode' :: UniMap -> NodeId -> Command Graph API.Node
-buildNode' uniMap nodeId = do
-    ref   <- GraphUtils.getASTTarget nodeId
-    uref  <- GraphUtils.getASTPointer nodeId
+buildNode nid = do
+    ref   <- GraphUtils.getASTTarget nid
+    uref  <- GraphUtils.getASTPointer nid
     expr  <- zoom Graph.ast $ runASTOp $ Print.printNodeExpression ref
     meta  <- zoom Graph.ast $ AST.readMeta uref
-    name  <- getNodeName nodeId
-    ports <- buildPorts uniMap ref
+    name  <- getNodeName nid
+    ports <- buildPorts ref
     let portMap = Map.fromList $ flip fmap ports $ \p@(Port id _ _) -> (id, p)
-    return $ API.Node nodeId (Text.pack name) (API.ExpressionNode $ Text.pack expr) portMap $ fromMaybe def meta
+    return $ API.Node nid (Text.pack name) (API.ExpressionNode $ Text.pack expr) portMap $ fromMaybe def meta
 
 getNodeName :: NodeId -> Command Graph String
 getNodeName nid = do
@@ -70,10 +65,10 @@ getNodeName nid = do
         vnode <- Builder.read vref
         caseTest (uncover vnode) $ match $ \(Var n) -> return . toString $ n
 
-getPortState :: ASTOp m => UniMap -> NodeRef -> m PortState
-getPortState uniMap ref
-    | Map.member ref uniMap = return Connected
-    | otherwise             = do
+getPortState :: ASTOp m => NodeRef -> m PortState
+getPortState ref = do
+    isConnected <- ASTBuilder.isGraphNode ref
+    if isConnected then return Connected else do
         node <- Builder.read ref
         caseTest (uncover node) $ do
             match $ \(Lit.String s)   -> return . WithDefault . Constant . StringValue $ s
@@ -83,37 +78,30 @@ getPortState uniMap ref
             match $ \Blank   -> return NotConnected
             match $ \ANY     -> Print.printExpression ref >>= return . WithDefault . Expression
 
-buildPort :: ASTOp m => UniMap -> (PortId, NodeRef) -> m Port
-buildPort uniMap (portId, ref) = Port portId (TypeIdent "Int") <$> getPortState uniMap ref
+buildPort :: ASTOp m => (PortId, NodeRef) -> m Port
+buildPort (portId, ref) = Port portId (TypeIdent "Int") <$> getPortState ref
 
-buildSelfPort :: ASTOp m => UniMap -> NodeRef -> m (Maybe Port)
-buildSelfPort uniMap nodeRef = do
+buildSelfPort :: ASTOp m => NodeRef -> m (Maybe Port)
+buildSelfPort nodeRef = do
     node <- Builder.read nodeRef
     caseTest (uncover node) $ do
-        match $ \(Acc _ t) -> Builder.follow source t >>= fmap Just . buildPort uniMap . ((,) $ InPortId Self)
-        match $ \(App t _) -> Builder.follow source t >>= buildSelfPort uniMap
+        match $ \(Acc _ t) -> Builder.follow source t >>= fmap Just . buildPort . ((,) $ InPortId Self)
+        match $ \(App t _) -> Builder.follow source t >>= buildSelfPort
         match $ \(Var _)   -> return . Just $ Port (InPortId Self) AnyType NotConnected
         match $ \ANY       -> return Nothing
 
-buildPorts :: UniMap -> NodeRef -> Command Graph [Port]
-buildPorts uniMap ref = zoom Graph.ast $ runASTOp $ do
+buildPorts :: NodeRef -> Command Graph [Port]
+buildPorts ref = zoom Graph.ast $ runASTOp $ do
     args     <- getPositionalNodeRefs ref
-    selfPort <- maybeToList <$> buildSelfPort uniMap ref
-    argPorts <- mapM (buildPort uniMap) $ zip (InPortId . Arg <$> [0..]) args
+    selfPort <- maybeToList <$> buildSelfPort ref
+    argPorts <- mapM buildPort $ zip (InPortId . Arg <$> [0..]) args
     return $ selfPort ++ argPorts ++ [Port (OutPortId All) (TypeIdent "Int") NotConnected]
 
 buildConnections :: Command Graph [(OutPortRef, InPortRef)]
 buildConnections = do
-    uniMap <- getUniMap
     allNodes <- uses Graph.nodeMapping IntMap.keys
-    edges <- mapM (getNodeInputs uniMap) allNodes
+    edges <- mapM getNodeInputs allNodes
     return $ concat edges
-
-getUniMap :: Command Graph UniMap
-getUniMap = do
-    let swap (a, b) = (b, a)
-    reverseMap <- uses Graph.nodeMapping IntMap.toList
-    return $ Map.fromList $ fmap swap reverseMap
 
 getSelfNodeRef' :: ASTOp m => Bool -> NodeRef -> m (Maybe NodeRef)
 getSelfNodeRef' seenAcc nodeRef = do
@@ -133,17 +121,19 @@ getPositionalNodeRefs nodeRef = do
         match $ \(App _ args) -> ASTBuilder.unpackArguments args
         match $ \ANY          -> return []
 
-getNodeInputs :: UniMap -> NodeId -> Command Graph [(OutPortRef, InPortRef)]
-getNodeInputs uniMap nodeId = do
-    ref     <- GraphUtils.getASTTarget nodeId
-    selfMay <- zoom Graph.ast $ runASTOp $ getSelfNodeRef ref
-    let selfNodeMay = selfMay >>= flip Map.lookup uniMap
-        selfConnMay = (,) <$> (OutPortRef <$> selfNodeMay <*> Just All)
+getNodeInputs :: NodeId -> Command Graph [(OutPortRef, InPortRef)]
+getNodeInputs nodeId = do
+    ref         <- GraphUtils.getASTTarget nodeId
+    selfMay     <- zoom Graph.ast $ runASTOp $ getSelfNodeRef ref
+    selfNodeMay <- case selfMay of
+        Just self -> zoom Graph.ast $ runASTOp $ ASTBuilder.getNodeId self
+        Nothing   -> return Nothing
+    let selfConnMay = (,) <$> (OutPortRef <$> selfNodeMay <*> Just All)
                           <*> (Just $ InPortRef nodeId Self)
 
     args <- zoom Graph.ast $ runASTOp $ getPositionalNodeRefs ref
-    let nodeMays = flip Map.lookup uniMap <$> args
-        withInd  = zip nodeMays [0..]
+    nodeMays <- mapM (zoom Graph.ast . runASTOp . ASTBuilder.getNodeId) args
+    let withInd  = zip nodeMays [0..]
         onlyExt  = catMaybes $ (\(n, i) -> (,) <$> n <*> Just i) <$> withInd
         conns    = flip fmap onlyExt $ \(n, i) -> (OutPortRef n All, InPortRef nodeId (Arg i))
     return $ (maybeToList selfConnMay) ++ conns

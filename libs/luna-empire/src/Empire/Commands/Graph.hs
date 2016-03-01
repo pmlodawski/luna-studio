@@ -50,7 +50,7 @@ import qualified Empire.Commands.Publisher    as Publisher
 addNode :: GraphLocation -> Text -> NodeMeta -> Empire Node
 addNode loc expr meta = withGraph loc $ do
     newNodeId <- gets Graph.nextNodeId
-    refNode <- zoom Graph.ast $ AST.addNode ("node" ++ show newNodeId) (Text.unpack expr)
+    refNode <- zoom Graph.ast $ AST.addNode newNodeId ("node" ++ show newNodeId) (Text.unpack expr)
     zoom Graph.ast $ AST.writeMeta refNode meta
     Graph.nodeMapping . at newNodeId ?= refNode
     GraphBuilder.buildNode newNodeId
@@ -167,14 +167,14 @@ unApp nodeId pos = do
 
 makeAcc :: NodeId -> NodeId -> Command Graph ()
 makeAcc src dst = do
-    srcAst <- GraphUtils.getASTPointer src
+    srcAst <- GraphUtils.getASTVar    src
     dstAst <- GraphUtils.getASTTarget dst
     newNodeRef <- zoom Graph.ast $ AST.makeAccessor srcAst dstAst
     GraphUtils.rewireNode dst newNodeRef
 
 makeApp :: NodeId -> NodeId -> Int -> Command Graph ()
 makeApp src dst pos = do
-    srcAst <- GraphUtils.getASTPointer src
+    srcAst <- GraphUtils.getASTVar    src
     dstAst <- GraphUtils.getASTTarget dst
     newNodeRef <- zoom Graph.ast $ AST.applyFunction dstAst srcAst pos
     GraphUtils.rewireNode dst newNodeRef

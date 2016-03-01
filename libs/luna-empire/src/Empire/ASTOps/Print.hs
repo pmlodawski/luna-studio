@@ -1,34 +1,34 @@
 module Empire.ASTOps.Print where
 
 import           Prologue
-import           Data.Record           (ANY (..), caseTest, match)
-import qualified Data.Text.Lazy        as Text
-import           Data.Layer.Cover      (uncover)
-import           Data.Direction        (source)
+import           Data.Record            (ANY (..), caseTest, match)
+import qualified Data.Text.Lazy         as Text
+import           Data.Layer.Cover       (uncover)
+import           Data.Direction         (source)
 
-import           Empire.ASTOp          (ASTOp)
-import           Empire.Data.AST       (NodeRef)
-import qualified Empire.ASTOps.Builder as ASTBuilder
+import           Empire.ASTOp           (ASTOp)
+import           Empire.Data.AST        (NodeRef)
+import qualified Empire.ASTOps.Builder  as ASTBuilder
 
-import           Luna.Syntax.AST.Term  (Acc (..), App (..), Blank (..), Unify (..), Var (..))
-import qualified Luna.Syntax.AST.Lit   as Lit
-import qualified Luna.Syntax.Builder   as Builder
+import           Luna.Syntax.AST.Term   (Acc (..), App (..), Blank (..), Unify (..), Var (..))
+import qualified Luna.Syntax.AST.Lit    as Lit
+import qualified Luna.Syntax.Builder    as Builder
 
 printExpression' :: ASTOp m => Bool -> NodeRef -> m String
-printExpression' printEquations nodeRef = do
-    let recur = printExpression' printEquations
+printExpression' suppresNodes nodeRef = do
+    let recur = printExpression' suppresNodes
     node <- Builder.read nodeRef
     caseTest (uncover node) $ do
-        match $ \(Unify l r) -> if printEquations
-            then do
-                leftRep  <- Builder.follow source l >>= recur
-                rightRep <- Builder.follow source r >>= recur
-                return $ leftRep ++ " = " ++ rightRep
-            else return "_"
-        match $ \(Var n) -> return $ toString n
+        match $ \(Unify l r) -> do
+            leftRep  <- Builder.follow source l >>= recur
+            rightRep <- Builder.follow source r >>= recur
+            return $ leftRep ++ " = " ++ rightRep
+        match $ \(Var n) -> do
+            isNode <- ASTBuilder.isGraphNode nodeRef
+            return $ if isNode && suppresNodes then "_" else unwrap n
         match $ \(Acc n t) -> do
             targetRep <- Builder.follow source t >>= recur
-            return $ targetRep ++ "." ++ toString n
+            return $ targetRep ++ "." ++ unwrap n
         match $ \(App f args) -> do
             funRep <- Builder.follow source f >>= recur
             unpackedArgs <- ASTBuilder.unpackArguments args
@@ -44,7 +44,7 @@ printExpression' printEquations nodeRef = do
         match $ \ANY -> return ""
 
 printExpression :: ASTOp m => NodeRef -> m String
-printExpression = printExpression' True
+printExpression = printExpression' False
 
 printNodeExpression :: ASTOp m => NodeRef -> m String
-printNodeExpression = printExpression' False
+printNodeExpression = printExpression' True

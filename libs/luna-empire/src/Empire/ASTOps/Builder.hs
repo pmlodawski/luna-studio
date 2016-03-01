@@ -5,20 +5,26 @@ module Empire.ASTOps.Builder where
 import           Prologue                hiding ((#), cons)
 import           Control.Monad.Error     (throwError)
 import           Data.Record             (match, caseTest, cons, ANY(..))
-import           Data.Prop               ((#))
+import           Data.Prop               ((#), prop)
 import           Data.Layer.Cover        (uncover, covered)
 import           Data.Graph              (Inputs (..))
 import           Data.Direction          (source)
+import qualified Data.HMap.Lazy          as HMap
+import           Data.HMap.Lazy          (HTMap)
+import           Data.Maybe              (isJust)
 
 import           Empire.ASTOp            (ASTOp)
 import           Empire.Empire           ((<?!>))
-import           Empire.ASTOps.Remove    (removeNode, safeRemove)
+import           Empire.ASTOps.Remove    (removeNode, performSafeRemoval)
 import           Empire.Data.AST         (ASTEdge, ASTNode, EdgeRef, NodeRef, UncoveredNode)
+import           Empire.Data.NodeMarker  (NodeMarker, nodeMarkerKey)
+import           Empire.API.Data.Node    (NodeId)
 import           Luna.Syntax.AST.Arg     (Arg)
 import qualified Luna.Syntax.AST.Arg     as Arg
 import           Luna.Syntax.AST.Term    (Acc (..), App (..), Blank (..), Unify (..), Var (..))
 import qualified Luna.Syntax.AST.Lit     as Lit
 import qualified Luna.Syntax.Builder     as Builder
+import           Luna.Syntax.Builder     (Meta (..))
 
 functionApplicationNode :: Lens' ASTNode EdgeRef
 functionApplicationNode = covered . lens getter setter where
@@ -129,33 +135,33 @@ unAccRec ref = do
             oldTarget <- Builder.follow source t
             replacement <- unAccRec =<< Builder.follow source t
             case replacement of
-                Just r  -> do
-                    Builder.reconnect accessorTarget ref r
-                    return $ Just ref
-                Nothing -> removeNode ref >> Just <$> Builder.var n
+                Just r  -> Just <$> Builder.acc n r
+                Nothing -> Just <$> Builder.var n
         match $ \(App t args) -> do
             oldTarget   <- Builder.follow source t
             replacement <- unAccRec oldTarget
             case replacement of
                 Just r -> do
                     repl <- Builder.read r
+                    as   <- (mapM . mapM) (Builder.follow source) args
                     caseTest (uncover repl) $ do
                         match $ \(Var _) -> if null args
-                            then removeNode ref >> return (Just r)
-                            else Builder.reconnect functionApplicationNode ref r >> return (Just ref)
-                        match $ \ANY -> do
-                            Builder.reconnect functionApplicationNode ref r
-                            return $ Just ref
+                            then return (Just r)
+                            else Just <$> Builder.app r as
+                        match $ \ANY -> Just <$> Builder.app r as
                 Nothing -> throwError "Self port not connected"
-        match $ \(Unify _ _) -> return Nothing
-        match $ \ANY -> removeNode ref >> return Nothing
+        match $ \ANY -> return Nothing
 
 unAcc :: ASTOp m => NodeRef -> m NodeRef
-unAcc ref = unAccRec ref <?!> "Self port not connected"
+unAcc ref = do
+    repl <- unAccRec ref <?!> "Self port not connected"
+    performSafeRemoval ref
+    return repl
 
-unifyWithName :: forall m. ASTOp m => String -> NodeRef -> m NodeRef
-unifyWithName name node = do
+makeNodeRep :: forall m. ASTOp m => NodeMarker -> String -> NodeRef -> m NodeRef
+makeNodeRep marker name node = do
     nameVar <- Builder.var (fromString name) :: m NodeRef
+    Builder.withRef nameVar $ prop Meta %~ HMap.insert nodeMarkerKey marker
     Builder.unify nameVar node
 
 rightUnifyOperand :: Lens' ASTNode (EdgeRef)
@@ -177,3 +183,11 @@ renameVar :: ASTOp m => NodeRef -> String -> m ()
 renameVar vref name = do
     node    <- Builder.read vref
     Builder.write vref $ node & varName .~ name
+
+isGraphNode :: ASTOp m => NodeRef -> m Bool
+isGraphNode = fmap isJust . getNodeId
+
+getNodeId :: ASTOp m => NodeRef -> m (Maybe NodeId)
+getNodeId ref = do
+    node <- Builder.read ref
+    return $ fmap unwrap $ HMap.lookup nodeMarkerKey $ node # Meta

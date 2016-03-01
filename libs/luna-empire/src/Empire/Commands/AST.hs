@@ -14,6 +14,8 @@ import qualified Data.HMap.Lazy               as HMap
 import           Empire.Empire
 import           Empire.API.Data.DefaultValue (PortDefault)
 import           Empire.API.Data.NodeMeta     (NodeMeta)
+import           Empire.API.Data.Node         (NodeId)
+import           Empire.Data.NodeMarker       (NodeMarker (..))
 import           Empire.Data.AST              (AST, NodeRef)
 
 import           Empire.ASTOp                 (runASTOp)
@@ -30,8 +32,8 @@ import           Luna.Diagnostic.Vis.GraphViz (renderAndOpen)
 metaKey :: TypeKey NodeMeta
 metaKey = TypeKey
 
-addNode :: String -> String -> Command AST (NodeRef)
-addNode name expr = runASTOp $ Parser.parseFragment expr >>= ASTBuilder.unifyWithName name
+addNode :: NodeId -> String -> String -> Command AST (NodeRef)
+addNode nid name expr = runASTOp $ Parser.parseFragment expr >>= ASTBuilder.makeNodeRep (NodeMarker nid) name
 
 addDefault :: PortDefault -> Command AST (NodeRef)
 addDefault val = runASTOp $ Parser.parsePortDefault val
