@@ -16,19 +16,20 @@ process _                                = Nothing
 
 processMessage :: WebMessage -> Batch.Event
 processMessage (WebMessage topic bytes)
-    | topic == Topic.addNodeUpdate        = NodeAdded         $ decode bytes
-    | topic == Topic.removeNodeUpdate     = NodeRemoved       $ decode bytes
-    | topic == Topic.connectUpdate        = NodesConnected    $ decode bytes
-    | topic == Topic.disconnectUpdate     = NodesDisconnected $ decode bytes
-    | topic == Topic.updateNodeMetaUpdate = NodeMetaUpdated   $ decode bytes
-    | topic == Topic.nodeUpdate           = NodeUpdated       $ decode bytes
-    | topic == Topic.programStatus        = ProgramFetched    $ decode bytes
-    | topic == Topic.codeUpdate           = CodeUpdated       $ decode bytes
-    | topic == Topic.nodeResultUpdate     = NodeResultUpdated $ decode bytes
-    | topic == Topic.listProjectsStatus   = ProjectList       $ decode bytes
-    | topic == Topic.createProjectUpdate  = ProjectCreated    $ decode bytes
-    | topic == Topic.renameNodeUpdate     = NodeRenamed       $ decode bytes
-    | otherwise                           = UnknownEvent topic
+    | topic == Topic.addNodeUpdate          = NodeAdded           $ decode bytes
+    | topic == Topic.removeNodeUpdate       = NodeRemoved         $ decode bytes
+    | topic == Topic.connectUpdate          = NodesConnected      $ decode bytes
+    | topic == Topic.disconnectUpdate       = NodesDisconnected   $ decode bytes
+    | topic == Topic.updateNodeMetaUpdate   = NodeMetaUpdated     $ decode bytes
+    | topic == Topic.nodeUpdate             = NodeUpdated         $ decode bytes
+    | topic == Topic.programStatus          = ProgramFetched      $ decode bytes
+    | topic == Topic.codeUpdate             = CodeUpdated         $ decode bytes
+    | topic == Topic.nodeResultUpdate       = NodeResultUpdated   $ decode bytes
+    | topic == Topic.listProjectsStatus     = ProjectList         $ decode bytes
+    | topic == Topic.createProjectUpdate    = ProjectCreated      $ decode bytes
+    | topic == Topic.renameNodeUpdate       = NodeRenamed         $ decode bytes
+    | topic == Topic.nodeSearcherDataUpdate = NodeSearcherUpdated $ decode bytes
+    | otherwise                             = UnknownEvent topic
     -- "project.open.update"                                          -> ProjectOpened <$> parseProjectOpenUpdate bytes
     -- "project.open.error"                                           -> Just $ ProjectDoesNotExist
     -- "project.library.list.status"                                  -> LibrariesList <$> parseLibrariesListResponse bytes

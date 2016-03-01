@@ -2,37 +2,38 @@ module Reactive.Plugins.Core.Action.Backend.Graph where
 
 import           Utils.PreludePlus
 
-import qualified Batch.Workspace                   as Workspace
-import           Event.Batch                       (Event (..))
-import qualified Event.Batch                       as Batch
-import qualified Event.Event                       as Event
-import           Reactive.Commands.AddNode         (addNode, updateNode, updateNodeValue)
-import           Reactive.Commands.Camera          (autoZoom)
-import           Reactive.Commands.Command         (Command, performIO)
-import           Reactive.Commands.DisconnectNodes (disconnect)
-import           Reactive.Commands.Graph           (localConnectNodes, renameNode, updateNodeMeta)
-import qualified Reactive.Commands.RemoveNode      as RemoveNode
-import           Reactive.Commands.RenderGraph     (renderGraph)
-import           Reactive.State.Global             (State)
-import qualified Reactive.State.Global             as Global
+import qualified Batch.Workspace                     as Workspace
+import           Event.Batch                         (Event (..))
+import qualified Event.Batch                         as Batch
+import qualified Event.Event                         as Event
+import           Reactive.Commands.AddNode           (addNode, updateNode, updateNodeValue)
+import           Reactive.Commands.Camera            (autoZoom)
+import           Reactive.Commands.Command           (Command, performIO)
+import           Reactive.Commands.DisconnectNodes   (disconnect)
+import           Reactive.Commands.Graph             (localConnectNodes, renameNode, updateNodeMeta)
+import qualified Reactive.Commands.RemoveNode        as RemoveNode
+import           Reactive.Commands.RenderGraph       (renderGraph)
+import           Reactive.State.Global               (State)
+import qualified Reactive.State.Global               as Global
 
-import qualified Empire.API.Data.Graph             as Graph
-import           Empire.API.Data.GraphLocation     (GraphLocation)
-import qualified Empire.API.Data.Node              as Node
-import           Empire.API.Data.PortRef           (InPortRef (..), OutPortRef (..))
-import qualified Empire.API.Data.PortRef           as PortRef
-import qualified Empire.API.Graph.AddNode          as AddNode
-import qualified Empire.API.Graph.Connect          as Connect
-import qualified Empire.API.Graph.Disconnect       as Disconnect
-import qualified Empire.API.Graph.GetProgram       as GetProgram
-import qualified Empire.API.Graph.NodeResultUpdate as NodeResultUpdate
-import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
-import qualified Empire.API.Graph.RemoveNode       as RemoveNode
-import qualified Empire.API.Graph.RenameNode       as RenameNode
-import qualified Empire.API.Graph.UpdateNodeMeta   as UpdateNodeMeta
-import qualified Empire.API.Update                 as Update
+import qualified Empire.API.Data.Graph               as Graph
+import           Empire.API.Data.GraphLocation       (GraphLocation)
+import qualified Empire.API.Data.Node                as Node
+import           Empire.API.Data.PortRef             (InPortRef (..), OutPortRef (..))
+import qualified Empire.API.Data.PortRef             as PortRef
+import qualified Empire.API.Graph.AddNode            as AddNode
+import qualified Empire.API.Graph.Connect            as Connect
+import qualified Empire.API.Graph.Disconnect         as Disconnect
+import qualified Empire.API.Graph.GetProgram         as GetProgram
+import qualified Empire.API.Graph.NodeResultUpdate   as NodeResultUpdate
+import qualified Empire.API.Graph.NodeUpdate         as NodeUpdate
+import qualified Empire.API.Graph.RemoveNode         as RemoveNode
+import qualified Empire.API.Graph.RenameNode         as RenameNode
+import qualified Empire.API.Graph.UpdateNodeMeta     as UpdateNodeMeta
+import qualified Empire.API.Graph.NodeSearcherUpdate as NodeSearcherUpdate
+import qualified Empire.API.Update                   as Update
 
-import qualified JS.TextEditor                     as UI
+import qualified JS.TextEditor                       as UI
 
 isCurrentLocation :: GraphLocation -> Command State Bool
 isCurrentLocation location = uses (Global.workspace . Workspace.currentLocation) (== location)
@@ -81,6 +82,10 @@ toAction (Event.Batch ev) = Just $ case ev of
     NodeResultUpdated response -> do
         shouldProcess <- isCurrentLocation (response ^. NodeResultUpdate.location)
         when shouldProcess $ updateNodeValue (response ^. NodeResultUpdate.nodeId) (response ^. NodeResultUpdate.value)
+
+    NodeSearcherUpdated update -> do
+        shouldProcess <- isCurrentLocation (update ^. NodeSearcherUpdate.location)
+        when shouldProcess $ Global.workspace . Workspace.nodeSearcherData .= update ^. NodeSearcherUpdate.nodeSearcherData
     _ -> return ()
 
 toAction _ = Nothing
