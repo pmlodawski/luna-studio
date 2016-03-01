@@ -12,7 +12,7 @@
 $ git clone git@bitbucket.org:NewByteOrder/new_byte_order.git
 $ cd new_byte_order
 $ REPO_DIR=`pwd`
-$ cd $REPO_DIR/build_7.10/backend
+$ cd $REPO_DIR/build/backend
 $ stack setup # installs ghc
 $ cd $REPO_DIR/nodelab
 $ stack setup # installs ghcjs
@@ -42,7 +42,7 @@ $ scripts/gencabal
 ### Backend & GUI
 
 ```shell
-$ cd $REPO_DIR/build_7.10/backend
+$ cd $REPO_DIR/build/backend
 $ stack build --copy-bins
 $ cd $REPO_DIR/nodelab
 $ brunch build # -e production -- for production build
