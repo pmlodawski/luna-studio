@@ -51,7 +51,7 @@ addNode :: GraphLocation -> Text -> NodeMeta -> Empire Node
 addNode loc expr meta = withGraph loc $ do
     newNodeId <- gets Graph.nextNodeId
     refNode <- zoom Graph.ast $ AST.addNode ("node" ++ show newNodeId) (Text.unpack expr)
-    zoom Graph.ast $ AST.writeMeta refNode (Just meta)
+    zoom Graph.ast $ AST.writeMeta refNode meta
     Graph.nodeMapping . at newNodeId ?= refNode
     GraphBuilder.buildNode newNodeId
 
@@ -66,7 +66,7 @@ removeNode loc nodeId = withGraph loc $ do
 updateNodeMeta :: GraphLocation -> NodeId -> NodeMeta -> Empire ()
 updateNodeMeta loc nodeId meta = withGraph loc $ do
     ref <- GraphUtils.getASTPointer nodeId
-    zoom Graph.ast $ AST.writeMeta ref $ Just meta
+    zoom Graph.ast $ AST.writeMeta ref meta
 
 connect :: GraphLocation -> OutPortRef -> InPortRef -> Empire ()
 connect loc (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) = withGraph loc $ do

@@ -16,7 +16,6 @@ import           Control.Concurrent                    (forkIO)
 import           Control.Concurrent.STM                (STM, atomically)
 import           Control.Concurrent.STM.TChan
 import           Control.Concurrent.STM.TVar
-import           Control.Exception                     (catch)
 import           Control.Monad                         (forever)
 import qualified Data.ByteString                       as ByteString
 import qualified Network.WebSockets                    as WS

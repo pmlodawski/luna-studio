@@ -53,8 +53,6 @@ Library
         Data.Cata,
         Data.Char.Class,
         Data.Constraint.Void,
-        Data.HMap.Lazy,
-        Data.HMap.Weak,
         Data.IntConvertibleMap,
         Data.IntConvertibleMap.Strict,
         Data.IntConvertibleSet,

@@ -8,6 +8,8 @@ import           Control.Monad.Error          (throwError)
 import           Data.Record                  (ANY (..), caseTest, match)
 import           Data.Prop                    (prop)
 import           Data.Graph                   (source)
+import           Data.HMap.Lazy               (TypeKey (..))
+import qualified Data.HMap.Lazy               as HMap
 
 import           Empire.Empire
 import           Empire.API.Data.DefaultValue (PortDefault)
@@ -25,8 +27,8 @@ import qualified Data.Graph.Builder           as Builder
 import           Luna.Syntax.Builder          (Meta (..))
 import           Luna.Diagnostic.Vis.GraphViz (renderAndOpen)
 
-meta :: Meta NodeMeta
-meta = Meta
+metaKey :: TypeKey NodeMeta
+metaKey = TypeKey
 
 addNode :: String -> String -> Command AST (NodeRef)
 addNode name expr = runASTOp $ Parser.parseFragment expr >>= ASTBuilder.unifyWithName name
@@ -35,12 +37,11 @@ addDefault :: PortDefault -> Command AST (NodeRef)
 addDefault val = runASTOp $ Parser.parsePortDefault val
 
 readMeta :: NodeRef -> Command AST (Maybe NodeMeta)
-readMeta ref = runASTOp $ view (prop meta) <$> Builder.read ref
+readMeta ref = runASTOp $ HMap.lookup metaKey . view (prop Meta) <$> Builder.read ref
 
-writeMeta :: NodeRef -> Maybe NodeMeta -> Command AST ()
+writeMeta :: NodeRef -> NodeMeta -> Command AST ()
 writeMeta ref newMeta = runASTOp $ do
-    node <- Builder.read ref
-    Builder.write ref (node & prop meta .~ newMeta)
+    Builder.withRef ref $ prop Meta %~ HMap.insert metaKey newMeta
 
 renameVar :: NodeRef -> String -> Command AST ()
 renameVar = runASTOp .: ASTBuilder.renameVar

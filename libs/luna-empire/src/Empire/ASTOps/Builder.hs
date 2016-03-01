@@ -30,8 +30,8 @@ accessorTarget = covered . lens getter setter where
     getter (a :: UncoveredNode)   = caseTest a $ match $ \(Acc _ t) -> t :: EdgeRef
     setter (a :: UncoveredNode) t = caseTest a $ match $ \(Acc n _) -> cons $ Acc n t :: UncoveredNode
 
-unpackArguments :: ASTOp m => [Arg (EdgeRef)] -> m [NodeRef]
-unpackArguments args = mapM (Builder.follow source . Arg.__arec) args
+unpackArguments :: ASTOp m => [Arg EdgeRef] -> m [NodeRef]
+unpackArguments args = mapM (Builder.follow source . Arg.__val_) args
 
 isBlank :: ASTOp m => NodeRef -> m Bool
 isBlank ref = do
