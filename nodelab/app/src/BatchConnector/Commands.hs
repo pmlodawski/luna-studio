@@ -12,7 +12,6 @@ import qualified Data.Text.Lazy                    as Text
 import qualified Data.Text.Lazy                    as Text
 import           Utils.Vector                      (Vector2 (..), x, y)
 
-import           Batch.Expressions
 import           Batch.Workspace                   (Workspace)
 import qualified Batch.Workspace                   as Workspace
 import           BatchConnector.Connection         (WebMessage (..), sendMany, sendMessage, sendRequest)
