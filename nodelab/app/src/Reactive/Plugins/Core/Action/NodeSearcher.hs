@@ -29,6 +29,7 @@ import qualified Reactive.State.UIRegistry                          as UIRegistr
 
 import qualified Reactive.Plugins.Core.Action.NodeSearcher.Mock     as Mock
 import qualified Reactive.Plugins.Core.Action.NodeSearcher.Scope    as Scope
+import           Empire.API.Data.NodeSearcher (LunaModule(..), Item(..))
 
 
 toAction :: Event -> Maybe (Command Global.State ())
@@ -45,10 +46,10 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\t'   mods)) = Just $ openFr
 toAction (Keyboard _ (Keyboard.Event Keyboard.Up   '\191' mods)) = Just $ openCommand -- 191 = /
 toAction _ = Nothing
 
-searcherData :: Command Global.State Scope.LunaModule
+searcherData :: Command Global.State LunaModule
 searcherData = do
     let scopeItems = Mock.mockData
-    return $ Scope.LunaModule . Map.fromList $ scopeItems
+    return $ LunaModule . Map.fromList $ scopeItems
 
 openFresh :: Command Global.State ()
 openFresh = do
@@ -74,15 +75,15 @@ openCommand = do
 querySearchCmd :: Text -> Command Global.State ()
 querySearchCmd query = do
     sd <- Commands.commands
-    let sd' = Scope.LunaModule $ Map.fromList sd
-    let items = Scope.searchInScope sd' query
+    let sd'   = LunaModule $ Map.fromList sd
+        items = Scope.searchInScope sd' query
     performIO $ UI.displayQueryResults items
 
 queryTreeCmd :: Text -> Command Global.State ()
 queryTreeCmd query = do
     sd <- Commands.commands
-    let sd' = Scope.LunaModule $ Map.fromList sd
-    let items = Scope.moduleItems sd' query
+    let sd'   = LunaModule $ Map.fromList sd
+        items = Scope.moduleItems sd' query
     performIO $ UI.displayTreeResults items
 
 parseExpr :: Text -> Command Global.State ()

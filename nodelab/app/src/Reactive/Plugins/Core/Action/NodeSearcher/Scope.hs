@@ -6,7 +6,7 @@ import           Utils.PreludePlus                                  hiding (Item
 
 import           Data.Map                                           (Map)
 import qualified Data.Map                                           as Map
-import           GHC.Exts                                            (sortWith)
+import           GHC.Exts                                           (sortWith)
 
 import           JS.NodeSearcher
 
@@ -15,13 +15,8 @@ import qualified Data.Text.Lazy                                     as Text
 
 import           Reactive.Plugins.Core.Action.NodeSearcher.Searcher
 
-
-data LunaModule = LunaModule { items :: Map Text Item }
-                  deriving (Show, Eq)
-
-data Item = Function
-          | Module { itmod :: LunaModule }
-          deriving (Show, Eq)
+import           Empire.API.Data.NodeSearcher                       (Item (..), LunaModule (..))
+import qualified Empire.API.Data.NodeSearcher                       as NS
 
 type Path = [Text]
 
@@ -50,10 +45,10 @@ searchableItems = searchableItems' 1.0 ""
 moduleByPath :: LunaModule -> Path -> Maybe LunaModule
 moduleByPath m []    = Just m
 moduleByPath m [""]  = Just m
-moduleByPath m [x] = case (Map.lookup x (items m)) of
+moduleByPath m [x] = case (Map.lookup x (m ^. NS.items)) of
     Just (Module m) -> Just m
     _               -> Nothing
-moduleByPath m (x:xs) = case (Map.lookup x (items m)) of
+moduleByPath m (x:xs) = case (Map.lookup x (m ^. NS.items)) of
     Just (Module m) -> moduleByPath m xs
     _               -> Nothing
 
