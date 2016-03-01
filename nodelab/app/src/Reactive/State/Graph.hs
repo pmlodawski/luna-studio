@@ -2,34 +2,35 @@
 
 module Reactive.State.Graph where
 
-import           Utils.PreludePlus          hiding ((.=))
+import           Utils.PreludePlus            hiding ((.=))
 import           Utils.Vector
 
-import           Data.IntMap.Lazy           (IntMap)
-import qualified Data.IntMap.Lazy           as IntMap
-import           Data.Map.Lazy              (Map)
-import qualified Data.Map.Lazy              as Map
-import qualified Data.Text.Lazy             as Text
+import           Data.IntMap.Lazy             (IntMap)
+import qualified Data.IntMap.Lazy             as IntMap
+import           Data.Map.Lazy                (Map)
+import qualified Data.Map.Lazy                as Map
+import qualified Data.Text.Lazy               as Text
 import           Debug.Trace
 
 import           Data.Aeson
-import           Empire.API.Data.Connection (Connection (..), ConnectionId)
-import qualified Empire.API.Data.Connection as Connection
-import           Empire.API.Data.Node       (Node, NodeId)
-import qualified Empire.API.Data.Node       as Node
-import           Empire.API.Data.Port       (Port)
-import qualified Empire.API.Data.Port       as Port
-import           Empire.API.Data.PortRef    (AnyPortRef, InPortRef, OutPortRef)
-import           Empire.API.Data.PortRef    (InPortRef)
-import qualified Empire.API.Data.PortRef    as PortRef
-import qualified Empire.API.JSONInstances   ()
-import           Utils.Aeson                (intMapToJSON)
+import           Empire.API.Data.Connection   (Connection (..), ConnectionId)
+import qualified Empire.API.Data.Connection   as Connection
+import           Empire.API.Data.Node         (Node, NodeId)
+import qualified Empire.API.Data.Node         as Node
+import           Empire.API.Data.NodeSearcher (LunaModule)
+import           Empire.API.Data.Port         (Port)
+import qualified Empire.API.Data.Port         as Port
+import           Empire.API.Data.PortRef      (AnyPortRef, InPortRef, OutPortRef)
+import           Empire.API.Data.PortRef      (InPortRef)
+import qualified Empire.API.Data.PortRef      as PortRef
+import qualified Empire.API.JSONInstances     ()
+import           Utils.Aeson                  (intMapToJSON)
 
 type NodesMap       = IntMap Node
 type ConnectionsMap = Map InPortRef Connection
 
-data State = State { _nodesMap       :: NodesMap       -- don't access it directly
-                   , _connectionsMap :: ConnectionsMap -- don't access it directly
+data State = State { _nodesMap         :: NodesMap       -- don't access it directly
+                   , _connectionsMap   :: ConnectionsMap -- don't access it directly
                    } deriving (Show, Generic)
 
 makeLenses ''State

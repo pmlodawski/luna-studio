@@ -10,20 +10,21 @@ import qualified Data.IntMap                       as IntMap
 import qualified Data.Map                          as Map
 import           Data.Maybe                        (fromMaybe)
 import qualified Data.Text.Lazy                    as Text
-import           Prologue
+import           Prologue                          hiding (Item)
 
 import           Empire.API.Data.DefaultValue      (Value (..))
 import           Empire.API.Data.GraphLocation     (GraphLocation)
 import           Empire.API.Data.Node              (Node (..), NodeId)
 import qualified Empire.API.Data.Node              as Node
+import qualified Empire.API.Data.NodeSearcher      as NS
 import           Empire.API.Data.Port              (InPort (..), OutPort (..), Port (..), PortId (..), PortState (..))
 import           Empire.API.Data.ValueType         (ValueType (..))
 import qualified Empire.API.Graph.AddNode          as AddNode
 import qualified Empire.API.Graph.CodeUpdate       as CodeUpdate
 import qualified Empire.API.Graph.Connect          as Connect
 import qualified Empire.API.Graph.Disconnect       as Disconnect
-import qualified Empire.API.Graph.GetProgram       as GetProgram
 import qualified Empire.API.Graph.DumpGraphViz     as DumpGraphViz
+import qualified Empire.API.Graph.GetProgram       as GetProgram
 import qualified Empire.API.Graph.NodeResultUpdate as NodeResultUpdate
 import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
 import qualified Empire.API.Graph.RemoveNode       as RemoveNode
@@ -225,6 +226,62 @@ handleSetDefaultValue content = do
             notifyCodeUpdate location
             notifyNodeResultUpdates location
 
+mockNSData  = NS.LunaModule $ Map.fromList [ ("+",         NS.Function)
+                                        , ("-",         NS.Function)
+                                        , ("*",         NS.Function)
+                                        , ("/",         NS.Function)
+                                        , (">",         NS.Function)
+                                        , ("==",        NS.Function)
+                                        , ("<",         NS.Function)
+                                        , ("<=",        NS.Function)
+                                        , (">=",        NS.Function)
+                                        , ("++",        NS.Function)
+                                        , ("toString",  NS.Function)
+                                        , ("truncate",  NS.Function)
+                                        , ("round",     NS.Function)
+                                        , ("floor",     NS.Function)
+                                        , ("ceiling",   NS.Function)
+                                        , ("length",    NS.Function)
+                                        , ("null",      NS.Function)
+                                        , ("!",         NS.Function)
+                                        , ("head",      NS.Function)
+                                        , ("last",      NS.Function)
+                                        , ("init",      NS.Function)
+                                        , ("tail",      NS.Function)
+                                        , ("take",      NS.Function)
+                                        , ("drop",      NS.Function)
+                                        , ("empty",     NS.Function)
+                                        , ("singleton", NS.Function)
+                                        , ("replicate", NS.Function)
+                                        , ("cons",      NS.Function)
+                                        , ("snoc",      NS.Function)
+                                        , ("++",        NS.Function)
+                                        , ("reverse",   NS.Function)
+                                        , ("map",       NS.Function)
+                                        , ("filter",    NS.Function)
+                                        , ("maximum",   NS.Function)
+                                        , ("minimum",   NS.Function)
+                                        , ("cos",       NS.Function)
+                                        , ("acos",      NS.Function)
+                                        , ("cosh",      NS.Function)
+                                        , ("asin",      NS.Function)
+                                        , ("sinh",      NS.Function)
+                                        , ("tan",       NS.Function)
+                                        , ("atan",      NS.Function)
+                                        , ("tanh",      NS.Function)
+                                        , ("abs",       NS.Function)
+                                        , ("signum",    NS.Function)
+                                        , ("min",       NS.Function)
+                                        , ("max",       NS.Function)
+                                        , ("gcd",       NS.Function)
+                                        , ("lcm",       NS.Function)
+                                        , ("div",       NS.Function)
+                                        , ("mod",       NS.Function)
+                                        , ("pi",        NS.Function)
+                                        , ("log,",      NS.Function)
+                                        , ("sqrt",      NS.Function)
+                                        ]
+
 handleGetProgram :: ByteString -> StateT Env BusT ()
 handleGetProgram content = do
     let request = Bin.decode . fromStrict $ content :: GetProgram.Request
@@ -237,7 +294,7 @@ handleGetProgram content = do
         (Left err, _) -> logger Logger.error $ errorMessage <> err
         (_, Left err) -> logger Logger.error $ errorMessage <> err
         (Right graph, Right code) -> do
-            let update = Update.Update request $ GetProgram.Status graph (Text.pack code)
+            let update = Update.Update request $ GetProgram.Status graph (Text.pack code) mockNSData
             sendToBus Topic.programStatus update
             notifyNodeResultUpdates location
 

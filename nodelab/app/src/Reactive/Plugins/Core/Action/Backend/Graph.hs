@@ -47,7 +47,9 @@ toAction (Event.Batch ev) = Just $ case ev of
             let nodes       = response ^. Update.result . GetProgram.graph . Graph.nodes
                 connections = response ^. Update.result . GetProgram.graph . Graph.connections
                 code        = response ^. Update.result . GetProgram.code
+                nsData      = response ^. Update.result . GetProgram.nodeSearcherData
 
+            Global.workspace . Workspace.nodeSearcherData .= nsData
             renderGraph nodes connections
             autoZoom
             performIO $ UI.setText code

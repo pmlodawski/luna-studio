@@ -50,6 +50,9 @@ removeLibraryUpdate    = "empire.library.remove.update"
 listLibrariesRequest   = "empire.library.list.request"
 listLibrariesStatus    = "empire.library.list.status"
 
+nodeSearcherRequest    = "empire.graph.nodeSearcher.request"
+nodeSearcherStatus     = "empire.graph.nodeSearcher.status" -- for future use
+
 logEnvDebug            = "empire.environment.debug"
 
 logEnvDebugGraphViz    = "empire.environment.debug.graphviz.request"

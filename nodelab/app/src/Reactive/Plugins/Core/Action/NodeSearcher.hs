@@ -13,6 +13,7 @@ import           Utils.Vector
 import qualified JS.NodeSearcher                                    as UI
 
 import           Event.Event                                        (Event (..))
+import qualified Batch.Workspace                                    as Workspace
 import qualified Event.Keyboard                                     as Keyboard
 import qualified Event.NodeSearcher                                 as NodeSearcher
 import qualified Object.Node                                        as Node
@@ -27,7 +28,6 @@ import qualified Reactive.State.Global                              as Global
 import qualified Reactive.State.Graph                               as Graph
 import qualified Reactive.State.UIRegistry                          as UIRegistry
 
-import qualified Reactive.Plugins.Core.Action.NodeSearcher.Mock     as Mock
 import qualified Reactive.Plugins.Core.Action.NodeSearcher.Scope    as Scope
 import           Empire.API.Data.NodeSearcher (LunaModule(..), Item(..))
 
@@ -47,9 +47,7 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Up   '\191' mods)) = Just $ openCo
 toAction _ = Nothing
 
 searcherData :: Command Global.State LunaModule
-searcherData = do
-    let scopeItems = Mock.mockData
-    return $ LunaModule . Map.fromList $ scopeItems
+searcherData = use $ Global.workspace . Workspace.nodeSearcherData
 
 openFresh :: Command Global.State ()
 openFresh = do
