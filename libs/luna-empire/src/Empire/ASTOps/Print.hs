@@ -40,6 +40,7 @@ printExpression' suppresNodes nodeRef = do
         of' $ \(Lit.Number _ s) -> return $ case s of
             Lit.Rational r -> show r
             Lit.Integer  i -> show i
+            Lit.Double   d -> show d
         of' $ \(Lit.String s) -> return $ show s
         of' $ \ANY -> return ""
 

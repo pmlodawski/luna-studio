@@ -77,6 +77,7 @@ getPortState ref = do
             of' $ \(Lit.Number _ n) -> return . WithDefault . Constant $ case n of
                 Lit.Integer  i -> IntValue $ fromIntegral i
                 Lit.Rational r -> RationalValue r
+                Lit.Double   d -> DoubleValue   d
             of' $ \Blank   -> return NotConnected
             of' $ \ANY     -> Print.printExpression ref >>= return . WithDefault . Expression
 

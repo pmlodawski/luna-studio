@@ -23,6 +23,7 @@ parsePortDefault :: ASTOp m => PortDefault -> m NodeRef
 parsePortDefault (Expression expr)          = parseFragment expr
 parsePortDefault (Constant (IntValue i))    = Builder.int $ fromIntegral i
 parsePortDefault (Constant (StringValue s)) = Builder.str s
+parsePortDefault (Constant (DoubleValue d)) = Builder.double d
 
 parseFragment :: ASTOp m => String -> m NodeRef
 parseFragment = parseApp

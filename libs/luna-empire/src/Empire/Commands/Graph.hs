@@ -148,17 +148,19 @@ renameNode loc nid name = withGraph loc $ do
     GraphBuilder.buildNode nid >>= Publisher.notifyNodeUpdate loc
 
 dumpGraphViz :: GraphLocation -> Empire ()
-dumpGraphViz loc = withGraph loc $ zoom Graph.ast $ AST.dumpGraphViz
+dumpGraphViz loc = withGraph loc $ do
+    zoom Graph.ast   $ AST.dumpGraphViz "gui_dump"
+    zoom Graph.tcAST $ AST.dumpGraphViz "gui_tc_dump"
 
 typecheck :: GraphLocation -> Empire ()
 typecheck loc = withGraph loc runTC
 
 -- internal
 
-collect pass = do
-    putStrLn $ "After pass: " <> pass
-    st <- TypeCheckState.get
-    putStrLn $ "State is: " <> show st
+collect pass = return ()
+    {-putStrLn $ "After pass: " <> pass-}
+    {-st <- TypeCheckState.get-}
+    {-putStrLn $ "State is: " <> show st-}
 
 runTC :: Command Graph ()
 runTC = do

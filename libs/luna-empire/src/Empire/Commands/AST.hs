@@ -81,7 +81,7 @@ replaceTargetNode matchNodeId newTargetId = runASTOp $ do
     Builder.reconnect ASTBuilder.rightMatchOperand matchNodeId newTargetId
     return ()
 
-dumpGraphViz :: Command AST ()
-dumpGraphViz = do
+dumpGraphViz :: String -> Command AST ()
+dumpGraphViz name = do
     g <- runASTOp Builder.get
-    liftIO $ renderAndOpen [("g", "g", g)]
+    liftIO $ renderAndOpen [(name, name, g)]
