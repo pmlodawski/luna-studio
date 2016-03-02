@@ -53,8 +53,8 @@ buildNode :: NodeId -> Command Graph API.Node
 buildNode nid = do
     ref   <- GraphUtils.getASTTarget nid
     uref  <- GraphUtils.getASTPointer nid
-    expr  <- zoom Graph.ast $ runASTOp $ Print.printNodeExpression ref
-    meta  <- zoom Graph.ast $ AST.readMeta uref
+    expr  <- zoom Graph.tcAST $ runASTOp $ Print.printNodeExpression ref
+    meta  <- zoom Graph.tcAST $ AST.readMeta uref
     name  <- getNodeName nid
     ports <- buildPorts ref
     let portMap = Map.fromList $ flip fmap ports $ \p@(Port id _ _) -> (id, p)
@@ -63,7 +63,7 @@ buildNode nid = do
 getNodeName :: NodeId -> Command Graph String
 getNodeName nid = do
     vref <- GraphUtils.getASTVar nid
-    zoom Graph.ast $ runASTOp $ do
+    zoom Graph.tcAST $ runASTOp $ do
         vnode <- Builder.read vref
         caseTest (uncover vnode) $ of' $ \(Var n) -> return . toString $ n
 
@@ -133,7 +133,7 @@ getTypeRep tp = do
         of' $ \ANY -> return AnyType
 
 buildPorts :: NodeRef -> Command Graph [Port]
-buildPorts ref = zoom Graph.ast $ runASTOp $ do
+buildPorts ref = zoom Graph.tcAST $ runASTOp $ do
     selfPort <- maybeToList <$> buildSelfPort ref
     argPorts <- buildArgPorts ref
     tpRep <- followTypeRep ref
@@ -166,15 +166,15 @@ getPositionalNodeRefs nodeRef = do
 getNodeInputs :: NodeId -> Command Graph [(OutPortRef, InPortRef)]
 getNodeInputs nodeId = do
     ref         <- GraphUtils.getASTTarget nodeId
-    selfMay     <- zoom Graph.ast $ runASTOp $ getSelfNodeRef ref
+    selfMay     <- zoom Graph.tcAST $ runASTOp $ getSelfNodeRef ref
     selfNodeMay <- case selfMay of
-        Just self -> zoom Graph.ast $ runASTOp $ ASTBuilder.getNodeId self
+        Just self -> zoom Graph.tcAST $ runASTOp $ ASTBuilder.getNodeId self
         Nothing   -> return Nothing
     let selfConnMay = (,) <$> (OutPortRef <$> selfNodeMay <*> Just All)
                           <*> (Just $ InPortRef nodeId Self)
 
-    args <- zoom Graph.ast $ runASTOp $ getPositionalNodeRefs ref
-    nodeMays <- mapM (zoom Graph.ast . runASTOp . ASTBuilder.getNodeId) args
+    args <- zoom Graph.tcAST $ runASTOp $ getPositionalNodeRefs ref
+    nodeMays <- mapM (zoom Graph.tcAST . runASTOp . ASTBuilder.getNodeId) args
     let withInd  = zip nodeMays [0..]
         onlyExt  = catMaybes $ (\(n, i) -> (,) <$> n <*> Just i) <$> withInd
         conns    = flip fmap onlyExt $ \(n, i) -> (OutPortRef n All, InPortRef nodeId (Arg i))

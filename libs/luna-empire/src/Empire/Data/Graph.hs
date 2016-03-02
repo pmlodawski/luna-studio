@@ -10,13 +10,14 @@ import           Empire.API.Data.Node   (NodeId)
 import           Luna.Syntax.Builder    (star, runNetworkBuilderT)
 
 data Graph = Graph { _ast         :: AST
+                   , _tcAST       :: AST
                    , _nodeMapping :: IntMap (NodeRef)
                    } deriving (Show)
 
 makeLenses ''Graph
 
 instance Default Graph where
-    def = Graph defaultAST def
+    def = Graph defaultAST defaultAST def
 
 nextNodeId :: Graph -> NodeId
 nextNodeId graph = IdGen.nextId $ graph ^. nodeMapping

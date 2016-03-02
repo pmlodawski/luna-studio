@@ -67,6 +67,7 @@ addNode loc expr meta = withGraph loc $ do
     refNode <- zoom Graph.ast $ AST.addNode newNodeId ("node" ++ show newNodeId) (Text.unpack expr)
     zoom Graph.ast $ AST.writeMeta refNode meta
     Graph.nodeMapping . at newNodeId ?= refNode
+    runTC
     GraphBuilder.buildNode newNodeId
 
 removeNode :: GraphLocation -> NodeId -> Empire ()
@@ -75,6 +76,7 @@ removeNode loc nodeId = withGraph loc $ do
     obsoleteEdges <- getOutEdges nodeId
     mapM_ (disconnectPort $ Publisher.notifyNodeUpdate loc) obsoleteEdges
     zoom Graph.ast $ AST.removeSubtree astRef
+    runTC
     Graph.nodeMapping %= IntMap.delete nodeId
 
 updateNodeMeta :: GraphLocation -> NodeId -> NodeMeta -> Empire ()
@@ -87,6 +89,7 @@ connect loc (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) = withGraph
     case dstPort of
         Self    -> makeAcc srcNodeId dstNodeId
         Arg num -> makeApp srcNodeId dstNodeId num
+    runTC
     GraphBuilder.buildNode dstNodeId >>= Publisher.notifyNodeUpdate loc
 connect _ _ _ = throwError "Source port should be All"
 
@@ -98,6 +101,7 @@ setDefaultValue loc (InPortRef nodeId port) val = withGraph loc $ do
         Self    -> AST.makeAccessor parsed ref
         Arg num -> AST.applyFunction ref parsed num
     GraphUtils.rewireNode nodeId newRef
+    runTC
     node <- GraphBuilder.buildNode nodeId
     Publisher.notifyNodeUpdate loc node
 
@@ -140,18 +144,24 @@ renameNode :: GraphLocation -> NodeId -> Text -> Empire ()
 renameNode loc nid name = withGraph loc $ do
     vref <- GraphUtils.getASTVar nid
     zoom Graph.ast $ AST.renameVar vref (Text.unpack name)
+    runTC
     GraphBuilder.buildNode nid >>= Publisher.notifyNodeUpdate loc
 
 dumpGraphViz :: GraphLocation -> Empire ()
 dumpGraphViz loc = withGraph loc $ zoom Graph.ast $ AST.dumpGraphViz
+
+typecheck :: GraphLocation -> Empire ()
+typecheck loc = withGraph loc runTC
+
+-- internal
 
 collect pass = do
     putStrLn $ "After pass: " <> pass
     st <- TypeCheckState.get
     putStrLn $ "State is: " <> show st
 
-typecheck :: GraphLocation -> Empire ()
-typecheck loc = withGraph loc $ do
+runTC :: Command Graph ()
+runTC = do
     allNodeIds <- uses Graph.nodeMapping IntMap.keys
     roots <- mapM GraphUtils.getASTPointer allNodeIds
     ast   <- use Graph.ast
@@ -159,14 +169,12 @@ typecheck loc = withGraph loc $ do
         Symbol.loadFunctions StdLib.symbols
         TypeCheckState.modify_ $ (TypeCheckState.freshRoots .~ roots)
         let seq3 a b c = Sequence a $ Sequence b c
-        let tc = Sequence ScanPass $ Sequence LiteralsPass $ Sequence StructuralInferencePass
+        let tc = Sequence (seq3 ScanPass LiteralsPass StructuralInferencePass)
                $ Loop $ seq3 SymbolImportingPass (Loop UnificationPass) FunctionCallingPass
 
         TypeCheck.runTCWithArtifacts tc collect
-    Graph.ast .= g
+    Graph.tcAST .= g
     return ()
-
--- internal
 
 printNodeLine :: NodeId -> Command Graph String
 printNodeLine nodeId = GraphUtils.getASTPointer nodeId >>= (zoom Graph.ast . AST.printExpression)
@@ -186,6 +194,7 @@ disconnectPort notif (InPortRef dstNodeId dstPort) = do
     case dstPort of
         Self    -> unAcc dstNodeId
         Arg num -> unApp dstNodeId num
+    runTC
     GraphBuilder.buildNode dstNodeId >>= notif
 
 unAcc :: NodeId -> Command Graph ()
