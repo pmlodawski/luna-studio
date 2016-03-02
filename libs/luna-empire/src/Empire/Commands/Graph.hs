@@ -76,8 +76,8 @@ removeNode loc nodeId = withGraph loc $ do
     obsoleteEdges <- getOutEdges nodeId
     mapM_ (disconnectPort $ Publisher.notifyNodeUpdate loc) obsoleteEdges
     zoom Graph.ast $ AST.removeSubtree astRef
-    runTC
     Graph.nodeMapping %= IntMap.delete nodeId
+    runTC
 
 updateNodeMeta :: GraphLocation -> NodeId -> NodeMeta -> Empire ()
 updateNodeMeta loc nodeId meta = withGraph loc $ do
