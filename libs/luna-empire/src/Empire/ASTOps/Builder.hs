@@ -21,7 +21,7 @@ import           Empire.Data.NodeMarker  (NodeMarker, nodeMarkerKey)
 import           Empire.API.Data.Node    (NodeId)
 import           Luna.Syntax.AST.Arg     (Arg)
 import qualified Luna.Syntax.AST.Arg     as Arg
-import           Luna.Syntax.AST.Term    (Acc (..), App (..), Blank (..), Unify (..), Var (..))
+import           Luna.Syntax.AST.Term    (Acc (..), App (..), Blank (..), Match (..), Var (..))
 import qualified Luna.Syntax.AST.Lit     as Lit
 import qualified Luna.Syntax.Builder     as Builder
 import           Luna.Syntax.Builder     (Meta (..))
@@ -162,17 +162,17 @@ makeNodeRep :: forall m. ASTOp m => NodeMarker -> String -> NodeRef -> m NodeRef
 makeNodeRep marker name node = do
     nameVar <- Builder.var (fromString name) :: m NodeRef
     Builder.withRef nameVar $ prop Meta %~ HMap.insert nodeMarkerKey marker
-    Builder.unify nameVar node
+    Builder.match nameVar node
 
-rightUnifyOperand :: Lens' ASTNode (EdgeRef)
-rightUnifyOperand = covered . lens rightGetter rightSetter where
-    rightGetter u   = caseTest u $ of' $ \(Unify _ r) -> r
-    rightSetter u r = caseTest u $ of' $ \(Unify l _) -> cons $ Unify l r
+rightMatchOperand :: Lens' ASTNode (EdgeRef)
+rightMatchOperand = covered . lens rightGetter rightSetter where
+    rightGetter u   = caseTest u $ of' $ \(Match _ r) -> r
+    rightSetter u r = caseTest u $ of' $ \(Match l _) -> cons $ Match l r
 
-leftUnifyOperand :: Lens' ASTNode (EdgeRef)
-leftUnifyOperand = covered . lens rightGetter rightSetter where
-    rightGetter u   = caseTest u $ of' $ \(Unify l _) -> l
-    rightSetter u l = caseTest u $ of' $ \(Unify _ r) -> cons $ Unify l r
+leftMatchOperand :: Lens' ASTNode (EdgeRef)
+leftMatchOperand = covered . lens rightGetter rightSetter where
+    rightGetter u   = caseTest u $ of' $ \(Match l _) -> l
+    rightSetter u l = caseTest u $ of' $ \(Match _ r) -> cons $ Match l r
 
 varName :: Lens' ASTNode String
 varName = covered . lens nameGetter nameSetter where

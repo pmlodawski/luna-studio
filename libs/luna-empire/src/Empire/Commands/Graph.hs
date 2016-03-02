@@ -48,6 +48,19 @@ import qualified Empire.Commands.GraphUtils   as GraphUtils
 import qualified Empire.Commands.GraphBuilder as GraphBuilder
 import qualified Empire.Commands.Publisher    as Publisher
 
+import qualified Luna.Library.Standard                           as StdLib
+import qualified Luna.Library.Symbol.Class                       as Symbol
+import qualified Luna.Compilation.Stage.TypeCheck                as TypeCheck
+import qualified Luna.Compilation.Stage.TypeCheck.Class          as TypeCheckState
+import           Luna.Compilation.Stage.TypeCheck                (Loop (..), Sequence (..))
+import           Luna.Compilation.Pass.Inference.Literals        (LiteralsPass (..))
+import           Luna.Compilation.Pass.Inference.Struct          (StructuralInferencePass (..))
+import           Luna.Compilation.Pass.Inference.Unification     (UnificationPass (..))
+import           Luna.Compilation.Pass.Inference.Calling         (FunctionCallingPass (..))
+import           Luna.Compilation.Pass.Inference.Importing       (SymbolImportingPass (..))
+import           Luna.Compilation.Pass.Inference.Scan            (ScanPass (..))
+import qualified Empire.ASTOp as ASTOp
+
 addNode :: GraphLocation -> Text -> NodeMeta -> Empire Node
 addNode loc expr meta = withGraph loc $ do
     newNodeId <- gets Graph.nextNodeId
@@ -132,8 +145,26 @@ renameNode loc nid name = withGraph loc $ do
 dumpGraphViz :: GraphLocation -> Empire ()
 dumpGraphViz loc = withGraph loc $ zoom Graph.ast $ AST.dumpGraphViz
 
+collect pass = do
+    putStrLn $ "After pass: " <> pass
+    st <- TypeCheckState.get
+    putStrLn $ "State is: " <> show st
+
 typecheck :: GraphLocation -> Empire ()
-typecheck loc = withGraph loc $ putStrLn "Here be typecheckers"
+typecheck loc = withGraph loc $ do
+    allNodeIds <- uses Graph.nodeMapping IntMap.keys
+    roots <- mapM GraphUtils.getASTPointer allNodeIds
+    ast   <- use Graph.ast
+    (_, g) <- TypeCheck.runT $ flip ASTOp.runGraph ast $ do
+        Symbol.loadFunctions StdLib.symbols
+        TypeCheckState.modify_ $ (TypeCheckState.freshRoots .~ roots)
+        let seq3 a b c = Sequence a $ Sequence b c
+        let tc = Sequence ScanPass $ Sequence LiteralsPass $ Sequence StructuralInferencePass
+               $ Loop $ seq3 SymbolImportingPass (Loop UnificationPass) FunctionCallingPass
+
+        TypeCheck.runTCWithArtifacts tc collect
+    Graph.ast .= g
+    return ()
 
 -- internal
 

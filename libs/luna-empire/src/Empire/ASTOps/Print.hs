@@ -10,7 +10,7 @@ import           Empire.ASTOp           (ASTOp)
 import           Empire.Data.AST        (NodeRef)
 import qualified Empire.ASTOps.Builder  as ASTBuilder
 
-import           Luna.Syntax.AST.Term   (Acc (..), App (..), Blank (..), Unify (..), Var (..))
+import           Luna.Syntax.AST.Term   (Acc (..), App (..), Blank (..), Match (..), Var (..))
 import qualified Luna.Syntax.AST.Lit    as Lit
 import qualified Luna.Syntax.Builder    as Builder
 
@@ -19,7 +19,7 @@ printExpression' suppresNodes nodeRef = do
     let recur = printExpression' suppresNodes
     node <- Builder.read nodeRef
     caseTest (uncover node) $ do
-        of' $ \(Unify l r) -> do
+        of' $ \(Match l r) -> do
             leftRep  <- Builder.follow source l >>= recur
             rightRep <- Builder.follow source r >>= recur
             return $ leftRep ++ " = " ++ rightRep

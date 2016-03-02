@@ -313,4 +313,9 @@ handleTypecheck content = do
         location = request ^. TypeCheck.location
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
-    void $ liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.typecheck location
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.typecheck location
+    case result of
+        Left err -> logger Logger.error $ errorMessage <> err
+        Right _ -> do
+            Env.empireEnv .= newEmpireEnv
+    return ()

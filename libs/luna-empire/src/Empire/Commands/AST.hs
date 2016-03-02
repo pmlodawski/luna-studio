@@ -68,17 +68,17 @@ removeAccessor = runASTOp . ASTBuilder.unAcc
 
 getTargetNode :: NodeRef -> Command AST (NodeRef)
 getTargetNode nodeRef = runASTOp $ Builder.read nodeRef
-                               >>= return . view ASTBuilder.rightUnifyOperand
+                               >>= return . view ASTBuilder.rightMatchOperand
                                >>= Builder.follow source
 
 getVarNode :: NodeRef -> Command AST (NodeRef)
 getVarNode nodeRef = runASTOp $ Builder.read nodeRef
-                            >>= return . view ASTBuilder.leftUnifyOperand
+                            >>= return . view ASTBuilder.leftMatchOperand
                             >>= Builder.follow source
 
 replaceTargetNode :: NodeRef -> NodeRef -> Command AST ()
-replaceTargetNode unifyNodeId newTargetId = runASTOp $ do
-    Builder.reconnect ASTBuilder.rightUnifyOperand unifyNodeId newTargetId
+replaceTargetNode matchNodeId newTargetId = runASTOp $ do
+    Builder.reconnect ASTBuilder.rightMatchOperand matchNodeId newTargetId
     return ()
 
 dumpGraphViz :: Command AST ()

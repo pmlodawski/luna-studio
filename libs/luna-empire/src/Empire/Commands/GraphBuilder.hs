@@ -13,6 +13,7 @@ import qualified Data.Text.Lazy               as Text
 import           Data.Record                  (ANY (..), caseTest, of')
 import           Data.Layer.Cover             (uncover)
 import           Data.Graph                   (source)
+import           Data.Prop                    (prop)
 
 import           Empire.Data.Graph            (Graph)
 import qualified Empire.Data.Graph            as Graph
@@ -34,9 +35,10 @@ import qualified Empire.Commands.AST          as AST
 import qualified Empire.Commands.GraphUtils   as GraphUtils
 import           Empire.Empire
 
-import           Luna.Syntax.AST.Term         (Acc (..), App (..), Blank (..), Unify (..), Var (..))
+import           Luna.Syntax.AST.Term         (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..))
 import qualified Luna.Syntax.AST.Lit          as Lit
 import qualified Luna.Syntax.Builder          as Builder
+import           Luna.Syntax.Builder          (Type (..))
 
 
 buildGraph :: Command Graph API.Graph
@@ -90,12 +92,21 @@ buildSelfPort nodeRef = do
         of' $ \(Var _)   -> return . Just $ Port (InPortId Self) AnyType NotConnected
         of' $ \ANY       -> return Nothing
 
+getTypeRep :: ASTOp m => NodeRef -> m ValueType
+getTypeRep ref = do
+    tp <- Builder.follow source =<< Builder.follow (prop Type) ref
+    tpNode <- Builder.read tp
+    caseTest (uncover tpNode) $ do
+        of' $ \(Cons (Lit.String s)) -> return $ TypeIdent s
+        of' $ \ANY -> return AnyType
+
 buildPorts :: NodeRef -> Command Graph [Port]
 buildPorts ref = zoom Graph.ast $ runASTOp $ do
     args     <- getPositionalNodeRefs ref
     selfPort <- maybeToList <$> buildSelfPort ref
     argPorts <- mapM buildPort $ zip (InPortId . Arg <$> [0..]) args
-    return $ selfPort ++ argPorts ++ [Port (OutPortId All) (TypeIdent "Int") NotConnected]
+    tpRep <- getTypeRep ref
+    return $ selfPort ++ argPorts ++ [Port (OutPortId All) tpRep NotConnected]
 
 buildConnections :: Command Graph [(OutPortRef, InPortRef)]
 buildConnections = do

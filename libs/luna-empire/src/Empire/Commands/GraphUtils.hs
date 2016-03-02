@@ -19,15 +19,15 @@ getASTPointer nodeId = use (Graph.nodeMapping . at nodeId) <?!> "Node does not e
 
 getASTTarget :: NodeId -> Command Graph NodeRef
 getASTTarget nodeId = do
-    unifyNode <- getASTPointer nodeId
-    zoom Graph.ast $ AST.getTargetNode unifyNode
+    matchNode <- getASTPointer nodeId
+    zoom Graph.ast $ AST.getTargetNode matchNode
 
 getASTVar :: NodeId -> Command Graph NodeRef
 getASTVar nodeId = do
-    unifyNode <- getASTPointer nodeId
-    zoom Graph.ast $ AST.getVarNode unifyNode
+    matchNode <- getASTPointer nodeId
+    zoom Graph.ast $ AST.getVarNode matchNode
 
 rewireNode :: NodeId -> NodeRef -> Command Graph ()
 rewireNode nodeId newTarget = do
-    unifyNode <- getASTPointer nodeId
-    zoom Graph.ast $ AST.replaceTargetNode unifyNode newTarget
+    matchNode <- getASTPointer nodeId
+    zoom Graph.ast $ AST.replaceTargetNode matchNode newTarget
