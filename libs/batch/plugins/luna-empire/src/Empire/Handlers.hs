@@ -26,6 +26,7 @@ handlersMap = Map.fromList
     , (Topic.setDefaultValueRequest, Graph.handleSetDefaultValue)
     , (Topic.programRequest,         Graph.handleGetProgram)
     , (Topic.logEnvDebugGraphViz,    Graph.handleDumpGraphViz)
+    , (Topic.typecheck,              Graph.handleTypecheck)
     , (Topic.createProjectRequest,   Project.handleCreateProject)
     , (Topic.listProjectsRequest,    Project.handleListProjects)
     , (Topic.createLibraryRequest,   Library.handleCreateLibrary)

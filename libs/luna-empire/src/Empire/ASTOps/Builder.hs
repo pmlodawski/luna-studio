@@ -4,7 +4,7 @@ module Empire.ASTOps.Builder where
 
 import           Prologue                hiding ((#), cons)
 import           Control.Monad.Error     (throwError)
-import           Data.Record             (match, caseTest, cons, ANY(..))
+import           Data.Record             (of', caseTest, cons, ANY(..))
 import           Data.Prop               ((#), prop)
 import           Data.Layer.Cover        (uncover, covered)
 import           Data.Graph              (Inputs (..))
@@ -28,13 +28,13 @@ import           Luna.Syntax.Builder     (Meta (..))
 
 functionApplicationNode :: Lens' ASTNode EdgeRef
 functionApplicationNode = covered . lens getter setter where
-    getter a   = caseTest a $ match $ \(App f _   ) -> f
-    setter a f = caseTest a $ match $ \(App _ args) -> cons $ App f args
+    getter a   = caseTest a $ of' $ \(App f _   ) -> f
+    setter a f = caseTest a $ of' $ \(App _ args) -> cons $ App f args
 
 accessorTarget :: Lens' ASTNode EdgeRef
 accessorTarget = covered . lens getter setter where
-    getter (a :: UncoveredNode)   = caseTest a $ match $ \(Acc _ t) -> t :: EdgeRef
-    setter (a :: UncoveredNode) t = caseTest a $ match $ \(Acc n _) -> cons $ Acc n t :: UncoveredNode
+    getter (a :: UncoveredNode)   = caseTest a $ of' $ \(Acc _ t) -> t :: EdgeRef
+    setter (a :: UncoveredNode) t = caseTest a $ of' $ \(Acc n _) -> cons $ Acc n t :: UncoveredNode
 
 unpackArguments :: ASTOp m => [Arg EdgeRef] -> m [NodeRef]
 unpackArguments args = mapM (Builder.follow source . Arg.__val_) args
@@ -43,8 +43,8 @@ isBlank :: ASTOp m => NodeRef -> m Bool
 isBlank ref = do
     node <- Builder.read ref
     caseTest (uncover node) $ do
-        match $ \Blank -> return True
-        match $ \ANY   -> return False
+        of' $ \Blank -> return True
+        of' $ \ANY   -> return False
 
 removeArg :: ASTOp m => NodeRef -> Int -> m NodeRef
 removeArg fun pos = do
@@ -58,11 +58,11 @@ destructApp :: ASTOp m => NodeRef -> m (NodeRef, [NodeRef])
 destructApp fun = do
     app    <- Builder.read fun
     result <- caseTest (uncover app) $ do
-        match $ \(App tg args) -> do
+        of' $ \(App tg args) -> do
             unpackedArgs <- unpackArguments args
             target <- Builder.follow source tg
             return (target, unpackedArgs)
-        match $ \ANY -> throwError "Expected App node, got wrong type."
+        of' $ \ANY -> throwError "Expected App node, got wrong type."
     removeNode fun
     return result
 
@@ -91,38 +91,38 @@ applyFunction :: ASTOp m => NodeRef -> NodeRef -> Int -> m NodeRef
 applyFunction fun arg pos = do
     funNode <- Builder.read fun
     caseTest (uncover funNode) $ do
-        match $ \(App _ _) -> rewireApplication fun arg pos
-        match $ \ANY -> newApplication fun arg pos
+        of' $ \(App _ _) -> rewireApplication fun arg pos
+        of' $ \ANY -> newApplication fun arg pos
 
 reapply :: ASTOp m => NodeRef -> [NodeRef] -> m NodeRef
 reapply funRef args = do
     funNode <- Builder.read funRef
     fun <- caseTest (uncover funNode) $ do
-        match $ \(App t _) -> do
+        of' $ \(App t _) -> do
             f <- Builder.follow source t
             removeNode funRef
             return f
-        match $ \ANY -> return funRef
+        of' $ \ANY -> return funRef
     Builder.app fun $ Builder.arg <$> args
 
 makeAccessorRec :: ASTOp m => Bool -> NodeRef -> NodeRef -> m NodeRef
 makeAccessorRec seenApp targetNodeRef namingNodeRef = do
     namingNode <- Builder.read namingNodeRef
     caseTest (uncover namingNode) $ do
-        match $ \(Var name) -> do
+        of' $ \(Var name) -> do
             removeNode namingNodeRef
             Builder.acc name targetNodeRef >>= (if seenApp then return else flip Builder.app [])
-        match $ \(App t _) -> do
+        of' $ \(App t _) -> do
             newNamingNodeRef <- Builder.follow source t
             replacementRef <- makeAccessorRec True targetNodeRef newNamingNodeRef
             Builder.reconnect functionApplicationNode namingNodeRef replacementRef
             return namingNodeRef
-        match $ \(Acc name t) -> do
+        of' $ \(Acc name t) -> do
             newNamingNodeRef <- Builder.follow source t
             replacement <- makeAccessorRec False targetNodeRef newNamingNodeRef
             Builder.reconnect accessorTarget namingNodeRef replacement
             return namingNodeRef
-        match $ \ANY -> throwError "Invalid node type"
+        of' $ \ANY -> throwError "Invalid node type"
 
 makeAccessor :: ASTOp m => NodeRef -> NodeRef -> m NodeRef
 makeAccessor = makeAccessorRec False
@@ -131,13 +131,13 @@ unAccRec :: forall m. ASTOp m => NodeRef -> m (Maybe NodeRef)
 unAccRec ref = do
     node <- Builder.read ref
     caseTest (uncover node) $ do
-        match $ \(Acc n t) -> do
+        of' $ \(Acc n t) -> do
             oldTarget <- Builder.follow source t
             replacement <- unAccRec =<< Builder.follow source t
             case replacement of
                 Just r  -> Just <$> Builder.acc n r
                 Nothing -> Just <$> Builder.var n
-        match $ \(App t args) -> do
+        of' $ \(App t args) -> do
             oldTarget   <- Builder.follow source t
             replacement <- unAccRec oldTarget
             case replacement of
@@ -145,12 +145,12 @@ unAccRec ref = do
                     repl <- Builder.read r
                     as   <- (mapM . mapM) (Builder.follow source) args
                     caseTest (uncover repl) $ do
-                        match $ \(Var _) -> if null args
+                        of' $ \(Var _) -> if null args
                             then return (Just r)
                             else Just <$> Builder.app r as
-                        match $ \ANY -> Just <$> Builder.app r as
+                        of' $ \ANY -> Just <$> Builder.app r as
                 Nothing -> throwError "Self port not connected"
-        match $ \ANY -> return Nothing
+        of' $ \ANY -> return Nothing
 
 unAcc :: ASTOp m => NodeRef -> m NodeRef
 unAcc ref = do
@@ -166,18 +166,18 @@ makeNodeRep marker name node = do
 
 rightUnifyOperand :: Lens' ASTNode (EdgeRef)
 rightUnifyOperand = covered . lens rightGetter rightSetter where
-    rightGetter u   = caseTest u $ match $ \(Unify _ r) -> r
-    rightSetter u r = caseTest u $ match $ \(Unify l _) -> cons $ Unify l r
+    rightGetter u   = caseTest u $ of' $ \(Unify _ r) -> r
+    rightSetter u r = caseTest u $ of' $ \(Unify l _) -> cons $ Unify l r
 
 leftUnifyOperand :: Lens' ASTNode (EdgeRef)
 leftUnifyOperand = covered . lens rightGetter rightSetter where
-    rightGetter u   = caseTest u $ match $ \(Unify l _) -> l
-    rightSetter u l = caseTest u $ match $ \(Unify _ r) -> cons $ Unify l r
+    rightGetter u   = caseTest u $ of' $ \(Unify l _) -> l
+    rightSetter u l = caseTest u $ of' $ \(Unify _ r) -> cons $ Unify l r
 
 varName :: Lens' ASTNode String
 varName = covered . lens nameGetter nameSetter where
-    nameGetter v   = caseTest v $ match $ \(Var (n :: Lit.String)) -> toString n
-    nameSetter v n = caseTest v $ match $ \(Var (_ :: Lit.String)) -> (cons $ Var $ (fromString n :: Lit.String))
+    nameGetter v   = caseTest v $ of' $ \(Var (n :: Lit.String)) -> toString n
+    nameSetter v n = caseTest v $ of' $ \(Var (_ :: Lit.String)) -> (cons $ Var $ (fromString n :: Lit.String))
 
 renameVar :: ASTOp m => NodeRef -> String -> m ()
 renameVar vref name = do

@@ -25,6 +25,7 @@ import qualified Empire.API.Graph.Connect          as Connect
 import qualified Empire.API.Graph.Disconnect       as Disconnect
 import qualified Empire.API.Graph.DumpGraphViz     as DumpGraphViz
 import qualified Empire.API.Graph.GetProgram       as GetProgram
+import qualified Empire.API.Graph.TypeCheck        as TypeCheck
 import qualified Empire.API.Graph.NodeResultUpdate as NodeResultUpdate
 import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
 import qualified Empire.API.Graph.RemoveNode       as RemoveNode
@@ -305,3 +306,11 @@ handleDumpGraphViz content = do
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
     void $ liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.dumpGraphViz location
+
+handleTypecheck :: ByteString -> StateT Env BusT ()
+handleTypecheck content = do
+    let request  = Bin.decode . fromStrict $ content :: TypeCheck.Request
+        location = request ^. TypeCheck.location
+    currentEmpireEnv <- use Env.empireEnv
+    empireNotifEnv   <- use Env.empireNotif
+    void $ liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.typecheck location

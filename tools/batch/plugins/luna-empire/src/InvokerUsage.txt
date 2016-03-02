@@ -11,6 +11,7 @@ Usage:
   luna-empire-invoker projects
   luna-empire-invoker dump
   luna-empire-invoker graphviz       <pid> <lid>
+  luna-empire-invoker typecheck      <pid> <lid>
 
 Options:
   <outPort>          All  or an integer value

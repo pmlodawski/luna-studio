@@ -33,6 +33,7 @@ import qualified Empire.API.Graph.Disconnect      as Disconnect
 import qualified Empire.API.Graph.UpdateNodeMeta  as UpdateNodeMeta
 import qualified Empire.API.Graph.GetProgram      as GetProgram
 import qualified Empire.API.Graph.DumpGraphViz    as DumpGraphViz
+import qualified Empire.API.Graph.TypeCheck       as TypeCheck
 import qualified Empire.API.Project.CreateProject as CreateProject
 import qualified Empire.API.Project.ListProjects  as ListProjects
 import qualified Empire.API.Library.CreateLibrary as CreateLibrary
@@ -111,6 +112,10 @@ main = do
         pid       <- args `getArgOrExit` (argument "pid")
         lid       <- args `getArgOrExit` (argument "lid")
         environmentDumpGraphviz endPoints $ toGraphLocation pid lid
+    when (args `isPresent` (command "typecheck")) $ do
+        pid       <- args `getArgOrExit` (argument "pid")
+        lid       <- args `getArgOrExit` (argument "lid")
+        typecheck endPoints $ toGraphLocation pid lid
 
 addNode :: EP.BusEndPoints -> GraphLocation -> String -> Double -> Double -> Int -> IO ()
 addNode endPoints graphLocation expression x y tag = do
@@ -171,3 +176,8 @@ environmentDumpGraphviz :: EP.BusEndPoints -> GraphLocation -> IO ()
 environmentDumpGraphviz endPoints loc = do
     let content = toStrict . Bin.encode $ DumpGraphViz.Request loc
     void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.logEnvDebugGraphViz content
+
+typecheck :: EP.BusEndPoints -> GraphLocation -> IO ()
+typecheck endPoints loc = do
+    let content = toStrict . Bin.encode $ TypeCheck.Request loc
+    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.typecheck content

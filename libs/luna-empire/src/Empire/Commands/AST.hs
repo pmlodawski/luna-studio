@@ -5,7 +5,7 @@ module Empire.Commands.AST where
 import           Prologue
 import           Control.Monad.State
 import           Control.Monad.Error          (throwError)
-import           Data.Record                  (ANY (..), caseTest, match)
+import           Data.Record                  (ANY (..), caseTest, of')
 import           Data.Prop                    (prop)
 import           Data.Graph                   (source)
 import           Data.HMap.Lazy               (TypeKey (..))

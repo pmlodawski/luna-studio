@@ -10,7 +10,7 @@ import           Data.Map                     (Map)
 import qualified Data.Map                     as Map
 import           Data.Maybe                   (catMaybes, fromMaybe, maybeToList)
 import qualified Data.Text.Lazy               as Text
-import           Data.Record                  (ANY (..), caseTest, match)
+import           Data.Record                  (ANY (..), caseTest, of')
 import           Data.Layer.Cover             (uncover)
 import           Data.Graph                   (source)
 
@@ -63,7 +63,7 @@ getNodeName nid = do
     vref <- GraphUtils.getASTVar nid
     zoom Graph.ast $ runASTOp $ do
         vnode <- Builder.read vref
-        caseTest (uncover vnode) $ match $ \(Var n) -> return . toString $ n
+        caseTest (uncover vnode) $ of' $ \(Var n) -> return . toString $ n
 
 getPortState :: ASTOp m => NodeRef -> m PortState
 getPortState ref = do
@@ -71,24 +71,24 @@ getPortState ref = do
     if isConnected then return Connected else do
         node <- Builder.read ref
         caseTest (uncover node) $ do
-            match $ \(Lit.String s)   -> return . WithDefault . Constant . StringValue $ s
-            match $ \(Lit.Number _ n) -> return . WithDefault . Constant $ case n of
+            of' $ \(Lit.String s)   -> return . WithDefault . Constant . StringValue $ s
+            of' $ \(Lit.Number _ n) -> return . WithDefault . Constant $ case n of
                 Lit.Integer  i -> IntValue $ fromIntegral i
                 Lit.Rational r -> RationalValue r
-            match $ \Blank   -> return NotConnected
-            match $ \ANY     -> Print.printExpression ref >>= return . WithDefault . Expression
+            of' $ \Blank   -> return NotConnected
+            of' $ \ANY     -> Print.printExpression ref >>= return . WithDefault . Expression
 
 buildPort :: ASTOp m => (PortId, NodeRef) -> m Port
-buildPort (portId, ref) = Port portId (TypeIdent "Int") <$> getPortState ref
+buildPort (portId, ref) = Port portId AnyType <$> getPortState ref
 
 buildSelfPort :: ASTOp m => NodeRef -> m (Maybe Port)
 buildSelfPort nodeRef = do
     node <- Builder.read nodeRef
     caseTest (uncover node) $ do
-        match $ \(Acc _ t) -> Builder.follow source t >>= fmap Just . buildPort . ((,) $ InPortId Self)
-        match $ \(App t _) -> Builder.follow source t >>= buildSelfPort
-        match $ \(Var _)   -> return . Just $ Port (InPortId Self) AnyType NotConnected
-        match $ \ANY       -> return Nothing
+        of' $ \(Acc _ t) -> Builder.follow source t >>= fmap Just . buildPort . ((,) $ InPortId Self)
+        of' $ \(App t _) -> Builder.follow source t >>= buildSelfPort
+        of' $ \(Var _)   -> return . Just $ Port (InPortId Self) AnyType NotConnected
+        of' $ \ANY       -> return Nothing
 
 buildPorts :: NodeRef -> Command Graph [Port]
 buildPorts ref = zoom Graph.ast $ runASTOp $ do
@@ -107,9 +107,9 @@ getSelfNodeRef' :: ASTOp m => Bool -> NodeRef -> m (Maybe NodeRef)
 getSelfNodeRef' seenAcc nodeRef = do
     node <- Builder.read nodeRef
     caseTest (uncover node) $ do
-        match $ \(Acc _ t) -> Builder.follow source t >>= getSelfNodeRef' True
-        match $ \(App t _) -> Builder.follow source t >>= getSelfNodeRef' seenAcc
-        match $ \ANY       -> return $ if seenAcc then Just nodeRef else Nothing
+        of' $ \(Acc _ t) -> Builder.follow source t >>= getSelfNodeRef' True
+        of' $ \(App t _) -> Builder.follow source t >>= getSelfNodeRef' seenAcc
+        of' $ \ANY       -> return $ if seenAcc then Just nodeRef else Nothing
 
 getSelfNodeRef :: ASTOp m => NodeRef -> m (Maybe NodeRef)
 getSelfNodeRef = getSelfNodeRef' False
@@ -118,8 +118,8 @@ getPositionalNodeRefs :: ASTOp m => NodeRef -> m [NodeRef]
 getPositionalNodeRefs nodeRef = do
     node <- Builder.read nodeRef
     caseTest (uncover node) $ do
-        match $ \(App _ args) -> ASTBuilder.unpackArguments args
-        match $ \ANY          -> return []
+        of' $ \(App _ args) -> ASTBuilder.unpackArguments args
+        of' $ \ANY          -> return []
 
 getNodeInputs :: NodeId -> Command Graph [(OutPortRef, InPortRef)]
 getNodeInputs nodeId = do

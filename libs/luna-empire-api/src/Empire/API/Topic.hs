@@ -55,3 +55,5 @@ nodeSearcherDataUpdate = "empire.graph.nodeSearcher.update"
 logEnvDebug            = "empire.environment.debug"
 
 logEnvDebugGraphViz    = "empire.environment.debug.graphviz.request"
+
+typecheck              = "empire.environment.debug.typecheck.request"

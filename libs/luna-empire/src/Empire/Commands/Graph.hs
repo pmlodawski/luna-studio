@@ -10,6 +10,7 @@ module Empire.Commands.Graph
     , setDefaultValue
     , renameNode
     , dumpGraphViz
+    , typecheck
     ) where
 
 import           Prologue
@@ -130,6 +131,9 @@ renameNode loc nid name = withGraph loc $ do
 
 dumpGraphViz :: GraphLocation -> Empire ()
 dumpGraphViz loc = withGraph loc $ zoom Graph.ast $ AST.dumpGraphViz
+
+typecheck :: GraphLocation -> Empire ()
+typecheck loc = withGraph loc $ putStrLn "Here be typecheckers"
 
 -- internal
 
