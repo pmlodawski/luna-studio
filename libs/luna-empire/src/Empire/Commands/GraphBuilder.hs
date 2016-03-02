@@ -35,7 +35,7 @@ import qualified Empire.Commands.AST          as AST
 import qualified Empire.Commands.GraphUtils   as GraphUtils
 import           Empire.Empire
 
-import           Luna.Syntax.AST.Term         (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..))
+import           Luna.Syntax.AST.Term         (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..), Lam (..))
 import qualified Luna.Syntax.AST.Lit          as Lit
 import qualified Luna.Syntax.Builder          as Builder
 import           Luna.Syntax.Builder          (Type (..))
@@ -80,8 +80,33 @@ getPortState ref = do
             of' $ \Blank   -> return NotConnected
             of' $ \ANY     -> Print.printExpression ref >>= return . WithDefault . Expression
 
-buildPort :: ASTOp m => (PortId, NodeRef) -> m Port
-buildPort (portId, ref) = Port portId AnyType <$> getPortState ref
+extractArgTypes :: ASTOp m => NodeRef -> m [ValueType]
+extractArgTypes ref = do
+    node <- Builder.read ref
+    caseTest (uncover node) $ do
+        of' $ \(Lam args _) -> do
+            unpacked <- ASTBuilder.unpackArguments args
+            mapM getTypeRep unpacked
+        of' $ \ANY -> return []
+
+
+buildArgPorts :: ASTOp m => NodeRef -> m [Port]
+buildArgPorts ref = do
+    node <- Builder.read ref
+    (types, states) <- caseTest (uncover node) $ do
+        of' $ \(App f args) -> do
+            tpRef      <- Builder.follow source =<< Builder.follow (prop Type) =<< Builder.follow source f
+            portTypes  <- extractArgTypes tpRef
+            unpacked   <- ASTBuilder.unpackArguments args
+            portStates <- mapM getPortState unpacked
+            return (portTypes, portStates)
+        of' $ \(Var _) -> do
+            tpRef <- Builder.follow source $ node ^. prop Type
+            types <- extractArgTypes tpRef
+            return (types, [])
+        of' $ \ANY -> return ([], [])
+    let psCons = zipWith Port (InPortId . Arg <$> [0..]) types
+    return $ zipWith ($) psCons $ states ++ repeat NotConnected
 
 buildSelfPort :: ASTOp m => NodeRef -> m (Maybe Port)
 buildSelfPort nodeRef = do
@@ -90,13 +115,18 @@ buildSelfPort nodeRef = do
         of' $ \(Acc _ t) -> Builder.follow source t >>= buildSelfPort
         of' $ \(App t _) -> Builder.follow source t >>= buildSelfPort
         of' $ \(Var _)   -> do
-            tpRep <- getTypeRep nodeRef
-            return . Just $ Port (InPortId Self) tpRep NotConnected
+            tpRep     <- followTypeRep nodeRef
+            portState <- getPortState nodeRef
+            return . Just $ Port (InPortId Self) tpRep portState
         of' $ \ANY       -> return Nothing
 
-getTypeRep :: ASTOp m => NodeRef -> m ValueType
-getTypeRep ref = do
+followTypeRep :: ASTOp m => NodeRef -> m ValueType
+followTypeRep ref = do
     tp <- Builder.follow source =<< Builder.follow (prop Type) ref
+    getTypeRep tp
+
+getTypeRep :: ASTOp m => NodeRef -> m ValueType
+getTypeRep tp = do
     tpNode <- Builder.read tp
     caseTest (uncover tpNode) $ do
         of' $ \(Cons (Lit.String s)) -> return $ TypeIdent s
@@ -104,10 +134,9 @@ getTypeRep ref = do
 
 buildPorts :: NodeRef -> Command Graph [Port]
 buildPorts ref = zoom Graph.ast $ runASTOp $ do
-    args     <- getPositionalNodeRefs ref
     selfPort <- maybeToList <$> buildSelfPort ref
-    argPorts <- mapM buildPort $ zip (InPortId . Arg <$> [0..]) args
-    tpRep <- getTypeRep ref
+    argPorts <- buildArgPorts ref
+    tpRep <- followTypeRep ref
     return $ selfPort ++ argPorts ++ [Port (OutPortId All) tpRep NotConnected]
 
 buildConnections :: Command Graph [(OutPortRef, InPortRef)]
