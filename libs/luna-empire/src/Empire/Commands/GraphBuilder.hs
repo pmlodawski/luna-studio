@@ -87,9 +87,11 @@ buildSelfPort :: ASTOp m => NodeRef -> m (Maybe Port)
 buildSelfPort nodeRef = do
     node <- Builder.read nodeRef
     caseTest (uncover node) $ do
-        of' $ \(Acc _ t) -> Builder.follow source t >>= fmap Just . buildPort . ((,) $ InPortId Self)
+        of' $ \(Acc _ t) -> Builder.follow source t >>= buildSelfPort
         of' $ \(App t _) -> Builder.follow source t >>= buildSelfPort
-        of' $ \(Var _)   -> return . Just $ Port (InPortId Self) AnyType NotConnected
+        of' $ \(Var _)   -> do
+            tpRep <- getTypeRep nodeRef
+            return . Just $ Port (InPortId Self) tpRep NotConnected
         of' $ \ANY       -> return Nothing
 
 getTypeRep :: ASTOp m => NodeRef -> m ValueType
