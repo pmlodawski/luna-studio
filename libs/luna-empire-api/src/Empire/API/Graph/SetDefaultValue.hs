@@ -5,12 +5,12 @@ import           Data.Binary                   (Binary)
 
 import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.Node          (NodeId)
-import           Empire.API.Data.PortRef       (InPortRef)
+import           Empire.API.Data.PortRef       (AnyPortRef)
 import           Empire.API.Data.DefaultValue  (PortDefault)
 import qualified Empire.API.Update             as Update
 
 data Request = Request { _location     :: GraphLocation
-                       , _portRef      :: InPortRef
+                       , _portRef      :: AnyPortRef
                        , _defaultValue :: PortDefault
                        } deriving (Generic, Show, Eq)
 

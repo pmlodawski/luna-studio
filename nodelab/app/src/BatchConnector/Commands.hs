@@ -29,7 +29,7 @@ import           Empire.API.Data.NodeMeta          (NodeMeta)
 import qualified Empire.API.Data.NodeMeta          as NodeMeta
 import           Empire.API.Data.Port              (InPort (..))
 import qualified Empire.API.Data.Port              as Port
-import           Empire.API.Data.PortRef           (InPortRef (..), OutPortRef (..))
+import           Empire.API.Data.PortRef           (InPortRef (..), OutPortRef (..), AnyPortRef (..))
 import qualified Empire.API.Data.PortRef           as PortRef
 import           Empire.API.Data.Project           (Project, ProjectId)
 import qualified Empire.API.Data.Project           as Project
@@ -112,7 +112,7 @@ disconnectNodes workspace connections = sendMany $ (disconnectMessage workspace)
 setDefaultValue :: Workspace -> InPortRef -> DefaultValue.PortDefault -> IO ()
 setDefaultValue workspace inPortRef val = sendRequest topic body where
     topic = Topic.setDefaultValueRequest
-    body = (withLibrary workspace SetDefaultValue.Request) inPortRef val
+    body = (withLibrary workspace SetDefaultValue.Request) (InPortRef' inPortRef) val
 
 setInputNodeType :: Workspace -> NodeId -> Text -> IO ()
 setInputNodeType workspace id tpe = sendRequest topic body where

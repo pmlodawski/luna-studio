@@ -32,7 +32,7 @@ import           Empire.Data.Graph       (Graph)
 import           Empire.API.Data.Project       (ProjectId)
 import           Empire.API.Data.Library       (LibraryId)
 import           Empire.API.Data.Port          (InPort(..), OutPort(..))
-import           Empire.API.Data.PortRef       (InPortRef(..), OutPortRef(..))
+import           Empire.API.Data.PortRef       (InPortRef(..), OutPortRef(..), AnyPortRef(..))
 import qualified Empire.API.Data.PortRef       as PortRef
 import           Empire.API.Data.Node          (NodeId, Node(..))
 import qualified Empire.API.Data.Node          as Node
@@ -93,13 +93,17 @@ connect loc (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) = withGraph
     GraphBuilder.buildNode dstNodeId >>= Publisher.notifyNodeUpdate loc
 connect _ _ _ = throwError "Source port should be All"
 
-setDefaultValue :: GraphLocation -> InPortRef -> PortDefault -> Empire ()
-setDefaultValue loc (InPortRef nodeId port) val = withGraph loc $ do
-    ref <- GraphUtils.getASTTarget nodeId
+setDefaultValue :: GraphLocation -> AnyPortRef -> PortDefault -> Empire ()
+setDefaultValue loc portRef val = withGraph loc $ do
     parsed <- zoom Graph.ast $ AST.addDefault val
-    newRef <- zoom Graph.ast $ case port of
-        Self    -> AST.makeAccessor parsed ref
-        Arg num -> AST.applyFunction ref parsed num
+    (nodeId, newRef) <- case portRef of
+        InPortRef' (InPortRef nodeId port) -> do
+            ref <- GraphUtils.getASTTarget nodeId
+            newRef <- zoom Graph.ast $ case port of
+                Self    -> AST.makeAccessor parsed ref
+                Arg num -> AST.applyFunction ref parsed num
+            return (nodeId, newRef)
+        OutPortRef' (OutPortRef nodeId _) -> return (nodeId, parsed)
     GraphUtils.rewireNode nodeId newRef
     runTC
     node <- GraphBuilder.buildNode nodeId
