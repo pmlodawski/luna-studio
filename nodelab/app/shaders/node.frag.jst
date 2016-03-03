@@ -37,8 +37,6 @@ void main(void) {
                     )
                 )
             );
-        vec4 portRing = vec4(unselectedColor, sdf_aa(sdf_ring(p, 20.0, 3.0)));
-        gl_FragColor = portRing;
-        gl_FragColor = mix(gl_FragColor, vec4(selectedColor, 1.0), float(selected) * sdf_aa(selectedShape));
+        gl_FragColor = vec4(selectedColor, float(selected) * sdf_aa(selectedShape));
     }
 }

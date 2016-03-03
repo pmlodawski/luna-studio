@@ -26,6 +26,7 @@ class Port
       nodeSize:  {type: 'f',  value: nodeSize}
       portSize:  {type: 'f',  value: height}
       portCount: {type: 'i',  value: 1}
+      onlyPort:  {type: 'i',  value: 0}
       angle:     {type: 'f',  value: 1}
       objectId:  {type: 'v3', value: new (THREE.Vector3)(widgetId % 256 / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0)}
 
@@ -43,9 +44,10 @@ class Port
 
     @setAngle 0
 
-  setAngle: (angle, count) ->
+  setAngle: (angle, count, only) ->
     @uniforms.angle.value     = angle
     @uniforms.portCount.value = count
+    @uniforms.onlyPort.value  = if only then 1 else 0
 
   setColor:        (color)     -> @uniforms.color.value     = colors[color]
   setHighlight:    (val)       -> @uniforms.highlight.value = if val then 1 else 0

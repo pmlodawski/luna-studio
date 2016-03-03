@@ -102,23 +102,27 @@ nodePorts id = do
 makePorts :: Node -> [PortModel.Port]
 makePorts node = makePort <$> ports where
     nodeId  = node ^. Node.nodeId
-    makePort port = PortModel.Port portRef angle (portCount portId) (colorPort port) False where
+    makePort port = PortModel.Port portRef angle (portCount portId) isOnly (colorPort port) False where
         portRef = toAnyPortRef nodeId portId
         angle   = portDefaultAngle (portCount portId) (port ^. Port.portId)
         portId  = port ^. Port.portId
+        isOnly  = isLiteral
     ports = Map.elems $ node ^. Node.ports
     portIds = Map.keys $  node ^. Node.ports
     portCount :: PortId -> Int
-    portCount (OutPortId _) = sum $ fmap isOut portIds
-    portCount (InPortId  _) = sum $ fmap isIn  portIds
-    isIn :: PortId -> Int
-    isIn (OutPortId _) = 0
-    isIn (InPortId (Arg _)) = 1
-    isIn (InPortId Self) = 0
-    isOut :: PortId -> Int
-    isOut (OutPortId _) = 1
-    isOut (InPortId  _) = 0
-
+    portCount (OutPortId _) = sum $ fmap isOut portIds where
+        isOut :: PortId -> Int
+        isOut (OutPortId _) = 1
+        isOut (InPortId  _) = 0
+    portCount (InPortId  _) = sum $ fmap isIn  portIds where
+        isIn :: PortId -> Int
+        isIn (OutPortId _) = 0
+        isIn (InPortId (Arg _)) = 1
+        isIn (InPortId Self) = 0
+    isLiteral = 0 == (sum $ fmap isIn' portIds) where
+        isIn' :: PortId -> Int
+        isIn' (OutPortId _) = 0
+        isIn' (InPortId  _) = 1
 displayPorts :: WidgetId -> Node -> Command UIRegistry.State ()
 displayPorts id node = do
     nodeId <- UICmd.get id Model.nodeId
