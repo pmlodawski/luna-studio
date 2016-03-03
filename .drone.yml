@@ -38,10 +38,10 @@ publish:
     username:  $$DOCKERHUB_USER
     password:  $$DOCKERHUB_PASS
     email: $$DOCKERHUB_EMAIL
-    repo: kfigiela/nodelab
-    tag: $$BRANCH
+    repo: lunalang/luna
+    tag: $${BRANCH##docker/}
     file: Dockerfile
     insecure: false
     storage_driver: aufs
     when:
-      branch: [production, fogger]
+      branch: docker/*
