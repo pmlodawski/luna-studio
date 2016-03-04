@@ -104,10 +104,10 @@ handleAddNode content = do
           node = Node 43 (Text.pack $ fromMaybe "module0" name) (Node.ModuleNode) mempty (request ^. AddNode.nodeMeta)
         Input    name -> return (Right node, currentEmpireEnv) where
           node = Node 44 (Text.pack $ fromMaybe "input0" name) (Node.InputNode 1) ports (request ^. AddNode.nodeMeta) where
-            ports = Map.fromList [ (OutPortId All,  Port (OutPortId All)  (TypeIdent "Int") NotConnected)]
+            ports = Map.fromList [ (OutPortId All,  Port (OutPortId All) "All" (TypeIdent "Int") NotConnected)]
         Output   name -> return (Right node, currentEmpireEnv) where
           node = Node 45 (Text.pack $ fromMaybe "output0" name) (Node.OutputNode 1) ports (request ^. AddNode.nodeMeta) where
-            ports = Map.fromList [ (InPortId (Arg 0),  Port (InPortId (Arg 0))  (TypeIdent "Int") NotConnected)]
+            ports = Map.fromList [ (InPortId (Arg 0),  Port (InPortId (Arg 0)) "result" (TypeIdent "Int") NotConnected)]
       AddNode.InputNode _ _ -> return (Left "Input Nodes not yet supported", currentEmpireEnv)
     case result of
         Left err -> logger Logger.error $ errorMessage <> err

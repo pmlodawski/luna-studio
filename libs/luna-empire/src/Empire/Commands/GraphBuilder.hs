@@ -57,7 +57,7 @@ buildNode nid = do
     meta  <- zoom Graph.tcAST $ AST.readMeta uref
     name  <- getNodeName nid
     ports <- buildPorts ref
-    let portMap = Map.fromList $ flip fmap ports $ \p@(Port id _ _) -> (id, p)
+    let portMap = Map.fromList $ flip fmap ports $ \p@(Port id _ _ _) -> (id, p)
     return $ API.Node nid (Text.pack name) (API.ExpressionNode $ Text.pack expr) portMap $ fromMaybe def meta
 
 getNodeName :: NodeId -> Command Graph String
@@ -106,8 +106,8 @@ buildArgPorts ref = do
             types <- extractArgTypes tpRef
             return (types, [])
         of' $ \ANY -> return ([], [])
-    let psCons = zipWith Port (InPortId . Arg <$> [0..]) types
-    return $ zipWith ($) psCons $ states ++ repeat NotConnected
+    let psCons = zipWith3 Port (InPortId . Arg <$> [0..]) (repeat "foo") types
+    return $ zipWith ($) psCons (states ++ repeat NotConnected)
 
 buildSelfPort :: ASTOp m => NodeRef -> m (Maybe Port)
 buildSelfPort nodeRef = do
@@ -118,7 +118,7 @@ buildSelfPort nodeRef = do
         of' $ \(Var _)   -> do
             tpRep     <- followTypeRep nodeRef
             portState <- getPortState nodeRef
-            return . Just $ Port (InPortId Self) tpRep portState
+            return . Just $ Port (InPortId Self) "Self" tpRep portState
         of' $ \ANY       -> return Nothing
 
 followTypeRep :: ASTOp m => NodeRef -> m ValueType
@@ -138,7 +138,7 @@ buildPorts ref = zoom Graph.tcAST $ runASTOp $ do
     selfPort <- maybeToList <$> buildSelfPort ref
     argPorts <- buildArgPorts ref
     tpRep <- followTypeRep ref
-    return $ selfPort ++ argPorts ++ [Port (OutPortId All) tpRep NotConnected]
+    return $ selfPort ++ argPorts ++ [Port (OutPortId All) "All" tpRep NotConnected]
 
 buildConnections :: Command Graph [(OutPortRef, InPortRef)]
 buildConnections = do

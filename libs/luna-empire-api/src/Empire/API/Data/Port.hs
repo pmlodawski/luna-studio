@@ -49,6 +49,7 @@ instance Read OutPort where
 data PortState = NotConnected | Connected | WithDefault PortDefault deriving (Show, Eq, Generic)
 
 data Port = Port { _portId     :: PortId
+                 , _name       :: String
                  , _valueType  :: ValueType
                  , _state      :: PortState
                  } deriving (Show, Eq, Generic)
