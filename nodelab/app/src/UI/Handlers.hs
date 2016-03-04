@@ -95,7 +95,7 @@ instance HasHandlers State where
         | tpe ==           buttonType  =           Button.widgetHandlers
         | tpe ==             listType  = def
         | tpe ==            sceneType  = def
-        | tpe ==            labelType  = def
+        | tpe ==            labelType  =           Button.widgetHandlers
         | tpe ==      scatterPlotType  = def
 
         | otherwise                    = error $ "Unknown widget type " <> (show tpe)

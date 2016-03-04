@@ -8,7 +8,7 @@ import qualified JS.NodeGraph   as UI
 
 import           Object.Node
 import           Object.UITypes
-import           Object.Widget   (WidgetFile, objectId, widget, widgetPosition)
+import           Object.Widget   (WidgetFile, objectId, widget, widgetPosition, parent)
 
 import           Event.Keyboard hiding        (Event)
 import qualified Event.Keyboard as Keyboard
@@ -31,11 +31,16 @@ import           Reactive.State.Global        (State)
 import qualified BatchConnector.Commands      as BatchCmd
 import           Batch.Workspace              (Workspace)
 
-import qualified Object.Widget.Node as Model
+import qualified Object.Widget.Node  as Model
+import           Object.Widget.Label (Label)
 
 import           Control.Monad.State          hiding (State)
+import           Control.Monad.Trans.Maybe
+import           Control.Monad.Trans
+
 
 import qualified UI.Generic as UI
+import qualified UI.Handlers.Node as Node
 
 import           Empire.API.Data.Node (Node)
 import qualified Empire.API.Data.Node as Node
@@ -49,18 +54,26 @@ toAction _                                                                     =
 
 
 isNodeUnderCursor :: Command UIRegistry.State Bool
-isNodeUnderCursor = do
-    maybeOver    <- use UIRegistry.widgetOver
-    case maybeOver of
-        Just widgetId -> do
-            widget <- UIRegistry.lookupTypedM widgetId :: Command UIRegistry.State (Maybe (WidgetFile Model.Node))
-            return $ isJust widget
-        Nothing       -> return False
+isNodeUnderCursor = runMaybeT act >>= (return . isJust) where
+    act = do
+        (Just id) <- lift $ use UIRegistry.widgetOver
+        lift $ (UIRegistry.lookupTypedM id :: Command UIRegistry.State (Maybe (WidgetFile Label)))
+
+isNodeLabelUnderCursor :: Command UIRegistry.State Bool
+isNodeLabelUnderCursor = runMaybeT act >>= (\x -> return $ fromMaybe False x) where
+    act = do
+        (Just id) <- lift $ use UIRegistry.widgetOver
+        (Just w)  <- lift $ (UIRegistry.lookupTypedM id :: Command UIRegistry.State (Maybe (WidgetFile Label)))
+        (Just p)  <- return $ w ^. parent
+        (Just n)  <- lift $ (UIRegistry.lookupTypedM p :: Command UIRegistry.State (Maybe (WidgetFile Model.Node)))
+        exId <- lift $ Node.expressionId p
+        return $ id == exId
 
 startDrag :: Vector2 Int -> Command State ()
 startDrag coord = do
     shouldDrag <- zoom Global.uiRegistry isNodeUnderCursor
-    when shouldDrag $ do
+    shouldDrag' <- zoom Global.uiRegistry isNodeLabelUnderCursor
+    when (shouldDrag || shouldDrag') $ do
         Global.drag . Drag.history ?= (DragHistory coord coord coord)
 
 handleMove :: Vector2 Int -> Command State ()

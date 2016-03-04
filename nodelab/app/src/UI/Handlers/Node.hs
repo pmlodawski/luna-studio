@@ -33,6 +33,7 @@ import qualified Reactive.State.UIRegistry    as UIRegistry
 
 import           UI.Generic                   (defaultResize, startDrag)
 import           UI.Handlers.Generic          (triggerValueChanged)
+import           UI.Handlers.Button           (MousePressedHandler(..))
 import           UI.Handlers.Generic          (ValueChangedHandler (..), triggerValueChanged)
 import           UI.Layout                    as Layout
 import           UI.Widget.Group              ()
@@ -139,12 +140,14 @@ unselectAll = do
 dblClickHandler :: DblClickHandler Global.State
 dblClickHandler _ _ id = triggerEnterNodeHandler id
 
+selectNode evt id = do
+    triggerFocusNodeHandler id
+    UICmd.takeFocus id
+    handleSelection evt id
+
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyDown      .~ keyDownHandler
-                     & mousePressed .~ (\evt _ id -> do
-                         triggerFocusNodeHandler id
-                         UICmd.takeFocus id
-                         handleSelection evt id)
+                     & mousePressed .~ (\evt _ id -> selectNode evt id)
                      & dblClick     .~ dblClickHandler
 
 allNodes :: Command UIRegistry.State [WidgetFile Model.Node]
@@ -153,14 +156,20 @@ allNodes = UIRegistry.lookupAllM
 unselectNode :: WidgetId -> Command UIRegistry.State ()
 unselectNode = flip UICmd.update_ (Model.isSelected .~ False)
 
+
+onClicked h = addHandler (MousePressedHandler $ h) mempty
+
 instance ResizableWidget Model.Node
 instance CompositeWidget Model.Node where
     createWidget id model = do
         let label  = Style.expressionLabel $ model ^. Model.expression
-        UICmd.register id label def
+        UICmd.register id label $ onClicked (\evt _ -> selectNode evt id)
 
         let group  = Group.create & Group.position .~ Style.controlsPosition
         controlGroups <- UICmd.register id group Style.controlsLayout
+
+        let outPortControlGroup  = Group.create
+        UICmd.register id outPortControlGroup Style.controlsLayout
 
         let grp    = Group.create & Group.style   .~ Style.expandedGroupStyle
                                   & Group.visible .~ (model ^. Model.isExpanded)
@@ -222,6 +231,11 @@ portControlsGroupId id = do
     expGroup <- expandedGroupId id
     (_:controlsId:_) <- UICmd.children expGroup
     return controlsId
+
+outPortControlsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
+outPortControlsGroupId id = do
+    (_:_:groupId:_) <- UICmd.children id
+    return groupId
 
 nodeControlsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
 nodeControlsGroupId id = do

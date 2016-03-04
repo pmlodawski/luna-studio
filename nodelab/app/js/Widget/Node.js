@@ -22,16 +22,10 @@ nodeGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0));
 var expandedRadius  = 20.0;
 var collapsedRadius = 30.0;
 
-function Node(id, position, z, widgetId) {
+function Node(position, z, widgetId) {
   var _this = this;
 
-  this.id = id;
   this.position = position;
-
-  this.labelText = ":" + id;
-  this.valueText = "";
-  this.inputPorts  = [];
-  this.outputPorts = [];
 
   this.uniforms = {
     selected:          { type: 'i',  value:                               0 },
@@ -97,7 +91,6 @@ function Node(id, position, z, widgetId) {
   this.mesh.add(this.node);
   this.mesh.add(this.expandedNode);
   this.expandedNode.add(this.expandedNodeBkg);
-  this.mesh.userData.id = id;
   this.htmlContainer = document.createElement("div");
   $$.htmlCanvas.append(this.htmlContainer);
 
@@ -111,25 +104,7 @@ function Node(id, position, z, widgetId) {
   this.node.scale.x = this.collapsedNodeSize.x;
   this.node.scale.y = this.collapsedNodeSize.y;
 
-  this.setExpandedState(0.0);
 }
-
-Node.prototype.setExpandedState = function (expanded) {
-  this.expandedState = expanded;
-  this.expandedNode.visible = (expanded > 0.0);
-
-  var params = this.inputPorts.length;
-  var nodeSize = new THREE.Vector2();
-  nodeSize.x = (1.0 - expanded) * this.collapsedNodeSize.x + expanded * this.expandedNodeSize.x;
-  nodeSize.y = (1.0 - expanded) * this.collapsedNodeSize.y + expanded * this.expandedNodeSize.y + params * 25 - 75;
-
-  var radius = (1.0 - expanded) * collapsedRadius + expanded * expandedRadius;
-  this.expandedUniforms.nodeSize.value.copy(nodeSize);
-  this.expandedUniforms.radiusTop.value    = collapsedRadius;
-  this.expandedUniforms.radiusBottom.value = radius;
-  this.expandedNodeBkg.scale.x = nodeSize.x;
-  this.expandedNodeBkg.scale.y = nodeSize.y;
-};
 
 Node.prototype.setPending = function () {
   this.uniforms.alpha.value = 0.2;

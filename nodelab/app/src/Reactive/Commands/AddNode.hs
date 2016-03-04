@@ -139,10 +139,14 @@ displayPorts id node = do
     portControls <- UICmd.children groupId
     mapM_ UICmd.removeWidget portControls
 
+    outPortGroupId <- Node.outPortControlsGroupId id
+    outPortControls <- UICmd.children outPortGroupId
+    mapM_ UICmd.removeWidget outPortControls
+
     let newPorts = makePorts node
 
     forM_ newPorts $ \p -> UICmd.register id p def
-    forM_ (node ^. Node.ports) $ \p -> makePortControl node groupId (node ^. Node.nodeId) p
+    forM_ (node ^. Node.ports) $ \p -> makePortControl node outPortGroupId groupId (node ^. Node.nodeId) p
 
 nodeHandlers :: Node -> HTMap
 nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
@@ -177,11 +181,11 @@ updateNode node = do
 onValueChanged :: Typeable a => (a -> WidgetId -> Command Global.State ()) -> HTMap
 onValueChanged h = addHandler (ValueChangedHandler h) mempty
 
-makePortControl :: Node -> WidgetId -> NodeId -> Port -> Command UIRegistry.State ()
-makePortControl node parent nodeId port = let portRef = toAnyPortRef nodeId $ port ^. Port.portId in
+makePortControl :: Node -> WidgetId -> WidgetId -> NodeId -> Port -> Command UIRegistry.State ()
+makePortControl node outPortParent groupParent nodeId port = let portRef = toAnyPortRef nodeId $ port ^. Port.portId in
     case port ^. Port.portId of
-        InPortId  (Arg ix) -> makeInPortControl parent portRef port
-        OutPortId All      -> when (node ^. isLiteral) $ makeInPortControl parent portRef port
+        InPortId  (Arg ix) -> makeInPortControl groupParent portRef port
+        OutPortId All      -> when (node ^. isLiteral) $ makeInPortControl outPortParent portRef port
         _ -> return ()
 
 makeInPortControl :: WidgetId -> AnyPortRef -> Port -> Command UIRegistry.State ()

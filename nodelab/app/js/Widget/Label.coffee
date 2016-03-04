@@ -15,8 +15,29 @@ class Label extends BaseWidget
 
     @alignment = 'Left'
     @text = ""
-    @uniforms = {}
+
+    @uniforms =
+      size:      { type: 'v2', value: new THREE.Vector2(width, height) }
+      objectId:  { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
+      color:     { type: 'v4', value: new THREE.Vector4(1.0, 0, 0, 0.0) }
+      radius:    { type: 'v4', value: new THREE.Vector4(0.0, 0.0, 0.0, 0.0) }
     @uniforms[k] = v for k, v of $$.commonUniforms
+
+    bgMesh = new THREE.PlaneBufferGeometry(1, 1)
+    bgMesh.applyMatrix( new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0))
+
+    @bg = new THREE.Mesh bgMesh, new THREE.ShaderMaterial
+        uniforms:       @uniforms
+        vertexShader:   require('shaders/sdf.vert')()
+        fragmentShader: require('shaders/generic_bg.frag')()
+        transparent:    true
+        blending:       THREE.NormalBlending
+        side:           THREE.DoubleSide
+        derivatives:    true
+
+    @mesh.add @bg
+
+    @bg.scale.set(width, height, 1.0);
 
   setAlignment: (align) ->
     @alignment = align
@@ -45,8 +66,10 @@ class Label extends BaseWidget
         when 'Right'  then  @width - width
         when 'Center' then (@width - width) / 2.0
         else throw 'Invalid text alignment'
-
       @mesh.add @label
+
+      @bg.position.x = @label.position.x
+      @bg.scale.x = width
 
   relayout: ->
     super
