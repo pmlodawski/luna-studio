@@ -1,6 +1,5 @@
-FROM kfigiela/nodelab-env:latest
+FROM luna/base:latest
 MAINTAINER kamil.figiela@gmail.com
-
 
 COPY env /etc/nodelab
 
