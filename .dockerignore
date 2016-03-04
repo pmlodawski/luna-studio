@@ -1,16 +1,7 @@
-build_7.10
+build
 nodelab
 !nodelab/www
-docs
-get-stack.sh
-init_repo.py
 libs
-nix
-prebuild.sh
-repair_libs.sh
-repo_manager
-samples
 scripts
 stdlib
-third-party
 tools
