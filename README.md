@@ -68,6 +68,9 @@ $ cd $REPO_DIR/nodelab
 $ brunch watch --server # or serve $REPO_DIR/nodelab/www using any HTTP server
 ```
 
+### Building Docker images
+
+Push to `docker/TAG` branch to build docker image and upload it to `lunalang/luna:TAG` at Docker Hub.
 
 ## Utility scripts
 
