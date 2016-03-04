@@ -109,10 +109,10 @@ disconnectMessage workspace (src, dst) = WebMessage Topic.disconnectRequest $ en
 disconnectNodes :: Workspace -> [(OutPortRef, InPortRef)] -> IO ()
 disconnectNodes workspace connections = sendMany $ (disconnectMessage workspace) <$> connections
 
-setDefaultValue :: Workspace -> InPortRef -> DefaultValue.PortDefault -> IO ()
-setDefaultValue workspace inPortRef val = sendRequest topic body where
+setDefaultValue :: Workspace -> AnyPortRef -> DefaultValue.PortDefault -> IO ()
+setDefaultValue workspace portRef val = sendRequest topic body where
     topic = Topic.setDefaultValueRequest
-    body = (withLibrary workspace SetDefaultValue.Request) (InPortRef' inPortRef) val
+    body = (withLibrary workspace SetDefaultValue.Request) portRef val
 
 setInputNodeType :: Workspace -> NodeId -> Text -> IO ()
 setInputNodeType workspace id tpe = sendRequest topic body where

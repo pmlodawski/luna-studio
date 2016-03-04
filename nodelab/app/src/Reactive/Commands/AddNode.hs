@@ -106,7 +106,7 @@ makePorts node = makePort <$> ports where
         portRef = toAnyPortRef nodeId portId
         angle   = portDefaultAngle (portCount portId) (port ^. Port.portId)
         portId  = port ^. Port.portId
-        isOnly  = isLiteral
+        isOnly  = node ^. isLiteral
     ports = Map.elems $ node ^. Node.ports
     portIds = Map.keys $  node ^. Node.ports
     portCount :: PortId -> Int
@@ -119,10 +119,16 @@ makePorts node = makePort <$> ports where
         isIn (OutPortId _) = 0
         isIn (InPortId (Arg _)) = 1
         isIn (InPortId Self) = 0
-    isLiteral = 0 == (sum $ fmap isIn' portIds) where
+
+isLiteral :: Getter Node Bool
+isLiteral = to $ isLiteral' where
+    isLiteral' node = (0 == (sum $ fmap isIn' portIds)) where
+        portIds = Map.keys $ node ^. Node.ports
         isIn' :: PortId -> Int
         isIn' (OutPortId _) = 0
         isIn' (InPortId  _) = 1
+
+
 displayPorts :: WidgetId -> Node -> Command UIRegistry.State ()
 displayPorts id node = do
     nodeId <- UICmd.get id Model.nodeId
@@ -136,7 +142,7 @@ displayPorts id node = do
     let newPorts = makePorts node
 
     forM_ newPorts $ \p -> UICmd.register id p def
-    forM_ (node ^. Node.ports) $ \p -> makePortControl groupId (node ^. Node.nodeId) p
+    forM_ (node ^. Node.ports) $ \p -> makePortControl node groupId (node ^. Node.nodeId) p
 
 nodeHandlers :: Node -> HTMap
 nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
@@ -171,65 +177,67 @@ updateNode node = do
 onValueChanged :: Typeable a => (a -> WidgetId -> Command Global.State ()) -> HTMap
 onValueChanged h = addHandler (ValueChangedHandler h) mempty
 
-makePortControl :: WidgetId -> NodeId -> Port -> Command UIRegistry.State ()
-makePortControl parent nodeId port = case port ^. Port.portId of
-    InPortId (Arg ix) -> makeInPortControl parent nodeId (Arg ix) port
-    _ -> return ()
+makePortControl :: Node -> WidgetId -> NodeId -> Port -> Command UIRegistry.State ()
+makePortControl node parent nodeId port = let portRef = toAnyPortRef nodeId $ port ^. Port.portId in
+    case port ^. Port.portId of
+        InPortId  (Arg ix) -> makeInPortControl parent portRef port
+        OutPortId All      -> when (node ^. isLiteral) $ makeInPortControl parent portRef port
+        _ -> return ()
 
-makeInPortControl :: WidgetId -> NodeId -> InPort -> Port -> Command UIRegistry.State ()
-makeInPortControl parent nodeId inPort port = case port ^. Port.state of
+makeInPortControl :: WidgetId -> AnyPortRef -> Port -> Command UIRegistry.State ()
+makeInPortControl parent portRef port = case port ^. Port.state of
     Port.NotConnected    -> do
         let group = Group.create & Group.style . Group.padding .~ Style.Padding 0.0 0.0 0.0 Style.setLabelOffsetX
         groupId <- UICmd.register parent group (Layout.horizontalLayoutHandler 0.0)
-        let label  = Label.create Style.setLabelSize (Text.pack $ show inPort)
+        let label  = Label.create Style.setLabelSize (Text.pack $ port ^. Port.name)
                    & Label.position . x .~ Style.setLabelOffsetX
             button = Button.create Style.setButtonSize "not set"
             handlers = addHandler (Button.ClickedHandler $ \_ -> do
                 workspace <- use Global.workspace
-                performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.IntValue def)
+                performIO $ BatchCmd.setDefaultValue workspace portRef (DefaultValue.Constant $ DefaultValue.IntValue def)
                 ) mempty
 
         UICmd.register_ groupId label def
         UICmd.register_ groupId button handlers
     Port.Connected       -> do
-        let widget = Label.create (Style.portControlSize & x -~ Style.setLabelOffsetX) (Text.pack $ show inPort <> " (connected)")
+        let widget = Label.create (Style.portControlSize & x -~ Style.setLabelOffsetX) (Text.pack $ (port ^. Port.name) <> " (connected)")
                    & Label.position . x .~ Style.setLabelOffsetX
         void $ UICmd.register parent widget def
     Port.WithDefault def -> void $ case port ^. Port.valueType . ValueType.toEnum of
         ValueType.DiscreteNumber -> do
-            let label = show inPort
+            let label = port ^. Port.name
                 value = fromMaybe 0 $ def ^? DefaultValue._Constant . DefaultValue._IntValue
-                widget = DiscreteNumber.create Style.portControlSize (Text.pack $ show inPort) value
+                widget = DiscreteNumber.create Style.portControlSize (Text.pack $ label) value
                 handlers = onValueChanged $ \val _ -> do
                     workspace <- use Global.workspace
-                    performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.IntValue val)
+                    performIO $ BatchCmd.setDefaultValue workspace portRef (DefaultValue.Constant $ DefaultValue.IntValue val)
             UICmd.register parent widget handlers
         ValueType.ContinuousNumber -> do
-            let label = show inPort
+            let label = port ^. Port.name
                 value = fromMaybe 0.0 $ def ^? DefaultValue._Constant . DefaultValue._DoubleValue
-                widget = ContinuousNumber.create Style.portControlSize (Text.pack $ show inPort) value
+                widget = ContinuousNumber.create Style.portControlSize (Text.pack $ label) value
                 handlers = onValueChanged $ \val _ -> do
                     workspace <- use Global.workspace
-                    performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.DoubleValue val)
+                    performIO $ BatchCmd.setDefaultValue workspace portRef (DefaultValue.Constant $ DefaultValue.DoubleValue val)
             UICmd.register parent widget handlers
         ValueType.String -> do
-            let label = show inPort
+            let label = port ^. Port.name
                 value = fromMaybe "" $ def ^? DefaultValue._Constant . DefaultValue._StringValue
-                widget = LabeledTextBox.create Style.portControlSize (Text.pack $ show inPort) (Text.pack $ value)
+                widget = LabeledTextBox.create Style.portControlSize (Text.pack $ label) (Text.pack $ value)
                 handlers = onValueChanged $ \val _ -> do
                     workspace <- use Global.workspace
-                    performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.StringValue $ Text.unpack val)
+                    performIO $ BatchCmd.setDefaultValue workspace portRef (DefaultValue.Constant $ DefaultValue.StringValue $ Text.unpack val)
             UICmd.register parent widget handlers
         ValueType.Bool -> do
-            let label = show inPort
+            let label = port ^. Port.name
                 value = fromMaybe True $ def ^? DefaultValue._Constant . DefaultValue._BoolValue
-                widget = Toggle.create Style.portControlSize (Text.pack $ show inPort) value
+                widget = Toggle.create Style.portControlSize (Text.pack $ label) value
                 handlers = onValueChanged $ \val _ -> do
                     workspace <- use Global.workspace
-                    performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.BoolValue val)
+                    performIO $ BatchCmd.setDefaultValue workspace portRef (DefaultValue.Constant $ DefaultValue.BoolValue val)
             UICmd.register parent widget handlers
         ValueType.Other -> do
-            let widget = Label.create Style.portControlSize (Text.pack $ show inPort <> " :: " <> (show $ port ^. Port.valueType) )
+            let widget = Label.create Style.portControlSize (Text.pack $ (port ^. Port.name) <> " :: " <> (show $ port ^. Port.valueType) )
             UICmd.register parent widget mempty
 
 
