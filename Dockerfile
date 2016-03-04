@@ -1,4 +1,4 @@
-FROM luna/base:latest
+FROM lunalang/base:latest
 MAINTAINER kamil.figiela@gmail.com
 
 COPY env /etc/nodelab
