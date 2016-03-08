@@ -6,12 +6,8 @@ var features = require('features');
 var vs = require('shaders/sdf.vert')();
 var fs = require('shaders/node.frag')();
 
-var evs = require('shaders/expandedNode.vert')();
-var efs = require('shaders/expandedNode.frag')();
-
 var insideColor     = new THREE.Color(0x1a1a1a);
 var unselectedColor = new THREE.Color(0x3a3a3a);
-var expandedColor   = new THREE.Color(0x202020);
 var selectedColor   = new THREE.Color(0xb87410).multiplyScalar(0.8);
 var focusedColor    = new THREE.Color(0xc85808).multiplyScalar(0.8);
 
@@ -19,7 +15,6 @@ var nodeGeometry    = new THREE.PlaneBufferGeometry(1.0, 1.0);
 nodeGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0));
 
 
-var expandedRadius  = 20.0;
 var collapsedRadius = 30.0;
 
 function Node(position, z, widgetId) {
@@ -31,7 +26,7 @@ function Node(position, z, widgetId) {
     selected:          { type: 'i',  value:                               0 },
     mouseDist:         { type: 'f',  value:                             0.0 },
     expanded:          { type: 'f',  value:                             0.0 },
-    size:              { type: 'v2', value: new THREE.Vector2(60.0, 60.0) },
+    size:              { type: 'v2', value:   new THREE.Vector2(60.0, 60.0) },
     radiusTop:         { type: 'f',  value:                 collapsedRadius },
     radiusBottom:      { type: 'f',  value:                 collapsedRadius },
     insideColor:       { type: 'c',  value:                     insideColor },
@@ -40,16 +35,6 @@ function Node(position, z, widgetId) {
     focusedColor:      { type: 'c',  value:                    focusedColor },
     alpha:             { type: 'f',  value:                             1.0 },
     objectId:          { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
-  };
-
-  this.expandedUniforms = {
-    selected: this.uniforms.selected,
-    expanded: this.uniforms.expanded,
-    nodeSize:          { type: 'v2', value: new THREE.Vector2( 60.0,  60.0) },
-    expandedColor:     { type: 'c',  value: expandedColor },
-    objectId: this.uniforms.objectId,
-    radiusTop:         { type: 'f',  value: collapsedRadius },
-    radiusBottom:      { type: 'f',  value: collapsedRadius }
   };
 
   Object.keys($$.commonUniforms).forEach(function (k) {
@@ -72,50 +57,21 @@ function Node(position, z, widgetId) {
   this.node.position.set(-30, -30, 0);
 
   this.expandedNode = new THREE.Group();
-  this.container    = this.mesh; //this.expandedNode;
-
-  this.expandedNodeBkg = new THREE.Mesh(
-    nodeGeometry,
-    new THREE.ShaderMaterial( {
-      uniforms:       this.expandedUniforms,
-      vertexShader:   evs,
-      fragmentShader: efs,
-      transparent:    true,
-      blending:       THREE.NormalBlending,
-      side:           THREE.DoubleSide
-    })
-  );
-  this.expandedNode.position.set(-30, -30, 0);
-  this.expandedNodeBkg.position.set(0, 0, -0.000005);
-
+  this.container    = this.mesh;
   this.mesh.add(this.node);
-  this.mesh.add(this.expandedNode);
-  this.expandedNode.add(this.expandedNodeBkg);
-  this.htmlContainer = document.createElement("div");
-  $$.htmlCanvas.append(this.htmlContainer);
-
-  this.htmlElements = {};
-  this.moveTo(position.x, position.y);
-  // this.updateMouse(position.x - 1000.0, position.y - 1000.0);
 
   this.collapsedNodeSize = new THREE.Vector2(60.0, 60.0);
-  this.expandedNodeSize  = new THREE.Vector2(200.0, 180.0);
 
   this.node.scale.x = this.collapsedNodeSize.x;
   this.node.scale.y = this.collapsedNodeSize.y;
+
+  this.mesh.position.x = position.x;
+  this.mesh.position.y = position.y;
 
 }
 
 Node.prototype.setPending = function () {
   this.uniforms.alpha.value = 0.2;
-};
-
-Node.prototype.setExpandedStateBool = function(expanded) {
-  if (expanded) {
-    this.setExpandedState(1.0);
-  } else {
-    this.setExpandedState(0.0);
-  }
 };
 
 Node.prototype.selected = function (val) {
@@ -130,17 +86,6 @@ Node.prototype.selected = function (val) {
   return this.uniforms.selected.value;
 };
 
-Node.prototype.moveTo = function (a, b) {
-  var vec = new THREE.Vector2(a, b);
-
-  this.position.x = vec.x;
-  this.position.y = vec.y;
-
-  this.mesh.position.x = vec.x;
-  this.mesh.position.y = vec.y;
-
-  $(this.htmlContainer).css({left: vec.x, top: vec.y});
-};
 
 Node.prototype.setZPos = function (z) {
   this.mesh.position.z = z;
