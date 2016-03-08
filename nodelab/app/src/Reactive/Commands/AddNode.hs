@@ -185,7 +185,7 @@ makePortControl :: Node -> WidgetId -> WidgetId -> NodeId -> Port -> Command UIR
 makePortControl node outPortParent groupParent nodeId port = let portRef = toAnyPortRef nodeId $ port ^. Port.portId in
     case port ^. Port.portId of
         InPortId  (Arg ix) -> makeInPortControl groupParent portRef port
-        OutPortId All      -> when (node ^. isLiteral) $ makeInPortControl outPortParent portRef port
+        OutPortId All      -> when (node ^. isLiteral) $ makeInPortControl groupParent portRef port -- TODO: change groupParent to outPortParent
         _ -> return ()
 
 makeInPortControl :: WidgetId -> AnyPortRef -> Port -> Command UIRegistry.State ()
