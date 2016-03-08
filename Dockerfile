@@ -18,3 +18,7 @@ EXPOSE 80 8088 9001
 COPY nodelab/www /usr/share/nodelab/gui
 
 COPY dist/bin /usr/local/bin/nodelab
+
+COPY userdata /userdata
+
+VOLUME ["/userdata"]
