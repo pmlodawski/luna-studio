@@ -91,10 +91,8 @@ Node.prototype.setZPos = function (z) {
   this.mesh.position.z = z;
 };
 
-Node.prototype.destructor = function (){
-  this.htmlContainer.parentNode.removeChild(this.htmlContainer);
-};
+Node.prototype.destructor = function () {};
 
-Node.prototype.redrawTextures = function() {};
+Node.prototype.redrawTextures = function () {};
 
 module.exports = Node;

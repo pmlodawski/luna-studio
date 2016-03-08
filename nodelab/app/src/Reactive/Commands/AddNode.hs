@@ -3,6 +3,7 @@ module Reactive.Commands.AddNode
     ( addNode
     , updateNode
     , updateNodeValue
+    , updateNodeProfilingData
     ) where
 
 import           Utils.PreludePlus
@@ -299,3 +300,8 @@ updateNodeValue id val = inRegistry $ do
         UICmd.update_ widgetId $ Model.value .~ nodeValueToText val
         removeVisualization widgetId
         visualizeNodeValue widgetId val
+
+updateNodeProfilingData :: NodeId -> Integer -> Command State ()
+updateNodeProfilingData id execTime = inRegistry $ do
+    widgetId <- nodeIdToWidgetId id
+    withJust widgetId $ flip UICmd.update_ $ Model.execTime ?~ execTime

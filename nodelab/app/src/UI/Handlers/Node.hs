@@ -191,9 +191,13 @@ instance CompositeWidget Model.Node where
         let label  = Style.valueLabel ""
         UICmd.register controlGroups label def
 
+
         let group  = Group.create & Group.style   .~ Style.visualizationGroupStyle
                                   & Group.visible .~ (model ^. Model.isExpanded)
         UICmd.register_ controlGroups group (Layout.verticalLayoutHandler 0.0)
+
+        let label  = Style.execTimeLabel ""
+        void $ UICmd.register id label def
 
     updateWidget id old model = do
         controlsId <- expandedGroupId id
@@ -202,6 +206,8 @@ instance CompositeWidget Model.Node where
         valueId    <- valueLabelId    id
         valueVisId <- valueGroupId    id
         typeTbId   <- typeTextBoxId   id
+        etId       <- execTimeLabelId id
+
 
         UICmd.update_ controlsId $ Group.visible .~ (model ^. Model.isExpanded)
         UICmd.update_ valueVisId $ Group.visible .~ (model ^. Model.isExpanded)
@@ -211,6 +217,11 @@ instance CompositeWidget Model.Node where
         withJust (model ^. Model.tpe) $ \tpe -> do
             withJust typeTbId $ \typeTbId -> UICmd.update_ typeTbId $ LabeledTextBox.value .~ tpe
 
+        let (etPos, etAlign)   = if (model ^. Model.isExpanded) then (Style.execTimeExpandedPos,  Style.execTimeExpandedAlign)
+                                                                else (Style.execTimeCollapsedPos, Style.execTimeCollapsedAlign)
+        UICmd.move etId etPos
+        UICmd.update_ etId $ Label.alignment .~ etAlign
+        UICmd.update_ etId $ Label.label     .~ (fromMaybe "" $ (<> " ms") <$> (Text.pack . show) <$> model ^. Model.execTime)
 
 -- Node widget structure:
 -- Node:
@@ -278,3 +289,8 @@ valueLabelId id = do
     (_:groupId:_) <- UICmd.children id
     (_:valLabelId:_) <- UICmd.children groupId
     return valLabelId
+
+execTimeLabelId :: WidgetId -> Command UIRegistry.State WidgetId
+execTimeLabelId id = do
+    (_:_:_:etId:_) <- UICmd.children id
+    return etId

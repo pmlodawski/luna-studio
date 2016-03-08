@@ -30,19 +30,28 @@ data Node = Node { _nodeId     :: Int
                  , _isExpanded :: Bool
                  , _isSelected :: Bool
                  , _isFocused  :: Bool
+                 , _execTime   :: Maybe Integer
                  } deriving (Eq, Show, Typeable, Generic)
 
 makeLenses ''Node
 instance ToJSON Node
 
+makeNode :: Int -> Position -> Text -> Text -> Maybe Text -> Node
+makeNode id pos expr name tpe = Node id [] [] pos 0.0 expr name "" tpe False False False Nothing
+
 fromNode :: N.Node -> Node
-fromNode n = case n ^. N.nodeType of
-    N.ExpressionNode expression -> Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 expression (n ^. N.name) "" Nothing False False False
-    N.InputNode inputIx         -> Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 (Text.pack $ "Input " <> show inputIx) (n ^. N.name) "" (Just tpe) False False False where
-        tpe = Text.pack $ fromMaybe "?" $ show <$> n ^? N.ports . ix (P.OutPortId P.All) . P.valueType
-    N.OutputNode outputIx       -> Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 (Text.pack $ "Output " <> show outputIx) (n ^. N.name) "" Nothing False False False
-    N.ModuleNode                -> Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 "Module"              (n ^. N.name) "" Nothing False False False
-    N.FunctionNode tpeSig       -> Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 "Function"            (n ^. N.name) (Text.pack $ intercalate " -> " tpeSig) Nothing False False False
+fromNode n = let position' = uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position
+                 nodeId'   = n ^. N.nodeId
+                 name'     = n ^. N.name
+    in
+    case n ^. N.nodeType of
+        N.ExpressionNode expression ->  makeNode nodeId' position' expression name' Nothing
+        N.InputNode inputIx         ->  makeNode nodeId' position' (Text.pack $ "Input " <> show inputIx) name' (Just tpe) where
+            tpe = Text.pack $ fromMaybe "?" $ show <$> n ^? N.ports . ix (P.OutPortId P.All) . P.valueType
+        N.OutputNode outputIx       ->  makeNode nodeId' position' (Text.pack $ "Output " <> show outputIx) name' Nothing
+        N.ModuleNode                ->  makeNode nodeId' position' "Module"    name' Nothing
+        N.FunctionNode tpeSig       -> (makeNode nodeId' position' "Function"  name' Nothing) & value .~ (Text.pack $ intercalate " -> " tpeSig)
+
 
 instance IsDisplayObject Node where
     widgetPosition = position

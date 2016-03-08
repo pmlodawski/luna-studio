@@ -6,7 +6,7 @@ import qualified Batch.Workspace                     as Workspace
 import           Event.Batch                         (Event (..))
 import qualified Event.Batch                         as Batch
 import qualified Event.Event                         as Event
-import           Reactive.Commands.AddNode           (addNode, updateNode, updateNodeValue)
+import           Reactive.Commands.AddNode           (addNode, updateNode, updateNodeValue, updateNodeProfilingData)
 import           Reactive.Commands.Camera            (autoZoom)
 import           Reactive.Commands.Command           (Command, performIO)
 import           Reactive.Commands.DisconnectNodes   (disconnect)
@@ -81,7 +81,9 @@ toAction (Event.Batch ev) = Just $ case ev of
 
     NodeResultUpdated response -> do
         shouldProcess <- isCurrentLocation (response ^. NodeResultUpdate.location)
-        when shouldProcess $ updateNodeValue (response ^. NodeResultUpdate.nodeId) (response ^. NodeResultUpdate.value)
+        when shouldProcess $ do
+            updateNodeValue         (response ^. NodeResultUpdate.nodeId) (response ^. NodeResultUpdate.value)
+            updateNodeProfilingData (response ^. NodeResultUpdate.nodeId) (response ^. NodeResultUpdate.execTime)
 
     NodeSearcherUpdated update -> do
         shouldProcess <- isCurrentLocation (update ^. NodeSearcherUpdate.location)
