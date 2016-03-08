@@ -4,48 +4,57 @@
 
 module Empire.Server where
 
-import           Control.Concurrent.STM.TChan  (TChan, newTChan, readTChan)
-import           Control.Concurrent            (forkIO)
-import           Control.Monad                 (forever)
-import           Control.Monad.State           (StateT, evalStateT)
-import           Control.Monad.STM             (atomically)
-import           Data.ByteString               (ByteString)
-import           Data.ByteString.Char8         (unpack)
-import qualified Data.Map.Strict               as Map
+import           Control.Concurrent.STM.TChan      (TChan, newTChan, readTChan)
+import           Control.Concurrent                (forkIO)
+import           Control.Monad                     (forever)
+import           Control.Monad.State               (StateT, evalStateT)
+import           Control.Monad.STM                 (atomically)
+import           Data.ByteString                   (ByteString)
+import           Data.ByteString.Char8             (unpack)
+import qualified Data.Map.Strict                   as Map
+import qualified Data.Binary                       as Bin
+import           Data.ByteString.Lazy              (toStrict)
 
-import           Empire.API.Data.AsyncUpdate   (AsyncUpdate (..))
-import qualified Empire.API.Topic              as Topic
-import qualified Empire.API.Graph.NodeUpdate   as NodeUpdate
+import           Empire.API.Data.AsyncUpdate       (AsyncUpdate (..))
+import qualified Empire.API.Topic                  as Topic
+import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
+import qualified Empire.API.Control.EmpireStarted  as EmpireStarted
 
-import qualified Empire.Commands.Library       as Library
-import qualified Empire.Commands.Project       as Project
-import qualified Empire.Empire                 as Empire
-import           Empire.Env                    (Env)
-import qualified Empire.Env                    as Env
-import qualified Empire.Handlers               as Handlers
-import qualified Empire.Server.Server          as Server
-import qualified Empire.Utils                  as Utils
-import           Flowbox.Bus.Bus               (Bus)
-import qualified Flowbox.Bus.Bus               as Bus
-import           Flowbox.Bus.BusT              (BusT (..))
-import qualified Flowbox.Bus.BusT              as BusT
-import qualified Flowbox.Bus.Data.Flag         as Flag
-import           Flowbox.Bus.Data.Message      (Message)
-import qualified Flowbox.Bus.Data.Message      as Message
-import           Flowbox.Bus.Data.MessageFrame (MessageFrame (MessageFrame))
-import           Flowbox.Bus.Data.Topic        (Topic)
-import           Flowbox.Bus.EndPoint          (BusEndPoints)
+import qualified Empire.Commands.Library           as Library
+import qualified Empire.Commands.Project           as Project
+import qualified Empire.Empire                     as Empire
+import           Empire.Env                        (Env)
+import qualified Empire.Env                        as Env
+import qualified Empire.Handlers                   as Handlers
+import qualified Empire.Server.Server              as Server
+import qualified Empire.Utils                      as Utils
+import           Flowbox.Bus.Bus                   (Bus)
+import qualified Flowbox.Bus.Bus                   as Bus
+import           Flowbox.Bus.BusT                  (BusT (..))
+import qualified Flowbox.Bus.BusT                  as BusT
+import qualified Flowbox.Bus.Data.Flag             as Flag
+import           Flowbox.Bus.Data.Message          (Message)
+import qualified Flowbox.Bus.Data.Message          as Message
+import           Flowbox.Bus.Data.MessageFrame     (MessageFrame (MessageFrame))
+import           Flowbox.Bus.Data.Topic            (Topic)
+import           Flowbox.Bus.EndPoint              (BusEndPoints)
 import           Flowbox.Prelude
-import qualified Flowbox.System.Log.Logger     as Logger
+import qualified Flowbox.System.Log.Logger         as Logger
 
 
 logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)
 
+sendStarted :: BusEndPoints -> IO ()
+sendStarted endPoints = do
+    let content = toStrict . Bin.encode $ EmpireStarted.Status
+    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.controlEmpireStarted content
+
 run :: BusEndPoints -> [Topic] -> Bool -> IO (Either Bus.Error ())
 run endPoints topics formatted = do
     logger Logger.info $ "Subscribing to topics: " <> show topics
     logger Logger.info $ (Utils.display formatted) endPoints
+    sendStarted endPoints
     toBusChan      <- atomically newTChan
     fromEmpireChan <- atomically newTChan
     let env = Env.make toBusChan fromEmpireChan

@@ -19,6 +19,7 @@ import qualified Reactive.Plugins.Core.Action.Drag                   as Drag
 import qualified Reactive.Plugins.Core.Action.Connect                as Connect
 import qualified Reactive.Plugins.Core.Action.NodeSearcher           as NodeSearcher
 import qualified Reactive.Plugins.Core.Action.Widget                 as Widget
+import qualified Reactive.Plugins.Core.Action.Backend.Control        as Control
 import qualified Reactive.Plugins.Core.Action.Backend.Graph          as Graph
 import qualified Reactive.Plugins.Core.Action.Backend.ProjectManager as ProjectManager
 import qualified Reactive.Plugins.Core.Action.ConnectionPen          as ConnectionPen
@@ -42,6 +43,7 @@ toTransformer cmd (_, a) = execCommand cmd a
 
 
 actions =  [ Debug.toActionEv
+           , Control.toAction
            , Widget.toAction
            , General.toAction
            , Camera.toAction

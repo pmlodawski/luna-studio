@@ -1,11 +1,12 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Empire.API.JSONInstances where
 
-import           Data.Aeson.Types                  (FromJSON, ToJSON, toJSON)
-import           Data.Map.Lazy                     (Map)
-import qualified Data.Map.Lazy                     as Map
+import           Data.Aeson.Types                    (FromJSON, ToJSON, toJSON)
+import           Data.Map.Lazy                       (Map)
+import qualified Data.Map.Lazy                       as Map
 import           Prologue
 
+import           Empire.API.Control.EmpireStarted    as EmpireStarted
 import           Empire.API.Data.Breadcrumb          as Breadcrumb
 import           Empire.API.Data.Connection          as Connection
 import           Empire.API.Data.DefaultValue        as DefaultValue
@@ -25,13 +26,13 @@ import           Empire.API.Graph.Connect            as Connect
 import           Empire.API.Graph.Disconnect         as Disconnect
 import           Empire.API.Graph.GetProgram         as GetProgram
 import           Empire.API.Graph.NodeResultUpdate   as NodeResultUpdate
+import           Empire.API.Graph.NodeSearcherUpdate as NodeSearcherUpdate
 import           Empire.API.Graph.NodeUpdate         as NodeUpdate
 import           Empire.API.Graph.RemoveNode         as RemoveNode
 import           Empire.API.Graph.RenameNode         as RenameNode
 import           Empire.API.Graph.SetDefaultValue    as SetDefaultValue
 import           Empire.API.Graph.SetInputNodeType   as SetInputNodeType
 import           Empire.API.Graph.UpdateNodeMeta     as UpdateNodeMeta
-import           Empire.API.Graph.NodeSearcherUpdate as NodeSearcherUpdate
 import           Empire.API.Library.CreateLibrary    as CreateLibrary
 import           Empire.API.Library.ListLibraries    as ListLibraries
 import           Empire.API.Project.CreateProject    as CreateProject
@@ -121,3 +122,5 @@ instance ToJSON NodeSearcher.LunaModule
 instance ToJSON NodeSearcher.Item
 
 instance ToJSON NodeSearcherUpdate.Update
+
+instance ToJSON EmpireStarted.Status

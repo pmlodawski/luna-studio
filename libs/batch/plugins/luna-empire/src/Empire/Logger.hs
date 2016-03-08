@@ -4,6 +4,7 @@
 
 module Empire.Logger where
 
+import           Prologue
 import           Control.Monad                     (forever)
 import           Control.Monad.State               (StateT, evalStateT)
 import qualified Data.Binary                       as Bin
@@ -12,6 +13,8 @@ import           Data.ByteString.Char8             (unpack)
 import           Data.ByteString.Lazy              (fromStrict, toStrict)
 import           Data.Map.Strict                   (Map)
 import qualified Data.Map.Strict                   as Map
+
+import qualified Empire.API.Control.EmpireStarted  as EmpireStarted
 import qualified Empire.API.Graph.AddNode          as AddNode
 import qualified Empire.API.Graph.CodeUpdate       as CodeUpdate
 import qualified Empire.API.Graph.Connect          as Connect
@@ -35,6 +38,7 @@ import           Empire.Env                        (LoggerEnv)
 import qualified Empire.Env                        as Env
 import qualified Empire.Handlers                   as Handlers
 import qualified Empire.Utils                      as Utils
+
 import qualified Flowbox.Bus.Bus                   as Bus
 import           Flowbox.Bus.BusT                  (BusT (..))
 import qualified Flowbox.Bus.BusT                  as Bus
@@ -43,7 +47,6 @@ import           Flowbox.Bus.Data.MessageFrame     (MessageFrame (MessageFrame))
 import           Flowbox.Bus.Data.Topic            (Topic)
 import           Flowbox.Bus.EndPoint              (BusEndPoints)
 import qualified Flowbox.System.Log.Logger         as Logger
-import           Prologue
 
 
 logger :: Logger.LoggerIO
@@ -121,6 +124,7 @@ loggFormattersMap = Map.fromList
     , (Topic.setDefaultValueRequest, \display content -> display (Bin.decode . fromStrict $ content :: SetDefaultValue.Request))
     , (Topic.logEnvDebug,            \display content -> "Log environment")
     , (Topic.logEnvDebugGraphViz,    \display content -> "Dump graphviz")
+    , (Topic.controlEmpireStarted,   \display content -> "Luna empire started")
     ]
 
 defaultLogFormatter :: LogFormatter

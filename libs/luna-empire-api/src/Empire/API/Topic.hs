@@ -57,3 +57,5 @@ logEnvDebug            = "empire.environment.debug"
 logEnvDebugGraphViz    = "empire.environment.debug.graphviz.request"
 
 typecheck              = "empire.environment.debug.typecheck.request"
+
+controlEmpireStarted   = "empire.control.started.status"
