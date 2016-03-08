@@ -9,7 +9,7 @@ import           Empire.API.Data.DefaultValue  (Value)
 
 data Update = Update { _location  :: GraphLocation
                      , _nodeId    :: NodeId
-                     , _value     :: Value
+                     , _value     :: Maybe Value
                      , _execTime  :: Integer
                      } deriving (Generic, Show, Eq)
 

@@ -131,7 +131,7 @@ getTypeRep :: ASTOp m => NodeRef -> m ValueType
 getTypeRep tp = do
     tpNode <- Builder.read tp
     caseTest (uncover tpNode) $ do
-        of' $ \(Cons (Lit.String s)) -> return $ TypeIdent s
+        of' $ \(Cons (Lit.String s) _) -> return $ TypeIdent s
         of' $ \ANY -> return AnyType
 
 buildPorts :: NodeRef -> Command Graph [Port]

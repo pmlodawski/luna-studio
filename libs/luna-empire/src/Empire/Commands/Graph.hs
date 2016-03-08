@@ -59,7 +59,11 @@ import           Luna.Compilation.Pass.Inference.Unification     (UnificationPas
 import           Luna.Compilation.Pass.Inference.Calling         (FunctionCallingPass (..))
 import           Luna.Compilation.Pass.Inference.Importing       (SymbolImportingPass (..))
 import           Luna.Compilation.Pass.Inference.Scan            (ScanPass (..))
+
+import qualified Luna.Compilation.Pass.Interpreter.Interpreter   as Interpreter
+
 import qualified Empire.ASTOp as ASTOp
+import           Empire.Data.AST                                 (AST, NodeRef)
 
 addNode :: GraphLocation -> Text -> NodeMeta -> Empire Node
 addNode loc expr meta = withGraph loc $ do
@@ -68,6 +72,7 @@ addNode loc expr meta = withGraph loc $ do
     zoom Graph.ast $ AST.writeMeta refNode meta
     Graph.nodeMapping . at newNodeId ?= refNode
     runTC
+    val <- getNodeValue newNodeId
     GraphBuilder.buildNode newNodeId
 
 removeNode :: GraphLocation -> NodeId -> Empire ()
@@ -90,6 +95,8 @@ connect loc (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) = withGraph
         Self    -> makeAcc srcNodeId dstNodeId
         Arg num -> makeApp srcNodeId dstNodeId num
     runTC
+    val <- getNodeValue dstNodeId
+    Publisher.notifyResultUpdate loc dstNodeId val 4242
     GraphBuilder.buildNode dstNodeId >>= Publisher.notifyNodeUpdate loc
 connect _ _ _ = throwError "Source port should be All"
 
@@ -108,6 +115,8 @@ setDefaultValue loc portRef val = withGraph loc $ do
     runTC
     node <- GraphBuilder.buildNode nodeId
     Publisher.notifyNodeUpdate loc node
+    val  <- getNodeValue nodeId
+    Publisher.notifyResultUpdate loc nodeId val 4242
 
 disconnect :: GraphLocation -> InPortRef -> Empire ()
 disconnect loc port@(InPortRef dstNodeId dstPort) = withGraph loc $ do
@@ -161,6 +170,11 @@ typecheck loc = withGraph loc runTC
 
 -- internal
 
+getNodeValue :: NodeId -> Command Graph (Maybe Value)
+getNodeValue nid = do
+    ref <- GraphUtils.getASTTarget nid
+    zoom Graph.tcAST $ AST.getNodeValue ref
+
 collect pass = return ()
     {-putStrLn $ "After pass: " <> pass-}
     {-st <- TypeCheckState.get-}
@@ -179,8 +193,13 @@ runTC = do
                $ Loop $ seq3 SymbolImportingPass (Loop UnificationPass) FunctionCallingPass
 
         TypeCheck.runTCWithArtifacts tc collect
-    Graph.tcAST .= g
+    evals <- mapM GraphUtils.getASTTarget allNodeIds
+    g2 <- liftIO $ runInterpreter evals g
+    Graph.tcAST .= g2
     return ()
+
+runInterpreter :: [NodeRef] -> AST -> IO AST
+runInterpreter refs g = fmap snd $ flip ASTOp.runBuilder g $ Interpreter.run refs
 
 printNodeLine :: NodeId -> Command Graph String
 printNodeLine nodeId = GraphUtils.getASTPointer nodeId >>= (zoom Graph.ast . AST.printExpression)

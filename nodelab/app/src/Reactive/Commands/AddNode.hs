@@ -293,13 +293,13 @@ visualizeNodeValue _ _ = return ()
 
 
 
-updateNodeValue :: NodeId -> Value -> Command State ()
+updateNodeValue :: NodeId -> Maybe Value -> Command State ()
 updateNodeValue id val = inRegistry $ do
     widgetId <- nodeIdToWidgetId id
     forM_ widgetId $ \widgetId -> do
-        UICmd.update_ widgetId $ Model.value .~ nodeValueToText val
+        UICmd.update_ widgetId $ Model.value .~ (fromMaybe "" $ nodeValueToText <$> val)
         removeVisualization widgetId
-        visualizeNodeValue widgetId val
+        fromMaybe (return ()) (visualizeNodeValue widgetId <$> val)
 
 updateNodeProfilingData :: NodeId -> Integer -> Command State ()
 updateNodeProfilingData id execTime = inRegistry $ do

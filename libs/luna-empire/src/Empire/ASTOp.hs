@@ -42,6 +42,10 @@ type ASTOp m = ( MonadIO m
                , Reconnectible m Node ASTNode EdgeRef ASTNode
                )
 
+runBuilder :: NetworkBuilderT AST m (KnownTypeT ELEMENT NodeRef n) => m a -> AST -> n (a, AST)
+runBuilder cmd ast = runInferenceT ELEMENT (Proxy :: Proxy NodeRef)
+                   $ runNetworkBuilderT ast cmd
+
 runGraph :: NetworkBuilderT AST m (KnownTypeT ELEMENT NodeRef n) => ErrorT Error m a -> AST -> n (Either Error a, AST)
 runGraph cmd g = runInferenceT ELEMENT (Proxy :: Proxy NodeRef)
                $ runNetworkBuilderT g

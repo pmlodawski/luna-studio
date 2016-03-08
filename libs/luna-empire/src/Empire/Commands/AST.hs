@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts    #-}
 
 module Empire.Commands.AST where
 
@@ -12,11 +12,11 @@ import           Data.HMap.Lazy               (TypeKey (..))
 import qualified Data.HMap.Lazy               as HMap
 
 import           Empire.Empire
-import           Empire.API.Data.DefaultValue (PortDefault)
+import           Empire.API.Data.DefaultValue (PortDefault, Value (..))
 import           Empire.API.Data.NodeMeta     (NodeMeta)
 import           Empire.API.Data.Node         (NodeId)
 import           Empire.Data.NodeMarker       (NodeMarker (..))
-import           Empire.Data.AST              (AST, NodeRef)
+import           Empire.Data.AST              (AST, NodeRef, ASTNode)
 
 import           Empire.ASTOp                 (runASTOp)
 import qualified Empire.ASTOps.Builder        as ASTBuilder
@@ -29,6 +29,10 @@ import           Luna.Diagnostic.Vis.GraphViz (renderAndOpen)
 import qualified Luna.Syntax.Model.Network.Builder as Builder
 import           Luna.Syntax.Model.Network.Builder (Meta (..))
 
+import qualified Luna.Compilation.Pass.Interpreter.Layer as Interpreter
+import           Luna.Compilation.Pass.Interpreter.Layer (InterpreterData (..))
+import           Unsafe.Coerce
+
 metaKey :: TypeKey NodeMeta
 metaKey = TypeKey
 
@@ -37,6 +41,13 @@ addNode nid name expr = runASTOp $ Parser.parseFragment expr >>= ASTBuilder.make
 
 addDefault :: PortDefault -> Command AST (NodeRef)
 addDefault val = runASTOp $ Parser.parsePortDefault val
+
+getNodeValue :: NodeRef -> Command AST (Maybe Value)
+getNodeValue ref = runASTOp $ do
+    node <- Builder.read ref
+    case (node ^. prop InterpreterData . Interpreter.value) of
+        Nothing -> return Nothing
+        Just v  -> return $ Just $ IntValue $ unsafeCoerce v
 
 readMeta :: NodeRef -> Command AST (Maybe NodeMeta)
 readMeta ref = runASTOp $ HMap.lookup metaKey . view (prop Meta) <$> Builder.read ref

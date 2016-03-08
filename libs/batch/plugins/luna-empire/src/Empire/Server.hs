@@ -70,7 +70,8 @@ startAsyncUpdateWorker :: TChan AsyncUpdate -> StateT Env BusT ()
 startAsyncUpdateWorker asyncChan = forever $ do
     update <- liftIO $ atomically $ readTChan asyncChan
     case update of
-        NodeUpdate loc n -> Server.sendToBus Topic.nodeUpdate $ NodeUpdate.Update loc n
+        NodeUpdate   up -> Server.sendToBus Topic.nodeUpdate up
+        ResultUpdate up -> Server.sendToBus Topic.nodeResultUpdate up
 
 createDefaultState :: StateT Env BusT ()
 createDefaultState = do
