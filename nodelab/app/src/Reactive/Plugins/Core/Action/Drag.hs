@@ -57,7 +57,8 @@ isNodeUnderCursor :: Command UIRegistry.State Bool
 isNodeUnderCursor = runMaybeT act >>= (return . isJust) where
     act = do
         (Just id) <- lift $ use UIRegistry.widgetOver
-        lift $ (UIRegistry.lookupTypedM id :: Command UIRegistry.State (Maybe (WidgetFile Label)))
+        (Just w ) <- lift $ (UIRegistry.lookupTypedM id :: Command UIRegistry.State (Maybe (WidgetFile Model.Node)))
+        return w
 
 isNodeLabelUnderCursor :: Command UIRegistry.State Bool
 isNodeLabelUnderCursor = runMaybeT act >>= (\x -> return $ fromMaybe False x) where
@@ -71,7 +72,7 @@ isNodeLabelUnderCursor = runMaybeT act >>= (\x -> return $ fromMaybe False x) wh
 
 startDrag :: Vector2 Int -> Command State ()
 startDrag coord = do
-    shouldDrag <- zoom Global.uiRegistry isNodeUnderCursor
+    shouldDrag  <- zoom Global.uiRegistry isNodeUnderCursor
     shouldDrag' <- zoom Global.uiRegistry isNodeLabelUnderCursor
     when (shouldDrag || shouldDrag') $ do
         Global.drag . Drag.history ?= (DragHistory coord coord coord)
