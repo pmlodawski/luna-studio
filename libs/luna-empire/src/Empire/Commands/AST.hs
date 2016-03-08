@@ -24,10 +24,10 @@ import qualified Empire.ASTOps.Parse          as Parser
 import qualified Empire.ASTOps.Print          as Printer
 import           Empire.ASTOps.Remove         (safeRemove)
 
-import qualified Luna.Syntax.Builder          as Builder
-import qualified Data.Graph.Builder           as Builder
-import           Luna.Syntax.Builder          (Meta (..))
 import           Luna.Diagnostic.Vis.GraphViz (renderAndOpen)
+
+import qualified Luna.Syntax.Model.Network.Builder as Builder
+import           Luna.Syntax.Model.Network.Builder (Meta (..))
 
 metaKey :: TypeKey NodeMeta
 metaKey = TypeKey

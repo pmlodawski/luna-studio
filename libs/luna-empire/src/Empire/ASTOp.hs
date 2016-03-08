@@ -9,7 +9,8 @@ import           Prologue                               hiding (Num)
 
 import           Control.Monad.Error                    (ErrorT, MonadError, runErrorT)
 import           Data.Proxy
-import           Data.Graph.Model.Class                 (ELEMENT (..))
+import           Data.Graph                             (Node)
+import           Data.Graph.Model.Events                (ELEMENT (..))
 import           Empire.Data.AST                        (AST, ASTEdge, ASTNode, NodeRef, EdgeRef)
 import           Empire.API.Data.NodeMeta               (NodeMeta)
 import           Empire.Empire                          (Command, Error, empire)
@@ -20,8 +21,9 @@ import           Luna.Syntax.Model.Network.Builder.Term (TermBuilder, NetLayers,
 import           Luna.Syntax.Model.Network.Term         (Raw)
 import           Luna.Syntax.AST.Term                   (Acc, App, Blank, Match, Var)
 import           Luna.Syntax.Model.Layer                ((:<:))
-import qualified Luna.Syntax.AST.Lit                    as Lit
+import qualified Luna.Syntax.AST.Term.Lit               as Lit
 import           Type.Inference
+import           Luna.Syntax.Model.Network.Builder      (Reconnectible)
 
 type ASTOp m = ( MonadIO m
                , MonadFix m
@@ -37,6 +39,7 @@ type ASTOp m = ( MonadIO m
                , TermBuilder Match      m NodeRef
                , TermBuilder Var        m NodeRef
                , Connectible NodeRef NodeRef m
+               , Reconnectible m Node ASTNode EdgeRef ASTNode
                )
 
 runGraph :: NetworkBuilderT AST m (KnownTypeT ELEMENT NodeRef n) => ErrorT Error m a -> AST -> n (Either Error a, AST)

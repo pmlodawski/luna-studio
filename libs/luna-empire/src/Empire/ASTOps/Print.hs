@@ -1,18 +1,19 @@
 module Empire.ASTOps.Print where
 
 import           Prologue
-import           Data.Record            (ANY (..), caseTest, of')
-import qualified Data.Text.Lazy         as Text
-import           Data.Layer.Cover       (uncover)
-import           Data.Direction         (source)
+import           Data.Record              (ANY (..), caseTest, of')
+import qualified Data.Text.Lazy           as Text
+import           Data.Layer.Cover         (uncover)
+import           Data.Direction           (source)
 
-import           Empire.ASTOp           (ASTOp)
-import           Empire.Data.AST        (NodeRef)
-import qualified Empire.ASTOps.Builder  as ASTBuilder
+import           Empire.ASTOp             (ASTOp)
+import           Empire.Data.AST          (NodeRef)
+import qualified Empire.ASTOps.Builder    as ASTBuilder
 
-import           Luna.Syntax.AST.Term   (Acc (..), App (..), Blank (..), Match (..), Var (..))
-import qualified Luna.Syntax.AST.Lit    as Lit
-import qualified Luna.Syntax.Builder    as Builder
+import           Luna.Syntax.AST.Term     (Acc (..), App (..), Blank (..), Match (..), Var (..))
+import qualified Luna.Syntax.AST.Term.Lit as Lit
+
+import qualified Luna.Syntax.Model.Network.Builder as Builder
 
 printExpression' :: ASTOp m => Bool -> NodeRef -> m String
 printExpression' suppresNodes nodeRef = do

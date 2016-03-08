@@ -2,29 +2,30 @@
 
 module Empire.ASTOps.Builder where
 
-import           Prologue                hiding ((#), cons)
-import           Control.Monad.Error     (throwError)
-import           Data.Record             (of', caseTest, cons, ANY(..))
-import           Data.Prop               ((#), prop)
-import           Data.Layer.Cover        (uncover, covered)
-import           Data.Graph              (Inputs (..))
-import           Data.Direction          (source)
-import qualified Data.HMap.Lazy          as HMap
-import           Data.HMap.Lazy          (HTMap)
-import           Data.Maybe              (isJust)
+import           Prologue                 hiding ((#), cons)
+import           Control.Monad.Error      (throwError)
+import           Data.Record              (of', caseTest, cons, ANY(..))
+import           Data.Prop                ((#), prop)
+import           Data.Layer.Cover         (uncover, covered)
+import           Data.Graph               (Inputs (..))
+import           Data.Direction           (source)
+import qualified Data.HMap.Lazy           as HMap
+import           Data.HMap.Lazy           (HTMap)
+import           Data.Maybe               (isJust)
 
-import           Empire.ASTOp            (ASTOp)
-import           Empire.Empire           ((<?!>))
-import           Empire.ASTOps.Remove    (removeNode, performSafeRemoval)
-import           Empire.Data.AST         (ASTEdge, ASTNode, EdgeRef, NodeRef, UncoveredNode)
-import           Empire.Data.NodeMarker  (NodeMarker, nodeMarkerKey)
-import           Empire.API.Data.Node    (NodeId)
-import           Luna.Syntax.AST.Arg     (Arg)
-import qualified Luna.Syntax.AST.Arg     as Arg
-import           Luna.Syntax.AST.Term    (Acc (..), App (..), Blank (..), Match (..), Var (..))
-import qualified Luna.Syntax.AST.Lit     as Lit
-import qualified Luna.Syntax.Builder     as Builder
-import           Luna.Syntax.Builder     (Meta (..))
+import           Empire.ASTOp             (ASTOp)
+import           Empire.Empire            ((<?!>))
+import           Empire.ASTOps.Remove     (removeNode, performSafeRemoval)
+import           Empire.Data.AST          (ASTEdge, ASTNode, EdgeRef, NodeRef, UncoveredNode)
+import           Empire.Data.NodeMarker   (NodeMarker, nodeMarkerKey)
+import           Empire.API.Data.Node     (NodeId)
+import           Luna.Syntax.AST.Term     (Acc (..), App (..), Blank (..), Match (..), Var (..))
+import qualified Luna.Syntax.AST.Term.Lit as Lit
+
+import           Luna.Syntax.AST.Function.Argument (Arg)
+import qualified Luna.Syntax.AST.Function.Argument as Arg
+import           Luna.Syntax.Model.Network.Builder (Meta (..))
+import qualified Luna.Syntax.Model.Network.Builder as Builder
 
 functionApplicationNode :: Lens' ASTNode EdgeRef
 functionApplicationNode = covered . lens getter setter where

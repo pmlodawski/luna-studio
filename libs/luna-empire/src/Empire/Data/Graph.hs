@@ -7,7 +7,7 @@ import qualified Data.IntMap            as IntMap
 import           Data.IntMap            (IntMap)
 import           Empire.API.Data.Node   (NodeId)
 
-import           Luna.Syntax.Builder    (star, runNetworkBuilderT)
+import           Luna.Syntax.Model.Network.Builder (star, runNetworkBuilderT)
 
 data Graph = Graph { _ast         :: AST
                    , _tcAST       :: AST

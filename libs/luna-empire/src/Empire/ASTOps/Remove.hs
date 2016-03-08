@@ -11,8 +11,9 @@ import           Data.Direction                (source)
 
 import           Empire.ASTOp                  (ASTOp)
 import           Empire.Data.AST               (NodeRef)
-import qualified Luna.Syntax.Builder as Builder
-import           Luna.Syntax.Builder (Type (..))
+
+import qualified Luna.Syntax.Model.Network.Builder as Builder
+import           Luna.Syntax.Model.Network.Builder (Type (..))
 
 removeNode :: ASTOp m => NodeRef -> m ()
 removeNode ref = do

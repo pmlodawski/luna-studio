@@ -15,9 +15,9 @@ import           Empire.ASTOps.Builder        as ASTBuilder
 import           Empire.Utils.ParserMock      as Parser
 
 import           Empire.API.Data.DefaultValue (PortDefault (..), Value (..))
+import qualified Luna.Syntax.AST.Term.Lit     as Lit
 
-import qualified Luna.Syntax.Builder          as Builder
-import qualified Luna.Syntax.AST.Lit          as Lit
+import qualified Luna.Syntax.Model.Network.Builder as Builder
 
 parsePortDefault :: ASTOp m => PortDefault -> m NodeRef
 parsePortDefault (Expression expr)          = parseFragment expr

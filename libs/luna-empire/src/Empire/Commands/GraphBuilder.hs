@@ -36,9 +36,10 @@ import qualified Empire.Commands.GraphUtils   as GraphUtils
 import           Empire.Empire
 
 import           Luna.Syntax.AST.Term         (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..), Lam (..))
-import qualified Luna.Syntax.AST.Lit          as Lit
-import qualified Luna.Syntax.Builder          as Builder
-import           Luna.Syntax.Builder          (Type (..))
+import qualified Luna.Syntax.AST.Term.Lit     as Lit
+
+import qualified Luna.Syntax.Model.Network.Builder          as Builder
+import           Luna.Syntax.Model.Network.Builder          (Type (..))
 
 
 buildGraph :: Command Graph API.Graph
