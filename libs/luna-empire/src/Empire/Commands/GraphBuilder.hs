@@ -66,7 +66,7 @@ getNodeName nid = do
     vref <- GraphUtils.getASTVar nid
     zoom Graph.tcAST $ runASTOp $ do
         vnode <- Builder.read vref
-        caseTest (uncover vnode) $ of' $ \(Var n) -> return . toString $ n
+        caseTest (uncover vnode) $ of' $ \(Var (Lit.String n)) -> return . toString $ n
 
 getPortState :: ASTOp m => NodeRef -> m PortState
 getPortState ref = do
@@ -110,17 +110,22 @@ buildArgPorts ref = do
     let psCons = zipWith3 Port (InPortId . Arg <$> [0..]) (repeat "foo") types
     return $ zipWith ($) psCons (states ++ repeat NotConnected)
 
-buildSelfPort :: ASTOp m => NodeRef -> m (Maybe Port)
-buildSelfPort nodeRef = do
+buildSelfPort' :: ASTOp m => Bool -> NodeRef -> m (Maybe Port)
+buildSelfPort' seenAcc nodeRef = do
     node <- Builder.read nodeRef
+    let buildPort = do
+        tpRep     <- followTypeRep nodeRef
+        portState <- getPortState nodeRef
+        return . Just $ Port (InPortId Self) "self" tpRep portState
+
     caseTest (uncover node) $ do
-        of' $ \(Acc _ t) -> Builder.follow source t >>= buildSelfPort
-        of' $ \(App t _) -> Builder.follow source t >>= buildSelfPort
-        of' $ \(Var _)   -> do
-            tpRep     <- followTypeRep nodeRef
-            portState <- getPortState nodeRef
-            return . Just $ Port (InPortId Self) "Self" tpRep portState
-        of' $ \ANY       -> return Nothing
+        of' $ \(Acc _ t) -> Builder.follow source t >>= buildSelfPort' True
+        of' $ \(App t _) -> Builder.follow source t >>= buildSelfPort' seenAcc
+        of' $ \(Var _)   -> buildPort
+        of' $ \ANY       -> if seenAcc then buildPort else return Nothing
+
+buildSelfPort :: ASTOp m => NodeRef -> m (Maybe Port)
+buildSelfPort = buildSelfPort' False
 
 followTypeRep :: ASTOp m => NodeRef -> m ValueType
 followTypeRep ref = do
@@ -138,8 +143,9 @@ buildPorts :: NodeRef -> Command Graph [Port]
 buildPorts ref = zoom Graph.tcAST $ runASTOp $ do
     selfPort <- maybeToList <$> buildSelfPort ref
     argPorts <- buildArgPorts ref
-    tpRep <- followTypeRep ref
-    return $ selfPort ++ argPorts ++ [Port (OutPortId All) "All" tpRep NotConnected]
+    tpRep    <- followTypeRep ref
+    outState <- getPortState ref
+    return $ selfPort ++ argPorts ++ [Port (OutPortId All) "All" tpRep outState]
 
 buildConnections :: Command Graph [(OutPortRef, InPortRef)]
 buildConnections = do
