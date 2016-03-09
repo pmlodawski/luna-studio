@@ -48,11 +48,7 @@ parseAcc expr = do
         []       -> throwError "Can't parse: empty expression"
         t : accs -> do
             target <- parseInitial t
-            as     <- mapM (Builder.var >=> flip Builder.app []) (fromString <$> accs :: [Lit.String])
-            buildAccs target as
-
-buildAccs :: ASTOp m => NodeRef -> [NodeRef] -> m NodeRef
-buildAccs = foldM ASTBuilder.makeAccessor
+            ASTBuilder.buildAccessors target accs
 
 parseInitial :: ASTOp m => String -> m NodeRef
 parseInitial expr = fromMaybe (Builder.var (fromString expr :: Lit.String)) (whenBlank <|> whenString <|> whenInt) where

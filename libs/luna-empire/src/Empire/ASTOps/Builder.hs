@@ -4,6 +4,7 @@ module Empire.ASTOps.Builder where
 
 import           Prologue                 hiding ((#), cons)
 import           Control.Monad.Error      (throwError)
+import           Control.Monad            (foldM)
 import           Data.Record              (of', caseTest, cons, ANY(..))
 import           Data.Prop                ((#), prop)
 import           Data.Layer.Cover         (uncover, covered)
@@ -11,7 +12,7 @@ import           Data.Graph               (Inputs (..))
 import           Data.Direction           (source)
 import qualified Data.HMap.Lazy           as HMap
 import           Data.HMap.Lazy           (HTMap)
-import           Data.Maybe               (isJust)
+import           Data.Maybe               (isJust, isNothing)
 
 import           Empire.ASTOp             (ASTOp)
 import           Empire.Empire            ((<?!>))
@@ -106,58 +107,65 @@ reapply funRef args = do
         of' $ \ANY -> return funRef
     Builder.app fun $ Builder.arg <$> args
 
-makeAccessorRec :: ASTOp m => Bool -> NodeRef -> NodeRef -> m NodeRef
-makeAccessorRec seenApp targetNodeRef namingNodeRef = do
-    namingNode <- Builder.read namingNodeRef
-    caseTest (uncover namingNode) $ do
-        of' $ \(Var name) -> do
-            removeNode namingNodeRef
-            Builder.acc name targetNodeRef >>= (if seenApp then return else flip Builder.app [])
-        of' $ \(App t _) -> do
-            newNamingNodeRef <- Builder.follow source t
-            replacementRef <- makeAccessorRec True targetNodeRef newNamingNodeRef
-            Builder.reconnect functionApplicationNode namingNodeRef replacementRef
-            return namingNodeRef
-        of' $ \(Acc name t) -> do
-            newNamingNodeRef <- Builder.follow source t
-            replacement <- makeAccessorRec False targetNodeRef newNamingNodeRef
-            Builder.reconnect accessorTarget namingNodeRef replacement
-            return namingNodeRef
-        of' $ \ANY -> throwError "Invalid node type"
 
-makeAccessor :: ASTOp m => NodeRef -> NodeRef -> m NodeRef
-makeAccessor = makeAccessorRec False
-
-unAccRec :: forall m. ASTOp m => NodeRef -> m (Maybe NodeRef)
-unAccRec ref = do
+dumpAccessors' :: ASTOp m => Bool -> NodeRef -> m (Maybe NodeRef, [String])
+dumpAccessors' firstApp ref = do
     node <- Builder.read ref
     caseTest (uncover node) $ do
-        of' $ \(Acc n t) -> do
-            oldTarget <- Builder.follow source t
-            replacement <- unAccRec =<< Builder.follow source t
-            case replacement of
-                Just r  -> Just <$> Builder.acc n r
-                Nothing -> Just <$> Builder.var n
-        of' $ \(App t args) -> do
-            oldTarget   <- Builder.follow source t
-            replacement <- unAccRec oldTarget
-            case replacement of
-                Just r -> do
-                    repl <- Builder.read r
-                    as   <- (mapM . mapM) (Builder.follow source) args
-                    caseTest (uncover repl) $ do
-                        of' $ \(Var _) -> if null args
-                            then return (Just r)
-                            else Just <$> Builder.app r as
-                        of' $ \ANY -> Just <$> Builder.app r as
-                Nothing -> throwError "Self port not connected"
-        of' $ \ANY -> return Nothing
+        of' $ \(Var (Lit.String name)) -> do
+            isNode <- isGraphNode ref
+            if isNode
+                then return (Just ref, [])
+                else return (Nothing, [name])
+        of' $ \(App t a) -> do
+            if not firstApp && not (null a)
+                then return (Just ref, [])
+                else do
+                    target <- Builder.follow source t
+                    dumpAccessors' False target
+        of' $ \(Acc (Lit.String name) t) -> do
+            target <- Builder.follow source t
+            (tgt, names) <- dumpAccessors' False target
+            return (tgt, names ++ [name])
+        of' $ \ANY -> return (Just ref, [])
+
+dumpAccessors :: ASTOp m => NodeRef -> m (Maybe NodeRef, [String])
+dumpAccessors = dumpAccessors' True
+
+dumpArguments :: ASTOp m => NodeRef -> m [NodeRef]
+dumpArguments ref = do
+    node <- Builder.read ref
+    caseTest (uncover node) $ do
+        of' $ \(App _ as) -> unpackArguments as
+        of' $ \ANY        -> return []
+
+buildAccessors :: ASTOp m => NodeRef -> [String] -> m NodeRef
+buildAccessors = foldM $ \t n -> Builder.acc (fromString n) t >>= flip Builder.app []
+
+makeAccessor :: ASTOp m => NodeRef -> NodeRef -> m NodeRef
+makeAccessor target naming = do
+    (oldTarget, names) <- dumpAccessors naming
+    print $ (oldTarget, names)
+    args <- dumpArguments naming
+    print args
+    acc <- buildAccessors target names
+    applied <- if null args then return acc else reapply acc args
+    performSafeRemoval naming
+    return applied
 
 unAcc :: ASTOp m => NodeRef -> m NodeRef
 unAcc ref = do
-    repl <- unAccRec ref <?!> "Self port not connected"
-    performSafeRemoval ref
-    return repl
+    (target, names) <- dumpAccessors ref
+    args            <- dumpArguments ref
+    if isNothing target then throwError "Self port not connected" else return ()
+    case names of
+        []     -> throwError "Self port not connected"
+        n : ns -> do
+            v   <- Builder.var (fromString n)
+            acc <- buildAccessors v ns
+            applied <- if null args then return acc else reapply acc args
+            performSafeRemoval ref
+            return applied
 
 makeNodeRep :: forall m. ASTOp m => NodeMarker -> String -> NodeRef -> m NodeRef
 makeNodeRep marker name node = do
