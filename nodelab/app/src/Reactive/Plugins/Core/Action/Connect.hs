@@ -39,7 +39,7 @@ import qualified Empire.API.Data.PortRef      as PortRef (srcNodeId, dstNodeId)
 
 
 toAction :: Event -> Maybe (Command State ())
-toAction (Mouse _ event@(Mouse.Event Mouse.Pressed  _   Mouse.LeftButton _ (Just _))) = Just $ startDrag event
+toAction (Mouse _ event@(Mouse.Event Mouse.Pressed  _   Mouse.LeftButton (KeyMods False False False False) (Just _))) = Just $ startDrag event
 toAction (Mouse _ event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ whileConnecting $ handleMove pos
 toAction (Mouse _ event@(Mouse.Event Mouse.Moved    _   _                _ _)) = Just $ whileConnecting $ stopDrag'
 toAction (Mouse _ event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just $ whileConnecting $ stopDrag event
