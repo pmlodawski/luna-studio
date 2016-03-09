@@ -20,7 +20,7 @@ void main(void) {
 
     float spacing = 2.0;
 
-    float ring = sdf_ring(p, 20.0 + float(objectMap)*5.0, 3.0 + float(objectMap)*20.0);
+    float ring = sdf_ring(p, 20.0 + float(objectMap)*5.0, 3.0 + float(objectMap)*8.0);
     float opacity = sdf_intersect(
         sdf_halfplaneRight(sdf_rotateCCW(p, span / 2.0) + vec2(spacing, 0.0)),
         sdf_intersect(

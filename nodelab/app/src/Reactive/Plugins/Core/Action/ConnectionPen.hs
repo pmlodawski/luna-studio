@@ -3,39 +3,41 @@
 module Reactive.Plugins.Core.Action.ConnectionPen where
 
 
+import           Utils.Angle
 import           Utils.PreludePlus
 import           Utils.Vector
-import           Utils.Angle
 
-import qualified Data.IntMap.Lazy         as IntMap
+import qualified Data.IntMap.Lazy                  as IntMap
 
-import qualified JS.Widget                as UI
-import qualified JS.ConnectionPen         as UI
+import qualified JS.ConnectionPen                  as UI
+import qualified JS.Widget                         as UI
 
-import qualified Object.Widget.Node       as UINode
-import qualified Object.Widget.Connection as UIConnection
 import           Object.UITypes
-import           Object.Widget            (WidgetFile, widget)
+import           Object.Widget                     (WidgetFile, widget)
+import qualified Object.Widget.Connection          as UIConnection
+import qualified Object.Widget.Node                as UINode
 
-import           Event.Keyboard           hiding      (Event)
-import qualified Event.Keyboard           as Keyboard
-import           Event.Mouse              hiding      (Event, widget)
-import qualified Event.Mouse              as Mouse
+import qualified Event.ConnectionPen               as ConnectionPen
 import           Event.Event
-import qualified Event.ConnectionPen      as ConnectionPen
+import           Event.Keyboard                    hiding (Event)
+import qualified Event.Keyboard                    as Keyboard
+import           Event.Mouse                       hiding (Event, widget)
+import qualified Event.Mouse                       as Mouse
 
-import qualified Reactive.State.Graph              as Graph
-import qualified Reactive.State.Global             as Global
 import           Reactive.State.Global             (State)
+import qualified Reactive.State.Global             as Global
+import qualified Reactive.State.Graph              as Graph
 import qualified Reactive.State.UIRegistry         as UIRegistry
 
-import           Reactive.Commands.Graph
-import           Reactive.Commands.Command         (Command, performIO, execCommand)
+import           Reactive.Commands.Command         (Command, execCommand, performIO)
 import           Reactive.Commands.DisconnectNodes (disconnectAll)
-
+import           Reactive.Commands.Graph
 import qualified Reactive.State.ConnectionPen      as ConnectionPen
 
 import qualified BatchConnector.Commands           as BatchCmd
+
+import qualified Empire.API.Data.Port              as Port
+import           Empire.API.Data.PortRef           (InPortRef(..), OutPortRef(..))
 
 import           Debug.Trace
 
@@ -127,22 +129,11 @@ autoConnectBackwards :: (Int, Int) -> Command State ()
 autoConnectBackwards (srcNodeId, dstNodeId) = autoConnect (dstNodeId, srcNodeId)
 
 autoConnect :: (Int, Int) -> Command State ()
-autoConnect (srcNodeId, dstNodeId) = return ()
-    -- do
-    -- graph     <- use Global.graph
-    -- workspace <- use Global.workspace
-    --
-    -- TODO: FIXME: Port to new Graph API
-    -- let srcNode          = Graph.getNode graph srcNodeId
-    --     dstNode          = Graph.getNode graph dstNodeId
-    --     srcPorts         = srcNode ^. ports . outputPorts
-    --     dstPorts         = dstNode ^. ports . inputPorts
-    --     dstPortsFiltered = filterConnectedInputPorts graph dstNodeId $ dstNode ^. ports . inputPorts
-    --     connectionMay    = findConnectionForAll dstPortsFiltered srcPorts
-    -- forM_ connectionMay $ \(srcPortId, dstPortId) -> do
-    --     let srcPortRef   = PortRef srcNodeId OutputPort srcPortId
-    --         dstPortRef   = PortRef dstNodeId InputPort  dstPortId
-    --     connectNodes srcPortRef dstPortRef
+autoConnect (srcNodeId, dstNodeId) = do
+    graph     <- use Global.graph
+    workspace <- use Global.workspace
+
+    performIO $ BatchCmd.connectNodes workspace (OutPortRef srcNodeId Port.All) (InPortRef dstNodeId Port.Self)
 
 -- filterConnectedInputPorts :: Graph.State -> NodeId -> PortCollection -> PortCollection
 -- filterConnectedInputPorts state nodeId ports = filter isConnected ports where
