@@ -14,10 +14,11 @@ data NodeType = InputNode { _name :: String
               | ExpressionNode { _expression :: String }
               deriving (Generic, Show, Eq)
 
-data Request = Request { _location :: GraphLocation
-                       , _nodeType :: NodeType
-                       , _nodeMeta :: NodeMeta
-                       , _tag      :: Int
+data Request = Request { _location  :: GraphLocation
+                       , _nodeType  :: NodeType
+                       , _nodeMeta  :: NodeMeta
+                       , _connectTo :: Maybe Int
+                       , _tag       :: Int
                        } deriving (Generic, Show, Eq)
 
 type Update = Update.SimpleUpdate Request

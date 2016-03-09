@@ -54,10 +54,10 @@ import qualified Empire.API.Project.ListProjects   as ListProjects
 withLibrary :: Workspace -> (GraphLocation -> a) -> a
 withLibrary w f = f (w ^. Workspace.currentLocation)
 
-addNode :: Workspace -> Text -> NodeMeta -> Int -> IO ()
-addNode workspace expression meta tag = sendRequest topic body where
+addNode :: Workspace -> Text -> NodeMeta -> Maybe Int -> Int -> IO ()
+addNode workspace expression meta connectTo tag = sendRequest topic body where
     topic = Topic.addNodeRequest
-    body  = (withLibrary workspace AddNode.Request) (AddNode.ExpressionNode $ Text.unpack expression) meta tag
+    body  = (withLibrary workspace AddNode.Request) (AddNode.ExpressionNode $ Text.unpack expression) meta connectTo tag
 
 createProject :: Text -> Text -> IO ()
 createProject name path = sendRequest topic body where

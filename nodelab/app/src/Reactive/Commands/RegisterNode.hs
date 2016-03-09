@@ -1,22 +1,26 @@
 module Reactive.Commands.RegisterNode where
 
 import           Utils.PreludePlus
+import           Control.Monad.State         hiding (State)
+import           Data.Text.Lazy              (Text)
+import           Utils.Vector                (Vector2, toTuple)
 
-import           Reactive.Commands.Command     (Command, performIO)
--- import           Reactive.Commands.PendingNode (renderPending)
-import           Reactive.State.Global         (State)
-import qualified Reactive.State.Global         as Global
-import qualified Reactive.State.Camera         as Camera
+import           Reactive.Commands.Command   (Command, performIO)
+import qualified Reactive.State.Camera       as Camera
+import           Reactive.State.Global       (State)
+import qualified Reactive.State.Global       as Global
 
-import qualified Object.Node             as Node
-import           Utils.Vector            (Vector2, toTuple)
-import           Data.Text.Lazy          (Text)
-import           Control.Monad.State     hiding (State)
-import qualified BatchConnector.Commands as BatchCmd
-import           Reactive.State.Graph (genNodeId)
-import           Empire.API.Data.Node (Node(..))
-import           Empire.API.Data.NodeMeta (NodeMeta(..))
-import qualified Empire.API.Data.Node as Node
+import qualified BatchConnector.Commands     as BatchCmd
+import qualified Object.Node                 as Node
+import           Object.Widget               (widget)
+import qualified Object.Widget.Node          as UINode
+import           Reactive.Commands.Selection (selectedNodes)
+import           Reactive.State.Graph        (genNodeId)
+import           Reactive.State.Global       (inRegistry)
+
+import           Empire.API.Data.Node        (Node (..))
+import qualified Empire.API.Data.Node        as Node
+import           Empire.API.Data.NodeMeta    (NodeMeta (..))
 
 registerNode :: Text -> Command State ()
 registerNode expr = do
@@ -25,5 +29,9 @@ registerNode expr = do
     nodePos <- uses Global.mousePos $ Camera.screenToWorkspace camera
     let nodeMeta = NodeMeta $ toTuple nodePos
     workspace <- use Global.workspace
-    performIO $ BatchCmd.addNode workspace expr nodeMeta 42
-    -- renderPending node
+    selected   <- inRegistry selectedNodes
+    let connectTo = case selected of
+            []     -> Nothing
+            [wf]   -> Just $ wf ^. widget . UINode.nodeId
+            (_:_) -> Nothing
+    performIO $ BatchCmd.addNode workspace expr nodeMeta connectTo 42

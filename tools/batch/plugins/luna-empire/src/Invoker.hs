@@ -119,7 +119,7 @@ main = do
 
 addNode :: EP.BusEndPoints -> GraphLocation -> String -> Double -> Double -> Int -> IO ()
 addNode endPoints graphLocation expression x y tag = do
-    let content = toStrict . Bin.encode $ AddNode.Request graphLocation (AddNode.ExpressionNode expression) (NodeMeta.NodeMeta (x, y)) tag
+    let content = toStrict . Bin.encode $ AddNode.Request graphLocation (AddNode.ExpressionNode expression) (NodeMeta.NodeMeta (x, y)) Nothing tag
     void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.addNodeRequest content
 
 removeNode :: EP.BusEndPoints -> GraphLocation -> NodeId -> IO ()
