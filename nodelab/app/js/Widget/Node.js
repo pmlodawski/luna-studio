@@ -1,21 +1,17 @@
 "use strict";
 
 var $$       = require('common');
-var features = require('features');
 
 var vs = require('shaders/sdf.vert')();
 var fs = require('shaders/node.frag')();
 
-var insideColor     = new THREE.Color(0x1a1a1a);
 var unselectedColor = new THREE.Color(0x3a3a3a);
 var selectedColor   = new THREE.Color(0xb87410).multiplyScalar(0.8);
-var focusedColor    = new THREE.Color(0xc85808).multiplyScalar(0.8);
+var errorColor      = new THREE.Color(0xec2f02);
 
 var nodeGeometry    = new THREE.PlaneBufferGeometry(1.0, 1.0);
 nodeGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0));
 
-
-var collapsedRadius = 30.0;
 
 function Node(position, z, widgetId) {
   var _this = this;
@@ -27,13 +23,11 @@ function Node(position, z, widgetId) {
     mouseDist:         { type: 'f',  value:                             0.0 },
     expanded:          { type: 'f',  value:                             0.0 },
     size:              { type: 'v2', value:   new THREE.Vector2(60.0, 60.0) },
-    radiusTop:         { type: 'f',  value:                 collapsedRadius },
-    radiusBottom:      { type: 'f',  value:                 collapsedRadius },
-    insideColor:       { type: 'c',  value:                     insideColor },
     unselectedColor:   { type: 'c',  value:                 unselectedColor },
     selectedColor:     { type: 'c',  value:                   selectedColor },
-    focusedColor:      { type: 'c',  value:                    focusedColor },
+    errorColor:        { type: 'c',  value:                      errorColor },
     alpha:             { type: 'f',  value:                             1.0 },
+    error:             { type: 'i',  value:                               0 },
     objectId:          { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
   };
 
@@ -74,16 +68,11 @@ Node.prototype.setPending = function () {
   this.uniforms.alpha.value = 0.2;
 };
 
-Node.prototype.selected = function (val) {
-  if (val !== undefined) {
-    this.uniforms.selected.value = val;
-    if (features.label_editor) {
-      if (val === 2) {
-        this.showLabelEditor();
-      }
-    }
-  }
-  return this.uniforms.selected.value;
+Node.prototype.setSelected = function (val) {
+  this.uniforms.selected.value = val?1:0;
+};
+Node.prototype.setError = function (val) {
+  this.uniforms.error.value = val?1:0;
 };
 
 

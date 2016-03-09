@@ -34,24 +34,14 @@ instance UIWidget    Node
 instance UIContainer Node
 
 foreign import javascript safe "new GraphNode(new THREE.Vector2($2, $3), 0, $1)"     create'          :: WidgetId -> Double -> Double -> IO Node
-foreign import javascript safe "$1.setExpandedStateBool($2)"                         setExpandedState :: Node -> Bool     -> IO ()
 foreign import javascript safe "$1.setZPos($2)"                                      setZPos          :: Node -> Double -> IO ()
-foreign import javascript safe "$1.uniforms.selected.value = $2"                     setSelected      :: Node -> Int      -> IO ()
+foreign import javascript safe "$1.setSelected($2)"                                  setSelected      :: Node -> Bool      -> IO ()
+foreign import javascript safe "$1.setError($2)"                                     setError         :: Node -> Bool      -> IO ()
 
 createNode :: WidgetId -> Model.Node -> IO Node
 createNode id model = do
     node <- create' id (model ^. Model.position . x) (model ^. Model.position . y)
     return node
-
-selectedState :: Getter Model.Node Int
-selectedState = to selectedState' where
-    selectedState' model
-        | model ^. Model.isFocused  = 2
-        | model ^. Model.isSelected = 1
-        | otherwise                 = 0
-
-setSelectedState :: Node -> Model.Node -> IO ()
-setSelectedState node model = setSelected node $ model ^. selectedState
 
 ifChanged :: (Eq b) => a -> a -> Lens' a b -> IO () -> IO ()
 ifChanged old new get action = if (old ^. get) /= (new ^. get) then action
@@ -67,5 +57,6 @@ instance UIDisplayObject Model.Node where
     updateUI id old model = do
         node <- UIR.lookup id :: IO Node
 
-        setSelectedState node model
+        setSelected      node (model ^. Model.isSelected)
+        setError         node (model ^. Model.isError)
         setZPos          node (model ^. Model.zPos)

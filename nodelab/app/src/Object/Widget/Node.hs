@@ -29,7 +29,6 @@ data Node = Node { _nodeId     :: Int
                  , _tpe        :: Maybe Text
                  , _isExpanded :: Bool
                  , _isSelected :: Bool
-                 , _isFocused  :: Bool
                  , _isError    :: Bool
                  , _execTime   :: Maybe Integer
                  } deriving (Eq, Show, Typeable, Generic)
@@ -38,7 +37,7 @@ makeLenses ''Node
 instance ToJSON Node
 
 makeNode :: Int -> Position -> Text -> Text -> Maybe Text -> Node
-makeNode id pos expr name tpe = Node id [] [] pos 0.0 expr name "" tpe False False False False Nothing
+makeNode id pos expr name tpe = Node id [] [] pos 0.0 expr name "" tpe False False False Nothing
 
 fromNode :: N.Node -> Node
 fromNode n = let position' = uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position

@@ -2,16 +2,11 @@
 precision highp float;
 #endif
 uniform int   selected;
+uniform int   error;
 
 uniform vec3  unselectedColor;
 uniform vec3  selectedColor;
-
-
-precision mediump float;
-
-uniform float angle;
-uniform int portCount;
-uniform vec4 color;
+uniform vec3  errorColor;
 
 <%= require('shaders/stdlib')() %>
 
@@ -33,10 +28,14 @@ void main(void) {
                     sdf_subtract(
                       sdf_ball(p, 22.0),
                       sdf_rect(p + vec2(-12.5, 12.5), vec2(25.0, 25.0), vec4(0.0, 0.0, 0.0, 5.0))
-
                     )
                 )
             );
-        gl_FragColor = vec4(selectedColor, float(selected) * sdf_aa(selectedShape));
+        float errorShape = sdf_ball(p, 17.0);
+
+        vec4 errorC = vec4(errorColor, float(error) * sdf_aa(errorShape));
+        vec4 selectedC = vec4(selectedColor, float(selected) * sdf_aa(selectedShape));
+
+        gl_FragColor = blend(errorC, selectedC);
     }
 }
