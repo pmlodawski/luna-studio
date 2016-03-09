@@ -168,7 +168,7 @@ nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
 updateNode :: Node -> Command State ()
 updateNode node = do
     let nodeId  = node ^. Node.nodeId
-    inGraph <- preuse $ Global.graph . Graph.nodes . ix nodeId
+    inGraph <- preuse $ Global.graph . Graph.nodesMap . ix nodeId
     case inGraph of
         Just existingNode -> updateExistingNode node
         Nothing           -> addNode            node
