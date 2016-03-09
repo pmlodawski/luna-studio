@@ -26,8 +26,10 @@ import           Empire.ASTOps.Remove         (safeRemove)
 
 import           Luna.Diagnostic.Vis.GraphViz (renderAndOpen)
 
+import           Luna.Syntax.Model.Network.Builder (Meta (..), Type (..))
 import qualified Luna.Syntax.Model.Network.Builder as Builder
-import           Luna.Syntax.Model.Network.Builder (Meta (..))
+import           Luna.Syntax.AST.Term              (Cons (..))
+import qualified Luna.Syntax.AST.Term.Lit          as Lit
 
 import qualified Luna.Compilation.Pass.Interpreter.Layer as Interpreter
 import           Luna.Compilation.Pass.Interpreter.Layer (InterpreterData (..))
@@ -44,10 +46,17 @@ addDefault val = runASTOp $ Parser.parsePortDefault val
 
 getNodeValue :: NodeRef -> Command AST (Maybe Value)
 getNodeValue ref = runASTOp $ do
-    node <- Builder.read ref
+    node   <- Builder.read ref
+    tp     <- Builder.follow source $ node ^. prop Type
+    tpNode <- Builder.read tp
     case (node ^. prop InterpreterData . Interpreter.value) of
         Nothing -> return Nothing
-        Just v  -> return $ Just $ IntValue $ unsafeCoerce v
+        Just v  -> return $ caseTest (uncover tpNode) $ do
+            of' $ \(Cons (Lit.String n) _) -> case n of
+                "Int"    -> Just $ IntValue    $ unsafeCoerce v
+                "String" -> Just $ StringValue $ unsafeCoerce v
+                _        -> Nothing
+            of' $ \ANY -> Nothing
 
 readMeta :: NodeRef -> Command AST (Maybe NodeMeta)
 readMeta ref = runASTOp $ HMap.lookup metaKey . view (prop Meta) <$> Builder.read ref
