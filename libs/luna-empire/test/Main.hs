@@ -38,9 +38,9 @@ test = do
     Graph.addNode loc "3.floor.toString" def
 
 
-    n1 <- view nodeId <$> Graph.addNode loc "3" def
-    n2 <- view nodeId <$> Graph.addNode loc "6" def
-    np <- view nodeId <$> Graph.addNode loc "_.+ _" def
+    n1 <- Graph.addNode loc "3" def
+    n2 <- Graph.addNode loc "6" def
+    np <- Graph.addNode loc "_.+ _" def
     Graph.connect loc (OutPortRef n1 All) (InPortRef np Self)
     Graph.connect loc (OutPortRef n2 All) (InPortRef np $ Arg 0)
 

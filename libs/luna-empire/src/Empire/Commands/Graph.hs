@@ -65,7 +65,7 @@ import qualified Luna.Compilation.Pass.Interpreter.Interpreter   as Interpreter
 import qualified Empire.ASTOp as ASTOp
 import           Empire.Data.AST                                 (AST, NodeRef)
 
-addNode :: GraphLocation -> Text -> NodeMeta -> Empire Node
+addNode :: GraphLocation -> Text -> NodeMeta -> Empire NodeId
 addNode loc expr meta = withGraph loc $ do
     newNodeId <- gets Graph.nextNodeId
     refNode <- zoom Graph.ast $ AST.addNode newNodeId ("node" ++ show newNodeId) (Text.unpack expr)
@@ -73,7 +73,9 @@ addNode loc expr meta = withGraph loc $ do
     Graph.nodeMapping . at newNodeId ?= refNode
     runTC
     val <- getNodeValue newNodeId
-    GraphBuilder.buildNode newNodeId
+    GraphBuilder.buildNode newNodeId >>= Publisher.notifyNodeUpdate loc
+    Publisher.notifyResultUpdate loc newNodeId val 323
+    return newNodeId
 
 removeNode :: GraphLocation -> NodeId -> Empire ()
 removeNode loc nodeId = withGraph loc $ do

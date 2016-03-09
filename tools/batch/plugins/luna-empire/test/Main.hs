@@ -95,6 +95,5 @@ testNodeUpdate = do
         let meta    = NodeMeta.NodeMeta (20.0, 30.0)
             request = AddNode.Request (gl 0 0) (AddNode.ExpressionNode "dupa123") meta 1235
             node    = Node.Node 123 "node0" (Node.ExpressionNode "dupa123") mempty meta
-            result  = AddNode.Result node
-            update  = Update.Update request result
+            update  = Update.Update request Update.Ok
         Bus.send Flag.Enable $ Message.Message Topic.addNodeUpdate $ toStrict $ Bin.encode update

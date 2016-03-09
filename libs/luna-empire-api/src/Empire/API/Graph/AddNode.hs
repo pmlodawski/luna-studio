@@ -20,14 +20,9 @@ data Request = Request { _location :: GraphLocation
                        , _tag      :: Int
                        } deriving (Generic, Show, Eq)
 
-data Result = Result { _node :: Node
-                     } deriving (Generic, Show, Eq)
-
-type Update = Update.Update Request Result
+type Update = Update.SimpleUpdate Request
 
 makeLenses ''Request
-makeLenses ''Result
 
 instance Binary NodeType
 instance Binary Request
-instance Binary Result
