@@ -99,8 +99,13 @@ function initUserInfo() {
     localStorage.setItem('tutorial', "1");
   });
 
-  $(".tutorial").click(function () {
+  $(".tutorial").click(function (e) {
+    e.preventDefault();
     $(".tutorial-box").show();
+  });
+  $(".feedback").click(function (e) {
+    e.preventDefault();
+    _urq.push(['Feedback_Open']);
   });
 }
 function initTerminal() {

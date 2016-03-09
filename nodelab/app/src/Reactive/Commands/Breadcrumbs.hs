@@ -26,6 +26,7 @@ import qualified Empire.API.Data.Project       as Project
 
 import qualified Object.Widget.Button          as Button
 import qualified Object.Widget.Group           as Group
+import           Object.Widget.Icon            (Icon(..))
 import qualified Object.Widget.LabeledTextBox  as LabeledTextBox
 import qualified Style.Layout                  as Style
 import           UI.Handlers.Button            (ClickedHandler (..))
@@ -59,6 +60,7 @@ displayBreadcrumbs enterBreadcrumbs = do
                        & Button.style .~ Style.breadcrumbItemStyle
                        & Button.size  . x .~ (fromIntegral $ 5 + JS.calculateTextWidth name')
                 handlers = addHandler (ClickedHandler $ \_ -> enterBreadcrumbs $ Breadcrumb bc) mempty
+            when (length bc /= 0) $ UICmd.register_ group (Icon def (Vector2 20 20) "triangle") def
             UICmd.register group widget handlers
 
 

@@ -68,7 +68,8 @@ queryTree query = do
 
 openCommand :: Command Global.State ()
 openCommand = do
-    performIO $ UI.initNodeSearcher "" 0 (Vector2 200 200) True
+    mousePos <- use Global.mousePos
+    performIO $ UI.initNodeSearcher "" 0 mousePos True
 
 querySearchCmd :: Text -> Command Global.State ()
 querySearchCmd query = do

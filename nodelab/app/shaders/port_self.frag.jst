@@ -13,7 +13,8 @@ void main(void) {
     vec3 ulocal  = local * dpr;
     vec2 p       = ulocal.xy - size / 2.0;
 
-    float opacity = sdf_ball(p, 5.0);
+    float opacity = sdf_ball(p, 5.0 + float(objectMap) * 5.0);
+
     if (objectMap == 1) {
         gl_FragColor = vec4(objectId, sdf_sharp(opacity));
     } else {

@@ -1,3 +1,13 @@
+.tutorial-bkg {
+  position: fixed;
+  z-index:-1;
+  background: black;
+  opacity: 0.5;
+  top:0;
+  bottom:0;
+  right:0;
+  left:0;
+}
 .tutorial-box {
   position: fixed;
   z-index: 2000;
@@ -21,17 +31,23 @@
   }
 }
 
-.tutorial {
+.help-buttons {
   position: fixed;
-  top: 0;
+  top: 10px;
   right: 10px;
-  background: #555;
   z-index: 30;
-  padding: 5px 10px;
-  font-weight: normal;
-  cursor: pointer;
-  color: #ddd;
-  &:hover {
-    color: white;
+  a {
+    padding: 5px 10px;
+    background: #555;
+    font-weight: normal;
+    font-size: 11px;
+    border-radius: 5px;
+    cursor: pointer;
+    color: #ddd;
+    &:hover {
+      color: white;
+    }
+    text-decoration: none;
+
   }
 }

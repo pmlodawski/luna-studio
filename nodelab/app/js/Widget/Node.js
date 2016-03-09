@@ -13,6 +13,8 @@ var nodeGeometry    = new THREE.PlaneBufferGeometry(1.0, 1.0);
 nodeGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0));
 
 
+var nodeSize = 100.0;
+
 function Node(position, z, widgetId) {
   var _this = this;
 
@@ -22,7 +24,7 @@ function Node(position, z, widgetId) {
     selected:          { type: 'i',  value:                               0 },
     mouseDist:         { type: 'f',  value:                             0.0 },
     expanded:          { type: 'f',  value:                             0.0 },
-    size:              { type: 'v2', value:   new THREE.Vector2(60.0, 60.0) },
+    size:              { type: 'v2', value:   new THREE.Vector2(nodeSize, nodeSize) },
     unselectedColor:   { type: 'c',  value:                 unselectedColor },
     selectedColor:     { type: 'c',  value:                   selectedColor },
     errorColor:        { type: 'c',  value:                      errorColor },
@@ -48,16 +50,14 @@ function Node(position, z, widgetId) {
       derivatives:    true
     })
   );
-  this.node.position.set(-30, -30, 0);
+  this.node.position.set(-nodeSize/2, -nodeSize/2, 0);
 
   this.expandedNode = new THREE.Group();
   this.container    = this.mesh;
   this.mesh.add(this.node);
 
-  this.collapsedNodeSize = new THREE.Vector2(60.0, 60.0);
-
-  this.node.scale.x = this.collapsedNodeSize.x;
-  this.node.scale.y = this.collapsedNodeSize.y;
+  this.node.scale.x = nodeSize;
+  this.node.scale.y = nodeSize;
 
   this.mesh.position.x = position.x;
   this.mesh.position.y = position.y;
