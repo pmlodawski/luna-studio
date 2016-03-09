@@ -201,7 +201,11 @@ runTC = do
     return ()
 
 runInterpreter :: [NodeRef] -> AST -> IO AST
-runInterpreter refs g = fmap snd $ flip ASTOp.runBuilder g $ Interpreter.run refs
+runInterpreter refs g = do
+    print "TCStart"
+    res <- fmap snd $ flip ASTOp.runBuilder g $ Interpreter.run refs
+    print "TCDone"
+    return res
 
 printNodeLine :: NodeId -> Command Graph String
 printNodeLine nodeId = GraphUtils.getASTPointer nodeId >>= (zoom Graph.ast . AST.printExpression)
