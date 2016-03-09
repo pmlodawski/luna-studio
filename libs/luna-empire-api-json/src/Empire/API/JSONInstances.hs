@@ -94,6 +94,7 @@ instance ToJSON UpdateNodeMeta.Result
 
 instance ToJSON NodeUpdate.Update
 instance ToJSON NodeResultUpdate.Update
+instance ToJSON NodeResultUpdate.NodeValue
 instance ToJSON CodeUpdate.Update
 
 instance ToJSON GetProgram.Request

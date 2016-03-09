@@ -69,7 +69,7 @@ notifyNodeResultUpdates location = do
 
 notifyNodeResultUpdate :: GraphLocation -> NodeId -> Value -> StateT Env BusT ()
 notifyNodeResultUpdate location nodeId value = do
-    let update = NodeResultUpdate.Update location nodeId (Just value) 42 -- FIXME: report correct execution time
+    let update = NodeResultUpdate.Update location nodeId (NodeResultUpdate.Value value) 42 -- FIXME: report correct execution time
     sendToBus Topic.nodeResultUpdate update
 
 

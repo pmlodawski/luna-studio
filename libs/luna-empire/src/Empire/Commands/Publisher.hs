@@ -1,6 +1,7 @@
 module Empire.Commands.Publisher where
 
 import Prologue
+import Data.Maybe
 import Empire.Empire
 import Control.Monad.Reader
 import Control.Monad.STM             (atomically)
@@ -18,7 +19,8 @@ notifyNodeUpdate loc n = do
     chan <- asks $ view updatesChan
     liftIO $ atomically $ writeTChan chan $ NodeUpdate $ Node.Update loc n
 
+
 notifyResultUpdate :: GraphLocation -> NodeId -> Maybe Value -> Integer -> Command s ()
 notifyResultUpdate loc nid v t = do
     chan <- asks $ view updatesChan
-    liftIO $ atomically $ writeTChan chan $ ResultUpdate $ NodeResult.Update loc nid v t
+    liftIO $ atomically $ writeTChan chan $ ResultUpdate $ NodeResult.Update loc nid (fromMaybe NodeResult.NoValue $ NodeResult.Value <$> v) t
