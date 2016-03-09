@@ -56,8 +56,6 @@ toAction (Event.Batch ev) = Just $ case ev of
             performIO $ UI.setText code
             Global.workspace . Workspace.isGraphLoaded .= True
 
-    NodeAdded      response -> addNode $ response ^. Update.result . AddNode.node
-
     NodesConnected response -> processConnection (response ^. Update.request)  where
         processConnection request = localConnectNodes (request ^. Connect.src) (request ^. Connect.dst)
 

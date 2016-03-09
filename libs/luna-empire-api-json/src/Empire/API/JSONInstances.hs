@@ -79,7 +79,6 @@ instance ToJSON Graph.Graph
 
 instance ToJSON AddNode.NodeType
 instance ToJSON AddNode.Request
-instance ToJSON AddNode.Result
 
 instance ToJSON Connect.Request
 

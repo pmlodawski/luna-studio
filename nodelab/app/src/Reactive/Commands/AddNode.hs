@@ -168,6 +168,14 @@ nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
 updateNode :: Node -> Command State ()
 updateNode node = do
     let nodeId  = node ^. Node.nodeId
+    inGraph <- preuse $ Global.graph . Graph.nodes . ix nodeId
+    case inGraph of
+        Just existingNode -> updateExistingNode node
+        Nothing           -> addNode            node
+
+updateExistingNode :: Node -> Command State ()
+updateExistingNode node = do
+    let nodeId  = node ^. Node.nodeId
     maybeWidgetId <- inRegistry $ nodeIdToWidgetId nodeId
     zoom Global.graph $ modify (Graph.addNode node)
     forM_ maybeWidgetId $ \widgetId -> do
