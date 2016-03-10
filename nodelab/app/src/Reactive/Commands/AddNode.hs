@@ -317,6 +317,15 @@ visualizeNodeValue id (DoublePairList v) = do
                & ScatterPlot.dataPoints .~ dataPoints
     UICmd.register_ groupId widget def
 
+visualizeNodeValue id (Histogram v) = do
+    groupId <- Node.valueGroupId id
+
+    let dataPoints = uncurry Vector2 <$> v
+        widget = ScatterPlot.create Style.plotSize
+               & ScatterPlot.dataPoints .~ dataPoints
+               & ScatterPlot.display    .~ ScatterPlot.Bars
+    UICmd.register_ groupId widget def
+
 visualizeNodeValue _ _ = return ()
 
 

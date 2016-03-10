@@ -26,7 +26,7 @@ newtype ScatterPlot = ScatterPlot JSVal deriving (PToJSVal, PFromJSVal)
 instance UIWidget ScatterPlot
 
 foreign import javascript safe "new ScatterPlot($1, $2, $3)" create'  :: Int         -> Double -> Double -> IO ScatterPlot
-foreign import javascript safe "$1.setData($2)"              setData' :: ScatterPlot -> JSVal -> IO ()
+foreign import javascript safe "$1.setData($2, $3)"              setData' :: ScatterPlot -> JSVal -> Bool -> IO ()
 
 foreign import javascript safe "$1.push({Index: $2, Value: $3})" createDataPoint' :: JSVal -> Double -> Double -> IO JSVal
 foreign import javascript safe "[]" emptyArr' :: IO JSVal
@@ -37,7 +37,7 @@ setData plot model = do
     let plotData = (model ^. Model.dataPoints)
     seq plotData $ return ()
     forM_ plotData $ \v -> createDataPoint' outArr (v ^. x) (v ^. y)
-    setData' plot outArr
+    setData' plot outArr (model ^. Model.display == Model.Bars)
 
 create :: WidgetId -> Model.ScatterPlot -> IO ScatterPlot
 create oid model = do

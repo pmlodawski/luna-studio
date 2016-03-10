@@ -43,7 +43,7 @@ class ScatterPlot extends BaseWidget
     @mesh.add @plot
 
 
-  setData: (vector) ->
+  setData: (vector, bars) ->
     @data = vector
     @svg = d3.select("body")
       .append("svg")
@@ -53,10 +53,14 @@ class ScatterPlot extends BaseWidget
       .attr('fill', "#ffffff");
 
     myChart = new dimple.chart(@svg, vector)
-    myChart.addMeasureAxis("x", "Index");
+    if bars
+      x = myChart.addCategoryAxis("x", "Index");
+      x.hidden = true
+    else
+      myChart.addMeasureAxis("x", "Index");
     myChart.addMeasureAxis("y", "Value");
 
-    myChart.addSeries(["Index"], dimple.plot.bubble);
+    myChart.addSeries(["Index"], (if bars then dimple.plot.bar else dimple.plot.bar));
     myChart.defaultColors = [
           new dimple.color("#3498db", "#2980b9", 1), # blue
           # new dimple.color("#e74c3c", "#c0392b", 1), # red
