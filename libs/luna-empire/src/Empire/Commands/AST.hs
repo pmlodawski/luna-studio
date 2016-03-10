@@ -53,8 +53,12 @@ getNodeValue ref = runASTOp $ do
         Nothing -> return Nothing
         Just v  -> return $ caseTest (uncover tpNode) $ do
             of' $ \(Cons (Lit.String n) _) -> case n of
-                "Int"    -> Just $ IntValue    $ unsafeCoerce v
-                "String" -> Just $ StringValue $ unsafeCoerce v
+                "Int"      -> Just $ IntValue    $ unsafeCoerce v
+                "String"   -> Just $ StringValue $ unsafeCoerce v
+                "Double"   -> Just $ DoubleValue $ unsafeCoerce v
+                "Bool"     -> Just $ BoolValue   $ unsafeCoerce v
+                "[Double]" -> Just $ DoubleList  $ unsafeCoerce v
+                "[Int]"    -> Just $ IntList     $ unsafeCoerce v
                 _        -> Nothing
             of' $ \ANY -> Nothing
 
