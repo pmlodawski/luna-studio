@@ -60,7 +60,7 @@ class ScatterPlot extends BaseWidget
       myChart.addMeasureAxis("x", "Index");
     myChart.addMeasureAxis("y", "Value");
 
-    myChart.addSeries(["Index"], (if bars then dimple.plot.bar else dimple.plot.bar));
+    myChart.addSeries(["Index"], (if bars then dimple.plot.bar else dimple.plot.bubbles));
     myChart.defaultColors = [
           new dimple.color("#3498db", "#2980b9", 1), # blue
           # new dimple.color("#e74c3c", "#c0392b", 1), # red
