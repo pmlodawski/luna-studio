@@ -28,6 +28,7 @@ import qualified Object.Widget.Number.Continuous   as ContinuousNumber
 import           Object.Widget.Number.Discrete     (DiscreteNumber (..))
 import qualified Object.Widget.Number.Discrete     as DiscreteNumber
 import qualified Object.Widget.Plots.ScatterPlot   as ScatterPlot
+import qualified Object.Widget.Plots.Image         as Image
 import qualified Object.Widget.Port                as PortModel
 import           Object.Widget.Toggle              (Toggle (..))
 import qualified Object.Widget.Toggle              as Toggle
@@ -324,6 +325,12 @@ visualizeNodeValue id (Histogram v) = do
         widget = ScatterPlot.create Style.plotSize
                & ScatterPlot.dataPoints .~ dataPoints
                & ScatterPlot.display    .~ ScatterPlot.Bars
+    UICmd.register_ groupId widget def
+
+visualizeNodeValue id (Image url w h) = do
+    groupId <- Node.valueGroupId id
+
+    let widget = Image.create (Vector2 w h) $ Text.pack url
     UICmd.register_ groupId widget def
 
 visualizeNodeValue _ _ = return ()

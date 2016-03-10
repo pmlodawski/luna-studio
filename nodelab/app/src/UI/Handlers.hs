@@ -24,6 +24,7 @@ import           Object.Widget.Toggle             (Toggle)
 import           Object.Widget.Scene              (Scene)
 import           Object.Widget.Label              (Label)
 import           Object.Widget.Plots.ScatterPlot  (ScatterPlot)
+import           Object.Widget.Plots.Image        (Image)
 
 import           UI.Widget                        (GenericWidget (..), UIContainer, UIWidget)
 import qualified UI.Widget.Button                 as Button
@@ -38,6 +39,7 @@ import qualified UI.Widget.Slider                 as Slider
 import qualified UI.Widget.TextBox                as TextBox
 import qualified UI.Widget.Toggle                 as Toggle
 import qualified UI.Widget.Plots.ScatterPlot      as ScatterPlot
+import qualified UI.Widget.Plots.Image            as Image
 
 import qualified UI.Handlers.Button               as Button
 import qualified UI.Handlers.Node                 as Node
@@ -74,6 +76,7 @@ listType              = typeOf (undefined :: List)
 sceneType             = typeOf (undefined :: Scene)
 labelType             = typeOf (undefined :: Label)
 scatterPlotType       = typeOf (undefined :: ScatterPlot)
+imageType             = typeOf (undefined :: Image)
 
 instance HasHandlers State where
     widgetHandlers (CtxDynamic tpe _)
@@ -97,5 +100,6 @@ instance HasHandlers State where
         | tpe ==            sceneType  = def
         | tpe ==            labelType  =           Button.widgetHandlers
         | tpe ==      scatterPlotType  = def
+        | tpe ==            imageType  = def
 
         | otherwise                    = error $ "Unknown widget type " <> (show tpe)

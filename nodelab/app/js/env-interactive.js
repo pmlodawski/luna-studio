@@ -23,4 +23,5 @@ module.exports = function() {
   window.LabeledWidget  = require('Widget/LabeledWidget');
   window.ScatterPlot    = require('Widget/ScatterPlot');
   window.Icon           = require('Widget/Icon');
+  window.PlotImage      = require('Widget/Image');
 };
