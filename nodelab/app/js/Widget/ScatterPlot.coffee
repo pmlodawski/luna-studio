@@ -45,7 +45,6 @@ class ScatterPlot extends BaseWidget
 
   setData: (vector) ->
     @data = vector
-
     @svg = d3.select("body")
       .append("svg")
       .attr("xmlns", "http://www.w3.org/2000/svg")
@@ -53,22 +52,20 @@ class ScatterPlot extends BaseWidget
       .attr("height", @height)
       .attr('fill', "#ffffff");
 
-    data = @data
-
-    myChart = new dimple.chart(@svg, data)
-    myChart.addCategoryAxis("x", "Index");
+    myChart = new dimple.chart(@svg, vector)
+    myChart.addMeasureAxis("x", "Index");
     myChart.addMeasureAxis("y", "Value");
 
-    myChart.addSeries(null, dimple.plot.bubble);
+    myChart.addSeries(["Index"], dimple.plot.bubble);
     myChart.defaultColors = [
           new dimple.color("#3498db", "#2980b9", 1), # blue
-          new dimple.color("#e74c3c", "#c0392b", 1), # red
-          new dimple.color("#2ecc71", "#27ae60", 1), # green
-          new dimple.color("#9b59b6", "#8e44ad", 1), # purple
-          new dimple.color("#e67e22", "#d35400", 1), # orange
-          new dimple.color("#f1c40f", "#f39c12", 1), # yellow
-          new dimple.color("#1abc9c", "#16a085", 1), # turquoise
-          new dimple.color("#95a5a6", "#7f8c8d", 1)  # gray
+          # new dimple.color("#e74c3c", "#c0392b", 1), # red
+          # new dimple.color("#2ecc71", "#27ae60", 1), # green
+          # new dimple.color("#9b59b6", "#8e44ad", 1), # purple
+          # new dimple.color("#e67e22", "#d35400", 1), # orange
+          # new dimple.color("#f1c40f", "#f39c12", 1), # yellow
+          # new dimple.color("#1abc9c", "#16a085", 1), # turquoise
+          # new dimple.color("#95a5a6", "#7f8c8d", 1)  # gray
     ]
 
     myChart.draw();
