@@ -175,6 +175,9 @@ instance CompositeWidget Model.Node where
                                   & Group.visible .~ (model ^. Model.isExpanded)
         expandedGroup <- UICmd.register controlGroups grp Style.expandedGroupLayout
 
+        let label  = Style.execTimeLabel "Execution time: (not executed)"
+        void $ UICmd.register expandedGroup label def
+
         let grp    = Group.create
         nodeGroup <- UICmd.register expandedGroup grp Style.expandedGroupLayout
 
@@ -196,8 +199,6 @@ instance CompositeWidget Model.Node where
                                   & Group.visible .~ (model ^. Model.isExpanded)
         UICmd.register_ controlGroups group (Layout.verticalLayoutHandler 0.0)
 
-        let label  = Style.execTimeLabel ""
-        void $ UICmd.register id label def
 
     updateWidget id old model = do
         controlsId <- expandedGroupId id
@@ -217,11 +218,7 @@ instance CompositeWidget Model.Node where
         withJust (model ^. Model.tpe) $ \tpe -> do
             withJust typeTbId $ \typeTbId -> UICmd.update_ typeTbId $ LabeledTextBox.value .~ tpe
 
-        let (etPos, etAlign)   = if (model ^. Model.isExpanded) then (Style.execTimeExpandedPos,  Style.execTimeExpandedAlign)
-                                                                else (Style.execTimeCollapsedPos, Style.execTimeCollapsedAlign)
-        UICmd.move etId etPos
-        UICmd.update_ etId $ Label.alignment .~ etAlign
-        UICmd.update_ etId $ Label.label     .~ (fromMaybe "" $ (<> " ms") <$> (Text.pack . show) <$> model ^. Model.execTime)
+        UICmd.update_ etId $ Label.label     .~ (fromMaybe "" $ (\v -> "Execution time: " <> v <> " ms") <$> (Text.pack . show) <$> model ^. Model.execTime)
 
 -- Node widget structure:
 -- Node:
@@ -240,7 +237,7 @@ instance CompositeWidget Model.Node where
 portControlsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
 portControlsGroupId id = do
     expGroup <- expandedGroupId id
-    (_:controlsId:_) <- UICmd.children expGroup
+    (_:_:controlsId:_) <- UICmd.children expGroup
     return controlsId
 
 outPortControlsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
@@ -251,7 +248,7 @@ outPortControlsGroupId id = do
 nodeControlsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
 nodeControlsGroupId id = do
     expGroup <- expandedGroupId id
-    (controlsId:_) <- UICmd.children expGroup
+    (_:controlsId:_) <- UICmd.children expGroup
 
     return controlsId
 
@@ -292,5 +289,7 @@ valueLabelId id = do
 
 execTimeLabelId :: WidgetId -> Command UIRegistry.State WidgetId
 execTimeLabelId id = do
-    (_:_:_:etId:_) <- UICmd.children id
+    expGroup <- expandedGroupId id
+    (etId:_) <- UICmd.children expGroup
+
     return etId

@@ -48,11 +48,10 @@ setLabelOffsetX = 10.0
 labeledPadding = xyPadding setLabelOffsetX 0.0
 
 
-execTimeCollapsedPos   = Vector2 (-50.0) 27.0
-execTimeCollapsedAlign = Label.Center
-execTimeExpandedPos    = Vector2 30.0 0.0
-execTimeExpandedAlign  = Label.Left
-execTimeLabel = Label.Label position size align  where
-    position = execTimeCollapsedPos
-    size     = Vector2 100.0 20.0
-    align    = execTimeCollapsedAlign
+-- execTimeCollapsedPos   = Vector2 (-50.0) 27.0
+-- execTimeCollapsedAlign = Label.Center
+-- execTimeExpandedPos    = Vector2 30.0 0.0
+-- execTimeExpandedAlign  = Label.Left
+execTimeLabel = Label.Label def size align  where
+    size     = Vector2 200.0 20.0
+    align    = Label.Left
