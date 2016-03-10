@@ -202,18 +202,30 @@ makePortControl node outPortParent groupParent nodeId port = let portRef = toAny
 makeInPortControl :: WidgetId -> AnyPortRef -> Port -> Command UIRegistry.State ()
 makeInPortControl parent portRef port = case port ^. Port.state of
     Port.NotConnected    -> do
-        let group = Group.create & Group.style . Group.padding .~ Style.Padding 0.0 0.0 0.0 Style.setLabelOffsetX
-        groupId <- UICmd.register parent group (Layout.horizontalLayoutHandler 0.0)
-        let label  = Label.create Style.setLabelSize (Text.pack $ port ^. Port.name)
-                   & Label.position . x .~ Style.setLabelOffsetX
-            button = Button.create Style.setButtonSize "not set"
-            handlers = addHandler (Button.ClickedHandler $ \_ -> do
-                workspace <- use Global.workspace
-                performIO $ BatchCmd.setDefaultValue workspace portRef (DefaultValue.Constant $ DefaultValue.IntValue def)
-                ) mempty
+        case port ^. Port.valueType . ValueType.toEnum of
+            ValueType.Other -> do
+                let widget = Label.create (Style.portControlSize & x -~ Style.setLabelOffsetX) (Text.pack $ (port ^. Port.name) <> " :: " <> (show $ port ^. Port.valueType) )
+                           & Label.position . x .~ Style.setLabelOffsetX
+                UICmd.register_ parent widget mempty
+            otherwise -> do
+                let group = Group.create & Group.style . Group.padding .~ Style.Padding 0.0 0.0 0.0 Style.setLabelOffsetX
+                groupId <- UICmd.register parent group (Layout.horizontalLayoutHandler 0.0)
+                let label  = Label.create Style.setLabelSize (Text.pack $ port ^. Port.name)
+                           & Label.position . x .~ Style.setLabelOffsetX
+                    button = Button.create Style.setButtonSize "not set"
+                    zeroValue = case port ^. Port.valueType . ValueType.toEnum of
+                        ValueType.DiscreteNumber -> DefaultValue.IntValue def
+                        ValueType.ContinuousNumber -> DefaultValue.DoubleValue def
+                        ValueType.String ->  DefaultValue.StringValue def
+                        ValueType.Bool -> DefaultValue.BoolValue False
+                        _              -> undefined
+                    handlers = addHandler (Button.ClickedHandler $ \_ -> do
+                        workspace <- use Global.workspace
+                        performIO $ BatchCmd.setDefaultValue workspace portRef (DefaultValue.Constant $ zeroValue)
+                        ) mempty
 
-        UICmd.register_ groupId label def
-        UICmd.register_ groupId button handlers
+                UICmd.register_ groupId label def
+                UICmd.register_ groupId button handlers
     Port.Connected       -> do
         let widget = Label.create (Style.portControlSize & x -~ Style.setLabelOffsetX) (Text.pack $ (port ^. Port.name) <> " (connected)")
                    & Label.position . x .~ Style.setLabelOffsetX
@@ -252,7 +264,9 @@ makeInPortControl parent portRef port = case port ^. Port.state of
                     performIO $ BatchCmd.setDefaultValue workspace portRef (DefaultValue.Constant $ DefaultValue.BoolValue val)
             UICmd.register parent widget handlers
         ValueType.Other -> do
-            let widget = Label.create Style.portControlSize (Text.pack $ (port ^. Port.name) <> " :: " <> (show $ port ^. Port.valueType) )
+            let widget = Label.create (Style.portControlSize & x -~ Style.setLabelOffsetX) (Text.pack $ (port ^. Port.name) <> " :: " <> (show $ port ^. Port.valueType) )
+                       & Label.position . x .~ Style.setLabelOffsetX
+
             UICmd.register parent widget mempty
 
 

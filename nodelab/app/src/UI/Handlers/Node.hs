@@ -218,7 +218,7 @@ instance CompositeWidget Model.Node where
         withJust (model ^. Model.tpe) $ \tpe -> do
             withJust typeTbId $ \typeTbId -> UICmd.update_ typeTbId $ LabeledTextBox.value .~ tpe
 
-        UICmd.update_ etId $ Label.label     .~ (fromMaybe "" $ (\v -> "Execution time: " <> v <> " ms") <$> (Text.pack . show) <$> model ^. Model.execTime)
+        UICmd.update_ etId $ Label.label     .~ (fromMaybe "Execution time: (not executed)" $ (\v -> "Execution time: " <> v <> " ms") <$> (Text.pack . show) <$> model ^. Model.execTime)
 
 -- Node widget structure:
 -- Node:
