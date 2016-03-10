@@ -256,14 +256,17 @@ makeInPortControl parent portRef port = case port ^. Port.state of
 
 
 nodeValueToText :: Value -> Text
-nodeValueToText (IntValue    v) = Text.pack $ show v
-nodeValueToText (DoubleValue v) = Text.pack $ show v
-nodeValueToText (BoolValue   v) = Text.pack $ show v
-nodeValueToText (StringValue v) = Text.pack v
-nodeValueToText (IntList     v) = Text.pack $ "Vector [" <> (show $ length v) <> "]"
-nodeValueToText (DoubleList  v) = Text.pack $ "Vector [" <> (show $ length v) <> "]"
-nodeValueToText (BoolList    v) = Text.pack $ "Vector [" <> (show $ length v) <> "]"
-nodeValueToText (StringList  v) = Text.pack $ "Vector [" <> (show $ length v) <> "]"
+nodeValueToText (IntValue    v)      = Text.pack $ show v
+nodeValueToText (DoubleValue v)      = Text.pack $ show v
+nodeValueToText (BoolValue   v)      = Text.pack $ show v
+nodeValueToText (StringValue v)      = Text.pack v
+nodeValueToText (IntList     v)      = Text.pack $ "Vector [" <> (show $ length v) <> "]"
+nodeValueToText (DoubleList  v)      = Text.pack $ "Vector [" <> (show $ length v) <> "]"
+nodeValueToText (BoolList    v)      = Text.pack $ "Vector [" <> (show $ length v) <> "]"
+nodeValueToText (DoublePairList v)   = Text.pack $ "Vector2 [" <> (show $ length v) <> "]"
+nodeValueToText (IntPairList v)      = Text.pack $ "Vector2 [" <> (show $ length v) <> "]"
+nodeValueToText (Histogram   v)      = Text.pack $ "Histogram [" <> (show $ length v) <> "]"
+nodeValueToText (Image      dataUrl width height) = Text.pack $ "Image"
 
 removeVisualization :: WidgetId -> Command UIRegistry.State ()
 removeVisualization id = do
@@ -294,6 +297,22 @@ visualizeNodeValue id (DoubleList v) = do
     groupId <- Node.valueGroupId id
 
     let dataPoints = zipVector v []
+        widget = ScatterPlot.create Style.plotSize
+               & ScatterPlot.dataPoints .~ dataPoints
+    UICmd.register_ groupId widget def
+
+visualizeNodeValue id (IntPairList v) = do
+    groupId <- Node.valueGroupId id
+
+    let dataPoints = (\(a,b) -> Vector2 (fromIntegral a) (fromIntegral b)) <$> v
+        widget = ScatterPlot.create Style.plotSize
+               & ScatterPlot.dataPoints .~ dataPoints
+    UICmd.register_ groupId widget def
+
+visualizeNodeValue id (DoublePairList v) = do
+    groupId <- Node.valueGroupId id
+
+    let dataPoints = uncurry Vector2 <$> v
         widget = ScatterPlot.create Style.plotSize
                & ScatterPlot.dataPoints .~ dataPoints
     UICmd.register_ groupId widget def
