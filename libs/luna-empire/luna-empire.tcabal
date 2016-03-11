@@ -45,7 +45,8 @@ Library
                   stm,
                   prologue,
                   text,
-                  typelevel
+                  typelevel,
+                  transformers
 
 Executable luna-empire-lib-test
   Main-Is:        Main.hs

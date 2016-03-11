@@ -51,16 +51,26 @@ getNodeValue ref = runASTOp $ do
     tpNode <- Builder.read tp
     case (node ^. prop InterpreterData . Interpreter.value) of
         Nothing -> return Nothing
-        Just v  -> return $ caseTest (uncover tpNode) $ do
-            of' $ \(Cons (Lit.String n) _) -> case n of
-                "Int"      -> Just $ IntValue    $ unsafeCoerce v
-                "String"   -> Just $ StringValue $ unsafeCoerce v
-                "Double"   -> Just $ DoubleValue $ unsafeCoerce v
-                "Bool"     -> Just $ BoolValue   $ unsafeCoerce v
-                "[Double]" -> Just $ DoubleList  $ unsafeCoerce v
-                "[Int]"    -> Just $ IntList     $ unsafeCoerce v
-                _        -> Nothing
-            of' $ \ANY -> Nothing
+        Just v  -> caseTest (uncover tpNode) $ do
+            of' $ \(Cons (Lit.String n) as) -> case n of
+                "Int"      -> return $ Just $ IntValue    $ unsafeCoerce v
+                "String"   -> return $ Just $ StringValue $ unsafeCoerce v
+                "Double"   -> return $ Just $ DoubleValue $ unsafeCoerce v
+                "Bool"     -> return $ Just $ BoolValue   $ unsafeCoerce v
+                "List"     -> do
+                    args <- ASTBuilder.unpackArguments as
+                    case args of
+                        [a] -> do
+                            arg <- Builder.read a
+                            caseTest (uncover arg) $ do
+                                of' $ \(Cons (Lit.String n) _) -> case n of
+                                    "Int"    -> return $ Just $ IntList    $ unsafeCoerce v
+                                    "Double" -> return $ Just $ DoubleList $ unsafeCoerce v
+                                    _        -> return Nothing
+                                of' $ \ANY -> return Nothing
+                        _ -> return Nothing
+                _ -> return Nothing
+            of' $ \ANY -> return Nothing
 
 readMeta :: NodeRef -> Command AST (Maybe NodeMeta)
 readMeta ref = runASTOp $ HMap.lookup metaKey . view (prop Meta) <$> Builder.read ref

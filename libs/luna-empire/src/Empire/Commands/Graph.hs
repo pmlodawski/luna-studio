@@ -177,10 +177,10 @@ getNodeValue nid = do
     ref <- GraphUtils.getASTTarget nid
     zoom Graph.tcAST $ AST.getNodeValue ref
 
-collect pass = return ()
-    {-putStrLn $ "After pass: " <> pass-}
-    {-st <- TypeCheckState.get-}
-    {-putStrLn $ "State is: " <> show st-}
+collect pass = do --return ()
+    putStrLn $ "After pass: " <> pass
+    st <- TypeCheckState.get
+    putStrLn $ "State is: " <> show st
 
 runTC :: Command Graph ()
 runTC = do

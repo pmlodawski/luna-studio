@@ -1,9 +1,12 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Empire.Commands.GraphBuilder where
 
 import           Prologue
 
 import           Control.Monad.State
 import           Control.Monad.Error          (throwError)
+import           Control.Monad.Trans.Maybe    (MaybeT (..), runMaybeT)
 
 import qualified Data.IntMap                  as IntMap
 import           Data.Map                     (Map)
@@ -27,7 +30,7 @@ import           Empire.API.Data.Port         (InPort (..), OutPort (..), Port (
 import           Empire.API.Data.PortRef      (InPortRef (..), OutPortRef (..))
 import           Empire.API.Data.ValueType    (ValueType (..))
 
-import           Empire.Data.AST              (NodeRef, EdgeRef)
+import           Empire.Data.AST              (NodeRef, EdgeRef, ClusRef)
 import           Empire.ASTOp                 (ASTOp, runASTOp)
 import qualified Empire.ASTOps.Builder        as ASTBuilder
 import qualified Empire.ASTOps.Print          as Print
@@ -37,9 +40,10 @@ import           Empire.Empire
 
 import           Luna.Syntax.AST.Term         (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..), Lam (..))
 import qualified Luna.Syntax.AST.Term.Lit     as Lit
+import qualified Luna.Syntax.AST.Function     as Function
 
-import qualified Luna.Syntax.Model.Network.Builder          as Builder
-import           Luna.Syntax.Model.Network.Builder          (Type (..))
+import qualified Luna.Syntax.Model.Network.Builder  as Builder
+import           Luna.Syntax.Model.Network.Builder  (Type (..), TCData (..), replacement, Lambda (..))
 
 
 buildGraph :: Command Graph API.Graph
@@ -82,6 +86,20 @@ getPortState ref = do
             of' $ \Blank   -> return NotConnected
             of' $ \ANY     -> Print.printExpression ref >>= return . WithDefault . Expression
 
+extractAppArgTypes :: ASTOp m => NodeRef -> m [ValueType]
+extractAppArgTypes ref = do
+    node <- Builder.read ref
+    args <- runMaybeT $ do
+        repl :: ClusRef <- MaybeT $ cast <$> Builder.follow (prop TCData . replacement) ref
+        sig <- MaybeT $ Builder.follow (prop Lambda) repl
+        return $ sig ^. Function.args
+    case args of
+        Nothing -> return []
+        Just as -> do
+            let unpacked = unlayer <$> as
+            types <- mapM (Builder.follow (prop Type) >=> Builder.follow source) unpacked
+            mapM getTypeRep types
+
 extractArgTypes :: ASTOp m => NodeRef -> m [ValueType]
 extractArgTypes ref = do
     node <- Builder.read ref
@@ -91,14 +109,12 @@ extractArgTypes ref = do
             mapM getTypeRep unpacked
         of' $ \ANY -> return []
 
-
 buildArgPorts :: ASTOp m => NodeRef -> m [Port]
 buildArgPorts ref = do
     node <- Builder.read ref
     (types, states) <- caseTest (uncover node) $ do
         of' $ \(App f args) -> do
-            tpRef      <- Builder.follow source =<< Builder.follow (prop Type) =<< Builder.follow source f
-            portTypes  <- extractArgTypes tpRef
+            portTypes  <- extractAppArgTypes ref
             unpacked   <- ASTBuilder.unpackArguments args
             portStates <- mapM getPortState unpacked
             return (portTypes, portStates)
@@ -132,12 +148,22 @@ followTypeRep ref = do
     tp <- Builder.follow source =<< Builder.follow (prop Type) ref
     getTypeRep tp
 
-getTypeRep :: ASTOp m => NodeRef -> m ValueType
-getTypeRep tp = do
+getTypeString :: ASTOp m => NodeRef -> m String
+getTypeString tp = do
     tpNode <- Builder.read tp
     caseTest (uncover tpNode) $ do
-        of' $ \(Cons (Lit.String s) _) -> return $ TypeIdent s
-        of' $ \ANY -> return AnyType
+        of' $ \(Cons (Lit.String s) as) -> do
+            args <- ASTBuilder.unpackArguments as
+            reps <- mapM getTypeString args
+            return $ s ++ concat reps
+        of' $ \ANY -> return ""
+
+getTypeRep :: ASTOp m => NodeRef -> m ValueType
+getTypeRep tp = do
+    str <- getTypeString tp
+    case str of
+        "" -> return AnyType
+        s  -> return $ TypeIdent s
 
 buildPorts :: NodeRef -> Command Graph [Port]
 buildPorts ref = zoom Graph.tcAST $ runASTOp $ do
