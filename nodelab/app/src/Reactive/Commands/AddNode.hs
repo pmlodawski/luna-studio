@@ -264,7 +264,7 @@ makeInPortControl parent portRef port = case port ^. Port.state of
                     performIO $ BatchCmd.setDefaultValue workspace portRef (DefaultValue.Constant $ DefaultValue.BoolValue val)
             UICmd.register parent widget handlers
         ValueType.Other -> do
-            let widget = Label.create (Style.portControlSize & x -~ Style.setLabelOffsetX) (Text.pack $ (port ^. Port.name) <> " :: " <> (show $ port ^. Port.valueType) )
+            let widget = Label.create (Style.portControlSize & x -~ Style.setLabelOffsetX) (Text.pack $ (port ^. Port.name) )
                        & Label.position . x .~ Style.setLabelOffsetX
 
             UICmd.register parent widget mempty
@@ -346,6 +346,12 @@ visualizeNodeValue id (Image url w h) = do
 
     let widget = Image.create (Vector2 w h) $ Text.pack url
     UICmd.register_ groupId widget def
+
+-- visualizeNodeValue id (IntValue v) = do -- For Image widget testing
+--     groupId <- Node.valueGroupId id
+--
+--     let widget = Image.create (Vector2 353 269) $ ""
+--     UICmd.register_ groupId widget def
 
 visualizeNodeValue _ _ = return ()
 
