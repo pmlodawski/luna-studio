@@ -49,7 +49,7 @@ class ScatterPlot extends BaseWidget
       .append("svg")
       .attr("xmlns", "http://www.w3.org/2000/svg")
       .attr("width", @width)
-      .attr("height", @height)
+      .attr("height", @height - 5)
       .attr('fill', "#ffffff");
 
     myChart = new dimple.chart(@svg, vector)
@@ -57,8 +57,10 @@ class ScatterPlot extends BaseWidget
       x = myChart.addCategoryAxis("x", "Index");
       x.hidden = true
     else
-      myChart.addMeasureAxis("x", "Index");
-    myChart.addMeasureAxis("y", "Value");
+      x = myChart.addMeasureAxis("x", "Index");
+      x.ticks = 5
+    y = myChart.addMeasureAxis("y", "Value");
+    y.ticks = 5
 
     myChart.addSeries(["Index"], (if bars then dimple.plot.bar else dimple.plot.bubbles));
     myChart.defaultColors = [
