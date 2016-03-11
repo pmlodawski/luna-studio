@@ -17,7 +17,7 @@ import           Prologue
 import           Control.Monad.State
 import           Unsafe.Coerce           (unsafeCoerce)
 import           Control.Monad.Error     (throwError)
-import           Control.Monad           (forM)
+import           Control.Monad           (forM, forM_)
 import           Data.IntMap             (IntMap)
 import qualified Data.IntMap             as IntMap
 import qualified Data.Map                as Map
@@ -71,20 +71,17 @@ addNode loc expr meta = withGraph loc $ do
     refNode <- zoom Graph.ast $ AST.addNode newNodeId ("node" ++ show newNodeId) (Text.unpack expr)
     zoom Graph.ast $ AST.writeMeta refNode meta
     Graph.nodeMapping . at newNodeId ?= refNode
-    runTC
-    val <- getNodeValue newNodeId
-    GraphBuilder.buildNode newNodeId >>= Publisher.notifyNodeUpdate loc
-    Publisher.notifyResultUpdate loc newNodeId val 323
+    runTC loc
     return newNodeId
 
 removeNode :: GraphLocation -> NodeId -> Empire ()
 removeNode loc nodeId = withGraph loc $ do
     astRef <- GraphUtils.getASTPointer nodeId
     obsoleteEdges <- getOutEdges nodeId
-    mapM_ (disconnectPort $ Publisher.notifyNodeUpdate loc) obsoleteEdges
+    mapM_ disconnectPort obsoleteEdges
     zoom Graph.ast $ AST.removeSubtree astRef
     Graph.nodeMapping %= IntMap.delete nodeId
-    runTC
+    runTC loc
 
 updateNodeMeta :: GraphLocation -> NodeId -> NodeMeta -> Empire ()
 updateNodeMeta loc nodeId meta = withGraph loc $ do
@@ -96,10 +93,7 @@ connect loc (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) = withGraph
     case dstPort of
         Self    -> makeAcc srcNodeId dstNodeId
         Arg num -> makeApp srcNodeId dstNodeId num
-    runTC
-    val <- getNodeValue dstNodeId
-    Publisher.notifyResultUpdate loc dstNodeId val 4242
-    GraphBuilder.buildNode dstNodeId >>= Publisher.notifyNodeUpdate loc
+    runTC loc
 connect _ _ _ = throwError "Source port should be All"
 
 setDefaultValue :: GraphLocation -> AnyPortRef -> PortDefault -> Empire ()
@@ -114,15 +108,12 @@ setDefaultValue loc portRef val = withGraph loc $ do
             return (nodeId, newRef)
         OutPortRef' (OutPortRef nodeId _) -> return (nodeId, parsed)
     GraphUtils.rewireNode nodeId newRef
-    runTC
-    node <- GraphBuilder.buildNode nodeId
-    Publisher.notifyNodeUpdate loc node
-    val  <- getNodeValue nodeId
-    Publisher.notifyResultUpdate loc nodeId val 4242
+    runTC loc
 
 disconnect :: GraphLocation -> InPortRef -> Empire ()
 disconnect loc port@(InPortRef dstNodeId dstPort) = withGraph loc $ do
-    disconnectPort (Publisher.notifyNodeUpdate loc) port
+    disconnectPort port
+    runTC loc
 
 getCode :: GraphLocation -> Empire String
 getCode loc = withGraph loc $ do
@@ -159,8 +150,7 @@ renameNode :: GraphLocation -> NodeId -> Text -> Empire ()
 renameNode loc nid name = withGraph loc $ do
     vref <- GraphUtils.getASTVar nid
     zoom Graph.ast $ AST.renameVar vref (Text.unpack name)
-    runTC
-    GraphBuilder.buildNode nid >>= Publisher.notifyNodeUpdate loc
+    runTC loc
 
 dumpGraphViz :: GraphLocation -> Empire ()
 dumpGraphViz loc = withGraph loc $ do
@@ -168,7 +158,7 @@ dumpGraphViz loc = withGraph loc $ do
     zoom Graph.tcAST $ AST.dumpGraphViz "gui_tc_dump"
 
 typecheck :: GraphLocation -> Empire ()
-typecheck loc = withGraph loc runTC
+typecheck loc = withGraph loc $ runTC loc
 
 -- internal
 
@@ -182,8 +172,8 @@ collect pass = do --return ()
     st <- TypeCheckState.get
     putStrLn $ "State is: " <> show st
 
-runTC :: Command Graph ()
-runTC = do
+runTC :: GraphLocation -> Command Graph ()
+runTC loc = do
     allNodeIds <- uses Graph.nodeMapping IntMap.keys
     roots <- mapM GraphUtils.getASTPointer allNodeIds
     ast   <- use Graph.ast
@@ -198,14 +188,25 @@ runTC = do
     evals <- mapM GraphUtils.getASTTarget allNodeIds
     g2 <- liftIO $ runInterpreter evals g
     Graph.tcAST .= g2
+    updateGraph loc
     return ()
 
 runInterpreter :: [NodeRef] -> AST -> IO AST
-runInterpreter refs g = do
-    print "TCStart"
-    res <- fmap snd $ flip ASTOp.runBuilder g $ Interpreter.run refs
-    print "TCDone"
-    return res
+runInterpreter refs g = fmap snd $ flip ASTOp.runBuilder g $ Interpreter.run refs
+
+updateGraph :: GraphLocation -> Command Graph ()
+updateGraph loc = do
+    allNodeIds <- uses Graph.nodeMapping IntMap.keys
+    mapM (GraphBuilder.buildNode >=> Publisher.notifyNodeUpdate loc) allNodeIds
+    forM_ allNodeIds $ \id -> do
+        val    <- getNodeValue id
+        cached <- uses Graph.valueCache $ IntMap.lookup id
+        if cached /= Just val
+            then do
+                Publisher.notifyResultUpdate loc id val 100
+                Graph.valueCache %= IntMap.insert id val
+            else return ()
+
 
 printNodeLine :: NodeId -> Command Graph String
 printNodeLine nodeId = GraphUtils.getASTPointer nodeId >>= (zoom Graph.ast . AST.printExpression)
@@ -220,13 +221,11 @@ getOutEdges nodeId = do
         filtered = filter (\(opr, _) -> opr ^. PortRef.srcNodeId == nodeId) edges
     return $ view _2 <$> filtered
 
-disconnectPort :: (Node -> Command Graph ()) -> InPortRef -> Command Graph ()
-disconnectPort notif (InPortRef dstNodeId dstPort) = do
+disconnectPort :: InPortRef -> Command Graph ()
+disconnectPort (InPortRef dstNodeId dstPort) = do
     case dstPort of
         Self    -> unAcc dstNodeId
         Arg num -> unApp dstNodeId num
-    runTC
-    GraphBuilder.buildNode dstNodeId >>= notif
 
 unAcc :: NodeId -> Command Graph ()
 unAcc nodeId = do
