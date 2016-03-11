@@ -194,7 +194,6 @@ instance CompositeWidget Model.Node where
         let label  = Style.valueLabel ""
         UICmd.register controlGroups label def
 
-
         let group  = Group.create & Group.style   .~ Style.visualizationGroupStyle
                                   & Group.visible .~ (model ^. Model.isExpanded)
         UICmd.register_ controlGroups group (Layout.verticalLayoutHandler 0.0)
@@ -220,19 +219,9 @@ instance CompositeWidget Model.Node where
 
         UICmd.update_ etId $ Label.label     .~ (fromMaybe "Execution time: (not executed)" $ (\v -> "Execution time: " <> v <> " ms") <$> (Text.pack . show) <$> model ^. Model.execTime)
 
--- Node widget structure:
--- Node:
---   1. expression label
---   2. name label
---   3. group
---      1. expanded group
---        1. node controls [name, etc.]
---          1. node name labeled textbox
---          1. Maybe input node type labeled textbox
---        2. port controls [name, etc.]
---      2. Expression value
---      3. Visualization group
---   4.. ports (should put them into separate group widget)
+        UICmd.update_ valueId  $ Label.alignment .~ (if model ^. Model.isExpanded then Label.Left else Label.Center)
+        UICmd.moveX   valueId  $ if model ^. Model.isExpanded then 0.0 else -25.0
+
 
 portControlsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
 portControlsGroupId id = do

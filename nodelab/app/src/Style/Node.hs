@@ -36,6 +36,8 @@ valueLabel = Label.Label position size align  where
     size     = Vector2 100.0 20.0
     align    = Label.Left
 
+
+
 visualizationGroupStyle = def & Group.background ?~ Color 0.2 0.2 0.2 1.0
 plotSize = Vector2 200.0 150.0
 
@@ -48,10 +50,6 @@ setLabelOffsetX = 10.0
 labeledPadding = xyPadding setLabelOffsetX 0.0
 
 
--- execTimeCollapsedPos   = Vector2 (-50.0) 27.0
--- execTimeCollapsedAlign = Label.Center
--- execTimeExpandedPos    = Vector2 30.0 0.0
--- execTimeExpandedAlign  = Label.Left
 execTimeLabel = Label.Label (Vector2 setLabelOffsetX 0) size align  where
     size     = (portControlSize & x -~ setLabelOffsetX)
     align    = Label.Left
