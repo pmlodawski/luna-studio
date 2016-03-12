@@ -274,7 +274,7 @@ nodeValueToText :: Value -> Text
 nodeValueToText (IntValue    v)      = Text.pack $ show v
 nodeValueToText (DoubleValue v)      = Text.pack $ show v
 nodeValueToText (BoolValue   v)      = Text.pack $ show v
-nodeValueToText (StringValue v)      = Text.pack v
+nodeValueToText (StringValue v)      = Text.pack $ "\"" <> v <> "\""
 nodeValueToText (IntList     v)      = Text.pack $ "Vector [" <> (show $ length v) <> "]"
 nodeValueToText (DoubleList  v)      = Text.pack $ "Vector [" <> (show $ length v) <> "]"
 nodeValueToText (BoolList    v)      = Text.pack $ "Vector [" <> (show $ length v) <> "]"
