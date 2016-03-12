@@ -109,7 +109,7 @@ makePorts node = makePort <$> ports where
         portRef = toAnyPortRef nodeId portId
         angle   = portDefaultAngle (portCount portId) (port ^. Port.portId)
         portId  = port ^. Port.portId
-        isOnly  = node ^. isLiteral
+        isOnly  = 0 == portCount (InPortId Self)
     ports = Map.elems $ node ^. Node.ports
     portIds = Map.keys $  node ^. Node.ports
     portCount :: PortId -> Int
