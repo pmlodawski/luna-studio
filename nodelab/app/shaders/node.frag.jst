@@ -7,6 +7,7 @@ uniform int   error;
 uniform vec3  unselectedColor;
 uniform vec3  selectedColor;
 uniform vec3  errorColor;
+uniform int   connectionPen;
 
 <%= require('shaders/stdlib')() %>
 
@@ -18,7 +19,7 @@ void main(void) {
 
 
     if (objectMap == 1) {
-        gl_FragColor = vec4(objectId, sdf_sharp(sdf_ball(p, 20.0)));
+        gl_FragColor = vec4(objectId, sdf_sharp(sdf_ball(p, 20.0 + float(20 * connectionPen))));
     } else {
 
 

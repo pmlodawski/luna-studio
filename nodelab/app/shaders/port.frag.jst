@@ -5,6 +5,7 @@ uniform int portCount;
 uniform int onlyPort;
 uniform vec4 color;
 uniform int highlight;
+uniform int connectionPen;
 
 <%= require('shaders/stdlib')() %>
 
@@ -35,7 +36,7 @@ void main(void) {
     opacity = float(onlyPort) * ring + (1.0 - float(onlyPort)) * opacity;
 
     if (objectMap == 1) {
-        gl_FragColor = vec4(objectId, sdf_sharp(opacity));
+        gl_FragColor = vec4(objectId, sdf_sharp(opacity) * float(1 - connectionPen));
     } else {
         gl_FragColor = vec4(color.xyz + vec3(0.3,0.3,0.3) * float(highlight), sdf_aa(opacity));
     }

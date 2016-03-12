@@ -15,6 +15,7 @@ function beginPath(x, y, _type) {
   type = _type;
   $$.canvas2DCtx.beginPath();
   $$.canvas2DCtx.moveTo(x, y);
+  $$.commonUniforms.connectionPen.value = 1;
   raycaster.cacheMap();
   iterations = -1;
   $$.canvas2DCtx.strokeStyle = (type ? "#00ff00" : "#ff0000");
@@ -28,6 +29,7 @@ function drawSegment(x, y) {
 }
 
 function endPath() {
+  $$.commonUniforms.connectionPen.value = 0;
   iterations = 40;
 }
 
