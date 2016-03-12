@@ -175,7 +175,7 @@ instance CompositeWidget Model.Node where
                                   & Group.visible .~ (model ^. Model.isExpanded)
         expandedGroup <- UICmd.register controlGroups grp Style.expandedGroupLayout
 
-        let label  = Style.execTimeLabel "Execution time: (not executed)"
+        let label  = Style.execTimeLabel "Execution time: --"
         void $ UICmd.register expandedGroup label def
 
         let grp    = Group.create
@@ -217,7 +217,7 @@ instance CompositeWidget Model.Node where
         withJust (model ^. Model.tpe) $ \tpe -> do
             withJust typeTbId $ \typeTbId -> UICmd.update_ typeTbId $ LabeledTextBox.value .~ tpe
 
-        UICmd.update_ etId $ Label.label     .~ (fromMaybe "Execution time: (not executed)" $ (\v -> "Execution time: " <> v <> " ms") <$> (Text.pack . show) <$> model ^. Model.execTime)
+        UICmd.update_ etId $ Label.label     .~ (fromMaybe "Execution time: --" $ (\v -> "Execution time: " <> v <> " ms") <$> (Text.pack . show) <$> model ^. Model.execTime)
 
         UICmd.update_ valueId  $ Label.alignment .~ (if model ^. Model.isExpanded then Label.Left else Label.Center)
         UICmd.moveX   valueId  $ if model ^. Model.isExpanded then 0.0 else -25.0
