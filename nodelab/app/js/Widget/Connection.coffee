@@ -48,6 +48,6 @@ class Connection
   setColor:   (colorId) -> @uniforms.color.value   = colors[colorId]
   setFocused: (focused) -> @uniforms.focused.value = if focused then 1 else 0
   setArrow:   (arrow)   -> @uniforms.arrow.value   = if arrow then 1 else 0
-
+  widgetMoved: -> null
 module.exports = Connection
 

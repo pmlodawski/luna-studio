@@ -20,5 +20,6 @@ class BaseWidget
 
   relayout: -> null
   redrawTextures: -> null
+  widgetMoved: -> null
 
 module.exports = BaseWidget

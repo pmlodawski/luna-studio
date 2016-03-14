@@ -41,8 +41,8 @@ function initializeGl() {
     $$.scene                 = new THREE.Scene();
     $$.sceneHUD              = new THREE.Scene();
 
-    $$.registry[1] = {mesh: $$.sceneHUD, container: $$.sceneHUD};
-    $$.registry[2] = {mesh: $$.scene   , container: $$.scene};
+    $$.registry[1] = {mesh: $$.sceneHUD, container: $$.sceneHUD, widgetMoved: function(){} };
+    $$.registry[2] = {mesh: $$.scene   , container: $$.scene, widgetMoved: function(){} };
 
 
     $$.camera                = new THREE.OrthographicCamera(-500, 500, -500, 500, 1, 1000);

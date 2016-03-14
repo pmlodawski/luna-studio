@@ -109,7 +109,10 @@ triggerEnterNodeHandler id = do
     forM_ maybeHandler $ \(EnterNodeHandler handler) -> handler
 
 keyDownHandler :: KeyPressedHandler Global.State
-keyDownHandler '\r'   _ _ id = inRegistry $ UICmd.update_ id (Model.isExpanded %~ not)
+keyDownHandler '\r'   _ _ id = void $ inRegistry $ do
+    UICmd.update_ id (Model.isExpanded %~ not)
+    UICmd.moveBy  id (Vector2 0 0) -- FIXME: trigger moved handler for html widgets
+
 keyDownHandler '\x08' _ _ id = triggerRemoveHandler id
 keyDownHandler '\x2e' _ _ id = triggerRemoveHandler id
 keyDownHandler _      _ _ _  = return ()

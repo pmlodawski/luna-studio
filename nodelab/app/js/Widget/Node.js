@@ -83,5 +83,6 @@ Node.prototype.setZPos = function (z) {
 Node.prototype.destructor = function () {};
 
 Node.prototype.redrawTextures = function () {};
+Node.prototype.widgetMoved    = function () {_.each($$.registry, function(v) { if(!(v instanceof Node) && v.widgetMoved) v.widgetMoved(); })}; // FIXME: REALLY UGLY
 
 module.exports = Node;

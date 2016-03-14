@@ -32,6 +32,8 @@ import qualified Object.Widget.Plots.Image         as Image
 import qualified Object.Widget.Port                as PortModel
 import           Object.Widget.Toggle              (Toggle (..))
 import qualified Object.Widget.Toggle              as Toggle
+import qualified Object.Widget.LongText            as LongText
+import qualified Object.Widget.DataFrame           as DataFrame
 import qualified UI.Handlers.Button                as Button
 import qualified UI.Handlers.LabeledTextBox        as LabeledTextBox
 import qualified UI.Handlers.Node                  as Node
@@ -299,6 +301,15 @@ zipVectorInt (ax:xs) [] = zipVectorInt xs [Vector2 0 (fromIntegral ax)]
 zipVectorInt (ax:xs) (acc:accs) = zipVectorInt xs ((Vector2 (acc ^. x + 1.0) (fromIntegral ax)):acc:accs)
 zipVectorInt [] accs = accs
 
+
+displayListTable :: WidgetId -> [Text] -> Command UIRegistry.State ()
+displayListTable groupId col = do
+    let idxs = Text.pack . show <$> take (length col) [1..]
+        cols = [idxs, col]
+        rows = transpose cols
+        df = DataFrame.create Style.plotSize ["Index", "Value"] rows
+    UICmd.register_ groupId df def
+
 visualizeNodeValue :: WidgetId -> Value -> Command UIRegistry.State ()
 visualizeNodeValue id (IntList v) = do
     groupId <- Node.valueGroupId id
@@ -308,6 +319,9 @@ visualizeNodeValue id (IntList v) = do
                & ScatterPlot.dataPoints .~ dataPoints
     UICmd.register_ groupId widget def
 
+    displayListTable groupId $ Text.pack . show <$> v
+
+
 visualizeNodeValue id (DoubleList v) = do
     groupId <- Node.valueGroupId id
 
@@ -315,6 +329,8 @@ visualizeNodeValue id (DoubleList v) = do
         widget = ScatterPlot.create Style.plotSize
                & ScatterPlot.dataPoints .~ dataPoints
     UICmd.register_ groupId widget def
+
+    displayListTable groupId $ Text.pack . show <$> v
 
 visualizeNodeValue id (IntPairList v) = do
     groupId <- Node.valueGroupId id
@@ -346,6 +362,23 @@ visualizeNodeValue id (Image url w h) = do
 
     let widget = Image.create (Vector2 w h) $ Text.pack url
     UICmd.register_ groupId widget def
+
+visualizeNodeValue id (StringValue str) = do
+    groupId <- Node.valueGroupId id
+
+    let widget = LongText.create (Vector2 200 200) (Text.pack str) LongText.Left
+    UICmd.register_ groupId widget def
+
+visualizeNodeValue id (DataFrame cols) = do
+    groupId <- Node.valueGroupId id
+
+    let heads = Text.pack <$> fst <$> cols
+        cols' = (fmap DefaultValue.stringify) <$> snd <$> cols
+        rows = transpose cols'
+        df = DataFrame.create (Vector2 400 200) heads rows
+    UICmd.register_ groupId df def
+
+
 
 -- visualizeNodeValue id (IntValue v) = do -- For Image widget testing
 --     groupId <- Node.valueGroupId id

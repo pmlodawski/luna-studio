@@ -24,4 +24,6 @@ module.exports = function() {
   window.ScatterPlot    = require('Widget/ScatterPlot');
   window.Icon           = require('Widget/Icon');
   window.PlotImage      = require('Widget/Image');
+  window.LongText       = require('Widget/Text');
+  window.DataFrame      = require('Widget/DataFrame');
 };

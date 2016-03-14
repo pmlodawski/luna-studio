@@ -26,7 +26,7 @@ import qualified UI.Registry               as UIR
 import           UI.Widget                 (GenericWidget (..), UIContainer, UIWidget)
 
 
-foreign import javascript safe "$1.mesh.position.x = $2; $1.mesh.position.y = $3"
+foreign import javascript safe "$1.mesh.position.x = $2; $1.mesh.position.y = $3; $1.widgetMoved()"
     setWidgetPosition'      :: JSVal -> Double -> Double -> IO ()
 
 foreign import javascript safe "$1.setSize($2, $3)"

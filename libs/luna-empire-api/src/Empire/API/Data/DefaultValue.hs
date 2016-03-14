@@ -2,6 +2,7 @@ module Empire.API.Data.DefaultValue where
 
 import Prologue
 import Data.Binary   (Binary)
+import Data.Text.Lazy as Text
 
 data Value = IntValue       Int
            | DoubleValue    Double
@@ -16,6 +17,7 @@ data Value = IntValue       Int
            | IntPairList    [(Int, Int)]
            | Histogram      [(Double, Double)]
            | Image          String Double Double
+           | DataFrame      [(String, [Value])]
            deriving (Generic, Show, Eq)
 
 data PortDefault = Expression String | Constant Value deriving (Generic, Show, Eq)
@@ -25,3 +27,6 @@ instance Binary PortDefault
 
 makePrisms ''Value
 makePrisms ''PortDefault
+
+stringify :: Value -> Text
+stringify = Text.pack . show

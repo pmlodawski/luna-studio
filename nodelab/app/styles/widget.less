@@ -15,3 +15,35 @@ input.widget {
     outline-style: none;
   }
 }
+
+div.text-widget, div.data-frame {
+  position:       absolute;
+  background:     transparent;
+  color:          white;
+  font-size:      11px;
+  padding:        10px;
+  margin:         0;
+  overflow:       auto;
+  word-wrap:      break-word;
+  box-sizing:     border-box;
+}
+
+div.data-frame table {
+  box-sizing:     border-box;
+  width:95%;
+  margin: auto;
+  border-collapse: collapse;
+  border-spacing: none;
+  td, th {
+    padding: 3px 5px;
+    text-align: right;
+    border: 1px solid #555;
+  }
+  th {
+    background: #555;
+  }
+
+  td {
+    font-weight: normal
+  }
+}
