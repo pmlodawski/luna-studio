@@ -4,7 +4,8 @@
 
 module Empire.Server where
 
-import           Control.Concurrent.STM.TChan      (TChan, newTChan, readTChan)
+import           Control.Concurrent.STM            (STM)
+import           Control.Concurrent.STM.TChan      (TChan, newTChan, readTChan, tryPeekTChan)
 import           Control.Concurrent                (forkIO)
 import           Control.Monad                     (forever)
 import           Control.Monad.State               (StateT, evalStateT)
@@ -19,9 +20,12 @@ import           Empire.API.Data.AsyncUpdate       (AsyncUpdate (..))
 import qualified Empire.API.Topic                  as Topic
 import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
 import qualified Empire.API.Control.EmpireStarted  as EmpireStarted
+import           Empire.API.Data.GraphLocation     (GraphLocation)
+import           Empire.Data.Graph                 (Graph)
 
 import qualified Empire.Commands.Library           as Library
 import qualified Empire.Commands.Project           as Project
+import qualified Empire.Commands.Typecheck         as Typecheck
 import qualified Empire.Empire                     as Empire
 import           Empire.Env                        (Env)
 import qualified Empire.Env                        as Env
@@ -57,9 +61,12 @@ run endPoints topics formatted = do
     sendStarted endPoints
     toBusChan      <- atomically newTChan
     fromEmpireChan <- atomically newTChan
-    let env = Env.make toBusChan fromEmpireChan
+    tcChan         <- atomically newTChan
+    let env     = Env.make toBusChan fromEmpireChan tcChan
+    let commEnv = Empire.CommunicationEnv fromEmpireChan tcChan
     forkIO $ void $ Bus.runBus endPoints $ BusT.runBusT $ evalStateT (startAsyncUpdateWorker fromEmpireChan) env
     forkIO $ void $ Bus.runBus endPoints $ startToBusWorker toBusChan
+    forkIO $ void $ Bus.runBus endPoints $ startTCWorker commEnv tcChan
     Bus.runBus endPoints $ do
         mapM_ Bus.subscribe topics
         BusT.runBusT $ evalStateT (runBus formatted) env
@@ -69,6 +76,21 @@ runBus formatted = do
     Env.formatted .= formatted
     createDefaultState
     forever handleMessage
+
+readAll :: TChan a -> STM a
+readAll chan = do
+    v    <- readTChan chan
+    next <- tryPeekTChan chan
+    case next of
+        Nothing -> return v
+        Just _  -> readAll chan
+
+startTCWorker :: Empire.CommunicationEnv -> TChan (GraphLocation, Graph) -> Bus ()
+startTCWorker env chan = liftIO $ void $ Empire.runEmpire env def $ forever $ do
+    (loc, g) <- liftIO $ atomically $ readAll chan
+    Empire.graph .= g
+    Typecheck.run loc
+
 
 startToBusWorker :: TChan Message -> Bus ()
 startToBusWorker toBusChan = forever $ do

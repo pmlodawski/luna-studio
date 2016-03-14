@@ -7,7 +7,7 @@ packages:
 - {extra-dep: true, location: ../../libs/bus-binary}
 - {extra-dep: true, location: ../../libs/config}
 - {extra-dep: true, location: ../../libs/luna-empire-api}
-- {extra-dep: true, location: ../../libs/luna-empire}
+- {extra-dep: false, location: ../../libs/luna-empire}
 - {extra-dep: true, location: ../../libs/luna-empire-api-json}
 - {extra-dep: true, location: ../../libs/old-utils}
 - {extra-dep: true, location: ../../libs/rpc}
@@ -21,12 +21,12 @@ packages:
 - extra-dep: true
   location:
     git: 'git@bitbucket.org:NewByteOrder/luna.git'
-    commit: b6ed7b2a6323ae4468ef8425a3f6efbcea6c07a8
+    commit: a264271055455ab868e94c9d2d6cbd8e4720b4d4
   subdirs:
   - compiler
   - core
 - extra-dep: true
-  location: {commit: 0154ec09008e030aee074617f8012bd392567c9b, git: 'https://github.com/wdanilo/container.git'}
+  location: {commit: 3e16c8426e1870d5686ce1b2a0b70a5259d01634, git: 'https://github.com/wdanilo/container.git'}
 - extra-dep: true
   location: {commit: b55500e95a422ec29b1dba4fc9c0b8092669350b, git: 'https://github.com/wdanilo/convert.git'}
 - extra-dep: true
@@ -36,7 +36,7 @@ packages:
 - extra-dep: true
   location: {commit: 13c735377b61d6ab634f689e88612cf68d6a4111, git: 'https://github.com/wdanilo/data-construction.git'}
 - extra-dep: true
-  location: {commit: 89c3973c185959d60aa1710bbdaaf768ce41b0c3, git: 'https://github.com/wdanilo/data-layer.git'}
+  location: {commit: 8bfc7451203c143205998e8c20c024bff47082c5, git: 'https://github.com/wdanilo/data-layer.git'}
 - extra-dep: true
   location: {commit: 941777d7080fcb86fd50b982ed61eb040a5c03db, git: 'https://github.com/wdanilo/data-repr.git'}
 - extra-dep: true
@@ -52,7 +52,7 @@ packages:
 - extra-dep: true
   location: {commit: 8cb9cbd7e87f5c5223dc171ae97762e2a535483b, git: 'https://github.com/wdanilo/poly-control.git'}
 - extra-dep: true
-  location: {commit: 7182431349e946c8bdbf58ef7d48c413b2781329, git: 'https://github.com/wdanilo/prologue.git'}
+  location: {commit: 02edbf57945ad908069ed63596d420a1e51de35b, git: 'https://github.com/wdanilo/prologue.git'}
 - extra-dep: true
   location: {commit: eee76a96bdd1d442299cecdcd1e445d76eef3b1a, git: 'https://github.com/wdanilo/type-cache.git'}
 - extra-dep: true

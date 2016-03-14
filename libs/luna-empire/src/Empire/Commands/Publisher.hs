@@ -6,6 +6,7 @@ import Empire.Empire
 import Control.Monad.Reader
 import Control.Monad.STM             (atomically)
 import Control.Concurrent.STM.TChan  (writeTChan)
+import Empire.Data.Graph             (Graph)
 import Empire.API.Data.AsyncUpdate   (AsyncUpdate (..))
 import Empire.API.Data.GraphLocation (GraphLocation)
 import Empire.API.Data.Node          (Node, NodeId)
@@ -24,3 +25,8 @@ notifyResultUpdate :: GraphLocation -> NodeId -> Maybe Value -> Integer -> Comma
 notifyResultUpdate loc nid v t = do
     chan <- asks $ view updatesChan
     liftIO $ atomically $ writeTChan chan $ ResultUpdate $ NodeResult.Update loc nid (fromMaybe NodeResult.NoValue $ NodeResult.Value <$> v) t
+
+requestTC :: GraphLocation -> Graph -> Command s ()
+requestTC loc g = do
+    chan <- asks $ view typecheckChan
+    liftIO $ atomically $ writeTChan chan (loc, g)

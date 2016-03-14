@@ -10,7 +10,7 @@ module.exports = {
   backendAddress: (window.backendAddress || defaultBackend()),
   logging:         false,
   exportState:     false,
-  backgroundColor: 0x1a1a1a,
+  backgroundColor: 0x0F0D0C,
   fontSize:        0.45,
   nodeSearcher: {
     scrollAnimationTime: 100,

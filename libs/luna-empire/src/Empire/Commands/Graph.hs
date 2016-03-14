@@ -48,29 +48,14 @@ import qualified Empire.Commands.GraphUtils   as GraphUtils
 import qualified Empire.Commands.GraphBuilder as GraphBuilder
 import qualified Empire.Commands.Publisher    as Publisher
 
-import qualified Luna.Library.Standard                           as StdLib
-import qualified Luna.Library.Symbol.Class                       as Symbol
-import qualified Luna.Compilation.Stage.TypeCheck                as TypeCheck
-import qualified Luna.Compilation.Stage.TypeCheck.Class          as TypeCheckState
-import           Luna.Compilation.Stage.TypeCheck                (Loop (..), Sequence (..))
-import           Luna.Compilation.Pass.Inference.Literals        (LiteralsPass (..))
-import           Luna.Compilation.Pass.Inference.Struct          (StructuralInferencePass (..))
-import           Luna.Compilation.Pass.Inference.Unification     (UnificationPass (..))
-import           Luna.Compilation.Pass.Inference.Calling         (FunctionCallingPass (..))
-import           Luna.Compilation.Pass.Inference.Importing       (SymbolImportingPass (..))
-import           Luna.Compilation.Pass.Inference.Scan            (ScanPass (..))
-
-import qualified Luna.Compilation.Pass.Interpreter.Interpreter   as Interpreter
-
-import qualified Empire.ASTOp as ASTOp
-import           Empire.Data.AST                                 (AST, NodeRef)
-
 addNode :: GraphLocation -> Text -> NodeMeta -> Empire NodeId
 addNode loc expr meta = withGraph loc $ do
     newNodeId <- gets Graph.nextNodeId
     refNode <- zoom Graph.ast $ AST.addNode newNodeId ("node" ++ show newNodeId) (Text.unpack expr)
     zoom Graph.ast $ AST.writeMeta refNode meta
     Graph.nodeMapping . at newNodeId ?= refNode
+    node <- GraphBuilder.buildNode newNodeId
+    Publisher.notifyNodeUpdate loc node
     runTC loc
     return newNodeId
 
@@ -155,58 +140,17 @@ renameNode loc nid name = withGraph loc $ do
 dumpGraphViz :: GraphLocation -> Empire ()
 dumpGraphViz loc = withGraph loc $ do
     zoom Graph.ast   $ AST.dumpGraphViz "gui_dump"
-    zoom Graph.tcAST $ AST.dumpGraphViz "gui_tc_dump"
+    {-zoom Graph.tcAST $ AST.dumpGraphViz "gui_tc_dump"-}
 
 typecheck :: GraphLocation -> Empire ()
 typecheck loc = withGraph loc $ runTC loc
 
 -- internal
 
-getNodeValue :: NodeId -> Command Graph (Maybe Value)
-getNodeValue nid = do
-    ref <- GraphUtils.getASTTarget nid
-    zoom Graph.tcAST $ AST.getNodeValue ref
-
-collect pass = do --return ()
-    putStrLn $ "After pass: " <> pass
-    st <- TypeCheckState.get
-    putStrLn $ "State is: " <> show st
-
 runTC :: GraphLocation -> Command Graph ()
 runTC loc = do
-    allNodeIds <- uses Graph.nodeMapping IntMap.keys
-    roots <- mapM GraphUtils.getASTPointer allNodeIds
-    ast   <- use Graph.ast
-    (_, g) <- TypeCheck.runT $ flip ASTOp.runGraph ast $ do
-        Symbol.loadFunctions StdLib.symbols
-        TypeCheckState.modify_ $ (TypeCheckState.freshRoots .~ roots)
-        let seq3 a b c = Sequence a $ Sequence b c
-        let tc = Sequence (seq3 ScanPass LiteralsPass StructuralInferencePass)
-               $ Loop $ seq3 SymbolImportingPass (Loop UnificationPass) FunctionCallingPass
-
-        TypeCheck.runTCWithArtifacts tc collect
-    evals <- mapM GraphUtils.getASTTarget allNodeIds
-    g2 <- liftIO $ runInterpreter evals g
-    Graph.tcAST .= g2
-    updateGraph loc
-    return ()
-
-runInterpreter :: [NodeRef] -> AST -> IO AST
-runInterpreter refs g = fmap snd $ flip ASTOp.runBuilder g $ Interpreter.run refs
-
-updateGraph :: GraphLocation -> Command Graph ()
-updateGraph loc = do
-    allNodeIds <- uses Graph.nodeMapping IntMap.keys
-    mapM (GraphBuilder.buildNode >=> Publisher.notifyNodeUpdate loc) allNodeIds
-    forM_ allNodeIds $ \id -> do
-        val    <- getNodeValue id
-        cached <- uses Graph.valueCache $ IntMap.lookup id
-        if cached /= Just val
-            then do
-                Publisher.notifyResultUpdate loc id val 100
-                Graph.valueCache %= IntMap.insert id val
-            else return ()
-
+    g <- get
+    Publisher.requestTC loc g
 
 printNodeLine :: NodeId -> Command Graph String
 printNodeLine nodeId = GraphUtils.getASTPointer nodeId >>= (zoom Graph.ast . AST.printExpression)

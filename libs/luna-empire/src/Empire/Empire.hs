@@ -1,9 +1,14 @@
 module Empire.Empire where
 
 import           Prologue
-import           Empire.Data.Project          (Project)
-import           Empire.API.Data.Project      (ProjectId)
-import           Empire.API.Data.AsyncUpdate  (AsyncUpdate)
+import           Empire.Data.Project           (Project)
+import           Empire.Data.AST               (AST)
+import           Empire.Data.Graph             (Graph)
+import           Empire.API.Data.Project       (ProjectId)
+import           Empire.API.Data.GraphLocation (GraphLocation)
+import           Empire.API.Data.AsyncUpdate   (AsyncUpdate)
+import           Empire.API.Data.DefaultValue  (Value)
+import           Empire.API.Data.Node          (Node)
 
 import           Control.Monad.State
 import           Control.Monad.Reader
@@ -22,26 +27,35 @@ makeLenses ''Env
 instance Default Env where
     def = Env IntMap.empty
 
-newtype NotifierEnv = NotifierEnv { _updatesChan :: TChan AsyncUpdate }
-makeLenses ''NotifierEnv
+data CommunicationEnv = CommunicationEnv { _updatesChan   :: TChan AsyncUpdate
+                                         , _typecheckChan :: TChan (GraphLocation, Graph)
+                                         }
+makeLenses ''CommunicationEnv
 
-instance Show NotifierEnv where
-    show _ = "NotifierEnv"
+instance Show CommunicationEnv where
+    show _ = "CommunicationEnv"
 
-type Command s a = ErrorT Error (ReaderT NotifierEnv (StateT s IO)) a
+data InterpreterEnv = InterpreterEnv { _valuesCache :: IntMap (Maybe Value)
+                                     , _nodesCache  :: IntMap (Node)
+                                     , _graph       :: Graph
+                                     } deriving (Show)
+makeLenses ''InterpreterEnv
+
+instance Default InterpreterEnv where
+    def = InterpreterEnv def def def
+
+type Command s a = ErrorT Error (ReaderT CommunicationEnv (StateT s IO)) a
 
 type Empire a = Command Env a
 
-runEmpire :: NotifierEnv -> s -> Command s a -> IO (Either Error a, s)
+runEmpire :: CommunicationEnv -> s -> Command s a -> IO (Either Error a, s)
 runEmpire notif st cmd = runStateT (runReaderT (runErrorT cmd) notif) st
 
-execEmpire :: NotifierEnv -> s -> Command s a -> IO (Either Error a)
+execEmpire :: CommunicationEnv -> s -> Command s a -> IO (Either Error a)
 execEmpire = fmap fst .:. runEmpire
 
-empire :: (NotifierEnv -> s -> IO (Either Error a, s)) -> Command s a
-empire f = ErrorT readered where
-    readered = ReaderT stated
-    stated   = fmap StateT f
+empire :: (CommunicationEnv -> s -> IO (Either Error a, s)) -> Command s a
+empire = ErrorT . ReaderT . fmap StateT
 
 infixr 4 <?!>
 (<?!>) :: MonadError Error m => m (Maybe a) -> Error -> m a

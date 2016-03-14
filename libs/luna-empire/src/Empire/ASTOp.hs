@@ -23,7 +23,8 @@ import           Luna.Syntax.AST.Term                   (Acc, App, Blank, Match,
 import           Luna.Syntax.Model.Layer                ((:<:))
 import qualified Luna.Syntax.AST.Term.Lit               as Lit
 import           Type.Inference
-import           Luna.Syntax.Model.Network.Builder      (Reconnectible)
+import           Luna.Syntax.Model.Network.Builder       (Reconnectible)
+import qualified Luna.Syntax.Model.Network.Builder.Class as Builder
 
 type ASTOp m = ( MonadIO m
                , MonadFix m
@@ -42,14 +43,17 @@ type ASTOp m = ( MonadIO m
                , Reconnectible m Node ASTNode EdgeRef ASTNode
                )
 
-runBuilder :: NetworkBuilderT AST m (KnownTypeT ELEMENT NodeRef n) => m a -> AST -> n (a, AST)
+runBuilder :: NetworkBuilderT AST m (KnownTypeT ELEMENT NodeRef n) => Builder.NetworkBuilderT m a -> AST -> n (a, AST)
 runBuilder cmd ast = runInferenceT ELEMENT (Proxy :: Proxy NodeRef)
-                   $ runNetworkBuilderT ast cmd
+                   $ runNetworkBuilderT ast
+                   $ Builder.runNetworkBuilderT cmd
 
-runGraph :: NetworkBuilderT AST m (KnownTypeT ELEMENT NodeRef n) => ErrorT Error m a -> AST -> n (Either Error a, AST)
+runGraph :: NetworkBuilderT AST m (KnownTypeT ELEMENT NodeRef n) => Builder.NetworkBuilderT (ErrorT Error m) a -> AST -> n (Either Error a, AST)
 runGraph cmd g = runInferenceT ELEMENT (Proxy :: Proxy NodeRef)
                $ runNetworkBuilderT g
-               $ runErrorT cmd
+               $ runErrorT
+               $ Builder.runNetworkBuilderT
+               $ cmd
 
-runASTOp :: NetworkBuilderT AST m (KnownTypeT ELEMENT NodeRef IO) => ErrorT Error m a -> Command AST a
+runASTOp :: NetworkBuilderT AST m (KnownTypeT ELEMENT NodeRef IO) => Builder.NetworkBuilderT (ErrorT Error m) a -> Command AST a
 runASTOp = empire . const . runGraph
