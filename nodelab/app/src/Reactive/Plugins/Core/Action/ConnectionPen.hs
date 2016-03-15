@@ -48,6 +48,7 @@ toAction :: Event -> Maybe (Command State ())
 toAction (Mouse _ event@(Mouse.Event Mouse.Pressed  _   Mouse.LeftButton (KeyMods False True False False) _)) = Just $ startConnecting event
 toAction (Mouse _ event@(Mouse.Event Mouse.Pressed  _   Mouse.LeftButton (KeyMods True  True False False) _)) = Just $ startDisconnecting event
 toAction (Mouse _ event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ whileDrawing $ handleMove pos
+toAction (Mouse _ event@(Mouse.Event Mouse.Moved    _   Mouse.NoButton   _ _)) = Just $ whileDrawing stopDrag
 toAction (Mouse _ event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just $ whileDrawing   stopDrag
 toAction (ConnectionPen (ConnectionPen.Segment widgets))                     = Just $ whileDrawing $ handleAction widgets
 toAction _                                                                   = Nothing
