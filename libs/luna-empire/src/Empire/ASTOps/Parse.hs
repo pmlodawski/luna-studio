@@ -29,3 +29,4 @@ parsePortDefault (Expression expr)          = parseExpr expr
 parsePortDefault (Constant (IntValue i))    = Builder.int $ fromIntegral i
 parsePortDefault (Constant (StringValue s)) = Builder.str s
 parsePortDefault (Constant (DoubleValue d)) = Builder.double d
+parsePortDefault (Constant (BoolValue b))   = Builder.cons (fromString $ show b) []

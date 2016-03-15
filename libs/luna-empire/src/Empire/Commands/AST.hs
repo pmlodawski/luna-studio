@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Empire.Commands.AST where
 
@@ -10,6 +11,7 @@ import           Data.Prop                    (prop)
 import           Data.Graph                   (source)
 import           Data.HMap.Lazy               (TypeKey (..))
 import qualified Data.HMap.Lazy               as HMap
+import           GHC.Prim                     (Any)
 
 import           Empire.Empire
 import           Empire.API.Data.DefaultValue (PortDefault, Value (..))
@@ -50,27 +52,31 @@ getNodeValue ref = runASTOp $ do
     tp     <- Builder.follow source $ node ^. prop Type
     tpNode <- Builder.read tp
     case (node ^. prop InterpreterData . Interpreter.value) of
-        Nothing -> return Nothing
-        Just v  -> caseTest (uncover tpNode) $ do
-            of' $ \(Cons (Lit.String n) as) -> case n of
-                "Int"      -> return $ Just $ IntValue    $ unsafeCoerce v
-                "String"   -> return $ Just $ StringValue $ unsafeCoerce v
-                "Double"   -> return $ Just $ DoubleValue $ unsafeCoerce v
-                "Bool"     -> return $ Just $ BoolValue   $ unsafeCoerce v
-                "List"     -> do
-                    args <- ASTBuilder.unpackArguments as
-                    case args of
-                        [a] -> do
-                            arg <- Builder.read a
-                            caseTest (uncover arg) $ do
-                                of' $ \(Cons (Lit.String n) _) -> case n of
-                                    "Int"    -> return $ Just $ IntList    $ unsafeCoerce v
-                                    "Double" -> return $ Just $ DoubleList $ unsafeCoerce v
-                                    _        -> return Nothing
-                                of' $ \ANY -> return Nothing
-                        _ -> return Nothing
-                _ -> return Nothing
-            of' $ \ANY -> return Nothing
+        Nothing   -> return Nothing
+        Just val  -> do
+            v <- liftIO (unsafeCoerce val :: IO Any)
+            caseTest (uncover tpNode) $ do
+                of' $ \(Cons (Lit.String n) as) -> case n of
+                    "Int"      -> return $ Just $ IntValue    $ unsafeCoerce v
+                    "String"   -> return $ Just $ StringValue $ unsafeCoerce v
+                    "Double"   -> return $ Just $ DoubleValue $ unsafeCoerce v
+                    "Bool"     -> return $ Just $ BoolValue   $ unsafeCoerce v
+                    "List"     -> do
+                        args <- ASTBuilder.unpackArguments as
+                        case args of
+                            [a] -> do
+                                arg <- Builder.read a
+                                caseTest (uncover arg) $ do
+                                    of' $ \(Cons (Lit.String n) _) -> case n of
+                                        "Int"    -> return $ Just $ IntList    $ unsafeCoerce v
+                                        "Double" -> return $ Just $ DoubleList $ unsafeCoerce v
+                                        "Bool"   -> return $ Just $ BoolList   $ unsafeCoerce v
+                                        "String" -> return $ Just $ StringList $ unsafeCoerce v
+                                        _        -> return Nothing
+                                    of' $ \ANY -> return Nothing
+                            _ -> return Nothing
+                    _ -> return Nothing
+                of' $ \ANY -> return Nothing
 
 readMeta :: NodeRef -> Command AST (Maybe NodeMeta)
 readMeta ref = runASTOp $ HMap.lookup metaKey . view (prop Meta) <$> Builder.read ref
