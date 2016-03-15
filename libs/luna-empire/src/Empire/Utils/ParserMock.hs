@@ -2,13 +2,20 @@ module Empire.Utils.ParserMock where
 
 import           Data.Maybe (isJust)
 import           Prologue
-import           Text.Read  (readMaybe)
+import           Text.Read  (reads)
 
-asInteger :: String -> Maybe Int
-asInteger expr = readMaybe expr
+safeHead :: [a] -> Maybe a
+safeHead []      = Nothing
+safeHead (a : _) = Just a
 
-asString :: String -> Maybe String
-asString expr = readMaybe expr
+asInteger :: String -> Maybe (Int, String)
+asInteger = safeHead . reads
+
+asString :: String -> Maybe (String, String)
+asString = safeHead . reads
+
+asDouble :: String -> Maybe (Double, String)
+asDouble = safeHead . reads
 
 isInteger :: String -> Bool
 isInteger = isJust . asInteger

@@ -25,6 +25,7 @@ packages:
   subdirs:
   - compiler
   - core
+  - parser
 - extra-dep: true
   location: {commit: 3e16c8426e1870d5686ce1b2a0b70a5259d01634, git: 'https://github.com/wdanilo/container.git'}
 - extra-dep: true

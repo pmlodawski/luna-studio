@@ -40,6 +40,7 @@ Library
                   flowbox-utils,
                   luna-empire-api,
                   luna-core,
+                  luna-parser,
                   lunac,
                   mtl,
                   stm,

@@ -39,7 +39,7 @@ metaKey :: TypeKey NodeMeta
 metaKey = TypeKey
 
 addNode :: NodeId -> String -> String -> Command AST (NodeRef)
-addNode nid name expr = runASTOp $ Parser.parseFragment expr >>= ASTBuilder.makeNodeRep (NodeMarker nid) name
+addNode nid name expr = runASTOp $ Parser.parseExpr expr >>= ASTBuilder.makeNodeRep (NodeMarker nid) name
 
 addDefault :: PortDefault -> Command AST (NodeRef)
 addDefault val = runASTOp $ Parser.parsePortDefault val
