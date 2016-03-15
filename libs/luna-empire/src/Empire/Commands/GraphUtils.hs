@@ -30,4 +30,7 @@ getASTVar nodeId = do
 rewireNode :: NodeId -> NodeRef -> Command Graph ()
 rewireNode nodeId newTarget = do
     matchNode <- getASTPointer nodeId
-    zoom Graph.ast $ AST.replaceTargetNode matchNode newTarget
+    oldTarget <- getASTTarget  nodeId
+    zoom Graph.ast $ do
+        AST.replaceTargetNode matchNode newTarget
+        AST.removeSubtree oldTarget

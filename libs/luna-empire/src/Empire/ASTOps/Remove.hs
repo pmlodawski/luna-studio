@@ -4,6 +4,7 @@ module Empire.ASTOps.Remove where
 
 import           Prologue                      hiding ((#))
 import           Data.Construction             (destruct)
+import           Data.Container                (size)
 import           Data.Prop                     ((#))
 import           Data.Layer.Cover              (uncover)
 import           Data.Graph                    (Inputs (..), Succs (..))
@@ -27,7 +28,7 @@ safeRemove ref = do
         else performSafeRemoval ref
 
 getRefCount :: ASTOp m => NodeRef -> m Int
-getRefCount ref = (length . (# Succs)) <$> Builder.read ref
+getRefCount ref = (size . (# Succs)) <$> Builder.read ref
 
 performSafeRemoval :: ASTOp m => NodeRef -> m ()
 performSafeRemoval ref = do

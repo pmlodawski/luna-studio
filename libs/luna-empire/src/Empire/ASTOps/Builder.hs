@@ -65,7 +65,6 @@ destructApp fun = do
             target <- Builder.follow source tg
             return (target, unpackedArgs)
         of' $ \ANY -> throwError "Expected App node, got wrong type."
-    removeNode fun
     return result
 
 newApplication :: ASTOp m => NodeRef -> NodeRef -> Int -> m NodeRef
@@ -86,7 +85,6 @@ rewireApplication fun arg pos = do
     args <- sequence withNewArg
     oldArg <- oldArgCmd
 
-    whenM (isBlank oldArg) $ removeNode oldArg
     Builder.app target (Builder.arg <$> args)
 
 applyFunction :: ASTOp m => NodeRef -> NodeRef -> Int -> m NodeRef
@@ -150,7 +148,6 @@ makeAccessor target naming = do
     print args
     acc <- buildAccessors target names
     applied <- if null args then return acc else reapply acc args
-    performSafeRemoval naming
     return applied
 
 unAcc :: ASTOp m => NodeRef -> m NodeRef
@@ -164,7 +161,6 @@ unAcc ref = do
             v   <- Builder.var (fromString n)
             acc <- buildAccessors v ns
             applied <- if null args then return acc else reapply acc args
-            performSafeRemoval ref
             return applied
 
 makeNodeRep :: forall m. ASTOp m => NodeMarker -> String -> NodeRef -> m NodeRef
