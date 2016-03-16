@@ -22,7 +22,7 @@ data Env = Env { _empireEnv   :: Empire.Env
                } deriving (Show)
 makeLenses ''Env
 
-make :: TChan Message -> TChan AsyncUpdate -> TChan (GraphLocation, Graph) -> Env
+make :: TChan Message -> TChan AsyncUpdate -> TChan (GraphLocation, Graph, Bool) -> Env
 make toBus fromEmpire tc = Env def (Empire.CommunicationEnv fromEmpire tc) True toBus
 
 newtype LoggerEnv = LoggerEnv { _formatLog :: Bool }

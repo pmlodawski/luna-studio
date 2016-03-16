@@ -28,7 +28,8 @@ instance Default Env where
     def = Env IntMap.empty
 
 data CommunicationEnv = CommunicationEnv { _updatesChan   :: TChan AsyncUpdate
-                                         , _typecheckChan :: TChan (GraphLocation, Graph)
+                                         -- FIXME[MK]: Yeah, let's use 3-tuples, way to code!
+                                         , _typecheckChan :: TChan (GraphLocation, Graph, Bool)
                                          }
 makeLenses ''CommunicationEnv
 

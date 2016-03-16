@@ -35,7 +35,7 @@ class LongText extends BaseWidget
 
   setText: (text) ->
     @text = text
-    @element.text(text)
+    @element.html(text)
     @relayout()
 
   setAlignment: (align) ->

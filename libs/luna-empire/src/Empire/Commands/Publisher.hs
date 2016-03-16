@@ -26,7 +26,7 @@ notifyResultUpdate loc nid v t = do
     chan <- asks $ view updatesChan
     liftIO $ atomically $ writeTChan chan $ ResultUpdate $ NodeResult.Update loc nid v t
 
-requestTC :: GraphLocation -> Graph -> Command s ()
-requestTC loc g = do
+requestTC :: GraphLocation -> Graph -> Bool -> Command s ()
+requestTC loc g flush = do
     chan <- asks $ view typecheckChan
-    liftIO $ atomically $ writeTChan chan (loc, g)
+    liftIO $ atomically $ writeTChan chan (loc, g, flush)

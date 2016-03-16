@@ -117,6 +117,12 @@ updateValues loc = do
                     else return ()
             else return ()
 
+flushCache :: Command InterpreterEnv ()
+flushCache = do
+    errorsCache .= def
+    valuesCache .= def
+    nodesCache  .= def
+
 run :: GraphLocation -> Command InterpreterEnv ()
 run loc = do
     zoom graph runTC

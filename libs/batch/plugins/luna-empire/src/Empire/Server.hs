@@ -85,9 +85,10 @@ readAll chan = do
         Nothing -> return v
         Just _  -> readAll chan
 
-startTCWorker :: Empire.CommunicationEnv -> TChan (GraphLocation, Graph) -> Bus ()
+startTCWorker :: Empire.CommunicationEnv -> TChan (GraphLocation, Graph, Bool) -> Bus ()
 startTCWorker env chan = liftIO $ void $ Empire.runEmpire env def $ forever $ do
-    (loc, g) <- liftIO $ atomically $ readAll chan
+    (loc, g, flush) <- liftIO $ atomically $ readAll chan
+    if flush then Typecheck.flushCache else return ()
     Empire.graph .= g
     Typecheck.run loc
 

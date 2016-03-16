@@ -13,6 +13,8 @@ import           Control.Monad.State               hiding (State)
 import           Data.Hashable                     (hash)
 import qualified Data.Map.Lazy                     as Map
 import qualified Data.Text.Lazy                    as Text
+import           Data.List.Split                   (wordsBy)
+import           Data.List                         (intercalate)
 import           GHC.Float                         (double2Float)
 
 import           Object.UITypes                    (WidgetId)
@@ -276,7 +278,7 @@ nodeValueToText :: Value -> Text
 nodeValueToText (IntValue    v)      = Text.pack $ show v
 nodeValueToText (DoubleValue v)      = Text.pack $ show v
 nodeValueToText (BoolValue   v)      = Text.pack $ show v
-nodeValueToText (StringValue v)      = Text.pack $ if (length v > 20) then "String [" <> show (length v) <> "]" else "\"" <> v <> "\""
+nodeValueToText (StringValue v)      = Text.pack $ "\"" <> (if (length v > 10) then (take 10 v) <> "..." else v) <> "\""
 nodeValueToText (IntList     v)      = Text.pack $ "Vector [" <> (show $ length v) <> "]"
 nodeValueToText (DoubleList  v)      = Text.pack $ "Vector [" <> (show $ length v) <> "]"
 nodeValueToText (BoolList    v)      = Text.pack $ "Vector [" <> (show $ length v) <> "]"
@@ -320,6 +322,10 @@ visualizeNodeValue id (IntList v) = do
                & ScatterPlot.dataPoints .~ dataPoints
     UICmd.register_ groupId widget def
 
+    displayListTable groupId $ Text.pack . show <$> v
+
+visualizeNodeValue id (StringList v) = do
+    groupId <- Node.valueGroupId id
     displayListTable groupId $ Text.pack . show <$> v
 
 
@@ -367,7 +373,8 @@ visualizeNodeValue id (Image url w h) = do
 visualizeNodeValue id (StringValue str) = do
     groupId <- Node.valueGroupId id
 
-    let widget = LongText.create (Vector2 200 200) (Text.pack str) LongText.Left
+    let normalize = intercalate "<br />" . wordsBy (== '\n')
+    let widget = LongText.create (Vector2 200 200) (Text.pack $ normalize str) LongText.Left
     UICmd.register_ groupId widget def
 
 visualizeNodeValue id (DataFrame cols) = do

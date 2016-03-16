@@ -56,7 +56,7 @@ addNode loc expr meta = withGraph loc $ do
     Graph.nodeMapping . at newNodeId ?= refNode
     node <- GraphBuilder.buildNode newNodeId
     Publisher.notifyNodeUpdate loc node
-    runTC loc
+    runTC loc False
     return newNodeId
 
 removeNode :: GraphLocation -> NodeId -> Empire ()
@@ -66,7 +66,7 @@ removeNode loc nodeId = withGraph loc $ do
     mapM_ disconnectPort obsoleteEdges
     zoom Graph.ast $ AST.removeSubtree astRef
     Graph.nodeMapping %= IntMap.delete nodeId
-    runTC loc
+    runTC loc False
 
 updateNodeMeta :: GraphLocation -> NodeId -> NodeMeta -> Empire ()
 updateNodeMeta loc nodeId meta = withGraph loc $ do
@@ -78,7 +78,7 @@ connect loc (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) = withGraph
     case dstPort of
         Self    -> makeAcc srcNodeId dstNodeId
         Arg num -> makeApp srcNodeId dstNodeId num
-    runTC loc
+    runTC loc False
 connect _ _ _ = throwError "Source port should be All"
 
 setDefaultValue :: GraphLocation -> AnyPortRef -> PortDefault -> Empire ()
@@ -93,12 +93,12 @@ setDefaultValue loc portRef val = withGraph loc $ do
             return (nodeId, newRef)
         OutPortRef' (OutPortRef nodeId _) -> return (nodeId, parsed)
     GraphUtils.rewireNode nodeId newRef
-    runTC loc
+    runTC loc False
 
 disconnect :: GraphLocation -> InPortRef -> Empire ()
 disconnect loc port@(InPortRef dstNodeId dstPort) = withGraph loc $ do
     disconnectPort port
-    runTC loc
+    runTC loc False
 
 getCode :: GraphLocation -> Empire String
 getCode loc = withGraph loc $ do
@@ -107,7 +107,7 @@ getCode loc = withGraph loc $ do
     return $ intercalate "\n" lines
 
 getGraph :: GraphLocation -> Empire APIGraph.Graph
-getGraph loc = withGraph loc GraphBuilder.buildGraph
+getGraph loc = withGraph loc $ runTC loc True >> GraphBuilder.buildGraph
 
 runGraph :: GraphLocation -> Empire (IntMap Value)
 runGraph loc = withGraph loc $ do
@@ -135,7 +135,7 @@ renameNode :: GraphLocation -> NodeId -> Text -> Empire ()
 renameNode loc nid name = withGraph loc $ do
     vref <- GraphUtils.getASTVar nid
     zoom Graph.ast $ AST.renameVar vref (Text.unpack name)
-    runTC loc
+    runTC loc False
 
 dumpGraphViz :: GraphLocation -> Empire ()
 dumpGraphViz loc = withGraph loc $ do
@@ -143,14 +143,14 @@ dumpGraphViz loc = withGraph loc $ do
     {-zoom Graph.tcAST $ AST.dumpGraphViz "gui_tc_dump"-}
 
 typecheck :: GraphLocation -> Empire ()
-typecheck loc = withGraph loc $ runTC loc
+typecheck loc = withGraph loc $ runTC loc False
 
 -- internal
 
-runTC :: GraphLocation -> Command Graph ()
-runTC loc = do
+runTC :: GraphLocation -> Bool -> Command Graph ()
+runTC loc flush = do
     g <- get
-    Publisher.requestTC loc g
+    Publisher.requestTC loc g flush
 
 printNodeLine :: NodeId -> Command Graph String
 printNodeLine nodeId = GraphUtils.getASTPointer nodeId >>= (zoom Graph.ast . AST.printExpression)
