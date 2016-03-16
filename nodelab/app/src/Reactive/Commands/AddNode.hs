@@ -390,6 +390,11 @@ visualizeNodeValue id (DataFrame cols) = do
 visualizeNodeValue _ _ = return ()
 
 
+visualizeError :: NodeId -> String -> Command UIRegistry.State ()
+visualizeError id str = do
+    groupId <- Node.valueGroupId id
+    let widget = LongText.create (Vector2 200 200) (Text.pack str) LongText.Left
+    UICmd.register_ groupId widget def
 
 updateNodeValue :: NodeId -> NodeResult.NodeValue -> Command State ()
 updateNodeValue id val = inRegistry $ do
@@ -405,8 +410,9 @@ updateNodeValue id val = inRegistry $ do
                 UICmd.update_ widgetId $ Model.value   .~ ""
                 UICmd.update_ widgetId $ Model.isError .~ False
             NodeResult.Error msg -> do
-                UICmd.update_ widgetId $ Model.value   .~ ("Error: " <> (Text.pack msg))
+                UICmd.update_ widgetId $ Model.value   .~ "Error!"
                 UICmd.update_ widgetId $ Model.isError .~ True
+                visualizeError widgetId msg
 
 updateNodeProfilingData :: NodeId -> Integer -> Command State ()
 updateNodeProfilingData id execTime = inRegistry $ do

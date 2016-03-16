@@ -45,7 +45,6 @@ type ASTOp m = ( MonadIO m
                , TermBuilder Unify      m NodeRef
                , TermBuilder Cons       m NodeRef
                , Connectible NodeRef NodeRef m
-               , Reconnectible m Node ASTNode EdgeRef ASTNode
                )
 
 runBuilder :: NetworkBuilderT AST m (KnownTypeT ELEMENT NodeRef n) => Builder.NetworkBuilderT m a -> AST -> n (a, AST)

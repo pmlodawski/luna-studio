@@ -8,13 +8,15 @@ import           Control.Monad           (forM, forM_)
 import           Data.IntMap             (IntMap)
 import qualified Data.IntMap             as IntMap
 import qualified Data.Map                as Map
+import           Data.Maybe              (isNothing, fromMaybe)
 
 import qualified Empire.Data.Graph       as Graph
 import           Empire.Data.Graph       (Graph)
 
-import           Empire.API.Data.Node          (NodeId)
-import           Empire.API.Data.DefaultValue  (Value (..))
-import           Empire.API.Data.GraphLocation (GraphLocation (..))
+import           Empire.API.Data.Node              (NodeId)
+import           Empire.API.Data.DefaultValue      (Value (..))
+import           Empire.API.Data.GraphLocation     (GraphLocation (..))
+import qualified Empire.API.Graph.NodeResultUpdate as NodeResult
 
 import           Empire.Empire
 import qualified Empire.Commands.AST          as AST
@@ -78,6 +80,18 @@ updateNodes :: GraphLocation -> Command InterpreterEnv ()
 updateNodes loc = do
     allNodeIds <- uses (graph . Graph.nodeMapping) IntMap.keys
     forM_ allNodeIds $ \id -> do
+        ref <- zoom graph $ GraphUtils.getASTTarget id
+
+        err <- zoom (graph . Graph.ast) $ AST.getError ref
+        cachedErr <- uses errorsCache $ IntMap.lookup id
+        if cachedErr /= err
+            then do
+                errorsCache %= IntMap.alter (const err) id
+                case err of
+                    Just e  -> Publisher.notifyResultUpdate loc id (NodeResult.Error e) 0
+                    Nothing -> Publisher.notifyResultUpdate loc id (NodeResult.NoValue) 0
+            else return ()
+
         rep <- zoom graph $ GraphBuilder.buildNode id
         cached <- uses nodesCache $ IntMap.lookup id
         if cached /= Just rep
@@ -91,12 +105,16 @@ updateValues :: GraphLocation -> Command InterpreterEnv ()
 updateValues loc = do
     allNodeIds <- uses (graph . Graph.nodeMapping) IntMap.keys
     forM_ allNodeIds $ \id -> do
-        val    <- zoom graph $ getNodeValue id
-        cached <- uses valuesCache $ IntMap.lookup id
-        if cached /= Just val
+        noErrors <- isNothing <$> uses errorsCache (IntMap.lookup id)
+        if noErrors
             then do
-                Publisher.notifyResultUpdate loc id val 100
-                valuesCache %= IntMap.insert id val
+                val    <- zoom graph $ getNodeValue id
+                cached <- uses valuesCache $ IntMap.lookup id
+                if cached /= Just val
+                    then do
+                        Publisher.notifyResultUpdate loc id (fromMaybe NodeResult.NoValue $ NodeResult.Value <$> val) 100
+                        valuesCache %= IntMap.insert id val
+                    else return ()
             else return ()
 
 run :: GraphLocation -> Command InterpreterEnv ()

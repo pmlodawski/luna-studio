@@ -37,7 +37,19 @@ void main(void) {
                 sdf_ring(p, 25.0, 3.0),
                 cycek
             );
-        float errorShape = sdf_ball(p, 17.0);
+        float errorShape = sdf_subtract(
+                             sdf_rect(sdf_rotateCCW(p + vec2(-16.0, -16.0), 0.785), vec2(11.0, 100.0)),
+                             sdf_subtract(
+                               sdf_rect(sdf_rotateCCW(p + vec2(16.0, 16.0), 0.785), vec2(11.0, 100.0)),
+                               sdf_subtract(
+                                 sdf_rect(sdf_rotateCCW(p, 0.785) , vec2(11.0, 100.0)),
+                                 sdf_subtract(
+                                   sdf_ball(p, 22.0),
+                                   sdf_ball(p, 40.0)
+                                 )
+                               )
+                             )
+                           );
 
         vec4 errorC = vec4(errorColor, float(error) * sdf_aa(errorShape));
         vec4 selectedC = vec4(selectedColor, float(selected) * sdf_aa(selectedShape));

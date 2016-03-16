@@ -21,10 +21,10 @@ notifyNodeUpdate loc n = do
     liftIO $ atomically $ writeTChan chan $ NodeUpdate $ Node.Update loc n
 
 
-notifyResultUpdate :: GraphLocation -> NodeId -> Maybe Value -> Integer -> Command s ()
+notifyResultUpdate :: GraphLocation -> NodeId -> NodeResult.NodeValue -> Integer -> Command s ()
 notifyResultUpdate loc nid v t = do
     chan <- asks $ view updatesChan
-    liftIO $ atomically $ writeTChan chan $ ResultUpdate $ NodeResult.Update loc nid (fromMaybe NodeResult.NoValue $ NodeResult.Value <$> v) t
+    liftIO $ atomically $ writeTChan chan $ ResultUpdate $ NodeResult.Update loc nid v t
 
 requestTC :: GraphLocation -> Graph -> Command s ()
 requestTC loc g = do

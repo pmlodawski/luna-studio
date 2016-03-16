@@ -36,13 +36,14 @@ instance Show CommunicationEnv where
     show _ = "CommunicationEnv"
 
 data InterpreterEnv = InterpreterEnv { _valuesCache :: IntMap (Maybe Value)
-                                     , _nodesCache  :: IntMap (Node)
+                                     , _nodesCache  :: IntMap Node
+                                     , _errorsCache :: IntMap String
                                      , _graph       :: Graph
                                      } deriving (Show)
 makeLenses ''InterpreterEnv
 
 instance Default InterpreterEnv where
-    def = InterpreterEnv def def def
+    def = InterpreterEnv def def def def
 
 type Command s a = ErrorT Error (ReaderT CommunicationEnv (StateT s IO)) a
 

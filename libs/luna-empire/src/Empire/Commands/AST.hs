@@ -3,12 +3,12 @@
 
 module Empire.Commands.AST where
 
-import           Prologue
+import           Prologue                     hiding ((#))
 import           Control.Monad.State
 import           Control.Monad.Error          (throwError)
 import           Data.Record                  (ANY (..), caseTest, of')
-import           Data.Prop                    (prop)
-import           Data.Graph                   (source)
+import           Data.Prop                    (prop, (#))
+import           Data.Graph                   (source, Inputs (..))
 import           Data.HMap.Lazy               (TypeKey (..))
 import qualified Data.HMap.Lazy               as HMap
 import           GHC.Prim                     (Any)
@@ -20,7 +20,7 @@ import           Empire.API.Data.Node         (NodeId)
 import           Empire.Data.NodeMarker       (NodeMarker (..))
 import           Empire.Data.AST              (AST, NodeRef, ASTNode)
 
-import           Empire.ASTOp                 (runASTOp)
+import           Empire.ASTOp                 (runASTOp, ASTOp)
 import qualified Empire.ASTOps.Builder        as ASTBuilder
 import qualified Empire.ASTOps.Parse          as Parser
 import qualified Empire.ASTOps.Print          as Printer
@@ -30,7 +30,7 @@ import           Luna.Diagnostic.Vis.GraphViz (renderAndOpen)
 
 import           Luna.Syntax.Model.Network.Builder (Meta (..), Type (..))
 import qualified Luna.Syntax.Model.Network.Builder as Builder
-import           Luna.Syntax.AST.Term              (Cons (..))
+import           Luna.Syntax.AST.Term              (Cons (..), Unify (..), Var (..))
 import qualified Luna.Syntax.AST.Term.Lit          as Lit
 
 import qualified Luna.Compilation.Pass.Interpreter.Layer as Interpreter
@@ -80,6 +80,44 @@ getNodeValue ref = runASTOp $ do
 
 readMeta :: NodeRef -> Command AST (Maybe NodeMeta)
 readMeta ref = runASTOp $ HMap.lookup metaKey . view (prop Meta) <$> Builder.read ref
+
+getTypeRep :: ASTOp m => NodeRef -> m String
+getTypeRep ref = do
+    n <- Builder.read ref
+    caseTest (uncover n) $ do
+        of' $ \(Cons (Lit.String n) args) -> do
+            as <- mapM (Builder.follow source >=> getTypeRep) (unlayer <$> args)
+            case as of
+                [] -> return n
+                _  -> return $ "("
+                            <> n
+                            <> " "
+                            <> intercalate " " as
+                            <> ")"
+        of' $ \(Var (Lit.String n)) -> return n
+        of' $ \ANY -> return ""
+
+getError :: NodeRef -> Command AST (Maybe String)
+getError ref = runASTOp $ do
+    tp <- Builder.follow (prop Type) ref >>= Builder.follow source
+    getError' tp
+
+getError' :: ASTOp m => NodeRef -> m (Maybe String)
+getError' ref = do
+    n <- Builder.read ref
+    caseTest (uncover n) $ do
+        of' $ \(Unify l r) -> do
+            lr <- Builder.follow source l
+            rr <- Builder.follow source r
+            lrep <- getTypeRep lr
+            rrep <- getTypeRep rr
+            return $ Just $ "Unable to match type " <> lrep <> " with " <> rrep <> "."
+        of' $ \Lit.Star  -> return Nothing
+        of' $ \ANY -> do
+            ers <- mapM (Builder.follow source >=> getError') (uncover n # Inputs)
+            let errors = catMaybes ers
+            return $ tryHead errors
+
 
 writeMeta :: NodeRef -> NodeMeta -> Command AST ()
 writeMeta ref newMeta = runASTOp $ do
