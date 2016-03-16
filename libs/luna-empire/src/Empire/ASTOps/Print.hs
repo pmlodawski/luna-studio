@@ -10,7 +10,7 @@ import           Empire.ASTOp             (ASTOp)
 import           Empire.Data.AST          (NodeRef)
 import qualified Empire.ASTOps.Builder    as ASTBuilder
 
-import           Luna.Syntax.AST.Term     (Acc (..), App (..), Blank (..), Match (..), Var (..))
+import           Luna.Syntax.AST.Term     (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..))
 import qualified Luna.Syntax.AST.Term.Lit as Lit
 
 import qualified Luna.Syntax.Model.Network.Builder as Builder
@@ -50,6 +50,7 @@ printExpression' suppresNodes paren nodeRef = do
             Lit.Integer  i -> show i
             Lit.Double   d -> show d
         of' $ \(Lit.String s) -> return $ show s
+        of' $ \(Cons (Lit.String n) _) -> return n
         of' $ \ANY -> return ""
 
 printExpression :: ASTOp m => NodeRef -> m String
