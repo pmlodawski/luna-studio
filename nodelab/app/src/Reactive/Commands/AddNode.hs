@@ -285,7 +285,7 @@ nodeValueToText (BoolList    v)      = Text.pack $ "Vector [" <> (show $ length 
 nodeValueToText (StringList  v)      = Text.pack $ "Vector [" <> (show $ length v) <> "]"
 nodeValueToText (DoublePairList v)   = Text.pack $ "Vector2 [" <> (show $ length v) <> "]"
 nodeValueToText (IntPairList v)      = Text.pack $ "Vector2 [" <> (show $ length v) <> "]"
-nodeValueToText (Histogram   v)      = Text.pack $ "Histogram [" <> (show $ length v) <> "]"
+nodeValueToText (Histogram   v)      = Text.pack $ "Hist [" <> (show $ length v) <> "]"
 nodeValueToText (Image      dataUrl width height) = Text.pack $ "Image"
 
 removeVisualization :: WidgetId -> Command UIRegistry.State ()
@@ -358,7 +358,7 @@ visualizeNodeValue id (DoublePairList v) = do
 visualizeNodeValue id (Histogram v) = do
     groupId <- Node.valueGroupId id
 
-    let dataPoints = uncurry Vector2 <$> v
+    let dataPoints = (\(a,b) -> Vector2 (fromIntegral a) (fromIntegral b)) <$> v
         widget = ScatterPlot.create Style.plotSize
                & ScatterPlot.dataPoints .~ dataPoints
                & ScatterPlot.display    .~ ScatterPlot.Bars

@@ -57,11 +57,12 @@ getNodeValue ref = runASTOp $ do
             v <- liftIO (unsafeCoerce val :: IO Any)
             caseTest (uncover tpNode) $ do
                 of' $ \(Cons (Lit.String n) as) -> case n of
-                    "Int"      -> return $ Just $ IntValue    $ unsafeCoerce v
-                    "String"   -> return $ Just $ StringValue $ unsafeCoerce v
-                    "Double"   -> return $ Just $ DoubleValue $ unsafeCoerce v
-                    "Bool"     -> return $ Just $ BoolValue   $ unsafeCoerce v
-                    "List"     -> do
+                    "Int"       -> return $ Just $ IntValue    $ unsafeCoerce v
+                    "String"    -> return $ Just $ StringValue $ unsafeCoerce v
+                    "Double"    -> return $ Just $ DoubleValue $ unsafeCoerce v
+                    "Bool"      -> return $ Just $ BoolValue   $ unsafeCoerce v
+                    "Histogram" -> return $ Just $ Histogram   $ unsafeCoerce v
+                    "List"      -> do
                         args <- ASTBuilder.unpackArguments as
                         case args of
                             [a] -> do

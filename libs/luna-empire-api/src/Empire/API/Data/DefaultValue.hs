@@ -15,7 +15,7 @@ data Value = IntValue       Int
            | StringList     [String]
            | DoublePairList [(Double, Double)]
            | IntPairList    [(Int, Int)]
-           | Histogram      [(Double, Double)]
+           | Histogram      [(Int, Int)]
            | Image          String Double Double
            | DataFrame      [(String, [Value])]
            deriving (Generic, Show, Eq)

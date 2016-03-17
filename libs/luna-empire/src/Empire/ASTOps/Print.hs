@@ -33,17 +33,17 @@ printExpression' suppresNodes paren nodeRef = do
                 then return $ unwrap n
                 else return $ targetRep ++ "." ++ unwrap n
         of' $ \(App f args) -> do
-            funRep <- Builder.follow source f >>= recur True
-            unpackedArgs <- ASTBuilder.unpackArguments args
-            argsRep <- sequence $ recur True <$> unpackedArgs
-            let shouldParen = paren && not (null args)
-            case argsRep of
-                [] -> return funRep
-                _  -> return $ (if shouldParen then "(" else "")
-                            ++ funRep
-                            ++ " "
-                            ++ (intercalate " " argsRep)
-                            ++ (if shouldParen then ")" else "")
+            Builder.follow source f >>= recur True
+            {-unpackedArgs <- ASTBuilder.unpackArguments args-}
+            {-argsRep <- sequence $ recur True <$> unpackedArgs-}
+            {-let shouldParen = paren && not (null args)-}
+            {-case argsRep of-}
+                {-[] -> return funRep-}
+                {-_  -> return $ (if shouldParen then "(" else "")-}
+                            {-++ funRep-}
+                            {-++ " "-}
+                            {-++ (intercalate " " argsRep)-}
+                            {-++ (if shouldParen then ")" else "")-}
         of' $ \Blank -> return "_"
         of' $ \(Lit.Number _ s) -> return $ case s of
             Lit.Rational r -> show r
