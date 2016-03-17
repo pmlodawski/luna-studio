@@ -19,6 +19,6 @@ COPY nodelab/www /usr/share/nodelab/gui
 
 COPY dist/bin /usr/local/bin/nodelab
 
-COPY userdata /userdata
+COPY userdata /data
 
 VOLUME ["/userdata"]
