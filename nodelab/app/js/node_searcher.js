@@ -96,23 +96,27 @@ NodeSearcher.prototype.initSearchbox = function () {
 
   this.searchbox.on('keydown', function (ev) {
     switch(ev.keyCode){
-      case 9:  /* tab         */ _this.onTab(ev);       break;
-      case 27: /* esc         */ _this.onEsc(ev);       break;
-      case 8:  /* backspace   */ _this.onBackspace(ev); break;
-      case 38: /* arrow-up    */ _this.onKeyUp(ev);     break;
-      case 40: /* arrow-down  */ _this.onKeyDown(ev);   break;
-      case 37: /* arrow-left  */ _this.onKeyLeft(ev);   break;
-      case 39: /* arrow-right */ _this.onKeyRight(ev);  break;
-      case 13: /* enter       */ _this.onEnter(ev);     break;
-      case 33: /* page-up     */ _this.onKeyPgUp(ev);   break;
-      case 34: /* page-down   */ _this.onKeyPgDn(ev);   break;
-      case 36: /* home        */ _this.onKeyHome(ev);   break;
-      case 35: /* end         */ _this.onKeyEnd(ev);    break;
+      case 9:   /* tab         */ _this.onTab(ev);       break;
+      case 27:  /* esc         */ _this.onEsc(ev);       break;
+      case 8:   /* backspace   */ _this.onBackspace(ev); break;
+      case 38:  /* arrow-up    */ _this.onKeyUp(ev);     break;
+      case 40:  /* arrow-down  */ _this.onKeyDown(ev);   break;
+      case 37:  /* arrow-left  */ _this.onKeyLeft(ev);   break;
+      case 39:  /* arrow-right */ _this.onKeyRight(ev);  break;
+      case 13:  /* enter       */ _this.onEnter(ev);     break;
+      case 33:  /* page-up     */ _this.onKeyPgUp(ev);   break;
+      case 34:  /* page-down   */ _this.onKeyPgDn(ev);   break;
+      case 36:  /* home        */ _this.onKeyHome(ev);   break;
+      case 35:  /* end         */ _this.onKeyEnd(ev);    break;
+      case 191: /* slash /     */ _this.onSlashDown(ev); break;
     }
     ev.stopPropagation();
   });
 
   this.searchbox.on('keypress', function (ev) { // prevent Haskell handlers
+    switch(ev.keyCode){
+      case 47: /* slash /     */ _this.onSlashPress(ev); break;
+    }
     ev.stopPropagation();
   });
 
@@ -397,6 +401,11 @@ NodeSearcher.prototype.onTab = function (ev) {
   var current, data;
   ev.preventDefault();
 
+  if(!this.command && this.expression() == "") {
+    this.onEsc(ev);
+    return;
+  }
+
   if (!this.searchrow.hasClass('active')) {
     current = this.currentSelection();
   } else {
@@ -413,6 +422,19 @@ NodeSearcher.prototype.onTab = function (ev) {
     this.appendExpression(data.fullname );
   }
 
+};
+
+NodeSearcher.prototype.onSlashDown = function (ev) {
+  if(this.command && this.expression() == "") {
+    this.onEsc(ev);
+    ev.stopPropagation();
+  }
+};
+
+NodeSearcher.prototype.onSlashPress = function (ev) {
+  if(this.command && this.expression() == "") {
+    ev.preventDefault();
+  }
 };
 
 NodeSearcher.prototype.onEsc = function (ev) {

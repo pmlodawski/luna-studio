@@ -43,7 +43,7 @@ toAction (NodeSearcher (NodeSearcher.Event "treeCmd"  expr _))           = Just 
 toAction (NodeSearcher (NodeSearcher.Event "createCmd" expr Nothing))    = Just $ parseExpr expr
 
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\t'   mods)) = Just $ openFresh
-toAction (Keyboard _ (Keyboard.Event Keyboard.Up   '\191' mods)) = Just $ openCommand -- 191 = /
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\191' mods)) = Just $ openCommand -- 191 = /
 toAction _ = Nothing
 
 searcherData :: Command Global.State LunaModule
