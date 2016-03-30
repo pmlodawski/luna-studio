@@ -28,6 +28,7 @@ commands = do
                                                 -- , ("rename", Function)
                                                 ]
     return [ ("project",  Module projectCmd)
+           , ("insert",   Function)
            , ("feedback", Function)
            , ("help",     Function)
            ]
@@ -51,7 +52,6 @@ help = performIO $ openHelp'
 
 feedback :: Command Global.State ()
 feedback = performIO $ openFeedback'
-
 
 foreign import javascript unsafe "_urq.push(['Feedback_Open'])" openFeedback' :: IO ()
 foreign import javascript unsafe "$('.tutorial-box').show()"    openHelp' :: IO ()

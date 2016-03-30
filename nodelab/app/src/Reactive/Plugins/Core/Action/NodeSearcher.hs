@@ -91,4 +91,5 @@ parseExpr (stripPrefix "project.new "  -> Just name) = Commands.createProject na
 parseExpr (stripPrefix "project.open." -> Just name) = Commands.openProject name
 parseExpr "help"     = Commands.help
 parseExpr "feedback" = Commands.feedback
+parseExpr "insert"   = openFresh
 parseExpr _ = return ()
