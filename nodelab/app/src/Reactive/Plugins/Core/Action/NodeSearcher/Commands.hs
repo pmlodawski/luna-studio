@@ -54,4 +54,4 @@ feedback :: Command Global.State ()
 feedback = performIO $ openFeedback'
 
 foreign import javascript unsafe "_urq.push(['Feedback_Open'])" openFeedback' :: IO ()
-foreign import javascript unsafe "$('.tutorial-box').show()"    openHelp' :: IO ()
+foreign import javascript unsafe "$('.tutorial-box').show().focus()"    openHelp' :: IO ()

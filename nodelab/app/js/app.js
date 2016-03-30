@@ -94,14 +94,24 @@ function initUserInfo() {
   if (localStorage.getItem('tutorial') === "1")
     $(".tutorial-box").hide();
 
-  $(".tutorial-box").click(function () {
+
+  var hideTutorial = function () {
     $(".tutorial-box").hide();
+    $('#canvas2d').focus();
     localStorage.setItem('tutorial', "1");
+  };
+
+  $(".tutorial-box button, .tutorial-box .tutorial-bkg").click(hideTutorial);
+
+  $(".tutorial-box").keydown(function (ev) {
+    if(ev.keyCode == 27) {
+      hideTutorial();
+    }
   });
 
   $(".tutorial").click(function (e) {
     e.preventDefault();
-    $(".tutorial-box").show();
+    $(".tutorial-box").show().focus();
   });
   $(".feedback").click(function (e) {
     e.preventDefault();
