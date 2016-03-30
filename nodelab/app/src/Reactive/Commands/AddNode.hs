@@ -18,7 +18,7 @@ import           Data.List                         (intercalate)
 import           GHC.Float                         (double2Float)
 
 import           Object.UITypes                    (WidgetId)
-import           Object.Widget                     ()
+import           Object.Widget                     (objectId)
 import qualified Object.Widget.Button              as Button
 import qualified Object.Widget.Group               as Group
 import qualified Object.Widget.Label               as Label
@@ -50,6 +50,7 @@ import           Reactive.Commands.Graph           (colorPort, focusNode, nodeId
 -- import           Reactive.Commands.PendingNode   (unrenderPending)
 import           Reactive.Commands.RemoveNode      (removeSelectedNodes)
 import qualified Reactive.Commands.UIRegistry      as UICmd
+import           Reactive.Commands.Selection       (selectedNodes)
 import           Reactive.State.Global             (State, inRegistry)
 import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph
@@ -164,11 +165,20 @@ nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
                       workspace <- use Global.workspace
                       performIO $ BatchCmd.setInputNodeType workspace nodeId name)
                   $ addHandler (UINode.FocusNodeHandler  $ \id -> zoom Global.uiRegistry (focusNode id))
+                  $ addHandler (UINode.ExpandNodeHandler $ zoom Global.uiRegistry expandSelectedNodes)
                   $ addEnterNodeHandler where
                         addEnterNodeHandler = case node ^. Node.nodeType of
                             Node.FunctionNode _ -> addHandler (UINode.EnterNodeHandler $ enterNode $ Breadcrumb.Function $ Text.unpack $ node ^. Node.name) mempty
                             Node.ModuleNode     -> addHandler (UINode.EnterNodeHandler $ enterNode $ Breadcrumb.Module   $ Text.unpack $ node ^. Node.name) mempty
                             _                   -> mempty
+
+expandSelectedNodes :: Command UIRegistry.State ()
+expandSelectedNodes = do
+    sn <- selectedNodes
+    forM_ sn $ \wf -> do
+        let id = wf ^. objectId
+        UICmd.update_ id (Model.isExpanded %~ not)
+        UICmd.moveBy  id (Vector2 0 0) -- FIXME: trigger moved handler for html widgets
 
 updateNode :: Node -> Command State ()
 updateNode node = do

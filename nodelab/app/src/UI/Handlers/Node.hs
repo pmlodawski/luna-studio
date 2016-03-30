@@ -82,6 +82,11 @@ changeInputNodeTypeHandler = TypeKey :: TypeKey ChangeInputNodeTypeHandler
 newtype EnterNodeHandler = EnterNodeHandler (Command Global.State ())
 enterNodeHandler = TypeKey :: TypeKey EnterNodeHandler
 
+newtype ExpandNodeHandler = ExpandNodeHandler (Command Global.State ())
+expandNodeHandler = TypeKey :: TypeKey ExpandNodeHandler
+
+
+
 triggerRemoveHandler :: WidgetId -> Command Global.State ()
 triggerRemoveHandler id = do
     maybeHandler <- inRegistry $ UICmd.handler id removeNodeHandler
@@ -108,11 +113,13 @@ triggerEnterNodeHandler id = do
     maybeHandler <- inRegistry $ UICmd.handler id enterNodeHandler
     forM_ maybeHandler $ \(EnterNodeHandler handler) -> handler
 
-keyDownHandler :: KeyPressedHandler Global.State
-keyDownHandler '\r'   _ _ id = void $ inRegistry $ do
-    UICmd.update_ id (Model.isExpanded %~ not)
-    UICmd.moveBy  id (Vector2 0 0) -- FIXME: trigger moved handler for html widgets
+triggerExpandNodeHandler :: WidgetId -> Command Global.State ()
+triggerExpandNodeHandler id = do
+    maybeHandler <- inRegistry $ UICmd.handler id expandNodeHandler
+    forM_ maybeHandler $ \(ExpandNodeHandler handler) -> handler
 
+keyDownHandler :: KeyPressedHandler Global.State
+keyDownHandler '\r'   _ _ id = triggerExpandNodeHandler id
 keyDownHandler '\x08' _ _ id = triggerRemoveHandler id
 keyDownHandler '\x2e' _ _ id = triggerRemoveHandler id
 keyDownHandler _      _ _ _  = return ()
