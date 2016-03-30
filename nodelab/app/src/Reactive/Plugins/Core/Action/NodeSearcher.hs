@@ -14,6 +14,7 @@ import qualified JS.NodeSearcher                                    as UI
 
 import           Event.Event                                        (Event (..))
 import qualified Batch.Workspace                                    as Workspace
+import           Event.Keyboard                                     (KeyMods (..))
 import qualified Event.Keyboard                                     as Keyboard
 import qualified Event.NodeSearcher                                 as NodeSearcher
 import qualified Object.Node                                        as Node
@@ -43,7 +44,8 @@ toAction (NodeSearcher (NodeSearcher.Event "treeCmd"  expr _))           = Just 
 toAction (NodeSearcher (NodeSearcher.Event "createCmd" expr Nothing))    = Just $ parseExpr expr
 
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\t'   mods)) = Just $ openFresh
-toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\191' mods)) = Just $ openCommand -- 191 = /
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\191' (KeyMods False False False False))) = Just $ openCommand -- 191 = /
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\191' (KeyMods True False False False))) = Just $ Commands.help
 toAction _ = Nothing
 
 searcherData :: Command Global.State LunaModule
