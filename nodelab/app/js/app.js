@@ -75,7 +75,7 @@ function initializeGl() {
 
     document.body.appendChild($$.renderer.domElement);
 
-    window.displayObjectMap = function () { document.body.appendChild($$.rendererMap.domElement); };
+    window.displayObjectMap = function () { document.body.appendChild($$.rendererMap.domElement); $($$.rendererMap.domElement).css({opacity: 0.5, zIndex: 15}); };
 
     initCommonWidgets();
     textEditor.init();
@@ -104,7 +104,7 @@ function initUserInfo() {
   $(".tutorial-box button, .tutorial-box .tutorial-bkg").click(hideTutorial);
 
   $(".tutorial-box").keydown(function (ev) {
-    if(ev.keyCode == 27) {
+    if(ev.keyCode === 27) {
       hideTutorial();
     }
   });
