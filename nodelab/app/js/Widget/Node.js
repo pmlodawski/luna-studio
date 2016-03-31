@@ -30,6 +30,7 @@ function Node(position, z, widgetId) {
     errorColor:        { type: 'c',  value:                      errorColor },
     alpha:             { type: 'f',  value:                             1.0 },
     error:             { type: 'i',  value:                               0 },
+    highlight:         { type: 'i',  value:                               0 },
     objectId:          { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
   };
 
@@ -71,6 +72,9 @@ Node.prototype.setPending = function () {
 Node.prototype.setSelected = function (val) {
   this.uniforms.selected.value = val?1:0;
 };
+Node.prototype.setHighlight = function (val) {
+  this.uniforms.highlight.value = val?1:0;
+};
 Node.prototype.setError = function (val) {
   this.uniforms.error.value = val?1:0;
 };
@@ -83,6 +87,6 @@ Node.prototype.setZPos = function (z) {
 Node.prototype.destructor = function () {};
 
 Node.prototype.redrawTextures = function () {};
-Node.prototype.widgetMoved    = function () {_.each($$.registry, function(v) { if(!(v instanceof Node) && v.widgetMoved) v.widgetMoved(); })}; // FIXME: REALLY UGLY
+Node.prototype.widgetMoved    = function () {_.each($$.registry, function(v) { if(!(v instanceof Node) && v.widgetMoved) v.widgetMoved(); }); }; // FIXME: REALLY UGLY
 
 module.exports = Node;

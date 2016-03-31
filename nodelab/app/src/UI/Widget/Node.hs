@@ -35,8 +35,10 @@ instance UIContainer Node
 
 foreign import javascript safe "new GraphNode(new THREE.Vector2($2, $3), 0, $1)"     create'          :: WidgetId -> Double -> Double -> IO Node
 foreign import javascript safe "$1.setZPos($2)"                                      setZPos          :: Node -> Double -> IO ()
-foreign import javascript safe "$1.setSelected($2)"                                  setSelected      :: Node -> Bool      -> IO ()
-foreign import javascript safe "$1.setError($2)"                                     setError         :: Node -> Bool      -> IO ()
+foreign import javascript safe "$1.setSelected($2)"                                  setSelected      :: Node -> Bool   -> IO ()
+foreign import javascript safe "$1.setError($2)"                                     setError         :: Node -> Bool   -> IO ()
+foreign import javascript safe "$1.setHighlight($2)"                                 setHighlight     :: Node -> Bool   -> IO ()
+
 
 createNode :: WidgetId -> Model.Node -> IO Node
 createNode id model = do
@@ -57,6 +59,7 @@ instance UIDisplayObject Model.Node where
     updateUI id old model = do
         node <- UIR.lookup id :: IO Node
 
-        setSelected      node (model ^. Model.isSelected)
-        setError         node (model ^. Model.isError)
-        setZPos          node (model ^. Model.zPos)
+        setSelected      node $ model ^. Model.isSelected
+        setError         node $ model ^. Model.isError
+        setZPos          node $ model ^. Model.zPos
+        setHighlight     node $ model ^. Model.highlight

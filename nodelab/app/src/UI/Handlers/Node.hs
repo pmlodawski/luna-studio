@@ -16,14 +16,14 @@ import qualified Event.Mouse                  as Mouse
 import           Object.Widget                (CompositeWidget, DblClickHandler, DragEndHandler, DragMoveHandler,
                                                KeyPressedHandler, KeyUpHandler, MousePressedHandler, ResizableWidget,
                                                UIHandlers, WidgetFile, WidgetId, click, createWidget, currentPos,
-                                               dblClick, dragEnd, dragMove, keyDown, keyMods, keyUp, mousePressed,
-                                               objectId, resizeWidget, startPos, updateWidget)
+                                               dblClick, dragEnd, dragMove, keyDown, keyMods, keyUp, mouseOut,
+                                               mouseOver, mousePressed, objectId, resizeWidget, startPos, updateWidget)
 
 import qualified Object.Widget.Group          as Group
 import qualified Object.Widget.Label          as Label
+import qualified Object.Widget.LabeledTextBox as LabeledTextBox
 import qualified Object.Widget.Node           as Model
 import qualified Object.Widget.TextBox        as TextBox
-import qualified Object.Widget.LabeledTextBox as LabeledTextBox
 import           Reactive.Commands.Command    (Command, performIO)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import           Reactive.State.Global        (inRegistry)
@@ -31,18 +31,18 @@ import qualified Reactive.State.Global        as Global
 import           Reactive.State.UIRegistry    (addHandler)
 import qualified Reactive.State.UIRegistry    as UIRegistry
 
+import qualified Style.Node                   as Style
 import           UI.Generic                   (defaultResize, startDrag)
+import           UI.Handlers.Button           (MousePressedHandler (..))
 import           UI.Handlers.Generic          (triggerValueChanged)
-import           UI.Handlers.Button           (MousePressedHandler(..))
 import           UI.Handlers.Generic          (ValueChangedHandler (..), triggerValueChanged)
+import           UI.Handlers.LabeledTextBox   ()
 import           UI.Layout                    as Layout
 import           UI.Widget.Group              ()
 import           UI.Widget.Label              ()
+import           UI.Widget.LabeledTextBox     ()
 import           UI.Widget.Node               ()
 import           UI.Widget.TextBox            ()
-import           UI.Widget.LabeledTextBox     ()
-import           UI.Handlers.LabeledTextBox   ()
-import qualified Style.Node as Style
 
 import           Empire.API.Data.Node         (NodeId)
 
@@ -155,10 +155,17 @@ selectNode evt id = do
     UICmd.takeFocus id
     handleSelection evt id
 
+onMouseOver, onMouseOut :: WidgetId -> Command Global.State ()
+onMouseOver id = inRegistry $ UICmd.update_ id $ Model.highlight .~ True
+onMouseOut  id = inRegistry $ UICmd.update_ id $ Model.highlight .~ False
+
+
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyDown      .~ keyDownHandler
                      & mousePressed .~ (\evt _ id -> selectNode evt id)
                      & dblClick     .~ dblClickHandler
+                     & mouseOver .~ const onMouseOver
+                     & mouseOut  .~ const onMouseOut
 
 allNodes :: Command UIRegistry.State [WidgetFile Model.Node]
 allNodes = UIRegistry.lookupAllM

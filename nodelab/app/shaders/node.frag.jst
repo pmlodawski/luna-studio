@@ -3,6 +3,7 @@ precision highp float;
 #endif
 uniform int   selected;
 uniform int   error;
+uniform int   highlight;
 
 uniform vec3  unselectedColor;
 uniform vec3  selectedColor;
@@ -22,6 +23,7 @@ void main(void) {
         gl_FragColor = vec4(objectId, sdf_sharp(sdf_ball(p, 20.0 + float(20 * connectionPen))));
     } else {
 
+        float nodeShape = sdf_ball(p, 20.0);
 
         float cycek =sdf_intersect(
                         sdf_pie(sdf_rotateCCW(p, 1.0 * M_PI / 4.0), M_PI / 2.0),
@@ -51,9 +53,9 @@ void main(void) {
                              )
                            );
 
-        vec4 errorC = vec4(errorColor, float(error) * sdf_aa(errorShape));
+        vec4 errorC    = vec4(errorColor,    float(error) * sdf_aa(errorShape));
         vec4 selectedC = vec4(selectedColor, float(selected) * sdf_aa(selectedShape));
-
-        gl_FragColor = blend(errorC, selectedC);
+        vec4 bkgC      = vec4(0.2, 0.2 ,0.2, float(highlight) * sdf_aa(nodeShape));
+        gl_FragColor = blend(blend(bkgC, errorC), selectedC);
     }
 }
