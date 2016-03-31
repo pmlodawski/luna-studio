@@ -11,8 +11,8 @@ margin     = 0.0
 dist       = nodeRadius + halfWidth + margin
 nodeSize   = 30.0
 
-height     = 50.0
-width      = 50.0
+height     = 80.0
+width      = 80.0
 
 class Port
   constructor: (widgetId, isSelf) ->
