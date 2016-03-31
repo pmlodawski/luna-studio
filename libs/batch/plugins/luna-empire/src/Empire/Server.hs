@@ -21,11 +21,12 @@ import qualified Empire.API.Topic                  as Topic
 import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
 import qualified Empire.API.Control.EmpireStarted  as EmpireStarted
 import           Empire.API.Data.GraphLocation     (GraphLocation)
-import           Empire.Data.Graph                 (Graph)
+import           Empire.Data.Graph                 (Graph, ast)
 
 import qualified Empire.Commands.Library           as Library
 import qualified Empire.Commands.Project           as Project
 import qualified Empire.Commands.Typecheck         as Typecheck
+import qualified Empire.Commands.AST               as AST
 import qualified Empire.Empire                     as Empire
 import           Empire.Env                        (Env)
 import qualified Empire.Env                        as Env
@@ -91,6 +92,7 @@ startTCWorker env chan = liftIO $ void $ Empire.runEmpire env def $ forever $ do
     if flush then Typecheck.flushCache else return ()
     Empire.graph .= g
     Typecheck.run loc
+    {-zoom (Empire.graph . ast) $ AST.dumpGraphViz "tc_graph"-}
 
 
 startToBusWorker :: TChan Message -> Bus ()

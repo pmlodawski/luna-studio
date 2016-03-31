@@ -7,6 +7,7 @@ import           Prologue                     hiding ((#))
 import           Control.Monad.State
 import           Control.Monad.Error          (throwError)
 import           Data.Record                  (ANY (..), caseTest, of')
+import           Data.Maybe                   (maybeToList)
 import           Data.Prop                    (prop, (#))
 import           Data.Graph                   (source, Inputs (..))
 import           Data.HMap.Lazy               (TypeKey (..))
@@ -26,15 +27,16 @@ import qualified Empire.ASTOps.Parse          as Parser
 import qualified Empire.ASTOps.Print          as Printer
 import           Empire.ASTOps.Remove         (safeRemove)
 
-import           Luna.Diagnostic.Vis.GraphViz (renderAndOpen)
+import           Luna.Pretty.GraphViz         (renderAndOpen)
 
-import           Luna.Syntax.Model.Network.Builder (Meta (..), Type (..))
+import           Luna.Syntax.Model.Network.Builder (Meta (..), Type (..), TCData (..), tcErrors)
 import qualified Luna.Syntax.Model.Network.Builder as Builder
-import           Luna.Syntax.AST.Term              (Cons (..), Unify (..), Var (..))
-import qualified Luna.Syntax.AST.Term.Lit          as Lit
+import           Luna.Syntax.Term.Expr             (Cons (..), Unify (..), Var (..))
+import qualified Luna.Syntax.Term.Lit              as Lit
 
 import qualified Luna.Compilation.Pass.Interpreter.Layer as Interpreter
 import           Luna.Compilation.Pass.Interpreter.Layer (InterpreterData (..))
+import           Luna.Compilation.Error
 import           Unsafe.Coerce
 
 metaKey :: TypeKey NodeMeta
@@ -52,8 +54,8 @@ getNodeValue ref = runASTOp $ do
     tp     <- Builder.follow source $ node ^. prop Type
     tpNode <- Builder.read tp
     case (node ^. prop InterpreterData . Interpreter.value) of
-        Nothing   -> return Nothing
-        Just val  -> do
+        Left  _   -> return Nothing
+        Right val -> do
             v <- liftIO (unsafeCoerce val :: IO Any)
             caseTest (uncover tpNode) $ do
                 of' $ \(Cons (Lit.String n) as) -> case n of
@@ -99,26 +101,23 @@ getTypeRep ref = do
         of' $ \ANY -> return ""
 
 getError :: NodeRef -> Command AST (Maybe String)
-getError ref = runASTOp $ do
-    tp <- Builder.follow (prop Type) ref >>= Builder.follow source
-    getError' tp
+getError = runASTOp . getError'
 
 getError' :: ASTOp m => NodeRef -> m (Maybe String)
 getError' ref = do
-    n <- Builder.read ref
-    caseTest (uncover n) $ do
-        of' $ \(Unify l r) -> do
-            lr <- Builder.follow source l
-            rr <- Builder.follow source r
-            lrep <- getTypeRep lr
-            rrep <- getTypeRep rr
-            return $ Just $ "Unable to match type " <> lrep <> " with " <> rrep <> "."
-        of' $ \Lit.Star  -> return Nothing
-        of' $ \ANY -> do
-            ers <- mapM (Builder.follow source >=> getError') (uncover n # Inputs)
-            let errors = catMaybes ers
-            return $ tryHead errors
+    n :: ASTNode <- Builder.read ref
+    let err  = n ^. prop TCData . tcErrors
+    inps <- mapM (Builder.follow source) $ uncover n # Inputs
+    isSt <- isStar ref
+    inpErrs <- concat . fmap maybeToList <$> (if isSt then return [] else mapM getError' inps)
+    return $ (show <$> tryHead err) <|> tryHead inpErrs
 
+isStar :: ASTOp m => NodeRef -> m Bool
+isStar r = do
+    n <- Builder.read r
+    caseTest (uncover n) $ do
+        of' $ \Lit.Star -> return True
+        of' $ \ANY      -> return False
 
 writeMeta :: NodeRef -> NodeMeta -> Command AST ()
 writeMeta ref newMeta = runASTOp $ do

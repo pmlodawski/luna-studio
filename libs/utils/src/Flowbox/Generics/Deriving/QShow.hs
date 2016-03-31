@@ -141,11 +141,6 @@ instance QShow Bool    where qshowsPrec = showsPrec
 instance QShow Integer where qshowsPrec = showsPrec
 instance QShow Text    where qshowsPrec = showsPrec
 
-intersperse :: a -> [a] -> [a]
-intersperse _ []    = []
-intersperse _ [h]   = [h]
-intersperse x (h:t) = h : x : intersperse x t
-
 instance (QShow a) => QShow [a] where
   qshowsPrec _ l =   showChar '['
                    . foldr (.) id

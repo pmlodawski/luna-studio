@@ -10,8 +10,8 @@ import           Empire.ASTOp             (ASTOp)
 import           Empire.Data.AST          (NodeRef)
 import qualified Empire.ASTOps.Builder    as ASTBuilder
 
-import           Luna.Syntax.AST.Term     (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..))
-import qualified Luna.Syntax.AST.Term.Lit as Lit
+import           Luna.Syntax.Term.Expr    (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..))
+import qualified Luna.Syntax.Term.Lit     as Lit
 
 import qualified Luna.Syntax.Model.Network.Builder as Builder
 

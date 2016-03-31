@@ -24,8 +24,8 @@ import qualified Empire.Commands.GraphUtils   as GraphUtils
 import qualified Empire.Commands.GraphBuilder as GraphBuilder
 import qualified Empire.Commands.Publisher    as Publisher
 
-import qualified Luna.Library.Standard                           as StdLib
-import qualified Luna.Library.Symbol.Class                       as Symbol
+import qualified StdLibMock                                      as StdLib
+import qualified Luna.Library.Symbol                             as Symbol
 import qualified Luna.Compilation.Stage.TypeCheck                as TypeCheck
 import qualified Luna.Compilation.Stage.TypeCheck.Class          as TypeCheckState
 import           Luna.Compilation.Stage.TypeCheck                (Loop (..), Sequence (..))
@@ -87,6 +87,7 @@ updateNodes loc = do
         if cachedErr /= err
             then do
                 errorsCache %= IntMap.alter (const err) id
+                valuesCache  %= IntMap.delete id
                 case err of
                     Just e  -> Publisher.notifyResultUpdate loc id (NodeResult.Error e) 0
                     Nothing -> Publisher.notifyResultUpdate loc id (NodeResult.NoValue) 0

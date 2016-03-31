@@ -121,7 +121,7 @@ instance IsString StyledText where
 instance ToText StyledText where
     toText [] = ""
     toText (x:xs) = case x of
-        TextElement txt -> txt ++ toText xs
+        TextElement txt -> Text.append txt $ toText xs
         _               -> toText xs
 
 

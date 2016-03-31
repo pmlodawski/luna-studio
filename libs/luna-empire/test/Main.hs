@@ -25,7 +25,7 @@ import           Empire.Data.Library
 import           Empire.Empire
 import           Control.Concurrent.STM.TChan (newTChan)
 import           Control.Concurrent.STM       (atomically)
-import           Luna.Diagnostic.Vis.GraphViz (renderAndOpen, toGraphViz)
+import           Luna.Pretty.GraphViz         (renderAndOpen, toGraphViz)
 
 
 

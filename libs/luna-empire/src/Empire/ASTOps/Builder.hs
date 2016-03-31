@@ -20,11 +20,11 @@ import           Empire.ASTOps.Remove     (removeNode, performSafeRemoval)
 import           Empire.Data.AST          (ASTEdge, ASTNode, EdgeRef, NodeRef, UncoveredNode)
 import           Empire.Data.NodeMarker   (NodeMarker, nodeMarkerKey)
 import           Empire.API.Data.Node     (NodeId)
-import           Luna.Syntax.AST.Term     (Acc (..), App (..), Blank (..), Match (..), Var (..))
-import qualified Luna.Syntax.AST.Term.Lit as Lit
+import           Luna.Syntax.Term.Expr    (Acc (..), App (..), Blank (..), Match (..), Var (..))
+import qualified Luna.Syntax.Term.Lit     as Lit
 
-import           Luna.Syntax.AST.Function.Argument (Arg)
-import qualified Luna.Syntax.AST.Function.Argument as Arg
+import           Luna.Syntax.Term.Function.Argument (Arg)
+import qualified Luna.Syntax.Term.Function.Argument as Arg
 import           Luna.Syntax.Model.Network.Builder (Meta (..))
 import qualified Luna.Syntax.Model.Network.Builder as Builder
 

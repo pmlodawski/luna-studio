@@ -7,7 +7,7 @@ import           Prologue
 
 import Data.Graph                             (Node, Link, Ref, Edge, Cluster)
 import Luna.Syntax.Model.Network.Builder.Term (NetGraph, NetNode, NetLayers, NetCluster)
-import Luna.Evaluation.Runtime                (Static)
+import Luna.Runtime.Dynamics                  (Static)
 import Luna.Syntax.Model.Network.Term         (Draft)
 
 type ASTNode       = NetNode
