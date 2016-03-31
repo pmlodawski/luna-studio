@@ -38,7 +38,7 @@ publish:
     username:  $$DOCKERHUB_USER
     password:  $$DOCKERHUB_PASS
     email: $$DOCKERHUB_EMAIL
-    repo: lunalang/luna
+    repo: lunalang/luna-testing
     tag: $${BRANCH##docker/}
     file: Dockerfile
     insecure: false
