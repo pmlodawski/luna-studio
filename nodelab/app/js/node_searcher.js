@@ -401,7 +401,7 @@ NodeSearcher.prototype.onTab = function (ev) {
   var current, data;
   ev.preventDefault();
 
-  if(!this.command && this.expression() == "") {
+  if(!this.command && this.expression() === "") {
     this.onEsc(ev);
     return;
   }
@@ -425,14 +425,14 @@ NodeSearcher.prototype.onTab = function (ev) {
 };
 
 NodeSearcher.prototype.onSlashDown = function (ev) {
-  if(this.command && this.expression() == "") {
+  if(this.command && this.expression() === "") {
     this.onEsc(ev);
     ev.stopPropagation();
   }
 };
 
 NodeSearcher.prototype.onSlashPress = function (ev) {
-  if(this.command && this.expression() == "") {
+  if(this.command && this.expression() === "") {
     ev.preventDefault();
   }
 };
