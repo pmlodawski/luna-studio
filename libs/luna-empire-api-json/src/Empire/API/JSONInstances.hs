@@ -10,6 +10,7 @@ import           Empire.API.Control.EmpireStarted    as EmpireStarted
 import           Empire.API.Data.Breadcrumb          as Breadcrumb
 import           Empire.API.Data.Connection          as Connection
 import           Empire.API.Data.DefaultValue        as DefaultValue
+import           Empire.API.Data.Error               as Error
 import           Empire.API.Data.Graph               as Graph
 import           Empire.API.Data.GraphLocation       as GraphLocation
 import           Empire.API.Data.Library             as Library
@@ -76,6 +77,8 @@ instance ToJSON DefaultValue.Value
 instance ToJSON DefaultValue.PortDefault
 
 instance ToJSON Graph.Graph
+
+instance ToJSON t => ToJSON (Error.Error t)
 
 instance ToJSON AddNode.NodeType
 instance ToJSON AddNode.Request

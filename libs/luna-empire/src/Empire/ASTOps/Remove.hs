@@ -6,7 +6,7 @@ import           Prologue                      hiding ((#))
 import           Data.Construction             (destruct)
 import           Data.Container                (size)
 import           Data.Prop                     ((#))
-import           Data.Layer.Cover              (uncover)
+import           Data.Layer_OLD.Cover_OLD (uncover, covered)
 import           Data.Graph                    (Inputs (..), Succs (..))
 import           Data.Direction                (source)
 

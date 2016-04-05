@@ -31,10 +31,11 @@ import qualified Luna.Compilation.Stage.TypeCheck.Class          as TypeCheckSta
 import           Luna.Compilation.Stage.TypeCheck                (Loop (..), Sequence (..))
 import           Luna.Compilation.Pass.Inference.Literals        (LiteralsPass (..))
 import           Luna.Compilation.Pass.Inference.Struct          (StructuralInferencePass (..))
-import           Luna.Compilation.Pass.Inference.Unification     (UnificationPass (..))
+import           Luna.Compilation.Pass.Inference.Unification     (StrictUnificationPass (..))
 import           Luna.Compilation.Pass.Inference.Calling         (FunctionCallingPass (..))
 import           Luna.Compilation.Pass.Inference.Importing       (SymbolImportingPass (..))
 import           Luna.Compilation.Pass.Inference.Scan            (ScanPass (..))
+import           Luna.Syntax.Model.Network.Builder               (Sign (..))
 
 import qualified Luna.Compilation.Pass.Interpreter.Interpreter   as Interpreter
 
@@ -46,10 +47,10 @@ getNodeValue nid = do
     ref <- GraphUtils.getASTTarget nid
     zoom Graph.ast $ AST.getNodeValue ref
 
-collect pass = do --return ()
-    putStrLn $ "After pass: " <> pass
-    st <- TypeCheckState.get
-    putStrLn $ "State is: " <> show st
+collect pass = return ()
+    {-putStrLn $ "After pass: " <> pass-}
+    {-st <- TypeCheckState.get-}
+    {-putStrLn $ "State is: " <> show st-}
 
 runTC :: Command Graph ()
 runTC = do
@@ -60,9 +61,19 @@ runTC = do
         Symbol.loadFunctions StdLib.symbols
         TypeCheckState.modify_ $ (TypeCheckState.freshRoots .~ roots)
         let seq3 a b c = Sequence a $ Sequence b c
-        let tc = Sequence (seq3 ScanPass LiteralsPass StructuralInferencePass)
-               $ Loop $ seq3 SymbolImportingPass (Loop UnificationPass) FunctionCallingPass
-
+            seq4 a b c d = Sequence a $ seq3 b c d
+            seq5 a b c d e = Sequence a $ seq4 b c d e
+        let tc = (seq4
+                     ScanPass
+                     LiteralsPass
+                     StructuralInferencePass
+                     (Loop $ Sequence
+                         (Loop $ seq4
+                             SymbolImportingPass
+                             (Loop $ StrictUnificationPass Positive False)
+                             FunctionCallingPass
+                             (Loop $ StrictUnificationPass Positive False))
+                         (StrictUnificationPass Negative True)))
         TypeCheck.runTCWithArtifacts tc collect
     Graph.ast .= g
     return ()

@@ -429,7 +429,7 @@ updateNodeValue id val = inRegistry $ do
             NodeResult.Error msg -> do
                 UICmd.update_ widgetId $ Model.value   .~ "Error!"
                 UICmd.update_ widgetId $ Model.isError .~ True
-                visualizeError widgetId msg
+                visualizeError widgetId $ show msg
 
 updateNodeProfilingData :: NodeId -> Integer -> Command State ()
 updateNodeProfilingData id execTime = inRegistry $ do

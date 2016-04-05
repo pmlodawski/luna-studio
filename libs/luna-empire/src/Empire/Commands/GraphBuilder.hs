@@ -14,7 +14,7 @@ import qualified Data.Map                     as Map
 import           Data.Maybe                   (catMaybes, fromMaybe, maybeToList)
 import qualified Data.Text.Lazy               as Text
 import           Data.Record                  (ANY (..), caseTest, of')
-import           Data.Layer.Cover             (uncover)
+import           Data.Layer_OLD.Cover_OLD (uncover, covered)
 import           Data.Graph                   (source)
 import           Data.Prop                    (prop)
 

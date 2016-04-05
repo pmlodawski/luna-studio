@@ -13,11 +13,13 @@ import           Data.Graph                   (source, Inputs (..))
 import           Data.HMap.Lazy               (TypeKey (..))
 import qualified Data.HMap.Lazy               as HMap
 import           GHC.Prim                     (Any)
+import           Data.Layer_OLD.Cover_OLD     (uncover, covered)
 
 import           Empire.Empire
 import           Empire.API.Data.DefaultValue (PortDefault, Value (..))
 import           Empire.API.Data.NodeMeta     (NodeMeta)
 import           Empire.API.Data.Node         (NodeId)
+import qualified Empire.API.Data.Error        as APIError
 import           Empire.Data.NodeMarker       (NodeMarker (..))
 import           Empire.Data.AST              (AST, NodeRef, ASTNode)
 
@@ -31,12 +33,12 @@ import           Luna.Pretty.GraphViz         (renderAndOpen)
 
 import           Luna.Syntax.Model.Network.Builder (Meta (..), Type (..), TCData (..), tcErrors)
 import qualified Luna.Syntax.Model.Network.Builder as Builder
-import           Luna.Syntax.Term.Expr             (Cons (..), Unify (..), Var (..))
+import           Luna.Syntax.Term.Expr             (Cons (..), Unify (..), Var (..), Acc (..), App (..))
 import qualified Luna.Syntax.Term.Lit              as Lit
 
 import qualified Luna.Compilation.Pass.Interpreter.Layer as Interpreter
 import           Luna.Compilation.Pass.Interpreter.Layer (InterpreterData (..))
-import           Luna.Compilation.Error
+import           Luna.Compilation.Error            as TCError
 import           Unsafe.Coerce
 
 metaKey :: TypeKey NodeMeta
@@ -95,33 +97,30 @@ getTypeRep ref = do
                 _  -> return $ "("
                             <> n
                             <> " "
-                            <> intercalate " " as
+                            <> unwords as
                             <> ")"
         of' $ \(Var (Lit.String n)) -> return n
         of' $ \ANY -> return ""
 
-getError :: NodeRef -> Command AST (Maybe String)
+getError :: NodeRef -> Command AST (Maybe (APIError.Error String))
 getError = runASTOp . getError'
 
-getError' :: ASTOp m => NodeRef -> m (Maybe String)
+getError' :: ASTOp m => NodeRef -> m (Maybe (APIError.Error String))
 getError' ref = do
     n :: ASTNode <- Builder.read ref
-    let err  = n ^. prop TCData . tcErrors
+    err <- mapM reprError $ n ^. prop TCData . tcErrors
     inps <- mapM (Builder.follow source) $ uncover n # Inputs
-    isSt <- isStar ref
-    inpErrs <- concat . fmap maybeToList <$> (if isSt then return [] else mapM getError' inps)
-    return $ (show <$> tryHead err) <|> tryHead inpErrs
+    inpErrs <- concat . fmap maybeToList <$> mapM getError' inps
+    return $ tryHead err <|> tryHead inpErrs
 
-isStar :: ASTOp m => NodeRef -> m Bool
-isStar r = do
-    n <- Builder.read r
-    caseTest (uncover n) $ do
-        of' $ \Lit.Star -> return True
-        of' $ \ANY      -> return False
+reprError :: ASTOp m => TCError NodeRef -> m (APIError.Error String)
+reprError tcErr = case tcErr of
+    TCError.ImportError Nothing m  -> return $ APIError.ImportError m
+    TCError.ImportError (Just n) m -> return $ APIError.NoMethodError m "TODO" -- <$> getTypeRep n
+    TCError.UnificationError l r -> return $ APIError.TypeError "TODO" "TODO" -- <$> getTypeRep l <*> getTypeRep r
 
 writeMeta :: NodeRef -> NodeMeta -> Command AST ()
-writeMeta ref newMeta = runASTOp $ do
-    Builder.withRef ref $ prop Meta %~ HMap.insert metaKey newMeta
+writeMeta ref newMeta = runASTOp $ Builder.withRef ref $ prop Meta %~ HMap.insert metaKey newMeta
 
 renameVar :: NodeRef -> String -> Command AST ()
 renameVar = runASTOp .: ASTBuilder.renameVar
@@ -132,24 +131,24 @@ removeSubtree = runASTOp . safeRemove
 printExpression :: NodeRef -> Command AST String
 printExpression = runASTOp . Printer.printExpression
 
-applyFunction :: NodeRef -> NodeRef -> Int -> Command AST (NodeRef)
+applyFunction :: NodeRef -> NodeRef -> Int -> Command AST NodeRef
 applyFunction = runASTOp .:. ASTBuilder.applyFunction
 
-unapplyArgument :: NodeRef -> Int -> Command AST (NodeRef)
+unapplyArgument :: NodeRef -> Int -> Command AST NodeRef
 unapplyArgument = runASTOp .: ASTBuilder.removeArg
 
-makeAccessor :: NodeRef -> NodeRef -> Command AST (NodeRef)
+makeAccessor :: NodeRef -> NodeRef -> Command AST NodeRef
 makeAccessor = runASTOp .: ASTBuilder.makeAccessor
 
-removeAccessor :: NodeRef -> Command AST (NodeRef)
+removeAccessor :: NodeRef -> Command AST NodeRef
 removeAccessor = runASTOp . ASTBuilder.unAcc
 
-getTargetNode :: NodeRef -> Command AST (NodeRef)
+getTargetNode :: NodeRef -> Command AST NodeRef
 getTargetNode nodeRef = runASTOp $ Builder.read nodeRef
                                >>= return . view ASTBuilder.rightMatchOperand
                                >>= Builder.follow source
 
-getVarNode :: NodeRef -> Command AST (NodeRef)
+getVarNode :: NodeRef -> Command AST NodeRef
 getVarNode nodeRef = runASTOp $ Builder.read nodeRef
                             >>= return . view ASTBuilder.leftMatchOperand
                             >>= Builder.follow source

@@ -3,7 +3,7 @@ module Empire.ASTOps.Print where
 import           Prologue
 import           Data.Record              (ANY (..), caseTest, of')
 import qualified Data.Text.Lazy           as Text
-import           Data.Layer.Cover         (uncover)
+import           Data.Layer_OLD.Cover_OLD (uncover, covered)
 import           Data.Direction           (source)
 
 import           Empire.ASTOp             (ASTOp)

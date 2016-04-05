@@ -7,7 +7,7 @@ import           Control.Monad.Error      (throwError)
 import           Control.Monad            (foldM)
 import           Data.Record              (of', caseTest, cons, ANY(..))
 import           Data.Prop                ((#), prop)
-import           Data.Layer.Cover         (uncover, covered)
+import           Data.Layer_OLD.Cover_OLD (uncover, covered)
 import           Data.Graph               (Inputs (..))
 import           Data.Direction           (source)
 import qualified Data.HMap.Lazy           as HMap
