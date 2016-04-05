@@ -15,7 +15,6 @@ data DragHistory = DragHistory { _dragStartPos    :: Vector2 Int
                                } deriving (Eq, Show, Generic)
 
 data Connecting = Connecting { _sourcePortRef      :: AnyPortRef
-                             , _sourcePortWidget   :: WidgetId
                              , _sourcePortAngleVec :: Vector2 Double
                              , _sourceNodePos      :: Vector2 Double
                              , _destinationPortMay :: Maybe AnyPortRef

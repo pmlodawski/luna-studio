@@ -219,6 +219,12 @@ connectionIdToWidgetId connectionId = do
     let matching = find (\file -> (file ^. widget . ConnectionModel.connectionId) == connectionId) files
     return (view objectId <$> matching)
 
+portRefToWidgetId :: AnyPortRef -> Command UIRegistry.State (Maybe WidgetId)
+portRefToWidgetId portRef = do
+    files <- allPorts
+    let matching = find (\file -> (file ^. widget . PortModel.portRef) == portRef) files
+    return (view objectId <$> matching)
+
 focusNode :: WidgetId -> Command UIRegistry.State ()
 focusNode id = do
     nodes <- allNodes

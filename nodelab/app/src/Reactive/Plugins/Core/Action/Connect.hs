@@ -58,9 +58,7 @@ hideCurrentConnection :: Command UIRegistry.State ()
 hideCurrentConnection = UICmd.update_ UIRegistry.currentConnectionId $ UIConnection.currentVisible .~ False
 
 getPortWidgetUnderCursor :: EventWidget -> Command UIRegistry.State (Maybe (WidgetFile PortModel.Port))
-getPortWidgetUnderCursor (EventWidget widgetId _ _) = do
-    file <- UIRegistry.lookupTypedM widgetId
-    return file
+getPortWidgetUnderCursor (EventWidget widgetId _ _) = UIRegistry.lookupTypedM widgetId
 
 startDrag :: Mouse.RawEvent -> Command State ()
 startDrag event@(Mouse.Event _ coord _ _ (Just evWd)) = do
@@ -71,7 +69,7 @@ startDrag event@(Mouse.Event _ coord _ _ (Just evWd)) = do
         graph  <- use Global.graph
         camera <- use $ Global.camera . Camera.camera
         sourceNodePos <- zoom Global.uiRegistry $ UICmd.get (fromJust $ file ^. parent) NodeModel.position
-        Global.connect . Connect.connecting ?= (Connecting sourceRef (evWd ^. Mouse.widgetId) (model ^. PortModel.angleVector) sourceNodePos Nothing (DragHistory coord coord))
+        Global.connect . Connect.connecting ?= (Connecting sourceRef (model ^. PortModel.angleVector) sourceNodePos Nothing (DragHistory coord coord))
         zoom Global.uiRegistry $ setCurrentConnectionColor $ model ^. PortModel.color
 
 whileConnecting :: (Connect.Connecting -> Command State ()) -> Command State ()
@@ -80,7 +78,7 @@ whileConnecting run = do
     forM_ connectingMay $ \connecting -> run connecting
 
 handleMove :: Vector2 Int -> Connect.Connecting -> Command State ()
-handleMove coord (Connecting sourceRef sourceWidget sourceVector nodePos _ (DragHistory start current)) = do
+handleMove coord (Connecting sourceRef sourceVector nodePos _ (DragHistory start current)) = do
     graph  <- use Global.graph
     camera <- use $ Global.camera . Camera.camera
     Global.connect . Connect.connecting . _Just . Connect.history . Connect.dragCurrentPos .= coord
@@ -88,17 +86,21 @@ handleMove coord (Connecting sourceRef sourceWidget sourceVector nodePos _ (Drag
     current' <- zoom Global.camera $ Camera.screenToWorkspaceM coord
     zoom Global.uiRegistry $ do
         startLine <- case sourceRef of
-            (InPortRef' (InPortRef _ Self)) -> return $ nodePos
+            (InPortRef' (InPortRef _ Self)) -> return nodePos
             _                   -> do
-                newVector <- UICmd.get sourceWidget PortModel.angleVector
-                portCount <- UICmd.get sourceWidget PortModel.portCount
-                let
-                    portAngle = toAngle $ newVector
-                    angle     = boundedAngle portAngle portCount nodePos current'
-                    sx        = (nodePos ^. x) + outerPos * cos angle
-                    sy        = (nodePos ^. y) + outerPos * sin angle
-                    outerPos  = 22.0
-                return $ Vector2 sx sy
+                sourceWidget <- portRefToWidgetId sourceRef
+                case sourceWidget of
+                    Just sourceWidget -> do
+                        newVector <- UICmd.get sourceWidget PortModel.angleVector
+                        portCount <- UICmd.get sourceWidget PortModel.portCount
+                        let
+                            portAngle = toAngle $ newVector
+                            angle     = boundedAngle portAngle portCount nodePos current'
+                            sx        = (nodePos ^. x) + outerPos * cos angle
+                            sy        = (nodePos ^. y) + outerPos * sin angle
+                            outerPos  = 22.0
+                        return $ Vector2 sx sy
+                    Nothing -> return nodePos
         case sourceRef of
             InPortRef'   (InPortRef _ Self) -> showCurrentConnection current' startLine False
             InPortRef'   (InPortRef _ _)    -> showCurrentConnection current' startLine True
@@ -120,7 +122,7 @@ toValidConnection a b = (normalize a b) >>= toOtherNode where
         | otherwise                                        = Nothing
 
 stopDrag :: Mouse.RawEvent -> Connect.Connecting -> Command State ()
-stopDrag event@(Mouse.Event _ coord _ _ mayEvWd) (Connecting sourceRef _ _ _ _ (DragHistory start current)) = do
+stopDrag event@(Mouse.Event _ coord _ _ mayEvWd) (Connecting sourceRef _ _ _ (DragHistory start current)) = do
     Global.connect . Connect.connecting .= Nothing
     zoom Global.uiRegistry hideCurrentConnection
 
