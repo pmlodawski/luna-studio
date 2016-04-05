@@ -38,6 +38,12 @@ import qualified JS.TextEditor                       as UI
 isCurrentLocation :: GraphLocation -> Command State Bool
 isCurrentLocation location = uses (Global.workspace . Workspace.currentLocation) (== location)
 
+isCurrentLocationAndGraphLoaded :: GraphLocation -> Command State Bool
+isCurrentLocationAndGraphLoaded location = do
+    icl <- isCurrentLocation location
+    igl <- use $ Global.workspace . Workspace.isGraphLoaded
+    return $ icl && igl
+
 toAction :: Event.Event -> Maybe (Command State ())
 toAction (Event.Batch ev) = Just $ case ev of
     ProgramFetched response -> do
@@ -56,35 +62,39 @@ toAction (Event.Batch ev) = Just $ case ev of
             performIO $ UI.setText code
             Global.workspace . Workspace.isGraphLoaded .= True
 
-    NodesConnected response -> processConnection (response ^. Update.request)  where
-        processConnection request = localConnectNodes (request ^. Connect.src) (request ^. Connect.dst)
+    NodesConnected response -> do
+        whenM (isCurrentLocation $ response ^. Update.request . Connect.location) $ do
+            let request = (response ^. Update.request)
+            localConnectNodes (request ^. Connect.src) (request ^. Connect.dst)
 
-    NodesDisconnected response -> disconnect (response ^. Update.request . Disconnect.dst) where
+    NodesDisconnected response -> do
+        whenM (isCurrentLocation $ response ^. Update.request . Disconnect.location) $ do
+            disconnect $ response ^. Update.request . Disconnect.dst
 
     NodeMetaUpdated response -> do
-        shouldProcess <- isCurrentLocation (response ^. Update.request . UpdateNodeMeta.location)
+        shouldProcess <- isCurrentLocationAndGraphLoaded (response ^. Update.request . UpdateNodeMeta.location)
         when shouldProcess $ updateNodeMeta (response ^. Update.request . UpdateNodeMeta.nodeId) (response ^. Update.result ^. UpdateNodeMeta.newNodeMeta)
 
     NodeUpdated response -> do
-        shouldProcess <- isCurrentLocation (response ^. NodeUpdate.location)
+        shouldProcess <- isCurrentLocationAndGraphLoaded (response ^. NodeUpdate.location)
         when shouldProcess $ updateNode $ response ^. NodeUpdate.node
 
     NodeRenamed response -> do
-        shouldProcess <- isCurrentLocation (response ^. Update.request . RenameNode.location)
+        shouldProcess <- isCurrentLocationAndGraphLoaded (response ^. Update.request . RenameNode.location)
         when shouldProcess $ renameNode (response ^. Update.request . RenameNode.nodeId) (response ^. Update.request . RenameNode.name)
 
     NodeRemoved response -> do
-        shouldProcess <- isCurrentLocation (response ^. Update.request . RemoveNode.location)
+        shouldProcess <- isCurrentLocationAndGraphLoaded (response ^. Update.request . RemoveNode.location)
         when shouldProcess $ RemoveNode.localRemoveNodes $ response ^. Update.request . RemoveNode.nodeId
 
     NodeResultUpdated response -> do
-        shouldProcess <- isCurrentLocation (response ^. NodeResultUpdate.location)
+        shouldProcess <- isCurrentLocationAndGraphLoaded (response ^. NodeResultUpdate.location)
         when shouldProcess $ do
             updateNodeValue         (response ^. NodeResultUpdate.nodeId) (response ^. NodeResultUpdate.value)
             updateNodeProfilingData (response ^. NodeResultUpdate.nodeId) (response ^. NodeResultUpdate.execTime)
 
     NodeSearcherUpdated update -> do
-        shouldProcess <- isCurrentLocation (update ^. NodeSearcherUpdate.location)
+        shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. NodeSearcherUpdate.location)
         when shouldProcess $ Global.workspace . Workspace.nodeSearcherData .= update ^. NodeSearcherUpdate.nodeSearcherData
     _ -> return ()
 
