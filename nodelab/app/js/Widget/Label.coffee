@@ -68,7 +68,7 @@ class Label extends BaseWidget
         else throw 'Invalid text alignment'
       @mesh.add @label
 
-      @bg.position.x = @label.position.x
+      @bg.position.x = Math.max(@label.position.x, -20.0)
       @bg.scale.x = Math.max(width, 40.0)
 
   relayout: ->
