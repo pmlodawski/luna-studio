@@ -150,7 +150,7 @@ resizeHandler = AddHandler $ \h -> do
     window `on` resize $ liftIO $ do
         width  <- getInnerWidth  window
         height <- getInnerHeight window
-        h $ Window $ Window.Event Window.Resized width height
+        h $ Window $ Window.Event Window.Resized (floor $ 0.7 * (fromIntegral width)) height
 
 nodeSearcherHander :: AddHandler Event
 nodeSearcherHander = AddHandler $ \h -> do
