@@ -13,6 +13,7 @@ data DragHistory =  PanDragHistory  { _panPreviousPos         :: Vector2 Int }
                  deriving (Eq, Show, Generic)
 
 data Camera = Camera { _screenSize :: Vector2 Int
+                     , _windowSize :: Vector2 Int
                      , _pan        :: Vector2 Double
                      , _factor     :: Double
                      } deriving (Eq, Show, Generic)
@@ -30,13 +31,13 @@ instance ToJSON Camera
 instance ToJSON DragHistory
 
 instance Default Camera where
-    def = Camera (Vector2 400 200) def 1.0
+    def = Camera (Vector2 400 200) (Vector2 400 200) def 1.0
 
 instance Default State where
     def = State def def
 
 glToWorkspace :: Camera -> Vector2 Double -> Vector2 Double
-glToWorkspace (Camera _ pan factor) (Vector2 xGl yGl) = Vector2
+glToWorkspace (Camera _ _ pan factor) (Vector2 xGl yGl) = Vector2
     (xGl / factor + pan ^. x)
     (yGl / factor + pan ^. y)
 

@@ -19,7 +19,7 @@ expressionLabel = Label.Label position size align  where
 controlsPosition = Vector2 (-nodeRadius) 35.0
 controlsLayout   = Layout.verticalLayoutHandler 5.0
 
-expandedGroupStyle = def & Group.background ?~ Color 0.09 0.09 0.09 1
+expandedGroupStyle = def & Group.background ?~ Color 0.12 0.12 0.12 1
                          & Group.padding .~ uniformPadding 5.0
 
 -- controlsPosition = Vector2 (-30.0) (-30.0)

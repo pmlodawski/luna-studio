@@ -2,20 +2,23 @@
 
 module Reactive.Plugins.Core.Action.NodeSearcher.Commands where
 
-import qualified Data.IntMap.Lazy                 as IntMap
-import           Data.Map                         (Map)
-import qualified Data.Map                         as Map
-import           Data.Text.Lazy                   (Text)
-import qualified Data.Text.Lazy                   as Text
-import           Utils.PreludePlus                hiding (Item)
+import qualified Data.IntMap.Lazy                     as IntMap
+import           Data.Map                             (Map)
+import qualified Data.Map                             as Map
+import           Data.Text.Lazy                       (Text)
+import qualified Data.Text.Lazy                       as Text
+import           Utils.PreludePlus                    hiding (Item)
 
-import qualified Batch.Workspace                  as Workspace
-import qualified BatchConnector.Commands          as BatchCmd
-import           Empire.API.Data.NodeSearcher     (Item (..), LunaModule (..))
-import qualified Empire.API.Data.Project          as Project
-import           Reactive.Commands.Command        (Command, performIO)
-import           Reactive.Commands.ProjectManager (loadProject)
-import qualified Reactive.State.Global            as Global
+import qualified Batch.Workspace                      as Workspace
+import qualified BatchConnector.Commands              as BatchCmd
+import           Empire.API.Data.NodeSearcher         (Item (..), LunaModule (..))
+import qualified Empire.API.Data.Project              as Project
+import           Reactive.Commands.Command            (Command, performIO)
+import           Reactive.Commands.ProjectManager     (loadProject)
+import qualified Reactive.Plugins.Core.Action.General as General
+import qualified Reactive.State.Camera                as Camera
+import qualified Reactive.State.Global                as Global
+import qualified Reactive.State.UIElements            as UIElements
 
 commands :: Command Global.State ([(Text, Item)])
 commands = do
@@ -31,6 +34,7 @@ commands = do
            , ("insert",   Function)
            , ("feedback", Function)
            , ("help",     Function)
+           , ("toggleTextEditor",     Function)
            ]
 
 
@@ -52,6 +56,12 @@ help = performIO $ openHelp'
 
 feedback :: Command Global.State ()
 feedback = performIO $ openFeedback'
+
+toggleText :: Command Global.State ()
+toggleText = do
+    Global.uiElements . UIElements.textEditorVisible %= not
+    size <- use $ Global.camera . Camera.camera . Camera.windowSize
+    General.updateWindowSize size
 
 foreign import javascript unsafe "_urq.push(['Feedback_Open'])" openFeedback' :: IO ()
 foreign import javascript unsafe "$('.tutorial-box').show().focus()"    openHelp' :: IO ()

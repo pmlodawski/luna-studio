@@ -88,10 +88,11 @@ queryTreeCmd query = do
     performIO $ UI.displayTreeResults items
 
 parseExpr :: Text -> Command Global.State ()
-parseExpr "project.new" = performIO $ UI.initNodeSearcher "project.new untitled" 0 (Vector2 200 200) True
+parseExpr "project.new"                              = performIO $ UI.initNodeSearcher "project.new untitled" 0 (Vector2 200 200) True
 parseExpr (stripPrefix "project.new "  -> Just name) = Commands.createProject name
 parseExpr (stripPrefix "project.open." -> Just name) = Commands.openProject name
-parseExpr "help"     = Commands.help
-parseExpr "feedback" = Commands.feedback
-parseExpr "insert"   = openFresh
-parseExpr _ = return ()
+parseExpr "help"                                     = Commands.help
+parseExpr "feedback"                                 = Commands.feedback
+parseExpr "insert"                                   = openFresh
+parseExpr "toggleTextEditor"                         = Commands.toggleText
+parseExpr _                                          = return ()

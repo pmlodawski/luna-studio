@@ -18,7 +18,7 @@ import qualified Style.Layout                 as Style
 import qualified UI.Layout                    as Layout
 
 toAction :: Event -> Maybe (Command Global.State ())
-toAction (Window (Window.Event Window.Resized width height)) = Just $ resizeSidebar
+toAction (Window (Window.Event Window.Resized width height)) = Just resizeSidebar
 toAction _ = Nothing
 
 resizeSidebar :: Command State ()

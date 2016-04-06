@@ -32,4 +32,5 @@ registerCallback callback = do
     return $ unregisterCallback' wrappedCallback >> releaseCallback wrappedCallback
 
 
-
+foreign import javascript safe "textEditor.setWidth($1)" setWidth :: Int -> IO ()
+foreign import javascript safe "textEditor.setVisible($1)" setVisible :: Bool -> IO ()
