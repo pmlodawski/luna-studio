@@ -38,9 +38,6 @@ localRemoveNodes nodeId = do
 
     Global.graph %= Graph.removeNode (nodeId)
 
-    uiRegistry <- use Global.uiRegistry
-    workspace  <- use Global.workspace
-
     nodeWidgetId <- zoom Global.uiRegistry $ nodeIdToWidgetId nodeId
     zoom Global.uiRegistry $ mapM_ removeWidget $ maybeToList nodeWidgetId
 
