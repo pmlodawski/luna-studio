@@ -1,6 +1,7 @@
 module Empire.ASTOps.Print where
 
 import           Prologue
+import           Data.List                (dropWhileEnd)
 import           Data.Record              (ANY (..), caseTest, of')
 import qualified Data.Text.Lazy           as Text
 import           Data.Layer_OLD.Cover_OLD (uncover, covered)
@@ -15,9 +16,9 @@ import qualified Luna.Syntax.Term.Lit     as Lit
 
 import qualified Luna.Syntax.Model.Network.Builder as Builder
 
-printExpression' :: ASTOp m => Bool -> Bool -> NodeRef -> m String
-printExpression' suppresNodes paren nodeRef = do
-    let recur = printExpression' suppresNodes
+printExpression' :: ASTOp m => Bool -> Bool -> Bool -> NodeRef -> m String
+printExpression' suppresNodes expandApp paren nodeRef = do
+    let recur = printExpression' suppresNodes expandApp
     node <- Builder.read nodeRef
     caseTest (uncover node) $ do
         of' $ \(Match l r) -> do
@@ -33,17 +34,18 @@ printExpression' suppresNodes paren nodeRef = do
                 then return $ unwrap n
                 else return $ targetRep ++ "." ++ unwrap n
         of' $ \(App f args) -> do
-            Builder.follow source f >>= recur True
-            {-unpackedArgs <- ASTBuilder.unpackArguments args-}
-            {-argsRep <- sequence $ recur True <$> unpackedArgs-}
-            {-let shouldParen = paren && not (null args)-}
-            {-case argsRep of-}
-                {-[] -> return funRep-}
-                {-_  -> return $ (if shouldParen then "(" else "")-}
-                            {-++ funRep-}
-                            {-++ " "-}
-                            {-++ (intercalate " " argsRep)-}
-                            {-++ (if shouldParen then ")" else "")-}
+            funExpr <- Builder.follow source f >>= recur True
+            unpackedArgs <- ASTBuilder.unpackArguments args
+            argsRep <- mapM (recur True) unpackedArgs
+            let dropTailBlanks = dropWhileEnd (== "_") argsRep
+            let shouldParen = paren && not (null args)
+            case (expandApp, argsRep) of
+                (True, a : as) -> return $ (if shouldParen then "(" else "")
+                                         ++ funExpr
+                                         ++ " "
+                                         ++ unwords dropTailBlanks
+                                         ++ (if shouldParen then ")" else "")
+                _ -> return funExpr
         of' $ \Blank -> return "_"
         of' $ \(Lit.Number _ s) -> return $ case s of
             Lit.Rational r -> show r
@@ -54,7 +56,7 @@ printExpression' suppresNodes paren nodeRef = do
         of' $ \ANY -> return ""
 
 printExpression :: ASTOp m => NodeRef -> m String
-printExpression = printExpression' False False
+printExpression = printExpression' False True False
 
 printNodeExpression :: ASTOp m => NodeRef -> m String
-printNodeExpression = printExpression' True False
+printNodeExpression = printExpression' True False False

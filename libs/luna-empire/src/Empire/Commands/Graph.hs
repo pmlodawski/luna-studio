@@ -6,7 +6,6 @@ module Empire.Commands.Graph
     , disconnect
     , getCode
     , getGraph
-    , runGraph
     , setDefaultValue
     , renameNode
     , dumpGraphViz
@@ -24,6 +23,7 @@ import qualified Data.Map                as Map
 import           Data.Text.Lazy          (Text)
 import qualified Data.Text.Lazy          as Text
 import           Data.Maybe              (catMaybes)
+import           Data.List               (sort)
 
 import qualified Empire.Data.Library     as Library
 import qualified Empire.Data.Graph       as Graph
@@ -103,33 +103,14 @@ disconnect loc port@(InPortRef dstNodeId dstPort) = withGraph loc $ do
 getCode :: GraphLocation -> Empire String
 getCode loc = withGraph loc $ do
     allNodes <- uses Graph.nodeMapping IntMap.keys
-    lines <- sequence $ printNodeLine <$> allNodes
-    return $ intercalate "\n" lines
+    refs     <- mapM GraphUtils.getASTPointer allNodes
+    metas    <- zoom Graph.ast $ mapM AST.readMeta refs
+    let sorted = fmap snd $ sort $ zip metas allNodes
+    lines <- sequence $ printNodeLine <$> sorted
+    return $ unlines lines
 
 getGraph :: GraphLocation -> Empire APIGraph.Graph
 getGraph loc = withGraph loc $ runTC loc True >> GraphBuilder.buildGraph
-
-runGraph :: GraphLocation -> Empire (IntMap Value)
-runGraph loc = withGraph loc $ do
-    {-allNodes <- uses Graph.nodeMapping IntMap.keys-}
-    {-astNodes <- mapM GraphUtils.getASTPointer allNodes-}
-    {-ast      <- use Graph.ast-}
-    {-astVals  <- liftIO $ NodeRunner.getNodeValues astNodes ast-}
-
-    {-let values = flip fmap (zip allNodes astNodes) $ \(n, ref) -> do-}
-        {-val <- Map.lookup ref astVals-}
-        {-case val of-}
-            {-NodeRunner.HaskellVal v tp -> return $ (,) n $ case tp of-}
-                {-"Int"    -> IntValue $ unsafeCoerce v-}
-                {-"Double" -> DoubleValue $ unsafeCoerce v-}
-                {-"String" -> StringValue $ unsafeCoerce v-}
-                {-"[Int]"  -> IntList $ unsafeCoerce v-}
-                {-"[Double]" -> DoubleList $ unsafeCoerce v-}
-
-            {-_ -> Nothing-}
-
-    {-return $ IntMap.fromList $ catMaybes values-}
-    return $ IntMap.empty
 
 renameNode :: GraphLocation -> NodeId -> Text -> Empire ()
 renameNode loc nid name = withGraph loc $ do

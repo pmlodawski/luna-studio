@@ -56,17 +56,6 @@ notifyCodeUpdate location = do
             let update = CodeUpdate.Update location $ Text.pack code
             sendToBus Topic.codeUpdate update
 
-notifyNodeResultUpdates :: GraphLocation -> StateT Env BusT ()
-notifyNodeResultUpdates location = do
-    currentEmpireEnv <- use Env.empireEnv
-    empireNotifEnv   <- use Env.empireNotif
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.runGraph location
-    case result of
-        Left err -> logger Logger.error $ errorMessage <> err
-        Right valuesMap -> do
-            Env.empireEnv .= newEmpireEnv
-            mapM_ (uncurry $ notifyNodeResultUpdate location) $ IntMap.assocs valuesMap
-
 notifyNodeResultUpdate :: GraphLocation -> NodeId -> Value -> StateT Env BusT ()
 notifyNodeResultUpdate location nodeId value = do
     let update = NodeResultUpdate.Update location nodeId (NodeResultUpdate.Value value) 42 -- FIXME: report correct execution time
@@ -110,7 +99,6 @@ handleAddNode content = do
             let update = Update.Update request Update.Ok
             sendToBus Topic.addNodeUpdate update
             notifyCodeUpdate location
-            notifyNodeResultUpdates location
 
 handleRemoveNode :: ByteString -> StateT Env BusT ()
 handleRemoveNode content = do
@@ -128,7 +116,6 @@ handleRemoveNode content = do
             let update = Update.Update request $ Update.Ok
             sendToBus Topic.removeNodeUpdate update
             notifyCodeUpdate location
-            notifyNodeResultUpdates location
 
 handleUpdateNodeMeta :: ByteString -> StateT Env BusT ()
 handleUpdateNodeMeta content = do
@@ -182,7 +169,6 @@ handleConnect content = do
             let update = Update.Update request $ Update.Ok
             sendToBus Topic.connectUpdate update
             notifyCodeUpdate location
-            notifyNodeResultUpdates location
 
 handleDisconnect :: ByteString -> StateT Env BusT ()
 handleDisconnect content = do
@@ -200,7 +186,6 @@ handleDisconnect content = do
             let update = Update.Update request $ Update.Ok
             sendToBus Topic.disconnectUpdate update
             notifyCodeUpdate location
-            notifyNodeResultUpdates location
 
 handleSetDefaultValue :: ByteString -> StateT Env BusT ()
 handleSetDefaultValue content = do
@@ -219,7 +204,6 @@ handleSetDefaultValue content = do
             let update = Update.Update request $ Update.Ok
             sendToBus Topic.setDefaultValueUpdate update
             notifyCodeUpdate location
-            notifyNodeResultUpdates location
 
 mockNSData  = NS.LunaModule $ Map.fromList [ ("+",           NS.Function)
                                            , ("*",           NS.Function)
@@ -301,7 +285,6 @@ handleGetProgram content = do
         (Right graph, Right code) -> do
             let update = Update.Update request $ GetProgram.Status graph (Text.pack code) mockNSData
             sendToBus Topic.programStatus update
-            notifyNodeResultUpdates location
 
 handleDumpGraphViz :: ByteString -> StateT Env BusT ()
 handleDumpGraphViz content = do
@@ -320,6 +303,5 @@ handleTypecheck content = do
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.typecheck location
     case result of
         Left err -> logger Logger.error $ errorMessage <> err
-        Right _ -> do
-            Env.empireEnv .= newEmpireEnv
+        Right _  -> Env.empireEnv .= newEmpireEnv
     return ()

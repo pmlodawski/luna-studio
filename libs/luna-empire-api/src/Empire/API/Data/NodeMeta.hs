@@ -4,7 +4,7 @@ import Prologue
 import Data.Binary          (Binary)
 
 data NodeMeta = NodeMeta { _position :: (Double, Double)
-                         } deriving (Generic, Show, Eq)
+                         } deriving (Generic, Show, Eq, Ord)
 
 makeLenses ''NodeMeta
 
