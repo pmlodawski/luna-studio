@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Style.Layout where
 
 import           Utils.PreludePlus
@@ -48,3 +50,8 @@ createProjectDialogCancelSize  = Vector2 80.0 20.0
 
 projectChooserStyle = def & Group.background   ?~ Color 0.55 0.55 0.55 1.0
                           & Group.padding      .~ uniformPadding 5.0
+
+textEditorToggle = Button.create (Vector2 10 1000) ":" & Button.style .~ style where
+     style = def & Button.rounded    .~ False
+                 & Button.background .~ Color 0.1 0.1 0.1 1.0
+                 & Button.alignment  .~ Label.Center

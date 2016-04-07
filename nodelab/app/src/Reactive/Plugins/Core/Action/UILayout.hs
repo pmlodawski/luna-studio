@@ -7,6 +7,7 @@ import           Event.Event                  (Event (Window))
 import qualified Event.Window                 as Window
 import           Object.UITypes               (WidgetId)
 import qualified Object.Widget.Group          as Group
+import qualified Object.Widget.Button         as Button
 import           Reactive.Commands.Command    (Command)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import qualified Reactive.State.Camera        as Camera
@@ -17,9 +18,7 @@ import qualified Reactive.State.UIElements    as UIElements
 import qualified Style.Layout                 as Style
 import qualified UI.Layout                    as Layout
 
-toAction :: Event -> Maybe (Command Global.State ())
-toAction (Window (Window.Event Window.Resized width height)) = Just resizeSidebar
-toAction _ = Nothing
+relayout = resizeSidebar >> resizeTextEditorToggle
 
 resizeSidebar :: Command State ()
 resizeSidebar = do
@@ -29,3 +28,12 @@ resizeSidebar = do
 
     bcId <- use $ Global.uiElements . UIElements.breadcrumbs
     inRegistry $ UICmd.resize bcId (Vector2 (fromIntegral $ screenSize ^. x) Style.breadcrumbsHeight)
+
+resizeTextEditorToggle :: Command State ()
+resizeTextEditorToggle = do
+    screenSize <- use $ Global.camera     . Camera.camera . Camera.screenSize
+    toggleId   <- use $ Global.uiElements . UIElements.textEditorToggle
+    inRegistry $ do
+        let width = Style.textEditorToggle ^. Button.size . x
+        UICmd.moveX  toggleId $ (fromIntegral $ screenSize ^. x) - width
+        UICmd.resize toggleId $ Vector2 width (fromIntegral $ screenSize ^. y)

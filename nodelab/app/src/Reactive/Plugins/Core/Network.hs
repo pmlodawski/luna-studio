@@ -13,7 +13,6 @@ import qualified Event.Processors.Batch     as BatchEventProcessor
 
 import qualified Reactive.Plugins.Core.Action.General                as General
 import qualified Reactive.Plugins.Core.Action.Camera                 as Camera
-import qualified Reactive.Plugins.Core.Action.UILayout               as UILayout
 import qualified Reactive.Plugins.Core.Action.MultiSelection         as MultiSelection
 import qualified Reactive.Plugins.Core.Action.Drag                   as Drag
 import qualified Reactive.Plugins.Core.Action.Connect                as Connect
@@ -47,7 +46,6 @@ actions =  [ Debug.toActionEv
            , Widget.toAction
            , General.toAction
            , Camera.toAction
-           , UILayout.toAction
            , Graph.toAction
            , MultiSelection.toAction
            , Drag.toAction
