@@ -55,7 +55,7 @@ class LongText extends BaseWidget
       textAlign: @alignment
       display: if isVisible(@mesh) then 'block' else 'none'
   widgetMoved: =>
-    setTimeout((=> @relayout()), 100)
+    setTimeout((=> @relayout()), 0)
   destructor: ->
     @element.remove()
 
