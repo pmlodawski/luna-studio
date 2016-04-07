@@ -21,7 +21,7 @@ packages:
 - extra-dep: true
   location:
     git: 'git@bitbucket.org:NewByteOrder/luna.git'
-    commit: a9bdc3dcbd88940c0db592e494ab9c76b28b99b3
+    commit: b5548062b9860e511634391a694ac2fceb8b181a
   subdirs:
   - compiler
   - core
@@ -57,13 +57,14 @@ packages:
 - extra-dep: true
   location: {commit: eee76a96bdd1d442299cecdcd1e445d76eef3b1a, git: 'https://github.com/wdanilo/type-cache.git'}
 - extra-dep: true
-  location: {commit: ffc3bc335f4368c25e9462c30918cbe4658f4302, git: 'https://github.com/wdanilo/typelevel.git'}
+  location: {commit: 6ae9be62066e7c39d36af35314d7fdf89b843f45, git: 'https://github.com/wdanilo/typelevel.git'}
 - extra-dep: true
   location: {commit: 13c735377b61d6ab634f689e88612cf68d6a4111, git: 'https://github.com/wdanilo/data-construction.git'}
 - extra-dep: true
   location: {commit: c1d0a2d57471ec016471c371f2ffbd04b95a6dee, git: 'https://github.com/wdanilo/data-member.git'}
 - extra-dep: true
-  location: {commit: 28c9f5409572c6796370d4f115939b8d97e5f1d1, git: 'https://github.com/wdanilo/data-rtuple.git'}
+  location: {commit: 3fc120a163d13be6e37b7ee81769e094dceed8be, git: 'https://github.com/wdanilo/data-rtuple.git'}
 - extra-dep: true
-  location: {commit: 27e0df11de50ccdea88d83c9cab33a3e555c1d03, git: 'https://github.com/wdanilo/data-shell.git'}
-resolver: lts-4.1
+  location: {commit: 4500653d6b8e1022cb95e91960a3c340de04a3fe, git: 'https://github.com/wdanilo/data-shell.git'}
+resolver: lts-5.10
+

@@ -116,8 +116,15 @@ getError' ref = do
 reprError :: ASTOp m => TCError NodeRef -> m (APIError.Error String)
 reprError tcErr = case tcErr of
     TCError.ImportError Nothing m  -> return $ APIError.ImportError m
-    TCError.ImportError (Just n) m -> return $ APIError.NoMethodError m "TODO" -- <$> getTypeRep n
-    TCError.UnificationError l r -> return $ APIError.TypeError "TODO" "TODO" -- <$> getTypeRep l <*> getTypeRep r
+    TCError.ImportError (Just n) m -> do
+        tp <- Builder.follow source =<< Builder.follow (prop Type) n
+        tpRep <- getTypeRep tp
+        return $ APIError.NoMethodError m tpRep
+    TCError.UnificationError uni -> do
+        uniNode <- Builder.read uni
+        caseTest (uncover uniNode) $ do
+            of' $ \(Unify l r) -> APIError.TypeError <$> (getTypeRep =<< Builder.follow source l) <*> (getTypeRep =<< Builder.follow source r)
+            of' $ \ANY         -> impossible
 
 writeMeta :: NodeRef -> NodeMeta -> Command AST ()
 writeMeta ref newMeta = runASTOp $ Builder.withRef ref $ prop Meta %~ HMap.insert metaKey newMeta
