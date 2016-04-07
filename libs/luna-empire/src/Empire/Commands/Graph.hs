@@ -110,7 +110,10 @@ getCode loc = withGraph loc $ do
     return $ unlines lines
 
 getGraph :: GraphLocation -> Empire APIGraph.Graph
-getGraph loc = withGraph loc $ runTC loc True >> GraphBuilder.buildGraph
+getGraph loc = withGraph loc $ do
+    g <- GraphBuilder.buildGraph
+    runTC loc True
+    return g
 
 renameNode :: GraphLocation -> NodeId -> Text -> Empire ()
 renameNode loc nid name = withGraph loc $ do
