@@ -14,6 +14,7 @@ init = ->
   $$.editorContainer.append editorDiv
   editor = ace.edit('editor')
   editor.setTheme 'ace/theme/twilight'
+  editor.setReadOnly true
   editor.getSession().setMode 'ace/mode/ruby'
   editor.$blockScrolling = Infinity
   $$.editor = editor
