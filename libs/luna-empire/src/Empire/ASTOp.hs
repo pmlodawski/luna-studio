@@ -17,7 +17,8 @@ import           Empire.Empire                          (Command, Error, empire)
 import           Data.Construction                      (Destructor, Unregister)
 import           Data.Graph.Builder                     (MonadBuilder)
 import           Data.Graph.Builders                    (Connectible)
-import           Luna.Syntax.Model.Network.Builder.Term (TermBuilder, NetLayers, NetworkBuilderT, runNetworkBuilderT)
+import           Luna.Syntax.Model.Network.Builder.Term (TermBuilder_OLD, NetLayers, NetworkBuilderT, runNetworkBuilderT)
+import           Luna.Syntax.Model.Network.Builder.Node (TermNode)
 import           Luna.Syntax.Model.Network.Term         (Raw)
 import           Luna.Syntax.Term.Expr                  (Acc, App, Blank, Match, Var, Cons, Unify)
 import           Luna.Syntax.Model.Layer                ((:<:))
@@ -35,15 +36,15 @@ type ASTOp m = ( MonadIO m
                , Unregister m EdgeRef
                , MonadBuilder AST m
                , MonadLocation m
-               , TermBuilder Blank      m NodeRef
-               , TermBuilder Lit.Number m NodeRef
-               , TermBuilder Lit.String m NodeRef
-               , TermBuilder Acc        m NodeRef
-               , TermBuilder App        m NodeRef
-               , TermBuilder Match      m NodeRef
-               , TermBuilder Var        m NodeRef
-               , TermBuilder Unify      m NodeRef
-               , TermBuilder Cons       m NodeRef
+               , TermBuilder_OLD Blank      m NodeRef
+               , TermBuilder_OLD Lit.Number m NodeRef
+               , TermBuilder_OLD Lit.String m NodeRef
+               , TermBuilder_OLD Acc        m NodeRef
+               , TermBuilder_OLD App        m NodeRef
+               , TermBuilder_OLD Match      m NodeRef
+               , TermBuilder_OLD Var        m NodeRef
+               , TermBuilder_OLD Unify      m NodeRef
+               , TermBuilder_OLD Cons       m NodeRef
                , Connectible NodeRef NodeRef m
                )
 
