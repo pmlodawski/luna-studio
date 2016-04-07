@@ -70,7 +70,9 @@ processEvent :: MVar State -> Event.Event -> IO ()
 processEvent var ev = do
     let realEvent = preprocessBatchEvent ev
     state <- takeMVar var
-    let (ioActions, newState) = execCommand (runCommands actions realEvent) state
+    jsState <- Handlers.getJSState
+    let state' = state & Global.jsState .~ jsState
+    let (ioActions, newState) = execCommand (runCommands actions realEvent) state'
     catch (ioActions >> UI.shouldRender) (handleExcept newState realEvent)
     putMVar var newState
 

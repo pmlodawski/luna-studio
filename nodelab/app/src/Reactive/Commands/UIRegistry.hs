@@ -154,5 +154,6 @@ triggerLostFocus id = do
 takeFocus :: WidgetId -> Command Global.State ()
 takeFocus id = do
     currentFocused <- use $ Global.uiRegistry . UIRegistry.focusedWidget
-    forM_ currentFocused triggerLostFocus
-    Global.uiRegistry . UIRegistry.focusedWidget ?= id
+    when (currentFocused /= Just id) $ do
+        forM_ currentFocused triggerLostFocus
+        Global.uiRegistry . UIRegistry.focusedWidget ?= id

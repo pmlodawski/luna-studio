@@ -29,16 +29,23 @@ dblClickHandler _ _ id = do
 foreign import javascript safe "$1.registry[$2].input.val()" getValue' :: JSState -> WidgetId -> JSString
 
 keyDownHandler :: KeyDownHandler Global.State
-keyDownHandler '\r' _ jsState id = do
+keyDownHandler '\r'  _ _ = applyChanges
+keyDownHandler '\27' _ _ = abortChanges
+keyDownHandler _     _ _ = const $ return ()
+
+applyChanges :: WidgetId -> Command Global.State ()
+applyChanges id = do
+    jsState <- use $ Global.jsState
     let value = lazyTextFromJSString $ getValue' jsState id
     inRegistry $ UICmd.update_ id $ (Model.isEditing .~ False)
                                   . (Model.value     .~ value)
     triggerValueChanged value id
 
-keyDownHandler '\27' _ jsState id = do
+abortChanges :: WidgetId -> Command Global.State ()
+abortChanges id = do
+    jsState <- use $ Global.jsState
     let value = lazyTextFromJSString $ getValue' jsState id
     inRegistry $ UICmd.update_ id $ Model.isEditing .~ False
-keyDownHandler _ _ _ _ = return ()
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyDown   .~ keyDownHandler

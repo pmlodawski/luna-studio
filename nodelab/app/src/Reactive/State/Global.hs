@@ -18,6 +18,8 @@ import qualified Reactive.State.MultiSelection as MultiSelection
 import qualified Reactive.State.UIElements     as UIElements
 import qualified Reactive.State.UIRegistry     as UIRegistry
 
+foreign import javascript unsafe "{}" defJsState :: Event.JSState
+
 data State = State { _mousePos          :: Vector2 Int
                    , _graph             :: Graph.State
                    , _camera            :: Camera.State
@@ -30,6 +32,7 @@ data State = State { _mousePos          :: Vector2 Int
                    , _uiElements        :: UIElements.State
                    , _lastEvent         :: Maybe Event.Event
                    , _eventNum          :: Int
+                   , _jsState           :: Event.JSState
                    } deriving (Eq, Show, Generic)
 
 instance ToJSON State
@@ -37,7 +40,7 @@ instance ToJSON State
 makeLenses ''State
 
 initialState :: State
-initialState = State (Vector2 200 200) def def def def def def def def def def def
+initialState = State (Vector2 200 200) def def def def def def def def def def def defJsState
 
 inRegistry :: Command UIRegistry.State a -> Command State a
 inRegistry = zoom uiRegistry

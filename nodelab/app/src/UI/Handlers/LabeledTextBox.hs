@@ -43,6 +43,7 @@ widgetHandlers = def & dblClick     .~ dblClickHandler
 
 textHandlers :: WidgetId -> HTMap
 textHandlers id = addHandler (ValueChangedHandler $ textValueChangedHandler id)
+                $ addHandler (UICmd.LostFocus $ lostFocusHandler id)
                 $ mempty where
 
 textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
@@ -50,6 +51,8 @@ textValueChangedHandler parent val tbId = do
     inRegistry $ UICmd.update_ parent $ Model.value .~ val
     triggerValueChanged val parent
 
+lostFocusHandler :: WidgetId -> WidgetId -> Command Global.State ()
+lostFocusHandler _ id = TextBox.applyChanges id
 
 instance CompositeWidget Model.LabeledTextBox where
     createWidget id model = do
