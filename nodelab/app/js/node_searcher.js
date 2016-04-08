@@ -25,19 +25,25 @@ function highlightText(name, highlight) {
 }
 
 function shouldSplit(query) {
-  return (query.indexOf('.') > -1 || query.indexOf(' ') > -1);
+  var isLiteral = (query[0] === "\"");
+  return (query.indexOf('.') > -1 || query.indexOf(' ') > -1) && !isLiteral ;
 }
 
 function splitExpression(expr, command) {
   var prefix, query, idx;
-  if (command) {
-    idx = Math.max(expr.lastIndexOf('.'), expr.indexOf(' '));
+  var isLiteral = (expr[0] === "\"");
+  if (isLiteral) {
+    return {prefix: "", query: expr};
   } else {
-    idx = Math.max(expr.lastIndexOf('.'), expr.lastIndexOf(' '));
+    if (command) {
+      idx = Math.max(expr.lastIndexOf('.'), expr.indexOf(' '));
+    } else {
+      idx = Math.max(expr.lastIndexOf('.'), expr.lastIndexOf(' '));
+    }
+    prefix = expr.substring(0, idx+1);
+    query  = expr.substring(idx+1);
+    return {prefix: prefix, query: query};
   }
-  prefix = expr.substring(0, idx+1);
-  query  = expr.substring(idx+1);
-  return {prefix: prefix, query: query};
 }
 
 function NodeSearcher() {
@@ -376,9 +382,9 @@ NodeSearcher.prototype.addTreeResult = function (prefix, name, fullname, type) {
 // input event handlers
 
 NodeSearcher.prototype.onInput = function () {
-  var query = this.searchbox.val();
+  var query = this.expression();
   if (shouldSplit(query)) {
-    this.appendExpression(query);
+    this.appendExpression(this.searchbox.val());
   } else {
     this.performSearch();
   }
