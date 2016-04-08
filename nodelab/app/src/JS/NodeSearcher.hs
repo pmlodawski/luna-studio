@@ -67,6 +67,9 @@ foreign import javascript safe "app.nodeSearcher().clearResults()"
 foreign import javascript safe "app.nodeSearcher().addResult($1, $2, $3, $4, $5)"
     nodesearcher_add_result :: JSString -> JSString -> JSString -> JSRef JSHighlight -> JSString -> IO ()
 
+foreign import javascript safe "app.nodeSearcher().finishResult()"
+    nodesearcher_finish_result :: IO ()
+
 foreign import javascript safe "app.nodeSearcher().addTreeResult($1, $2, $3, $4)"
     nodesearcher_add_tree_result :: JSString -> JSString -> JSString -> JSString -> IO ()
 
@@ -78,6 +81,7 @@ displayQueryResult (QueryResult prefix name fullname highlight tpe) = do
     ary <- createJSArray
     mapM_ (pushHighlight ary) highlight
     nodesearcher_add_result (lazyTextToJSString prefix) (lazyTextToJSString name) (lazyTextToJSString fullname) ary (lazyTextToJSString tpe)
+    nodesearcher_finish_result
 
 displayQueryResults :: [QueryResult] -> IO ()
 displayQueryResults results = do

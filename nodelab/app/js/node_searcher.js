@@ -313,6 +313,14 @@ NodeSearcher.prototype.displaySearchResults = function (results) {
   this.displayResults(results, this.firstColumn.items);
 };
 
+NodeSearcher.prototype.finishResult = function () {
+  var nextSelection = this.firstColumn.find('li:first-child');
+  if (nextSelection.length > 0) {
+    this.select(nextSelection);
+    this.scrollToSelected();
+  }
+};
+
 // -> HS
 NodeSearcher.prototype.displayResults = function (results, ul) {
   var _this = this;
