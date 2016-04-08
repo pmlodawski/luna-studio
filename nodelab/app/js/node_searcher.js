@@ -110,6 +110,20 @@ NodeSearcher.prototype.initSearchbox = function () {
       case 35:  /* end         */ _this.onKeyEnd(ev);    break;
       case 191: /* slash /     */ _this.onSlashDown(ev); break;
     }
+    if(ev.ctrlKey) {
+      switch (ev.keyCode) {
+        case 49: /* 1 */ _this.onQuickChoice(ev,  1); break;
+        case 50: /* 2 */ _this.onQuickChoice(ev,  2); break;
+        case 51: /* 3 */ _this.onQuickChoice(ev,  3); break;
+        case 52: /* 4 */ _this.onQuickChoice(ev,  4); break;
+        case 53: /* 5 */ _this.onQuickChoice(ev,  5); break;
+        case 54: /* 6 */ _this.onQuickChoice(ev,  6); break;
+        case 55: /* 7 */ _this.onQuickChoice(ev,  7); break;
+        case 56: /* 8 */ _this.onQuickChoice(ev,  8); break;
+        case 57: /* 9 */ _this.onQuickChoice(ev,  9); break;
+        case 48: /* 0 */ _this.onQuickChoice(ev, 10); break;
+      }
+    }
     ev.stopPropagation();
   });
 
@@ -405,6 +419,19 @@ NodeSearcher.prototype.onEnter = function (ev) {
   }
 
   ev.preventDefault();
+};
+
+NodeSearcher.prototype.onQuickChoice = function (ev, ix) {
+   var choice = this.currentColumn.find("li:nth-child(" + ix + ")");
+   if (choice.length === 0) return;
+   var data  = choice.data('match');
+
+   if (data.type === 'module') {
+     this.appendExpression(data.fullname + ".");
+   } else {
+     this.appendExpression(data.fullname);
+     this.createNode();
+   }
 };
 
 NodeSearcher.prototype.onTab = function (ev) {
