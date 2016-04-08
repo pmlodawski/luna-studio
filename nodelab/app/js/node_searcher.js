@@ -385,11 +385,13 @@ NodeSearcher.prototype.onBackspace = function (event) {
 NodeSearcher.prototype.onEnter = function (ev) {
   var current, data;
 
-  if (this.searchrow.hasClass('active')) {
+  if(ev.ctrlKey) {
+    this.createNode(this.expression());
+  } else if (this.searchrow.hasClass('active')) {
     if (this.command) {
       this.onTab(ev);
     }
-    this.createNode(this.prefix + this.searchbox.val());
+    this.createNode(this.expression());
   } else {
     current = this.currentSelection();
     data    = current.data('match');
