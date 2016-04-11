@@ -386,6 +386,10 @@ NodeSearcher.prototype.onInput = function () {
   if (shouldSplit(query)) {
     this.appendExpression(this.searchbox.val());
   } else {
+    if(this.expression() === "\"") {
+      this.searchbox.val("\"\"");
+      var range = this.searchbox.selectRange(1,1);
+    }
     this.performSearch();
   }
 };
