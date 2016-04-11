@@ -388,7 +388,7 @@ NodeSearcher.prototype.onInput = function () {
   } else {
     if(this.expression() === "\"") {
       this.searchbox.val("\"\"");
-      var range = this.searchbox.selectRange(1,1);
+      this.searchbox.selectRange(1,1);
     }
     this.performSearch();
   }
