@@ -1,19 +1,20 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Reactive.Commands.UIRegistry where
 
-import           Utils.PreludePlus hiding (children)
-import           JS.Widget         as UI
-import           Object.UITypes    (WidgetId)
-import           Object.Widget
+import           Data.HMap.Lazy            (HTMap, TypeKey (..))
+import qualified Data.HMap.Lazy            as HMap
+import           Utils.PreludePlus         hiding (children)
 import           Utils.Vector
 
-import qualified Reactive.State.UIRegistry as UIRegistry
-import qualified Reactive.State.Global     as Global
+import qualified JS.Cursor                 as Cursor
+import           JS.Widget                 as UI
+import           Object.UITypes            (WidgetId)
+import           Object.Widget
 import           Reactive.Commands.Command (Command, performIO)
-import qualified UI.Generic as UI
-import qualified Data.HMap.Lazy as HMap
-import           Data.HMap.Lazy (HTMap,TypeKey(..))
+import qualified Reactive.State.Global     as Global
+import qualified Reactive.State.UIRegistry as UIRegistry
+import qualified UI.Generic                as UI
 
 register :: (CompositeWidget a, DisplayObjectClass a) => WidgetId -> a -> HTMap -> Command UIRegistry.State WidgetId
 register parent model handlers = do
@@ -140,7 +141,9 @@ handler id k = do
 
 removeWidget :: WidgetId -> Command UIRegistry.State ()
 removeWidget id = do
+    widgetOver <- use $ UIRegistry.widgetOver
     widgets <- UIRegistry.unregisterM id
+    when (elem id widgets) $ performIO $ Cursor.setCursor Cursor.Normal
     forM_ widgets $ performIO . UI.removeWidget
 
 newtype LostFocus = LostFocus (WidgetId -> Command Global.State ())
