@@ -155,10 +155,20 @@ selectNode evt id = do
     UICmd.takeFocus id
     handleSelection evt id
 
-onMouseOver, onMouseOut :: WidgetId -> Command Global.State ()
-onMouseOver id = inRegistry $ UICmd.update_ id $ Model.highlight .~ True
-onMouseOut  id = inRegistry $ UICmd.update_ id $ Model.highlight .~ False
+showHidePortLabels :: Bool -> WidgetId -> Command UIRegistry.State ()
+showHidePortLabels show id = do
+    inLabels <- inLabelsGroupId id
+    UICmd.update_ inLabels $ Group.visible .~ show
+    outLabels <- outLabelsGroupId id
+    UICmd.update_ outLabels $ Group.visible .~ show
 
+onMouseOver, onMouseOut :: WidgetId -> Command Global.State ()
+onMouseOver id = inRegistry $ do
+    UICmd.update_ id $ Model.highlight .~ True
+    showHidePortLabels True id
+onMouseOut  id = inRegistry $ do
+    UICmd.update_ id $ Model.highlight .~ False
+    showHidePortLabels False id
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyDown      .~ keyDownHandler
@@ -187,6 +197,14 @@ instance CompositeWidget Model.Node where
 
         let outPortControlGroup  = Group.create
         UICmd.register id outPortControlGroup Style.controlsLayout
+
+        let inLabelsGroup  = Group.create & Group.position .~ (Vector2 (-200) (-30))
+                                          & Group.visible .~ False
+        UICmd.register id inLabelsGroup Style.inLabelsLayout
+
+        let outLabelsGroup  = Group.create & Group.position .~ (Vector2 (40) (-30))
+                                           & Group.visible .~ False
+        UICmd.register id outLabelsGroup Style.inLabelsLayout
 
         let grp    = Group.create & Group.style   .~ Style.expandedGroupStyle
                                   & Group.visible .~ (model ^. Model.isExpanded)
@@ -249,6 +267,16 @@ portControlsGroupId id = do
 outPortControlsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
 outPortControlsGroupId id = do
     (_:_:groupId:_) <- UICmd.children id
+    return groupId
+
+inLabelsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
+inLabelsGroupId id = do
+    (_:_:_:groupId:_) <- UICmd.children id
+    return groupId
+
+outLabelsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
+outLabelsGroupId id = do
+    (_:_:_:_:groupId:_) <- UICmd.children id
     return groupId
 
 nodeControlsGroupId :: WidgetId -> Command UIRegistry.State WidgetId

@@ -151,10 +151,33 @@ displayPorts id node = do
     outPortControls <- UICmd.children outPortGroupId
     mapM_ UICmd.removeWidget outPortControls
 
+    inLabelsGroupId <- Node.inLabelsGroupId id
+    inLabels <- UICmd.children inLabelsGroupId
+    mapM_ UICmd.removeWidget inLabels
+
+    outLabelsGroupId <- Node.outLabelsGroupId id
+    outLabels <- UICmd.children outLabelsGroupId
+    mapM_ UICmd.removeWidget outLabels
+
     let newPorts = makePorts node
 
     forM_ newPorts $ \p -> UICmd.register id p def
     forM_ (node ^. Node.ports) $ \p -> makePortControl node outPortGroupId groupId (node ^. Node.nodeId) p
+    forM_ (node ^. Node.ports) $ \p -> case p ^. Port.portId of
+        InPortId  _ -> makePortLabel inLabelsGroupId p
+        OutPortId _ -> makePortLabel outLabelsGroupId p
+
+makePortLabel :: WidgetId -> Port -> Command UIRegistry.State ()
+makePortLabel parent port = do
+    let align = case port ^. Port.portId of
+            InPortId  _ -> Label.Right
+            OutPortId _ -> Label.Left
+        label = Label.create (Vector2 160 15) text & Label.alignment .~ align
+        text  = (Text.pack $ port ^. Port.name) <> " :: " <> portType
+        portType = case port ^. Port.valueType of
+            ValueType.AnyType -> "a"
+            ValueType.TypeIdent a -> Text.pack a
+    UICmd.register_ parent label def
 
 nodeHandlers :: Node -> HTMap
 nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)

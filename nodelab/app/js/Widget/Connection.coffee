@@ -28,7 +28,7 @@ class Connection
       side: THREE.DoubleSide
       derivatives: true))
 
-    @mesh.position.z = 100
+    @mesh.position.z = -100
 
   setPos: (x0, y0, x1, y1) ->
     dist = 0

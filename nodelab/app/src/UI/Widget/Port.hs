@@ -26,6 +26,7 @@ import qualified UI.Registry                  as UIR
 import           UI.Widget                    (UIContainer (..), UIWidget (..))
 import           UI.Widget                    (GenericWidget (..))
 import qualified UI.Widget                    as Widget
+import qualified UI.Handlers.Node             as Node
 
 import           Empire.API.Data.Port (PortId (InPortId), InPort (Self))
 import           Empire.API.Data.PortRef (AnyPortRef (InPortRef'), InPortRef(..))
@@ -66,8 +67,14 @@ instance UIDisplayObject Model.Port where
         setHighlight port $ model ^. Model.highlight
 
 onMouseOver, onMouseOut :: WidgetId -> Command Global.State ()
-onMouseOver id = inRegistry $ UICmd.update_ id $ Model.highlight .~ True
-onMouseOut  id = inRegistry $ UICmd.update_ id $ Model.highlight .~ False
+onMouseOver id = inRegistry $ do
+    UICmd.update_ id $ Model.highlight .~ True
+    nodeId <- UICmd.parent id
+    Node.showHidePortLabels True nodeId
+onMouseOut  id = inRegistry $ do
+    UICmd.update_ id $ Model.highlight .~ False
+    nodeId <- UICmd.parent id
+    Node.showHidePortLabels False nodeId
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & mouseOver .~ const onMouseOver
