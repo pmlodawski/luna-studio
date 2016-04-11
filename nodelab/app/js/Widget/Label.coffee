@@ -68,8 +68,13 @@ class Label extends BaseWidget
         else throw 'Invalid text alignment'
       @mesh.add @label
 
-      @bg.position.x = Math.max(@label.position.x, -20.0)
-      @bg.scale.x = Math.max(width, 40.0)
+      bgWidth = Math.max(width, 40.0)
+      @bg.position.x = switch @alignment
+        when 'Left'   then 0
+        when 'Right'  then (@width - bgWidth)
+        when 'Center' then (@width - bgWidth) / 2.0
+        else throw 'Invalid text alignment'
+      @bg.scale.x = bgWidth
 
   relayout: ->
     super
