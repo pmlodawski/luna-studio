@@ -7,7 +7,8 @@ var commonUniforms =  {
   dpr:          { type: 'f',  value: 1.0 }, // TODO: js_devicePixelRatio
   aa:           { type: 'f',  value: 0.8 },
   zoomScaling:  { type: 'i',  value: 0 },
-  connectionPen:{ type: 'i',  value: 0 }
+  connectionPen:{ type: 'i',  value: 0 },
+  isConnecting: { type: 'i',  value: 0 }
 };
 
 module.exports = {

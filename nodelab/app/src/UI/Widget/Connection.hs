@@ -29,6 +29,7 @@ instance UIWidget Connection
 foreign import javascript safe "new Connection($1)"            create'    :: WidgetId   -> IO Connection
 foreign import javascript safe "$1.setPos($2, $3, $4, $5, $6)" setPos     :: Connection -> Double -> Double -> Double -> Double -> Int -> IO ()
 foreign import javascript safe "$1.setVisible($2)"             setVisible :: Connection -> Bool    -> IO ()
+foreign import javascript safe "common.commonUniforms.isConnecting.value = ($1?1:0)" setIsConnecting :: Bool    -> IO ()
 foreign import javascript safe "$1.setColor($2)"               setColor   :: Connection -> Int     -> IO ()
 foreign import javascript safe "$1.setArrow($2)"               setArrow   :: Connection -> Bool    -> IO ()
 
@@ -63,6 +64,7 @@ instance UIDisplayObject Model.CurrentConnection where
         setVisible connection (model ^. Model.currentVisible)
         setArrow   connection (model ^. Model.currentArrow)
         setColor   connection (model ^. Model.currentColor)
+        setIsConnecting (model ^. Model.currentVisible)
 
 instance CompositeWidget Model.Connection
 instance ResizableWidget Model.Connection
