@@ -1,12 +1,9 @@
-FROM lunalang/base:latest
-MAINTAINER kamil.figiela@gmail.com
+FROM lunalang/base:v7.10
+MAINTAINER kamil.figiela@luna-lang.org
 
 RUN locale-gen en_US.UTF-8
-
 ENV LANG en_US.UTF-8
-
 ENV LANGUAGE en_US:en
-
 ENV LC_ALL en_US.UTF-8
 
 COPY env /etc/nodelab
@@ -30,5 +27,10 @@ COPY dist/bin /usr/local/bin/nodelab
 COPY userdata /userdata
 
 COPY userdata /data
+
+COPY runtime /runtime
+
+RUN    cd /runtime \
+    && stack build
 
 VOLUME ["/userdata"]

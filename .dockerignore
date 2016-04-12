@@ -5,3 +5,4 @@ libs
 scripts
 stdlib
 tools
+.stack-overlay

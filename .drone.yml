@@ -1,7 +1,11 @@
 clone:
   recursive: true
 build:
-  image: nbo/ghcjs-gui:20160201
+  image: lunalang/buildenv-deps:v20160412
+  auth_config:
+    username:  $$DOCKERHUB_USER
+    password:  $$DOCKERHUB_PASS
+    email: $$DOCKERHUB_EMAIL
   environment:
     - AWS_ACCESS_KEY_ID=$$AWS_ACCESS_KEY_ID
     - AWS_SECRET_ACCESS_KEY=$$AWS_SECRET_ACCESS_KEY
