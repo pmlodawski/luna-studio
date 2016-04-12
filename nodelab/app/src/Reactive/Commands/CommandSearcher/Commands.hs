@@ -86,13 +86,13 @@ querySearchCmd :: Text -> Command Global.State ()
 querySearchCmd query = do
     sd <- commands
     let sd'   = LunaModule $ Map.fromList sd
-        items = Scope.searchInScope sd' query
+        items = Scope.searchInScope True sd' query
     performIO $ UI.displayQueryResults items
 
 queryTreeCmd :: Text -> Command Global.State ()
 queryTreeCmd query = do
     sd <- commands
     let sd'   = LunaModule $ Map.fromList sd
-        items = Scope.moduleItems sd' query
+        items = Scope.moduleItems True sd' query
     performIO $ UI.displayTreeResults items
 

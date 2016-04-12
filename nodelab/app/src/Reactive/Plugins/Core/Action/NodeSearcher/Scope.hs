@@ -65,8 +65,8 @@ itemsInScope root path = case moduleByPath root (pathFromText path) of
     Just items -> searchableItems items
     Nothing    -> []
 
-searchInScope :: LunaModule -> Text -> [QueryResult]
-searchInScope root expr
+searchInScope :: Bool -> LunaModule -> Text -> [QueryResult]
+searchInScope includePath root expr
     | (Text.length expr > 0) && (Text.last expr == '.') = maybe [] displayModuleItems scope
     | otherwise                                         = fmap transformMatch $ findSuggestions items query
     where
@@ -76,16 +76,16 @@ searchInScope root expr
             t  -> Text.init t
         scope = moduleByPath root $ pathFromText prefix
         items = maybe [] searchableItems scope
-        transformMatch (Match score (SearchableItem _ path name tpe) sm) = QueryResult path name (appendPath path name) (fmap toHighlight sm) (jsItemType tpe)
+        transformMatch (Match score (SearchableItem _ path name tpe) sm) = QueryResult path name (if includePath then appendPath path name else name) (fmap toHighlight sm) (jsItemType tpe)
         displayModuleItems (LunaModule it) = fmap di $ Map.toList it
         di  (name, t)  = QueryResult "" name name [] (jsItemType t)
 
 
 
-moduleItems :: LunaModule -> Text -> [QueryResult]
-moduleItems root path = fmap toQueryResult $ items where
+moduleItems :: Bool -> LunaModule -> Text -> [QueryResult]
+moduleItems includePath root path = fmap toQueryResult $ items where
     toQueryResult :: (Text, Item) -> QueryResult
-    toQueryResult (name, t)  = QueryResult path name (appendPath path name) [] (jsItemType t)
+    toQueryResult (name, t)  = QueryResult path name (if includePath then appendPath path name else name) [] (jsItemType t)
     items :: [(Text, Item)]
     items = case moduleByPath root (pathFromText path) of
         Just (LunaModule it) -> sortWith fst $ Map.toList it

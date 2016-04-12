@@ -16,6 +16,7 @@ instance Binary Item
 
 makeLenses ''LunaModule
 makeLenses ''Item
+makePrisms ''Item
 
 instance Default LunaModule where
   def = LunaModule def
