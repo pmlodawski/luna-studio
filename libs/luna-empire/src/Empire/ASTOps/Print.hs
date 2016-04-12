@@ -11,7 +11,7 @@ import           Empire.ASTOp             (ASTOp)
 import           Empire.Data.AST          (NodeRef)
 import qualified Empire.ASTOps.Builder    as ASTBuilder
 
-import           Luna.Syntax.Term.Expr    (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..))
+import           Luna.Syntax.Term.Class_OLD    (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..), Curry (..))
 import qualified Luna.Syntax.Term.Lit     as Lit
 
 import qualified Luna.Syntax.Model.Network.Builder as Builder
@@ -46,6 +46,20 @@ printExpression' suppresNodes expandApp paren nodeRef = do
                                          ++ unwords dropTailBlanks
                                          ++ (if shouldParen then ")" else "")
                 _ -> return funExpr
+        of' $ \(Curry f args) -> do
+            funExpr <- Builder.follow source f >>= recur True
+            unpackedArgs <- ASTBuilder.unpackArguments args
+            argsRep <- mapM (recur True) unpackedArgs
+            let dropTailBlanks = dropWhileEnd (== "_") argsRep
+            let shouldParen = paren && not (null args)
+            case (expandApp, argsRep) of
+                (True, a : as) -> return $ (if shouldParen then "(" else "")
+                                         ++ "@"
+                                         ++ funExpr
+                                         ++ " "
+                                         ++ unwords dropTailBlanks
+                                         ++ (if shouldParen then ")" else "")
+                _ -> return $ "@" <> funExpr
         of' $ \Blank -> return "_"
         of' $ \(Lit.Number _ s) -> return $ case s of
             Lit.Rational r -> show r

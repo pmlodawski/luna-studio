@@ -38,7 +38,7 @@ import qualified Empire.Commands.AST          as AST
 import qualified Empire.Commands.GraphUtils   as GraphUtils
 import           Empire.Empire
 
-import           Luna.Syntax.Term.Expr        (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..), Lam (..))
+import           Luna.Syntax.Term.Class_OLD   (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..), Lam (..))
 import qualified Luna.Syntax.Term.Lit         as Lit
 import qualified Luna.Syntax.Term.Function    as Function
 

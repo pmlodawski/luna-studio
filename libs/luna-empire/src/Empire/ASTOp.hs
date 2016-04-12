@@ -5,7 +5,7 @@
 
 module Empire.ASTOp where
 
-import           Prologue                               hiding (Num, Cons)
+import           Prologue                               hiding (Num, Cons, Curry)
 
 import           Control.Monad.Error                    (ErrorT, MonadError, runErrorT)
 import           Data.Proxy
@@ -20,7 +20,7 @@ import           Data.Graph.Builders                    (Connectible)
 import           Luna.Syntax.Model.Network.Builder.Term (TermBuilder_OLD, NetLayers, NetworkBuilderT, runNetworkBuilderT)
 import           Luna.Syntax.Model.Network.Builder.Node (TermNode)
 import           Luna.Syntax.Model.Network.Term         (Raw)
-import           Luna.Syntax.Term.Expr                  (Acc, App, Blank, Match, Var, Cons, Unify)
+import           Luna.Syntax.Term.Class_OLD             (Acc, App, Blank, Match, Var, Cons, Unify, Curry)
 import           Luna.Syntax.Model.Layer                ((:<:))
 import qualified Luna.Syntax.Term.Lit                   as Lit
 import           Type.Inference
@@ -45,6 +45,7 @@ type ASTOp m = ( MonadIO m
                , TermBuilder_OLD Var        m NodeRef
                , TermBuilder_OLD Unify      m NodeRef
                , TermBuilder_OLD Cons       m NodeRef
+               , TermBuilder_OLD Curry      m NodeRef
                , Connectible NodeRef NodeRef m
                )
 
