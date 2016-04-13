@@ -76,9 +76,14 @@ onMouseOut  id = inRegistry $ do
     nodeId <- UICmd.parent id
     Node.showHidePortLabels False nodeId
 
+selectNode evt _ id = do
+    nid <- inRegistry $ UICmd.parent id
+    Node.selectNode evt nid
+
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & mouseOver .~ const onMouseOver
                      & mouseOut  .~ const onMouseOut
+                     & mousePressed .~ selectNode
 
 instance CompositeWidget Model.Port
 instance ResizableWidget Model.Port
