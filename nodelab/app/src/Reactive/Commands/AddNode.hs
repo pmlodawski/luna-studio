@@ -18,7 +18,7 @@ import           Data.List                         (intercalate)
 import           GHC.Float                         (double2Float)
 
 import           Object.UITypes                    (WidgetId)
-import           Object.Widget                     (objectId)
+import           Object.Widget                     (objectId, widget)
 import qualified Object.Widget.Button              as Button
 import qualified Object.Widget.Group               as Group
 import qualified Object.Widget.Label               as Label
@@ -198,9 +198,12 @@ nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
 expandSelectedNodes :: Command UIRegistry.State ()
 expandSelectedNodes = do
     sn <- selectedNodes
+    let allSelected = all (view $ widget . Model.isExpanded) sn
+        update      = if allSelected then Model.isExpanded %~ not
+                                     else Model.isExpanded .~ True
     forM_ sn $ \wf -> do
         let id = wf ^. objectId
-        UICmd.update_ id (Model.isExpanded %~ not)
+        UICmd.update_ id update
         UICmd.moveBy  id (Vector2 0 0) -- FIXME: trigger moved handler for html widgets
 
 updateNode :: Node -> Command State ()
