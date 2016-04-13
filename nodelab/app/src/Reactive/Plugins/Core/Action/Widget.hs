@@ -94,25 +94,35 @@ handleKeyboardGeneric jsState (Keyboard.Event eventType ch mods) = do
                 Keyboard.Press    -> (handlers ^. keyPressed)  ch mods jsState focusedWidget
 
 handleMouseDrag ::  JSState -> Mouse.RawEvent -> Command Global.State ()
-handleMouseDrag jsState (Mouse.Event Mouse.Moved absPos _ keymods _) = do
+handleMouseDrag jsState (Mouse.Event Mouse.Moved absPos button keymods _) = do
     dragState <- use $ Global.uiRegistry . UIRegistry.dragState
 
     ifJustThen dragState $ \dragState -> do
-        file <- zoom Global.uiRegistry $ UIRegistry.lookupM $ dragState ^. Widget.widgetId
-        camera <- use $ Global.camera . Camera.camera
-        let pos = absPosToRel (dragState ^. Widget.scene) camera (dragState ^. Widget.widgetMatrix) (fromIntegral <$> absPos)
+        let stillDragging = dragState ^. Widget.button == button
+        if stillDragging then dragInProgress jsState dragState absPos keymods
+                         else stopDrag       jsState
 
-        zoom (Global.uiRegistry . UIRegistry.dragState . _Just) $ do
-            Widget.keyMods .= keymods
-            prevPos' <- use Widget.previousPos
-            Widget.previousPos .= prevPos'
-            Widget.currentPos .= pos
+handleMouseDrag jsState (Mouse.Event Mouse.Released _ _ _ _) = stopDrag jsState
+handleMouseDrag _ _ = return ()
 
-        ifJustThen file $ \file -> do
-            let handlers = widgetHandlers (file ^. widget)
-            (handlers ^. dragMove) dragState jsState (dragState ^. Widget.widgetId)
+-- stopDrag :: _
+dragInProgress jsState dragState absPos keymods = do
+    file <- zoom Global.uiRegistry $ UIRegistry.lookupM $ dragState ^. Widget.widgetId
+    camera <- use $ Global.camera . Camera.camera
+    let pos = absPosToRel (dragState ^. Widget.scene) camera (dragState ^. Widget.widgetMatrix) (fromIntegral <$> absPos)
 
-handleMouseDrag jsState (Mouse.Event Mouse.Released _ _ _ _) = do
+    zoom (Global.uiRegistry . UIRegistry.dragState . _Just) $ do
+        Widget.keyMods .= keymods
+        prevPos' <- use Widget.previousPos
+        Widget.previousPos .= prevPos'
+        Widget.currentPos .= pos
+
+    ifJustThen file $ \file -> do
+        let handlers = widgetHandlers (file ^. widget)
+        (handlers ^. dragMove) dragState jsState (dragState ^. Widget.widgetId)
+
+stopDrag :: JSState -> Command Global.State ()
+stopDrag jsState = do
     dragState <- use $ Global.uiRegistry . UIRegistry.dragState
 
     ifJustThen dragState $ \dragState -> do
@@ -122,7 +132,6 @@ handleMouseDrag jsState (Mouse.Event Mouse.Released _ _ _ _) = do
             (handlers ^. dragEnd) dragState jsState (dragState ^. widgetId)
 
         Global.uiRegistry . UIRegistry.dragState .= Nothing
-handleMouseDrag _ _ = return ()
 
 handleMouseClick :: JSState -> Mouse.RawEvent -> Command Global.State ()
 handleMouseClick jsState (Mouse.Event Mouse.Pressed _ Mouse.LeftButton _ (Just (EventWidget widgetId _ _))) = do
