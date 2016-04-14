@@ -20,6 +20,7 @@ import qualified Object.Widget.Node                              as NodeModel
 import           Reactive.Commands.Command                       (Command, performIO)
 import           Reactive.Commands.RegisterNode                  (registerNode)
 import           Reactive.Commands.Selection                     (selectedNodes)
+import           Reactive.Commands.Camera                        (syncCamera)
 import           Reactive.Commands.UpdateNode                    ()
 import           Reactive.State.Global                           (inRegistry)
 import qualified Reactive.State.Global                           as Global
@@ -39,6 +40,14 @@ searcherData = use $ Global.workspace . Workspace.nodeSearcherData
 
 openFresh :: Command Global.State ()
 openFresh = do
+    factor <- use $ Global.camera . Camera.camera . Camera.factor
+    let offset = Vector2 0 (floor $ -40.0 * factor)
+    (nsPos', nsPos) <- ensureNSVisible
+    Global.uiElements . UIElements.nsPos .= nsPos'
+    performIO $ UI.initNodeSearcher "" 0 (nsPos + offset) False
+
+position :: Command Global.State (Vector2 Double, Vector2 Int)
+position = do
     mousePos <- use Global.mousePos
     mousePos' <- zoom Global.camera $ Camera.screenToWorkspaceM mousePos
     factor <- use $ Global.camera . Camera.camera . Camera.factor
@@ -47,9 +56,26 @@ openFresh = do
             [wf]   -> (wf ^. Widget.widget . NodeModel.position) + (Vector2 230.0 0)
             _     -> mousePos'
     nsPos' <- zoom Global.camera $ Camera.screenToWorkspaceM nsPos
-    let offset = Vector2 0 (floor $ -40.0 * factor)
-    Global.uiElements . UIElements.nsPos .= nsPos'
-    performIO $ UI.initNodeSearcher "" 0 (nsPos + offset) False
+    return (nsPos', nsPos)
+
+ensureNSVisible :: Command Global.State (Vector2 Double, Vector2 Int)
+ensureNSVisible = do
+    (workspacePos, screenPos) <- position
+    screenSize <- use $ Global.camera . Camera.camera . Camera.screenSize
+    x' <- case (screenPos ^. x > (screenSize ^. x - 250)) of
+        True -> do
+            Global.camera . Camera.camera . Camera.pan . x .= workspacePos ^. x
+            zoom Global.camera syncCamera
+            return (floor $ (fromIntegral $ screenSize ^. x) / 2.0)
+        False -> return $ screenPos ^. x
+    y' <- case (screenPos ^. y > (screenSize ^. y - 250)) of
+        True -> do
+            Global.camera . Camera.camera . Camera.pan . y .= workspacePos ^. y
+            zoom Global.camera syncCamera
+            return (floor $ (fromIntegral $ screenSize ^. y) / 2.0)
+        False -> return $ screenPos ^. y
+
+    return $ (workspacePos, Vector2 x' y')
 
 globalFunctions :: LunaModule -> LunaModule
 globalFunctions (LunaModule items) = LunaModule $ Map.filter (== Function) items
