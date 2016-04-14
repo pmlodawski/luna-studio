@@ -109,7 +109,7 @@ handleAddNode content = do
             forM_ connectTo $ \srcNodeId -> do
                 let connectRequest = Connect.Request location srcNodeId All nodeId Self
                     connectUpdate  = Update.Update connectRequest Update.Ok
-                sendToBus Topic.connectUpdate update
+                sendToBus Topic.connectUpdate connectUpdate
             notifyCodeUpdate location
 
 handleRemoveNode :: ByteString -> StateT Env BusT ()
