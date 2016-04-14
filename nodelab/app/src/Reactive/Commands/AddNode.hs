@@ -102,7 +102,7 @@ addDummyNode meta nodeId = do
         Just _  -> return ()
         Nothing -> do
             let dummyNode = Node.Node nodeId "" (Node.ExpressionNode "") ports meta
-                ports = Map.fromList [(OutPortId All, Port (OutPortId All) "All" AnyType Port.NotConnected), (OutPortId Sefl, Port (InPortId Self) "self" AnyType Port.NotConnected)]]
+                ports = Map.fromList [(OutPortId All, Port (OutPortId All) "All" AnyType Port.NotConnected), (InPortId Self, Port (InPortId Self) "self" AnyType Port.NotConnected)]
             addNode dummyNode
 
 
