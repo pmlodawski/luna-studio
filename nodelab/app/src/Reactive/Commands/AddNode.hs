@@ -93,7 +93,8 @@ addNode :: Node -> Command State ()
 addNode node = do
     -- unrenderPending node
     zoom Global.graph $ modify (Graph.addNode node)
-    zoom Global.uiRegistry $ registerNode node
+    widgetId <- zoom Global.uiRegistry $ registerNode node
+    Node.selectNode' Node.performSelect widgetId
 
 addDummyNode :: NodeMeta -> NodeId -> Command State ()
 addDummyNode meta nodeId = do
@@ -106,13 +107,14 @@ addDummyNode meta nodeId = do
             addNode dummyNode
 
 
-registerNode :: Node -> Command UIRegistry.State ()
+registerNode :: Node -> Command UIRegistry.State WidgetId
 registerNode node = do
     let nodeModel = Model.fromNode node
     nodeWidget <- UICmd.register sceneGraphId nodeModel (nodeHandlers node)
 
     displayPorts nodeWidget node
     focusNode nodeWidget
+    return nodeWidget
 
 nodePorts :: WidgetId -> Command UIRegistry.State [WidgetId]
 nodePorts id = do

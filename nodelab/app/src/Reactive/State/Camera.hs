@@ -52,5 +52,14 @@ screenToWorkspace camera pos =
 
 screenToWorkspaceM :: Vector2 Int -> Command State (Vector2 Double)
 screenToWorkspaceM pos = do
-    camera  <- use camera
+    camera <- use camera
     return $ screenToWorkspace camera pos
+
+workspaceToScreen :: Vector2 Double -> Command State (Vector2 Int)
+workspaceToScreen (Vector2 px py) = do
+    screenSize' <- use $ camera . screenSize
+    pan'        <- use $ camera . pan
+    factor'     <- use $ camera . factor
+    let px' = floor $ (px - pan' ^. x) * factor'  + (fromIntegral $ screenSize' ^. x) / 2.0
+        py' = floor $ (py - pan' ^. y) * factor'  + (fromIntegral $ screenSize' ^. y) / 2.0
+    return $ Vector2 px' py'

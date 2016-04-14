@@ -16,6 +16,7 @@ import           Object.Widget               (widget)
 import qualified Object.Widget.Node          as UINode
 import           Reactive.Commands.Selection (selectedNodes)
 import           Reactive.State.Graph        (genNodeId)
+import qualified Reactive.State.UIElements   as UIElements
 import           Reactive.State.Global       (inRegistry)
 
 import           Empire.API.Data.Node        (Node (..))
@@ -25,8 +26,7 @@ import           Empire.API.Data.NodeMeta    (NodeMeta (..))
 registerNode :: Text -> Command State ()
 registerNode expr = do
     nodeId  <- zoom Global.graph $ gets genNodeId
-    camera  <- use $ Global.camera . Camera.camera
-    nodePos <- uses Global.mousePos $ Camera.screenToWorkspace camera
+    nodePos <- use $ Global.uiElements . UIElements.nsPos
     let nodeMeta = NodeMeta $ toTuple nodePos
     workspace <- use Global.workspace
     selected   <- inRegistry selectedNodes

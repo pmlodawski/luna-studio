@@ -124,11 +124,22 @@ keyDownHandler '\x08' _ _ id = triggerRemoveHandler id
 keyDownHandler '\x2e' _ _ id = triggerRemoveHandler id
 keyDownHandler _      _ _ _  = return ()
 
-handleSelection :: Mouse.Event' -> WidgetId -> Command Global.State ()
-handleSelection evt id = case evt ^. Mouse.keyMods of
-    KeyMods False False False False -> zoom Global.uiRegistry $ performSelect id
-    KeyMods False False True  False -> zoom Global.uiRegistry $ toggleSelect  id
-    otherwise                       -> return ()
+selectNode :: Mouse.Event' -> WidgetId -> Command Global.State ()
+selectNode evt id = do
+    let action = handleSelection evt
+    selectNode' action id
+
+selectNode' :: (WidgetId -> Command UIRegistry.State ()) -> WidgetId -> Command Global.State ()
+selectNode' action id = do
+    triggerFocusNodeHandler id
+    UICmd.takeFocus id
+    inRegistry $ action id
+
+handleSelection :: Mouse.Event' -> (WidgetId -> Command UIRegistry.State ())
+handleSelection evt = case evt ^. Mouse.keyMods of
+    KeyMods False False False False -> performSelect
+    KeyMods False False True  False -> toggleSelect
+    otherwise                       -> const $ return ()
 
 performSelect :: WidgetId -> Command UIRegistry.State ()
 performSelect id = do
@@ -140,6 +151,8 @@ performSelect id = do
 toggleSelect :: WidgetId -> Command UIRegistry.State ()
 toggleSelect id = UICmd.update_ id (Model.isSelected %~ not)
 
+
+
 unselectAll :: Command UIRegistry.State ()
 unselectAll = do
     widgets <- allNodes
@@ -149,11 +162,6 @@ unselectAll = do
 
 dblClickHandler :: DblClickHandler Global.State
 dblClickHandler _ _ id = triggerEnterNodeHandler id
-
-selectNode evt id = do
-    triggerFocusNodeHandler id
-    UICmd.takeFocus id
-    handleSelection evt id
 
 showHidePortLabels :: Bool -> WidgetId -> Command UIRegistry.State ()
 showHidePortLabels show id = do

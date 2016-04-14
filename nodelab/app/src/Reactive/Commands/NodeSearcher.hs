@@ -24,6 +24,8 @@ import           Reactive.Commands.UpdateNode                    ()
 import           Reactive.State.Global                           (inRegistry)
 import qualified Reactive.State.Global                           as Global
 import qualified Reactive.State.Graph                            as Graph
+import qualified Reactive.State.UIElements                       as UIElements
+import qualified Reactive.State.Camera                           as Camera
 import qualified Reactive.State.UIRegistry                       as UIRegistry
 
 import qualified Empire.API.Data.Node                            as Node
@@ -38,7 +40,16 @@ searcherData = use $ Global.workspace . Workspace.nodeSearcherData
 openFresh :: Command Global.State ()
 openFresh = do
     mousePos <- use Global.mousePos
-    performIO $ UI.initNodeSearcher "" 0 mousePos False
+    mousePos' <- zoom Global.camera $ Camera.screenToWorkspaceM mousePos
+    factor <- use $ Global.camera . Camera.camera . Camera.factor
+    selected <- inRegistry selectedNodes
+    nsPos <- zoom Global.camera $ Camera.workspaceToScreen $ case selected of
+            [wf]   -> (wf ^. Widget.widget . NodeModel.position) + (Vector2 230.0 0)
+            _     -> mousePos'
+    nsPos' <- zoom Global.camera $ Camera.screenToWorkspaceM nsPos
+    let offset = Vector2 0 (floor $ -40.0 * factor)
+    Global.uiElements . UIElements.nsPos .= nsPos'
+    performIO $ UI.initNodeSearcher "" 0 (nsPos + offset) False
 
 globalFunctions :: LunaModule -> LunaModule
 globalFunctions (LunaModule items) = LunaModule $ Map.filter (== Function) items
@@ -52,7 +63,6 @@ scopedData = do
             [wf]   -> do
                 let nodeId = wf ^. Widget.widget . NodeModel.nodeId
                 vt <- preuse $ Global.graph . Graph.nodes . ix nodeId . Node.ports . ix (Port.OutPortId Port.All) . Port.valueType
-                performIO $ putStrLn $ show vt
                 return $ case vt of
                     Nothing -> Nothing
                     Just vt -> case vt of
