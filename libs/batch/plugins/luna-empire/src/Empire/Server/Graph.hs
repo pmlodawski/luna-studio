@@ -118,8 +118,9 @@ handleRemoveNode content = do
         location = request ^. RemoveNode.location
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ do
-        forM_ (request ^. RemoveNode.nodeIds) $ \nodeId -> Graph.removeNode location nodeId
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.removeNodes
+        location
+        (request ^. RemoveNode.nodeIds)
     case result of
         Left err -> logger Logger.error $ errorMessage <> err
         Right _ -> do

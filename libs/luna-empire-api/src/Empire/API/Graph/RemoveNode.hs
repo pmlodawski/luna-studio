@@ -11,6 +11,7 @@ data Request = Request { _location :: GraphLocation
                        , _nodeIds  :: [NodeId]
                        } deriving (Generic, Show, Eq)
 
+
 type Update = Update.SimpleUpdate Request
 
 makeLenses ''Request

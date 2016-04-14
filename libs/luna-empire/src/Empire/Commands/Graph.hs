@@ -1,6 +1,6 @@
 module Empire.Commands.Graph
     ( addNode
-    , removeNode
+    , removeNodes
     , updateNodeMeta
     , connect
     , disconnect
@@ -59,14 +59,18 @@ addNode loc expr meta = withGraph loc $ do
     runTC loc False
     return newNodeId
 
-removeNode :: GraphLocation -> NodeId -> Empire ()
-removeNode loc nodeId = withGraph loc $ do
+removeNodes :: GraphLocation -> [NodeId] -> Empire ()
+removeNodes loc nodeIds = withGraph loc $ do
+    forM_ nodeIds removeNode
+    runTC loc False
+
+removeNode :: NodeId -> Command Graph ()
+removeNode nodeId = do
     astRef <- GraphUtils.getASTPointer nodeId
     obsoleteEdges <- getOutEdges nodeId
     mapM_ disconnectPort obsoleteEdges
     zoom Graph.ast $ AST.removeSubtree astRef
     Graph.nodeMapping %= IntMap.delete nodeId
-    runTC loc False
 
 updateNodeMeta :: GraphLocation -> NodeId -> NodeMeta -> Empire ()
 updateNodeMeta loc nodeId meta = withGraph loc $ do
