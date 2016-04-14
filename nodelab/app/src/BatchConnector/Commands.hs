@@ -87,10 +87,10 @@ updateNodeMeta w nid nm = sendRequest Topic.updateNodeMetaRequest $ withLibrary 
 renameNode :: Workspace -> NodeId -> Text -> IO ()
 renameNode w nid name = sendRequest Topic.renameNodeRequest $ withLibrary w RenameNode.Request nid name
 
-removeNode :: Workspace -> NodeId -> IO ()
-removeNode workspace nid = sendRequest topic body where
+removeNode :: Workspace -> [NodeId] -> IO ()
+removeNode workspace nodeIds = sendRequest topic body where
     topic = Topic.removeNodeRequest
-    body  = withLibrary workspace RemoveNode.Request nid
+    body  = withLibrary workspace RemoveNode.Request nodeIds
 
 
 connectNodes :: Workspace -> OutPortRef -> InPortRef -> IO ()

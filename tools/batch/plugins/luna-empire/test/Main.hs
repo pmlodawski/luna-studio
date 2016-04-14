@@ -84,7 +84,7 @@ testAddNode = do
 testRemoveNode :: IO ()
 testRemoveNode = do
     endPoints <- EP.clientFromConfig <$> Config.load
-    let content = toStrict . Bin.encode $ RemoveNode.Request (gl 0 0) 3
+    let content = toStrict . Bin.encode $ RemoveNode.Request (gl 0 0) [3]
     void $ Bus.runBus endPoints $ do
         Bus.send Flag.Enable $ Message.Message Topic.removeNodeRequest content
 

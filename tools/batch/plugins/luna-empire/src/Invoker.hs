@@ -124,7 +124,7 @@ addNode endPoints graphLocation expression x y tag = do
 
 removeNode :: EP.BusEndPoints -> GraphLocation -> NodeId -> IO ()
 removeNode endPoints graphLocation nodeId = do
-    let content = toStrict . Bin.encode $ RemoveNode.Request graphLocation nodeId
+    let content = toStrict . Bin.encode $ RemoveNode.Request graphLocation [nodeId]
     void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.removeNodeRequest content
 
 updateNodeMeta :: EP.BusEndPoints -> GraphLocation -> NodeId -> Double -> Double -> IO ()

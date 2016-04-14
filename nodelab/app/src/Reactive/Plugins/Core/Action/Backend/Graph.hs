@@ -89,7 +89,7 @@ toAction (Event.Batch ev) = Just $ case ev of
 
     NodeRemoved response -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (response ^. Update.request . RemoveNode.location)
-        when shouldProcess $ RemoveNode.localRemoveNodes $ response ^. Update.request . RemoveNode.nodeId
+        when shouldProcess $ RemoveNode.localRemoveNodes $ response ^. Update.request . RemoveNode.nodeIds
 
     NodeResultUpdated response -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (response ^. NodeResultUpdate.location)

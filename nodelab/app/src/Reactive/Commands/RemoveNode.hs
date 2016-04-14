@@ -24,15 +24,15 @@ import           Empire.API.Data.Node (NodeId)
 removeSelectedNodes :: Command State ()
 removeSelectedNodes = do
     selectedNodes <- zoom Global.uiRegistry selectedNodes
-    mapM_ performRemoval $ (^. widget . NodeModel.nodeId) <$> selectedNodes
+    performRemoval $ (^. widget . NodeModel.nodeId) <$> selectedNodes
 
-performRemoval :: NodeId -> Command State ()
-performRemoval nodeId = do
+performRemoval :: [NodeId] -> Command State ()
+performRemoval nodeIds = do
     workspace  <- use Global.workspace
-    performIO $ BatchCmd.removeNode workspace nodeId
+    performIO $ BatchCmd.removeNode workspace nodeIds
 
-localRemoveNodes :: NodeId -> Command State ()
-localRemoveNodes nodeId = do
+localRemoveNodes :: [NodeId] -> Command State ()
+localRemoveNodes nodeIds = forM_ nodeIds $ \nodeId -> do
     danglingConns <- uses Global.graph (Graph.connectionIdsContainingNode $ nodeId)
     localDisconnectAll danglingConns
 
