@@ -32,7 +32,7 @@ import           Reactive.State.UIRegistry    (addHandler)
 import qualified Reactive.State.UIRegistry    as UIRegistry
 
 import qualified Style.Node                   as Style
-import           UI.Generic                   (defaultResize, startDrag)
+import           UI.Generic                   (defaultResize, startDrag, whenChanged)
 import           UI.Handlers.Button           (MousePressedHandler (..))
 import           UI.Handlers.Generic          (triggerValueChanged)
 import           UI.Handlers.Generic          (ValueChangedHandler (..), triggerValueChanged)
@@ -243,27 +243,32 @@ instance CompositeWidget Model.Node where
 
 
     updateWidget id old model = do
-        controlsId <- expandedGroupId id
-        exprId     <- expressionId    id
-        nameTbId   <- nameTextBoxId   id
-        valueId    <- valueLabelId    id
-        valueVisId <- valueGroupId    id
-        typeTbId   <- typeTextBoxId   id
-        etId       <- execTimeLabelId id
-
-
-        UICmd.update_ controlsId $ Group.visible .~ (model ^. Model.isExpanded)
-        UICmd.update_ valueVisId $ Group.visible .~ (model ^. Model.isExpanded)
-        UICmd.update_ exprId     $ Label.label   .~ (model ^. Model.expression)
-        UICmd.update_ nameTbId   $ LabeledTextBox.value .~ (model ^. Model.name)
-        UICmd.update_ valueId    $ Label.label   .~ (model ^. Model.value)
-        withJust (model ^. Model.tpe) $ \tpe -> do
+        whenChanged old model Model.isExpanded $ do
+            controlsId <- expandedGroupId id
+            valueVisId <- valueGroupId    id
+            UICmd.update_ controlsId $ Group.visible .~ (model ^. Model.isExpanded)
+            UICmd.update_ valueVisId $ Group.visible .~ (model ^. Model.isExpanded)
+        whenChanged old model Model.expression $ do
+            exprId     <- expressionId    id
+            UICmd.update_ exprId     $ Label.label   .~ (model ^. Model.expression)
+        whenChanged old model Model.name  $ do
+            nameTbId   <- nameTextBoxId   id
+            UICmd.update_ nameTbId   $ LabeledTextBox.value .~ (model ^. Model.name)
+        whenChanged old model Model.value $ do
+            valueId    <- valueLabelId    id
+            UICmd.update_ valueId    $ Label.label   .~ (model ^. Model.value)
+        whenChanged old model Model.tpe   $ withJust (model ^. Model.tpe) $ \tpe -> do
+            typeTbId   <- typeTextBoxId   id
             withJust typeTbId $ \typeTbId -> UICmd.update_ typeTbId $ LabeledTextBox.value .~ tpe
 
-        UICmd.update_ etId $ Label.label     .~ (fromMaybe "Execution time: --" $ (\v -> "Execution time: " <> v <> " ms") <$> (Text.pack . show) <$> model ^. Model.execTime)
+        whenChanged old model Model.execTime $ do
+            etId       <- execTimeLabelId id
+            UICmd.update_ etId $ Label.label     .~ (fromMaybe "Execution time: --" $ (\v -> "Execution time: " <> v <> " ms") <$> (Text.pack . show) <$> model ^. Model.execTime)
 
-        UICmd.update_ valueId  $ Label.alignment .~ (if model ^. Model.isExpanded then Label.Left else Label.Center)
-        UICmd.moveX   valueId  $ if model ^. Model.isExpanded then 0.0 else -25.0
+        whenChanged old model Model.isExpanded $ do
+            valueId    <- valueLabelId    id
+            UICmd.update_ valueId  $ Label.alignment .~ (if model ^. Model.isExpanded then Label.Left else Label.Center)
+            UICmd.moveX   valueId  $ if model ^. Model.isExpanded then 0.0 else -25.0
 
 
 portControlsGroupId :: WidgetId -> Command UIRegistry.State WidgetId

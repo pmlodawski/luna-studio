@@ -26,6 +26,7 @@ import qualified Reactive.State.UIRegistry     as UIRegistry
 import qualified UI.Registry                   as UIR
 import           UI.Widget                     (UIContainer (..), UIWidget (..))
 import           UI.Widget                     (GenericWidget (..))
+import           UI.Generic                    (whenChanged)
 import qualified UI.Widget                     as UIT
 
 newtype Node = Node { unNode :: JSVal } deriving (PToJSVal, PFromJSVal)
@@ -59,7 +60,7 @@ instance UIDisplayObject Model.Node where
     updateUI id old model = do
         node <- UIR.lookup id :: IO Node
 
-        setSelected      node $ model ^. Model.isSelected
-        setError         node $ model ^. Model.isError
-        setZPos          node $ model ^. Model.zPos
-        setHighlight     node $ model ^. Model.highlight
+        whenChanged old model Model.isSelected   $ setSelected      node $ model ^. Model.isSelected
+        whenChanged old model Model.isError      $ setError         node $ model ^. Model.isError
+        whenChanged old model Model.zPos         $ setZPos          node $ model ^. Model.zPos
+        whenChanged old model Model.highlight    $ setHighlight     node $ model ^. Model.highlight

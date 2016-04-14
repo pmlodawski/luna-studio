@@ -22,8 +22,9 @@ import qualified Reactive.Commands.UIRegistry  as UICmd
 unselectAll :: Command UIRegistry.State ()
 unselectAll = do
     widgets <- allNodes
-    let widgetIds = (^. objectId) <$> widgets
-    forM_ widgetIds $ (flip UICmd.update) (NodeModel.isSelected .~ False)
+    forM_ widgets $ \wf -> do
+        let widgetId = wf ^. objectId
+        when (wf ^. widget . NodeModel.isSelected) $ UICmd.update_ widgetId $ NodeModel.isSelected .~ False
 
 selectAll :: Command UIRegistry.State ()
 selectAll = do

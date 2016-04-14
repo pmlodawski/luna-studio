@@ -4,12 +4,12 @@ module Reactive.Plugins.Core.Action.MultiSelection where
 
 import           Utils.PreludePlus
 import           Utils.Vector      (Vector2(..), x, y)
-
+import qualified Data.Set as Set
 import           JS.MultiSelection (displaySelectionBox, hideSelectionBox)
 import qualified JS.NodeGraph   as UI
 
 import           Object.Node
-import           Object.Widget (DisplayObject, UIHandlers, WidgetId, WidgetFile)
+import           Object.Widget (DisplayObject, UIHandlers, WidgetId, WidgetFile, objectId)
 import qualified Object.Widget.Node as NodeModel
 
 import           Event.Keyboard (KeyMods(..))
@@ -27,7 +27,7 @@ import           Reactive.State.Global         (State)
 
 import           Reactive.Commands.Command          (Command, performIO)
 import qualified Reactive.Commands.UIRegistry       as UICmd
-import           Reactive.Commands.Selection        (unselectAll, selectAll, focusSelectedNode)
+import           Reactive.Commands.Selection        (unselectAll, selectAll, focusSelectedNode, selectedNodes)
 
 import           Control.Monad.State                               hiding (State)
 
@@ -72,15 +72,20 @@ lookupNode :: WidgetId -> Command UIRegistry.State (Maybe (WidgetFile NodeModel.
 lookupNode = UIRegistry.lookupTypedM
 
 updateSelection :: JSState -> Vector2 Int -> Vector2 Int -> Command State ()
-updateSelection jsstate start end = do
+updateSelection jsstate start end = zoom Global.uiRegistry $ do
     let leftTop     = Vector2 (min (start ^. x) (end ^. x)) (min (start ^. y) (end ^. y))
         rightBottom = Vector2 (max (start ^. x) (end ^. x)) (max (start ^. y) (end ^. y))
         ids         = getObjectsInRect jsstate leftTop (rightBottom - leftTop)
-    zoom Global.uiRegistry unselectAll
-    forM_ ids $ \id -> do
-        zoom Global.uiRegistry $ do
-            w <- lookupNode id
-            when (isJust w) $ UICmd.update_ id (NodeModel.isSelected .~ True)
+    oldSelected <- selectedNodes
+    newSelectedFiles <-  mapM lookupNode ids
+    let oldSet = Set.fromList $ (view objectId) <$> oldSelected
+        newSet = Set.fromList $ (view objectId) <$> catMaybes newSelectedFiles
+        toSelect = Set.difference newSet oldSet
+        toUnselect = Set.difference oldSet newSet
+
+    forM_ toSelect   $ flip UICmd.update_ $ NodeModel.isSelected .~ True
+    forM_ toUnselect $ flip UICmd.update_ $ NodeModel.isSelected .~ False
+
 
 drawSelectionBox :: Vector2 Int -> Vector2 Int -> Command State ()
 drawSelectionBox start end = do
