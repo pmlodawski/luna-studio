@@ -52,6 +52,7 @@ scopedData = do
             [wf]   -> do
                 let nodeId = wf ^. Widget.widget . NodeModel.nodeId
                 vt <- preuse $ Global.graph . Graph.nodes . ix nodeId . Node.ports . ix (Port.OutPortId Port.All) . Port.valueType
+                performIO $ putStrLn $ show vt
                 return $ case vt of
                     Nothing -> Nothing
                     Just vt -> case vt of

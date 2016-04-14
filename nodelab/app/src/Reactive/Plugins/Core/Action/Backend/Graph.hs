@@ -6,7 +6,7 @@ import qualified Batch.Workspace                     as Workspace
 import           Event.Batch                         (Event (..))
 import qualified Event.Batch                         as Batch
 import qualified Event.Event                         as Event
-import           Reactive.Commands.AddNode           (addNode, updateNode, updateNodeValue, updateNodeProfilingData)
+import           Reactive.Commands.AddNode           (addNode, addDummyNode, updateNode, updateNodeValue, updateNodeProfilingData)
 import           Reactive.Commands.Camera            (autoZoom)
 import           Reactive.Commands.Command           (Command, performIO)
 import           Reactive.Commands.DisconnectNodes   (disconnect)
@@ -74,6 +74,10 @@ toAction (Event.Batch ev) = Just $ case ev of
     NodeMetaUpdated response -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (response ^. Update.request . UpdateNodeMeta.location)
         when shouldProcess $ updateNodeMeta (response ^. Update.request . UpdateNodeMeta.nodeId) (response ^. Update.result ^. UpdateNodeMeta.newNodeMeta)
+
+    NodeAdded response -> do
+        shouldProcess <- isCurrentLocationAndGraphLoaded (response ^. Update.request . AddNode.location)
+        when shouldProcess $ addDummyNode (response ^. Update.request . AddNode.nodeMeta) (response ^. Update.result . AddNode.nodeId)
 
     NodeUpdated response -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (response ^. NodeUpdate.location)

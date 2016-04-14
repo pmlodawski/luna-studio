@@ -82,6 +82,7 @@ instance ToJSON t => ToJSON (Error.Error t)
 
 instance ToJSON AddNode.NodeType
 instance ToJSON AddNode.Request
+instance ToJSON AddNode.Result
 
 instance ToJSON Connect.Request
 

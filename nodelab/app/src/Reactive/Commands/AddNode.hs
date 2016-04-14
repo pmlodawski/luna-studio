@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Reactive.Commands.AddNode
     ( addNode
+    , addDummyNode
     , updateNode
     , updateNodeValue
     , updateNodeProfilingData
@@ -79,6 +80,7 @@ import           Empire.API.Data.DefaultValue      (Value (..))
 import qualified Empire.API.Data.DefaultValue      as DefaultValue
 import           Empire.API.Data.Node              (Node, NodeId)
 import qualified Empire.API.Data.Node              as Node
+import           Empire.API.Data.NodeMeta          (NodeMeta)
 import           Empire.API.Data.Port              (InPort (..), InPort (..), OutPort (..), Port (..), PortId (..))
 import qualified Empire.API.Data.Port              as Port
 import           Empire.API.Data.PortRef           (AnyPortRef (..), InPortRef (..), toAnyPortRef)
@@ -92,6 +94,17 @@ addNode node = do
     -- unrenderPending node
     zoom Global.graph $ modify (Graph.addNode node)
     zoom Global.uiRegistry $ registerNode node
+
+addDummyNode :: NodeMeta -> NodeId -> Command State ()
+addDummyNode meta nodeId = do
+    mayNode <- preuse $ Global.graph . Graph.nodes . ix nodeId
+    case mayNode of
+        Just _  -> return ()
+        Nothing -> do
+            let dummyNode = Node.Node nodeId "" (Node.ExpressionNode "") ports meta
+                ports = Map.fromList [(OutPortId All, Port (OutPortId All) "All" AnyType Port.NotConnected), (OutPortId Sefl, Port (InPortId Self) "self" AnyType Port.NotConnected)]]
+            addNode dummyNode
+
 
 registerNode :: Node -> Command UIRegistry.State ()
 registerNode node = do

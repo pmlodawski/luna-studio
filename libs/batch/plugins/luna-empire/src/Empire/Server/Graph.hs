@@ -104,7 +104,7 @@ handleAddNode content = do
         Left err -> logger Logger.error $ errorMessage <> err
         Right nodeId -> do
             Env.empireEnv .= newEmpireEnv
-            let update = Update.Update request Update.Ok
+            let update = Update.Update request $ AddNode.Result nodeId
             sendToBus Topic.addNodeUpdate update
             forM_ connectTo $ \srcNodeId -> do
                 let connectRequest = Connect.Request location srcNodeId All nodeId Self
