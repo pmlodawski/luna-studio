@@ -8,7 +8,7 @@ import           Data.ByteString                   (ByteString)
 import           Data.ByteString.Lazy              (fromStrict)
 import qualified Data.IntMap                       as IntMap
 import qualified Data.Map                          as Map
-import           Data.Maybe                        (fromMaybe)
+import           Data.Maybe                        (fromMaybe, isJust)
 import qualified Data.Text.Lazy                    as Text
 import           Prologue                          hiding (Item)
 
@@ -78,8 +78,9 @@ parseExpr expr = Expression expr
 
 handleAddNode :: ByteString -> StateT Env BusT ()
 handleAddNode content = do
-    let request  = Bin.decode . fromStrict $ content :: AddNode.Request
-        location = request ^. AddNode.location
+    let request   = Bin.decode . fromStrict $ content :: AddNode.Request
+        location  = request ^. AddNode.location
+        connectTo = request ^. AddNode.connectTo
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
     (result, newEmpireEnv) <- case request ^. AddNode.nodeType of
@@ -89,7 +90,7 @@ handleAddNode content = do
                 location
                 (Text.pack $ expression)
                 (request ^. AddNode.nodeMeta)
-            forM_ (request ^. AddNode.connectTo) $ \srcNodeId -> do
+            forM_ connectTo $ \srcNodeId -> do
                 let outPortRef = OutPortRef srcNodeId All
                     inPortRef  = InPortRef  nodeId    Self
                 Graph.connect location outPortRef inPortRef
@@ -101,10 +102,14 @@ handleAddNode content = do
       AddNode.InputNode _ _ -> return (Left "Input Nodes not yet supported", currentEmpireEnv)
     case result of
         Left err -> logger Logger.error $ errorMessage <> err
-        Right _ -> do
+        Right nodeId -> do
             Env.empireEnv .= newEmpireEnv
             let update = Update.Update request Update.Ok
             sendToBus Topic.addNodeUpdate update
+            forM_ connectTo $ \srcNodeId -> do
+                let connectRequest = Connect.Request location srcNodeId All nodeId Self
+                    connectUpdate  = Update.Update connectRequest Update.Ok
+                sendToBus Topic.connectUpdate update
             notifyCodeUpdate location
 
 handleRemoveNode :: ByteString -> StateT Env BusT ()
