@@ -56,15 +56,15 @@ import qualified Empire.API.Data.ValueType     as ValueType
 
 vtToColor AnyType = 0
 vtToColor (TypeIdent tn) = case tn of
-     "Int"      -> 1
-     "Bool"     -> 2
-     "Double"   -> 3
-     "String"   -> 4
-     "[Int]"    -> 5
-     "[Double]" -> 6
-     "[Bool]"   -> 7
-     "[String]" -> 8
-     _          -> 9 -- + hash tn `mod` 8
+     "Int"        -> 1
+     "Bool"       -> 2
+     "Double"     -> 3
+     "String"     -> 4
+     "[Int..]"    -> 5
+     "[Double..]" -> 6
+     "[Bool..]"   -> 7
+     "[String..]" -> 8
+     _            -> 9 -- + hash tn `mod` 8
 colorPort port = vtToColor $ port ^. Port.valueType
 
 
