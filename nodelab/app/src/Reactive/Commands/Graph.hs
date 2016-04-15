@@ -64,7 +64,7 @@ vtToColor (TypeIdent tn) = case tn of
      "[Double]" -> 6
      "[Bool]"   -> 7
      "[String]" -> 8
-     _          -> 9 + hash tn `mod` 8
+     _          -> 9 -- + hash tn `mod` 8
 colorPort port = vtToColor $ port ^. Port.valueType
 
 
