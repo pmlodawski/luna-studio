@@ -83,8 +83,12 @@ getPortState ref = do
                 Lit.Integer  i -> IntValue $ fromIntegral i
                 Lit.Rational r -> RationalValue r
                 Lit.Double   d -> DoubleValue   d
+            of' $ \(Cons (Lit.String s) _) -> case s of
+                "False" -> return . WithDefault . Constant . BoolValue $ False
+                "True"  -> return . WithDefault . Constant . BoolValue $ True
+                _       -> WithDefault . Expression <$> Print.printExpression ref
             of' $ \Blank   -> return NotConnected
-            of' $ \ANY     -> Print.printExpression ref >>= return . WithDefault . Expression
+            of' $ \ANY     -> WithDefault . Expression <$> Print.printExpression ref
 
 extractAppArgTypes :: ASTOp m => NodeRef -> m [ValueType]
 extractAppArgTypes ref = do
@@ -212,4 +216,4 @@ getNodeInputs nodeId = do
     let withInd  = zip nodeMays [0..]
         onlyExt  = catMaybes $ (\(n, i) -> (,) <$> n <*> Just i) <$> withInd
         conns    = flip fmap onlyExt $ \(n, i) -> (OutPortRef n All, InPortRef nodeId (Arg i))
-    return $ (maybeToList selfConnMay) ++ conns
+    return $ maybeToList selfConnMay ++ conns
