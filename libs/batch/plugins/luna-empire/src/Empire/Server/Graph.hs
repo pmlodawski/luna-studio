@@ -10,6 +10,7 @@ import qualified Data.IntMap                       as IntMap
 import qualified Data.Map                          as Map
 import           Data.Maybe                        (fromMaybe, isJust)
 import qualified Data.Text.Lazy                    as Text
+import           Data.List.Split                   (splitOneOf)
 import           Prologue                          hiding (Item)
 
 import           Empire.API.Data.DefaultValue      (Value (..))
@@ -42,6 +43,7 @@ import qualified Empire.Env                        as Env
 import           Empire.Server.Server              (errorMessage, sendToBus)
 import           Flowbox.Bus.BusT                  (BusT (..))
 import qualified Flowbox.System.Log.Logger         as Logger
+import qualified StdLibMock
 
 logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)
@@ -76,6 +78,9 @@ parseExpr ('o':'u':'t':' ':name) = Output $ Just name
 parseExpr "out" = Output Nothing
 parseExpr expr = Expression expr
 
+stdlibFunctions :: [String]
+stdlibFunctions = filter (not . elem '.') StdLibMock.symbolsNames
+
 handleAddNode :: ByteString -> StateT Env BusT ()
 handleAddNode content = do
     let request   = Bin.decode . fromStrict $ content :: AddNode.Request
@@ -100,9 +105,13 @@ handleAddNode content = do
             Env.empireEnv .= newEmpireEnv
             let update = Update.Update request $ AddNode.Result node
             sendToBus Topic.addNodeUpdate update
-            forM_ connectTo $ \srcNodeId -> do
-                let connectRequest = Connect.Request location srcNodeId All (node ^. Node.nodeId) Self
-                handleConnectReq connectRequest
+            case request ^. AddNode.nodeType of
+                AddNode.InputNode _ _ -> return ()
+                AddNode.ExpressionNode expr -> forM_ connectTo $ \srcNodeId -> do
+                        let exprCall = head $ splitOneOf " ." expr
+                            inPort = if exprCall `elem` stdlibFunctions then Arg 0 else Self
+                            connectRequest = Connect.Request location srcNodeId All (node ^. Node.nodeId) inPort
+                        handleConnectReq connectRequest
             notifyCodeUpdate location
 
 handleRemoveNode :: ByteString -> StateT Env BusT ()
