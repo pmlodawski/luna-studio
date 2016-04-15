@@ -183,7 +183,7 @@ buildPorts ref = zoom Graph.ast $ runASTOp $ do
     argPorts <- buildArgPorts ref
     tpRep    <- followTypeRep ref
     outState <- getPortState ref
-    return $ selfPort ++ argPorts ++ [Port (OutPortId All) "All" tpRep outState]
+    return $ selfPort ++ argPorts ++ [Port (OutPortId All) "Output" tpRep outState]
 
 buildConnections :: Command Graph [(OutPortRef, InPortRef)]
 buildConnections = do
