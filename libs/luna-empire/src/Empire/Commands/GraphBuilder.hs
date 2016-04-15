@@ -12,6 +12,7 @@ import qualified Data.IntMap                  as IntMap
 import           Data.Map                     (Map)
 import qualified Data.Map                     as Map
 import           Data.Maybe                   (catMaybes, fromMaybe, maybeToList)
+import qualified Data.List                    as List
 import qualified Data.Text.Lazy               as Text
 import           Data.Record                  (ANY (..), caseTest, of')
 import           Data.Layer_OLD.Cover_OLD (uncover, covered)
@@ -141,6 +142,7 @@ buildSelfPort' seenAcc nodeRef = do
     caseTest (uncover node) $ do
         of' $ \(Acc _ t) -> Builder.follow source t >>= buildSelfPort' True
         of' $ \(App t _) -> Builder.follow source t >>= buildSelfPort' seenAcc
+        of' $ \Blank     -> return Nothing
         of' $ \(Var _)   -> buildPort
         of' $ \ANY       -> if seenAcc then buildPort else return Nothing
 
@@ -152,27 +154,32 @@ followTypeRep ref = do
     tp <- Builder.follow source =<< Builder.follow (prop Type) ref
     getTypeRep tp
 
-getTypeString :: ASTOp m => Bool -> NodeRef -> m String
-getTypeString paren tp = do
+getTypeString :: ASTOp m => Bool -> Bool -> NodeRef -> m String
+getTypeString parenCons parenLam tp = do
     tpNode <- Builder.read tp
+    let parenIf cond expr = if cond then "(" <> expr <> ")" else expr
     caseTest (uncover tpNode) $ do
         of' $ \(Cons (Lit.String s) as) -> do
             args <- ASTBuilder.unpackArguments as
             case s of
                 "List" -> do
-                    reps <- mapM (getTypeString False) args
+                    reps <- mapM (getTypeString False False) args
                     return $ "[" <> concat reps <> "..]"
                 _ -> do
-                    reps <- mapM (getTypeString True) args
-                    let shouldParen = paren && (not . null $ reps)
-                    return $ if shouldParen then "(" else ""
-                          ++ unwords (s : reps)
-                          ++ if shouldParen then ")" else ""
+                    reps <- mapM (getTypeString True True) args
+                    let shouldParen = parenCons && (not . null $ reps)
+                    return $ parenIf shouldParen $ unwords (s : reps)
+        of' $ \(Lam as out) -> do
+            args   <- ASTBuilder.unpackArguments as
+            outRep <- getTypeString False True =<< Builder.follow source out
+            reps   <- mapM (getTypeString False True) args
+            return $ parenIf parenLam $ intercalate " -> " reps <> " => " <> outRep
+        of' $ \(Var (Lit.String n)) -> return $ List.delete '#' n
         of' $ \ANY -> return ""
 
 getTypeRep :: ASTOp m => NodeRef -> m ValueType
 getTypeRep tp = do
-    str <- getTypeString False tp
+    str <- getTypeString False False tp
     case str of
         "" -> return AnyType
         s  -> return $ TypeIdent s

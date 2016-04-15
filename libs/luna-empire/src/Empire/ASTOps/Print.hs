@@ -23,7 +23,7 @@ printExpression' suppresNodes paren nodeRef = do
     let displayFun funExpr args = do
         unpackedArgs <- ASTBuilder.unpackArguments args
         argsRep <- mapM (recur True) unpackedArgs
-        let dropTailBlanks = dropWhileEnd (== "_") argsRep
+        let dropTailBlanks = dropWhileEnd (\x -> x == "_" || x == "@") argsRep
         let shouldParen = paren && not (null args)
         case argsRep of
             a : as -> return $ (if shouldParen then "(" else "")
