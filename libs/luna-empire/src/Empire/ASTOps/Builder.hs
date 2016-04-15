@@ -14,14 +14,14 @@ import qualified Data.HMap.Lazy           as HMap
 import           Data.HMap.Lazy           (HTMap)
 import           Data.Maybe               (isJust, isNothing)
 
-import           Empire.ASTOp             (ASTOp)
-import           Empire.Empire            ((<?!>))
-import           Empire.ASTOps.Remove     (removeNode, performSafeRemoval)
-import           Empire.Data.AST          (ASTEdge, ASTNode, EdgeRef, NodeRef, UncoveredNode)
-import           Empire.Data.NodeMarker   (NodeMarker, nodeMarkerKey)
-import           Empire.API.Data.Node     (NodeId)
-import           Luna.Syntax.Term.Class_OLD (Acc (..), App (..), Blank (..), Match (..), Var (..))
-import qualified Luna.Syntax.Term.Lit     as Lit
+import           Empire.ASTOp               (ASTOp)
+import           Empire.Empire              ((<?!>))
+import           Empire.ASTOps.Remove       (removeNode, performSafeRemoval)
+import           Empire.Data.AST            (ASTEdge, ASTNode, EdgeRef, NodeRef, UncoveredNode)
+import           Empire.Data.NodeMarker     (NodeMarker, nodeMarkerKey)
+import           Empire.API.Data.Node       (NodeId)
+import           Old.Luna.Syntax.Term.Class (Acc (..), App (..), Blank (..), Match (..), Var (..))
+import qualified Old.Luna.Syntax.Term.Expr.Lit   as Lit
 
 import           Luna.Syntax.Term.Function.Argument (Arg)
 import qualified Luna.Syntax.Term.Function.Argument as Arg

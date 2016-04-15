@@ -20,9 +20,9 @@ import           Data.Graph.Builders                    (Connectible)
 import           Luna.Syntax.Model.Network.Builder.Term (TermBuilder_OLD, NetLayers, NetworkBuilderT, runNetworkBuilderT)
 import           Luna.Syntax.Model.Network.Builder.Node (TermNode)
 import           Luna.Syntax.Model.Network.Term         (Raw)
-import           Luna.Syntax.Term.Class_OLD             (Acc, App, Blank, Match, Var, Cons, Unify, Curry)
+import           Old.Luna.Syntax.Term.Class             (Acc, App, Blank, Match, Var, Cons, Unify, Curry)
 import           Luna.Syntax.Model.Layer                ((:<:))
-import qualified Luna.Syntax.Term.Lit                   as Lit
+import qualified Old.Luna.Syntax.Term.Expr.Lit               as Lit
 import           Type.Inference
 import           Luna.Syntax.Model.Network.Builder       (Reconnectible)
 import qualified Luna.Syntax.Model.Network.Builder.Class as Builder

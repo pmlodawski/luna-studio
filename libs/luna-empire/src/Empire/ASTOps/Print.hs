@@ -11,15 +11,27 @@ import           Empire.ASTOp             (ASTOp)
 import           Empire.Data.AST          (NodeRef)
 import qualified Empire.ASTOps.Builder    as ASTBuilder
 
-import           Luna.Syntax.Term.Class_OLD    (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..), Curry (..))
-import qualified Luna.Syntax.Term.Lit     as Lit
+import           Old.Luna.Syntax.Term.Class   (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..), Curry (..))
+import qualified Old.Luna.Syntax.Term.Expr.Lit     as Lit
 
 import qualified Luna.Syntax.Model.Network.Builder as Builder
 
-printExpression' :: ASTOp m => Bool -> Bool -> Bool -> NodeRef -> m String
-printExpression' suppresNodes expandApp paren nodeRef = do
-    let recur = printExpression' suppresNodes expandApp
+printExpression' :: ASTOp m => Bool -> Bool -> NodeRef -> m String
+printExpression' suppresNodes paren nodeRef = do
+    let recur = printExpression' suppresNodes
     node <- Builder.read nodeRef
+    let displayFun funExpr args = do
+        unpackedArgs <- ASTBuilder.unpackArguments args
+        argsRep <- mapM (recur True) unpackedArgs
+        let dropTailBlanks = dropWhileEnd (== "_") argsRep
+        let shouldParen = paren && not (null args)
+        case argsRep of
+            a : as -> return $ (if shouldParen then "(" else "")
+                               ++ funExpr
+                               ++ " "
+                               ++ unwords dropTailBlanks
+                               ++ (if shouldParen then ")" else "")
+            _ -> return funExpr
     caseTest (uncover node) $ do
         of' $ \(Match l r) -> do
             leftRep  <- Builder.follow source l >>= recur paren
@@ -35,32 +47,11 @@ printExpression' suppresNodes expandApp paren nodeRef = do
                 else return $ targetRep ++ "." ++ unwrap n
         of' $ \(App f args) -> do
             funExpr <- Builder.follow source f >>= recur True
-            unpackedArgs <- ASTBuilder.unpackArguments args
-            argsRep <- mapM (recur True) unpackedArgs
-            let dropTailBlanks = dropWhileEnd (== "_") argsRep
-            let shouldParen = paren && not (null args)
-            case (expandApp, argsRep) of
-                (True, a : as) -> return $ (if shouldParen then "(" else "")
-                                         ++ funExpr
-                                         ++ " "
-                                         ++ unwords dropTailBlanks
-                                         ++ (if shouldParen then ")" else "")
-                _ -> return funExpr
+            displayFun funExpr args
         of' $ \(Curry f args) -> do
             funExpr <- Builder.follow source f >>= recur True
-            unpackedArgs <- ASTBuilder.unpackArguments args
-            argsRep <- mapM (recur True) unpackedArgs
-            let dropTailBlanks = dropWhileEnd (== "_") argsRep
-            let shouldParen = paren && not (null args)
-            case (expandApp, argsRep) of
-                (True, a : as) -> return $ (if shouldParen then "(" else "")
-                                         ++ "@"
-                                         ++ funExpr
-                                         ++ " "
-                                         ++ unwords dropTailBlanks
-                                         ++ (if shouldParen then ")" else "")
-                _ -> return $ "@" <> funExpr
-        of' $ \Blank -> return "_"
+            displayFun ("@" <> funExpr) args
+        of' $ \Blank -> return "@"
         of' $ \(Lit.Number _ s) -> return $ case s of
             Lit.Rational r -> show r
             Lit.Integer  i -> show i
@@ -70,7 +61,7 @@ printExpression' suppresNodes expandApp paren nodeRef = do
         of' $ \ANY -> return ""
 
 printExpression :: ASTOp m => NodeRef -> m String
-printExpression = printExpression' False True False
+printExpression = printExpression' False False
 
 printNodeExpression :: ASTOp m => NodeRef -> m String
-printNodeExpression = printExpression' True False False
+printNodeExpression = printExpression' True False

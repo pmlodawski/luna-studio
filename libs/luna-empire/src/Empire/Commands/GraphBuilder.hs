@@ -38,8 +38,8 @@ import qualified Empire.Commands.AST          as AST
 import qualified Empire.Commands.GraphUtils   as GraphUtils
 import           Empire.Empire
 
-import           Luna.Syntax.Term.Class_OLD   (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..), Lam (..))
-import qualified Luna.Syntax.Term.Lit         as Lit
+import           Old.Luna.Syntax.Term.Class       (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..), Lam (..))
+import qualified Old.Luna.Syntax.Term.Expr.Lit         as Lit
 import qualified Luna.Syntax.Term.Function    as Function
 
 import qualified Luna.Syntax.Model.Network.Builder  as Builder

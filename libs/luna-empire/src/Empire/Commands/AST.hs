@@ -33,8 +33,8 @@ import           Luna.Pretty.GraphViz         (renderAndOpen)
 
 import           Luna.Syntax.Model.Network.Builder (Meta (..), Type (..), TCData (..), tcErrors)
 import qualified Luna.Syntax.Model.Network.Builder as Builder
-import           Luna.Syntax.Term.Class_OLD        (Cons (..), Unify (..), Var (..), Acc (..), App (..))
-import qualified Luna.Syntax.Term.Lit              as Lit
+import           Old.Luna.Syntax.Term.Class        (Cons (..), Unify (..), Var (..), Acc (..), App (..))
+import qualified Old.Luna.Syntax.Term.Expr.Lit              as Lit
 
 import qualified Luna.Compilation.Pass.Interpreter.Layer as Interpreter
 import           Luna.Compilation.Pass.Interpreter.Layer (InterpreterData (..))
