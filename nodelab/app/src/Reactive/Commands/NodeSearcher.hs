@@ -101,7 +101,7 @@ scopedData = do
         Just tn -> do
             let (LunaModule gf) = globalFunctions completeData
                 (LunaModule items) = completeData
-                tn' = if Text.isPrefixOf "List" (Text.pack tn) then "List" else (Text.pack tn)
+                tn' = if Text.isPrefixOf "[" (Text.pack tn) then "List" else (Text.pack tn)
                 mayScope = items ^? ix tn' . _Module
                 scope = fromMaybe (LunaModule mempty) mayScope
                 (LunaModule scopefuns) = globalFunctions scope
