@@ -81,6 +81,12 @@ parseExpr expr = Expression expr
 stdlibFunctions :: [String]
 stdlibFunctions = filter (not . elem '.') StdLibMock.symbolsNames
 
+forceTC :: GraphLocation -> StateT Env BusT ()
+forceTC location = do
+    currentEmpireEnv <- use Env.empireEnv
+    empireNotifEnv   <- use Env.empireNotif
+    void $ liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.typecheck location
+
 handleAddNode :: ByteString -> StateT Env BusT ()
 handleAddNode content = do
     let request   = Bin.decode . fromStrict $ content :: AddNode.Request
@@ -112,7 +118,8 @@ handleAddNode content = do
                         let exprCall = head $ splitOneOf " ." expr
                             inPort = if exprCall `elem` stdlibFunctions then Arg 0 else Self
                             connectRequest = Connect.Request location srcNodeId All (node ^. Node.nodeId) inPort
-                        handleConnectReq connectRequest
+                        handleConnectReq False connectRequest
+                        forceTC location
             notifyCodeUpdate location
 
 handleRemoveNode :: ByteString -> StateT Env BusT ()
@@ -168,14 +175,15 @@ handleRenameNode content = do
             notifyCodeUpdate location
 
 handleConnect :: ByteString -> StateT Env BusT ()
-handleConnect content = handleConnectReq $ Bin.decode . fromStrict $ content
+handleConnect content = handleConnectReq True $ Bin.decode . fromStrict $ content
 
-handleConnectReq :: Connect.Request -> StateT Env BusT ()
-handleConnectReq request = do
+handleConnectReq :: Bool -> Connect.Request -> StateT Env BusT ()
+handleConnectReq doTC request = do
     let location = request ^. Connect.location
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.connect
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.connectCondTC
+        doTC
         location
         (request ^. Connect.src)
         (request ^. Connect.dst)
