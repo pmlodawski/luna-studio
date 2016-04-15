@@ -48,20 +48,23 @@ import           Empire.API.Data.PortRef       (AnyPortRef(..), InPortRef(..), O
 import qualified Empire.API.Data.PortRef       as PortRef
 import           Empire.API.Data.Connection    (Connection, ConnectionId)
 import qualified Empire.API.Data.Connection    as Connection
-import           Empire.API.Data.ValueType     (ValueType)
+import           Empire.API.Data.ValueType     (ValueType (..))
 import           Empire.API.Data.Port          (PortId(..))
 import qualified Empire.API.Data.Port          as Port
 import qualified Empire.API.Data.ValueType     as ValueType
 
 
-vtToColor ValueType.AnyType = 0
-vtToColor vt = 1 + case vt ^. ValueType.toEnum of
-     ValueType.DiscreteNumber -> 0
-     ValueType.ContinuousNumber -> 1
-     ValueType.String -> 2
-     ValueType.Bool -> 3
-     ValueType.Other -> hash vt `mod` 16
-
+vtToColor AnyType = 0
+vtToColor (TypeIdent tn) = case tn of
+     "Int"      -> 1
+     "Bool"     -> 2
+     "Double"   -> 3
+     "String"   -> 4
+     "[Int]"    -> 5
+     "[Double]" -> 6
+     "[Bool]"   -> 7
+     "[String]" -> 8
+     _          -> 9 + hash tn `mod` 8
 colorPort port = vtToColor $ port ^. Port.valueType
 
 
