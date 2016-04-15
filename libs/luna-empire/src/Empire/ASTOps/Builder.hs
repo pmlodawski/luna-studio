@@ -143,25 +143,22 @@ buildAccessors = foldM $ \t n -> Builder.acc (fromString n) t >>= flip Builder.a
 makeAccessor :: ASTOp m => NodeRef -> NodeRef -> m NodeRef
 makeAccessor target naming = do
     (oldTarget, names) <- dumpAccessors naming
-    print $ (oldTarget, names)
+    when (null names) $ throwError "Requested target doesn't have a self port"
     args <- dumpArguments naming
-    print args
     acc <- buildAccessors target names
-    applied <- if null args then return acc else reapply acc args
-    return applied
+    if null args then return acc else reapply acc args
 
 unAcc :: ASTOp m => NodeRef -> m NodeRef
 unAcc ref = do
     (target, names) <- dumpAccessors ref
     args            <- dumpArguments ref
-    if isNothing target then throwError "Self port not connected" else return ()
+    when (isNothing target) $ throwError "Self port not connected"
     case names of
         []     -> throwError "Self port not connected"
         n : ns -> do
             v   <- Builder.var (fromString n)
             acc <- buildAccessors v ns
-            applied <- if null args then return acc else reapply acc args
-            return applied
+            if null args then return acc else reapply acc args
 
 makeNodeRep :: forall m. ASTOp m => NodeMarker -> String -> NodeRef -> m NodeRef
 makeNodeRep marker name node = do
