@@ -34,4 +34,4 @@ registerNode expr = do
             []     -> Nothing
             [wf]   -> Just $ wf ^. widget . UINode.nodeId
             (_:_) -> Nothing
-    performIO $ BatchCmd.addNode workspace expr nodeMeta connectTo 42
+    performIO $ BatchCmd.addNode workspace expr nodeMeta connectTo

@@ -77,7 +77,7 @@ testBadTopic = do
 testAddNode :: IO ()
 testAddNode = do
     endPoints <- EP.clientFromConfig <$> Config.load
-    let content = toStrict . Bin.encode $ AddNode.Request (gl 0 0) (AddNode.ExpressionNode "expres") (NodeMeta.NodeMeta (1.2, 3.4)) Nothing 7
+    let content = toStrict . Bin.encode $ AddNode.Request (gl 0 0) (AddNode.ExpressionNode "expres") (NodeMeta.NodeMeta (1.2, 3.4)) Nothing
     void $ Bus.runBus endPoints $ do
         Bus.send Flag.Enable $ Message.Message Topic.addNodeRequest content
 
@@ -93,7 +93,7 @@ testNodeUpdate = do
     endPoints <- EP.clientFromConfig <$> Config.load
     void $ Bus.runBus endPoints $ do
         let meta    = NodeMeta.NodeMeta (20.0, 30.0)
-            request = AddNode.Request (gl 0 0) (AddNode.ExpressionNode "dupa123") meta Nothing 1235
+            request = AddNode.Request (gl 0 0) (AddNode.ExpressionNode "dupa123") meta Nothing
             node    = Node.Node 123 "node0" (Node.ExpressionNode "dupa123") mempty meta
             update  = Update.Update request Update.Ok
         Bus.send Flag.Enable $ Message.Message Topic.addNodeUpdate $ toStrict $ Bin.encode update

@@ -18,7 +18,6 @@ data Request = Request { _location  :: GraphLocation
                        , _nodeType  :: NodeType
                        , _nodeMeta  :: NodeMeta
                        , _connectTo :: Maybe NodeId
-                       , _tag       :: Int
                        } deriving (Generic, Show, Eq)
 
 data Result = Result { _nodeId :: NodeId

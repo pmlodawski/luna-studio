@@ -60,8 +60,7 @@ main = do
         expr      <- args `getArgOrExit` (argument "expression")
         x         <- args `getArgOrExit` (argument "x")
         y         <- args `getArgOrExit` (argument "y")
-        tag       <- args `getArgOrExit` (argument "tag")
-        addNode endPoints (toGraphLocation pid lid) expr (read x) (read y) (read tag)
+        addNode endPoints (toGraphLocation pid lid) expr (read x) (read y)
     when (args `isPresent` (command "removeNode")) $ do
         pid       <- args `getArgOrExit` (argument "pid")
         lid       <- args `getArgOrExit` (argument "lid")
@@ -117,9 +116,9 @@ main = do
         lid       <- args `getArgOrExit` (argument "lid")
         typecheck endPoints $ toGraphLocation pid lid
 
-addNode :: EP.BusEndPoints -> GraphLocation -> String -> Double -> Double -> Int -> IO ()
-addNode endPoints graphLocation expression x y tag = do
-    let content = toStrict . Bin.encode $ AddNode.Request graphLocation (AddNode.ExpressionNode expression) (NodeMeta.NodeMeta (x, y)) Nothing tag
+addNode :: EP.BusEndPoints -> GraphLocation -> String -> Double -> Double -> IO ()
+addNode endPoints graphLocation expression x y = do
+    let content = toStrict . Bin.encode $ AddNode.Request graphLocation (AddNode.ExpressionNode expression) (NodeMeta.NodeMeta (x, y)) Nothing
     void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.addNodeRequest content
 
 removeNode :: EP.BusEndPoints -> GraphLocation -> NodeId -> IO ()
