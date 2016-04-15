@@ -176,8 +176,9 @@ displayPorts id node = do
     forM_ newPorts $ \p -> UICmd.register id p def
     forM_ (node ^. Node.ports) $ \p -> makePortControl node outPortGroupId groupId (node ^. Node.nodeId) p
     forM_ (node ^. Node.ports) $ \p -> case p ^. Port.portId of
-        InPortId  _ -> makePortLabel inLabelsGroupId p
-        OutPortId _ -> makePortLabel outLabelsGroupId p
+        InPortId  Self -> return ()
+        InPortId  _    -> makePortLabel inLabelsGroupId p
+        OutPortId _    -> makePortLabel outLabelsGroupId p
 
 makePortLabel :: WidgetId -> Port -> Command UIRegistry.State ()
 makePortLabel parent port = do
