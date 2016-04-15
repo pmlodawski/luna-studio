@@ -206,7 +206,7 @@ instance CompositeWidget Model.Node where
         let outPortControlGroup  = Group.create
         UICmd.register id outPortControlGroup Style.controlsLayout
 
-        let inLabelsGroup  = Group.create & Group.position .~ (Vector2 (-200) (-30))
+        let inLabelsGroup  = Group.create & Group.position .~ (Vector2 (-400) (-30))
                                           & Group.visible .~ False
         UICmd.register id inLabelsGroup Style.inLabelsLayout
 

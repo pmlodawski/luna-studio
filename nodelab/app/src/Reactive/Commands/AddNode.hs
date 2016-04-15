@@ -184,7 +184,7 @@ makePortLabel parent port = do
     let align = case port ^. Port.portId of
             InPortId  _ -> Label.Right
             OutPortId _ -> Label.Left
-        label = Label.create (Vector2 160 15) text & Label.alignment .~ align
+        label = Label.create (Vector2 360 15) text & Label.alignment .~ align
         text  = (Text.pack $ port ^. Port.name) <> " :: " <> portType
         portType = case port ^. Port.valueType of
             ValueType.AnyType     -> "*"
