@@ -34,9 +34,9 @@ expandedGroupStyle = def & Group.background ?~ Color 0.15 0.15 0.15 0.8
 expandedGroupLayout = Layout.verticalLayoutHandler 5.0
 
 valueLabel = Label.Label position size align  where
-    position = Vector2 0 0
+    position = Vector2 (-25.0) 0
     size     = Vector2 100.0 20.0
-    align    = Label.Left
+    align    = Label.Center
 
 
 
