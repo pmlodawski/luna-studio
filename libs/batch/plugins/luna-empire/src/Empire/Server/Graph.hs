@@ -8,7 +8,7 @@ import           Data.ByteString                   (ByteString)
 import           Data.ByteString.Lazy              (fromStrict)
 import qualified Data.IntMap                       as IntMap
 import qualified Data.Map                          as Map
-import           Data.Maybe                        (fromMaybe, isJust)
+import           Data.Maybe                        (fromMaybe, isJust, isNothing)
 import qualified Data.Text.Lazy                    as Text
 import           Data.List.Split                   (splitOneOf)
 import           Prologue                          hiding (Item)
@@ -90,7 +90,8 @@ handleAddNode content = do
     empireNotifEnv   <- use Env.empireNotif
     (result, newEmpireEnv) <- case request ^. AddNode.nodeType of
       AddNode.ExpressionNode expression -> case parseExpr expression of
-        Expression expression -> liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.addNode
+        Expression expression -> liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.addNodeCondTC
+            (isNothing connectTo)
             location
             (Text.pack $ expression)
             (request ^. AddNode.nodeMeta)

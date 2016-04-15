@@ -1,5 +1,6 @@
 module Empire.Commands.Graph
     ( addNode
+    , addNodeCondTC
     , removeNodes
     , updateNodeMeta
     , connect
@@ -48,24 +49,30 @@ import qualified Empire.Commands.GraphUtils   as GraphUtils
 import qualified Empire.Commands.GraphBuilder as GraphBuilder
 import qualified Empire.Commands.Publisher    as Publisher
 
+addNodeCondTC :: Bool -> GraphLocation -> Text -> NodeMeta -> Empire Node
+addNodeCondTC doTC = if doTC then addNode else addNodeSkipTC
+
 addNode :: GraphLocation -> Text -> NodeMeta -> Empire Node
-addNode loc expr meta = withGraph loc $ do
+addNode loc expr meta = withTC loc False $ addNodeNoTC loc expr meta
+
+addNodeSkipTC :: GraphLocation -> Text -> NodeMeta -> Empire Node
+addNodeSkipTC loc expr meta = withGraph loc $ addNodeNoTC loc expr meta
+
+addNodeNoTC :: GraphLocation -> Text -> NodeMeta -> Command Graph Node
+addNodeNoTC loc expr meta = do
     newNodeId <- gets Graph.nextNodeId
     refNode <- zoom Graph.ast $ AST.addNode newNodeId ("node" ++ show newNodeId) (Text.unpack expr)
     zoom Graph.ast $ AST.writeMeta refNode meta
     Graph.nodeMapping . at newNodeId ?= refNode
     node <- GraphBuilder.buildNode newNodeId
     Publisher.notifyNodeUpdate loc node
-    runTC loc False
     return node
 
 removeNodes :: GraphLocation -> [NodeId] -> Empire ()
-removeNodes loc nodeIds = withGraph loc $ do
-    forM_ nodeIds removeNode
-    runTC loc False
+removeNodes loc nodeIds = withTC loc False $ forM_ nodeIds removeNodeNoTC
 
-removeNode :: NodeId -> Command Graph ()
-removeNode nodeId = do
+removeNodeNoTC :: NodeId -> Command Graph ()
+removeNodeNoTC nodeId = do
     astRef <- GraphUtils.getASTPointer nodeId
     obsoleteEdges <- getOutEdges nodeId
     mapM_ disconnectPort obsoleteEdges
@@ -78,15 +85,14 @@ updateNodeMeta loc nodeId meta = withGraph loc $ do
     zoom Graph.ast $ AST.writeMeta ref meta
 
 connect :: GraphLocation -> OutPortRef -> InPortRef -> Empire ()
-connect loc (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) = withGraph loc $ do
+connect loc (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) = withTC loc False $ do
     case dstPort of
         Self    -> makeAcc srcNodeId dstNodeId
         Arg num -> makeApp srcNodeId dstNodeId num
-    runTC loc False
 connect _ _ _ = throwError "Source port should be All"
 
 setDefaultValue :: GraphLocation -> AnyPortRef -> PortDefault -> Empire ()
-setDefaultValue loc portRef val = withGraph loc $ do
+setDefaultValue loc portRef val = withTC loc False $ do
     parsed <- zoom Graph.ast $ AST.addDefault val
     (nodeId, newRef) <- case portRef of
         InPortRef' (InPortRef nodeId port) -> do
@@ -97,12 +103,9 @@ setDefaultValue loc portRef val = withGraph loc $ do
             return (nodeId, newRef)
         OutPortRef' (OutPortRef nodeId _) -> return (nodeId, parsed)
     GraphUtils.rewireNode nodeId newRef
-    runTC loc False
 
 disconnect :: GraphLocation -> InPortRef -> Empire ()
-disconnect loc port@(InPortRef dstNodeId dstPort) = withGraph loc $ do
-    disconnectPort port
-    runTC loc False
+disconnect loc port@(InPortRef dstNodeId dstPort) = withTC loc False $ disconnectPort port
 
 getCode :: GraphLocation -> Empire String
 getCode loc = withGraph loc $ do
@@ -114,16 +117,12 @@ getCode loc = withGraph loc $ do
     return $ unlines lines
 
 getGraph :: GraphLocation -> Empire APIGraph.Graph
-getGraph loc = withGraph loc $ do
-    g <- GraphBuilder.buildGraph
-    runTC loc True
-    return g
+getGraph loc = withTC loc True $ GraphBuilder.buildGraph
 
 renameNode :: GraphLocation -> NodeId -> Text -> Empire ()
-renameNode loc nid name = withGraph loc $ do
+renameNode loc nid name = withTC loc False $ do
     vref <- GraphUtils.getASTVar nid
     zoom Graph.ast $ AST.renameVar vref (Text.unpack name)
-    runTC loc False
 
 dumpGraphViz :: GraphLocation -> Empire ()
 dumpGraphViz loc = withGraph loc $ do
@@ -142,6 +141,12 @@ runTC loc flush = do
 
 printNodeLine :: NodeId -> Command Graph String
 printNodeLine nodeId = GraphUtils.getASTPointer nodeId >>= (zoom Graph.ast . AST.printExpression)
+
+withTC :: GraphLocation -> Bool -> Command Graph a -> Empire a
+withTC loc flush cmd = withGraph loc $ do
+    res <- cmd
+    runTC loc flush
+    return res
 
 withGraph :: GraphLocation -> Command Graph a -> Empire a
 withGraph (GraphLocation pid lid _) = withLibrary pid lid . zoom Library.body
