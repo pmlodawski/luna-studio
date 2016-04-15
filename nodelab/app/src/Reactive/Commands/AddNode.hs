@@ -180,6 +180,13 @@ displayPorts id node = do
         InPortId  _    -> makePortLabel inLabelsGroupId p
         OutPortId _    -> makePortLabel outLabelsGroupId p
 
+vtToText :: Getter ValueType Text
+vtToText = to $ \v -> case v of
+    ValueType.AnyType     -> "*"
+    ValueType.TypeIdent a -> Text.pack a
+
+
+
 makePortLabel :: WidgetId -> Port -> Command UIRegistry.State ()
 makePortLabel parent port = do
     let align = case port ^. Port.portId of
@@ -187,9 +194,7 @@ makePortLabel parent port = do
             OutPortId _ -> Label.Left
         label = Label.create (Vector2 360 15) text & Label.alignment .~ align
         text  = (Text.pack $ port ^. Port.name) <> " :: " <> portType
-        portType = case port ^. Port.valueType of
-            ValueType.AnyType     -> "*"
-            ValueType.TypeIdent a -> Text.pack a
+        portType = port ^. Port.valueType . vtToText
     UICmd.register_ parent label def
 
 nodeHandlers :: Node -> HTMap
@@ -257,7 +262,7 @@ makeInPortControl parent portRef port = case port ^. Port.state of
     Port.NotConnected    -> do
         case port ^. Port.valueType . ValueType.toEnum of
             ValueType.Other -> do
-                let widget = Label.create (Style.portControlSize & x -~ Style.setLabelOffsetX) (Text.pack $ (port ^. Port.name) <> " :: " <> (show $ port ^. Port.valueType) )
+                let widget = Label.create (Style.portControlSize & x -~ Style.setLabelOffsetX) ((Text.pack $ port ^. Port.name) <> " :: " <> (port ^. Port.valueType . vtToText) )
                            & Label.position . x .~ Style.setLabelOffsetX
                 UICmd.register_ parent widget mempty
             otherwise -> do
