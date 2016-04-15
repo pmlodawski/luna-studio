@@ -36,10 +36,12 @@ keyDownHandler _     _ _ = const $ return ()
 applyChanges :: WidgetId -> Command Global.State ()
 applyChanges id = do
     jsState <- use $ Global.jsState
-    let value = lazyTextFromJSString $ getValue' jsState id
-    inRegistry $ UICmd.update_ id $ (Model.isEditing .~ False)
-                                  . (Model.value     .~ value)
-    triggerValueChanged value id
+    wasEditing <- inRegistry $ UICmd.get id Model.isEditing
+    when (wasEditing) $ do
+        let value = lazyTextFromJSString $ getValue' jsState id
+        inRegistry $ UICmd.update_ id $ (Model.isEditing .~ False)
+                                      . (Model.value     .~ value)
+        triggerValueChanged value id
 
 abortChanges :: WidgetId -> Command Global.State ()
 abortChanges id = do
