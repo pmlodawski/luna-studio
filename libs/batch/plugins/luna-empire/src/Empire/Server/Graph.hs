@@ -86,28 +86,29 @@ handleAddNode content = do
     (result, newEmpireEnv) <- case request ^. AddNode.nodeType of
       AddNode.ExpressionNode expression -> case parseExpr expression of
         Expression expression -> liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ do
-            nodeId <- Graph.addNode
+            node <- Graph.addNode
                 location
                 (Text.pack $ expression)
                 (request ^. AddNode.nodeMeta)
             forM_ connectTo $ \srcNodeId -> do
-                let outPortRef = OutPortRef srcNodeId All
+                let nodeId     = node ^. Node.nodeId
+                    outPortRef = OutPortRef srcNodeId All
                     inPortRef  = InPortRef  nodeId    Self
                 Graph.connect location outPortRef inPortRef
-            return nodeId
-        Function name -> return (Right 10, currentEmpireEnv)
-        Module   name -> return (Right 10, currentEmpireEnv)
-        Input    name -> return (Right 10, currentEmpireEnv)
-        Output   name -> return (Right 10, currentEmpireEnv)
+            return node
+        Function name -> return (Left "Function Nodes not yet supported", currentEmpireEnv)
+        Module   name -> return (Left "Module Nodes not yet supported",   currentEmpireEnv)
+        Input    name -> return (Left "Input Nodes not yet supported",    currentEmpireEnv)
+        Output   name -> return (Left "Output Nodes not yet supported",   currentEmpireEnv)
       AddNode.InputNode _ _ -> return (Left "Input Nodes not yet supported", currentEmpireEnv)
     case result of
         Left err -> logger Logger.error $ errorMessage <> err
-        Right nodeId -> do
+        Right node -> do
             Env.empireEnv .= newEmpireEnv
-            let update = Update.Update request $ AddNode.Result nodeId
+            let update = Update.Update request $ AddNode.Result node
             sendToBus Topic.addNodeUpdate update
             forM_ connectTo $ \srcNodeId -> do
-                let connectRequest = Connect.Request location srcNodeId All nodeId Self
+                let connectRequest = Connect.Request location srcNodeId All (node ^. Node.nodeId) Self
                     connectUpdate  = Update.Update connectRequest Update.Ok
                 sendToBus Topic.connectUpdate connectUpdate
             notifyCodeUpdate location

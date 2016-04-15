@@ -96,15 +96,12 @@ addNode node = do
     widgetId <- zoom Global.uiRegistry $ registerNode node
     Node.selectNode' Node.performSelect widgetId
 
-addDummyNode :: NodeMeta -> NodeId -> Command State ()
-addDummyNode meta nodeId = do
-    mayNode <- preuse $ Global.graph . Graph.nodes . ix nodeId
+addDummyNode :: Node -> Command State ()
+addDummyNode dummyNode = do
+    mayNode <- preuse $ Global.graph . Graph.nodes . ix (dummyNode ^. Node.nodeId)
     case mayNode of
         Just _  -> return ()
-        Nothing -> do
-            let dummyNode = Node.Node nodeId "" (Node.ExpressionNode "") ports meta
-                ports = Map.fromList [(OutPortId All, Port (OutPortId All) "All" AnyType Port.NotConnected), (InPortId Self, Port (InPortId Self) "self" AnyType Port.NotConnected)]
-            addNode dummyNode
+        Nothing -> addNode dummyNode
 
 
 registerNode :: Node -> Command UIRegistry.State WidgetId

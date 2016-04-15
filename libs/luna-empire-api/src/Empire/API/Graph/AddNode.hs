@@ -20,7 +20,7 @@ data Request = Request { _location  :: GraphLocation
                        , _connectTo :: Maybe NodeId
                        } deriving (Generic, Show, Eq)
 
-data Result = Result { _nodeId :: NodeId
+data Result = Result { _node :: Node
                      } deriving (Generic, Show, Eq)
 
 type Update = Update.Update Request Result

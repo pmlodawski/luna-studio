@@ -77,7 +77,7 @@ toAction (Event.Batch ev) = Just $ case ev of
 
     NodeAdded response -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (response ^. Update.request . AddNode.location)
-        when shouldProcess $ addDummyNode (response ^. Update.request . AddNode.nodeMeta) (response ^. Update.result . AddNode.nodeId)
+        when shouldProcess $ addDummyNode (response ^. Update.result . AddNode.node)
 
     NodeUpdated response -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (response ^. NodeUpdate.location)

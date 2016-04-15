@@ -48,7 +48,7 @@ import qualified Empire.Commands.GraphUtils   as GraphUtils
 import qualified Empire.Commands.GraphBuilder as GraphBuilder
 import qualified Empire.Commands.Publisher    as Publisher
 
-addNode :: GraphLocation -> Text -> NodeMeta -> Empire NodeId
+addNode :: GraphLocation -> Text -> NodeMeta -> Empire Node
 addNode loc expr meta = withGraph loc $ do
     newNodeId <- gets Graph.nextNodeId
     refNode <- zoom Graph.ast $ AST.addNode newNodeId ("node" ++ show newNodeId) (Text.unpack expr)
@@ -57,7 +57,7 @@ addNode loc expr meta = withGraph loc $ do
     node <- GraphBuilder.buildNode newNodeId
     Publisher.notifyNodeUpdate loc node
     runTC loc False
-    return newNodeId
+    return node
 
 removeNodes :: GraphLocation -> [NodeId] -> Empire ()
 removeNodes loc nodeIds = withGraph loc $ do
