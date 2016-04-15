@@ -152,19 +152,27 @@ followTypeRep ref = do
     tp <- Builder.follow source =<< Builder.follow (prop Type) ref
     getTypeRep tp
 
-getTypeString :: ASTOp m => NodeRef -> m String
-getTypeString tp = do
+getTypeString :: ASTOp m => Bool -> NodeRef -> m String
+getTypeString paren tp = do
     tpNode <- Builder.read tp
     caseTest (uncover tpNode) $ do
         of' $ \(Cons (Lit.String s) as) -> do
             args <- ASTBuilder.unpackArguments as
-            reps <- mapM getTypeString args
-            return $ s ++ concat reps
+            case s of
+                "List" -> do
+                    reps <- mapM (getTypeString False) args
+                    return $ "[" <> concat reps <> "..]"
+                _ -> do
+                    reps <- mapM (getTypeString True) args
+                    let shouldParen = paren && (not . null $ reps)
+                    return $ if shouldParen then "(" else ""
+                          ++ unwords (s : reps)
+                          ++ if shouldParen then ")" else ""
         of' $ \ANY -> return ""
 
 getTypeRep :: ASTOp m => NodeRef -> m ValueType
 getTypeRep tp = do
-    str <- getTypeString tp
+    str <- getTypeString False tp
     case str of
         "" -> return AnyType
         s  -> return $ TypeIdent s
