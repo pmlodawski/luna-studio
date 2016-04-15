@@ -31,6 +31,7 @@ selectAll = do
     widgets <- allNodes
     let widgetIds = (^. objectId) <$> widgets
     forM_ widgetIds $ (flip UICmd.update) (NodeModel.isSelected .~ True)
+    focusSelectedNode
 
 
 selectedNodes :: Command UIRegistry.State [WidgetFile NodeModel.Node]
