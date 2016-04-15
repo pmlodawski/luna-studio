@@ -85,17 +85,10 @@ handleAddNode content = do
     empireNotifEnv   <- use Env.empireNotif
     (result, newEmpireEnv) <- case request ^. AddNode.nodeType of
       AddNode.ExpressionNode expression -> case parseExpr expression of
-        Expression expression -> liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ do
-            node <- Graph.addNode
-                location
-                (Text.pack $ expression)
-                (request ^. AddNode.nodeMeta)
-            forM_ connectTo $ \srcNodeId -> do
-                let nodeId     = node ^. Node.nodeId
-                    outPortRef = OutPortRef srcNodeId All
-                    inPortRef  = InPortRef  nodeId    Self
-                Graph.connect location outPortRef inPortRef
-            return node
+        Expression expression -> liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.addNode
+            location
+            (Text.pack $ expression)
+            (request ^. AddNode.nodeMeta)
         Function name -> return (Left "Function Nodes not yet supported", currentEmpireEnv)
         Module   name -> return (Left "Module Nodes not yet supported",   currentEmpireEnv)
         Input    name -> return (Left "Input Nodes not yet supported",    currentEmpireEnv)
@@ -109,8 +102,7 @@ handleAddNode content = do
             sendToBus Topic.addNodeUpdate update
             forM_ connectTo $ \srcNodeId -> do
                 let connectRequest = Connect.Request location srcNodeId All (node ^. Node.nodeId) Self
-                    connectUpdate  = Update.Update connectRequest Update.Ok
-                sendToBus Topic.connectUpdate connectUpdate
+                handleConnectReq connectRequest
             notifyCodeUpdate location
 
 handleRemoveNode :: ByteString -> StateT Env BusT ()
@@ -166,9 +158,11 @@ handleRenameNode content = do
             notifyCodeUpdate location
 
 handleConnect :: ByteString -> StateT Env BusT ()
-handleConnect content = do
-    let request = Bin.decode . fromStrict $ content :: Connect.Request
-        location = request ^. Connect.location
+handleConnect content = handleConnectReq $ Bin.decode . fromStrict $ content
+
+handleConnectReq :: Connect.Request -> StateT Env BusT ()
+handleConnectReq request = do
+    let location = request ^. Connect.location
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.connect
