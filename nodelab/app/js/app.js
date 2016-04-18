@@ -127,7 +127,7 @@ function initTerminal() {
   });
 
   $$.term.open($("#term")[0]);
-  $$.term.write('\x1b[31mWelcome to NodeLab!\x1b[m\r\n');
+  $$.term.write('\x1b[31mWelcome to Nodelab!\x1b[m\r\n');
   $("#termClose").click(function (){
     $('#termContainer').css({height: "0px"});
   });
