@@ -236,6 +236,7 @@ mockNSData  = NS.LunaModule $ Map.fromList  [
     , ("const"          , NS.Function)
     , ("app"            , NS.Function)
     , ("comp"           , NS.Function)
+    , ("flip"           , NS.Function)
     , ("empty"          , NS.Function)
     , ("singleton"      , NS.Function)
     , ("switch"         , NS.Function)
