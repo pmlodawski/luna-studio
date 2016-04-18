@@ -204,6 +204,7 @@
       float: right;
       padding-left: 10px;
       content: '›';
+      opacity: 1;
     }
   }
 
@@ -211,6 +212,9 @@
     li::after{
       opacity: 0.3;
       float:right;
+    }
+    li.module::after{
+      opacity: 1;
     }
     li:nth-child(1)::after {
       content: '^1';
