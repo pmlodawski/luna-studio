@@ -44,8 +44,9 @@ Library
                   luna-parser,
                   lunac,
                   mtl,
-                  stm,
                   prologue,
+                  split,
+                  stm,
                   text,
                   typelevel,
                   transformers
