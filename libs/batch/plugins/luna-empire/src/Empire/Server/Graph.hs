@@ -250,6 +250,7 @@ mockNSData  = NS.LunaModule $ Map.fromList  [
                                         , ("prepend"    , NS.Function)
                                         , ("length"     , NS.Function)
                                         , ("reverse"    , NS.Function)
+                                        , ("take"       , NS.Function)
                                         , ("drop"       , NS.Function)
                                         , ("sort"       , NS.Function)
 
