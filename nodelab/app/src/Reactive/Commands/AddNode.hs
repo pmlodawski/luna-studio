@@ -263,10 +263,7 @@ makeInPortControl :: WidgetId -> AnyPortRef -> Port -> Command UIRegistry.State 
 makeInPortControl parent portRef port = case port ^. Port.state of
     Port.NotConnected    -> do
         case port ^. Port.valueType . ValueType.toEnum of
-            ValueType.Other -> do
-                let widget = Label.create (Style.portControlSize & x -~ Style.setLabelOffsetX) ((Text.pack $ port ^. Port.name) <> " :: " <> (port ^. Port.valueType . vtToText) )
-                           & Label.position . x .~ Style.setLabelOffsetX
-                UICmd.register_ parent widget mempty
+            ValueType.Other -> return ()
             otherwise -> do
                 let group = Group.create & Group.style . Group.padding .~ Style.Padding 0.0 0.0 0.0 Style.setLabelOffsetX
                 groupId <- UICmd.register parent group (Layout.horizontalLayoutHandler 0.0)
@@ -274,11 +271,11 @@ makeInPortControl parent portRef port = case port ^. Port.state of
                            & Label.position . x .~ Style.setLabelOffsetX
                     button = Button.create Style.setButtonSize "not set"
                     zeroValue = case port ^. Port.valueType . ValueType.toEnum of
-                        ValueType.DiscreteNumber -> DefaultValue.IntValue def
+                        ValueType.DiscreteNumber   -> DefaultValue.IntValue    def
                         ValueType.ContinuousNumber -> DefaultValue.DoubleValue def
-                        ValueType.String ->  DefaultValue.StringValue def
-                        ValueType.Bool -> DefaultValue.BoolValue False
-                        _              -> undefined
+                        ValueType.String           -> DefaultValue.StringValue def
+                        ValueType.Bool             -> DefaultValue.BoolValue   False
+                        _                          -> undefined
                     handlers = addHandler (Button.ClickedHandler $ \_ -> do
                         workspace <- use Global.workspace
                         performIO $ BatchCmd.setDefaultValue workspace portRef (DefaultValue.Constant $ zeroValue)
