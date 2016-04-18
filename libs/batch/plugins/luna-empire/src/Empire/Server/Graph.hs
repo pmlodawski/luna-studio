@@ -235,6 +235,7 @@ mockNSData  = NS.LunaModule $ Map.fromList  [
       ("id"             , NS.Function)
     , ("const"          , NS.Function)
     , ("empty"          , NS.Function)
+    , ("singleton"      , NS.Function)
     , ("switch"         , NS.Function)
     , ("readFile"       , NS.Function)
     , ("mean"           , NS.Function)
@@ -253,6 +254,7 @@ mockNSData  = NS.LunaModule $ Map.fromList  [
                                         , ("fold"       , NS.Function)
                                         , ("map"        , NS.Function)
                                         , ("zip"        , NS.Function)
+                                        , ("filter"     , NS.Function)
                                         ])
     , ("Int"            , NS.Module $ NS.LunaModule $ Map.fromList [
                                           ("=="         , NS.Function)
