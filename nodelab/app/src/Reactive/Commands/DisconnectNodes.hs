@@ -54,8 +54,4 @@ disconnectAll connectionIds = do
     localDisconnectAll connectionIds
 
 disconnect :: InPortRef -> Command State ()
-disconnect port = do
-    connections <- uses (Global.graph . Graph.connectionsMap) Map.elems
-    let shouldRemove c = (c ^. Connection.dst) == port
-        found = filter shouldRemove connections
-    localDisconnectAll $ (view Connection.connectionId) <$> found
+disconnect port = localDisconnectAll [port]

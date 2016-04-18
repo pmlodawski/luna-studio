@@ -127,13 +127,6 @@ batchConnectNodes src dst = ioCommand $ \state -> let
     workspace = state ^. Global.workspace
     in BatchCmd.connectNodes workspace src dst
 
-addConnectionM :: OutPortRef -> InPortRef -> Command Global.State (Maybe ConnectionId)
-addConnectionM src dst = do
-    graph          <- use Global.graph
-    let (connId, newGraph) = Graph.addConnection src dst graph
-    Global.graph .= newGraph
-    return connId
-
 withArrow :: Getter InPortRef Bool
 withArrow = to $ \ref -> case ref of
     InPortRef _ Port.Self -> False
@@ -141,11 +134,10 @@ withArrow = to $ \ref -> case ref of
 
 localConnectNodes :: OutPortRef -> InPortRef -> Command Global.State ()
 localConnectNodes src dst = do
-    connectionId <- addConnectionM src dst
-    forM_ connectionId $ \connectionId -> do
-        nodePositions  <- zoom Global.uiRegistry nodePositionMap
-        portAngles     <- zoom Global.uiRegistry portRefToAngleMap
-        zoom Global.uiRegistry $ UICmd.register_ sceneGraphId (ConnectionModel.Connection connectionId True def def (dst ^. withArrow) def) def
+    prevConn <- preuse $ Global.graph . Graph.connectionsMap . ix dst
+    connectionId <- zoom Global.graph $ Graph.addConnection src dst
+    let newConnection = not $ isJust prevConn
+    when newConnection $ zoom Global.uiRegistry $ UICmd.register_ sceneGraphId (ConnectionModel.Connection connectionId True def def (dst ^. withArrow) def) def
     updateConnections
 
 sortAndGroup assocs = Map.fromListWith (++) [(k, [v]) | (k, v) <- assocs]
@@ -243,12 +235,9 @@ focusNode id = do
 updateNodeMeta :: NodeId -> NodeMeta -> Command Global.State ()
 updateNodeMeta nodeId meta = do
     Global.graph . Graph.nodesMap . ix nodeId . Node.nodeMeta .= meta
-
     inRegistry $ do
         widgetId <- nodeIdToWidgetId nodeId
-
         forM_ widgetId $ flip UICmd.move (fromTuple $  meta ^. NodeMeta.position)
-
     updateConnections
 
 

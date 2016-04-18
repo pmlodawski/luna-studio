@@ -25,6 +25,7 @@ import           Empire.API.Data.PortRef      (InPortRef)
 import qualified Empire.API.Data.PortRef      as PortRef
 import qualified Empire.API.JSONInstances     ()
 import           Utils.Aeson                  (intMapToJSON)
+import           Reactive.Commands.Command     (Command)
 
 type NodesMap       = IntMap Node
 type ConnectionsMap = Map InPortRef Connection
@@ -96,11 +97,10 @@ addNode newNode state  = state & nodesMap     %~ IntMap.insert (newNode ^. Node.
 removeNode :: NodeId -> State -> State
 removeNode remNodeId state = state & nodesMap %~ IntMap.delete remNodeId
 
-addConnection :: OutPortRef -> InPortRef -> State -> (Maybe ConnectionId, State) -- TODO: check if node/ports exist
-addConnection sourcePortRef destPortRef state = (Just newConnId, newState) where
-    newState      = state & connectionsMap %~ Map.insert destPortRef newConnection
-    newConnection = Connection sourcePortRef destPortRef
-    newConnId     = destPortRef
+addConnection :: OutPortRef -> InPortRef -> Command State ConnectionId
+addConnection sourcePortRef destPortRef = do
+    connectionsMap %= (Map.insert destPortRef $ Connection sourcePortRef destPortRef)
+    return destPortRef
 
 removeConnections :: [ConnectionId] -> State -> State
 removeConnections connIds state = foldr removeConnection state connIds
