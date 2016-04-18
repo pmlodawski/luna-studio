@@ -17,9 +17,4 @@ renderGraph :: [Node] -> [(OutPortRef, InPortRef)] -> Command State ()
 renderGraph nodes edges = do
     mapM_ addNode nodes
     mapM_ (uncurry Graph.localConnectNodes) edges
-
-    -- reLayout <- use $ Global.workspace . Workspace.shouldLayout
-    -- Global.workspace . Workspace.shouldLayout .= False
-    -- when reLayout layoutGraph
-
     Graph.updateConnections

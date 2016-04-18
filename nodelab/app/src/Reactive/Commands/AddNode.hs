@@ -47,7 +47,7 @@ import qualified UI.Handlers.Toggle                as Toggle
 import           Reactive.Commands.Command         (Command, performIO)
 import           Reactive.Commands.EnterNode       (enterNode)
 import           Reactive.Commands.Graph           (colorPort, focusNode, nodeIdToWidgetId, portDefaultAngle,
-                                                    updateNodeMeta)
+                                                    updateNodeMeta, updateConnections)
 -- import           Reactive.Commands.PendingNode   (unrenderPending)
 import           Reactive.Commands.RemoveNode      (removeSelectedNodes)
 import qualified Reactive.Commands.UIRegistry      as UICmd
@@ -246,6 +246,7 @@ updateExistingNode node = do
                 inRegistry $ UICmd.update_ widgetId $ Model.expression .~ expression
             _ -> return ()
         -- TODO: obsluzyc to ze moga zniknac polaczenia
+    updateConnections
 
 onValueChanged :: Typeable a => (a -> WidgetId -> Command Global.State ()) -> HTMap
 onValueChanged h = addHandler (ValueChangedHandler h) mempty

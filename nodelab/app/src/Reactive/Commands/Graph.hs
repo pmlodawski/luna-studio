@@ -118,7 +118,7 @@ getConnectionLine nodePos portAngles portTypes srcPortRef dstPortRef = (srcWs, d
     delta                        = dstNWs - srcNWs
     visible                      = lengthSquared delta > 4 * 25
     color                        = fromMaybe missingPortColor $ vtToColor <$> portTypes ^? ix (OutPortRef' srcPortRef)
-    missingPortPos               = (-pi / 2.0, 1)
+    missingPortPos               = (-1, 0)
     missingPortColor             = 13
 
 
@@ -138,7 +138,6 @@ localConnectNodes src dst = do
     connectionId <- zoom Global.graph $ Graph.addConnection src dst
     let newConnection = not $ isJust prevConn
     when newConnection $ zoom Global.uiRegistry $ UICmd.register_ sceneGraphId (ConnectionModel.Connection connectionId True def def (dst ^. withArrow) def) def
-    updateConnections
 
 sortAndGroup assocs = Map.fromListWith (++) [(k, [v]) | (k, v) <- assocs]
 

@@ -10,7 +10,7 @@ import           Reactive.Commands.AddNode           (addNode, addDummyNode, upd
 import           Reactive.Commands.Camera            (autoZoom)
 import           Reactive.Commands.Command           (Command, performIO)
 import           Reactive.Commands.DisconnectNodes   (disconnect)
-import           Reactive.Commands.Graph             (localConnectNodes, renameNode, updateNodeMeta)
+import           Reactive.Commands.Graph             (localConnectNodes, renameNode, updateNodeMeta, updateConnections)
 import qualified Reactive.Commands.RemoveNode        as RemoveNode
 import           Reactive.Commands.RenderGraph       (renderGraph)
 import           Reactive.State.Global               (State)
@@ -66,6 +66,7 @@ toAction (Event.Batch ev) = Just $ case ev of
         whenM (isCurrentLocation $ response ^. Update.request . Connect.location) $ do
             let request = (response ^. Update.request)
             localConnectNodes (request ^. Connect.src) (request ^. Connect.dst)
+            updateConnections
 
     NodesDisconnected response -> do
         whenM (isCurrentLocation $ response ^. Update.request . Disconnect.location) $ do
