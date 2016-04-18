@@ -80,6 +80,7 @@ import           Empire.API.Data.DefaultValue      (Value (..))
 import qualified Empire.API.Data.DefaultValue      as DefaultValue
 import           Empire.API.Data.Node              (Node, NodeId)
 import qualified Empire.API.Data.Node              as Node
+import qualified Empire.API.Data.Error             as LunaError
 import           Empire.API.Data.NodeMeta          (NodeMeta)
 import           Empire.API.Data.Port              (InPort (..), InPort (..), OutPort (..), Port (..), PortId (..))
 import qualified Empire.API.Data.Port              as Port
@@ -452,10 +453,14 @@ visualizeNodeValue id (DataFrame cols) = do
 visualizeNodeValue _ _ = return ()
 
 
-visualizeError :: NodeId -> String -> Command UIRegistry.State ()
-visualizeError id str = do
+visualizeError :: NodeId -> LunaError.Error String -> Command UIRegistry.State ()
+visualizeError id err = do
     groupId <- Node.valueGroupId id
-    let widget = LongText.create (Vector2 200 200) (Text.pack str) LongText.Left
+    let msg  = case err of
+            LunaError.ImportError   name     -> "Cannot find symbol \"" <> name <> "\""
+            LunaError.NoMethodError name tpe -> "Cannot find method \"" <> name <> "\" for type \"" <> tpe <> "\""
+            LunaError.TypeError     t1   t2  -> "Cannot match type  \"" <> t1   <> "\" with \"" <> t2 <> "\""
+        widget = LongText.create (Vector2 200 200) (Text.pack msg) LongText.Left
     UICmd.register_ groupId widget def
 
 updateNodeValue :: NodeId -> NodeResult.NodeValue -> Command State ()
@@ -474,7 +479,7 @@ updateNodeValue id val = inRegistry $ do
             NodeResult.Error msg -> do
                 UICmd.update_ widgetId $ Model.value   .~ "Error!"
                 UICmd.update_ widgetId $ Model.isError .~ True
-                visualizeError widgetId $ show msg
+                visualizeError widgetId msg
 
 updateNodeProfilingData :: NodeId -> Integer -> Command State ()
 updateNodeProfilingData id execTime = inRegistry $ do
