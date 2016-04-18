@@ -234,6 +234,8 @@ handleSetDefaultValue content = do
 mockNSData  = NS.LunaModule $ Map.fromList  [
       ("id"             , NS.Function)
     , ("const"          , NS.Function)
+    , ("app"            , NS.Function)
+    -- , ("comp"           , NS.Function)
     , ("empty"          , NS.Function)
     , ("singleton"      , NS.Function)
     , ("switch"         , NS.Function)
