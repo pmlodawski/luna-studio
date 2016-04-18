@@ -21,7 +21,12 @@ toAngle (Vector2 x y) = normAngle $ atan2 y x
 
 boundedAngle :: Double -> Int -> Vector2 Double -> Vector2 Double -> Double
 boundedAngle centralAngle' count src dst = angle where
-    span' = pi / (fromIntegral count) / 2.0 * 0.8
+    mult = case count of
+        1 -> 0.8
+        2 -> 0.7
+        3 -> 0.6
+        _ -> 0.5
+    span' = pi / (fromIntegral count) / 2.0 * mult
     centralAngle = centralAngle'
     minAngle = centralAngle - span'
     maxAngle = centralAngle + span'
