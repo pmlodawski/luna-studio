@@ -9,6 +9,8 @@ import           Data.List.Split              (splitOn)
 
 import           Empire.Data.AST              (NodeRef)
 import           Empire.ASTOp                 (ASTOp)
+import           Empire.ASTOps.Builder        (applyAccessors)
+import           Empire.ASTOps.Remove         (safeRemove)
 
 import           Empire.API.Data.DefaultValue (PortDefault (..), Value (..))
 
@@ -21,7 +23,11 @@ import qualified Luna.Parser.Term   as Term
 parseExpr :: ASTOp m => String -> m NodeRef
 parseExpr s = case parsed of
         Left d          -> throwError $ "Parser error: " <> show d
-        Right (bldr, _) -> bldr
+        Right (bldr, _) -> do
+            r     <- bldr
+            fixed <- applyAccessors r
+            when (fixed /= r) $ safeRemove r
+            return fixed
     where
     operatorHotFix = replace "@.+" "@.op+"
                    . replace "@.*" "@.op*"

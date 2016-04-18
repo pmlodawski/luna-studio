@@ -20,7 +20,7 @@ import           Empire.ASTOps.Remove       (removeNode, performSafeRemoval)
 import           Empire.Data.AST            (ASTEdge, ASTNode, EdgeRef, NodeRef, UncoveredNode)
 import           Empire.Data.NodeMarker     (NodeMarker, nodeMarkerKey)
 import           Empire.API.Data.Node       (NodeId)
-import           Old.Luna.Syntax.Term.Class (Acc (..), App (..), Blank (..), Match (..), Var (..))
+import           Old.Luna.Syntax.Term.Class (Acc (..), Curry (..), App (..), Blank (..), Match (..), Var (..))
 import qualified Old.Luna.Syntax.Term.Expr.Lit   as Lit
 
 import           Luna.Syntax.Term.Function.Argument (Arg)
@@ -139,6 +139,40 @@ dumpArguments ref = do
 
 buildAccessors :: ASTOp m => NodeRef -> [String] -> m NodeRef
 buildAccessors = foldM $ \t n -> Builder.acc (fromString n) t >>= flip Builder.app []
+
+applyAccessors :: ASTOp m => NodeRef -> m NodeRef
+applyAccessors = applyAccessors' False
+
+-- FIXME[MK]: move to TC pass
+applyAccessors' :: ASTOp m => Bool -> NodeRef -> m NodeRef
+applyAccessors' apped ref = do
+    node <- Builder.read ref
+    caseTest (uncover node) $ do
+        of' $ \(Var _) -> if apped then return ref else Builder.app ref []
+        of' $ \(Acc n t) -> do
+            tgt   <- Builder.follow source t
+            isLam <- isBlank tgt
+            if isLam
+                then return ref
+                else do
+                    trep <- applyAccessors' False tgt
+                    newAcc <- Builder.acc n trep
+                    if apped then return newAcc else Builder.app newAcc []
+        of' $ \(App f as) -> do
+        -- FIXME[MK]: this clause is identical to the curry one. And it happens often. Maybe curry is a wrong abstraction? How to unify it with App? Susp?
+            fr   <- Builder.follow source f
+            args <- unpackArguments as
+            frep <- applyAccessors' True fr
+            argReps <- mapM (applyAccessors' False) args
+            Builder.app frep (Builder.arg <$> argReps)
+        of' $ \(Curry f as) -> do
+            fr   <- Builder.follow source f
+            args <- unpackArguments as
+            frep <- applyAccessors' True fr
+            argReps <- mapM (applyAccessors' False) args
+            Builder.curry frep (Builder.arg <$> argReps)
+        of' $ \ANY -> return ref
+
 
 makeAccessor :: ASTOp m => NodeRef -> NodeRef -> m NodeRef
 makeAccessor target naming = do
