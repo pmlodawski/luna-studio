@@ -155,6 +155,7 @@ handleUpdateNodeMeta content = do
             Env.empireEnv .= newEmpireEnv
             let update = Update.Update request $ UpdateNodeMeta.Result nodeMeta
             sendToBus Topic.updateNodeMetaUpdate update
+            notifyCodeUpdate $ request ^. UpdateNodeMeta.location
 
 handleRenameNode :: ByteString -> StateT Env BusT ()
 handleRenameNode content = do
