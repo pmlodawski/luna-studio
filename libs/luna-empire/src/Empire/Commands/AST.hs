@@ -86,22 +86,6 @@ getNodeValue ref = runASTOp $ do
 readMeta :: NodeRef -> Command AST (Maybe NodeMeta)
 readMeta ref = runASTOp $ HMap.lookup metaKey . view (prop Meta) <$> Builder.read ref
 
-getTypeRep :: ASTOp m => NodeRef -> m String
-getTypeRep ref = do
-    n <- Builder.read ref
-    caseTest (uncover n) $ do
-        of' $ \(Cons (Lit.String n) args) -> do
-            as <- mapM (Builder.follow source >=> getTypeRep) (unlayer <$> args)
-            case as of
-                [] -> return n
-                _  -> return $ "("
-                            <> n
-                            <> " "
-                            <> unwords as
-                            <> ")"
-        of' $ \(Var (Lit.String n)) -> return n
-        of' $ \ANY -> return ""
-
 getError :: NodeRef -> Command AST (Maybe (APIError.Error String))
 getError = runASTOp . getError'
 
@@ -118,12 +102,12 @@ reprError tcErr = case tcErr of
     TCError.ImportError Nothing m  -> return $ APIError.ImportError m
     TCError.ImportError (Just n) m -> do
         tp <- Builder.follow source =<< Builder.follow (prop Type) n
-        tpRep <- getTypeRep tp
+        tpRep <- Printer.getTypeString tp
         return $ APIError.NoMethodError m tpRep
     TCError.UnificationError uni -> do
         uniNode <- Builder.read uni
         caseTest (uncover uniNode) $ do
-            of' $ \(Unify l r) -> APIError.TypeError <$> (getTypeRep =<< Builder.follow source l) <*> (getTypeRep =<< Builder.follow source r)
+            of' $ \(Unify l r) -> APIError.TypeError <$> (Printer.getTypeString =<< Builder.follow source l) <*> (Printer.getTypeString =<< Builder.follow source r)
             of' $ \ANY         -> impossible
 
 writeMeta :: NodeRef -> NodeMeta -> Command AST ()
