@@ -21,7 +21,7 @@ packages:
 - extra-dep: true
   location:
     git: 'git@bitbucket.org:NewByteOrder/luna.git'
-    commit: 68935c56e0ca2c343170406f8977eff7ac39bb24
+    commit: 98c1806c98f09896494ab94a438943f0f9522445
   subdirs:
   - compiler
   - core
