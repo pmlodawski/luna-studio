@@ -229,15 +229,6 @@ handleSetDefaultValue content = do
             sendToBus Topic.setDefaultValueUpdate update
             notifyCodeUpdate location
 
-experimental = [ "fix"
-               , "app1to2"
-               , "app2to2"
-               , "app1to3"
-               , "app2to3"
-               , "app3to3"
-               , "cycle3"
-               ]
-
 stdlibFunctions :: [String]
 stdlibFunctions = filter (not . elem '.') StdLibMock.symbolsNames
 
@@ -245,7 +236,7 @@ stdlibMethods :: [String]
 stdlibMethods = filter (elem '.') StdLibMock.symbolsNames
 
 mockNSData = NS.LunaModule $ Map.fromList $ functionsList <> modulesList where
-    nodeSearcherSymbols = filter (not . flip elem experimental) StdLibMock.symbolsNames
+    nodeSearcherSymbols = filter (not . flip elem StdLibMock.experimental) StdLibMock.symbolsNames
     (methods, functions) = partition (elem '.') nodeSearcherSymbols
     functionsList = functionEntry <$> functions
     functionEntry function = (Text.pack function, NS.Function)
@@ -256,7 +247,6 @@ mockNSData = NS.LunaModule $ Map.fromList $ functionsList <> modulesList where
         methodNames = methodName : (fromMaybe [] $ Map.lookup moduleName map)
     modulesList = (uncurry moduleEntry) <$> Map.toList modulesMethodsMap
     moduleEntry moduleName methodList = (Text.pack moduleName, NS.Module $ NS.LunaModule $ Map.fromList $ functionEntry <$> methodList)
-
 
 handleGetProgram :: ByteString -> StateT Env BusT ()
 handleGetProgram content = do
