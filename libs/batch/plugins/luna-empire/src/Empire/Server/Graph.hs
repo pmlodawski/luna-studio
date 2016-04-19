@@ -10,6 +10,7 @@ import qualified Data.IntMap                       as IntMap
 import qualified Data.Map                          as Map
 import           Data.Maybe                        (fromMaybe, isJust, isNothing)
 import qualified Data.Text.Lazy                    as Text
+import           Data.List                         (partition, break)
 import           Data.List.Split                   (splitOneOf)
 import           Prologue                          hiding (Item)
 
@@ -77,9 +78,6 @@ parseExpr "in" = Input Nothing
 parseExpr ('o':'u':'t':' ':name) = Output $ Just name
 parseExpr "out" = Output Nothing
 parseExpr expr = Expression expr
-
-stdlibFunctions :: [String]
-stdlibFunctions = filter (not . elem '.') StdLibMock.symbolsNames
 
 forceTC :: GraphLocation -> StateT Env BusT ()
 forceTC location = do
@@ -231,151 +229,34 @@ handleSetDefaultValue content = do
             sendToBus Topic.setDefaultValueUpdate update
             notifyCodeUpdate location
 
-mockNSData  = NS.LunaModule $ Map.fromList  [
-      ("id"             , NS.Function)
-    , ("const"          , NS.Function)
-    , ("app"            , NS.Function)
-    , ("comp"           , NS.Function)
-    , ("flip"           , NS.Function)
-    , ("empty"          , NS.Function)
-    , ("singleton"      , NS.Function)
-    , ("switch"         , NS.Function)
-    , ("readFile"       , NS.Function)
-    , ("mean"           , NS.Function)
-    , ("differences"    , NS.Function)
-    , ("histogram"      , NS.Function)
-    , ("primes"         , NS.Function)
-    , ("List"           , NS.Module $ NS.LunaModule $ Map.fromList [
-                                          ("+"          , NS.Function)
-                                        , ("append"     , NS.Function)
-                                        , ("prepend"    , NS.Function)
-                                        , ("length"     , NS.Function)
-                                        , ("reverse"    , NS.Function)
-                                        , ("take"       , NS.Function)
-                                        , ("drop"       , NS.Function)
-                                        , ("sort"       , NS.Function)
+experimental = [ "fix"
+               , "app1to2"
+               , "app2to2"
+               , "app1to3"
+               , "app2to3"
+               , "app3to3"
+               , "cycle3"
+               ]
 
-                                        , ("fold"       , NS.Function)
-                                        , ("map"        , NS.Function)
-                                        , ("zip"        , NS.Function)
-                                        , ("filter"     , NS.Function)
-                                        ])
-    , ("Int"            , NS.Module $ NS.LunaModule $ Map.fromList [
-                                          ("=="         , NS.Function)
-                                        , ("/="         , NS.Function)
-                                        , ("<"          , NS.Function)
-                                        , ("<="         , NS.Function)
-                                        , (">"          , NS.Function)
-                                        , (">="         , NS.Function)
-                                        , ("min"        , NS.Function)
-                                        , ("max"        , NS.Function)
+stdlibFunctions :: [String]
+stdlibFunctions = filter (not . elem '.') StdLibMock.symbolsNames
 
-                                        , ("+"          , NS.Function)
-                                        , ("*"          , NS.Function)
-                                        , ("-"          , NS.Function)
-                                        , ("/"          , NS.Function)
-                                        , ("%"          , NS.Function)
-                                        , ("^"          , NS.Function)
+stdlibMethods :: [String]
+stdlibMethods = filter (elem '.') StdLibMock.symbolsNames
 
-                                        , ("negate"     , NS.Function)
-                                        , ("abs"        , NS.Function)
-                                        , ("signum"     , NS.Function)
+mockNSData = NS.LunaModule $ Map.fromList $ functionsList <> modulesList where
+    nodeSearcherSymbols = filter (not . flip elem experimental) StdLibMock.symbolsNames
+    (methods, functions) = partition (elem '.') nodeSearcherSymbols
+    functionsList = functionEntry <$> functions
+    functionEntry function = (Text.pack function, NS.Function)
+    modulesMethodsMap = foldl updateModulesMethodsMap Map.empty methods
+    updateModulesMethodsMap map el = Map.insert moduleName methodNames map where
+        (moduleName, dotMethodName) = break (== '.') el
+        methodName = tail dotMethodName
+        methodNames = methodName : (fromMaybe [] $ Map.lookup moduleName map)
+    modulesList = (uncurry moduleEntry) <$> Map.toList modulesMethodsMap
+    moduleEntry moduleName methodList = (Text.pack moduleName, NS.Module $ NS.LunaModule $ Map.fromList $ functionEntry <$> methodList)
 
-                                        , ("pred"       , NS.Function)
-                                        , ("succ"       , NS.Function)
-                                        , ("even"       , NS.Function)
-                                        , ("odd"        , NS.Function)
-
-                                        , ("gcd"        , NS.Function)
-                                        , ("lcm"        , NS.Function)
-
-                                        , ("times"      , NS.Function)
-                                        , ("upto"       , NS.Function)
-
-                                        , ("toDouble"   , NS.Function)
-                                        , ("toString"   , NS.Function)
-                                        ])
-    , ("Double"         , NS.Module $ NS.LunaModule $ Map.fromList [
-                                          ("=="         , NS.Function)
-                                        , ("/="         , NS.Function)
-                                        , ("<"          , NS.Function)
-                                        , ("<="         , NS.Function)
-                                        , (">"          , NS.Function)
-                                        , (">="         , NS.Function)
-                                        , ("min"        , NS.Function)
-                                        , ("max"        , NS.Function)
-
-                                        , ("+"          , NS.Function)
-                                        , ("*"          , NS.Function)
-                                        , ("-"          , NS.Function)
-                                        , ("/"          , NS.Function)
-                                        , ("**"         , NS.Function)
-
-                                        , ("negate"     , NS.Function)
-                                        , ("abs"        , NS.Function)
-                                        , ("signum"     , NS.Function)
-
-                                        , ("round"      , NS.Function)
-                                        , ("ceiling"    , NS.Function)
-                                        , ("floor"      , NS.Function)
-
-                                        , ("exp"        , NS.Function)
-                                        , ("log"        , NS.Function)
-                                        , ("sqrt"       , NS.Function)
-
-                                        , ("sin"        , NS.Function)
-                                        , ("cos"        , NS.Function)
-                                        , ("tan"        , NS.Function)
-                                        , ("asin"       , NS.Function)
-                                        , ("acos"       , NS.Function)
-                                        , ("atan"       , NS.Function)
-                                        , ("sinh"       , NS.Function)
-                                        , ("cosh"       , NS.Function)
-                                        , ("tanh"       , NS.Function)
-                                        , ("asinh"      , NS.Function)
-                                        , ("acosh"      , NS.Function)
-                                        , ("atanh"      , NS.Function)
-
-                                        , ("toString"   , NS.Function)
-                                        ])
-    , ("Bool",            NS.Module $ NS.LunaModule $ Map.fromList [
-                                          ("=="         , NS.Function)
-                                        , ("/="         , NS.Function)
-                                        , ("<"          , NS.Function)
-                                        , ("<="         , NS.Function)
-                                        , (">"          , NS.Function)
-                                        , (">="         , NS.Function)
-                                        , ("min"        , NS.Function)
-                                        , ("max"        , NS.Function)
-
-                                        , ("&&"         , NS.Function)
-                                        , ("||"         , NS.Function)
-                                        , ("not"        , NS.Function)
-
-                                        , ("toString"   , NS.Function)
-                                        ])
-    , ("String"         , NS.Module $ NS.LunaModule $ Map.fromList [
-                                          ("=="         , NS.Function)
-                                        , ("/="         , NS.Function)
-                                        , ("<"          , NS.Function)
-                                        , ("<="         , NS.Function)
-                                        , (">"          , NS.Function)
-                                        , (">="         , NS.Function)
-                                        , ("min"        , NS.Function)
-                                        , ("max"        , NS.Function)
-
-                                        , ("+"          , NS.Function)
-                                        , ("length"     , NS.Function)
-                                        , ("reverse"    , NS.Function)
-                                        , ("take"       , NS.Function)
-                                        , ("drop"       , NS.Function)
-                                        , ("words"      , NS.Function)
-                                        , ("lines"      , NS.Function)
-                                        , ("join"       , NS.Function)
-
-                                        , ("toString"   , NS.Function)
-                                        ])
-    ]
 
 handleGetProgram :: ByteString -> StateT Env BusT ()
 handleGetProgram content = do
