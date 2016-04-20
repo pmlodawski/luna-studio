@@ -2,23 +2,27 @@ module JS.NodeSearcher where
 
 import           Utils.PreludePlus
 
-import           Utils.Vector
-import           GHCJS.Foreign
 import           GHCJS.DOM.EventM
-import           GHCJS.Types      (JSRef, JSString)
 import           GHCJS.DOM.EventTargetClosures (EventName, unsafeEventName)
-import           Data.JSString.Text (lazyTextFromJSString, lazyTextToJSString)
-import qualified Data.JSString as JSString
+import           GHCJS.DOM.Types               (IsUIEvent, UIEvent, Window, toUIEvent, unUIEvent)
+import           GHCJS.Foreign
+import           GHCJS.Types                   (JSRef, JSString)
 
-import           JavaScript.Array (JSArray)
-import qualified JavaScript.Array as JSArray
+import           Utils.Vector
 
-import qualified Data.Text.Lazy as Text
-import           Data.Text.Lazy (Text)
+import qualified Data.JSString                 as JSString
+import           Data.JSString.Text            (lazyTextFromJSString, lazyTextToJSString)
 
-import           Control.Monad.IO.Class ( MonadIO(..) )
-import           GHCJS.DOM.Types  ( UIEvent, Window, IsUIEvent, unUIEvent, toUIEvent )
+import           JavaScript.Array              (JSArray)
+import qualified JavaScript.Array              as JSArray
 
+import           Data.Text.Lazy                (Text)
+import qualified Data.Text.Lazy                as Text
+
+import           Control.Monad.IO.Class        (MonadIO (..))
+
+
+import           Reactive.Plugins.Core.Action.NodeSearcher.Scope (Highlight(..), QueryResult(..))
 
 
 foreign import javascript safe "app.createNodeSearcher($1, $2, $3, $4, $5)"
@@ -72,9 +76,6 @@ foreign import javascript safe "app.nodeSearcher().finishResult()"
 
 foreign import javascript safe "app.nodeSearcher().addTreeResult($1, $2, $3, $4)"
     nodesearcher_add_tree_result :: JSString -> JSString -> JSString -> JSString -> IO ()
-
-data Highlight = Highlight {start :: Int, len :: Int} deriving (Show, Eq)
-data QueryResult = QueryResult {_prefix :: Text, _name :: Text, _fullname :: Text, _highlights :: [Highlight], _tpe :: Text}
 
 displayQueryResult :: QueryResult -> IO ()
 displayQueryResult (QueryResult prefix name fullname highlight tpe) = do
