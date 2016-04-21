@@ -7,8 +7,10 @@ module Reactive.Plugins.Core.Action.NodeSearcher.Scope (
     , QueryResult(..)
     ) where
 
-import           Utils.PreludePlus                                  hiding (Item)
+import           Prelude
 
+import           Control.Lens
+import           Data.Monoid                                        ((<>))
 import           Data.Map                                           (Map)
 import qualified Data.Map                                           as Map
 import           GHC.Exts                                           (sortWith)
@@ -16,8 +18,8 @@ import           GHC.Exts                                           (sortWith)
 import           Data.Text.Lazy                                     (Text)
 import qualified Data.Text.Lazy                                     as Text
 
-import           Reactive.Plugins.Core.Action.NodeSearcher.Searcher (Nameable, Weightable, Match(..), Submatch(..))
-import qualified Reactive.Plugins.Core.Action.NodeSearcher.Searcher as Searcher
+import           Text.ScopeSearcher                                 (Nameable, Weightable, Match(..), Submatch(..))
+import qualified Text.ScopeSearcher                                 as Searcher
 
 import           Empire.API.Data.NodeSearcher                       (Item (..), LunaModule (..))
 import qualified Empire.API.Data.NodeSearcher                       as NS

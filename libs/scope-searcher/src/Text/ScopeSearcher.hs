@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Reactive.Plugins.Core.Action.NodeSearcher.Searcher (
+module Text.ScopeSearcher (
       findSuggestions
     , Nameable(..)
     , Weightable(..)
@@ -23,8 +23,8 @@ class Nameable a where
 class Weightable a where
     weight :: a -> Double
 
-nameToLower :: (Nameable a) => a -> Text
-nameToLower t = Text.toLower (name t)
+-- nameToLower :: (Nameable a) => a -> Text
+-- nameToLower t = Text.toLower (name t)
 
 data Submatch = Submatch { start :: Int
                          , len   :: Int
@@ -75,7 +75,7 @@ findSubsequenceOf a b = fmap indexesToSubmatch $ findSubsequenceOf' 0 a b where
                                   | otherwise        = skipHead
                                   where
                                        isPrefix      = Text.head (Text.toLower a) == Text.head (Text.toLower b)
-                                       dropPrefix    = Text.drop . fromIntegral
+                                       -- dropPrefix    = Text.drop . fromIntegral
                                        skipHead      = findSubsequenceOf' (idx + 1) a (Text.tail b)
                                        takePrefix    = fmap (idx :) $ findSubsequenceOf' (idx + 1) (Text.tail a) (Text.tail b)
 

@@ -1,0 +1,34 @@
+name:                scope-searcher
+version:             0.1.0.0
+synopsis:            Scope searcher library
+Author:              New Byte Order <contact@newbyteorder.com>
+Maintainer:          New Byte Order <contact@newbyteorder.com>
+build-type:          Simple
+-- extra-source-files:
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  ghc-options:         -Wall -O2 -threaded
+  default-language:    Haskell2010
+  exposed-modules:   `findmodules('src', '.*\.hs')`
+  extensions:          FlexibleContexts
+  build-depends:       base
+                     , text
+
+executable scope-searcher-exe
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+  build-depends:       base
+                     , scope-searcher
+
+test-suite scope-searcher-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+  build-depends:       base
+                     , scope-searcher
