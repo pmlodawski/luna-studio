@@ -4,10 +4,10 @@ import           Prologue
 import           Data.Binary                   (Binary)
 
 import           Empire.API.Data.GraphLocation (GraphLocation)
-import           Empire.API.Data.NodeSearcher  (LunaModule)
+import           Empire.API.Data.NodeSearcher  (ModuleItems)
 
 data Update = Update { _location         :: GraphLocation
-                     , _nodeSearcherData :: LunaModule
+                     , _nodeSearcherData :: ModuleItems
                      } deriving (Generic, Show, Eq)
 
 makeLenses ''Update

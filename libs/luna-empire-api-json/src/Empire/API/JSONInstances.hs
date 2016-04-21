@@ -122,7 +122,6 @@ instance ToJSON ListProjects.Status
 instance (ToJSON req, ToJSON res) => ToJSON (Update.Update req res)
 instance ToJSON Update.ResultOk
 
-instance ToJSON NodeSearcher.LunaModule
 instance ToJSON NodeSearcher.Item
 
 instance ToJSON NodeSearcherUpdate.Update

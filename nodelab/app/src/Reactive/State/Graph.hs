@@ -17,7 +17,6 @@ import           Empire.API.Data.Connection   (Connection (..), ConnectionId)
 import qualified Empire.API.Data.Connection   as Connection
 import           Empire.API.Data.Node         (Node, NodeId)
 import qualified Empire.API.Data.Node         as Node
-import           Empire.API.Data.NodeSearcher (LunaModule)
 import           Empire.API.Data.Port         (Port)
 import qualified Empire.API.Data.Port         as Port
 import           Empire.API.Data.PortRef      (AnyPortRef, InPortRef, OutPortRef)
@@ -25,7 +24,7 @@ import           Empire.API.Data.PortRef      (InPortRef)
 import qualified Empire.API.Data.PortRef      as PortRef
 import qualified Empire.API.JSONInstances     ()
 import           Utils.Aeson                  (intMapToJSON)
-import           Reactive.Commands.Command     (Command)
+import           Reactive.Commands.Command    (Command)
 
 type NodesMap       = IntMap Node
 type ConnectionsMap = Map InPortRef Connection
@@ -54,7 +53,6 @@ connectionToNodeIds conn = ( conn ^. Connection.src . PortRef.srcNodeId
 genId :: IntMap a -> Int
 genId intMap = if IntMap.null intMap then 0
                                      else 1 + (fst $ IntMap.findMax intMap)
-
 genNodeId :: State -> NodeId
 genNodeId state = genId $ state ^. nodesMap
 

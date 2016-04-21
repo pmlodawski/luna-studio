@@ -235,19 +235,6 @@ stdlibFunctions = filter (not . elem '.') StdLibMock.symbolsNames
 stdlibMethods :: [String]
 stdlibMethods = filter (elem '.') StdLibMock.symbolsNames
 
-mockNSData = NS.LunaModule $ Map.fromList $ functionsList <> modulesList where
-    nodeSearcherSymbols = filter (not . flip elem StdLibMock.experimental) StdLibMock.symbolsNames
-    (methods, functions) = partition (elem '.') nodeSearcherSymbols
-    functionsList = functionEntry <$> functions
-    functionEntry function = (Text.pack function, NS.Function)
-    modulesMethodsMap = foldl updateModulesMethodsMap Map.empty methods
-    updateModulesMethodsMap map el = Map.insert moduleName methodNames map where
-        (moduleName, dotMethodName) = break (== '.') el
-        methodName = tail dotMethodName
-        methodNames = methodName : (fromMaybe [] $ Map.lookup moduleName map)
-    modulesList = (uncurry moduleEntry) <$> Map.toList modulesMethodsMap
-    moduleEntry moduleName methodList = (Text.pack moduleName, NS.Module $ NS.LunaModule $ Map.fromList $ functionEntry <$> methodList)
-
 handleGetProgram :: ByteString -> StateT Env BusT ()
 handleGetProgram content = do
     let request = Bin.decode . fromStrict $ content :: GetProgram.Request
@@ -282,3 +269,18 @@ handleTypecheck content = do
         Left err -> logger Logger.error $ errorMessage <> err
         Right _  -> Env.empireEnv .= newEmpireEnv
     return ()
+
+mockNSData :: NS.ModuleItems
+mockNSData = Map.fromList $ functionsList <> modulesList where
+    nodeSearcherSymbols = filter (not . flip elem StdLibMock.experimental) StdLibMock.symbolsNames
+    (methods, functions) = partition (elem '.') nodeSearcherSymbols
+    functionsList = functionEntry <$> functions
+    functionEntry function = (Text.pack function, NS.Function)
+    modulesMethodsMap = foldl updateModulesMethodsMap Map.empty methods
+    updateModulesMethodsMap map el = Map.insert moduleName methodNames map where
+        (moduleName, dotMethodName) = break (== '.') el
+        methodName = tail dotMethodName
+        methodNames = methodName : (fromMaybe [] $ Map.lookup moduleName map)
+    modulesList = (uncurry moduleEntry) <$> Map.toList modulesMethodsMap
+    moduleEntry moduleName methodList = (Text.pack moduleName, NS.Module $ Map.fromList $ functionEntry <$> methodList)
+

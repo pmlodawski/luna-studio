@@ -30,12 +30,12 @@ import qualified Reactive.State.Camera                           as Camera
 import qualified Reactive.State.UIRegistry                       as UIRegistry
 
 import qualified Empire.API.Data.Node                            as Node
-import           Empire.API.Data.NodeSearcher                    (Item (..), LunaModule (..), _Module)
+import           Empire.API.Data.NodeSearcher                    (Item (..), ModuleItems, _Module)
 import qualified Empire.API.Data.Port                            as Port
 import qualified Empire.API.Data.ValueType                       as ValueType
 import qualified Reactive.Plugins.Core.Action.NodeSearcher.Scope as Scope
 
-searcherData :: Command Global.State LunaModule
+searcherData :: Command Global.State ModuleItems
 searcherData = use $ Global.workspace . Workspace.nodeSearcherData
 
 openFresh :: Command Global.State ()
@@ -77,10 +77,10 @@ ensureNSVisible = do
 
     return $ (workspacePos, Vector2 x' y')
 
-globalFunctions :: LunaModule -> LunaModule
-globalFunctions (LunaModule items) = LunaModule $ Map.filter (== Function) items
+globalFunctions :: ModuleItems -> ModuleItems
+globalFunctions items = Map.filter (== Function) items
 
-scopedData :: Command Global.State LunaModule
+scopedData :: Command Global.State ModuleItems
 scopedData = do
     completeData <- searcherData
     selected   <- inRegistry selectedNodes
@@ -99,13 +99,13 @@ scopedData = do
     case scope of
         Nothing -> return completeData
         Just tn -> do
-            let (LunaModule gf) = globalFunctions completeData
-                (LunaModule items) = completeData
+            let gf = globalFunctions completeData
+                items = completeData
                 tn' = if Text.isPrefixOf "[" (Text.pack tn) then "List" else (Text.pack tn)
                 mayScope = items ^? ix tn' . _Module
-                scope = fromMaybe (LunaModule mempty) mayScope
-                (LunaModule scopefuns) = globalFunctions scope
-                overallScope = LunaModule $ Map.union scopefuns gf
+                scope = fromMaybe mempty mayScope
+                scopefuns = globalFunctions scope
+                overallScope = Map.union scopefuns gf
             performIO $ putStrLn $ show overallScope
             return overallScope
 

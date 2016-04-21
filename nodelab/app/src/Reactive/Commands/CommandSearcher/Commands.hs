@@ -13,7 +13,7 @@ import           Utils.Vector
 
 import qualified Batch.Workspace                                 as Workspace
 import qualified BatchConnector.Commands                         as BatchCmd
-import           Empire.API.Data.NodeSearcher                    (Item (..), LunaModule (..))
+import           Empire.API.Data.NodeSearcher                    (Item (..))
 import qualified Empire.API.Data.Project                         as Project
 import qualified JS.NodeSearcher                                 as UI
 import           Reactive.Commands.Command                       (Command, performIO)
@@ -30,8 +30,8 @@ commands = do
     projects <- uses (Global.workspace . Workspace.projects) IntMap.elems
 
     let projectToItem p = (name, Function) where name = Text.pack $ fromMaybe "no_name" $ p ^. Project.name
-        projectList = LunaModule $ Map.fromList $ projectToItem <$> projects
-        projectCmd  = LunaModule $ Map.fromList [ ("new",    Function)
+        projectList = Map.fromList $ projectToItem <$> projects
+        projectCmd  = Map.fromList [ ("new",    Function)
                                                 , ("open",   Module projectList)
                                                 -- , ("rename", Function)
                                                 ]
@@ -85,14 +85,14 @@ runCommand _                                          = return ()
 querySearchCmd :: Text -> Command Global.State ()
 querySearchCmd query = do
     sd <- commands
-    let sd'   = LunaModule $ Map.fromList sd
+    let sd'   = Map.fromList sd
         items = Scope.searchInScope True sd' query
     performIO $ UI.displayQueryResults items
 
 queryTreeCmd :: Text -> Command Global.State ()
 queryTreeCmd query = do
     sd <- commands
-    let sd'   = LunaModule $ Map.fromList sd
+    let sd'   = Map.fromList sd
         items = Scope.moduleItems True sd' query
     performIO $ UI.displayTreeResults items
 
