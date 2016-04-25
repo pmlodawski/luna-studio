@@ -22,7 +22,7 @@ import qualified Data.Text.Lazy                as Text
 import           Control.Monad.IO.Class        (MonadIO (..))
 
 
-import           Reactive.Plugins.Core.Action.NodeSearcher.Scope (Highlight(..), QueryResult(..))
+import           Text.ScopeSearcher.Scope      (Highlight(..), QueryResult(..))
 
 
 foreign import javascript safe "app.createNodeSearcher($1, $2, $3, $4, $5)"

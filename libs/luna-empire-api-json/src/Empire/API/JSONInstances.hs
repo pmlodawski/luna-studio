@@ -16,7 +16,6 @@ import           Empire.API.Data.GraphLocation       as GraphLocation
 import           Empire.API.Data.Library             as Library
 import           Empire.API.Data.Node                as Node
 import           Empire.API.Data.NodeMeta            as NodeMeta
-import           Empire.API.Data.NodeSearcher        as NodeSearcher
 import           Empire.API.Data.Port                as Port
 import           Empire.API.Data.PortRef             as PortRef
 import           Empire.API.Data.Project             as Project
@@ -121,8 +120,6 @@ instance ToJSON ListProjects.Status
 
 instance (ToJSON req, ToJSON res) => ToJSON (Update.Update req res)
 instance ToJSON Update.ResultOk
-
-instance ToJSON NodeSearcher.Item
 
 instance ToJSON NodeSearcherUpdate.Update
 

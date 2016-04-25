@@ -10,10 +10,11 @@ import           Empire.API.Data.GraphLocation (GraphLocation (..))
 import qualified Empire.API.Data.GraphLocation as GraphLocation
 import           Empire.API.Data.Library       (Library, LibraryId)
 import qualified Empire.API.Data.Library       as Library
-import           Empire.API.Data.NodeSearcher  (ModuleItems)
 import           Empire.API.Data.Project       (Project, ProjectId)
 import qualified Empire.API.Data.Project       as Project
 import           Empire.API.JSONInstances      ()
+
+import           Text.ScopeSearcher.Item       (Items)
 
 data UIGraphLocation = UIGraphLocation { _projectName :: String
                                        , _libraryName :: String
@@ -25,7 +26,7 @@ data Workspace = Workspace { _projects         :: IntMap Project
                            , _currentLocation  :: GraphLocation
                            , _lastUILocation   :: Maybe UIGraphLocation
                            , _isGraphLoaded    :: Bool
-                           , _nodeSearcherData :: ModuleItems
+                           , _nodeSearcherData :: Items
                            } deriving (Show, Eq, Generic)
 
 instance ToJSON Workspace

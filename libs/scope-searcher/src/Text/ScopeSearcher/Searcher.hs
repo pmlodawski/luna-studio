@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Text.ScopeSearcher (
+module Text.ScopeSearcher.Searcher (
       findSuggestions
     , Nameable(..)
     , Weightable(..)

@@ -29,9 +29,6 @@ import qualified Reactive.State.Global                           as Global
 import qualified Reactive.State.Graph                            as Graph
 import qualified Reactive.State.UIRegistry                       as UIRegistry
 
-import           Empire.API.Data.NodeSearcher                    (Item (..))
-import qualified Reactive.Plugins.Core.Action.NodeSearcher.Scope as Scope
-
 
 toAction :: Event -> Maybe (Command Global.State ())
 toAction (NodeSearcher (NodeSearcher.Event "query" expr _))           = Just $ NS.querySearch expr

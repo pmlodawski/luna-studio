@@ -30,12 +30,13 @@ import qualified Reactive.State.Camera                           as Camera
 import qualified Reactive.State.UIRegistry                       as UIRegistry
 
 import qualified Empire.API.Data.Node                            as Node
-import           Empire.API.Data.NodeSearcher                    (Item (..), ModuleItems, _Module)
 import qualified Empire.API.Data.Port                            as Port
 import qualified Empire.API.Data.ValueType                       as ValueType
-import qualified Reactive.Plugins.Core.Action.NodeSearcher.Scope as Scope
 
-searcherData :: Command Global.State ModuleItems
+import qualified Text.ScopeSearcher.Scope                        as Scope
+import           Text.ScopeSearcher.Item                         (Item (..), Items, _Group)
+
+searcherData :: Command Global.State Items
 searcherData = use $ Global.workspace . Workspace.nodeSearcherData
 
 openFresh :: Command Global.State ()
@@ -77,10 +78,10 @@ ensureNSVisible = do
 
     return $ (workspacePos, Vector2 x' y')
 
-globalFunctions :: ModuleItems -> ModuleItems
-globalFunctions items = Map.filter (== Function) items
+globalFunctions :: Items -> Items
+globalFunctions items = Map.filter (== Element) items
 
-scopedData :: Command Global.State ModuleItems
+scopedData :: Command Global.State Items
 scopedData = do
     completeData <- searcherData
     selected   <- inRegistry selectedNodes
@@ -102,7 +103,7 @@ scopedData = do
             let gf = globalFunctions completeData
                 items = completeData
                 tn' = if Text.isPrefixOf "[" (Text.pack tn) then "List" else (Text.pack tn)
-                mayScope = items ^? ix tn' . _Module
+                mayScope = items ^? ix tn' . _Group
                 scope = fromMaybe mempty mayScope
                 scopefuns = globalFunctions scope
                 overallScope = Map.union scopefuns gf

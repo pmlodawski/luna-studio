@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Reactive.Plugins.Core.Action.NodeSearcher.Scope (
+module Text.ScopeSearcher.Scope (
       moduleItems
     , searchInScope
     , Highlight(..)
@@ -9,7 +9,6 @@ module Reactive.Plugins.Core.Action.NodeSearcher.Scope (
 
 import           Prelude
 
-import           Control.Lens
 import           Data.Monoid                                        ((<>))
 import           Data.Map                                           (Map)
 import qualified Data.Map                                           as Map
@@ -18,11 +17,10 @@ import           GHC.Exts                                           (sortWith)
 import           Data.Text.Lazy                                     (Text)
 import qualified Data.Text.Lazy                                     as Text
 
-import           Text.ScopeSearcher                                 (Nameable, Weightable, Match(..), Submatch(..))
-import qualified Text.ScopeSearcher                                 as Searcher
+import           Text.ScopeSearcher.Searcher                        (Nameable, Weightable, Match(..), Submatch(..))
+import qualified Text.ScopeSearcher.Searcher                        as Searcher
 
-import           Empire.API.Data.NodeSearcher                       (Item (..), ModuleItems)
-import qualified Empire.API.Data.NodeSearcher                       as NS
+import           Text.ScopeSearcher.Item                            (Item(..), Items)
 
 type Path = [Text]
 
@@ -47,28 +45,31 @@ instance Nameable SearchableItem where
 instance Weightable SearchableItem where
     weight (SearchableItem w _ _ _) = w
 
-jsItemType Function    = "function"
-jsItemType (Module _)  = "module"
 
-searchableItems' :: Double -> Text -> ModuleItems -> [SearchableItem]
+jsItemType :: Item -> Text
+jsItemType Element    = "function"
+jsItemType (Group _)  = "module"
+
+
+searchableItems' :: Double -> Text -> Items -> [SearchableItem]
 searchableItems' weight prefix items = Map.foldMapWithKey addItems items where
     addItems :: Text -> Item -> [SearchableItem]
-    addItems name i@Function   = [SearchableItem weight prefix name i]
-    addItems name i@(Module m) = [SearchableItem weight prefix name i] ++ (searchableItems' (weight*0.9) (nameWithPrefix prefix name) m)
+    addItems name i@Element   = [SearchableItem weight prefix name i]
+    addItems name i@(Group m) = [SearchableItem weight prefix name i] ++ (searchableItems' (weight*0.9) (nameWithPrefix prefix name) m)
     nameWithPrefix "" name = name
     nameWithPrefix prefix name = prefix <> "." <> name
 
-searchableItems :: ModuleItems -> [SearchableItem]
+searchableItems :: Items -> [SearchableItem]
 searchableItems = searchableItems' 1.0 ""
 
-moduleByPath :: ModuleItems -> Path -> Maybe ModuleItems
+moduleByPath :: Items -> Path -> Maybe Items
 moduleByPath m []     = Just m
 moduleByPath m [""]   = Just m
 moduleByPath m [x]    = case (Map.lookup x m) of
-    Just (Module m)  -> Just m
+    Just (Group m)   -> Just m
     _                -> Nothing
 moduleByPath m (x:xs) = case (Map.lookup x m) of
-    Just (Module m)  -> moduleByPath m xs
+    Just (Group m)   -> moduleByPath m xs
     _                -> Nothing
 
 pathFromText :: Text -> [Text]
@@ -78,12 +79,12 @@ appendPath :: Text -> Text -> Text
 appendPath "" n = n
 appendPath p  n = p <> "." <> n
 
-itemsInScope :: ModuleItems -> Text -> [SearchableItem]
+itemsInScope :: Items -> Text -> [SearchableItem]
 itemsInScope root path = case moduleByPath root (pathFromText path) of
     Just items -> searchableItems items
     Nothing    -> []
 
-searchInScope :: Bool -> ModuleItems -> Text -> [QueryResult]
+searchInScope :: Bool -> Items -> Text -> [QueryResult]
 searchInScope includePath root expr
     | (Text.length expr > 0) && (Text.last expr == '.') = maybe [] displayModuleItems scope
     | otherwise                                         = fmap transformMatch $ Searcher.findSuggestions items query
@@ -98,7 +99,7 @@ searchInScope includePath root expr
         displayModuleItems items = fmap di $ Map.toList items
         di  (name, t)  = QueryResult "" name name [] (jsItemType t)
 
-moduleItems :: Bool -> ModuleItems -> Text -> [QueryResult]
+moduleItems :: Bool -> Items -> Text -> [QueryResult]
 moduleItems includePath root path = fmap toQueryResult $ items where
     toQueryResult :: (Text, Item) -> QueryResult
     toQueryResult (name, t)  = QueryResult path name (if includePath then appendPath path name else name) [] (jsItemType t)

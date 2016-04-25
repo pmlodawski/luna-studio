@@ -1,6 +1,6 @@
 module Main where
 
-import Text.ScopeSearcher
+import Text.ScopeSearcher.Searcher
 
 main :: IO ()
 main = do

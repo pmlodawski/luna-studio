@@ -13,14 +13,14 @@ import           Utils.Vector
 
 import qualified Batch.Workspace                                 as Workspace
 import qualified BatchConnector.Commands                         as BatchCmd
-import           Empire.API.Data.NodeSearcher                    (Item (..))
+import           Text.ScopeSearcher.Item                         (Item (..))
+import qualified Text.ScopeSearcher.Scope                        as Scope
 import qualified Empire.API.Data.Project                         as Project
 import qualified JS.NodeSearcher                                 as UI
 import           Reactive.Commands.Command                       (Command, performIO)
 import           Reactive.Commands.NodeSearcher                  as NS
 import           Reactive.Commands.ProjectManager                (loadProject)
 import qualified Reactive.Plugins.Core.Action.General            as General
-import qualified Reactive.Plugins.Core.Action.NodeSearcher.Scope as Scope
 import qualified Reactive.State.Camera                           as Camera
 import qualified Reactive.State.Global                           as Global
 import qualified Reactive.State.UIElements                       as UIElements
@@ -29,17 +29,17 @@ commands :: Command Global.State ([(Text, Item)])
 commands = do
     projects <- uses (Global.workspace . Workspace.projects) IntMap.elems
 
-    let projectToItem p = (name, Function) where name = Text.pack $ fromMaybe "no_name" $ p ^. Project.name
+    let projectToItem p = (name, Element) where name = Text.pack $ fromMaybe "no_name" $ p ^. Project.name
         projectList = Map.fromList $ projectToItem <$> projects
-        projectCmd  = Map.fromList [ ("new",    Function)
-                                                , ("open",   Module projectList)
-                                                -- , ("rename", Function)
+        projectCmd  = Map.fromList [ ("new",    Element)
+                                                , ("open",   Group projectList)
+                                                -- , ("rename", Element)
                                                 ]
-    return [ ("project",  Module projectCmd)
-           , ("insert",   Function)
-           , ("feedback", Function)
-           , ("help",     Function)
-           , ("toggleTextEditor",     Function)
+    return [ ("project",          Group projectCmd)
+           , ("insert",           Element)
+           , ("feedback",         Element)
+           , ("help",             Element)
+           , ("toggleTextEditor", Element)
            ]
 
 
