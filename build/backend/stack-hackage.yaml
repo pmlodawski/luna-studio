@@ -13,6 +13,7 @@ packages:
 - ../../libs/rpc
 - ../../libs/utils
 - ../../libs/ws-connector
+- ../../libs/scope-searcher
 - ../../tools/batch/plugins/broker
 - ../../tools/batch/plugins/bus-logger
 - ../../tools/batch/plugins/luna-empire

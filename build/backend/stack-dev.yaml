@@ -14,6 +14,7 @@ packages:
 - {extra-dep: true, location: ../../libs/utils}
 - {extra-dep: true, location: ../../libs/ws-connector}
 - {extra-dep: true, location: ../../libs/batch/plugins/luna-empire}
+- {extra-dep: true, location: ../../libs/scope-searcher}
 - {location: ../../tools/batch/plugins/ws-connector}
 - {location: ../../tools/batch/plugins/broker}
 - {location: ../../tools/batch/plugins/bus-logger}
