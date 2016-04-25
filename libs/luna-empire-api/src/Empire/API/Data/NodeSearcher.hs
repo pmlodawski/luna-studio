@@ -1,5 +1,3 @@
-module Empire.API.Data.NodeSearcher where
+module Empire.API.Data.NodeSearcher(module X) where
 
-import qualified Text.ScopeSearcher.Item as ScopeItems (Items)
-
-type Items = ScopeItems.Items
+import Text.ScopeSearcher.Item as X
