@@ -1,151 +1,35 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main where
 
-import Text.ScopeSearcher.Searcher
+import           System.IO
+import           Control.Lens
+import qualified Data.Text.Lazy              as Text
+import           Text.Show.Pretty
+
+import           Text.ScopeSearcher.Item
+import qualified Text.ScopeSearcher.Scope    as Scope
+import qualified Text.ScopeSearcher.Searcher as Searcher
+
+import           MockDataNS
 
 main :: IO ()
 main = do
     putStrLn "ScopeSearcher test application"
+    putStrLn $ ppShow mockDataNS
+    putStrLn "Type :q to quit"
+    showHighlights
 
--- mockNSData  = NS.LunaModule $ Map.fromList  [
---          ("id"             , NS.Function)
---        , ("const"          , NS.Function)
---        , ("app"            , NS.Function)
---        , ("comp"           , NS.Function)
---        , ("flip"           , NS.Function)
---        , ("empty"          , NS.Function)
---        , ("singleton"      , NS.Function)
---        , ("switch"         , NS.Function)
---        , ("readFile"       , NS.Function)
---        , ("mean"           , NS.Function)
---        , ("differences"    , NS.Function)
---        , ("histogram"      , NS.Function)
---        , ("primes"         , NS.Function)
---        , ("List"           , NS.Module $ Map.fromList [
---                                              ("+"          , NS.Function)
---                                            , ("append"     , NS.Function)
---                                            , ("prepend"    , NS.Function)
---                                            , ("length"     , NS.Function)
---                                            , ("reverse"    , NS.Function)
---                                            , ("take"       , NS.Function)
---                                            , ("drop"       , NS.Function)
---                                            , ("sort"       , NS.Function)
+showHighlights :: IO ()
+showHighlights = do
+    putStr "> "
+    hFlush stdout
+    search <- getLine
+    if search == ":q"
+        then
+            putStrLn "Exiting"
+        else do
+            let suggestions = Scope.searchInScope False (mockDataNS ^. items) $ Text.pack search
+            putStrLn $ ppShow suggestions
+            showHighlights
 
---                                            , ("fold"       , NS.Function)
---                                            , ("map"        , NS.Function)
---                                            , ("zip"        , NS.Function)
---                                            , ("filter"     , NS.Function)
---                                            ])
---        , ("Int"            , NS.Module $ Map.fromList [
---                                              ("=="         , NS.Function)
---                                            , ("/="         , NS.Function)
---                                            , ("<"          , NS.Function)
---                                            , ("<="         , NS.Function)
---                                            , (">"          , NS.Function)
---                                            , (">="         , NS.Function)
---                                            , ("min"        , NS.Function)
---                                            , ("max"        , NS.Function)
-
---                                            , ("+"          , NS.Function)
---                                            , ("*"          , NS.Function)
---                                            , ("-"          , NS.Function)
---                                            , ("/"          , NS.Function)
---                                            , ("%"          , NS.Function)
---                                            , ("^"          , NS.Function)
-
---                                            , ("negate"     , NS.Function)
---                                            , ("abs"        , NS.Function)
---                                            , ("signum"     , NS.Function)
-
---                                            , ("pred"       , NS.Function)
---                                            , ("succ"       , NS.Function)
---                                            , ("even"       , NS.Function)
---                                            , ("odd"        , NS.Function)
-
---                                            , ("gcd"        , NS.Function)
---                                            , ("lcm"        , NS.Function)
-
---                                            , ("times"      , NS.Function)
---                                            , ("upto"       , NS.Function)
-
---                                            , ("toDouble"   , NS.Function)
---                                            , ("toString"   , NS.Function)
---                                            ])
---        , ("Double"         , NS.Module $ Map.fromList [
---                                              ("=="         , NS.Function)
---                                            , ("/="         , NS.Function)
---                                            , ("<"          , NS.Function)
---                                            , ("<="         , NS.Function)
---                                            , (">"          , NS.Function)
---                                            , (">="         , NS.Function)
---                                            , ("min"        , NS.Function)
---                                            , ("max"        , NS.Function)
-
---                                            , ("+"          , NS.Function)
---                                            , ("*"          , NS.Function)
---                                            , ("-"          , NS.Function)
---                                            , ("/"          , NS.Function)
---                                            , ("**"         , NS.Function)
-
---                                            , ("negate"     , NS.Function)
---                                            , ("abs"        , NS.Function)
---                                            , ("signum"     , NS.Function)
-
---                                            , ("round"      , NS.Function)
---                                            , ("ceiling"    , NS.Function)
---                                            , ("floor"      , NS.Function)
-
---                                            , ("exp"        , NS.Function)
---                                            , ("log"        , NS.Function)
---                                            , ("sqrt"       , NS.Function)
-
---                                            , ("sin"        , NS.Function)
---                                            , ("cos"        , NS.Function)
---                                            , ("tan"        , NS.Function)
---                                            , ("asin"       , NS.Function)
---                                            , ("acos"       , NS.Function)
---                                            , ("atan"       , NS.Function)
---                                            , ("sinh"       , NS.Function)
---                                            , ("cosh"       , NS.Function)
---                                            , ("tanh"       , NS.Function)
---                                            , ("asinh"      , NS.Function)
---                                            , ("acosh"      , NS.Function)
---                                            , ("atanh"      , NS.Function)
-
---                                            , ("toString"   , NS.Function)
---                                            ])
---        , ("Bool",            NS.Module $ Map.fromList [
---                                              ("=="         , NS.Function)
---                                            , ("/="         , NS.Function)
---                                            , ("<"          , NS.Function)
---                                            , ("<="         , NS.Function)
---                                            , (">"          , NS.Function)
---                                            , (">="         , NS.Function)
---                                            , ("min"        , NS.Function)
---                                            , ("max"        , NS.Function)
-
---                                            , ("&&"         , NS.Function)
---                                            , ("||"         , NS.Function)
---                                            , ("not"        , NS.Function)
-
---                                            , ("toString"   , NS.Function)
---                                            ])
---        , ("String"         , NS.Module $ Map.fromList [
---                                              ("=="         , NS.Function)
---                                            , ("/="         , NS.Function)
---                                            , ("<"          , NS.Function)
---                                            , ("<="         , NS.Function)
---                                            , (">"          , NS.Function)
---                                            , (">="         , NS.Function)
---                                            , ("min"        , NS.Function)
---                                            , ("max"        , NS.Function)
---                                            , ("+"          , NS.Function)
---                                            , ("length"     , NS.Function)
---                                            , ("reverse"    , NS.Function)
---                                            , ("take"       , NS.Function)
---                                            , ("drop"       , NS.Function)
---                                            , ("words"      , NS.Function)
---                                            , ("lines"      , NS.Function)
---                                            , ("join"       , NS.Function)
---                                            , ("toString"   , NS.Function)
---                                            ])
---        ]

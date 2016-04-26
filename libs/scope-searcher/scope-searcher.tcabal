@@ -11,7 +11,7 @@ library
   hs-source-dirs:      src
   ghc-options:         -Wall -O2 -threaded
   default-language:    Haskell2010
-  exposed-modules:   `findmodules('src', '.*\.hs')`
+  exposed-modules:     `findmodules('src', '.*\.hs')`
   extensions:          FlexibleContexts
                      , TemplateHaskell
                      , DeriveGeneric
@@ -23,11 +23,17 @@ library
                      , aeson
 
 executable scope-searcher-exe
-  hs-source-dirs:      app
+  hs-source-dirs:      app, test
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
+  other-modules:       `findmodules('test', '.*\.hs')`
   build-depends:       base
+                     , text
+                     , containers
+                     , lens
+                     , pretty-show
+                     , ansi-terminal
                      , scope-searcher
 
 test-suite scope-searcher-test
@@ -36,5 +42,9 @@ test-suite scope-searcher-test
   main-is:             Spec.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
+  other-modules:       `findmodules('test', '.*\.hs')`
   build-depends:       base
+                     , text
+                     , containers
+                     , lens
                      , scope-searcher

@@ -30,7 +30,8 @@ data QueryResult = QueryResult { _prefix     :: Text
                                , _name       :: Text
                                , _fullname   :: Text
                                , _highlights :: [Highlight]
-                               , _tpe        :: Text}
+                               , _tpe        :: Text
+                               } deriving (Eq, Show)
 
 
 data SearchableItem = SearchableItem { _itemWeight :: Double
