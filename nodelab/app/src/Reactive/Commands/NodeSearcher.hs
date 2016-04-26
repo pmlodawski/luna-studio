@@ -94,7 +94,7 @@ scopedData = do
                     Nothing -> Nothing
                     Just vt -> case vt of
                         ValueType.AnyType -> Nothing
-                        ValueType.TypeIdent ti -> Just ti
+                        ValueType.TypeIdent ti -> Just $ toString ti
             (_:_) -> return Nothing
     performIO $ putStrLn $ show scope
     case scope of

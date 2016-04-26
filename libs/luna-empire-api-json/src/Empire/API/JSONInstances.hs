@@ -19,6 +19,7 @@ import           Empire.API.Data.NodeMeta            as NodeMeta
 import           Empire.API.Data.Port                as Port
 import           Empire.API.Data.PortRef             as PortRef
 import           Empire.API.Data.Project             as Project
+import           Empire.API.Data.TypeRep             as TypeRep
 import           Empire.API.Data.ValueType           as ValueType
 import           Empire.API.Graph.AddNode            as AddNode
 import           Empire.API.Graph.CodeUpdate         as CodeUpdate
@@ -62,6 +63,8 @@ instance ToJSON Port.InPort
 instance ToJSON Port.OutPort
 instance ToJSON Port.PortId
 instance ToJSON Port.PortState
+
+instance ToJSON TypeRep.TypeRep
 
 instance ToJSON ValueType.ValueType
 instance ToJSON ValueType.ValueTypeEnum

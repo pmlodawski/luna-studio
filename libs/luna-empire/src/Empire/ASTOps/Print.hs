@@ -10,37 +10,29 @@ import           Data.Direction           (source)
 import           Empire.ASTOp             (ASTOp)
 import           Empire.Data.AST          (NodeRef)
 import qualified Empire.ASTOps.Builder    as ASTBuilder
+import           Empire.API.Data.TypeRep  (TypeRep (..))
 
 import           Old.Luna.Syntax.Term.Class   (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..), Curry (..), Lam (..))
 import qualified Old.Luna.Syntax.Term.Expr.Lit     as Lit
 
 import qualified Luna.Syntax.Model.Network.Builder as Builder
 
-getTypeString' :: ASTOp m => Bool -> Bool -> NodeRef -> m String
-getTypeString' parenCons parenLam tp = do
+getTypeRep :: ASTOp m => NodeRef -> m TypeRep
+getTypeRep tp = do
     tpNode <- Builder.read tp
-    let parenIf cond expr = if cond then "(" <> expr <> ")" else expr
     caseTest (uncover tpNode) $ do
         of' $ \(Cons (Lit.String s) as) -> do
             args <- ASTBuilder.unpackArguments as
-            case s of
-                "List" -> do
-                    reps <- mapM (getTypeString' False False) args
-                    return $ "[" <> concat reps <> "..]"
-                _ -> do
-                    reps <- mapM (getTypeString' True True) args
-                    let shouldParen = parenCons && (not . null $ reps)
-                    return $ parenIf shouldParen $ unwords (s : reps)
+            argReps <- mapM getTypeRep args
+            return $ TCons s argReps
         of' $ \(Lam as out) -> do
             args   <- ASTBuilder.unpackArguments as
-            outRep <- getTypeString' False True =<< Builder.follow source out
-            reps   <- mapM (getTypeString' False True) args
-            return $ parenIf parenLam $ intercalate " -> " reps <> " => " <> outRep
-        of' $ \(Var (Lit.String n)) -> return $ delete '#' n
-        of' $ \ANY -> return ""
-
-getTypeString :: ASTOp m => NodeRef -> m String
-getTypeString = getTypeString' False False
+            argReps <- mapM getTypeRep args
+            outRep <- getTypeRep =<< Builder.follow source out
+            return $ TLam argReps outRep
+        of' $ \(Var (Lit.String n)) -> return $ TVar $ delete '#' n
+        of' $ \Lit.Star -> return TStar
+        of' $ \ANY -> return TBlank
 
 printExpression' :: ASTOp m => Bool -> Bool -> NodeRef -> m String
 printExpression' suppresNodes paren nodeRef = do

@@ -27,6 +27,7 @@ import           GHC.Exts                           as X (IsList, Item, fromList
 import           GHC.Generics                       as X (Generic)
 import           Prelude                            hiding (mapM, mapM_, print, putStr, putStrLn, (.))
 import qualified Prelude
+import           Prologue                           as X (toString)
 import           Text.Show.Pretty                   (ppShow)
 
 import           Utils.Wrapper                      as X (Unwrap (unwrap), UnwrapT (unwrapT), Wrap (wrap), WrapT (wrapT), Wrapper, WrapperT, rewrap)

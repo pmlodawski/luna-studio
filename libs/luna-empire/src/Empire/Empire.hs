@@ -9,6 +9,7 @@ import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.AsyncUpdate   (AsyncUpdate)
 import           Empire.API.Data.DefaultValue  (Value)
 import           Empire.API.Data.Node          (Node)
+import           Empire.API.Data.TypeRep       (TypeRep)
 import qualified Empire.API.Data.Error         as APIError
 
 import           Control.Monad.State
@@ -39,7 +40,7 @@ instance Show CommunicationEnv where
 
 data InterpreterEnv = InterpreterEnv { _valuesCache :: IntMap (Maybe Value)
                                      , _nodesCache  :: IntMap Node
-                                     , _errorsCache :: IntMap (APIError.Error String)
+                                     , _errorsCache :: IntMap (APIError.Error TypeRep)
                                      , _graph       :: Graph
                                      } deriving (Show)
 makeLenses ''InterpreterEnv

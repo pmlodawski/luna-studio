@@ -19,6 +19,7 @@ import           Empire.Empire
 import           Empire.API.Data.DefaultValue (PortDefault, Value (..))
 import           Empire.API.Data.NodeMeta     (NodeMeta)
 import           Empire.API.Data.Node         (NodeId)
+import           Empire.API.Data.TypeRep      (TypeRep)
 import qualified Empire.API.Data.Error        as APIError
 import           Empire.Data.NodeMarker       (NodeMarker (..))
 import           Empire.Data.AST              (AST, NodeRef, ASTNode)
@@ -86,10 +87,10 @@ getNodeValue ref = runASTOp $ do
 readMeta :: NodeRef -> Command AST (Maybe NodeMeta)
 readMeta ref = runASTOp $ HMap.lookup metaKey . view (prop Meta) <$> Builder.read ref
 
-getError :: NodeRef -> Command AST (Maybe (APIError.Error String))
+getError :: NodeRef -> Command AST (Maybe (APIError.Error TypeRep))
 getError = runASTOp . getError'
 
-getError' :: ASTOp m => NodeRef -> m (Maybe (APIError.Error String))
+getError' :: ASTOp m => NodeRef -> m (Maybe (APIError.Error TypeRep))
 getError' ref = do
     n :: ASTNode <- Builder.read ref
     err <- mapM reprError $ n ^. prop TCData . tcErrors
@@ -97,17 +98,17 @@ getError' ref = do
     inpErrs <- concat . fmap maybeToList <$> mapM getError' inps
     return $ tryHead err <|> tryHead inpErrs
 
-reprError :: ASTOp m => TCError NodeRef -> m (APIError.Error String)
+reprError :: ASTOp m => TCError NodeRef -> m (APIError.Error TypeRep)
 reprError tcErr = case tcErr of
     TCError.ImportError Nothing m  -> return $ APIError.ImportError m
     TCError.ImportError (Just n) m -> do
         tp <- Builder.follow source =<< Builder.follow (prop Type) n
-        tpRep <- Printer.getTypeString tp
+        tpRep <- Printer.getTypeRep tp
         return $ APIError.NoMethodError m tpRep
     TCError.UnificationError uni -> do
         uniNode <- Builder.read uni
         caseTest (uncover uniNode) $ do
-            of' $ \(Unify l r) -> APIError.TypeError <$> (Printer.getTypeString =<< Builder.follow source l) <*> (Printer.getTypeString =<< Builder.follow source r)
+            of' $ \(Unify l r) -> APIError.TypeError <$> (Printer.getTypeRep =<< Builder.follow source l) <*> (Printer.getTypeRep =<< Builder.follow source r)
             of' $ \ANY         -> impossible
 
 writeMeta :: NodeRef -> NodeMeta -> Command AST ()

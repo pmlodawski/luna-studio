@@ -6,9 +6,10 @@ import           Prologue
 import qualified Empire.API.Data.DefaultValue  as DV (Value)
 import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.Node          (NodeId)
+import           Empire.API.Data.TypeRep       (TypeRep)
 import           Empire.API.Data.Error         (Error)
 
-data NodeValue = NoValue | Value DV.Value | Error (Error String) deriving (Show, Eq, Generic)
+data NodeValue = NoValue | Value DV.Value | Error (Error TypeRep) deriving (Show, Eq, Generic)
 
 data Update = Update { _location :: GraphLocation
                      , _nodeId   :: NodeId

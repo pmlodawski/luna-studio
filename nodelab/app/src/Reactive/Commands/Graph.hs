@@ -49,22 +49,32 @@ import qualified Empire.API.Data.PortRef       as PortRef
 import           Empire.API.Data.Connection    (Connection, ConnectionId)
 import qualified Empire.API.Data.Connection    as Connection
 import           Empire.API.Data.ValueType     (ValueType (..))
+import           Empire.API.Data.TypeRep       (TypeRep (..))
 import           Empire.API.Data.Port          (PortId(..))
 import qualified Empire.API.Data.Port          as Port
 import qualified Empire.API.Data.ValueType     as ValueType
 
+hashMany :: [TypeRep] -> Int
+hashMany as = sum $ zipWith (*) powers (tpRepToColor <$> as) where
+    powers = (37 ^) <$> [0..]
 
-vtToColor AnyType = 0
-vtToColor (TypeIdent tn) = case tn of
-     "Int"        -> 1
-     "Bool"       -> 2
-     "Double"     -> 3
-     "String"     -> 4
-     "[Int..]"    -> 5
-     "[Double..]" -> 6
-     "[Bool..]"   -> 7
-     "[String..]" -> 8
-     _            -> 9 -- + hash tn `mod` 8
+ensureRange n = (n `mod` 8) + 1
+
+tpRepToColor :: TypeRep -> Int
+tpRepToColor (TCons tn as) = ensureRange $ case tn of
+     "Int"        -> 0
+     "Bool"       -> 1
+     "Double"     -> 2
+     "String"     -> 3
+     "List"       -> 5 + hashMany as
+     _            -> hash tn + hashMany as
+tpRepToColor (TLam as out) = ensureRange . hashMany $ out : as
+tpRepToColor (TVar n) = 9
+tpRepToColor _ = 0
+
+vtToColor (TypeIdent t) = tpRepToColor t
+vtToColor _ = 0
+
 colorPort port = vtToColor $ port ^. Port.valueType
 
 

@@ -85,6 +85,7 @@ import           Empire.API.Data.NodeMeta          (NodeMeta)
 import           Empire.API.Data.Port              (InPort (..), InPort (..), OutPort (..), Port (..), PortId (..))
 import qualified Empire.API.Data.Port              as Port
 import           Empire.API.Data.PortRef           (AnyPortRef (..), InPortRef (..), toAnyPortRef)
+import           Empire.API.Data.TypeRep           (TypeRep)
 import           Empire.API.Data.ValueType         (ValueType (..))
 import qualified Empire.API.Data.ValueType         as ValueType
 import qualified Empire.API.Graph.NodeResultUpdate as NodeResult
@@ -184,7 +185,7 @@ displayPorts id node = do
 vtToText :: Getter ValueType Text
 vtToText = to $ \v -> case v of
     ValueType.AnyType     -> "*"
-    ValueType.TypeIdent a -> Text.pack a
+    ValueType.TypeIdent a -> Text.pack $ toString a
 
 
 
@@ -450,13 +451,13 @@ visualizeNodeValue id (DataFrame cols) = do
 visualizeNodeValue _ _ = return ()
 
 
-visualizeError :: NodeId -> LunaError.Error String -> Command UIRegistry.State ()
+visualizeError :: NodeId -> LunaError.Error TypeRep -> Command UIRegistry.State ()
 visualizeError id err = do
     groupId <- Node.valueGroupId id
     let msg  = case err of
-            LunaError.ImportError   name     -> "Cannot find symbol \"" <> name <> "\""
-            LunaError.NoMethodError name tpe -> "Cannot find method \"" <> name <> "\" for type \"" <> tpe <> "\""
-            LunaError.TypeError     t1   t2  -> "Cannot match type  \"" <> t1   <> "\" with \"" <> t2 <> "\""
+            LunaError.ImportError   name     -> "Cannot find symbol \"" <> name        <> "\""
+            LunaError.NoMethodError name tpe -> "Cannot find method \"" <> name        <> "\" for type \"" <> toString tpe <> "\""
+            LunaError.TypeError     t1   t2  -> "Cannot match type  \"" <> toString t1 <> "\" with \""     <> toString t2  <> "\""
         widget = LongText.create (Vector2 200 200) (Text.pack msg) LongText.Left
     UICmd.register_ groupId widget def
 

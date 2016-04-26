@@ -134,8 +134,8 @@ buildArgPorts ref = do
 buildSelfPort' :: ASTOp m => Bool -> NodeRef -> m (Maybe Port)
 buildSelfPort' seenAcc nodeRef = do
     node <- Builder.read nodeRef
-    let buildPort = do
-        tpRep     <- followTypeRep nodeRef
+    let buildPort noType = do
+        tpRep     <- if noType then return AnyType else followTypeRep nodeRef
         portState <- getPortState nodeRef
         return . Just $ Port (InPortId Self) "self" tpRep portState
 
@@ -143,8 +143,8 @@ buildSelfPort' seenAcc nodeRef = do
         of' $ \(Acc _ t) -> Builder.follow source t >>= buildSelfPort' True
         of' $ \(App t _) -> Builder.follow source t >>= buildSelfPort' seenAcc
         of' $ \Blank     -> return Nothing
-        of' $ \(Var _)   -> buildPort
-        of' $ \ANY       -> if seenAcc then buildPort else return Nothing
+        of' $ \(Var _)   -> if seenAcc then buildPort False else buildPort True
+        of' $ \ANY       -> if seenAcc then buildPort False else return Nothing
 
 buildSelfPort :: ASTOp m => NodeRef -> m (Maybe Port)
 buildSelfPort = buildSelfPort' False
@@ -156,10 +156,8 @@ followTypeRep ref = do
 
 getTypeRep :: ASTOp m => NodeRef -> m ValueType
 getTypeRep tp = do
-    str <- Print.getTypeString tp
-    case str of
-        "" -> return AnyType
-        s  -> return $ TypeIdent s
+    rep <- Print.getTypeRep tp
+    return $ TypeIdent rep
 
 buildPorts :: NodeRef -> Command Graph [Port]
 buildPorts ref = zoom Graph.ast $ runASTOp $ do
