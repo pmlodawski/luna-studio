@@ -3,26 +3,27 @@ module JS.NodeSearcher where
 import           Utils.PreludePlus
 
 import           GHCJS.DOM.EventM
-import           GHCJS.DOM.EventTargetClosures (EventName, unsafeEventName)
-import           GHCJS.DOM.Types               (IsUIEvent, UIEvent, Window, toUIEvent, unUIEvent)
+import           GHCJS.DOM.EventTargetClosures  (EventName, unsafeEventName)
+import           GHCJS.DOM.Types                (IsUIEvent, UIEvent, Window, toUIEvent, unUIEvent)
 import           GHCJS.Foreign
-import           GHCJS.Types                   (JSRef, JSString)
+import           GHCJS.Types                    (JSRef, JSString)
 
 import           Utils.Vector
 
-import qualified Data.JSString                 as JSString
-import           Data.JSString.Text            (lazyTextFromJSString, lazyTextToJSString)
+import qualified Data.JSString                  as JSString
+import           Data.JSString.Text             (lazyTextFromJSString, lazyTextToJSString)
 
-import           JavaScript.Array              (JSArray)
-import qualified JavaScript.Array              as JSArray
+import           JavaScript.Array               (JSArray)
+import qualified JavaScript.Array               as JSArray
 
-import           Data.Text.Lazy                (Text)
-import qualified Data.Text.Lazy                as Text
+import           Data.Text.Lazy                 (Text)
+import qualified Data.Text.Lazy                 as Text
 
-import           Control.Monad.IO.Class        (MonadIO (..))
+import           Control.Monad.IO.Class         (MonadIO (..))
 
 
-import           Text.ScopeSearcher.Scope      (Highlight(..), QueryResult(..))
+import           Text.ScopeSearcher.QueryResult (Highlight (..), QueryResult (..))
+
 
 
 foreign import javascript safe "app.createNodeSearcher($1, $2, $3, $4, $5)"

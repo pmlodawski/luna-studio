@@ -3,8 +3,6 @@
 module Text.ScopeSearcher.Scope (
       moduleItems
     , searchInScope
-    , Highlight(..)
-    , QueryResult(..)
     ) where
 
 import           Prelude
@@ -12,6 +10,7 @@ import           Prelude
 import           Data.Monoid                                        ((<>))
 import           Data.Map                                           (Map)
 import qualified Data.Map                                           as Map
+import           Control.Lens
 import           GHC.Exts                                           (sortWith)
 
 import           Data.Text.Lazy                                     (Text)
@@ -21,17 +20,9 @@ import           Text.ScopeSearcher.Searcher                        (Nameable, W
 import qualified Text.ScopeSearcher.Searcher                        as Searcher
 
 import           Text.ScopeSearcher.Item                            (Item(..), Items)
+import           Text.ScopeSearcher.QueryResult                     (QueryResult(..), Highlight(..))
 
 type Path = [Text]
-
-data Highlight = Highlight { start :: Int, len :: Int } deriving (Show, Eq)
-
-data QueryResult = QueryResult { _prefix     :: Text
-                               , _name       :: Text
-                               , _fullname   :: Text
-                               , _highlights :: [Highlight]
-                               , _tpe        :: Text
-                               } deriving (Eq, Show)
 
 
 data SearchableItem = SearchableItem { _itemWeight :: Double
@@ -46,6 +37,7 @@ instance Nameable SearchableItem where
 instance Weightable SearchableItem where
     weight (SearchableItem w _ _ _) = w
 
+makeLenses ''SearchableItem
 
 jsItemType :: Item -> Text
 jsItemType Element    = "function"
