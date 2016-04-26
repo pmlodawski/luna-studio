@@ -5,6 +5,8 @@ module MockDataNS where
 import qualified Data.Map                    as Map
 import           Text.ScopeSearcher.Item
 
+mockItemsNS = _items mockDataNS
+
 mockDataNS  = Group $ Map.fromList  [
          ("id"             , Element)
        , ("const"          , Element)
