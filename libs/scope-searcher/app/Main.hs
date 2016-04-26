@@ -4,7 +4,7 @@ module Main where
 
 import           System.IO
 import           Control.Lens
-import           Control.Monad               (forM_)
+import           Control.Monad               (forM_, when)
 import           Data.Text.Lazy              (Text)
 import qualified Data.Text.Lazy              as Text
 import           Text.Show.Pretty
@@ -21,35 +21,44 @@ main :: IO ()
 main = do
     putStrLn "ScopeSearcher test application"
     withColor Vivid Yellow putStrLn $ ppShow mockDataNS
-    withColor Vivid Red    putStrLn "Type :q to quit"
+    withColor Vivid Green  putStrLn "Press enter to quit."
     showHighlights
 
 showHighlights :: IO ()
 showHighlights = do
     withColor Vivid Blue putStr "> "
     hFlush stdout
-    search <- getLine
-    if search == ":q"
+    input <- getLine
+    if null input
         then do
-            withColor Dull Red putStrLn "Exiting"
+            withColor Vivid Red putStrLn "Leaving ScopeSearcher."
         else do
-            showQueryResult $ Text.pack search
+            let debug = head input == '!'
+                search = if debug then tail input else input
+            showQueryResults debug $ Text.pack search
             showHighlights
 
-
-showQueryResult :: Text -> IO ()
-showQueryResult searchText = do
+showQueryResults :: Bool -> Text -> IO ()
+showQueryResults debug searchText = do
     let suggestions = Scope.searchInScope False (mockDataNS ^. items) searchText
-    withColor Dull Yellow putStrLn $ ppShow suggestions
-    forM_ suggestions $ printQueryResult searchText
+    when debug $ withColor Dull Yellow putStrLn $ ppShow suggestions
+    forM_ suggestions showQueryResult
+
+showQueryResult :: QueryResult -> IO ()
+showQueryResult queryResult = showHighlight 0 (queryResult ^. highlights) $ Text.unpack (queryResult ^. name)
+
+showHighlight :: Int -> [Highlight] -> String -> IO ()
+showHighlight _ [] str = withColor Dull White putStrLn str
+showHighlight pos ((Highlight start len):highlights) str = do
+    let hlPos = start - pos
+        (normal, remainder) = splitAt hlPos str
+        (highlighted, rest) = splitAt len remainder
+    withColor Dull  White putStr normal
+    withColor Vivid Red   putStr highlighted
+    showHighlight (hlPos + len) highlights rest
 
 withColor :: Show a => ColorIntensity -> Color -> (a -> IO ()) -> a -> IO ()
 withColor colorIntensity color printFun output = do
     setSGR [SetColor Foreground colorIntensity color]
     printFun output
     setSGR [SetColor Foreground Vivid White]
-
-printQueryResult :: Text -> QueryResult -> IO ()
-printQueryResult search queryResult = do
-    putStrLn $ show $ queryResult ^. name
-    putStrLn $ show . head $ queryResult ^. highlights
