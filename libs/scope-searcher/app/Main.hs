@@ -29,10 +29,16 @@ instance Default Env where
 
 makeLenses ''Env
 
+lineWidth     = 54
+moduleWidth   = 18
+functionWidth = 22
+
 main :: IO ()
 main = do
     withColor Vivid Magenta putStrLn "ScopeSearcher test application"
+    showLine
     withColor Vivid Yellow  putStrLn "@     - show mock\n?     - toggle debug\n/     - toggle include path\nenter - quit"
+    showLine
     evalStateT showHighlights def
     withColor Vivid Red putStrLn "Leaving ScopeSearcher."
 
@@ -74,18 +80,31 @@ getUserInput = do
     hFlush stdout
     getLine
 
+showLine :: IO ()
+showLine = withColor Dull Green putStrLn $ replicate lineWidth '-'
+
+fillLeft, fillRight :: Int -> String -> String
+fillLeft  n s = s <> replicate (n - length s) ' '
+fillRight n s = replicate (n - length s) ' ' <> s
+
 showQueryResults :: Bool -> Bool -> Text -> IO ()
 showQueryResults debug includePath searchText = do
     let suggestions = Scope.searchInScope includePath (mockDataNS ^. items) searchText
     when debug $ withColor Dull Yellow putStrLn $ ppShow suggestions
+    showLine
     forM_ suggestions showQueryResult
+    showLine
 
 showQueryResult :: QueryResult -> IO ()
-showQueryResult queryResult = do
-    showHighlight 0 (queryResult ^. highlights) $ Text.unpack (queryResult ^. name)
+showQueryResult (QueryResult prefix name fullname highlights tpe) = do
+    let nameString = Text.unpack name
+    withColor Dull Blue putStr $ fillRight moduleWidth $ (Text.unpack prefix) <> " "
+    showHighlight 0 highlights nameString
+    putStr $ replicate (functionWidth - length nameString) ' '
+    putStrLn $ Text.unpack tpe
 
 showHighlight :: Int -> [Highlight] -> String -> IO ()
-showHighlight _ [] str = withColor Dull White putStrLn str
+showHighlight _ [] str = withColor Dull White putStr str
 showHighlight pos ((Highlight start len):highlights) str = do
     let hlPos = start - pos
         (normal, remainder) = splitAt hlPos str
@@ -98,4 +117,4 @@ withColor :: Show a => ColorIntensity -> Color -> (a -> IO ()) -> a -> IO ()
 withColor colorIntensity color printFun output = do
     setSGR [SetColor Foreground colorIntensity color]
     printFun output
-    setSGR [SetColor Foreground Vivid White]
+    setSGR [SetColor Foreground Dull White]
