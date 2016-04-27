@@ -7,6 +7,7 @@ import           Control.Monad.Error     (throwError)
 import           Control.Monad           (forM, forM_)
 import           Data.IntMap             (IntMap)
 import qualified Data.IntMap             as IntMap
+import           Data.List               (sort)
 import qualified Data.Map                as Map
 import           Data.Maybe              (isNothing, fromMaybe)
 
@@ -80,9 +81,12 @@ runTC = do
 
 runInterpreter :: Command Graph ()
 runInterpreter = do
-    allNodeIds <- uses Graph.nodeMapping IntMap.keys
-    evals      <- mapM GraphUtils.getASTTarget allNodeIds
     ast        <- use Graph.ast
+    allNodes   <- uses Graph.nodeMapping IntMap.keys
+    refs       <- mapM GraphUtils.getASTPointer allNodes
+    metas      <- zoom Graph.ast $ mapM AST.readMeta refs
+    let sorted = fmap snd $ sort $ zip metas allNodes
+    evals      <- mapM GraphUtils.getASTVar sorted
     newAst     <- liftIO $ fmap snd $ flip ASTOp.runBuilder ast $ Interpreter.run evals
     Graph.ast .= newAst
     return ()
@@ -98,7 +102,7 @@ updateNodes loc = do
         if cachedErr /= err
             then do
                 errorsCache %= IntMap.alter (const err) id
-                valuesCache  %= IntMap.delete id
+                valuesCache %= IntMap.delete id
                 case err of
                     Just e  -> Publisher.notifyResultUpdate loc id (NodeResult.Error e) 0
                     Nothing -> Publisher.notifyResultUpdate loc id (NodeResult.NoValue) 0
