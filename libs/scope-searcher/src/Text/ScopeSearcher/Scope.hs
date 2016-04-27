@@ -48,7 +48,7 @@ searchableItems' :: Double -> Text -> Items -> [SearchableItem]
 searchableItems' weight prefix items = Map.foldMapWithKey addItems items where
     addItems :: Text -> Item -> [SearchableItem]
     addItems name i@Element   = [SearchableItem weight prefix name i]
-    addItems name i@(Group m) = [SearchableItem weight prefix name i] ++ (searchableItems' (weight * 0.9) (nameWithPrefix prefix name) m)
+    addItems name i@(Group m) = [SearchableItem weight prefix name i] ++ (searchableItems' (weight * 0.99) (nameWithPrefix prefix name) m)
     nameWithPrefix "" name = name
     nameWithPrefix prefix name = prefix <> "." <> name
 

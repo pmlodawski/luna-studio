@@ -25,7 +25,7 @@ data Env = Env { _debug       :: Bool
                } deriving (Show)
 
 instance Default Env where
-    def = Env False False
+    def = Env True False
 
 makeLenses ''Env
 

@@ -22,6 +22,7 @@ group  = Group $ Map.fromList  [
        , ("histogram"      , Element)
        , ("primes"         , Element)
 -- purely for testing
+       , ("filter"         , Element)
        , ("moaBurger"      , Element)
        , ("MapOverAny"     , Element)
 -- !purely for testing

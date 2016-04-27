@@ -24,11 +24,11 @@ library
                      , aeson
 
 executable scope-searcher-exe
-  hs-source-dirs:      app, test
+  hs-source-dirs:      app, data
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
-  other-modules:       `findmodules('test', '.*\.hs')`
+  other-modules:       `findmodules('data', '.*\.hs')`
   default-extensions:  FlexibleContexts
                      , TemplateHaskell
   build-depends:       base
@@ -43,11 +43,11 @@ executable scope-searcher-exe
 
 test-suite scope-searcher-test
   type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
-  main-is:             Spec.hs
+  hs-source-dirs:      test, data
+  main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
-  other-modules:       `findmodules('test', '.*\.hs')`
+  other-modules:       `findmodules('data', '.*\.hs')`
   build-depends:       base
                      , text
                      , containers

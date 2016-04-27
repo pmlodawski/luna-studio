@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Text.ScopeSearcher.Searcher (
-      findSuggestions
-    , Nameable(..)
-    , Weightable(..)
-    , Match(..)
-    , Submatch(..)
-    ) where
+module Text.ScopeSearcher.Searcher where
+    -- ( findSuggestions
+    -- , Nameable(..)
+    -- , Weightable(..)
+    -- , Match(..)
+    -- , Submatch(..)
+    -- ) where
 
 import           Prelude
 
@@ -99,14 +99,9 @@ compareFirstPrefixStart (Submatch s1 _ : _) (Submatch s2 _ : _) = s2 `compare` s
 
 rank :: Text -> Text -> [Submatch] -> Score
 -- Ranking algorithm heavily inspired on Textmate implementation: https://github.com/textmate/textmate/blob/master/Frameworks/text/src/ranker.cc
-rank choice query match
-    | n == capitalsTouched = let score = (denom - 1) / denom + penalty in Score score penalty
-    | otherwise            = let
-                                    subtract = substrings * n + (n - capitalsTouched)
-                                    -- score    = (denom - subtract) / (denom + penalty)
-                                    score    = (denom - subtract) / denom + penalty
-                             in Score score penalty
+rank choice query match = Score score score n m bounty bounty1 bounty2 bounty3 denom substrings prefixSize subtract capitalsTouched totalCapitals
     where
+        score           = (denom - subtract) / denom + bounty
         capitalsTouched = fromIntegral $ countWordBoundaries choice match
         totalCapitals   = fromIntegral $ countTrue $ wordBoundaries choice
         n               = fromIntegral $ Text.length query
@@ -116,9 +111,12 @@ rank choice query match
         prefixSize      = case match of
             ((Submatch 0 l) : xs) -> fromIntegral l
             _                     -> fromIntegral 0
-        -- penalty = (m - prefixSize) * m / (2.0 * denom) + capitalsTouched / totalCapitals / (4.0 * denom) + n * m / (8.0 * denom)
-        penalty = (m - prefixSize) / m / (2.0 * denom) + capitalsTouched / totalCapitals / (4.0 * denom) + n / m / (8.0 * denom)
-
+        subtract = if n == capitalsTouched then 1 else substrings * n + (n - capitalsTouched)
+        -- bounty1 = (m - prefixSize) / m / (2.0 * denom)     -- original formula giving bad behaviour
+        bounty1 = 1 / (1 + m - prefixSize) / m / (2.0 * denom)
+        bounty2 = capitalsTouched / totalCapitals / (4.0 * denom)
+        bounty3 = n / m / (8.0 * denom)
+        bounty =  bounty1 + bounty2 + bounty3
 
 countWordBoundaries :: Text -> [Submatch] -> Int
 countWordBoundaries t sm = sum $ fmap (countTrue . substring) sm where
@@ -130,7 +128,7 @@ countTrue :: [Bool] -> Int
 countTrue list = sum $ map fromEnum list
 
 wordBoundaries :: Text -> [Bool]
-wordBoundaries t = reverse out where
-                   f :: (Bool, [Bool]) -> Char -> (Bool, [Bool])
-                   f (atBow, l) c = (((not $ isAlphaNum c) && c /= '.'), (atBow && isAlphaNum c || isUpper c) : l)
-                   (_, out) = Text.foldl f (True, []) t
+wordBoundaries t = True : (tail $ reverse out) where         -- first always True - for strings such as '/='
+    f :: (Bool, [Bool]) -> Char -> (Bool, [Bool])
+    f (atBow, l) c = (((not $ isAlphaNum c) && c /= '.'), (atBow && isAlphaNum c || isUpper c) : l)
+    (_, out) = Text.foldl f (True, []) t

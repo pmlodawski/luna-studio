@@ -71,7 +71,7 @@ main :: IO Counts
 main = do
     runTestTT $ TestList [
           testSearchApp
-        -- , testSearchCos
+        , testSearchCos
         , testSearchDou
-        -- , testSearchAe
+        , testSearchAe
         ]
