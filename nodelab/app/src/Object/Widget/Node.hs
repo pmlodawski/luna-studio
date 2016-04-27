@@ -38,21 +38,22 @@ data Node = Node { _nodeId     :: Int
 makeLenses ''Node
 instance ToJSON Node
 
-makeNode :: Int -> Position -> Text -> Text -> Maybe Text -> Node
-makeNode id pos expr name tpe = Node id [] [] pos 0.0 expr name "" tpe False False False False Nothing False
+makeNode :: Int -> Position -> Text -> Text -> Maybe Text -> Bool -> Node
+makeNode id pos expr name tpe req = Node id [] [] pos 0.0 expr name "" tpe False False False req Nothing False
 
 fromNode :: N.Node -> Node
 fromNode n = let position' = uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position
                  nodeId'   = n ^. N.nodeId
                  name'     = n ^. N.name
+                 req       = n ^. N.nodeMeta . NM.isRequired
     in
     case n ^. N.nodeType of
-        N.ExpressionNode expression ->  makeNode nodeId' position' expression name' Nothing
-        N.InputNode inputIx         ->  makeNode nodeId' position' (Text.pack $ "Input " <> show inputIx) name' (Just tpe) where
+        N.ExpressionNode expression ->  makeNode nodeId' position' expression name' Nothing  req
+        N.InputNode inputIx         ->  makeNode nodeId' position' (Text.pack $ "Input " <> show inputIx) name' (Just tpe) req where
             tpe = Text.pack $ fromMaybe "?" $ show <$> n ^? N.ports . ix (P.OutPortId P.All) . P.valueType
-        N.OutputNode outputIx       ->  makeNode nodeId' position' (Text.pack $ "Output " <> show outputIx) name' Nothing
-        N.ModuleNode                ->  makeNode nodeId' position' "Module"    name' Nothing
-        N.FunctionNode tpeSig       -> (makeNode nodeId' position' "Function"  name' Nothing) & value .~ (Text.pack $ intercalate " -> " tpeSig)
+        N.OutputNode outputIx       ->  makeNode nodeId' position' (Text.pack $ "Output " <> show outputIx) name' Nothing req
+        N.ModuleNode                ->  makeNode nodeId' position' "Module"    name' Nothing req
+        N.FunctionNode tpeSig       -> (makeNode nodeId' position' "Function"  name' Nothing req) & value .~ (Text.pack $ intercalate " -> " tpeSig)
 
 
 instance IsDisplayObject Node where

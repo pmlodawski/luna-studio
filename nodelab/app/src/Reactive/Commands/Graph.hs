@@ -246,7 +246,9 @@ updateNodeMeta nodeId meta = do
     Global.graph . Graph.nodesMap . ix nodeId . Node.nodeMeta .= meta
     inRegistry $ do
         widgetId <- nodeIdToWidgetId nodeId
-        forM_ widgetId $ flip UICmd.move (fromTuple $  meta ^. NodeMeta.position)
+        withJust widgetId $ \widgetId -> do
+            UICmd.update widgetId $ Model.isRequired .~ (meta ^. NodeMeta.isRequired)
+            UICmd.move   widgetId $ fromTuple $  meta ^. NodeMeta.position
     updateConnections
 
 

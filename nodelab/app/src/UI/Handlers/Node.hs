@@ -292,6 +292,10 @@ instance CompositeWidget Model.Node where
             UICmd.update_ valueId  $ Label.alignment .~ (if model ^. Model.isExpanded then Label.Left else Label.Center)
             UICmd.moveX   valueId  $ if model ^. Model.isExpanded then 0.0 else -25.0
 
+        whenChanged old model Model.isRequired $ do
+            toggleId  <- isRequiredId  id
+            UICmd.update_ toggleId $ Toggle.value .~ (model ^. Model.isRequired)
+
 
 portControlsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
 portControlsGroupId id = do
