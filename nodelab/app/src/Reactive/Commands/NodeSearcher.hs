@@ -31,6 +31,7 @@ import qualified Reactive.State.UIRegistry                       as UIRegistry
 
 import qualified Empire.API.Data.Node                            as Node
 import qualified Empire.API.Data.Port                            as Port
+import qualified Empire.API.Data.TypeRep                         as TypeRep
 import qualified Empire.API.Data.ValueType                       as ValueType
 
 import qualified Text.ScopeSearcher.Scope                        as Scope
@@ -93,21 +94,18 @@ scopedData = do
                 return $ case vt of
                     Nothing -> Nothing
                     Just vt -> case vt of
-                        ValueType.AnyType -> Nothing
-                        ValueType.TypeIdent ti -> Just $ toString ti
+                        ValueType.TypeIdent (TypeRep.TCons ti _) -> Just $ Text.pack ti
+                        _ -> Nothing
             (_:_) -> return Nothing
-    performIO $ putStrLn $ show scope
     case scope of
         Nothing -> return completeData
         Just tn -> do
             let gf = globalFunctions completeData
                 items = completeData
-                tn' = if Text.isPrefixOf "[" (Text.pack tn) then "List" else (Text.pack tn)
-                mayScope = items ^? ix tn' . _Group
+                mayScope = items ^? ix tn . _Group
                 scope = fromMaybe mempty mayScope
                 scopefuns = globalFunctions scope
                 overallScope = Map.union scopefuns gf
-            performIO $ putStrLn $ show overallScope
             return overallScope
 
 
