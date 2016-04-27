@@ -19,6 +19,7 @@ library
                      , text
                      , containers
                      , lens
+                     , data-default
                      , binary
                      , aeson
 
@@ -51,5 +52,6 @@ test-suite scope-searcher-test
                      , text
                      , containers
                      , lens
+                     , data-default
                      , scope-searcher
                      , HUnit

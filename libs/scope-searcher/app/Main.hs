@@ -18,7 +18,7 @@ import           Text.ScopeSearcher.QueryResult
 import qualified Text.ScopeSearcher.Scope    as Scope
 import qualified Text.ScopeSearcher.Searcher as Searcher
 
-import           MockDataNS
+import qualified Mock.Mix                    as Mock
 
 data Env = Env { _debug       :: Bool
                , _includePath :: Bool
@@ -37,42 +37,47 @@ main :: IO ()
 main = do
     withColor Vivid Magenta putStrLn "ScopeSearcher test application"
     showLine
-    withColor Vivid Yellow  putStrLn "@     - show mock\n?     - toggle debug\n/     - toggle include path\nenter - quit"
+    showHelp
     showLine
     evalStateT showHighlights def
     withColor Vivid Red putStrLn "Leaving ScopeSearcher."
 
+showHelp :: IO ()
+showHelp =  withColor Vivid Yellow  putStrLn ":h      - show help\n:m      - show mock\n:d      - toggle debug\n:p      - toggle include path\n[enter] - quit"
+
 showMock :: IO ()
-showMock = withColor Vivid Green putStrLn $ ppShow mockDataNS
+showMock = withColor Vivid Green putStrLn $ ppShow Mock.group
 
 showHighlights :: StateT Env IO ()
 showHighlights = do
     input <- liftIO $ getUserInput
     when (not $ null input) $ do
-        let shouldToggleDebug       = input == "?"
-            shouldToggleIncludePath = input == "/"
-            shouldShowMock          = input == "@"
+        let shouldToggleDebug       = take 2 input == ":d"
+            shouldToggleIncludePath = take 2 input == ":p"
+            shouldShowMock          = take 2 input == ":m"
+            shouldShowHelp          = take 2 input == ":h"
         debugState       <- use debug
         includePathState <- use includePath
-        case (shouldToggleDebug, shouldToggleIncludePath, shouldShowMock) of
-            (False, False, False) -> liftIO $ showQueryResults debugState includePathState $ Text.pack input
-            (_, _, _) -> do
+        case (shouldToggleDebug, shouldToggleIncludePath, shouldShowMock, shouldShowHelp) of
+            (False, False, False, False) -> liftIO $ showQueryResults debugState includePathState $ Text.pack input
+            (_, _, _, _) -> do
                 when shouldToggleDebug       updateDebug
                 when shouldToggleIncludePath updateIncludePath
                 when shouldShowMock $ liftIO showMock
+                when shouldShowHelp $ liftIO showHelp
         showHighlights
 
 updateDebug :: StateT Env IO ()
 updateDebug = zoom debug $ do
     modify not
     debug <- get
-    liftIO $ withColor Vivid Yellow putStrLn $ "Toggled debug to " <> show debug
+    liftIO $ withColor Vivid Red putStrLn $ "Toggled debug to " <> show debug
 
 updateIncludePath :: StateT Env IO ()
 updateIncludePath = zoom includePath $ do
     modify not
     includePath <- get
-    liftIO $ withColor Vivid Yellow putStrLn $ "Toggled includePath to " <> show includePath
+    liftIO $ withColor Vivid Red putStrLn $ "Toggled includePath to " <> show includePath
 
 getUserInput :: IO String
 getUserInput = do
@@ -89,14 +94,14 @@ fillRight n s = replicate (n - length s) ' ' <> s
 
 showQueryResults :: Bool -> Bool -> Text -> IO ()
 showQueryResults debug includePath searchText = do
-    let suggestions = Scope.searchInScope includePath (mockDataNS ^. items) searchText
+    let suggestions = Scope.searchInScope includePath Mock.items searchText
     when debug $ withColor Dull Yellow putStrLn $ ppShow suggestions
     showLine
     forM_ suggestions showQueryResult
     showLine
 
 showQueryResult :: QueryResult -> IO ()
-showQueryResult (QueryResult prefix name fullname highlights tpe) = do
+showQueryResult (QueryResult prefix name fullname highlights tpe score) = do
     let nameString = Text.unpack name
     withColor Dull Blue putStr $ fillRight moduleWidth $ (Text.unpack prefix) <> " "
     showHighlight 0 highlights nameString

@@ -79,7 +79,7 @@ foreign import javascript safe "app.nodeSearcher().addTreeResult($1, $2, $3, $4)
     nodesearcher_add_tree_result :: JSString -> JSString -> JSString -> JSString -> IO ()
 
 displayQueryResult :: QueryResult -> IO ()
-displayQueryResult (QueryResult prefix name fullname highlight tpe) = do
+displayQueryResult (QueryResult prefix name fullname highlight tpe _) = do
     ary <- createJSArray
     mapM_ (pushHighlight ary) highlight
     nodesearcher_add_result (lazyTextToJSString prefix) (lazyTextToJSString name) (lazyTextToJSString fullname) ary (lazyTextToJSString tpe)
@@ -91,7 +91,7 @@ displayQueryResults results = do
     mapM_ displayQueryResult results
 
 displayTreeResult :: QueryResult -> IO ()
-displayTreeResult (QueryResult prefix name fullname _ tpe ) = do
+displayTreeResult (QueryResult prefix name fullname _ tpe _) = do
     nodesearcher_add_tree_result (lazyTextToJSString prefix) (lazyTextToJSString name) (lazyTextToJSString fullname) (lazyTextToJSString tpe)
 
 displayTreeResults :: [QueryResult] -> IO ()

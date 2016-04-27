@@ -10,11 +10,15 @@ module Text.ScopeSearcher.Searcher (
 
 import           Prelude
 
-import           Data.Char      (isAlphaNum, isUpper)
-import           Data.List      (maximumBy, sort)
-import           Data.Maybe     (mapMaybe)
-import           Data.Text.Lazy (Text)
-import qualified Data.Text.Lazy as Text
+import           Control.Lens
+
+import           Data.Char                      (isAlphaNum, isUpper)
+import           Data.List                      (maximumBy, sort)
+import           Data.Maybe                     (mapMaybe)
+import           Data.Text.Lazy                 (Text)
+import qualified Data.Text.Lazy                 as Text
+
+import           Text.ScopeSearcher.Score
 
 
 class Nameable a where
@@ -26,11 +30,13 @@ class Weightable a where
 -- nameToLower :: (Nameable a) => a -> Text
 -- nameToLower t = Text.toLower (name t)
 
-data Submatch = Submatch { start :: Int
-                         , len   :: Int
-                         } deriving (Eq, Show)
+data Submatch = Submatch { _start :: Int
+                         , _len   :: Int
+                         } deriving (Show, Eq)
 
-data Match a = Match Double a [Submatch]
+makeLenses ''Submatch
+
+data Match a = Match Score a [Submatch]
              deriving (Show, Eq)
 
 instance Eq t => Ord (Match t) where
@@ -48,7 +54,7 @@ tryMatch query choice
     | name choice == ""          = Nothing
     | otherwise                  = isSubstringMatch
     where
-        choiceRank x     = (weight choice) * rank (name choice) query x
+        choiceRank x     = scale (weight choice) (rank (name choice) query x)
         isSubstringMatch = fmap (\x -> Match (choiceRank x) choice x) bestMatchVal
         bestMatchVal     = bestMatch matches
         bestMatch :: [[Submatch]] -> Maybe [Submatch]
@@ -91,11 +97,15 @@ compareFirstPrefixStart []                 _                = LT
 compareFirstPrefixStart _                  []               = GT
 compareFirstPrefixStart (Submatch s1 _ : _) (Submatch s2 _ : _) = s2 `compare` s1
 
-rank :: Text -> Text -> [Submatch] -> Double
+rank :: Text -> Text -> [Submatch] -> Score
 -- Ranking algorithm heavily inspired on Textmate implementation: https://github.com/textmate/textmate/blob/master/Frameworks/text/src/ranker.cc
 rank choice query match
-    | n == capitalsTouched = (denom - 1) / denom + penalty
-    | otherwise            = let subtract = substrings * n + (n - capitalsTouched) in (denom - subtract) / denom + penalty
+    | n == capitalsTouched = let score = (denom - 1) / denom + penalty in Score score penalty
+    | otherwise            = let
+                                    subtract = substrings * n + (n - capitalsTouched)
+                                    -- score    = (denom - subtract) / (denom + penalty)
+                                    score    = (denom - subtract) / denom + penalty
+                             in Score score penalty
     where
         capitalsTouched = fromIntegral $ countWordBoundaries choice match
         totalCapitals   = fromIntegral $ countTrue $ wordBoundaries choice
@@ -106,6 +116,7 @@ rank choice query match
         prefixSize      = case match of
             ((Submatch 0 l) : xs) -> fromIntegral l
             _                     -> fromIntegral 0
+        -- penalty = (m - prefixSize) * m / (2.0 * denom) + capitalsTouched / totalCapitals / (4.0 * denom) + n * m / (8.0 * denom)
         penalty = (m - prefixSize) / m / (2.0 * denom) + capitalsTouched / totalCapitals / (4.0 * denom) + n / m / (8.0 * denom)
 
 

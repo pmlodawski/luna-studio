@@ -1,13 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module MockDataNS where
+module Mock.NodeSearcher where
 
 import qualified Data.Map                    as Map
 import           Text.ScopeSearcher.Item
 
-mockItemsNS = _items mockDataNS
+items = _items group
 
-mockDataNS  = Group $ Map.fromList  [
+group  = Group $ Map.fromList  [
          ("id"             , Element)
        , ("const"          , Element)
        , ("app"            , Element)

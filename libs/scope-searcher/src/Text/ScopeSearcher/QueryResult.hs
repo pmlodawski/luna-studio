@@ -1,7 +1,10 @@
 module Text.ScopeSearcher.QueryResult where
 
 import           Control.Lens
-import           Data.Text.Lazy  (Text)
+import           Data.Text.Lazy           (Text)
+
+import           Text.ScopeSearcher.Score (Score)
+
 
 data Highlight = Highlight { _start :: Int
                            , _len   :: Int
@@ -12,6 +15,7 @@ data QueryResult = QueryResult { _prefix     :: Text
                                , _fullname   :: Text
                                , _highlights :: [Highlight]
                                , _tpe        :: Text
+                               , _score      :: Score
                                } deriving (Show, Eq)
 
 makeLenses ''Highlight
