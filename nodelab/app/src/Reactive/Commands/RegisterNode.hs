@@ -22,12 +22,13 @@ import           Reactive.State.Global       (inRegistry)
 import           Empire.API.Data.Node        (Node (..))
 import qualified Empire.API.Data.Node        as Node
 import           Empire.API.Data.NodeMeta    (NodeMeta (..))
+import qualified Empire.API.Data.NodeMeta    as NodeMeta
 
 registerNode :: Text -> Command State ()
 registerNode expr = do
     nodeId  <- zoom Global.graph $ gets genNodeId
     nodePos <- use $ Global.uiElements . UIElements.nsPos
-    let nodeMeta = NodeMeta $ toTuple nodePos
+    let nodeMeta = def & NodeMeta.position .~ (toTuple nodePos)
     workspace <- use Global.workspace
     selected   <- inRegistry selectedNodes
     let connectTo = case selected of

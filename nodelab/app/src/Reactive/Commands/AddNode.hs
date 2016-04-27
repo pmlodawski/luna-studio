@@ -12,32 +12,33 @@ import           Utils.Vector
 
 import           Control.Monad.State               hiding (State)
 import           Data.Hashable                     (hash)
+import           Data.List                         (intercalate)
+import           Data.List.Split                   (wordsBy)
 import qualified Data.Map.Lazy                     as Map
 import qualified Data.Text.Lazy                    as Text
-import           Data.List.Split                   (wordsBy)
-import           Data.List                         (intercalate)
 import           GHC.Float                         (double2Float)
 
 import           Object.UITypes                    (WidgetId)
 import           Object.Widget                     (objectId, widget)
 import qualified Object.Widget.Button              as Button
+import qualified Object.Widget.DataFrame           as DataFrame
 import qualified Object.Widget.Group               as Group
 import qualified Object.Widget.Label               as Label
 import           Object.Widget.LabeledTextBox      (LabeledTextBox (..))
 import qualified Object.Widget.LabeledTextBox      as LabeledTextBox
+import qualified Object.Widget.LongText            as LongText
 import qualified Object.Widget.Node                as Model
 import           Object.Widget.Number.Continuous   (ContinuousNumber (..))
 import qualified Object.Widget.Number.Continuous   as ContinuousNumber
 import           Object.Widget.Number.Discrete     (DiscreteNumber (..))
 import qualified Object.Widget.Number.Discrete     as DiscreteNumber
-import qualified Object.Widget.Plots.ScatterPlot   as ScatterPlot
 import qualified Object.Widget.Plots.Image         as Image
+import qualified Object.Widget.Plots.ScatterPlot   as ScatterPlot
 import qualified Object.Widget.Port                as PortModel
 import           Object.Widget.Toggle              (Toggle (..))
 import qualified Object.Widget.Toggle              as Toggle
-import qualified Object.Widget.LongText            as LongText
-import qualified Object.Widget.DataFrame           as DataFrame
 import qualified UI.Handlers.Button                as Button
+import           UI.Handlers.Generic               (onValueChanged)
 import qualified UI.Handlers.LabeledTextBox        as LabeledTextBox
 import qualified UI.Handlers.Node                  as Node
 import qualified UI.Handlers.Number.Continuous     as ContinuousNumber
@@ -47,11 +48,11 @@ import qualified UI.Handlers.Toggle                as Toggle
 import           Reactive.Commands.Command         (Command, performIO)
 import           Reactive.Commands.EnterNode       (enterNode)
 import           Reactive.Commands.Graph           (colorPort, focusNode, nodeIdToWidgetId, portDefaultAngle,
-                                                    updateNodeMeta, updateConnections)
+                                                    updateConnections, updateNodeMeta)
 -- import           Reactive.Commands.PendingNode   (unrenderPending)
 import           Reactive.Commands.RemoveNode      (removeSelectedNodes)
-import qualified Reactive.Commands.UIRegistry      as UICmd
 import           Reactive.Commands.Selection       (selectedNodes)
+import qualified Reactive.Commands.UIRegistry      as UICmd
 import           Reactive.State.Global             (State, inRegistry)
 import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph
@@ -78,10 +79,11 @@ import qualified Style.Types                       as Style
 import qualified Empire.API.Data.Breadcrumb        as Breadcrumb
 import           Empire.API.Data.DefaultValue      (Value (..))
 import qualified Empire.API.Data.DefaultValue      as DefaultValue
+import qualified Empire.API.Data.Error             as LunaError
 import           Empire.API.Data.Node              (Node, NodeId)
 import qualified Empire.API.Data.Node              as Node
-import qualified Empire.API.Data.Error             as LunaError
 import           Empire.API.Data.NodeMeta          (NodeMeta)
+import qualified Empire.API.Data.NodeMeta          as NodeMeta
 import           Empire.API.Data.Port              (InPort (..), InPort (..), OutPort (..), Port (..), PortId (..))
 import qualified Empire.API.Data.Port              as Port
 import           Empire.API.Data.PortRef           (AnyPortRef (..), InPortRef (..), toAnyPortRef)
@@ -207,8 +209,9 @@ nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
                   $ addHandler (UINode.ChangeInputNodeTypeHandler $ \_ nodeId name -> do
                       workspace <- use Global.workspace
                       performIO $ BatchCmd.setInputNodeType workspace nodeId name)
-                  $ addHandler (UINode.FocusNodeHandler  $ \id -> zoom Global.uiRegistry (focusNode id))
-                  $ addHandler (UINode.ExpandNodeHandler $ zoom Global.uiRegistry expandSelectedNodes)
+                  $ addHandler (UINode.FocusNodeHandler    $ \id -> zoom Global.uiRegistry (focusNode id))
+                  $ addHandler (UINode.ExpandNodeHandler   $ zoom Global.uiRegistry expandSelectedNodes)
+                  $ addHandler (UINode.NodeRequiredHandler $ \nid val -> updateNodeRequired nid val)
                   $ addEnterNodeHandler where
                         addEnterNodeHandler = case node ^. Node.nodeType of
                             Node.FunctionNode _ -> addHandler (UINode.EnterNodeHandler $ enterNode $ Breadcrumb.Function $ Text.unpack $ node ^. Node.name) mempty
@@ -250,8 +253,14 @@ updateExistingNode node = do
         -- TODO: obsluzyc to ze moga zniknac polaczenia
     updateConnections
 
-onValueChanged :: Typeable a => (a -> WidgetId -> Command Global.State ()) -> HTMap
-onValueChanged h = addHandler (ValueChangedHandler h) mempty
+updateNodeRequired :: NodeId -> Bool -> Command State ()
+updateNodeRequired id val = do
+    Global.graph . Graph.nodesMap . ix id . Node.nodeMeta . NodeMeta.isRequired .= val
+    newMeta <- preuse $ Global.graph . Graph.nodesMap . ix id . Node.nodeMeta
+    withJust newMeta $ \newMeta -> do
+        workspace <- use $ Global.workspace
+        performIO $ BatchCmd.updateNodeMeta workspace id newMeta
+
 
 makePortControl :: Node -> WidgetId -> WidgetId -> NodeId -> Port -> Command UIRegistry.State ()
 makePortControl node outPortParent groupParent nodeId port = let portRef = toAnyPortRef nodeId $ port ^. Port.portId in
@@ -381,7 +390,6 @@ visualizeNodeValue id (IntList v) = do
 visualizeNodeValue id (StringList v) = do
     groupId <- Node.valueGroupId id
     displayListTable groupId $ Text.pack . show <$> v
-
 
 visualizeNodeValue id (DoubleList v) = do
     groupId <- Node.valueGroupId id

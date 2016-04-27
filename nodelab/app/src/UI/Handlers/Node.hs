@@ -24,6 +24,7 @@ import qualified Object.Widget.Label          as Label
 import qualified Object.Widget.LabeledTextBox as LabeledTextBox
 import qualified Object.Widget.Node           as Model
 import qualified Object.Widget.TextBox        as TextBox
+import qualified Object.Widget.Toggle         as Toggle
 import           Reactive.Commands.Command    (Command, performIO)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import           Reactive.State.Global        (inRegistry)
@@ -50,7 +51,7 @@ import           Empire.API.Data.Node         (NodeId)
 nameHandlers :: WidgetId -> HTMap
 nameHandlers id = addHandler (ValueChangedHandler $ nameValueChangedHandler id)
                 $ addHandler (UICmd.LostFocus $ inRegistry . flip UICmd.update_ (TextBox.isEditing .~ False))
-                $ mempty where
+                $ mempty
 
 nameValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
 nameValueChangedHandler parent val tbId = do
@@ -66,6 +67,16 @@ typeValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State 
 typeValueChangedHandler parent val tbId = do
     model <- inRegistry $ UICmd.update parent $ Model.tpe ?~ val
     triggerChangeInputNodeTypeHandler parent model
+
+isRequiredHandlers :: WidgetId -> HTMap
+isRequiredHandlers id = addHandler (ValueChangedHandler $ isRequiredHandler id)
+                      $ mempty
+
+isRequiredHandler :: WidgetId -> Bool -> WidgetId -> Command Global.State ()
+isRequiredHandler parent val _ = do
+    model <- inRegistry $ UICmd.update parent $ Model.isRequired .~ val
+    triggerNodeRequiredHandler parent model
+
 
 newtype RemoveNodeHandler = RemoveNodeHandler (Command Global.State ())
 removeNodeHandler = TypeKey :: TypeKey RemoveNodeHandler
@@ -84,6 +95,9 @@ enterNodeHandler = TypeKey :: TypeKey EnterNodeHandler
 
 newtype ExpandNodeHandler = ExpandNodeHandler (Command Global.State ())
 expandNodeHandler = TypeKey :: TypeKey ExpandNodeHandler
+
+newtype NodeRequiredHandler = NodeRequiredHandler (NodeId -> Bool -> Command Global.State ())
+nodeRequiredHandler = TypeKey :: TypeKey NodeRequiredHandler
 
 
 
@@ -117,6 +131,11 @@ triggerExpandNodeHandler :: WidgetId -> Command Global.State ()
 triggerExpandNodeHandler id = do
     maybeHandler <- inRegistry $ UICmd.handler id expandNodeHandler
     forM_ maybeHandler $ \(ExpandNodeHandler handler) -> handler
+
+triggerNodeRequiredHandler :: WidgetId -> Model.Node -> Command Global.State ()
+triggerNodeRequiredHandler id model = do
+    maybeHandler <- inRegistry $ UICmd.handler id nodeRequiredHandler
+    forM_ maybeHandler $ \(NodeRequiredHandler handler) -> handler (model ^. Model.nodeId) (model ^. Model.isRequired)
 
 keyDownHandler :: KeyPressedHandler Global.State
 keyDownHandler '\r'   _ _ id = triggerExpandNodeHandler id
@@ -227,6 +246,9 @@ instance CompositeWidget Model.Node where
         let widget = LabeledTextBox.create Style.portControlSize "Name" (model ^. Model.name)
         UICmd.register nodeGroup widget $ nameHandlers id
 
+        let widget = Toggle.create Style.portControlSize "Required" (model ^. Model.isRequired)
+        UICmd.register nodeGroup widget $ isRequiredHandlers id
+
         withJust (model ^. Model.tpe) $ \tpe -> do
             let widget = LabeledTextBox.create Style.portControlSize "Type" (fromMaybe "" $ model ^. Model.tpe)
             UICmd.register_ nodeGroup widget $ typeHandlers id
@@ -305,11 +327,17 @@ nameTextBoxId id = do
     (nodeNameId:_) <- UICmd.children group
     return nodeNameId
 
+isRequiredId :: WidgetId -> Command UIRegistry.State WidgetId
+isRequiredId id = do
+    group <- nodeControlsGroupId id
+    (_:toggleId:_) <- UICmd.children group
+    return toggleId
+
 typeTextBoxId :: WidgetId -> Command UIRegistry.State (Maybe WidgetId)
 typeTextBoxId id = do
     group <- nodeControlsGroupId id
     children <- UICmd.children group
-    return $ children ^? ix 1
+    return $ children ^? ix 2
 
 expandedGroupId :: WidgetId -> Command UIRegistry.State WidgetId
 expandedGroupId id = do

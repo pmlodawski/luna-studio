@@ -72,7 +72,8 @@ main = do
         nodeId    <- args `getArgOrExit` (argument "nodeId")
         x         <- args `getArgOrExit` (argument "x")
         y         <- args `getArgOrExit` (argument "y")
-        updateNodeMeta endPoints (toGraphLocation pid lid) (read nodeId) (read x) (read y)
+        req       <- args `getArgOrExit` (argument "req")
+        updateNodeMeta endPoints (toGraphLocation pid lid) (read nodeId) (read x) (read y) (read req)
     when (args `isPresent` (command "connect")) $ do
         pid       <- args `getArgOrExit` (argument "pid")
         lid       <- args `getArgOrExit` (argument "lid")
@@ -118,7 +119,7 @@ main = do
 
 addNode :: EP.BusEndPoints -> GraphLocation -> String -> Double -> Double -> IO ()
 addNode endPoints graphLocation expression x y = do
-    let content = toStrict . Bin.encode $ AddNode.Request graphLocation (AddNode.ExpressionNode expression) (NodeMeta.NodeMeta (x, y)) Nothing
+    let content = toStrict . Bin.encode $ AddNode.Request graphLocation (AddNode.ExpressionNode expression) (NodeMeta.NodeMeta (x, y) True) Nothing
     void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.addNodeRequest content
 
 removeNode :: EP.BusEndPoints -> GraphLocation -> NodeId -> IO ()
@@ -126,9 +127,9 @@ removeNode endPoints graphLocation nodeId = do
     let content = toStrict . Bin.encode $ RemoveNode.Request graphLocation [nodeId]
     void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.removeNodeRequest content
 
-updateNodeMeta :: EP.BusEndPoints -> GraphLocation -> NodeId -> Double -> Double -> IO ()
-updateNodeMeta endPoints graphLocation nodeId x y = do
-    let content = toStrict . Bin.encode $ UpdateNodeMeta.Request graphLocation nodeId (NodeMeta.NodeMeta (x, y))
+updateNodeMeta :: EP.BusEndPoints -> GraphLocation -> NodeId -> Double -> Double -> Bool -> IO ()
+updateNodeMeta endPoints graphLocation nodeId x y req = do
+    let content = toStrict . Bin.encode $ UpdateNodeMeta.Request graphLocation nodeId (NodeMeta.NodeMeta (x, y) req)
     void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.updateNodeMetaRequest content
 
 connect :: EP.BusEndPoints -> GraphLocation -> NodeId -> OutPort -> NodeId -> InPort -> IO ()
