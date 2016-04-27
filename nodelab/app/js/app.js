@@ -13,7 +13,7 @@ var $$             = require('common'),
     connectionPen  = require('connection_pen'),
     Terminal       = window.Terminal;
 
-console.info("Current version " + brunch.env + " " + brunch.git_commit);
+console.info("Current version " + brunch.env + " " + brunch.git_commit + " build  " + brunch.build_number);
 console.info("Build at " + brunch.date);
 
 $$.currentConnection = null;
