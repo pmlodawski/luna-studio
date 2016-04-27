@@ -43,7 +43,9 @@ publish:
     password:  $$DOCKERHUB_PASS
     email: $$DOCKERHUB_EMAIL
     repo: lunalang/luna-testing
-    tag: $${BRANCH##docker/}
+    tag:
+      - $${BRANCH##docker/}-latest
+      - $${BRANCH##docker/}-b$$BUILD_NUMBER
     file: Dockerfile
     insecure: false
     storage_driver: aufs
