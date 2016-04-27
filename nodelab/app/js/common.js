@@ -22,7 +22,9 @@ module.exports = {
   node_searcher:  undefined,
   websocket:      undefined,
   lastFactor:     1.0,
-  registry:       {}
+  registry:       {},
+  isGAEnabled:    function() { return !(localStorage.getItem('ga') === '0'); },
+  enableGA:       function(val) { localStorage.setItem('ga', val?1:0); alert("Ok, Google Analytics is now " + (val?"enabled":"disabled") + "." ); }
 };
 
 window.$$ = module.exports;

@@ -12,6 +12,7 @@ module.exports = {
   exportState:     false,
   backgroundColor: 0x0F0D0C,
   fontSize:        0.45,
+  gaTrackingId:    'UA-68596358-1',
   nodeSearcher: {
     scrollAnimationTime: 100,
     scrollbarOptions: {

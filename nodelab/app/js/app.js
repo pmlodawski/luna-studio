@@ -29,7 +29,7 @@ function start() {
       return;
     }
     window.already_initialized = true;
-
+    startGA();
     require('env')();
     window.h$errorMsg = displayAppCrashed;
   });
@@ -112,10 +112,6 @@ function initUserInfo() {
   $(".tutorial").click(function (e) {
     e.preventDefault();
     $(".tutorial-box").show().focus();
-  });
-  $(".feedback").click(function (e) {
-    e.preventDefault();
-    _urq.push(['Feedback_Open']);
   });
 }
 function initTerminal() {
@@ -292,6 +288,19 @@ var displayAppCrashed = function (pat) {
   console.error('Haskell crashed', str);
 
   $('body').append(require('templates/bsod')({message: str}));
+};
+
+var startGA = function (){
+  var enabled = $$.isGAEnabled();
+  if(enabled) {
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', config.gaTrackingId, 'auto');
+    ga('send', 'pageview');
+  };
 };
 
 module.exports = {
