@@ -113,7 +113,7 @@ rank choice query match = Score score score n m bounty bounty1 bounty2 bounty3 d
             _                     -> fromIntegral 0
         subtract = if n == capitalsTouched then 1 else substrings * n + (n - capitalsTouched)
         -- bounty1 = (m - prefixSize) / m / (2.0 * denom)     -- original formula giving bad behaviour
-        bounty1 = 1 / (1 + m - prefixSize) / m / (2.0 * denom)
+        bounty1 = 1.0 / (1.0 + m - prefixSize) / m / (2.0 * denom)
         bounty2 = capitalsTouched / totalCapitals / (4.0 * denom)
         bounty3 = n / m / (8.0 * denom)
         bounty =  bounty1 + bounty2 + bounty3

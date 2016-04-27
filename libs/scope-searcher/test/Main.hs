@@ -2,11 +2,17 @@
 
 module Main where
 
-import           Data.Monoid                    ((<>))
+import           Control.Monad                  (when)
 import           Data.Default
-import           Test.HUnit
+import           Data.Monoid                    ((<>))
 import           Data.Text.Lazy                 (Text)
 import qualified Data.Text.Lazy                 as Text
+import           System.Exit
+
+import           Test.Framework                 hiding (Test)
+import           Test.Framework.Providers.HUnit
+import           Test.HUnit
+
 
 import           Text.ScopeSearcher.Item
 import           Text.ScopeSearcher.QueryResult
@@ -66,12 +72,13 @@ testSearchAe = let (suggestions, msg) = prepareTest "ae" in TestCase $ do
     assertMatch (msg "nEgAte"   4) (queryResult    "Int" "negate"   [ Highlight 3 1, Highlight 5 1 ] functionType) $ suggestions !! 4
     assertMatch (msg "reAdFilE" 5) (queryResult       "" "readFile" [ Highlight 2 1, Highlight 7 1 ] functionType) $ suggestions !! 5
 
-
-main :: IO Counts
-main = do
-    runTestTT $ TestList [
+-- tests :: IO ()
+tests = do
+    hUnitTestToTests $ TestList [
           testSearchApp
         , testSearchCos
         , testSearchDou
         , testSearchAe
         ]
+
+main = defaultMain tests

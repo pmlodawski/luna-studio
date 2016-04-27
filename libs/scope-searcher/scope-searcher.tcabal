@@ -55,3 +55,5 @@ test-suite scope-searcher-test
                      , data-default
                      , scope-searcher
                      , HUnit
+                     , test-framework
+                     , test-framework-hunit
