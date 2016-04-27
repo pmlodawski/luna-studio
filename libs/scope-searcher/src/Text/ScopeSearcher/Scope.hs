@@ -3,6 +3,7 @@
 module Text.ScopeSearcher.Scope (
       moduleItems
     , searchInScope
+    , appendPath
     ) where
 
 import           Prelude
@@ -32,7 +33,8 @@ data SearchableItem = SearchableItem { _itemWeight :: Double
                                      } deriving (Eq, Show)
 
 instance Nameable SearchableItem where
-    name (SearchableItem _ _ n _) = n
+    -- name (SearchableItem _ p n _) = appendPath p n
+    name (SearchableItem _ p n _) = n
 
 instance Weightable SearchableItem where
     weight (SearchableItem w _ _ _) = w
@@ -77,8 +79,8 @@ itemsInScope root path = case moduleByPath root (pathFromText path) of
     Just items -> searchableItems items
     Nothing    -> []
 
-searchInScope :: Bool -> Items -> Text -> [QueryResult]
-searchInScope includePath root expr
+searchInScope :: Items -> Text -> [QueryResult]
+searchInScope root expr
     | (Text.length expr > 0) && (Text.last expr == '.') = maybe [] displayModuleItems scope
     | otherwise                                         = fmap transformMatch $ Searcher.findSuggestions items query
     where
@@ -88,14 +90,14 @@ searchInScope includePath root expr
             t  -> Text.init t
         scope = moduleByPath root $ pathFromText prefix
         items = maybe [] searchableItems scope
-        transformMatch (Match score (SearchableItem _ path name tpe) sm) = QueryResult path name (if includePath then appendPath path name else name) (fmap toHighlight sm) (jsItemType tpe) score
+        transformMatch (Match score (SearchableItem _ path name tpe) sm) = QueryResult path name (appendPath path name) (fmap toHighlight sm) (jsItemType tpe) score
         displayModuleItems items = fmap di $ Map.toList items
         di  (name, t)  = QueryResult "" name name [] (jsItemType t) def
 
-moduleItems :: Bool -> Items -> Text -> [QueryResult]
-moduleItems includePath root path = fmap toQueryResult $ items where
+moduleItems :: Items -> Text -> [QueryResult]
+moduleItems root path = fmap toQueryResult $ items where
     toQueryResult :: (Text, Item) -> QueryResult
-    toQueryResult (name, t)  = QueryResult path name (if includePath then appendPath path name else name) [] (jsItemType t) def
+    toQueryResult (name, t)  = QueryResult path name (appendPath path name) [] (jsItemType t) def
     items :: [(Text, Item)]
     items = case moduleByPath root (pathFromText path) of
         Just items -> sortWith fst $ Map.toList items

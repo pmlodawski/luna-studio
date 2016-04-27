@@ -54,7 +54,7 @@ tryMatch query choice
     | name choice == ""          = Nothing
     | otherwise                  = isSubstringMatch
     where
-        choiceRank x     = scale (weight choice) (rank (name choice) query x)
+        choiceRank x     = (*) (weight choice) (rank (name choice) query x)
         isSubstringMatch = fmap (\x -> Match (choiceRank x) choice x) bestMatchVal
         bestMatchVal     = bestMatch matches
         bestMatch :: [[Submatch]] -> Maybe [Submatch]
@@ -99,7 +99,7 @@ compareFirstPrefixStart (Submatch s1 _ : _) (Submatch s2 _ : _) = s2 `compare` s
 
 rank :: Text -> Text -> [Submatch] -> Score
 -- Ranking algorithm heavily inspired on Textmate implementation: https://github.com/textmate/textmate/blob/master/Frameworks/text/src/ranker.cc
-rank choice query match = Score score score n m bounty bounty1 bounty2 bounty3 denom substrings prefixSize subtract capitalsTouched totalCapitals
+rank choice query match = score -- Score score score n m bounty bounty1 bounty2 bounty3 denom substrings prefixSize subtract capitalsTouched totalCapitals
     where
         score           = (denom - subtract) / denom + bounty
         capitalsTouched = fromIntegral $ countWordBoundaries choice match

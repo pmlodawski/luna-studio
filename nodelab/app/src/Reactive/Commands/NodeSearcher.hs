@@ -36,7 +36,7 @@ import qualified Empire.API.Data.ValueType                       as ValueType
 
 import qualified Text.ScopeSearcher.Scope                        as Scope
 import           Text.ScopeSearcher.Item                         (Item (..), Items, _Group)
-import qualified JS.GoogleAnalytics          as GA
+import qualified JS.GoogleAnalytics                              as GA
 
 
 searcherData :: Command Global.State Items
@@ -115,13 +115,13 @@ scopedData = do
 querySearch :: Text -> Command Global.State ()
 querySearch query = do
     sd <- scopedData
-    let items = Scope.searchInScope False sd query
+    let items = Scope.searchInScope sd query
     performIO $ UI.displayQueryResults items
 
 queryTree :: Text -> Command Global.State ()
 queryTree query = do
     sd <- scopedData
-    let items = Scope.moduleItems False sd query
+    let items = Scope.moduleItems sd query
     performIO $ UI.displayTreeResults items
 
 openCommand :: Command Global.State ()

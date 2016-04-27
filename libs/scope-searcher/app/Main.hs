@@ -43,7 +43,7 @@ main = do
     withColor Vivid Red putStrLn "Leaving ScopeSearcher."
 
 showHelp :: IO ()
-showHelp =  withColor Vivid Yellow  putStrLn ":h      - show help\n:m      - show mock\n:d      - toggle debug\n:p      - toggle include path\n[enter] - quit"
+showHelp =  withColor Vivid Yellow  putStrLn ":h      - show help\n:m      - show mock\n:d      - toggle debug\n[enter] - quit"
 
 showMock :: IO ()
 showMock = withColor Vivid Green putStrLn $ ppShow Mock.group
@@ -53,16 +53,13 @@ showHighlights = do
     input <- liftIO $ getUserInput
     when (not $ null input) $ do
         let shouldToggleDebug       = take 2 input == ":d"
-            shouldToggleIncludePath = take 2 input == ":p"
             shouldShowMock          = take 2 input == ":m"
             shouldShowHelp          = take 2 input == ":h"
         debugState       <- use debug
-        includePathState <- use includePath
-        case (shouldToggleDebug, shouldToggleIncludePath, shouldShowMock, shouldShowHelp) of
-            (False, False, False, False) -> liftIO $ showQueryResults debugState includePathState $ Text.pack input
-            (_, _, _, _) -> do
+        case (shouldToggleDebug, shouldShowMock, shouldShowHelp) of
+            (False, False, False) -> liftIO $ showQueryResults debugState $ Text.pack input
+            (_, _, _) -> do
                 when shouldToggleDebug       updateDebug
-                when shouldToggleIncludePath updateIncludePath
                 when shouldShowMock $ liftIO showMock
                 when shouldShowHelp $ liftIO showHelp
         showHighlights
@@ -92,9 +89,9 @@ fillLeft, fillRight :: Int -> String -> String
 fillLeft  n s = s <> replicate (n - length s) ' '
 fillRight n s = replicate (n - length s) ' ' <> s
 
-showQueryResults :: Bool -> Bool -> Text -> IO ()
-showQueryResults debug includePath searchText = do
-    let suggestions = Scope.searchInScope includePath Mock.items searchText
+showQueryResults :: Bool -> Text -> IO ()
+showQueryResults debug searchText = do
+    let suggestions = Scope.searchInScope Mock.items searchText
     when debug $ withColor Dull Yellow putStrLn $ ppShow suggestions
     showLine
     forM_ suggestions showQueryResult
@@ -103,6 +100,7 @@ showQueryResults debug includePath searchText = do
 showQueryResult :: QueryResult -> IO ()
 showQueryResult (QueryResult prefix name fullname highlights tpe score) = do
     let nameString = Text.unpack name
+    -- let nameString = Text.unpack fullname
     withColor Dull Blue putStr $ fillRight moduleWidth $ (Text.unpack prefix) <> " "
     showHighlight 0 highlights nameString
     putStr $ replicate (functionWidth - length nameString) ' '

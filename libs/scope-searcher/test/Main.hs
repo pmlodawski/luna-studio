@@ -28,7 +28,7 @@ assertMsg :: String -> String -> Int -> String
 assertMsg query sugg ind = "'" <> sugg <> "' should be " <> show ind <> " on suggestions list for '" <> query <> "' query"
 
 prepareTest :: String -> ([QueryResult], String -> Int -> String)
-prepareTest query = (Scope.searchInScope False Mock.items $ Text.pack query, assertMsg query)
+prepareTest query = (Scope.searchInScope Mock.items $ Text.pack query, assertMsg query)
 
 assertMatch :: String -> QueryResult -> QueryResult -> Assertion
 assertMatch msg expQR resQR = assertEqual msg expQR (resQR { _score = def })
@@ -36,7 +36,7 @@ assertMatch msg expQR resQR = assertEqual msg expQR (resQR { _score = def })
 -- Query helpers
 
 queryResult :: Text -> Text -> [Highlight] -> Text -> QueryResult
-queryResult modl name hl tpe = QueryResult modl name name hl tpe def
+queryResult modl name hl tpe = QueryResult modl name (Scope.appendPath modl name) hl tpe def
 
 functionType = "function"
 moduleType   = "module"
@@ -60,8 +60,6 @@ testSearchDou :: Test
 testSearchDou = let (suggestions, msg) = prepareTest "dou" in TestCase $ do
     assertMatch (msg "DOUble"   0) (queryResult ""    "Double"   [ Highlight 0 3 ] moduleType)   $ suggestions !! 0
     assertMatch (msg "toDOUble" 1) (queryResult "Int" "toDouble" [ Highlight 2 3 ] functionType) $ suggestions !! 1
-
-
 
 testSearchAe :: Test
 testSearchAe = let (suggestions, msg) = prepareTest "ae" in TestCase $ do
