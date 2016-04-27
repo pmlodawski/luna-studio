@@ -39,9 +39,8 @@ import qualified BatchConnector.Commands           as BatchCmd
 import qualified Empire.API.Data.Port              as Port
 import           Empire.API.Data.PortRef           (InPortRef(..), OutPortRef(..))
 
-import           Debug.Trace
-
 import           Control.Monad.State               hiding (State)
+import qualified JS.GoogleAnalytics          as GA
 
 
 toAction :: Event -> Maybe (Command State ())
@@ -111,7 +110,9 @@ handleDisconnectAction :: [WidgetId] -> Command State ()
 handleDisconnectAction widgets = do
     connectionsMay <- sequence $ lookupConnection <$> widgets
     let connections = (view $ widget . UIConnection.connectionId) <$> catMaybes connectionsMay
-    when (not . null $ connections) $ disconnectAll connections
+    when (not . null $ connections) $ do
+        disconnectAll connections
+        GA.sendEvent $ GA.Disconnect
 
 remdups               :: (Eq a) => [a] -> [a]
 remdups (x : xx : xs) =  if x == xx then remdups (x : xs) else x : remdups (xx : xs)
@@ -138,16 +139,4 @@ autoConnect (srcNodeId, dstNodeId) = do
     workspace <- use Global.workspace
 
     performIO $ BatchCmd.connectNodes workspace (OutPortRef srcNodeId Port.All) (InPortRef dstNodeId Port.Self)
-
--- filterConnectedInputPorts :: Graph.State -> NodeId -> PortCollection -> PortCollection
--- filterConnectedInputPorts state nodeId ports = filter isConnected ports where
---     destinationPortRefs = fmap (^. Graph.destination) $ Graph.getConnections state
---     isConnected port = not $ PortRef nodeId InputPort (port ^. portId) `elem` destinationPortRefs
---
--- findConnectionForAll :: PortCollection -> PortCollection -> Maybe (PortId, PortId)
--- findConnectionForAll dstPorts srcPorts = listToMaybe . catMaybes $ findConnection dstPorts <$> srcPorts
-
--- findConnection :: PortCollection -> Port -> Maybe (PortId, PortId)
--- findConnection dstPorts srcPort = (srcPort ^. portId,) <$> dstPortId where
---     dstPortId = fmap (^. portId) $
---         find (\port -> MockHelper.typesEq (port ^. portValueType) (srcPort ^. portValueType)) dstPorts
+    GA.sendEvent $ GA.Connect GA.Pen

@@ -34,7 +34,8 @@ import qualified BatchConnector.Commands      as BatchCmd
 import qualified Empire.API.Data.Node         as Node
 import           Empire.API.Data.Port         (InPort (Self))
 import           Empire.API.Data.PortRef      (AnyPortRef (..), InPortRef (..), OutPortRef (..))
-import qualified Empire.API.Data.PortRef      as PortRef (srcNodeId, dstNodeId)
+import qualified Empire.API.Data.PortRef      as PortRef (dstNodeId, srcNodeId)
+import qualified JS.GoogleAnalytics           as GA
 
 
 
@@ -135,4 +136,5 @@ stopDrag event@(Mouse.Event _ coord _ _ mayEvWd) (Connecting sourceRef _ _ _ (Dr
             let srcDstMay = toValidConnection sourceRef destinationRef
             withJust srcDstMay $ \(src, dst) -> do
                 batchConnectNodes src dst
+                GA.sendEvent $ GA.Connect GA.Manual
     updateConnections

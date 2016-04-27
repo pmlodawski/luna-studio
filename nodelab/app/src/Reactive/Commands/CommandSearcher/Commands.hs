@@ -15,6 +15,7 @@ import qualified Batch.Workspace                      as Workspace
 import qualified BatchConnector.Commands              as BatchCmd
 import qualified Empire.API.Data.Project              as Project
 import           Event.Event                          (JSState)
+import qualified JS.GoogleAnalytics                   as GA
 import qualified JS.NodeSearcher                      as UI
 import           Reactive.Commands.Command            (Command, performIO)
 import           Reactive.Commands.NodeSearcher       as NS
@@ -25,6 +26,7 @@ import qualified Reactive.State.Global                as Global
 import qualified Reactive.State.UIElements            as UIElements
 import           Text.ScopeSearcher.Item              (Item (..))
 import qualified Text.ScopeSearcher.Scope             as Scope
+
 
 commands :: Command Global.State ([(Text, Item)])
 commands = do
@@ -61,10 +63,13 @@ openProject name = do
 
 
 help :: Command Global.State ()
-help = performIO $ openHelp'
+help = do
+    GA.sendEvent $ GA.OpenHelp
+    performIO $ openHelp'
 
 toggleText :: Command Global.State ()
 toggleText = do
+    GA.sendEvent $ GA.ToggleText
     Global.uiElements . UIElements.textEditorVisible %= not
     size <- use $ Global.camera . Camera.camera . Camera.windowSize
     General.updateWindowSize size
@@ -73,7 +78,10 @@ foreign import javascript unsafe "$('.tutorial-box').show().focus()"    openHelp
 foreign import javascript unsafe "common.enableGA($1)"    enableGA' :: Bool -> IO ()
 foreign import javascript unsafe "$1.isGAEnabled()"       gaEnabled :: JSState -> Bool
 
-enableGA  = performIO . enableGA'
+enableGA :: Bool -> Command a ()
+enableGA val = do
+    GA.sendEvent $ GA.GAOptOut val
+    performIO $ enableGA' val
 
 
 runCommand :: Text -> Command Global.State ()

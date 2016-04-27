@@ -24,7 +24,7 @@ module.exports = {
   lastFactor:     1.0,
   registry:       {},
   isGAEnabled:    function() { return !(localStorage.getItem('ga') === '0'); },
-  enableGA:       function(val) { localStorage.setItem('ga', val?1:0); alert("Ok, Google Analytics is now " + (val?"enabled":"disabled") + "." ); }
+  enableGA:       function(val) { localStorage.setItem('ga', val?1:0); alert("Ok, Google Analytics will be " + (val?"enabled":"disabled") + " after you reload the page." ); }
 };
 
 window.$$ = module.exports;

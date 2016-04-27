@@ -36,12 +36,15 @@ import qualified Empire.API.Data.ValueType                       as ValueType
 
 import qualified Text.ScopeSearcher.Scope                        as Scope
 import           Text.ScopeSearcher.Item                         (Item (..), Items, _Group)
+import qualified JS.GoogleAnalytics          as GA
+
 
 searcherData :: Command Global.State Items
 searcherData = use $ Global.workspace . Workspace.nodeSearcherData
 
 openFresh :: Command Global.State ()
 openFresh = do
+    GA.sendEvent GA.NodeSearcher
     factor <- use $ Global.camera . Camera.camera . Camera.factor
     let offset = Vector2 0 (floor $ -40.0 * factor)
     (nsPos', nsPos) <- ensureNSVisible
@@ -123,5 +126,6 @@ queryTree query = do
 
 openCommand :: Command Global.State ()
 openCommand = do
+    GA.sendEvent GA.CommandSearcher
     mousePos <- use Global.mousePos
     performIO $ UI.initNodeSearcher "" 0 mousePos True

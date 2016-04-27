@@ -1,3 +1,4 @@
 module.exports = {
-  logging: true
+  logging: true,
+  gaTrackingId: 'UA-XXXXX-X'
 };

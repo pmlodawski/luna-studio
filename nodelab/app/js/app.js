@@ -275,6 +275,7 @@ var displayConnectionClosedMessage = function () {
   if($('#rejected').length === 0) {
     cleanupApp();
     $('body').append(require('templates/connection_closed')());
+    ga('send', 'event', 'Diagnostic', 'ConnectionLost');
   }
 };
 
@@ -288,6 +289,7 @@ var displayAppCrashed = function (pat) {
   console.error('Haskell crashed', str);
 
   $('body').append(require('templates/bsod')({message: str}));
+  ga('send', 'event', 'Diagnostic', 'BSOD', null, str);
 };
 
 var startGA = function (){
@@ -299,8 +301,10 @@ var startGA = function (){
     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
     ga('create', config.gaTrackingId, 'auto');
-    ga('send', 'pageview');
-  };
+    ga('send', 'pageview', '/b' + brunch.build_number);
+  } else {
+    window.ga = function() {};
+  }
 };
 
 module.exports = {

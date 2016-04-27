@@ -62,7 +62,7 @@ exports.config =
         "#{git_hash}#{if local_changes then "-local" else ""}";
       env: "development"
       date: -> new Date()
-      build_number: process.env.DRONE_BUILD_NUMBER
+      build_number: process.env.DRONE_BUILD_NUMBER or "DEV"
 
   optimize: no
 

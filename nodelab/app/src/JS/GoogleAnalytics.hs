@@ -1,43 +1,71 @@
 {-# LANGUAGE JavaScriptFFI     #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module JS.Cursor where
+module JS.GoogleAnalytics where
 
 import qualified Data.JSString     as JSString
 import           GHCJS.Foreign
 import           GHCJS.Types       (JSString)
 import           Utils.PreludePlus
 import           Utils.Vector
+import           Data.Text.Lazy              (Text, pack)
+import           Data.JSString.Text  (lazyTextToJSString)
+import           Reactive.Commands.Command         (Command, performIO)
+import           GHCJS.Nullable            (Nullable, maybeToNullable)
 
-foreign import javascript safe "ga('send','event,$1, $2, $3)" sendEvent' :: JSString -> JSString -> Maybe JSString -> IO ()
+data ConnectType = Manual
+                 | Pen
+                 deriving (Show)
 
+data AddNodeType = Simple
+                 | AutoConnect
+                 deriving (Show)
 
-data ConnectType = Manual | Pen | AutoConnect
-data NodeSearcherType = Open | MouseSelect | SearchSelect
-data AddNodeType = Solo | AutoConnect
-data Event = BSOD
-           | ConnectionLost
-           | Connect ConnectType
-           | NodeSearcher NodeSearcherType
+data Event = BSOD Text -- sent directly from JS
+           | ConnectionLost -- sent directly from JS4
            | AddNode AddNodeType
-           | RemoveNode Int -- Number
+           | RemoveNode Int
+           | Connect ConnectType
+           | Disconnect
+           | NodeSearcher
+           | CommandSearcher
            | CreateProject
            | SwitchProject
-           | GAOptOut
+           | GAOptOut Bool
            | OpenHelp
            | ToggleText
 
--- URL - numer builda
--- EVENT -
-    -- BSOD
-    -- Connection lost
-    -- JS error *powinny byc w BSOD*
-    -- connection z rozroznieniem na sposob (reczny, pen, autoconnect)
-    -- NS: wybranie z podziałem na drzewko / searcher
-    -- dodanie noda z podzialem na solo / autoconnect
-    -- usuniecie noda
-    -- stworzenie projektu
-    -- zmiana projektu
-    -- optout z GA
-    -- otwarcie helpa
-    -- toggle tekstowej wersji
+data GAEvent = GAEvent { _category :: Text
+                       , _action   :: Text
+                       , _label    :: Maybe Text
+                       , _value    :: Maybe Text
+                       }
+
+simpleEvent :: Text -> Text -> GAEvent
+simpleEvent c a = GAEvent c a Nothing Nothing
+
+toGAEvent :: Event -> GAEvent
+toGAEvent ev = case ev of
+    BSOD message        -> GAEvent     "Diagnostic"      "BSOD"           Nothing (Just message)
+    ConnectionLost      -> simpleEvent "Diagnostic"      "ConnectionLost"
+    AddNode tpe         -> GAEvent     "Graph"           "AddNode"        (Just $ pack $ show tpe) Nothing
+    RemoveNode n        -> GAEvent     "Graph"           "RemoveNode"     (Just $ pack $ show n)   Nothing
+    Connect tpe         -> GAEvent     "Graph"           "Connect"        (Just $ pack $ show tpe) Nothing
+    Disconnect          -> simpleEvent "Graph"           "Disconnect"
+    NodeSearcher        -> simpleEvent "NodeSearcher"    "Open"
+    CommandSearcher     -> simpleEvent "CommandSearcher" "Open"
+    CreateProject       -> simpleEvent "Project"         "Create"
+    SwitchProject       -> simpleEvent "Project"         "Switch"
+    GAOptOut s          -> GAEvent     "Settings"        "GAOptOut"       Nothing $ Just $ pack $ show s
+    OpenHelp            -> simpleEvent "UI"              "OpenHelp"
+    ToggleText          -> simpleEvent "UI"              "ToggleText"
+
+foreign import javascript safe "ga('send', 'event', $1, $2, $3)" sendEvent' :: JSString -> JSString -> Nullable JSString -> Nullable JSString -> IO ()
+
+sendEvent :: Event -> Command a ()
+sendEvent event = performIO $ sendEvent' cat' act' lab' val' where
+        GAEvent cat act lab val = toGAEvent event
+        cat' = lazyTextToJSString cat
+        act' = lazyTextToJSString act
+        lab' = maybeToNullable $ lazyTextToJSString <$> lab
+        val' = maybeToNullable $ lazyTextToJSString <$> val

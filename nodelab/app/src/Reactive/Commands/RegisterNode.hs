@@ -23,6 +23,7 @@ import           Empire.API.Data.Node        (Node (..))
 import qualified Empire.API.Data.Node        as Node
 import           Empire.API.Data.NodeMeta    (NodeMeta (..))
 import qualified Empire.API.Data.NodeMeta    as NodeMeta
+import qualified JS.GoogleAnalytics          as GA
 
 registerNode :: Text -> Command State ()
 registerNode expr = do
@@ -36,3 +37,4 @@ registerNode expr = do
             [wf]   -> Just $ wf ^. widget . UINode.nodeId
             (_:_) -> Nothing
     performIO $ BatchCmd.addNode workspace expr nodeMeta connectTo
+    GA.sendEvent $ GA.AddNode $ if isJust connectTo then GA.AutoConnect else GA.Simple

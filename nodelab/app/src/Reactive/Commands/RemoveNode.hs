@@ -20,6 +20,8 @@ import qualified JS.NodeGraph            as UIGraph
 import qualified Object.Widget.Node      as NodeModel
 import           Empire.API.Data.Node (NodeId)
 
+import qualified JS.GoogleAnalytics          as GA
+
 
 removeSelectedNodes :: Command State ()
 removeSelectedNodes = do
@@ -30,6 +32,7 @@ performRemoval :: [NodeId] -> Command State ()
 performRemoval nodeIds = do
     workspace  <- use Global.workspace
     performIO $ BatchCmd.removeNode workspace nodeIds
+    GA.sendEvent $ GA.RemoveNode (length nodeIds)
 
 localRemoveNodes :: [NodeId] -> Command State ()
 localRemoveNodes nodeIds = forM_ nodeIds $ \nodeId -> do
