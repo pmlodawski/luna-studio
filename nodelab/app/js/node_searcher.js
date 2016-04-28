@@ -423,7 +423,7 @@ NodeSearcher.prototype.onEnter = function (ev) {
     if (data.type === 'module') {
       this.appendExpression(data.fullname + ".");
     } else {
-      this.appendExpression(data.name);
+      this.appendExpression(data.fullname);
       this.createNode();
     }
   }

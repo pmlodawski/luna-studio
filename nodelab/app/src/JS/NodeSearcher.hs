@@ -64,6 +64,8 @@ getNode self = liftIO $ do
 
 -- display results
 
+data TargetSearcher = NodeSearcher | CommandSearcher
+
 data JSHighlight
 
 foreign import javascript safe "app.nodeSearcher().clearResults()"
@@ -78,24 +80,30 @@ foreign import javascript safe "app.nodeSearcher().finishResult()"
 foreign import javascript safe "app.nodeSearcher().addTreeResult($1, $2, $3, $4)"
     nodesearcher_add_tree_result :: JSString -> JSString -> JSString -> JSString -> IO ()
 
-displayQueryResult :: QueryResult -> IO ()
-displayQueryResult (QueryResult prefix name fullname highlight tpe _) = do
+searcherResultName :: TargetSearcher -> QueryResult -> Text
+searcherResultName NodeSearcher    (QueryResult _ name     _ _ _ _) = name
+searcherResultName CommandSearcher (QueryResult _ _ fullname _ _ _) = fullname
+
+displayQueryResult :: TargetSearcher -> QueryResult -> IO ()
+displayQueryResult target qr@(QueryResult prefix name fullname highlight tpe _) = do
     ary <- createJSArray
     mapM_ (pushHighlight ary) highlight
-    nodesearcher_add_result (lazyTextToJSString prefix) (lazyTextToJSString name) (lazyTextToJSString fullname) ary (lazyTextToJSString tpe)
+    let targetName = searcherResultName target qr
+    nodesearcher_add_result (lazyTextToJSString prefix) (lazyTextToJSString name) (lazyTextToJSString targetName) ary (lazyTextToJSString tpe)
     nodesearcher_finish_result
 
-displayQueryResults :: [QueryResult] -> IO ()
-displayQueryResults results = do
+displayQueryResults :: TargetSearcher -> [QueryResult] -> IO ()
+displayQueryResults target results = do
     nodesearcher_clear_results
-    mapM_ displayQueryResult results
+    forM_ results $ displayQueryResult target
 
-displayTreeResult :: QueryResult -> IO ()
-displayTreeResult (QueryResult prefix name fullname _ tpe _) = do
-    nodesearcher_add_tree_result (lazyTextToJSString prefix) (lazyTextToJSString name) (lazyTextToJSString fullname) (lazyTextToJSString tpe)
+displayTreeResult :: TargetSearcher -> QueryResult -> IO ()
+displayTreeResult target qr@(QueryResult prefix name fullname _ tpe _) = do
+    let targetName = searcherResultName target qr
+    nodesearcher_add_tree_result (lazyTextToJSString prefix) (lazyTextToJSString name) (lazyTextToJSString targetName) (lazyTextToJSString tpe)
 
-displayTreeResults :: [QueryResult] -> IO ()
-displayTreeResults results = mapM_ displayTreeResult results
+displayTreeResults :: TargetSearcher -> [QueryResult] -> IO ()
+displayTreeResults target results = forM_ results $ displayTreeResult target
 
 foreign import javascript safe "[]"
     createJSArray :: IO (JSRef JSHighlight)

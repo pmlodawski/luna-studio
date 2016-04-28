@@ -100,12 +100,12 @@ querySearchCmd query = do
     sd <- commands
     let sd'   = Map.fromList sd
         items = Scope.searchInScope sd' query
-    performIO $ UI.displayQueryResults items
+    performIO $ UI.displayQueryResults UI.CommandSearcher items
 
 queryTreeCmd :: Text -> Command Global.State ()
 queryTreeCmd query = do
     sd <- commands
     let sd'   = Map.fromList sd
         items = Scope.moduleItems sd' query
-    performIO $ UI.displayTreeResults items
+    performIO $ UI.displayTreeResults UI.CommandSearcher items
 

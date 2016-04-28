@@ -116,13 +116,13 @@ querySearch :: Text -> Command Global.State ()
 querySearch query = do
     sd <- scopedData
     let items = Scope.searchInScope sd query
-    performIO $ UI.displayQueryResults items
+    performIO $ UI.displayQueryResults UI.NodeSearcher items
 
 queryTree :: Text -> Command Global.State ()
 queryTree query = do
     sd <- scopedData
     let items = Scope.moduleItems sd query
-    performIO $ UI.displayTreeResults items
+    performIO $ UI.displayTreeResults UI.NodeSearcher items
 
 openCommand :: Command Global.State ()
 openCommand = do
