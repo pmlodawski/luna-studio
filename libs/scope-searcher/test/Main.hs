@@ -19,7 +19,7 @@ import           Text.ScopeSearcher.QueryResult
 import qualified Text.ScopeSearcher.Scope       as Scope
 import qualified Text.ScopeSearcher.Searcher    as Searcher
 
-import qualified Mock.NodeSearcher              as Mock
+import qualified Mock.Mix                       as Mock
 
 
 -- Helpers
@@ -79,6 +79,18 @@ testSearchCo = let (suggestions, msg) = prepareTest "co" in TestCase $ do
     assertMatch (msg "aCOs"  4) (queryResult "Double" "acos"  [ Highlight 1 2 ] functionType) $ suggestions !! 4
     assertMatch (msg "aCOsh" 5) (queryResult "Double" "acosh" [ Highlight 1 2 ] functionType) $ suggestions !! 5
 
+testSearchTr :: Test
+testSearchTr = let (suggestions, msg) = prepareTest "tr" in TestCase $ do
+    assertMatch (msg "sTRing"    0) (queryResult      ""  "String"    [ Highlight 1 2] moduleType)   $ suggestions !! 0
+    assertMatch (msg "TostRing"  1) (queryResult   "Bool" "toString"  [ Highlight 0 1, Highlight 4 1] functionType) $ suggestions !! 1
+    assertMatch (msg "TostRing"  2) (queryResult "Double" "toString"  [ Highlight 0 1, Highlight 4 1] functionType) $ suggestions !! 2
+    assertMatch (msg "TostRing"  3) (queryResult    "Int" "toString"  [ Highlight 0 1, Highlight 4 1] functionType) $ suggestions !! 3
+    assertMatch (msg "TostRing"  4) (queryResult "String" "toString"  [ Highlight 0 1, Highlight 4 1] functionType) $ suggestions !! 4
+    assertMatch (msg "filTeR"    5) (queryResult      ""  "filter"    [ Highlight 3 1, Highlight 5 1] functionType) $ suggestions !! 5
+    assertMatch (msg "filTeR"    6) (queryResult   "List" "filter"    [ Highlight 3 1, Highlight 5 1] functionType) $ suggestions !! 6
+    assertMatch (msg "hisTogRam" 7) (queryResult      ""  "histogram" [ Highlight 3 1, Highlight 6 1] functionType) $ suggestions !! 7
+
+
 -- tests :: IO ()
 tests = do
     hUnitTestToTests $ TestList [
@@ -87,6 +99,7 @@ tests = do
         , testSearchDou
         , testSearchAe
         , testSearchCo
+        , testSearchTr
         ]
 
 main = defaultMain tests
