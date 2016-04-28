@@ -33,7 +33,7 @@ data SearchableItem = SearchableItem { _itemWeight :: Double
                                      } deriving (Eq, Show)
 
 instance Nameable SearchableItem where
-    -- name (SearchableItem _ p n _) = appendPath p n
+    -- name (SearchableItem _ p n _) = appendPath p n    -- search in full path
     name (SearchableItem _ p n _) = n
 
 instance Weightable SearchableItem where

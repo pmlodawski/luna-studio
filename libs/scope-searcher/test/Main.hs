@@ -70,6 +70,15 @@ testSearchAe = let (suggestions, msg) = prepareTest "ae" in TestCase $ do
     assertMatch (msg "nEgAte"   4) (queryResult    "Int" "negate"   [ Highlight 3 1, Highlight 5 1 ] functionType) $ suggestions !! 4
     assertMatch (msg "reAdFilE" 5) (queryResult       "" "readFile" [ Highlight 2 1, Highlight 7 1 ] functionType) $ suggestions !! 5
 
+testSearchCo :: Test
+testSearchCo = let (suggestions, msg) = prepareTest "co" in TestCase $ do
+    assertMatch (msg "COs"   0) (queryResult "Double" "cos"   [ Highlight 0 2 ] functionType) $ suggestions !! 0
+    assertMatch (msg "COmp"  1) (queryResult ""       "comp"  [ Highlight 0 2 ] functionType) $ suggestions !! 1
+    assertMatch (msg "COnst" 2) (queryResult ""       "const" [ Highlight 0 2 ] functionType) $ suggestions !! 2
+    assertMatch (msg "COsh"  3) (queryResult "Double" "cosh"  [ Highlight 0 2 ] functionType) $ suggestions !! 3
+    assertMatch (msg "aCOs"  4) (queryResult "Double" "acos"  [ Highlight 1 2 ] functionType) $ suggestions !! 4
+    assertMatch (msg "aCOsh" 5) (queryResult "Double" "acosh" [ Highlight 1 2 ] functionType) $ suggestions !! 5
+
 -- tests :: IO ()
 tests = do
     hUnitTestToTests $ TestList [
@@ -77,6 +86,7 @@ tests = do
         , testSearchCos
         , testSearchDou
         , testSearchAe
+        , testSearchCo
         ]
 
 main = defaultMain tests
