@@ -38,7 +38,7 @@ data Event = BSOD Text -- sent directly from JS
 data GAEvent = GAEvent { _category :: Text
                        , _action   :: Text
                        , _label    :: Maybe Text
-                       , _value    :: Maybe Text
+                       , _value    :: Maybe Int
                        }
 
 simpleEvent :: Text -> Text -> GAEvent
@@ -46,7 +46,7 @@ simpleEvent c a = GAEvent c a Nothing Nothing
 
 toGAEvent :: Event -> GAEvent
 toGAEvent ev = case ev of
-    BSOD message        -> GAEvent     "Diagnostic"      "BSOD"           Nothing (Just message)
+    BSOD message        -> GAEvent     "Diagnostic"      "BSOD"           (Just message) Nothing
     ConnectionLost      -> simpleEvent "Diagnostic"      "ConnectionLost"
     AddNode tpe         -> GAEvent     "Graph"           "AddNode"        (Just $ pack $ show tpe) Nothing
     RemoveNode n        -> GAEvent     "Graph"           "RemoveNode"     (Just $ pack $ show n)   Nothing
@@ -56,11 +56,11 @@ toGAEvent ev = case ev of
     CommandSearcher     -> simpleEvent "CommandSearcher" "Open"
     CreateProject       -> simpleEvent "Project"         "Create"
     SwitchProject       -> simpleEvent "Project"         "Switch"
-    GAOptOut s          -> GAEvent     "Settings"        "GAOptOut"       Nothing $ Just $ pack $ show s
+    GAOptOut s          -> GAEvent     "Settings"        "GAOptOut"       (Just $ pack $ show s)  Nothing
     OpenHelp            -> simpleEvent "UI"              "OpenHelp"
     ToggleText          -> simpleEvent "UI"              "ToggleText"
 
-foreign import javascript safe "ga('send', 'event', $1, $2, $3)" sendEvent' :: JSString -> JSString -> Nullable JSString -> Nullable JSString -> IO ()
+foreign import javascript safe "ga('send', 'event', $1, $2, $3)" sendEvent' :: JSString -> JSString -> Nullable JSString -> Nullable Int -> IO ()
 
 sendEvent :: Event -> Command a ()
 sendEvent event = performIO $ sendEvent' cat' act' lab' val' where
@@ -68,4 +68,4 @@ sendEvent event = performIO $ sendEvent' cat' act' lab' val' where
         cat' = lazyTextToJSString cat
         act' = lazyTextToJSString act
         lab' = maybeToNullable $ lazyTextToJSString <$> lab
-        val' = maybeToNullable $ lazyTextToJSString <$> val
+        val' = maybeToNullable val
