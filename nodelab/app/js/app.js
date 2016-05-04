@@ -289,7 +289,7 @@ var displayAppCrashed = function (pat) {
   console.error('Haskell crashed', str);
 
   $('body').append(require('templates/bsod')({message: str}));
-  ga('send', 'event', 'Diagnostic', 'BSOD', null, str);
+  ga('send', 'event', 'Diagnostic', 'BSOD', str);
 };
 
 var startGA = function (){
