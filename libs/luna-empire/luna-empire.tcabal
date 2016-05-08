@@ -33,6 +33,7 @@ Library
                   data-member,
                   data-construction,
                   data-layer,
+                  directory,
                   either,
                   fgl,
                   flowbox-bus-binary,
@@ -40,6 +41,7 @@ Library
                   flowbox-utils,
                   ghc-prim,
                   luna-empire-api,
+                  luna-empire-api-json,
                   luna-core,
                   luna-parser,
                   lunac,
@@ -49,7 +51,8 @@ Library
                   stm,
                   text,
                   typelevel,
-                  transformers
+                  transformers,
+                  aeson
 
 Executable luna-empire-lib-test
   Main-Is:        Main.hs

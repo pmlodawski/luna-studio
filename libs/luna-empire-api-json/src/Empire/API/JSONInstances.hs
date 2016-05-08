@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Empire.API.JSONInstances where
 
-import           Data.Aeson.Types                    (FromJSON, ToJSON, toJSON)
+import           Data.Aeson.Types                    (FromJSON, ToJSON, toJSON, parseJSON)
 import           Data.Map.Lazy                       (Map)
 import qualified Data.Map.Lazy                       as Map
 import           Prologue
@@ -36,6 +36,9 @@ import           Empire.API.Graph.SetInputNodeType   as SetInputNodeType
 import           Empire.API.Graph.UpdateNodeMeta     as UpdateNodeMeta
 import           Empire.API.Library.CreateLibrary    as CreateLibrary
 import           Empire.API.Library.ListLibraries    as ListLibraries
+import           Empire.API.Persistence.Library      as PLibrary
+import           Empire.API.Persistence.Project      as PProject
+import           Empire.API.Persistence.Envelope     as PEnvelope
 import           Empire.API.Project.CreateProject    as CreateProject
 import           Empire.API.Project.ListProjects     as ListProjects
 import           Empire.API.Update                   as Update
@@ -51,34 +54,53 @@ instance FromJSON Breadcrumb.BreadcrumbItem
 instance ToJSON GraphLocation.GraphLocation
 
 instance ToJSON Node.Node
+instance FromJSON Node.Node
 instance ToJSON Node.NodeType
+instance FromJSON Node.NodeType
 
 instance ToJSON NodeMeta.NodeMeta
+instance FromJSON NodeMeta.NodeMeta
 instance (ToJSON a, ToJSON b) => ToJSON (Map a b) where
     toJSON = toJSON . Map.toList
     {-# INLINE toJSON #-}
+instance (FromJSON b) => FromJSON  (Map PortId b) where
+    parseJSON = fmap Map.fromList . parseJSON
+    {-# INLINE parseJSON #-}
 
 instance ToJSON Port.Port
+instance FromJSON Port.Port
 instance ToJSON Port.InPort
+instance FromJSON Port.InPort
 instance ToJSON Port.OutPort
+instance FromJSON Port.OutPort
 instance ToJSON Port.PortId
+instance FromJSON Port.PortId
 instance ToJSON Port.PortState
+instance FromJSON Port.PortState
 
 instance ToJSON TypeRep.TypeRep
+instance FromJSON TypeRep.TypeRep
 
 instance ToJSON ValueType.ValueType
+instance FromJSON ValueType.ValueType
 instance ToJSON ValueType.ValueTypeEnum
 
 instance ToJSON PortRef.AnyPortRef
+instance FromJSON PortRef.AnyPortRef
 instance ToJSON PortRef.OutPortRef
+instance FromJSON PortRef.OutPortRef
 instance ToJSON PortRef.InPortRef
+instance FromJSON PortRef.InPortRef
 
 instance ToJSON Connection.Connection
 
 instance ToJSON DefaultValue.Value
+instance FromJSON DefaultValue.Value
 instance ToJSON DefaultValue.PortDefault
+instance FromJSON DefaultValue.PortDefault
 
 instance ToJSON Graph.Graph
+instance FromJSON Graph.Graph
 
 instance ToJSON t => ToJSON (Error.Error t)
 
@@ -127,3 +149,10 @@ instance ToJSON Update.ResultOk
 instance ToJSON NodeSearcherUpdate.Update
 
 instance ToJSON EmpireStarted.Status
+
+instance ToJSON PProject.Project
+instance FromJSON PProject.Project
+instance ToJSON PLibrary.Library
+instance FromJSON PLibrary.Library
+instance ToJSON PEnvelope.Envelope
+instance FromJSON PEnvelope.Envelope

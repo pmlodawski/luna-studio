@@ -1,10 +1,12 @@
 module Empire.Commands.Graph
     ( addNode
     , addNodeCondTC
+    , addNodeUI
     , removeNodes
     , updateNodeMeta
     , connect
     , connectCondTC
+    , connectNoTC
     , disconnect
     , getCode
     , getGraph
@@ -42,6 +44,7 @@ import           Empire.API.Data.NodeMeta      (NodeMeta)
 import qualified Empire.API.Data.Graph         as APIGraph
 import           Empire.API.Data.DefaultValue  (PortDefault, Value(..))
 import           Empire.API.Data.GraphLocation (GraphLocation (..))
+import qualified Empire.API.Data.GraphLocation as GraphLocation
 
 import           Empire.Empire
 import           Empire.Commands.Library      (withLibrary)
@@ -69,6 +72,16 @@ addNodeNoTC loc expr meta = do
     Publisher.notifyNodeUpdate loc node
     return node
 
+addNodeUI :: Node -> Command Graph NodeId
+addNodeUI n = case n ^. Node.nodeType of
+  Node.ExpressionNode expr -> do
+    let newNodeId = n ^. Node.nodeId
+    refNode <- zoom Graph.ast $ AST.addNode newNodeId (Text.unpack $ n ^. Node.name) (Text.unpack $ expr)
+    zoom Graph.ast $ AST.writeMeta refNode (n ^. Node.nodeMeta)
+    Graph.nodeMapping . at newNodeId ?= refNode
+    return newNodeId
+  otherwise -> return 0
+
 removeNodes :: GraphLocation -> [NodeId] -> Empire ()
 removeNodes loc nodeIds = withTC loc False $ forM_ nodeIds removeNodeNoTC
 
@@ -87,18 +100,18 @@ updateNodeMeta loc nodeId meta = withGraph loc $ do
 
 connectCondTC :: Bool -> GraphLocation -> OutPortRef -> InPortRef -> Empire ()
 connectCondTC doTC loc outPort inPort = withGraph loc $ do
-    connectNoTC loc outPort inPort
+    connectNoTC outPort inPort
     when doTC $ runTC loc False
 
 connect :: GraphLocation -> OutPortRef -> InPortRef -> Empire ()
-connect loc outPort inPort = withTC loc False $ connectNoTC loc outPort inPort
+connect loc outPort inPort = withTC loc False $ connectNoTC outPort inPort
 
-connectNoTC :: GraphLocation -> OutPortRef -> InPortRef -> Command Graph ()
-connectNoTC loc (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) = do
+connectNoTC :: OutPortRef -> InPortRef -> Command Graph ()
+connectNoTC (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) = do
     case dstPort of
         Self    -> makeAcc srcNodeId dstNodeId
         Arg num -> makeApp srcNodeId dstNodeId num
-connectNoTC _ _ _ = throwError "Source port should be All"
+connectNoTC _ _ = throwError "Source port should be All"
 
 setDefaultValue :: GraphLocation -> AnyPortRef -> PortDefault -> Empire ()
 setDefaultValue loc portRef val = withTC loc False $ do

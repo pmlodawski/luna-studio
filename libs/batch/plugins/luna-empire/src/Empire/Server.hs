@@ -26,6 +26,7 @@ import           Empire.Data.Graph                 (Graph, ast)
 import qualified Empire.Commands.Library           as Library
 import qualified Empire.Commands.Project           as Project
 import qualified Empire.Commands.Typecheck         as Typecheck
+import qualified Empire.Commands.Persistence       as Persistence
 import qualified Empire.Commands.AST               as AST
 import qualified Empire.Empire                     as Empire
 import           Empire.Env                        (Env)
@@ -116,23 +117,8 @@ createDefaultState = do
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
     formatted        <- use Env.formatted
-    (resultProject, newEmpireEnv1) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Project.createProject
-        projectName (fromString projectPath)
-    case resultProject of
-        Left err -> logger Logger.error $ Server.errorMessage <> err
-        Right (projectId, project) -> do
-            logger Logger.info $ "Created project " <> show projectId
-            logger Logger.debug $ (Utils.display formatted) project
-            Env.empireEnv .= newEmpireEnv1
-            (resultLibrary, newEmpireEnv2) <- liftIO $ Empire.runEmpire empireNotifEnv newEmpireEnv1 $ Library.createLibrary
-                projectId libraryName (fromString libraryPath)
-            case resultLibrary of
-                Left err -> logger Logger.error $ Server.errorMessage <> err
-                Right (libraryId, library) -> do
-                    Env.empireEnv .= newEmpireEnv2
-                    logger Logger.info $ "Created library " <> show libraryId
-                    logger Logger.debug $ (Utils.display formatted) library
-                    return ()
+    (resultProject, newEmpireEnv1) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Persistence.loadProject "projects/default.lproj"
+    Env.empireEnv .= newEmpireEnv1
 
 handleMessage :: StateT Env BusT ()
 handleMessage = do

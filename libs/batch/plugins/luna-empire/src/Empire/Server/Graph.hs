@@ -38,6 +38,7 @@ import qualified Empire.API.Graph.UpdateNodeMeta   as UpdateNodeMeta
 import qualified Empire.API.Topic                  as Topic
 import qualified Empire.API.Update                 as Update
 import qualified Empire.Commands.Graph             as Graph
+import qualified Empire.Commands.Persistence       as Persistence
 import qualified Empire.Empire                     as Empire
 import           Empire.Env                        (Env)
 import qualified Empire.Env                        as Env
@@ -65,6 +66,11 @@ notifyNodeResultUpdate location nodeId value = do
     let update = NodeResultUpdate.Update location nodeId (NodeResultUpdate.Value value) 42 -- FIXME: report correct execution time
     sendToBus Topic.nodeResultUpdate update
 
+saveCurrentProject :: GraphLocation -> StateT Env BusT ()
+saveCurrentProject loc = do
+  currentEmpireEnv <- use Env.empireEnv
+  empireNotifEnv   <- use Env.empireNotif
+  void $ liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Persistence.saveLocation loc
 
 data Expr = Expression String | Function (Maybe String) | Module (Maybe String) | Input (Maybe String)| Output (Maybe String)
 
@@ -119,6 +125,7 @@ handleAddNode content = do
                         handleConnectReq False connectRequest
                         forceTC location
             notifyCodeUpdate location
+            saveCurrentProject location
 
 handleRemoveNode :: ByteString -> StateT Env BusT ()
 handleRemoveNode content = do
@@ -136,15 +143,17 @@ handleRemoveNode content = do
             let update = Update.Update request $ Update.Ok
             sendToBus Topic.removeNodeUpdate update
             notifyCodeUpdate location
+            saveCurrentProject location
 
 handleUpdateNodeMeta :: ByteString -> StateT Env BusT ()
 handleUpdateNodeMeta content = do
     let request = Bin.decode . fromStrict $ content :: UpdateNodeMeta.Request
+        location = request ^. UpdateNodeMeta.location
         nodeMeta = request ^. UpdateNodeMeta.nodeMeta
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.updateNodeMeta
-        (request ^. UpdateNodeMeta.location)
+        location
         (request ^. UpdateNodeMeta.nodeId)
         nodeMeta
     case result of
@@ -153,7 +162,8 @@ handleUpdateNodeMeta content = do
             Env.empireEnv .= newEmpireEnv
             let update = Update.Update request $ UpdateNodeMeta.Result nodeMeta
             sendToBus Topic.updateNodeMetaUpdate update
-            notifyCodeUpdate $ request ^. UpdateNodeMeta.location
+            notifyCodeUpdate location
+            saveCurrentProject location
 
 handleRenameNode :: ByteString -> StateT Env BusT ()
 handleRenameNode content = do
@@ -172,6 +182,7 @@ handleRenameNode content = do
             let update = Update.Update request $ Update.Ok
             sendToBus Topic.renameNodeUpdate update
             notifyCodeUpdate location
+            saveCurrentProject location
 
 handleConnect :: ByteString -> StateT Env BusT ()
 handleConnect content = handleConnectReq True $ Bin.decode . fromStrict $ content
@@ -193,6 +204,7 @@ handleConnectReq doTC request = do
             let update = Update.Update request $ Update.Ok
             sendToBus Topic.connectUpdate update
             notifyCodeUpdate location
+            saveCurrentProject location
 
 handleDisconnect :: ByteString -> StateT Env BusT ()
 handleDisconnect content = do
@@ -210,6 +222,7 @@ handleDisconnect content = do
             let update = Update.Update request $ Update.Ok
             sendToBus Topic.disconnectUpdate update
             notifyCodeUpdate location
+            saveCurrentProject location
 
 handleSetDefaultValue :: ByteString -> StateT Env BusT ()
 handleSetDefaultValue content = do
@@ -228,6 +241,7 @@ handleSetDefaultValue content = do
             let update = Update.Update request $ Update.Ok
             sendToBus Topic.setDefaultValueUpdate update
             notifyCodeUpdate location
+            saveCurrentProject location
 
 stdlibFunctions :: [String]
 stdlibFunctions = filter (not . elem '.') StdLibMock.symbolsNames
