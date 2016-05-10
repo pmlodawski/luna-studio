@@ -3,6 +3,7 @@ module Empire.API.Data.TypeRep where
 import Prologue
 
 import Data.Binary (Binary)
+import Data.List   (intercalate)
 
 data TypeRep = TCons String    [TypeRep]
              | TVar  String

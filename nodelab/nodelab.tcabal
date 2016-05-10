@@ -71,6 +71,7 @@ executable nodelab
                      , luna-empire-api-json
                      , hashable
                      , scope-searcher
+                     , hsprocessing
   hs-source-dirs:      app/src
   default-language:    Haskell2010
 

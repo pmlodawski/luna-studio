@@ -28,6 +28,8 @@ ghcjs  -package-db $SNAPSHOT_DB \
        -package graphviz \
        -package vector \
        -package luna-tc \
+       -package scope-seacher \
+       -package hsprocessing -
        -XNoImplicitPrelude \
        -XDoAndIfThenElse \
        -XTemplateHaskell \
