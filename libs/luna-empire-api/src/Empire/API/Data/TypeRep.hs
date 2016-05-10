@@ -1,6 +1,6 @@
 module Empire.API.Data.TypeRep where
 
-import Prologue
+import Prologue    hiding (intercalate)
 
 import Data.Binary (Binary)
 import Data.List   (intercalate)
