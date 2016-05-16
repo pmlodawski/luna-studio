@@ -2,11 +2,11 @@ module Empire.Commands.Persistence
     ( saveProject
     , saveLocation
     , loadProject
-    , loadAllProjects
-    , ensureDefaultExists
+    , createDefaultProject
     ) where
 
 import           Control.Monad.Error             (throwError)
+import           Control.Monad.Error             (catchError)
 import           Control.Monad.Reader
 import           Control.Monad.State
 import qualified Data.ByteString.Lazy            as BS (ByteString, putStrLn, readFile, writeFile)
@@ -42,13 +42,7 @@ import qualified Data.Text.Lazy                  as Text
 import           Empire.API.JSONInstances        ()
 import           System.Path                     (Path, native)
 
-
-import System.FilePath
-import System.FilePath.Find
-import System.FilePath.Glob
-import System.FilePath.Manip
-
-import qualified Flowbox.System.Log.Logger         as Logger
+import qualified Flowbox.System.Log.Logger       as Logger
 
 logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)
@@ -106,31 +100,23 @@ createProjectFromPersistent p = do
   return pid
 
 
-loadProject :: FilePath -> Empire (Maybe ProjectId)
+loadProject :: FilePath -> Empire ProjectId
 loadProject path = do
-  logger Logger.info $ "Loading project " <> path
-  proj <- liftIO $ readProject path
-  mapM createProjectFromPersistent proj
-
-projectFiles :: FilePath -> IO [FilePath]
-projectFiles = find always (extension ==? ".lproj")
-
-loadAllProjects :: FilePath -> Empire [ProjectId]
-loadAllProjects root = do
-  projects <- liftIO $ projectFiles root
-  loadedProjects <- mapM loadProject projects
-  return $ catMaybes loadedProjects
+    logger Logger.info $ "Loading project " <> path
+    proj <- liftIO $ readProject path
+    case proj of
+      Nothing   -> throwError $ "Cannot read JSON from " <> path
+      Just proj -> createProjectFromPersistent proj
 
 defaultProjectName = "default project"
 defaultProjectPath = "default_project"
 defaultLibraryName = "Main"
 defaultLibraryPath = "Main.luna"
 
-ensureDefaultExists :: [ProjectId] -> Empire ()
-ensureDefaultExists [] = do
+createDefaultProject :: Empire ()
+createDefaultProject = do
   logger Logger.info "Creating default project"
   (projectId, _) <- createProject (Just defaultProjectName) (fromString defaultProjectPath)
   void $ createLibrary projectId (Just defaultLibraryName) (fromString defaultLibraryPath)
-ensureDefaultExists _ = return ()
 
 

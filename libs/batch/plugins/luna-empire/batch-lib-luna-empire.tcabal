@@ -45,4 +45,6 @@ Library
                     luna-empire,
                     luna-empire-api,
                     lunac,
-                    zeromq4-haskell >= 0.4
+                    zeromq4-haskell >= 0.4,
+                    filemanip,
+                    filepath

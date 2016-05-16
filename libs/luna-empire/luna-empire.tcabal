@@ -52,10 +52,7 @@ Library
                   text,
                   typelevel,
                   transformers,
-                  aeson,
-                  filemanip,
-                  filepath
-
+                  aeson
 
 Executable luna-empire-lib-test
   Main-Is:        Main.hs

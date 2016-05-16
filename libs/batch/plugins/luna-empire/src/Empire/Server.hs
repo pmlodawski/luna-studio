@@ -16,6 +16,12 @@ import qualified Data.Map.Strict                   as Map
 import qualified Data.Binary                       as Bin
 import           Data.ByteString.Lazy              (toStrict)
 
+import           System.FilePath ()
+import           System.FilePath.Find (find, (==?), always, extension)
+import           System.FilePath.Glob ()
+import           System.FilePath.Manip ()
+
+
 import           Empire.API.Data.AsyncUpdate       (AsyncUpdate (..))
 import qualified Empire.API.Topic                  as Topic
 import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
@@ -109,16 +115,35 @@ startAsyncUpdateWorker asyncChan = forever $ do
         NodeUpdate   up -> Server.sendToBus Topic.nodeUpdate up
         ResultUpdate up -> Server.sendToBus Topic.nodeResultUpdate up
 
-createDefaultState :: StateT Env BusT ()
-createDefaultState = do
+projectFiles :: FilePath -> IO [FilePath]
+projectFiles = find always (extension ==? ".lproj")
+
+loadAllProjects :: StateT Env BusT ()
+loadAllProjects = do
+  projectRoot  <- use Env.projectRoot
+  empireNotifEnv   <- use Env.empireNotif
+
+  projects <- liftIO $ projectFiles projectRoot
+  loadedProjects <- flip mapM projects $ \proj -> do
     currentEmpireEnv <- use Env.empireEnv
-    empireNotifEnv   <- use Env.empireNotif
-    formatted        <- use Env.formatted
-    projectRoot      <- use Env.projectRoot
-    (result, newEmpireEnv1) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Persistence.loadAllProjects projectRoot >>= Persistence.ensureDefaultExists
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Persistence.loadProject proj
     case result of
-        Left err -> logger Logger.error $ "Cannot initialize Empire: " <> err
-        Right _ -> Env.empireEnv .= newEmpireEnv1
+        Left err -> do
+          logger Logger.error $ "Cannot load project: " <> err
+          return Nothing
+        Right projectId -> do
+          Env.empireEnv .= newEmpireEnv
+          return $ Just projectId
+
+  when ((catMaybes loadedProjects) == []) $ do
+    currentEmpireEnv <- use Env.empireEnv
+    (_, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $  Persistence.createDefaultProject
+    Env.empireEnv .= newEmpireEnv
+
+
+
+createDefaultState :: StateT Env BusT ()
+createDefaultState = loadAllProjects
 
 handleMessage :: StateT Env BusT ()
 handleMessage = do
