@@ -31,7 +31,9 @@ import           Utils.PreludePlus
 import           Batch.Workspace                   (Workspace)
 import qualified Batch.Workspace                   as Workspace
 import qualified BatchConnector.Commands           as BatchCmd
+import           Control.Concurrent.MVar
 import           JS.Config                         (getBackendAddress, isLoggerEnabled)
+import qualified JS.GraphLocation                  as GraphLocation
 import           JS.UI                             (initializeGl, render, triggerWindowResize)
 import           JS.WebSocket                      (WebSocket, connect, getWebSocket)
 import           Reactive.Commands.Command         (Command, execCommand)
@@ -41,14 +43,16 @@ import qualified Reactive.Plugins.Loader.Loader    as Loader
 import           Reactive.State.Global             (State, initialState)
 import qualified Reactive.State.Global             as Global
 import           Utils.URIParser                   (getProjectName)
-import Control.Concurrent.MVar
-import qualified JS.GraphLocation as GraphLocation
+
+import qualified Utils.Shader                      as Shader
+
 
 runMainNetwork :: WebSocket -> IO ()
 runMainNetwork socket = do
     initializeGl
     render
     enableLogging <- isLoggerEnabled
+    -- Shader.test
 
     lastLocation <- GraphLocation.loadLocation
 
