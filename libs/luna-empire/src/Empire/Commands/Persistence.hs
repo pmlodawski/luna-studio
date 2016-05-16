@@ -2,6 +2,8 @@ module Empire.Commands.Persistence
     ( saveProject
     , saveLocation
     , loadProject
+    , loadAllProjects
+    , ensureDefaultExists
     ) where
 
 import           Control.Monad.Error             (throwError)
@@ -40,7 +42,17 @@ import qualified Data.Text.Lazy                  as Text
 import           Empire.API.JSONInstances        ()
 import           System.Path                     (Path, native)
 
-projectsPath = "projects/"
+
+import System.FilePath
+import System.FilePath.Find
+import System.FilePath.Glob
+import System.FilePath.Manip
+
+import qualified Flowbox.System.Log.Logger         as Logger
+
+logger :: Logger.LoggerIO
+logger = Logger.getLoggerIO $(Logger.moduleName)
+
 
 toPersistentProject :: ProjectId -> Empire P.Project
 toPersistentProject pid = do
@@ -58,17 +70,18 @@ toPersistentProject pid = do
 serialize :: E.Envelope -> BS.ByteString
 serialize = JSON.encode
 
-saveProject :: ProjectId -> Empire ()
-saveProject pid = do
+saveProject :: FilePath -> ProjectId -> Empire ()
+saveProject projectRoot pid = do
   project <- toPersistentProject pid
   let bytes = serialize $ E.pack project
-      path  = projectsPath <> (fromMaybe "untitled" $ project ^. P.name) <> ".lproj"
+      path  = projectRoot <> "/" <> (fromMaybe "untitled" $ project ^. P.name) <> ".lproj"
 
+  logger Logger.info $ "Saving project " <> path
   liftIO $ BS.writeFile path bytes
 
 
-saveLocation :: GraphLocation -> Empire ()
-saveLocation (GraphLocation pid _ _) = saveProject pid
+saveLocation :: FilePath -> GraphLocation -> Empire ()
+saveLocation projectRoot (GraphLocation pid _ _) = saveProject projectRoot pid
 
 readProject :: FilePath -> IO (Maybe P.Project)
 readProject filename = do
@@ -88,17 +101,37 @@ createProjectFromPersistent p = do
       let graph = lib ^. L.graph
           nodes = graph ^. G.nodes
           connections = graph ^. G.connections
-      mapM Graph.addNodeUI nodes
-      mapM (uncurry Graph.connectNoTC)  connections
+      mapM Graph.addPersistentNode nodes
+      -- TODO: set port defaults
+      mapM (uncurry Graph.connectNoTC) connections
   return pid
 
 
 loadProject :: FilePath -> Empire (Maybe ProjectId)
 loadProject path = do
+  logger Logger.info $ "Loading project " <> path
   proj <- liftIO $ readProject path
   mapM createProjectFromPersistent proj
 
+projectFiles :: FilePath -> IO [FilePath]
+projectFiles = find always (extension ==? ".lproj")
 
+loadAllProjects :: FilePath -> Empire [ProjectId]
+loadAllProjects root = do
+  projects <- liftIO $ projectFiles root
+  loadedProjects <- mapM loadProject projects
+  return $ catMaybes loadedProjects
 
+defaultProjectName = "default project"
+defaultProjectPath = "default_project"
+defaultLibraryName = "Main"
+defaultLibraryPath = "Main.luna"
+
+ensureDefaultExists :: [ProjectId] -> Empire ()
+ensureDefaultExists [] = do
+  logger Logger.info "Creating default project"
+  (projectId, _) <- createProject (Just defaultProjectName) (fromString defaultProjectPath)
+  void $ createLibrary projectId (Just defaultLibraryName) (fromString defaultLibraryPath)
+ensureDefaultExists _ = return ()
 
 

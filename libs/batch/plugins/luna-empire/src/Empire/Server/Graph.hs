@@ -70,7 +70,8 @@ saveCurrentProject :: GraphLocation -> StateT Env BusT ()
 saveCurrentProject loc = do
   currentEmpireEnv <- use Env.empireEnv
   empireNotifEnv   <- use Env.empireNotif
-  void $ liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Persistence.saveLocation loc
+  projectRoot      <- use Env.projectRoot
+  void $ liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Persistence.saveLocation projectRoot loc
 
 data Expr = Expression String | Function (Maybe String) | Module (Maybe String) | Input (Maybe String)| Output (Maybe String)
 

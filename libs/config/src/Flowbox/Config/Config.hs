@@ -25,15 +25,7 @@ logger = getLoggerIO $moduleName
 
 
 data Config = Config      { root      :: Section
-                          , base      :: Section
-                          , global    :: Section
-                          , local     :: Section
-                          , templates :: Section
-                          , config    :: Section
-                          , tools     :: Section
-                          , wrappers  :: Section
-                          , bins      :: Section
-                          , ghcS      :: Section
+                          , projects  :: Section
                           , bus       :: Section
                           }
             deriving (Show)
@@ -42,55 +34,14 @@ data Section = Root       { path :: String
                           , conf :: String
                           , bin  :: String
                           }
-             | Base       { path  :: String
-                          , bin   :: String
-                          , lib   :: String
-                          , share :: String
-                          , pkgDb :: String
+             | Projects   { projectRoot  :: String
                           }
-             | Global     { path  :: String
-                          , bin   :: String
-                          , lib   :: String
-                          , share :: String
-                          , pkgDb :: String
-                          }
-             | Local      { home  :: String
-                          , path  :: String
-                          , conf  :: String
-                          , pkgDb :: String
-                          , cabal :: String
-                          }
-             | Templates  { path  :: String
-                          , cabal :: String
-                          }
-             | Cfg        { flowbox :: String
-                          , cabal   :: String
-                          }
-
-             | Tools      { path     :: String
-                          , lunac    :: String
-                          , batchSrv :: String
-                          }
-             | Wrappers   { path   :: String
-                          , ghc    :: String
-                          , ghcPkg :: String
-                          , hsc2hs :: String
-                          , cabal  :: String
-                          }
-             | Bins       { ghc    :: String
-                          , ghcPkg :: String
-                          , hsc2hs :: String
-                          , cabal  :: String
-                          }
-             | GHC        { ver    :: String
-                          , topDir :: String
-                          }
-             | Bus        {  serverControlEndPoint :: String
-                          ,  serverPullEndPoint    :: String
-                          ,  serverPubEndPoint     :: String
-                          ,  clientControlEndPoint :: String
-                          ,  clientPullEndPoint    :: String
-                          ,  clientPubEndPoint     :: String
+             | Bus        { serverControlEndPoint :: String
+                          , serverPullEndPoint    :: String
+                          , serverPubEndPoint     :: String
+                          , clientControlEndPoint :: String
+                          , clientPullEndPoint    :: String
+                          , clientPubEndPoint     :: String
                           }
              deriving (Show)
 
@@ -118,47 +69,7 @@ load = do
                       <*> readConf "root.conf"
                       <*> readConf "root.bin"
                )
-           <*> ( Base   <$> readConf "base.path"
-                        <*> readConf "base.bin"
-                        <*> readConf "base.lib"
-                        <*> readConf "base.share"
-                        <*> readConf "base.pkgDb"
-               )
-           <*> ( Global <$> readConf "global.path"
-                        <*> readConf "global.bin"
-                        <*> readConf "global.lib"
-                        <*> readConf "global.share"
-                        <*> readConf "global.pkgDb"
-               )
-           <*> ( Local  <$> readConf "local.home"
-                        <*> readConf "local.path"
-                        <*> readConf "local.conf"
-                        <*> readConf "local.pkgDb"
-                        <*> readConf "local.cabal"
-               )
-           <*> ( Templates <$> readConf "templates.path"
-                           <*> readConf "templates.cabal"
-               )
-           <*> ( Cfg <$> readConf "config.flowbox"
-                     <*> readConf "config.cabal"
-               )
-           <*> ( Tools <$> readConf "tools.path"
-                       <*> readConf "tools.lunac"
-                       <*> readConf "tools.batchSrv"
-               )
-           <*> ( Wrappers <$> readConf "wrappers.path"
-                          <*> readConf "wrappers.ghc"
-                          <*> readConf "wrappers.ghcPkg"
-                          <*> readConf "wrappers.hsc2hs"
-                          <*> readConf "wrappers.cabal"
-               )
-           <*> ( Bins     <$> readConf "bins.ghc"
-                          <*> readConf "bins.ghcPkg"
-                          <*> readConf "bins.hsc2hs"
-                          <*> readConf "bins.cabal"
-               )
-           <*> ( GHC      <$> readConf "ghc.version"
-                          <*> readConf "ghc.topDir"
+           <*> ( Projects <$> readConf "projects.projectRoot"
                )
            <*> ( Bus      <$> readConf "bus.serverControlEndPoint"
                           <*> readConf "bus.serverPullEndPoint"

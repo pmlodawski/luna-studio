@@ -11,6 +11,7 @@ import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.Data.Graph             (Graph)
 import           Control.Concurrent.STM.TChan  (TChan, newTChan)
 import           Flowbox.Bus.Data.Message      (Message)
+import qualified Flowbox.Config.Config       as Config
 
 instance Show (TChan Message) where
     show _ = "(TChan)"
@@ -19,10 +20,11 @@ data Env = Env { _empireEnv   :: Empire.Env
                , _empireNotif :: Empire.CommunicationEnv
                , _formatted   :: Bool
                , _toBusChan   :: TChan Message
+               , _projectRoot :: FilePath
                } deriving (Show)
 makeLenses ''Env
 
-make :: TChan Message -> TChan AsyncUpdate -> TChan (GraphLocation, Graph, Bool) -> Env
+make :: TChan Message -> TChan AsyncUpdate -> TChan (GraphLocation, Graph, Bool) -> FilePath -> Env
 make toBus fromEmpire tc = Env def (Empire.CommunicationEnv fromEmpire tc) True toBus
 
 newtype LoggerEnv = LoggerEnv { _formatLog :: Bool }

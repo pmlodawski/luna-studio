@@ -1,7 +1,7 @@
 module Empire.Commands.Graph
     ( addNode
     , addNodeCondTC
-    , addNodeUI
+    , addPersistentNode
     , removeNodes
     , updateNodeMeta
     , connect
@@ -35,14 +35,15 @@ import           Empire.Data.Graph       (Graph)
 
 import           Empire.API.Data.Project       (ProjectId)
 import           Empire.API.Data.Library       (LibraryId)
-import           Empire.API.Data.Port          (InPort(..), OutPort(..))
+import           Empire.API.Data.Port          (InPort(..), OutPort(..), PortId(..))
+import qualified Empire.API.Data.Port          as Port (state, PortState(..))
 import           Empire.API.Data.PortRef       (InPortRef(..), OutPortRef(..), AnyPortRef(..))
 import qualified Empire.API.Data.PortRef       as PortRef
 import           Empire.API.Data.Node          (NodeId, Node(..))
 import qualified Empire.API.Data.Node          as Node
 import           Empire.API.Data.NodeMeta      (NodeMeta)
 import qualified Empire.API.Data.Graph         as APIGraph
-import           Empire.API.Data.DefaultValue  (PortDefault, Value(..))
+import           Empire.API.Data.DefaultValue  (PortDefault(Constant), Value(..))
 import           Empire.API.Data.GraphLocation (GraphLocation (..))
 import qualified Empire.API.Data.GraphLocation as GraphLocation
 
@@ -52,6 +53,7 @@ import qualified Empire.Commands.AST          as AST
 import qualified Empire.Commands.GraphUtils   as GraphUtils
 import qualified Empire.Commands.GraphBuilder as GraphBuilder
 import qualified Empire.Commands.Publisher    as Publisher
+import Debug.Trace (trace)
 
 addNodeCondTC :: Bool -> GraphLocation -> Text -> NodeMeta -> Empire Node
 addNodeCondTC doTC loc expr meta = withGraph loc $ do
@@ -72,15 +74,23 @@ addNodeNoTC loc expr meta = do
     Publisher.notifyNodeUpdate loc node
     return node
 
-addNodeUI :: Node -> Command Graph NodeId
-addNodeUI n = case n ^. Node.nodeType of
+addPersistentNode :: Node -> Command Graph NodeId
+addPersistentNode n = case n ^. Node.nodeType of
   Node.ExpressionNode expr -> do
     let newNodeId = n ^. Node.nodeId
     refNode <- zoom Graph.ast $ AST.addNode newNodeId (Text.unpack $ n ^. Node.name) (Text.unpack $ expr)
     zoom Graph.ast $ AST.writeMeta refNode (n ^. Node.nodeMeta)
     Graph.nodeMapping . at newNodeId ?= refNode
+    mapM (setDefault newNodeId) (Map.toList $ n ^. Node.ports)
     return newNodeId
   otherwise -> return 0
+  where
+    setDefault nodeId (portId, port) = case port ^. Port.state of
+      Port.WithDefault (Constant val) -> trace (show (nodeId, portId, val)) $ case portId of
+        (InPortId pid) -> setDefaultValue' (PortRef.toAnyPortRef nodeId (InPortId pid)) (Constant val)
+        otherwise -> return ()
+        otherwise -> return ()
+      otherwise -> return ()
 
 removeNodes :: GraphLocation -> [NodeId] -> Empire ()
 removeNodes loc nodeIds = withTC loc False $ forM_ nodeIds removeNodeNoTC
@@ -114,7 +124,10 @@ connectNoTC (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) = do
 connectNoTC _ _ = throwError "Source port should be All"
 
 setDefaultValue :: GraphLocation -> AnyPortRef -> PortDefault -> Empire ()
-setDefaultValue loc portRef val = withTC loc False $ do
+setDefaultValue loc portRef val = withTC loc False $ setDefaultValue' portRef val
+
+setDefaultValue' :: AnyPortRef -> PortDefault -> Command Graph ()
+setDefaultValue' portRef val = do
     parsed <- zoom Graph.ast $ AST.addDefault val
     (nodeId, newRef) <- case portRef of
         InPortRef' (InPortRef nodeId port) -> do

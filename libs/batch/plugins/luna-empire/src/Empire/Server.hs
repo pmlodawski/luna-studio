@@ -46,7 +46,7 @@ import           Flowbox.Bus.Data.Topic            (Topic)
 import           Flowbox.Bus.EndPoint              (BusEndPoints)
 import           Flowbox.Prelude
 import qualified Flowbox.System.Log.Logger         as Logger
-
+import qualified Flowbox.Config.Config       as Config
 
 logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)
@@ -56,26 +56,27 @@ sendStarted endPoints = do
     let content = toStrict . Bin.encode $ EmpireStarted.Status
     void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.controlEmpireStarted content
 
-run :: BusEndPoints -> [Topic] -> Bool -> IO (Either Bus.Error ())
-run endPoints topics formatted = do
+run :: BusEndPoints -> [Topic] -> Bool -> FilePath -> IO (Either Bus.Error ())
+run endPoints topics formatted projectRoot = do
     logger Logger.info $ "Subscribing to topics: " <> show topics
     logger Logger.info $ (Utils.display formatted) endPoints
     sendStarted endPoints
     toBusChan      <- atomically newTChan
     fromEmpireChan <- atomically newTChan
     tcChan         <- atomically newTChan
-    let env     = Env.make toBusChan fromEmpireChan tcChan
+    let env     = Env.make toBusChan fromEmpireChan tcChan projectRoot
     let commEnv = Empire.CommunicationEnv fromEmpireChan tcChan
     forkIO $ void $ Bus.runBus endPoints $ BusT.runBusT $ evalStateT (startAsyncUpdateWorker fromEmpireChan) env
     forkIO $ void $ Bus.runBus endPoints $ startToBusWorker toBusChan
     forkIO $ void $ Bus.runBus endPoints $ startTCWorker commEnv tcChan
     Bus.runBus endPoints $ do
         mapM_ Bus.subscribe topics
-        BusT.runBusT $ evalStateT (runBus formatted) env
+        BusT.runBusT $ evalStateT (runBus formatted projectRoot) env
 
-runBus :: Bool -> StateT Env BusT ()
-runBus formatted = do
-    Env.formatted .= formatted
+runBus :: Bool -> FilePath ->  StateT Env BusT ()
+runBus formatted projectRoot = do
+    Env.formatted   .= formatted
+    Env.projectRoot .= projectRoot
     createDefaultState
     forever handleMessage
 
@@ -110,15 +111,14 @@ startAsyncUpdateWorker asyncChan = forever $ do
 
 createDefaultState :: StateT Env BusT ()
 createDefaultState = do
-    let projectName = Just "default project"
-        projectPath = "hello.luna"
-        libraryName = Just "default library"
-        libraryPath = "main.luna"
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
     formatted        <- use Env.formatted
-    (resultProject, newEmpireEnv1) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Persistence.loadProject "projects/default.lproj"
-    Env.empireEnv .= newEmpireEnv1
+    projectRoot      <- use Env.projectRoot
+    (result, newEmpireEnv1) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Persistence.loadAllProjects projectRoot >>= Persistence.ensureDefaultExists
+    case result of
+        Left err -> logger Logger.error $ "Cannot initialize Empire: " <> err
+        Right _ -> Env.empireEnv .= newEmpireEnv1
 
 handleMessage :: StateT Env BusT ()
 handleMessage = do

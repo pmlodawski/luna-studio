@@ -44,11 +44,12 @@ run cmd = case cmd of
     Cmd.Run {} -> do
         rootLogger setIntLevel $ Cmd.verbose cmd
         endPoints <- EP.clientFromConfig <$> Config.load
+        projectRoot <- Config.projectRoot <$> Config.projects <$> Config.load
         let topics = if List.null $ Cmd.topics cmd
                         then [defaultTopic]
                         else Cmd.topics cmd
             formatted = Cmd.formatted cmd
-        r <- Server.run endPoints topics formatted
+        r <- Server.run endPoints topics formatted projectRoot
         case r of
             Left err -> logger criticalFail err
             _        -> return ()
