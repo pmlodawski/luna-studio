@@ -102,7 +102,6 @@ createProjectFromPersistent p = do
           nodes = graph ^. G.nodes
           connections = graph ^. G.connections
       mapM Graph.addPersistentNode nodes
-      -- TODO: set port defaults
       mapM (uncurry Graph.connectNoTC) connections
   return pid
 

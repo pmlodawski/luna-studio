@@ -128,7 +128,7 @@ buildArgPorts ref = do
             types <- extractArgTypes tpRef
             return (types, [])
         of' $ \ANY -> return ([], [])
-    let psCons = zipWith3 Port (InPortId . Arg <$> [0..]) (("arg " <>) . show <$> [0..]) types
+    let psCons = zipWith3 Port (InPortId . Arg <$> [0..]) (("arg " <>) . show <$> [0..]) (types ++ replicate (length states - length types) AnyType)
     return $ zipWith ($) psCons (states ++ repeat NotConnected)
 
 buildSelfPort' :: ASTOp m => Bool -> NodeRef -> m (Maybe Port)
