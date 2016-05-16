@@ -86,9 +86,8 @@ addPersistentNode n = case n ^. Node.nodeType of
   otherwise -> return 0
   where
     setDefault nodeId (portId, port) = case port ^. Port.state of
-      Port.WithDefault (Constant val) -> trace (show (nodeId, portId, val)) $ case portId of
+      Port.WithDefault (Constant val) -> case portId of
         (InPortId pid) -> setDefaultValue' (PortRef.toAnyPortRef nodeId (InPortId pid)) (Constant val)
-        otherwise -> return ()
         otherwise -> return ()
       otherwise -> return ()
 

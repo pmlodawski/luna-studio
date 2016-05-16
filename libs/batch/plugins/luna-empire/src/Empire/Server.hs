@@ -129,7 +129,7 @@ loadAllProjects = do
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Persistence.loadProject proj
     case result of
         Left err -> do
-          logger Logger.error $ "Cannot load project: " <> err
+          logger Logger.error $ "Cannot load project [" <> proj <> "]: " <> err
           return Nothing
         Right projectId -> do
           Env.empireEnv .= newEmpireEnv
