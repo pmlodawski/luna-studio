@@ -1,27 +1,29 @@
 module Empire.API.Graph.Disconnect where
 
-import           Prologue
 import           Data.Binary                   (Binary)
+import           Prologue
 
 import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.Node          (NodeId)
-import           Empire.API.Data.Port          (OutPort, InPort)
-import           Empire.API.Data.PortRef       (InPortRef(..))
-import qualified Empire.API.Update             as Update
+import           Empire.API.Data.Port          (InPort, OutPort)
+import           Empire.API.Data.PortRef       (InPortRef (..))
+import qualified Empire.API.Response           as Response
+import qualified Empire.API.Graph.Request      as G
 
-data Request = Request { _location  :: GraphLocation
-                       , _dstNodeId :: NodeId
-                       , _dstPort   :: InPort
+data Request = Request { _location :: GraphLocation
+                       , _dst      :: InPortRef
                        } deriving (Generic, Show, Eq)
 
-type Update = Update.SimpleUpdate Request
+type Response = Response.SimpleResponse Request
+
+data Update = Update   { _location' :: GraphLocation
+                       , _dst'      :: InPortRef
+                       } deriving (Generic, Show, Eq)
+
 
 makeLenses ''Request
-
+makeLenses ''Update
 instance Binary Request
+instance Binary Update
 
-dst' :: Request -> InPortRef
-dst' r = InPortRef (r ^. dstNodeId) (r ^. dstPort)
-
-dst :: Getter Request InPortRef
-dst = to dst'
+instance G.GraphRequest Request where location = location

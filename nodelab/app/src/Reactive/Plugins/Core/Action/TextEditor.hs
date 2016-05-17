@@ -17,7 +17,6 @@ import qualified Batch.Workspace                 as Workspace
 import qualified BatchConnector.Monadic.Commands as BatchCmd
 import           Empire.API.Data.GraphLocation   (GraphLocation)
 import qualified Empire.API.Graph.CodeUpdate     as CodeUpdate
-import qualified Empire.API.Update               as Update
 
 
 isCurrentLocation :: GraphLocation -> Command Global.State Bool

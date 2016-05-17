@@ -7,29 +7,25 @@ import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.Node          (NodeId)
 import           Empire.API.Data.Port          (OutPort, InPort)
 import           Empire.API.Data.PortRef       (OutPortRef(..), InPortRef(..))
-import qualified Empire.API.Update             as Update
+import qualified Empire.API.Response             as Response
+import qualified Empire.API.Graph.Request      as G
 
 data Request = Request { _location  :: GraphLocation
-                       , _srcNodeId :: NodeId
-                       , _srcPort   :: OutPort
-                       , _dstNodeId :: NodeId
-                       , _dstPort   :: InPort
+                       , _src       :: OutPortRef
+                       , _dst       :: InPortRef
                        } deriving (Generic, Show, Eq)
 
-type Update = Update.SimpleUpdate Request
+type Response = Response.SimpleResponse Request
+
+data Update  = Update  { _location'  :: GraphLocation
+                       , _src'       :: OutPortRef
+                       , _dst'       :: InPortRef
+                       } deriving (Generic, Show, Eq)
+
 
 makeLenses ''Request
-
+makeLenses ''Update
 instance Binary Request
+instance Binary Update
 
-src' :: Request -> OutPortRef
-src' r = OutPortRef (r ^. srcNodeId) (r ^. srcPort)
-
-src :: Getter Request OutPortRef
-src = to src'
-
-dst' :: Request -> InPortRef
-dst' r = InPortRef (r ^. dstNodeId) (r ^. dstPort)
-
-dst :: Getter Request InPortRef
-dst = to dst'
+instance G.GraphRequest Request where location = location

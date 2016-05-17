@@ -11,23 +11,23 @@ import           Data.ByteString.Lazy             (fromStrict)
 import qualified Empire.API.Project.CreateProject as CreateProject
 import qualified Empire.API.Project.ListProjects  as ListProjects
 import qualified Empire.API.Topic                 as Topic
-import qualified Empire.API.Update                as Update
+import qualified Empire.API.Response              as Response
 import qualified Empire.Commands.Library          as Library
 import qualified Empire.Commands.Project          as Project
 import qualified Empire.Data.Project              as DataProject
 import qualified Empire.Empire                    as Empire
 import           Empire.Env                       (Env)
 import qualified Empire.Env                       as Env
-import           Empire.Server.Server             (errorMessage, sendToBus)
+import           Empire.Server.Server             (errorMessage, sendToBus', replyFail, replyResult)
 import           Flowbox.Bus.BusT                 (BusT (..))
 import qualified Flowbox.System.Log.Logger        as Logger
 
 logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)
 
-handleCreateProject :: ByteString -> StateT Env BusT ()
-handleCreateProject content = do
-    let request = Bin.decode . fromStrict $ content :: CreateProject.Request
+
+handleCreateProject :: CreateProject.Request -> StateT Env BusT ()
+handleCreateProject request = do
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ do
@@ -37,21 +37,19 @@ handleCreateProject content = do
       let project' = project & DataProject.libs . at libraryId ?~ library
       return (projectId, project')
     case result of
-        Left err -> logger Logger.error $ errorMessage <> err
+        Left err -> replyFail logger err request
         Right (projectId, project) -> do
             Env.empireEnv .= newEmpireEnv
-            let update = Update.Update request $ CreateProject.Result projectId $ DataProject.toAPI project
-            sendToBus Topic.createProjectUpdate update
+            replyResult request $ CreateProject.Result projectId $ DataProject.toAPI project
+            sendToBus' $ CreateProject.Update projectId $ DataProject.toAPI project
 
-handleListProjects :: ByteString -> StateT Env BusT ()
-handleListProjects content = do
-    let request = Bin.decode . fromStrict $ content :: ListProjects.Request
+handleListProjects :: ListProjects.Request -> StateT Env BusT ()
+handleListProjects request = do
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Project.listProjects
     case result of
-        Left err -> logger Logger.error $ errorMessage <> err
+        Left err -> replyFail logger err request
         Right projectList -> do
             Env.empireEnv .= newEmpireEnv
-            let update = Update.Update request $ ListProjects.Status $ (_2 %~ DataProject.toAPI) <$> projectList
-            sendToBus Topic.listProjectsStatus update
+            replyResult request $ ListProjects.Result $ (_2 %~ DataProject.toAPI) <$> projectList

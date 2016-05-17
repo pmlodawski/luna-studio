@@ -34,7 +34,7 @@ import           Data.Text.Lazy                      (Text)
 data Event = UnknownEvent String
            | NodeAdded                       AddNode.Update
            | NodeRemoved                  RemoveNode.Update
-           | ProgramFetched               GetProgram.Update
+           | ProgramFetched               GetProgram.Response
            | NodesConnected                  Connect.Update
            | NodesDisconnected            Disconnect.Update
            | NodeMetaUpdated          UpdateNodeMeta.Update
@@ -42,8 +42,8 @@ data Event = UnknownEvent String
            | NodeUpdated                  NodeUpdate.Update
            | CodeUpdated                  CodeUpdate.Update
            | NodeResultUpdated      NodeResultUpdate.Update
-           | ProjectList                ListProjects.Update
-           | ProjectCreated            CreateProject.Update
+           | ProjectList                ListProjects.Response
+           | ProjectCreated            CreateProject.Response
            | NodeSearcherUpdated  NodeSearcherUpdate.Update
            | EmpireStarted             EmpireStarted.Status
            -- | ProjectDoesNotExist

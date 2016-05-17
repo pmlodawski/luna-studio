@@ -24,6 +24,7 @@ import qualified Empire.API.Data.NodeMeta         as NodeMeta
 import           Empire.API.Data.GraphLocation    (GraphLocation)
 import qualified Empire.API.Data.GraphLocation    as GraphLocation
 import           Empire.API.Data.Port             (OutPort, InPort)
+import           Empire.API.Data.PortRef          (OutPortRef(..), InPortRef(..))
 import qualified Empire.API.Data.Breadcrumb       as Breadcrumb
 import           Empire.API.Data.Project          (ProjectId)
 import qualified Empire.API.Graph.AddNode         as AddNode
@@ -39,7 +40,7 @@ import qualified Empire.API.Project.ListProjects  as ListProjects
 import qualified Empire.API.Library.CreateLibrary as CreateLibrary
 import qualified Empire.API.Library.ListLibraries as ListLibraries
 import qualified Empire.API.Topic                 as Topic
-import qualified Empire.API.Update                as Update
+import qualified Empire.API.Response                as Response
 
 
 toGraphLocation :: String -> String -> GraphLocation
@@ -134,12 +135,12 @@ updateNodeMeta endPoints graphLocation nodeId x y req = do
 
 connect :: EP.BusEndPoints -> GraphLocation -> NodeId -> OutPort -> NodeId -> InPort -> IO ()
 connect endPoints graphLocation srcNodeId outPort dstNodeId inPort = do
-    let content = toStrict . Bin.encode $ Connect.Request graphLocation srcNodeId outPort dstNodeId inPort
+    let content = toStrict . Bin.encode $ Connect.Request graphLocation (OutPortRef srcNodeId outPort) (InPortRef dstNodeId inPort)
     void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.connectRequest content
 
 disconnect :: EP.BusEndPoints -> GraphLocation -> NodeId -> InPort -> IO ()
 disconnect endPoints graphLocation  dstNodeId inPort = do
-    let content = toStrict . Bin.encode $ Disconnect.Request graphLocation dstNodeId inPort
+    let content = toStrict . Bin.encode $ Disconnect.Request graphLocation (InPortRef dstNodeId inPort)
     void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.disconnectRequest content
 
 getProgram :: EP.BusEndPoints -> GraphLocation -> IO ()

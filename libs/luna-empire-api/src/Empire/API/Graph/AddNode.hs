@@ -6,13 +6,10 @@ import           Prologue
 import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.Node          (Node, NodeId)
 import           Empire.API.Data.NodeMeta      (NodeMeta)
-import qualified Empire.API.Update             as Update
+import qualified Empire.API.Response           as Response
+import qualified Empire.API.Graph.Request      as G
 
-data NodeType = InputNode { _name :: String
-                          , _tpe  :: String
-                          }
-              | ExpressionNode { _expression :: String }
-              deriving (Generic, Show, Eq)
+data NodeType = ExpressionNode { _expression :: String } deriving (Generic, Show, Eq)
 
 data Request = Request { _location  :: GraphLocation
                        , _nodeType  :: NodeType
@@ -20,14 +17,17 @@ data Request = Request { _location  :: GraphLocation
                        , _connectTo :: Maybe NodeId
                        } deriving (Generic, Show, Eq)
 
-data Result = Result { _node :: Node
+type Response = Response.Response Request NodeId
+
+data Update = Update { _location'  :: GraphLocation
+                     , _node'      :: Node
                      } deriving (Generic, Show, Eq)
 
-type Update = Update.Update Request Result
-
 makeLenses ''Request
-makeLenses ''Result
+makeLenses ''Update
 
 instance Binary NodeType
 instance Binary Request
-instance Binary Result
+instance Binary Update
+
+instance G.GraphRequest Request where location = location

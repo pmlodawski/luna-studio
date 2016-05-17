@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Empire.API.JSONInstances where
 
-import           Data.Aeson.Types                    (FromJSON, ToJSON, toJSON, parseJSON)
+import           Data.Aeson.Types                    (FromJSON, ToJSON, parseJSON, toJSON)
 import           Data.Map.Lazy                       (Map)
 import qualified Data.Map.Lazy                       as Map
 import           Prologue
@@ -36,12 +36,12 @@ import           Empire.API.Graph.SetInputNodeType   as SetInputNodeType
 import           Empire.API.Graph.UpdateNodeMeta     as UpdateNodeMeta
 import           Empire.API.Library.CreateLibrary    as CreateLibrary
 import           Empire.API.Library.ListLibraries    as ListLibraries
+import           Empire.API.Persistence.Envelope     as PEnvelope
 import           Empire.API.Persistence.Library      as PLibrary
 import           Empire.API.Persistence.Project      as PProject
-import           Empire.API.Persistence.Envelope     as PEnvelope
 import           Empire.API.Project.CreateProject    as CreateProject
 import           Empire.API.Project.ListProjects     as ListProjects
-import           Empire.API.Update                   as Update
+import           Empire.API.Response                 as Response
 
 instance ToJSON Project.Project
 instance ToJSON Library.Library
@@ -105,19 +105,22 @@ instance FromJSON Graph.Graph
 instance ToJSON t => ToJSON (Error.Error t)
 
 instance ToJSON AddNode.NodeType
-instance ToJSON AddNode.Request
-instance ToJSON AddNode.Result
+instance ToJSON AddNode.Update
 
 instance ToJSON Connect.Request
+instance ToJSON Connect.Update
 
 instance ToJSON Disconnect.Request
+instance ToJSON Disconnect.Update
 
 instance ToJSON RemoveNode.Request
+instance ToJSON RemoveNode.Update
 
 instance ToJSON RenameNode.Request
+instance ToJSON RenameNode.Update
 
 instance ToJSON UpdateNodeMeta.Request
-instance ToJSON UpdateNodeMeta.Result
+instance ToJSON UpdateNodeMeta.Update
 
 instance ToJSON NodeUpdate.Update
 instance ToJSON NodeResultUpdate.Update
@@ -125,7 +128,7 @@ instance ToJSON NodeResultUpdate.NodeValue
 instance ToJSON CodeUpdate.Update
 
 instance ToJSON GetProgram.Request
-instance ToJSON GetProgram.Status
+instance ToJSON GetProgram.Result
 
 instance ToJSON SetDefaultValue.Request
 
@@ -133,18 +136,20 @@ instance ToJSON SetInputNodeType.Request
 
 instance ToJSON CreateLibrary.Request
 instance ToJSON CreateLibrary.Result
+instance ToJSON CreateLibrary.Update
 
 instance ToJSON ListLibraries.Request
-instance ToJSON ListLibraries.Status
+instance ToJSON ListLibraries.Result
 
 instance ToJSON CreateProject.Request
 instance ToJSON CreateProject.Result
+instance ToJSON CreateProject.Update
 
 instance ToJSON ListProjects.Request
-instance ToJSON ListProjects.Status
+instance ToJSON ListProjects.Result
 
-instance (ToJSON req, ToJSON res) => ToJSON (Update.Update req res)
-instance ToJSON Update.ResultOk
+instance (ToJSON req, ToJSON res) => ToJSON (Response.Response req res)
+instance (ToJSON payload) => ToJSON (Response.Status payload)
 
 instance ToJSON NodeSearcherUpdate.Update
 

@@ -8,7 +8,6 @@ import           Event.Event                      (Event (Init, Batch))
 import           Reactive.Commands.Command        (Command, execCommand, performIO)
 import           Reactive.State.Global            (State)
 import qualified Reactive.State.Global            as Global
-import qualified Empire.API.Update                as Update
 
 
 

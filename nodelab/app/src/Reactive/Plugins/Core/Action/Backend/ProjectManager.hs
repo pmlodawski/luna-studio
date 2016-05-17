@@ -22,32 +22,28 @@ import           Empire.API.Data.Node             (Node)
 import           Empire.API.Data.PortRef          (InPortRef, OutPortRef)
 import qualified Empire.API.Project.ListProjects  as ListProjects
 import qualified Empire.API.Project.CreateProject as CreateProject
-import qualified Empire.API.Update                as Update
+import qualified Empire.API.Response              as Response
 
-
+whenOk :: Response.Response req res -> (res -> Command State ()) -> Command State ()
+whenOk (Response.Response req (Response.Ok res))  handler = handler res
+whenOk (Response.Response req (Response.Error _)) _       = return ()
 
 toAction :: Event -> Maybe (Command State ())
 toAction (Batch (Batch.ProjectList response)) = Just $ do
-    let projects = response ^. Update.result . ListProjects.projects
-    Global.workspace . Workspace.projects .= IntMap.fromList projects
+    whenOk response $ \(ListProjects.Result projects) -> do
+        Global.workspace . Workspace.projects .= IntMap.fromList projects
 
-
-    lastLocation <- use $ Global.workspace . Workspace.lastUILocation
-    withJust lastLocation $ \lastLocation -> do
-        let lastGraphLocation = Workspace.fromUIGraphLocation projects lastLocation
-        withJust lastGraphLocation $ assign (Global.workspace . Workspace.currentLocation)
-
-    loc <- use $ Global.workspace . Workspace.currentLocation
-
-    loadGraph loc
+        lastLocation <- use $ Global.workspace . Workspace.lastUILocation
+        withJust lastLocation $ \lastLocation -> do
+            let lastGraphLocation = Workspace.fromUIGraphLocation projects lastLocation
+            withJust lastGraphLocation $ assign (Global.workspace . Workspace.currentLocation)
+        loc <- use $ Global.workspace . Workspace.currentLocation
+        loadGraph loc
 
 toAction (Batch (Batch.ProjectCreated response)) = Just $ do
-    let pid     = response ^. Update.result . CreateProject.projectId
-        project = response ^. Update.result . CreateProject.project
-    Global.workspace . Workspace.projects . at pid ?= project
-
-    projs <- use $ Global.workspace . Workspace.projects
-
-    loadProject pid
+    whenOk response $ \(CreateProject.Result projectId project) -> do
+        Global.workspace . Workspace.projects . at projectId ?= project
+        projs <- use $ Global.workspace . Workspace.projects
+        loadProject projectId
 toAction _ = Nothing
 

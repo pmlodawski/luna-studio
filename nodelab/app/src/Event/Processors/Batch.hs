@@ -31,22 +31,6 @@ processMessage (WebMessage topic bytes)
     | topic == Topic.nodeSearcherDataUpdate = NodeSearcherUpdated $ decode bytes
     | topic == Topic.controlEmpireStarted   = EmpireStarted       $ decode bytes
     | otherwise                             = UnknownEvent topic
-    -- "project.open.update"                                          -> ProjectOpened <$> parseProjectOpenUpdate bytes
-    -- "project.open.error"                                           -> Just $ ProjectDoesNotExist
-    -- "project.library.list.status"                                  -> LibrariesList <$> parseLibrariesListResponse bytes
-    -- "project.library.create.update"                                -> LibraryCreated <$> parseLibraryCreateResponse bytes
-    -- "project.library.ast.function.add.update"                      -> WorkspaceCreated <$> parseFunctionCreateResponse bytes
-    -- "interpreter.value.update"                                     -> uncurry ValueUpdate <$> parseValueUpdate bytes
-    -- "project.library.ast.function.graph.node.add.update"           -> NodeAdded <$> parseAddNodeResponse bytes
-    -- "project.library.ast.function.graph.node.default.set.update"   -> Just NodeDefaultUpdated
-    -- "project.library.ast.code.get.status"                          -> CodeUpdate <$> parseGetCodeResponse bytes
-    -- "project.library.ast.code.set.update"                          -> Just CodeSet
-    -- "project.library.ast.code.set.error"                           -> Just $ CodeSetError $ parseErrorMsg bytes
-    -- "project.library.ast.function.graph.connect.update"            -> Just NodesConnected
-    -- "project.library.ast.function.graph.disconnect.update"         -> Just NodesDisconnected
-    -- "project.library.ast.get.status"                               -> Just ASTElementExists
-    -- "project.library.ast.get.error"                                -> Just ASTElementDoesNotExist
-    -- "interpreter.run.update"                                       -> RunFinished <$> parseRunStatus bytes
 
 processMessage (ControlMessage ConnectionTakeover) = ConnectionDropped
 processMessage (ControlMessage Welcome)            = ConnectionOpened

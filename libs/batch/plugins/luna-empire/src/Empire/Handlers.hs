@@ -1,6 +1,8 @@
+{-# LANGUAGE ScopedTypeVariables       #-}
 module Empire.Handlers where
 
 import           Prologue
+import           Prelude (undefined)
 
 import           Control.Monad.State   (StateT)
 import           Data.ByteString       (ByteString)
@@ -12,23 +14,31 @@ import qualified Empire.Server.Graph   as Graph
 import qualified Empire.Server.Library as Library
 import qualified Empire.Server.Project as Project
 import           Flowbox.Bus.BusT      (BusT (..))
+import qualified Data.Binary                      as Bin
+import           Data.ByteString                  (ByteString)
+import           Data.ByteString.Lazy             (fromStrict)
+
 
 type Handler = ByteString -> StateT Env BusT ()
 
 handlersMap :: Map String Handler
 handlersMap = Map.fromList
-    [ (Topic.addNodeRequest,         Graph.handleAddNode)
-    , (Topic.removeNodeRequest,      Graph.handleRemoveNode)
-    , (Topic.updateNodeMetaRequest,  Graph.handleUpdateNodeMeta)
-    , (Topic.renameNodeRequest,      Graph.handleRenameNode)
-    , (Topic.connectRequest,         Graph.handleConnect)
-    , (Topic.disconnectRequest,      Graph.handleDisconnect)
-    , (Topic.setDefaultValueRequest, Graph.handleSetDefaultValue)
-    , (Topic.programRequest,         Graph.handleGetProgram)
-    , (Topic.logEnvDebugGraphViz,    Graph.handleDumpGraphViz)
-    , (Topic.typecheck,              Graph.handleTypecheck)
-    , (Topic.createProjectRequest,   Project.handleCreateProject)
-    , (Topic.listProjectsRequest,    Project.handleListProjects)
-    , (Topic.createLibraryRequest,   Library.handleCreateLibrary)
-    , (Topic.listLibrariesRequest,   Library.handleListLibraries)
+    [ makeHandler Graph.handleAddNode
+    , makeHandler Graph.handleRemoveNode
+    , makeHandler Graph.handleUpdateNodeMeta
+    , makeHandler Graph.handleRenameNode
+    , makeHandler Graph.handleConnect
+    , makeHandler Graph.handleDisconnect
+    , makeHandler Graph.handleSetDefaultValue
+    , makeHandler Graph.handleGetProgram
+    , makeHandler Graph.handleDumpGraphViz
+    , makeHandler Graph.handleTypecheck
+    , makeHandler Project.handleCreateProject
+    , makeHandler Project.handleListProjects
+    , makeHandler Library.handleCreateLibrary
+    , makeHandler Library.handleListLibraries
     ]
+
+makeHandler :: forall a. (Topic.MessageTopic a, Bin.Binary a) => (a -> StateT Env BusT ()) -> (String, Handler)
+makeHandler h = (Topic.topic (undefined :: a), process) where
+   process content = h request where request = Bin.decode . fromStrict $ content

@@ -1,10 +1,10 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE RankNTypes       #-}
-{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE RankNTypes          #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 
 module Empire.Logger where
 
-import           Prologue
 import           Control.Monad                     (forever)
 import           Control.Monad.State               (StateT, evalStateT)
 import qualified Data.Binary                       as Bin
@@ -13,6 +13,8 @@ import           Data.ByteString.Char8             (unpack)
 import           Data.ByteString.Lazy              (fromStrict, toStrict)
 import           Data.Map.Strict                   (Map)
 import qualified Data.Map.Strict                   as Map
+import           Prelude                           (undefined)
+import           Prologue
 
 import qualified Empire.API.Control.EmpireStarted  as EmpireStarted
 import qualified Empire.API.Graph.AddNode          as AddNode
@@ -93,38 +95,51 @@ logMessage logMsg topic content = do
     let logFormatter = Map.findWithDefault defaultLogFormatter topic loggFormattersMap
     logger Logger.debug $ logFormatter (Utils.display formatted) content
 
+
+makeHandler :: forall a. (Topic.MessageTopic a, Bin.Binary a, Show a) => a -> (String, LogFormatter)
+makeHandler h = (Topic.topic (undefined :: a), process) where
+   process display content = display request where request = (Bin.decode . fromStrict $ content :: a)
+
 loggFormattersMap :: Map String LogFormatter
 loggFormattersMap = Map.fromList
-    [ (Topic.addNodeRequest,         \display content -> display (Bin.decode . fromStrict $ content :: AddNode.Request))
-    , (Topic.addNodeUpdate,          \display content -> display (Bin.decode . fromStrict $ content :: AddNode.Update))
-    , (Topic.removeNodeRequest,      \display content -> display (Bin.decode . fromStrict $ content :: RemoveNode.Request))
-    , (Topic.removeNodeUpdate,       \display content -> display (Bin.decode . fromStrict $ content :: RemoveNode.Update))
-    , (Topic.updateNodeMetaRequest,  \display content -> display (Bin.decode . fromStrict $ content :: UpdateNodeMeta.Request))
-    , (Topic.updateNodeMetaUpdate,   \display content -> display (Bin.decode . fromStrict $ content :: UpdateNodeMeta.Update))
-    , (Topic.renameNodeRequest,      \display content -> display (Bin.decode . fromStrict $ content :: RenameNode.Request))
-    , (Topic.renameNodeUpdate,       \display content -> display (Bin.decode . fromStrict $ content :: RenameNode.Update))
-    , (Topic.connectRequest,         \display content -> display (Bin.decode . fromStrict $ content :: Connect.Request))
-    , (Topic.connectUpdate,          \display content -> display (Bin.decode . fromStrict $ content :: Connect.Update))
-    , (Topic.disconnectRequest,      \display content -> display (Bin.decode . fromStrict $ content :: Disconnect.Request))
-    , (Topic.disconnectUpdate,       \display content -> display (Bin.decode . fromStrict $ content :: Disconnect.Update))
-    , (Topic.programRequest,         \display content -> display (Bin.decode . fromStrict $ content :: GetProgram.Request))
-    , (Topic.programStatus,          \display content -> display (Bin.decode . fromStrict $ content :: GetProgram.Update))
-    , (Topic.nodeUpdate,             \display content -> display (Bin.decode . fromStrict $ content :: NodeUpdate.Update))
-    , (Topic.nodeResultUpdate,       \display content -> display (Bin.decode . fromStrict $ content :: NodeResultUpdate.Update))
-    , (Topic.codeUpdate,             \display content -> display (Bin.decode . fromStrict $ content :: CodeUpdate.Update))
-    , (Topic.graphUpdate,            \display content -> "graphUpdate - not implemented yet")
-    , (Topic.createProjectRequest,   \display content -> display (Bin.decode . fromStrict $ content :: CreateProject.Request))
-    , (Topic.createProjectUpdate,    \display content -> display (Bin.decode . fromStrict $ content :: CreateProject.Update))
-    , (Topic.listProjectsRequest,    \display content -> display (Bin.decode . fromStrict $ content :: ListProjects.Request))
-    , (Topic.listProjectsStatus,     \display content -> display (Bin.decode . fromStrict $ content :: ListProjects.Update))
-    , (Topic.createLibraryRequest,   \display content -> display (Bin.decode . fromStrict $ content :: CreateLibrary.Request))
-    , (Topic.createLibraryUpdate,    \display content -> display (Bin.decode . fromStrict $ content :: CreateLibrary.Update))
-    , (Topic.listLibrariesRequest,   \display content -> display (Bin.decode . fromStrict $ content :: ListLibraries.Request))
-    , (Topic.listLibrariesStatus,    \display content -> display (Bin.decode . fromStrict $ content :: ListLibraries.Update))
-    , (Topic.setDefaultValueRequest, \display content -> display (Bin.decode . fromStrict $ content :: SetDefaultValue.Request))
+    [ makeHandler (undefined :: AddNode.Request          )
+    , makeHandler (undefined :: AddNode.Response         )
+    , makeHandler (undefined :: AddNode.Update           )
+    , makeHandler (undefined :: RemoveNode.Request       )
+    , makeHandler (undefined :: RemoveNode.Response      )
+    , makeHandler (undefined :: RemoveNode.Update        )
+    , makeHandler (undefined :: UpdateNodeMeta.Request   )
+    , makeHandler (undefined :: UpdateNodeMeta.Response  )
+    , makeHandler (undefined :: UpdateNodeMeta.Update    )
+    , makeHandler (undefined :: RenameNode.Request       )
+    , makeHandler (undefined :: RenameNode.Response      )
+    , makeHandler (undefined :: RenameNode.Update        )
+    , makeHandler (undefined :: Connect.Request          )
+    , makeHandler (undefined :: Connect.Response         )
+    , makeHandler (undefined :: Connect.Update           )
+    , makeHandler (undefined :: Disconnect.Request       )
+    , makeHandler (undefined :: Disconnect.Response      )
+    , makeHandler (undefined :: Disconnect.Update        )
+    , makeHandler (undefined :: GetProgram.Request       )
+    , makeHandler (undefined :: GetProgram.Response      )
+    , makeHandler (undefined :: NodeUpdate.Update        )
+    , makeHandler (undefined :: NodeResultUpdate.Update  )
+    , makeHandler (undefined :: CodeUpdate.Update        )
+    , makeHandler (undefined :: CreateProject.Request    )
+    , makeHandler (undefined :: CreateProject.Response   )
+    , makeHandler (undefined :: CreateProject.Update     )
+    , makeHandler (undefined :: ListProjects.Request     )
+    , makeHandler (undefined :: ListProjects.Response    )
+    , makeHandler (undefined :: CreateLibrary.Request    )
+    , makeHandler (undefined :: CreateLibrary.Response   )
+    , makeHandler (undefined :: CreateLibrary.Update     )
+    , makeHandler (undefined :: ListLibraries.Request    )
+    , makeHandler (undefined :: ListLibraries.Response   )
+    , makeHandler (undefined :: SetDefaultValue.Request  )
+    , makeHandler (undefined :: SetDefaultValue.Response )
+    , (Topic.controlEmpireStarted,   \display content -> "Luna empire started")
     , (Topic.logEnvDebug,            \display content -> "Log environment")
     , (Topic.logEnvDebugGraphViz,    \display content -> "Dump graphviz")
-    , (Topic.controlEmpireStarted,   \display content -> "Luna empire started")
     ]
 
 defaultLogFormatter :: LogFormatter

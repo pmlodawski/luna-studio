@@ -1,26 +1,28 @@
 module Empire.API.Graph.GetProgram where
 
-import           Prologue
 import           Data.Binary                   (Binary)
 import           Data.Text.Lazy                (Text)
+import           Prologue
 
-import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.Graph         (Graph)
+import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.NodeSearcher  (Items)
-import qualified Empire.API.Update             as Update
+import qualified Empire.API.Response           as Response
+import qualified Empire.API.Graph.Request      as G
 
 data Request = Request { _location :: GraphLocation
                        } deriving (Generic, Show, Eq)
 
-data Status = Status { _graph            :: Graph
-                     , _code             :: Text
-                     , _nodeSearcherData :: Items
-                     } deriving (Generic, Show, Eq)
+data Result  = Result  { _graph            :: Graph
+                       , _code             :: Text
+                       , _nodeSearcherData :: Items
+                       } deriving (Generic, Show, Eq)
 
-type Update = Update.Update Request Status
+type Response = Response.Response Request Result
 
 makeLenses ''Request
-makeLenses ''Status
+makeLenses ''Result
 
 instance Binary Request
-instance Binary Status
+instance Binary Result
+instance G.GraphRequest Request where location = location

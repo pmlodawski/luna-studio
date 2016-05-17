@@ -31,7 +31,7 @@ import qualified Empire.API.Graph.RemoveNode         as RemoveNode
 import qualified Empire.API.Graph.RenameNode         as RenameNode
 import qualified Empire.API.Graph.UpdateNodeMeta     as UpdateNodeMeta
 import qualified Empire.API.Graph.NodeSearcherUpdate as NodeSearcherUpdate
-import qualified Empire.API.Update                   as Update
+import qualified Empire.API.Response                   as Response
 
 import qualified JS.TextEditor                       as UI
 
@@ -44,59 +44,63 @@ isCurrentLocationAndGraphLoaded location = do
     igl <- use $ Global.workspace . Workspace.isGraphLoaded
     return $ icl && igl
 
+whenOk :: Response.Response req res -> (res -> Command State ()) -> Command State ()
+whenOk (Response.Response req (Response.Ok res))  handler = handler res
+whenOk (Response.Response req (Response.Error _)) _       = return ()
+
 toAction :: Event.Event -> Maybe (Command State ())
 toAction (Event.Batch ev) = Just $ case ev of
     ProgramFetched response -> do
-        let location = response ^. Update.request . GetProgram.location
-        isGraphLoaded  <- use $ Global.workspace . Workspace.isGraphLoaded
-        isGoodLocation <- isCurrentLocation location
-        when (isGoodLocation && not isGraphLoaded) $ do
-            let nodes       = response ^. Update.result . GetProgram.graph . Graph.nodes
-                connections = response ^. Update.result . GetProgram.graph . Graph.connections
-                code        = response ^. Update.result . GetProgram.code
-                nsData      = response ^. Update.result . GetProgram.nodeSearcherData
+        whenOk response $ \result -> do
+            let location = response ^. Response.request . GetProgram.location
+            isGraphLoaded  <- use $ Global.workspace . Workspace.isGraphLoaded
+            isGoodLocation <- isCurrentLocation location
+            when (isGoodLocation && not isGraphLoaded) $ do
+                let nodes       = result ^. GetProgram.graph . Graph.nodes
+                    connections = result ^. GetProgram.graph . Graph.connections
+                    code        = result ^. GetProgram.code
+                    nsData      = result ^. GetProgram.nodeSearcherData
 
-            Global.workspace . Workspace.nodeSearcherData .= nsData
-            renderGraph nodes connections
-            autoZoom
-            performIO $ UI.setText code
-            Global.workspace . Workspace.isGraphLoaded .= True
+                Global.workspace . Workspace.nodeSearcherData .= nsData
+                renderGraph nodes connections
+                autoZoom
+                performIO $ UI.setText code
+                Global.workspace . Workspace.isGraphLoaded .= True
 
-    NodesConnected response -> do
-        whenM (isCurrentLocation $ response ^. Update.request . Connect.location) $ do
-            let request = (response ^. Update.request)
-            localConnectNodes (request ^. Connect.src) (request ^. Connect.dst)
+    NodesConnected update -> do
+        whenM (isCurrentLocation $ update ^. Connect.location') $ do
+            localConnectNodes (update ^. Connect.src') (update ^. Connect.dst')
             updateConnections
 
-    NodesDisconnected response -> do
-        whenM (isCurrentLocation $ response ^. Update.request . Disconnect.location) $ do
-            disconnect $ response ^. Update.request . Disconnect.dst
+    NodesDisconnected update -> do
+        whenM (isCurrentLocation $ update ^. Disconnect.location') $ do
+            disconnect $ update ^. Disconnect.dst'
 
-    NodeMetaUpdated response -> do
-        shouldProcess <- isCurrentLocationAndGraphLoaded (response ^. Update.request . UpdateNodeMeta.location)
-        when shouldProcess $ updateNodeMeta (response ^. Update.request . UpdateNodeMeta.nodeId) (response ^. Update.result ^. UpdateNodeMeta.newNodeMeta)
+    NodeMetaUpdated update -> do
+        shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. UpdateNodeMeta.location')
+        when shouldProcess $ updateNodeMeta (update ^. UpdateNodeMeta.nodeId') (update ^. UpdateNodeMeta.nodeMeta')
 
-    NodeAdded response -> do
-        shouldProcess <- isCurrentLocationAndGraphLoaded (response ^. Update.request . AddNode.location)
-        when shouldProcess $ addDummyNode (response ^. Update.result . AddNode.node)
+    NodeAdded update -> do
+        shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. AddNode.location')
+        when shouldProcess $ addDummyNode (update ^. AddNode.node')
 
-    NodeUpdated response -> do
-        shouldProcess <- isCurrentLocationAndGraphLoaded (response ^. NodeUpdate.location)
-        when shouldProcess $ updateNode $ response ^. NodeUpdate.node
+    NodeUpdated update -> do
+        shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. NodeUpdate.location)
+        when shouldProcess $ updateNode $ update ^. NodeUpdate.node
 
-    NodeRenamed response -> do
-        shouldProcess <- isCurrentLocationAndGraphLoaded (response ^. Update.request . RenameNode.location)
-        when shouldProcess $ renameNode (response ^. Update.request . RenameNode.nodeId) (response ^. Update.request . RenameNode.name)
+    NodeRenamed update -> do
+        shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. RenameNode.location')
+        when shouldProcess $ renameNode (update ^. RenameNode.nodeId') (update ^. RenameNode.name')
 
-    NodeRemoved response -> do
-        shouldProcess <- isCurrentLocationAndGraphLoaded (response ^. Update.request . RemoveNode.location)
-        when shouldProcess $ RemoveNode.localRemoveNodes $ response ^. Update.request . RemoveNode.nodeIds
+    NodeRemoved update -> do
+        shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. RemoveNode.location')
+        when shouldProcess $ RemoveNode.localRemoveNodes $ update ^. RemoveNode.nodeIds'
 
-    NodeResultUpdated response -> do
-        shouldProcess <- isCurrentLocationAndGraphLoaded (response ^. NodeResultUpdate.location)
+    NodeResultUpdated update -> do
+        shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. NodeResultUpdate.location)
         when shouldProcess $ do
-            updateNodeValue         (response ^. NodeResultUpdate.nodeId) (response ^. NodeResultUpdate.value)
-            updateNodeProfilingData (response ^. NodeResultUpdate.nodeId) (response ^. NodeResultUpdate.execTime)
+            updateNodeValue         (update ^. NodeResultUpdate.nodeId) (update ^. NodeResultUpdate.value)
+            updateNodeProfilingData (update ^. NodeResultUpdate.nodeId) (update ^. NodeResultUpdate.execTime)
 
     NodeSearcherUpdated update -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. NodeSearcherUpdate.location)

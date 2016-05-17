@@ -96,15 +96,11 @@ removeNode workspace nodeIds = sendRequest topic body where
 connectNodes :: Workspace -> OutPortRef -> InPortRef -> IO ()
 connectNodes workspace src dst = sendRequest topic body where
     topic = Topic.connectRequest
-    body = (withLibrary workspace Connect.Request) (src ^. PortRef.srcNodeId)
-                                                   (src ^. PortRef.srcPortId)
-                                                   (dst ^. PortRef.dstNodeId)
-                                                   (dst ^. PortRef.dstPortId)
+    body = (withLibrary workspace Connect.Request) src dst
 
 disconnectMessage :: Workspace -> (OutPortRef, InPortRef) -> WebMessage
 disconnectMessage workspace (src, dst) = WebMessage Topic.disconnectRequest $ encode body where
-    body  = (withLibrary workspace Disconnect.Request) (dst ^. PortRef.dstNodeId)
-                                                       (dst ^. PortRef.dstPortId)
+    body  = (withLibrary workspace Disconnect.Request) dst
 
 disconnectNodes :: Workspace -> [(OutPortRef, InPortRef)] -> IO ()
 disconnectNodes workspace connections = sendMany $ (disconnectMessage workspace) <$> connections

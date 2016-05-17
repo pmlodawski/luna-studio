@@ -5,6 +5,7 @@ import           Data.Binary                   (Binary)
 import           Data.Text.Lazy                (Text)
 
 import           Empire.API.Data.GraphLocation (GraphLocation)
+import qualified Empire.API.Graph.Request      as G
 
 data Request = Request { _location :: GraphLocation
                        } deriving (Generic, Show, Eq)
@@ -12,3 +13,5 @@ data Request = Request { _location :: GraphLocation
 makeLenses ''Request
 
 instance Binary Request
+
+instance G.GraphRequest Request where location = location
