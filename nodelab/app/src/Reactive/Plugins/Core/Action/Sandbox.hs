@@ -134,7 +134,7 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\113' _)) = Just $ Global.in
         ) $ mempty
 
     return ()
-toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\114' _)) = Just $ Global.inRegistry $ do
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\115' _)) = Just $ Global.inRegistry $ do
     performIO $ putStrLn "show sandbox"
     performIO $ putStrLn "show sandbox"
     let widget = Group.create

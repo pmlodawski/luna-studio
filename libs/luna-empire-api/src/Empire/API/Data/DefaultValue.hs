@@ -1,8 +1,11 @@
 module Empire.API.Data.DefaultValue where
 
-import Prologue
-import Data.Binary   (Binary)
-import Data.Text.Lazy as Text
+import           Data.Binary          (Binary)
+import           Data.Text.Lazy       as Text
+import           Prologue
+
+import qualified Graphics.API.Objects as Visualization
+
 
 data Value = IntValue       Int
            | DoubleValue    Double
@@ -18,6 +21,7 @@ data Value = IntValue       Int
            | Histogram      [(Int, Int)]
            | Image          String Double Double
            | DataFrame      [(String, [Value])]
+           | Graphics       Visualization.Object
            deriving (Generic, Show, Eq)
 
 data PortDefault = Expression String | Constant Value deriving (Generic, Show, Eq)

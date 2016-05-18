@@ -28,4 +28,5 @@ Library
                   containers,
                   text,
                   hashable,
-                  scope-searcher
+                  scope-searcher,
+                  visualization-api

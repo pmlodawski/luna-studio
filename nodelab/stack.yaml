@@ -37,7 +37,7 @@ packages:
     extra-dep: true
   - location:
       git: 'https://bitbucket.org/NewByteOrder/visualization-api.git'
-      commit: 3e8782e2a5f7e5bb485dba34e9cc5dcddbb57ace
+      commit: 26bf5181d3d875f0f99b3799b992c1947fc07396
     extra-dep: true
 
 extra-deps:
