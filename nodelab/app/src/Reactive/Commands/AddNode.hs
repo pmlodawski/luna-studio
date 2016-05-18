@@ -92,6 +92,8 @@ import           Empire.API.Data.ValueType         (ValueType (..))
 import qualified Empire.API.Data.ValueType         as ValueType
 import qualified Empire.API.Graph.NodeResultUpdate as NodeResult
 
+import qualified Object.Widget.Graphics            as G
+import qualified Utils.Shader                      as Shader
 
 addNode :: Node -> Command State ()
 addNode node = do
@@ -350,6 +352,8 @@ nodeValueToText (DoublePairList v)   = Text.pack $ "Vector2 [" <> (show $ length
 nodeValueToText (IntPairList v)      = Text.pack $ "Vector2 [" <> (show $ length v) <> "]"
 nodeValueToText (Histogram   v)      = Text.pack $ "Hist [" <> (show $ length v) <> "]"
 nodeValueToText (Image      dataUrl width height) = Text.pack $ "Image"
+nodeValueToText (Graphics    _)      = Text.pack "Graphics"
+nodeValueToText _                    = Text.pack "(unknow type)"
 
 removeVisualization :: WidgetId -> Command UIRegistry.State ()
 removeVisualization id = do
@@ -447,6 +451,13 @@ visualizeNodeValue id (DataFrame cols) = do
         rows = transpose cols'
         df = DataFrame.create (Vector2 400 200) heads rows
     UICmd.register_ groupId df def
+
+visualizeNodeValue id (Graphics graphicObject) = do
+    groupId <- Node.valueGroupId id
+    let shader = Text.pack $ Shader.createShader graphicObject
+    let items   = [ G.Item shader [ G.Box (Vector2 0.0 0.0) (Vector2 1.0 1.0) ] ]
+        widget = G.create (Vector2 200 200) items
+    UICmd.register_ groupId widget def
 
 
 
