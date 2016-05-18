@@ -27,6 +27,7 @@ import           Object.Widget.Plots.ScatterPlot  (ScatterPlot)
 import           Object.Widget.Plots.Image        (Image)
 import           Object.Widget.LongText           (LongText)
 import           Object.Widget.DataFrame          (DataFrame)
+import           Object.Widget.Graphics           (Graphics)
 
 import           UI.Widget                        (GenericWidget (..), UIContainer, UIWidget)
 import qualified UI.Widget.Button                 as Button
@@ -44,6 +45,7 @@ import qualified UI.Widget.Plots.ScatterPlot      as ScatterPlot
 import qualified UI.Widget.Plots.Image            as Image
 import qualified UI.Widget.LongText               as LongText
 import qualified UI.Widget.DataFrame              as DataFrame
+import qualified UI.Widget.Graphics               as Graphics
 
 import qualified UI.Handlers.Button               as Button
 import qualified UI.Handlers.Node                 as Node
@@ -83,6 +85,7 @@ scatterPlotType       = typeOf (undefined :: ScatterPlot)
 imageType             = typeOf (undefined :: Image)
 longTextType          = typeOf (undefined :: LongText)
 dataFrameType         = typeOf (undefined :: DataFrame)
+graphicsType          = typeOf (undefined :: Graphics)
 
 instance HasHandlers State where
     widgetHandlers (CtxDynamic tpe _)
@@ -109,5 +112,6 @@ instance HasHandlers State where
         | tpe ==            imageType  = def
         | tpe ==         longTextType  = def
         | tpe ==        dataFrameType  = def
+        | tpe ==        graphicsType   = def
 
         | otherwise                    = error $ "Unknown widget type " <> (show tpe)

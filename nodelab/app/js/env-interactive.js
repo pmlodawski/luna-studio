@@ -26,4 +26,5 @@ module.exports = function() {
   window.PlotImage      = require('Widget/Image');
   window.LongText       = require('Widget/Text');
   window.DataFrame      = require('Widget/DataFrame');
+  window.Graphics       = require('Widget/Graphics');
 };

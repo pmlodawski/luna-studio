@@ -26,6 +26,7 @@ import qualified Object.Widget.Slider.Discrete    as DiscreteSlider
 import qualified Object.Widget.TextBox            as TextBox
 import qualified Object.Widget.Toggle             as Toggle
 import qualified Object.Widget.Plots.ScatterPlot  as ScatterPlot
+import qualified Object.Widget.Graphics           as G
 
 import           Object.Widget.Choice.RadioButton (RadioButton (..))
 import qualified Object.Widget.Choice.RadioButton as RadioButton
@@ -133,15 +134,22 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\113' _)) = Just $ Global.in
         ) $ mempty
 
     return ()
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\114' _)) = Just $ Global.inRegistry $ do
+    performIO $ putStrLn "show sandbox"
+    performIO $ putStrLn "show sandbox"
+    let widget = Group.create
+    parent <- UICmd.register sceneGraphId widget (Layout.verticalLayoutHandler 5.0)
 
-toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\114' _)) = Just $ do
-    performIO $ putStrLn "Sending getCode request"
-    -- workspace <- use Global.workspace
-    -- performIO $ BatchCmd.getCode workspace
-    -- let request = AddNode.Request 1 42 "2 + 2" (NodeMeta (5.0, 12.0)) 63
-    -- BC.sendMessage $ BC.WebMessage "empire.graph.dupa" $ "\0dupa trolololo"
-    -- putStrLn "Sending WS message"
-    -- let request = AddNode.Request 1 42 "2 + 2" (NodeMeta (5.0, 12.0)) 63
-    -- BC.sendMessage $ BC.WebMessage "empire.graph.addNode" $ encode request
+    let shader  = "void main() { gl_FragColor = vec4(0.1, 0.0, 0.0, 1.0); } "
+        shader2 = "void main() { gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0); } "
+        n       = 20.0
+        n'      = 20
+        items   = [ G.Item shader  [ G.Box (Vector2 0.0 0.0) (Vector2 1.0 1.0) ]
+                  , G.Item shader2 [ G.Box (Vector2 (i / n) 0.0) (Vector2 (1/n) (i / n)) | i <- [1..n']]
+                  ]
+        widget = G.create (Vector2 400 400) items
+    UICmd.register parent widget def
+
+    return ()
 
 toAction _  = Nothing
