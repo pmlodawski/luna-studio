@@ -9,6 +9,7 @@ import           Empire.API.Data.PortRef       (AnyPortRef)
 import           Empire.API.Data.DefaultValue  (PortDefault)
 import qualified Empire.API.Response            as Response
 import qualified Empire.API.Graph.Request      as G
+import qualified Empire.API.Topic              as T
 
 data Request = Request { _location     :: GraphLocation
                        , _portRef      :: AnyPortRef
@@ -16,7 +17,12 @@ data Request = Request { _location     :: GraphLocation
                        } deriving (Generic, Show, Eq)
 
 type Response = Response.SimpleResponse Request
+instance Response.ResponseResult Request ()
 
 makeLenses ''Request
 instance Binary Request
 instance G.GraphRequest Request where location = location
+
+topicPrefix = "empire.graph.node.defaultValue"
+instance T.MessageTopic Request  where topic _ = topicPrefix <> T.request
+instance T.MessageTopic Response where topic _ = topicPrefix <> T.response

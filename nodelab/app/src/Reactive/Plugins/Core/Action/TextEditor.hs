@@ -14,7 +14,6 @@ import qualified Reactive.State.Global           as Global
 import qualified Reactive.State.UIElements       as UIElements
 
 import qualified Batch.Workspace                 as Workspace
-import qualified BatchConnector.Monadic.Commands as BatchCmd
 import           Empire.API.Data.GraphLocation   (GraphLocation)
 import qualified Empire.API.Graph.CodeUpdate     as CodeUpdate
 

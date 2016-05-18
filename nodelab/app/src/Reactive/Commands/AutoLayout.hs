@@ -23,7 +23,6 @@ import qualified Empire.API.Data.Node as Node
 layoutGraph :: Command State ()
 layoutGraph = do
     newNodes  <- moveNodes
-    workspace <- use Global.workspace
     return ()
     -- performIO $ BatchCmd.updateNodes workspace newNodes
 

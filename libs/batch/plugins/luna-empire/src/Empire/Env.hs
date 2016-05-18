@@ -9,9 +9,8 @@ import qualified Empire.Empire                 as Empire
 import           Empire.API.Data.AsyncUpdate   (AsyncUpdate)
 import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.Data.Graph             (Graph)
-import           Control.Concurrent.STM.TChan  (TChan, newTChan)
+import           Control.Concurrent.STM.TChan  (TChan)
 import           Flowbox.Bus.Data.Message      (Message)
-import qualified Flowbox.Config.Config       as Config
 
 instance Show (TChan Message) where
     show _ = "(TChan)"

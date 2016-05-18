@@ -4,7 +4,7 @@ import           Utils.PreludePlus
 import           Event.Keyboard (KeyMods)
 import           Object.UITypes (WidgetId)
 import           Object.Widget  (widget)
-import           Reactive.State.Global             (State)
+import           Reactive.State.Global             (State, inWorkspace)
 import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.UIRegistry         as UIRegistry
 import qualified Reactive.State.Graph              as Graph
@@ -31,7 +31,7 @@ removeSelectedNodes = do
 performRemoval :: [NodeId] -> Command State ()
 performRemoval nodeIds = do
     workspace  <- use Global.workspace
-    performIO $ BatchCmd.removeNode workspace nodeIds
+    inWorkspace $ BatchCmd.removeNode nodeIds
     GA.sendEvent $ GA.RemoveNode (length nodeIds)
 
 localRemoveNodes :: [NodeId] -> Command State ()

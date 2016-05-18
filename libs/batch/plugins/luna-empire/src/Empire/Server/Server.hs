@@ -28,16 +28,16 @@ sendToBus topic bin = do
 sendToBus' :: (MessageTopic a, Binary a) => a -> StateT Env BusT ()
 sendToBus' msg = sendToBus (Topic.topic msg) msg
 
-replyFail :: forall a. (MessageTopic a, Binary a, MessageTopic (Response.Response a ())) => Logger.LoggerIO -> String -> a -> StateT Env BusT ()
+replyFail :: forall a b. (Binary a, Response.ResponseResult a b) => Logger.LoggerIO -> String -> a -> StateT Env BusT ()
 replyFail logger errMsg req = do
   logger Logger.error $ formatErrorMessage req errMsg
   sendToBus' $ Response.error req errMsg
 
-replyOk :: forall a. (Binary a, MessageTopic (Response.Response a ())) => a -> StateT Env BusT ()
+replyOk :: forall a b. (Binary a, Response.ResponseResult a (), MessageTopic (Response.Response a ())) => a -> StateT Env BusT ()
 replyOk req = sendToBus' $ Response.ok req
 
-replyResult :: forall a b. (Binary a, Binary b, MessageTopic (Response.Response a b)) => a -> b -> StateT Env BusT ()
-replyResult req res = sendToBus' $ Response.resultOk req res
+replyResult :: forall a b. (Binary a, Binary b, Response.ResponseResult a b) => a -> b -> StateT Env BusT ()
+replyResult req res = sendToBus' $ Response.result req res
 
 errorMessage :: String
 errorMessage = "Error processing request: "

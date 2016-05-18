@@ -25,11 +25,11 @@ import           Reactive.State.Drag          (DragHistory(..))
 import qualified Reactive.State.Graph         as Graph
 import qualified Reactive.State.Camera        as Camera
 import qualified Reactive.State.Global        as Global
+import           Reactive.State.Global        (inWorkspace)
 import qualified Reactive.State.UIRegistry    as UIRegistry
 import           Reactive.State.Global        (State)
 
 import qualified BatchConnector.Commands      as BatchCmd
-import           Batch.Workspace              (Workspace)
 
 import qualified Object.Widget.Node  as Model
 import           Object.Widget.Label (Label)
@@ -106,9 +106,7 @@ stopDrag = do
             nodes <- forM nodesToUpdate $ \(id, pos) -> do
                 Global.graph . Graph.nodesMap . ix id . Node.position .= toTuple pos
                 newMeta <- preuse $ Global.graph . Graph.nodesMap . ix id . Node.nodeMeta
-                forM_ newMeta $ \newMeta -> do
-                    workspace <- use $ Global.workspace
-                    performIO $ BatchCmd.updateNodeMeta workspace id newMeta
+                forM_ newMeta $ \newMeta -> inWorkspace $ BatchCmd.updateNodeMeta id newMeta
 
             updateConnections
 

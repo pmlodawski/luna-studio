@@ -79,12 +79,12 @@ handleMessage = do
                 content = msg ^. Message.message
                 errorMsg = show content
             case Utils.lastPart '.' topic of
-                "update"  -> logMessage logMsg topic content
-                "status"  -> logMessage logMsg topic content
-                "request" -> logMessage logMsg topic content
-                "debug"   -> logMessage logMsg topic content
-                _         -> do logger Logger.error logMsg
-                                logger Logger.error errorMsg
+                "request"  -> logMessage logMsg topic content
+                "response" -> logMessage logMsg topic content
+                "update"   -> logMessage logMsg topic content
+                "debug"    -> logMessage logMsg topic content
+                _          -> do logger Logger.error logMsg
+                                 logger Logger.error errorMsg
 
 type LogFormatter = (forall a. Show a => a -> String) -> ByteString -> String
 
@@ -98,7 +98,7 @@ logMessage logMsg topic content = do
 
 makeHandler :: forall a. (Topic.MessageTopic a, Bin.Binary a, Show a) => a -> (String, LogFormatter)
 makeHandler h = (Topic.topic (undefined :: a), process) where
-   process display content = display request where request = (Bin.decode . fromStrict $ content :: a)
+   process display content = display request where request = ((Bin.decode . fromStrict $ content) :: a)
 
 loggFormattersMap :: Map String LogFormatter
 loggFormattersMap = Map.fromList

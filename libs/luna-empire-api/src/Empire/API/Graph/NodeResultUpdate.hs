@@ -8,6 +8,7 @@ import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.Node          (NodeId)
 import           Empire.API.Data.TypeRep       (TypeRep)
 import           Empire.API.Data.Error         (Error)
+import qualified Empire.API.Topic              as T
 
 data NodeValue = NoValue | Value DV.Value | Error (Error TypeRep) deriving (Show, Eq, Generic)
 
@@ -21,3 +22,6 @@ makeLenses ''Update
 
 instance Binary Update
 instance Binary NodeValue
+
+topicPrefix = "empire.graph.result"
+instance T.MessageTopic Update   where topic _ = topicPrefix <> T.update

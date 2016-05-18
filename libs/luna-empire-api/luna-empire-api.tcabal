@@ -17,7 +17,10 @@ Library
 
   Extensions:     NoImplicitPrelude,
                   DeriveGeneric,
-                  TemplateHaskell
+                  TemplateHaskell,
+                  FlexibleInstances
+                  TypeSynonymInstances
+                  MultiParamTypeClasses
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 

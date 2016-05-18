@@ -5,7 +5,7 @@ import           Utils.PreludePlus
 import           Utils.Vector
 
 import           Data.Aeson                    (ToJSON)
-import           Reactive.Commands.Command     (Command)
+import           Reactive.Commands.Command     (Command, performIO)
 
 import           Batch.Workspace
 import qualified Event.Event                   as Event
@@ -44,3 +44,8 @@ initialState = State (Vector2 200 200) def def def def def def def def def def d
 
 inRegistry :: Command UIRegistry.State a -> Command State a
 inRegistry = zoom uiRegistry
+
+inWorkspace :: (Workspace -> IO ()) -> Command State ()
+inWorkspace act = do
+    workspace <- use workspace
+    performIO $ act workspace

@@ -21,7 +21,6 @@ import           Reactive.Commands.Command                       (Command, perfo
 import           Reactive.Commands.RegisterNode                  (registerNode)
 import           Reactive.Commands.Selection                     (selectedNodes)
 import           Reactive.Commands.Camera                        (syncCamera)
-import           Reactive.Commands.UpdateNode                    ()
 import           Reactive.State.Global                           (inRegistry)
 import qualified Reactive.State.Global                           as Global
 import qualified Reactive.State.Graph                            as Graph

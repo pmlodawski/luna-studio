@@ -14,7 +14,7 @@ import           Utils.Vector                      (Vector2 (..), x, y)
 
 import           Batch.Workspace                   (Workspace)
 import qualified Batch.Workspace                   as Workspace
-import           BatchConnector.Connection         (WebMessage (..), sendMany, sendMessage, sendRequest)
+import           BatchConnector.Connection         (WebMessage (..), sendRequest, sendRequests)
 
 import qualified Empire.API.Data.Connection        as Connection
 import qualified Empire.API.Data.DefaultValue      as DefaultValue
@@ -33,7 +33,6 @@ import           Empire.API.Data.PortRef           (InPortRef (..), OutPortRef (
 import qualified Empire.API.Data.PortRef           as PortRef
 import           Empire.API.Data.Project           (Project, ProjectId)
 import qualified Empire.API.Data.Project           as Project
-import qualified Empire.API.Topic                  as Topic
 
 import qualified Empire.API.Graph.AddNode          as AddNode
 import qualified Empire.API.Graph.Connect          as Connect
@@ -50,68 +49,47 @@ import qualified Empire.API.Project.CreateProject  as CreateProject
 import qualified Empire.API.Project.ListProjects   as ListProjects
 
 
-
 withLibrary :: Workspace -> (GraphLocation -> a) -> a
 withLibrary w f = f (w ^. Workspace.currentLocation)
 
-addNode :: Workspace -> Text -> NodeMeta -> Maybe Int -> IO ()
-addNode workspace expression meta connectTo = sendRequest topic body where
-    topic = Topic.addNodeRequest
-    body  = (withLibrary workspace AddNode.Request) (AddNode.ExpressionNode $ Text.unpack expression) meta connectTo
+addNode :: Text -> NodeMeta -> Maybe Int -> Workspace -> IO ()
+addNode expression meta connectTo workspace = sendRequest $ (withLibrary workspace AddNode.Request) (AddNode.ExpressionNode $ Text.unpack expression) meta connectTo
 
 createProject :: Text -> Text -> IO ()
-createProject name path = sendRequest topic body where
-    topic = Topic.createProjectRequest
-    body  = CreateProject.Request (Just $ Text.unpack name)
-                                  (Text.unpack path)
+createProject name path = sendRequest $ CreateProject.Request (Just $ Text.unpack name) (Text.unpack path)
 
 listProjects :: IO ()
-listProjects = sendRequest Topic.listProjectsRequest ListProjects.Request
+listProjects = sendRequest $ ListProjects.Request
 
-createLibrary :: Workspace -> Text -> Text -> IO ()
-createLibrary w name path = sendRequest topic body where
-    topic = Topic.createLibraryRequest
-    body  = CreateLibrary.Request (w ^. Workspace.currentLocation . GraphLocation.projectId)
-                                  (Just $ Text.unpack name)
-                                  (Text.unpack path)
+createLibrary :: Text -> Text -> Workspace -> IO ()
+createLibrary name path w = sendRequest $ CreateLibrary.Request (w ^. Workspace.currentLocation . GraphLocation.projectId)
+                                                                (Just $ Text.unpack name)
+                                                                (Text.unpack path)
 
 listLibraries :: ProjectId -> IO ()
-listLibraries projectId = sendRequest Topic.listLibrariesRequest $ ListLibraries.Request projectId
+listLibraries projectId = sendRequest $ ListLibraries.Request projectId
 
 getProgram :: Workspace -> IO ()
-getProgram workspace = sendRequest Topic.programRequest $ withLibrary workspace GetProgram.Request
+getProgram workspace = sendRequest $ withLibrary workspace GetProgram.Request
 
-updateNodeMeta :: Workspace -> NodeId -> NodeMeta -> IO ()
-updateNodeMeta w nid nm = sendRequest Topic.updateNodeMetaRequest $ withLibrary w UpdateNodeMeta.Request nid nm
+updateNodeMeta :: NodeId -> NodeMeta -> Workspace -> IO ()
+updateNodeMeta nid nm w = sendRequest $ withLibrary w UpdateNodeMeta.Request nid nm
 
-renameNode :: Workspace -> NodeId -> Text -> IO ()
-renameNode w nid name = sendRequest Topic.renameNodeRequest $ withLibrary w RenameNode.Request nid name
+renameNode :: NodeId -> Text -> Workspace -> IO ()
+renameNode nid name w = sendRequest $ withLibrary w RenameNode.Request nid name
 
-removeNode :: Workspace -> [NodeId] -> IO ()
-removeNode workspace nodeIds = sendRequest topic body where
-    topic = Topic.removeNodeRequest
-    body  = withLibrary workspace RemoveNode.Request nodeIds
+removeNode :: [NodeId] -> Workspace ->  IO ()
+removeNode nodeIds workspace  = sendRequest $ withLibrary workspace RemoveNode.Request nodeIds
 
+connectNodes :: OutPortRef -> InPortRef -> Workspace -> IO ()
+connectNodes src dst workspace  = sendRequest $ (withLibrary workspace Connect.Request) src dst
 
-connectNodes :: Workspace -> OutPortRef -> InPortRef -> IO ()
-connectNodes workspace src dst = sendRequest topic body where
-    topic = Topic.connectRequest
-    body = (withLibrary workspace Connect.Request) src dst
+disconnectNodes :: [(OutPortRef, InPortRef)] -> Workspace -> IO ()
+disconnectNodes connections workspace = sendRequests $ (withLibrary workspace Disconnect.Request) <$> snd <$> connections
 
-disconnectMessage :: Workspace -> (OutPortRef, InPortRef) -> WebMessage
-disconnectMessage workspace (src, dst) = WebMessage Topic.disconnectRequest $ encode body where
-    body  = (withLibrary workspace Disconnect.Request) dst
+setDefaultValue :: AnyPortRef -> DefaultValue.PortDefault -> Workspace -> IO ()
+setDefaultValue portRef val workspace = sendRequest $ (withLibrary workspace SetDefaultValue.Request) portRef val
 
-disconnectNodes :: Workspace -> [(OutPortRef, InPortRef)] -> IO ()
-disconnectNodes workspace connections = sendMany $ (disconnectMessage workspace) <$> connections
-
-setDefaultValue :: Workspace -> AnyPortRef -> DefaultValue.PortDefault -> IO ()
-setDefaultValue workspace portRef val = sendRequest topic body where
-    topic = Topic.setDefaultValueRequest
-    body = (withLibrary workspace SetDefaultValue.Request) portRef val
-
-setInputNodeType :: Workspace -> NodeId -> Text -> IO ()
-setInputNodeType workspace id tpe = sendRequest topic body where
-    topic = Topic.setInputNodeTypeRequest
-    body = (withLibrary workspace SetInputNodeType.Request) id (Text.unpack tpe)
+setInputNodeType :: NodeId -> Text -> Workspace -> IO ()
+setInputNodeType id tpe workspace  = sendRequest $ (withLibrary workspace SetInputNodeType.Request) id (Text.unpack tpe)
 

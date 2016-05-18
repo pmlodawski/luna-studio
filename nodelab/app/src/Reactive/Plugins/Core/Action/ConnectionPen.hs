@@ -24,7 +24,7 @@ import qualified Event.Keyboard                    as Keyboard
 import           Event.Mouse                       hiding (Event, widget)
 import qualified Event.Mouse                       as Mouse
 
-import           Reactive.State.Global             (State)
+import           Reactive.State.Global             (State, inWorkspace)
 import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph
 import qualified Reactive.State.UIRegistry         as UIRegistry
@@ -136,7 +136,5 @@ autoConnectBackwards (srcNodeId, dstNodeId) = autoConnect (dstNodeId, srcNodeId)
 autoConnect :: (Int, Int) -> Command State ()
 autoConnect (srcNodeId, dstNodeId) = do
     graph     <- use Global.graph
-    workspace <- use Global.workspace
-
-    performIO $ BatchCmd.connectNodes workspace (OutPortRef srcNodeId Port.All) (InPortRef dstNodeId Port.Self)
+    inWorkspace $ BatchCmd.connectNodes (OutPortRef srcNodeId Port.All) (InPortRef dstNodeId Port.Self)
     GA.sendEvent $ GA.Connect GA.Pen

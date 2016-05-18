@@ -6,6 +6,7 @@ import           Data.Binary                   (Binary)
 import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.Node          (Node)
 import           Data.Text.Lazy                (Text)
+import qualified Empire.API.Topic              as T
 
 data Update = Update { _location :: GraphLocation
                      , _code     :: Text
@@ -14,3 +15,6 @@ data Update = Update { _location :: GraphLocation
 makeLenses ''Update
 
 instance Binary Update
+
+topicPrefix = "empire.graph.code"
+instance T.MessageTopic Update   where topic _ = topicPrefix <> T.update

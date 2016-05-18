@@ -8,7 +8,7 @@ import qualified Data.Map.Lazy                as Map
 import           Reactive.Commands.Command    (Command, performIO)
 import           Reactive.Commands.Graph      (connectionIdToWidgetId, updateConnNodes, updateConnections)
 import           Reactive.Commands.UIRegistry (removeWidget)
-import           Reactive.State.Global        (State)
+import           Reactive.State.Global        (State, inWorkspace)
 import qualified Reactive.State.Global        as Global
 import qualified Reactive.State.Graph         as Graph
 import qualified Reactive.State.UIRegistry    as UIRegistry
@@ -47,10 +47,9 @@ connectionToRefs conn = (conn ^. Connection.src, conn ^. Connection.dst)
 disconnectAll :: [ConnectionId] -> Command State ()
 disconnectAll connectionIds = do
     graph     <- use Global.graph
-    workspace <- use Global.workspace
     let conns = catMaybes $ Graph.lookUpConnection graph <$> connectionIds
         refs  = connectionToRefs <$> conns
-    performIO $ BatchCmd.disconnectNodes workspace refs
+    inWorkspace $ BatchCmd.disconnectNodes refs
     localDisconnectAll connectionIds
 
 disconnect :: InPortRef -> Command State ()

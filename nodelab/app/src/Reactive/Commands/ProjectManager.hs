@@ -13,7 +13,7 @@ import qualified Reactive.Commands.Breadcrumbs   as Breadcrumbs
 import           Reactive.Commands.Command       (Command, execCommand, performIO)
 import qualified Reactive.Commands.UIRegistry    as UICmd
 import           Reactive.Commands.UnrenderGraph (unrender)
-import           Reactive.State.Global           (State, inRegistry)
+import           Reactive.State.Global           (State, inRegistry, inWorkspace)
 import qualified Reactive.State.Global           as Global
 import qualified Reactive.State.UIElements       as UIElements
 import           Reactive.State.UIRegistry       (addHandler, handle, sceneInterfaceId)
@@ -48,8 +48,7 @@ loadGraph location = do
     Global.workspace . Workspace.currentLocation .= location
     saveCurrentLocation
     displayCurrentBreadcrumb
-    workspace <- use Global.workspace
-    performIO $ BatchCmd.getProgram workspace
+    inWorkspace BatchCmd.getProgram
 
 navigateToGraph :: GraphLocation -> Command State ()
 navigateToGraph location = do

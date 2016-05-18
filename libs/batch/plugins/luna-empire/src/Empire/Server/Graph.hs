@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns      #-}
 {-# LANGUAGE FlexibleContexts  #-}
-
+{-# LANGUAGE RankNTypes  #-}
 
 module Empire.Server.Graph where
 
@@ -99,7 +99,7 @@ forceTC location = do
     empireNotifEnv   <- use Env.empireNotif
     void $ liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.typecheck location
 
-modifyGraph :: (Bin.Binary a, G.GraphRequest a, Topic.MessageTopic a, Topic.MessageTopic (Response.Response a ())) => (a -> Empire.Empire b) -> (a -> b -> StateT Env BusT ()) -> a -> StateT Env BusT ()
+modifyGraph :: forall a b c. (G.GraphRequest a, Response.ResponseResult a c) => (a -> Empire.Empire b) -> (a -> b -> StateT Env BusT ()) -> a -> StateT Env BusT ()
 modifyGraph action success request = do
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
@@ -112,7 +112,7 @@ modifyGraph action success request = do
         notifyCodeUpdate $ request ^. G.location
         saveCurrentProject $ request ^. G.location
 
-modifyGraphOk :: (Bin.Binary a, G.GraphRequest a, Topic.MessageTopic a, Topic.MessageTopic (Response.Response a ())) => (a -> Empire.Empire b) -> (a -> b -> StateT Env BusT ()) -> a -> StateT Env BusT ()
+modifyGraphOk :: forall a b c. (Bin.Binary a, G.GraphRequest a, Response.ResponseResult a c, Response.ResponseResult a ()) => (a -> Empire.Empire b) -> (a -> b -> StateT Env BusT ()) -> a -> StateT Env BusT ()
 modifyGraphOk action success = modifyGraph action (\req res -> replyOk req >> success req res)
 
 handleAddNode :: AddNode.Request -> StateT Env BusT ()

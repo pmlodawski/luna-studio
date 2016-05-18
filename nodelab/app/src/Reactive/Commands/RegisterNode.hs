@@ -17,7 +17,7 @@ import qualified Object.Widget.Node          as UINode
 import           Reactive.Commands.Selection (selectedNodes)
 import           Reactive.State.Graph        (genNodeId)
 import qualified Reactive.State.UIElements   as UIElements
-import           Reactive.State.Global       (inRegistry)
+import           Reactive.State.Global       (inRegistry, inWorkspace)
 
 import           Empire.API.Data.Node        (Node (..))
 import qualified Empire.API.Data.Node        as Node
@@ -30,11 +30,10 @@ registerNode expr = do
     nodeId  <- zoom Global.graph $ gets genNodeId
     nodePos <- use $ Global.uiElements . UIElements.nsPos
     let nodeMeta = def & NodeMeta.position .~ (toTuple nodePos)
-    workspace <- use Global.workspace
     selected   <- inRegistry selectedNodes
     let connectTo = case selected of
             []     -> Nothing
             [wf]   -> Just $ wf ^. widget . UINode.nodeId
             (_:_) -> Nothing
-    performIO $ BatchCmd.addNode workspace expr nodeMeta connectTo
+    inWorkspace $ BatchCmd.addNode expr nodeMeta connectTo
     GA.sendEvent $ GA.AddNode $ if isJust connectTo then GA.AutoConnect else GA.Simple

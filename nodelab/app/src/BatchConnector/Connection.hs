@@ -11,6 +11,7 @@ import qualified Data.ByteString.Base64.Lazy as Base64
 import           Data.Text.Lazy.Encoding     (decodeUtf8)
 import           Utils.PreludePlus           hiding (Text)
 import           JS.WebSocket
+import qualified Empire.API.Topic                  as Topic
 
 data ControlCode = ConnectionTakeover
                  | Welcome
@@ -38,13 +39,20 @@ serialize = lazyTextToJSString . decodeUtf8 . Base64.encode . Binary.encode
 deserialize :: String -> Frame
 deserialize = Binary.decode . Base64.decodeLenient . pack
 
-sendMessage :: WebMessage -> IO ()
-sendMessage msg = sendMany [msg]
-
-sendRequest :: Binary a => String -> a -> IO ()
-sendRequest topic body = sendMessage $ WebMessage topic $ Binary.encode body
-
-sendMany :: [WebMessage] -> IO ()
-sendMany msgs = do
+sendMessages :: [WebMessage] -> IO ()
+sendMessages msgs = do
     socket <- getWebSocket
     send socket $ serialize $ Frame msgs
+
+sendMessage :: WebMessage -> IO ()
+sendMessage msg = sendMessages [msg]
+
+makeMessage :: (Topic.MessageTopic a, Binary a) => a -> WebMessage
+makeMessage body = WebMessage (Topic.topic body) (Binary.encode body)
+
+sendRequest :: (Topic.MessageTopic a, Binary a) => a -> IO ()
+sendRequest = sendMessage . makeMessage
+
+sendRequests :: (Topic.MessageTopic a, Binary a) => [a] -> IO ()
+sendRequests = sendMessages . (fmap makeMessage)
+
