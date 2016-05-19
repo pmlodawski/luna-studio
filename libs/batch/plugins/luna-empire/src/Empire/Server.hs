@@ -60,7 +60,7 @@ logger = Logger.getLoggerIO $(Logger.moduleName)
 sendStarted :: BusEndPoints -> IO ()
 sendStarted endPoints = do
     let content = toStrict . Bin.encode $ EmpireStarted.Status
-    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.controlEmpireStarted content
+    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message (Topic.topic EmpireStarted.Status) content
 
 run :: BusEndPoints -> [Topic] -> Bool -> FilePath -> IO (Either Bus.Error ())
 run endPoints topics formatted projectRoot = do
@@ -112,8 +112,8 @@ startAsyncUpdateWorker :: TChan AsyncUpdate -> StateT Env BusT ()
 startAsyncUpdateWorker asyncChan = forever $ do
     update <- liftIO $ atomically $ readTChan asyncChan
     case update of
-        NodeUpdate   up -> Server.sendToBus Topic.nodeUpdate up
-        ResultUpdate up -> Server.sendToBus Topic.nodeResultUpdate up
+        NodeUpdate   up -> Server.sendToBus' up
+        ResultUpdate up -> Server.sendToBus' up
 
 projectFiles :: FilePath -> IO [FilePath]
 projectFiles = find always (extension ==? ".lproj")

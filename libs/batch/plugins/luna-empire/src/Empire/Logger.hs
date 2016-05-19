@@ -28,6 +28,8 @@ import qualified Empire.API.Graph.RemoveNode       as RemoveNode
 import qualified Empire.API.Graph.RenameNode       as RenameNode
 import qualified Empire.API.Graph.SetDefaultValue  as SetDefaultValue
 import qualified Empire.API.Graph.UpdateNodeMeta   as UpdateNodeMeta
+import qualified Empire.API.Graph.TypeCheck        as TypeCheck
+import qualified Empire.API.Graph.DumpGraphViz     as DumpGraphViz
 import qualified Empire.API.Library.CreateLibrary  as CreateLibrary
 import qualified Empire.API.Library.ListLibraries  as ListLibraries
 import qualified Empire.API.Project.CreateProject  as CreateProject
@@ -137,9 +139,9 @@ loggFormattersMap = Map.fromList
     , makeHandler (undefined :: ListLibraries.Response   )
     , makeHandler (undefined :: SetDefaultValue.Request  )
     , makeHandler (undefined :: SetDefaultValue.Response )
-    , (Topic.controlEmpireStarted,   \display content -> "Luna empire started")
-    , (Topic.logEnvDebug,            \display content -> "Log environment")
-    , (Topic.logEnvDebugGraphViz,    \display content -> "Dump graphviz")
+    , makeHandler (undefined :: EmpireStarted.Status     )
+    , makeHandler (undefined :: DumpGraphViz.Request     )
+    , makeHandler (undefined :: TypeCheck.Response       )
     ]
 
 defaultLogFormatter :: LogFormatter

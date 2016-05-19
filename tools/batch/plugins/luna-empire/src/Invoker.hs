@@ -40,7 +40,7 @@ import qualified Empire.API.Project.ListProjects  as ListProjects
 import qualified Empire.API.Library.CreateLibrary as CreateLibrary
 import qualified Empire.API.Library.ListLibraries as ListLibraries
 import qualified Empire.API.Topic                 as Topic
-import qualified Empire.API.Response                as Response
+import qualified Empire.API.Response              as Response
 
 
 toGraphLocation :: String -> String -> GraphLocation
@@ -107,8 +107,6 @@ main = do
     when (args `isPresent` (command "libraries")) $ do
         pid       <- args `getArgOrExit` (argument "pid")
         listLibraries endPoints $ read pid
-    when (args `isPresent` (command "dump")) $ do
-        environmentDump endPoints
     when (args `isPresent` (command "graphviz")) $ do
         pid       <- args `getArgOrExit` (argument "pid")
         lid       <- args `getArgOrExit` (argument "lid")
@@ -118,67 +116,41 @@ main = do
         lid       <- args `getArgOrExit` (argument "lid")
         typecheck endPoints $ toGraphLocation pid lid
 
+sendToBus :: (Topic.MessageTopic a, Bin.Binary a) => EP.BusEndPoints -> a -> IO ()
+sendToBus endPoints msg = void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message (Topic.topic msg) $ toStrict . Bin.encode $ msg
+
 addNode :: EP.BusEndPoints -> GraphLocation -> String -> Double -> Double -> IO ()
-addNode endPoints graphLocation expression x y = do
-    let content = toStrict . Bin.encode $ AddNode.Request graphLocation (AddNode.ExpressionNode expression) (NodeMeta.NodeMeta (x, y) True) Nothing
-    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.addNodeRequest content
+addNode endPoints graphLocation expression x y = sendToBus endPoints $ AddNode.Request graphLocation (AddNode.ExpressionNode expression) (NodeMeta.NodeMeta (x, y) True) Nothing
 
 removeNode :: EP.BusEndPoints -> GraphLocation -> NodeId -> IO ()
-removeNode endPoints graphLocation nodeId = do
-    let content = toStrict . Bin.encode $ RemoveNode.Request graphLocation [nodeId]
-    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.removeNodeRequest content
+removeNode endPoints graphLocation nodeId = sendToBus endPoints $ RemoveNode.Request graphLocation [nodeId]
 
 updateNodeMeta :: EP.BusEndPoints -> GraphLocation -> NodeId -> Double -> Double -> Bool -> IO ()
-updateNodeMeta endPoints graphLocation nodeId x y req = do
-    let content = toStrict . Bin.encode $ UpdateNodeMeta.Request graphLocation nodeId (NodeMeta.NodeMeta (x, y) req)
-    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.updateNodeMetaRequest content
+updateNodeMeta endPoints graphLocation nodeId x y req = sendToBus endPoints $ UpdateNodeMeta.Request graphLocation nodeId (NodeMeta.NodeMeta (x, y) req)
 
 connect :: EP.BusEndPoints -> GraphLocation -> NodeId -> OutPort -> NodeId -> InPort -> IO ()
-connect endPoints graphLocation srcNodeId outPort dstNodeId inPort = do
-    let content = toStrict . Bin.encode $ Connect.Request graphLocation (OutPortRef srcNodeId outPort) (InPortRef dstNodeId inPort)
-    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.connectRequest content
+connect endPoints graphLocation srcNodeId outPort dstNodeId inPort = sendToBus endPoints $ Connect.Request graphLocation (OutPortRef srcNodeId outPort) (InPortRef dstNodeId inPort)
 
 disconnect :: EP.BusEndPoints -> GraphLocation -> NodeId -> InPort -> IO ()
-disconnect endPoints graphLocation  dstNodeId inPort = do
-    let content = toStrict . Bin.encode $ Disconnect.Request graphLocation (InPortRef dstNodeId inPort)
-    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.disconnectRequest content
+disconnect endPoints graphLocation  dstNodeId inPort = sendToBus endPoints $ Disconnect.Request graphLocation (InPortRef dstNodeId inPort)
 
 getProgram :: EP.BusEndPoints -> GraphLocation -> IO ()
-getProgram endPoints graphLocation = do
-    let content = toStrict . Bin.encode $ GetProgram.Request graphLocation
-    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.programRequest content
+getProgram endPoints graphLocation = sendToBus endPoints $ GetProgram.Request graphLocation
 
 createProject :: EP.BusEndPoints -> Maybe String -> String -> IO ()
-createProject endPoints name path = do
-    let content = toStrict . Bin.encode $ CreateProject.Request name path
-    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.createProjectRequest content
+createProject endPoints name path = sendToBus endPoints $ CreateProject.Request name path
 
 listProjects :: EP.BusEndPoints -> IO ()
-listProjects endPoints = do
-    let content = toStrict . Bin.encode $ ListProjects.Request
-    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.listProjectsRequest content
+listProjects endPoints = sendToBus endPoints $ ListProjects.Request
 
 createLibrary :: EP.BusEndPoints -> ProjectId -> Maybe String -> String -> IO ()
-createLibrary endPoints pid name path = do
-    let content = toStrict . Bin.encode $ CreateLibrary.Request pid name path
-    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.createLibraryRequest content
+createLibrary endPoints pid name path = sendToBus endPoints $ CreateLibrary.Request pid name path
 
 listLibraries :: EP.BusEndPoints -> ProjectId -> IO ()
-listLibraries endPoints pid = do
-    let content = toStrict . Bin.encode $ ListLibraries.Request pid
-    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.listLibrariesRequest content
-
-environmentDump :: EP.BusEndPoints -> IO ()
-environmentDump endPoints = do
-    let content = toStrict . Bin.encode $ ("" :: String)
-    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.logEnvDebug content
+listLibraries endPoints pid = sendToBus endPoints $ ListLibraries.Request pid
 
 environmentDumpGraphviz :: EP.BusEndPoints -> GraphLocation -> IO ()
-environmentDumpGraphviz endPoints loc = do
-    let content = toStrict . Bin.encode $ DumpGraphViz.Request loc
-    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.logEnvDebugGraphViz content
+environmentDumpGraphviz endPoints loc = sendToBus endPoints $ DumpGraphViz.Request loc
 
 typecheck :: EP.BusEndPoints -> GraphLocation -> IO ()
-typecheck endPoints loc = do
-    let content = toStrict . Bin.encode $ TypeCheck.Request loc
-    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.typecheck content
+typecheck endPoints loc = sendToBus endPoints $ TypeCheck.Request loc
