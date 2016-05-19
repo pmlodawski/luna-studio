@@ -1,3 +1,4 @@
+"use strict";
 
 THREE.GraphicsBufferGeometry = function ( boxes ) {
 
@@ -12,8 +13,8 @@ THREE.GraphicsBufferGeometry = function ( boxes ) {
 	var indices  = new ( ( numBoxes * 4 ) > 65535 ? Uint32Array : Uint16Array )( numBoxes * 6 );
 
 	var offset3 = 0;
-  var offset2 = 0
-  var offsetInd = 0
+  var offset2 = 0;
+  var offsetInd = 0;
 
   boxes.forEach(function(box, ix){
     vertices[offset3    ] = box._boxPosition._x;
