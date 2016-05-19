@@ -15,12 +15,10 @@ data Item = Item { _shader    :: Text
                  , _boxes     :: [Box]
                  } deriving (Eq, Show, Typeable, Generic)
 
-
 data Graphics = Graphics { _position  :: Vector2 Double
                          , _size      :: Vector2 Double
                          , _items     :: [Item]
                          } deriving (Eq, Show, Typeable, Generic)
-
 
 makeLenses ''Box
 makeLenses ''Item

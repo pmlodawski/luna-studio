@@ -142,8 +142,8 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\115' _)) = Just $ Global.in
 
     let shader  = "void main() { gl_FragColor = vec4(0.1, 0.0, 0.0, 1.0); } "
         shader2 = "void main() { gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0); } "
-        n       = 20.0
-        n'      = 20
+        n       = 4.0
+        n'      = 4
         items   = [ G.Item shader  [ G.Box (Vector2 0.0 0.0) (Vector2 1.0 1.0) ]
                   , G.Item shader2 [ G.Box (Vector2 (i / n) 0.0) (Vector2 (1/n) (i / n)) | i <- [1..n']]
                   ]

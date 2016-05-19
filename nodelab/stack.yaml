@@ -29,7 +29,7 @@ packages:
   # - location: ../../libs/hsprocessing
   - location:
       git: https://github.com/wdanilo/hsprocessing.git
-      commit: e452e916fc7c394cdec30c77a21472633fc0541f
+      commit: c37a9fac6bd96707e2838a2964d89a98b913df16
     extra-dep: true
   - location:
       git:    https://github.com/wdanilo/data-repr.git
