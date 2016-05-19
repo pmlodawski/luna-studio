@@ -94,6 +94,8 @@ import qualified Empire.API.Graph.NodeResultUpdate as NodeResult
 
 import qualified Object.Widget.Graphics            as G
 import qualified Utils.Shader                      as Shader
+import qualified Graphics.API                      as GR
+
 
 addNode :: Node -> Command State ()
 addNode node = do
@@ -436,10 +438,12 @@ visualizeNodeValue id (DataFrame cols) = do
         df = DataFrame.create (Vector2 400 200) heads rows
     UICmd.register_ groupId df def
 
-visualizeNodeValue id (Graphics graphicObject) = do
+visualizeNodeValue id (Graphics (GR.Graphics layers)) = do
     groupId <- Node.valueGroupId id
-    let shader = Text.pack $ Shader.createShader graphicObject
-    let items   = [ G.Item shader [ G.Box (Vector2 0.0 0.0) (Vector2 1.0 1.0) ] ]
+    let shaderTxt = case listToMaybe layers of
+                        Just (GR.Layer shader _) -> Text.pack $ Shader.createShader shader
+                        Nothing                  -> Text.pack $ ""
+    let items  = [ G.Item shaderTxt [ G.Box (Vector2 0.0 0.0) (Vector2 1.0 1.0) ] ]
         widget = G.create (Vector2 200 200) items
     UICmd.register_ groupId widget def
 

@@ -21,12 +21,7 @@ import           Math.Space.Metric.Bounded           -- (Bounded(..))
 import qualified Language.GLSL                       as GLSL
 import qualified Language.GLSL.Builder               as GLSL
 
-
-
-import qualified Graphics.API.Shapes                 as Visualization
-import qualified Graphics.API.Materials              as Visualization
-import qualified Graphics.API.Transformations        as Visualization
-import qualified Graphics.API.Objects                as Visualization
+import qualified Graphics.API                        as G
 
 -- test
 
@@ -51,21 +46,23 @@ myBall = Bounded (A.vec2 400 400) (ball 100.0)
 toExpr :: Double -> GLSL.Expr
 toExpr v = GLSL.FloatConstant $ (realToFrac v :: Float)
 
-createShape :: Visualization.Shape -> Object 2
-createShape (Visualization.Square s)      = hyperrectangle (A.vec2 (toExpr s) (toExpr s) :: A.BVec 2 GLSL.Expr)
-createShape (Visualization.Rectangle w h) = hyperrectangle (A.vec2 (toExpr w) (toExpr h) :: A.BVec 2 GLSL.Expr)
-createShape (Visualization.Circle d)      = ball (toExpr d)
+createShape :: G.Shape -> Object 2
+createShape (G.Square s)      = hyperrectangle (A.vec2 (toExpr s) (toExpr s) :: A.BVec 2 GLSL.Expr)
+createShape (G.Rectangle w h) = hyperrectangle (A.vec2 (toExpr w) (toExpr h) :: A.BVec 2 GLSL.Expr)
+createShape (G.Circle d)      = ball (toExpr d)
 
-createMtl :: Visualization.Color -> Material (Layer GLSL.Expr)
-createMtl (Visualization.Color r g b a) = Material $ [ Fill . Solid $ color4 (toExpr r) (toExpr g) (toExpr b) (toExpr a)]
+createMtl :: G.Color -> Material (Layer GLSL.Expr)
+createMtl (G.Color r g b a) = Material $ [ Fill . Solid $ color4 (toExpr r) (toExpr g) (toExpr b) (toExpr a)]
 
-createObj :: Visualization.Object -> Bounded Float (Object 2)
-createObj (Visualization.Object shape color transformation) =
+createComp :: G.Component -> Bounded Float (Object 2)
+createComp (G.Component shape color) =
     Bounded (A.vec2 400 400) (createShape shape)
     & material .~ (createMtl color)
 
-createShader :: Visualization.Object -> String
-createShader object = fst $ GLSL.compileGLSL $ createObj object
+-- TODO: compile all components
+createShader :: G.Shader -> String
+createShader (G.Shader (component:components)) = fst $ GLSL.compileGLSL $ createComp component
+createShader _ = ""
 
 test :: IO ()
 test = do

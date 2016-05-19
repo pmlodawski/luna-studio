@@ -69,7 +69,7 @@ getNodeValue ref = runASTOp $ do
                     "Double"    -> return $ Just $ DoubleValue $ unsafeCoerce v
                     "Bool"      -> return $ Just $ BoolValue   $ unsafeCoerce v
                     "Histogram" -> return $ Just $ Histogram   $ unsafeCoerce v
-                    "Object"    -> return $ Just $ Graphics    $ unsafeCoerce v
+                    "Graphics"  -> return $ Just $ Graphics    $ unsafeCoerce v
                     "List"      -> do
                         args <- ASTBuilder.unpackArguments as
                         case args of
