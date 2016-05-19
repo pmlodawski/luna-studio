@@ -1,0 +1,72 @@
+name:                nodelab
+version:             0.1.0.0
+synopsis:            NodeLab
+homepage:            www.nodelab.io
+license:             AllRightsReserved
+author:              New Byte Order
+maintainer:          contact@nodelab.io
+
+default-extensions:
+  - DoAndIfThenElse
+  - NoImplicitPrelude
+  - TemplateHaskell
+  - DeriveGeneric
+  - StandaloneDeriving
+  - FlexibleContexts
+  - MultiParamTypeClasses
+  - DefaultSignatures
+  - DeriveFunctor
+  - DeriveTraversable
+  - DeriveFoldable
+  - FlexibleInstances
+  - LambdaCase
+  - ConstraintKinds
+  - GeneralizedNewtypeDeriving
+  - DeriveDataTypeable
+  - ScopedTypeVariables
+
+#
+# ACHTUNG! Zmieniasz tu - zmien w interactive
+#
+dependencies:
+  - "base >= 4.8 && < 4.9"
+  - prologue
+  - bytestring
+  - base64-bytestring
+  - binary
+  - data-default
+  - ghcjs-base
+  - ghcjs-dom
+  - ghcjs-prim
+  - text
+  - transformers
+  - fgl
+  - mtl
+  - MissingH
+  - split
+  - lens
+  - containers
+  - random
+  - pretty-show
+  - convert
+  - process
+  - constraints
+  - errors
+  - vector
+  - aeson
+  - unordered-containers
+  - luna-empire-api
+  - luna-empire-api-json
+  - hashable
+  - scope-searcher
+  - hsprocessing
+  - language-glsl
+  - visualization-api
+
+
+executables:
+  nodelab:
+    main:             Main.hs
+    source-dirs:      app/src
+
+
