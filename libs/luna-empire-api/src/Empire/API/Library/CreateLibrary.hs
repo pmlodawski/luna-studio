@@ -10,6 +10,7 @@ import           Empire.API.Data.Project (ProjectId)
 import           Empire.API.Data.Library (LibraryId, Library)
 import qualified Empire.API.Response             as Response
 import qualified Empire.API.Topic              as T
+import qualified Empire.API.Request            as R
 
 data Request = Request { _projectId   :: ProjectId
                        , _libraryName :: Maybe String
@@ -37,6 +38,6 @@ instance Binary Result
 instance Binary Update
 
 topicPrefix = "empire.library.create"
-instance T.MessageTopic Request  where topic _ = topicPrefix <> T.request
+instance T.MessageTopic (R.Request Request)  where topic _ = topicPrefix <> T.request
 instance T.MessageTopic Response where topic _ = topicPrefix <> T.response
 instance T.MessageTopic Update   where topic _ = topicPrefix <> T.update

@@ -12,6 +12,8 @@ import qualified Empire.API.Library.CreateLibrary as CreateLibrary
 import qualified Empire.API.Library.ListLibraries as ListLibraries
 import qualified Empire.API.Topic                 as Topic
 import qualified Empire.API.Response              as Response
+import qualified Empire.API.Request               as Request
+import           Empire.API.Request               (Request(..))
 import qualified Empire.Commands.Library          as Library
 import qualified Empire.Data.Library              as DataLibrary
 import qualified Empire.Empire                    as Empire
@@ -25,8 +27,8 @@ logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)
 
 
-handleCreateLibrary :: CreateLibrary.Request -> StateT Env BusT ()
-handleCreateLibrary request = do
+handleCreateLibrary :: Request CreateLibrary.Request -> StateT Env BusT ()
+handleCreateLibrary req@(Request _ request) = do
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Library.createLibrary
@@ -34,20 +36,20 @@ handleCreateLibrary request = do
         (request ^. CreateLibrary.libraryName)
         (fromString $ request ^. CreateLibrary.path)
     case result of
-        Left err -> replyFail logger err request
+        Left err -> replyFail logger err req
         Right (libraryId, library) -> do
             Env.empireEnv .= newEmpireEnv
-            replyResult request $ CreateLibrary.Result libraryId $ DataLibrary.toAPI library
+            replyResult req $ CreateLibrary.Result libraryId $ DataLibrary.toAPI library
             sendToBus' $ CreateLibrary.Update libraryId $ DataLibrary.toAPI library
 
-handleListLibraries :: ListLibraries.Request -> StateT Env BusT ()
-handleListLibraries request = do
+handleListLibraries :: Request ListLibraries.Request -> StateT Env BusT ()
+handleListLibraries req@(Request _ request) = do
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Library.listLibraries
         (request ^. ListLibraries.projectId)
     case result of
-        Left err -> replyFail logger err request
+        Left err -> replyFail logger err req
         Right librariesList -> do
             Env.empireEnv .= newEmpireEnv
-            replyResult request $ ListLibraries.Result $ (_2 %~ DataLibrary.toAPI) <$> librariesList
+            replyResult req $ ListLibraries.Result $ (_2 %~ DataLibrary.toAPI) <$> librariesList

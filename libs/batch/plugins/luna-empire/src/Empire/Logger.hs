@@ -35,6 +35,7 @@ import qualified Empire.API.Library.ListLibraries  as ListLibraries
 import qualified Empire.API.Project.CreateProject  as CreateProject
 import qualified Empire.API.Project.ListProjects   as ListProjects
 import qualified Empire.API.Topic                  as Topic
+import           Empire.API.Request                (Request)
 import qualified Empire.Commands.Library           as Library
 import qualified Empire.Commands.Project           as Project
 import qualified Empire.Empire                     as Empire
@@ -104,43 +105,44 @@ makeHandler h = (Topic.topic (undefined :: a), process) where
 
 loggFormattersMap :: Map String LogFormatter
 loggFormattersMap = Map.fromList
-    [ makeHandler (undefined :: AddNode.Request          )
+    [ makeHandler (undefined :: Request AddNode.Request          )
     , makeHandler (undefined :: AddNode.Response         )
     , makeHandler (undefined :: AddNode.Update           )
-    , makeHandler (undefined :: RemoveNode.Request       )
+    , makeHandler (undefined :: Request RemoveNode.Request       )
     , makeHandler (undefined :: RemoveNode.Response      )
     , makeHandler (undefined :: RemoveNode.Update        )
-    , makeHandler (undefined :: UpdateNodeMeta.Request   )
+    , makeHandler (undefined :: Request UpdateNodeMeta.Request   )
     , makeHandler (undefined :: UpdateNodeMeta.Response  )
     , makeHandler (undefined :: UpdateNodeMeta.Update    )
-    , makeHandler (undefined :: RenameNode.Request       )
+    , makeHandler (undefined :: Request RenameNode.Request       )
     , makeHandler (undefined :: RenameNode.Response      )
     , makeHandler (undefined :: RenameNode.Update        )
-    , makeHandler (undefined :: Connect.Request          )
+    , makeHandler (undefined :: Request Connect.Request          )
     , makeHandler (undefined :: Connect.Response         )
     , makeHandler (undefined :: Connect.Update           )
-    , makeHandler (undefined :: Disconnect.Request       )
+    , makeHandler (undefined :: Request Disconnect.Request       )
     , makeHandler (undefined :: Disconnect.Response      )
     , makeHandler (undefined :: Disconnect.Update        )
-    , makeHandler (undefined :: GetProgram.Request       )
+    , makeHandler (undefined :: Request GetProgram.Request       )
     , makeHandler (undefined :: GetProgram.Response      )
     , makeHandler (undefined :: NodeUpdate.Update        )
     , makeHandler (undefined :: NodeResultUpdate.Update  )
     , makeHandler (undefined :: CodeUpdate.Update        )
-    , makeHandler (undefined :: CreateProject.Request    )
+    , makeHandler (undefined :: Request CreateProject.Request    )
     , makeHandler (undefined :: CreateProject.Response   )
     , makeHandler (undefined :: CreateProject.Update     )
-    , makeHandler (undefined :: ListProjects.Request     )
+    , makeHandler (undefined :: Request ListProjects.Request     )
     , makeHandler (undefined :: ListProjects.Response    )
-    , makeHandler (undefined :: CreateLibrary.Request    )
+    , makeHandler (undefined :: Request CreateLibrary.Request    )
     , makeHandler (undefined :: CreateLibrary.Response   )
     , makeHandler (undefined :: CreateLibrary.Update     )
-    , makeHandler (undefined :: ListLibraries.Request    )
+    , makeHandler (undefined :: Request ListLibraries.Request    )
     , makeHandler (undefined :: ListLibraries.Response   )
-    , makeHandler (undefined :: SetDefaultValue.Request  )
+    , makeHandler (undefined :: Request SetDefaultValue.Request  )
     , makeHandler (undefined :: SetDefaultValue.Response )
     , makeHandler (undefined :: EmpireStarted.Status     )
-    , makeHandler (undefined :: DumpGraphViz.Request     )
+    , makeHandler (undefined :: Request DumpGraphViz.Request     )
+    , makeHandler (undefined :: Request TypeCheck.Request       )
     , makeHandler (undefined :: TypeCheck.Response       )
     ]
 

@@ -12,6 +12,7 @@ import qualified Empire.API.Project.CreateProject as CreateProject
 import qualified Empire.API.Project.ListProjects  as ListProjects
 import qualified Empire.API.Topic                 as Topic
 import qualified Empire.API.Response              as Response
+import           Empire.API.Request                (Request(..))
 import qualified Empire.Commands.Library          as Library
 import qualified Empire.Commands.Project          as Project
 import qualified Empire.Data.Project              as DataProject
@@ -26,8 +27,8 @@ logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)
 
 
-handleCreateProject :: CreateProject.Request -> StateT Env BusT ()
-handleCreateProject request = do
+handleCreateProject :: Request CreateProject.Request -> StateT Env BusT ()
+handleCreateProject req@(Request _ request) = do
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ do
@@ -37,19 +38,19 @@ handleCreateProject request = do
       let project' = project & DataProject.libs . at libraryId ?~ library
       return (projectId, project')
     case result of
-        Left err -> replyFail logger err request
+        Left err -> replyFail logger err req
         Right (projectId, project) -> do
             Env.empireEnv .= newEmpireEnv
-            replyResult request $ CreateProject.Result projectId $ DataProject.toAPI project
+            replyResult req $ CreateProject.Result projectId $ DataProject.toAPI project
             sendToBus' $ CreateProject.Update projectId $ DataProject.toAPI project
 
-handleListProjects :: ListProjects.Request -> StateT Env BusT ()
-handleListProjects request = do
+handleListProjects :: Request ListProjects.Request -> StateT Env BusT ()
+handleListProjects req = do
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Project.listProjects
     case result of
-        Left err -> replyFail logger err request
+        Left err -> replyFail logger err req
         Right projectList -> do
             Env.empireEnv .= newEmpireEnv
-            replyResult request $ ListProjects.Result $ (_2 %~ DataProject.toAPI) <$> projectList
+            replyResult req $ ListProjects.Result $ (_2 %~ DataProject.toAPI) <$> projectList

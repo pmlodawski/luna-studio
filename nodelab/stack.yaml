@@ -45,3 +45,4 @@ extra-deps:
   - language-glsl-0.2.0
   - prettyclass-1.0.0.0
   - data-repr-1.0.1
+  - uuid-types-1.0.3

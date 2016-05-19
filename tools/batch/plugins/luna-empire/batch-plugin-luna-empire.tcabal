@@ -72,4 +72,5 @@ Executable luna-empire-invoker
                     flowbox-utils,
                     luna-empire,
                     luna-empire-api,
-                    docopt
+                    docopt,
+                    uuid

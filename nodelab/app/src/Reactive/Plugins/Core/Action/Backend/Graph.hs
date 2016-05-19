@@ -45,8 +45,8 @@ isCurrentLocationAndGraphLoaded location = do
     return $ icl && igl
 
 whenOk :: Response.Response req res -> (res -> Command State ()) -> Command State ()
-whenOk (Response.Response req (Response.Ok res))  handler = handler res
-whenOk (Response.Response req (Response.Error _)) _       = return ()
+whenOk (Response.Response _ req (Response.Ok res))  handler = handler res
+whenOk (Response.Response _ req (Response.Error _)) _       = return ()
 
 toAction :: Event.Event -> Maybe (Command State ())
 toAction (Event.Batch ev) = Just $ case ev of

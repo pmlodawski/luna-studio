@@ -1,9 +1,12 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Empire.API.JSONInstances where
 
-import           Data.Aeson.Types                    (FromJSON, ToJSON, parseJSON, toJSON)
+import           Data.Aeson.Types                    (FromJSON, ToJSON, parseJSON, toJSON, typeMismatch)
 import           Data.Map.Lazy                       (Map)
 import qualified Data.Map.Lazy                       as Map
+import qualified Data.UUID.Types                           as UUID
+import           Data.UUID.Types                           (UUID)
+import           Data.Maybe                          (fromMaybe)
 import           Prologue
 
 import           Empire.API.Control.EmpireStarted    as EmpireStarted
@@ -42,6 +45,7 @@ import           Empire.API.Persistence.Project      as PProject
 import           Empire.API.Project.CreateProject    as CreateProject
 import           Empire.API.Project.ListProjects     as ListProjects
 import           Empire.API.Response                 as Response
+import           Empire.API.Request                  as Request
 
 instance ToJSON Project.Project
 instance ToJSON Library.Library
@@ -161,3 +165,9 @@ instance ToJSON PLibrary.Library
 instance FromJSON PLibrary.Library
 instance ToJSON PEnvelope.Envelope
 instance FromJSON PEnvelope.Envelope
+
+instance (ToJSON a) => ToJSON (Request.Request a)
+instance ToJSON UUID where
+  toJSON = toJSON . UUID.toString
+-- instance FromJSON UUID where
+--   parseJSON = fmap (\t -> fromMaybe (typeMismatch "UUID" t) $ UUID.fromString $ parseJSON t)

@@ -25,8 +25,8 @@ import qualified Empire.API.Project.CreateProject as CreateProject
 import qualified Empire.API.Response              as Response
 
 whenOk :: Response.Response req res -> (res -> Command State ()) -> Command State ()
-whenOk (Response.Response req (Response.Ok res))  handler = handler res
-whenOk (Response.Response req (Response.Error _)) _       = return ()
+whenOk (Response.Response _ req (Response.Ok res))  handler = handler res
+whenOk (Response.Response _ req (Response.Error _)) _       = return ()
 
 toAction :: Event -> Maybe (Command State ())
 toAction (Batch (Batch.ProjectList response)) = Just $ do

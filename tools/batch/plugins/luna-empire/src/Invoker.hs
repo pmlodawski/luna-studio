@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Main where
 
@@ -7,6 +8,7 @@ import           Prologue                         hiding (argument)
 import           System.Environment               (getArgs)
 import           System.Console.Docopt
 import qualified Data.Binary                      as Bin
+import qualified Data.UUID.V4                     as UUID
 import qualified Data.ByteString                  as ByteString
 import qualified Data.ByteString.Char8            as Char8 (pack)
 import           Data.ByteString.Lazy             (fromStrict, toStrict)
@@ -41,6 +43,7 @@ import qualified Empire.API.Library.CreateLibrary as CreateLibrary
 import qualified Empire.API.Library.ListLibraries as ListLibraries
 import qualified Empire.API.Topic                 as Topic
 import qualified Empire.API.Response              as Response
+import           Empire.API.Request               (Request(..))
 
 
 toGraphLocation :: String -> String -> GraphLocation
@@ -116,8 +119,11 @@ main = do
         lid       <- args `getArgOrExit` (argument "lid")
         typecheck endPoints $ toGraphLocation pid lid
 
-sendToBus :: (Topic.MessageTopic a, Bin.Binary a) => EP.BusEndPoints -> a -> IO ()
-sendToBus endPoints msg = void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message (Topic.topic msg) $ toStrict . Bin.encode $ msg
+sendToBus :: (Topic.MessageTopic (Request a), Bin.Binary a) => EP.BusEndPoints -> a -> IO ()
+sendToBus endPoints msg = do
+  uuid <- UUID.nextRandom
+  let msg' = Request uuid msg
+  void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message (Topic.topic msg') $ toStrict . Bin.encode $ msg'
 
 addNode :: EP.BusEndPoints -> GraphLocation -> String -> Double -> Double -> IO ()
 addNode endPoints graphLocation expression x y = sendToBus endPoints $ AddNode.Request graphLocation (AddNode.ExpressionNode expression) (NodeMeta.NodeMeta (x, y) True) Nothing

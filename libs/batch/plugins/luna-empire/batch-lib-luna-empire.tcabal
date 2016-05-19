@@ -47,4 +47,5 @@ Library
                     lunac,
                     zeromq4-haskell >= 0.4,
                     filemanip,
-                    filepath
+                    filepath,
+                    uuid

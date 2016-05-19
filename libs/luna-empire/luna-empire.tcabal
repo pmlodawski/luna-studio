@@ -52,7 +52,8 @@ Library
                   text,
                   typelevel,
                   transformers,
-                  aeson
+                  aeson,
+                  uuid
 
 Executable luna-empire-lib-test
   Main-Is:        Main.hs
@@ -70,4 +71,5 @@ Executable luna-empire-lib-test
                   luna-core,
                   lunac,
                   stm,
-                  prologue
+                  prologue,
+                  uuid

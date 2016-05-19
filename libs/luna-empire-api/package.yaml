@@ -19,6 +19,7 @@ dependencies:
   - hashable
   - scope-searcher
   - visualization-api
+  - uuid-types
 
 default-extensions:
   - NoImplicitPrelude,

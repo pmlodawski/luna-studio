@@ -16,6 +16,7 @@ dependencies:
   - containers
   - luna-empire-api
   - aeson
+  - uuid-types
 
 default-extensions:
   - NoImplicitPrelude
