@@ -5,3 +5,5 @@ libs
 scripts
 stdlib
 tools
+.stack
+.git

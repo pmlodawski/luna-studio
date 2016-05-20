@@ -1,12 +1,12 @@
 resolver:
-  name: nbo-gui-20160201
-  location: https://bitbucket.org/NewByteOrder/stack-snapshots/raw/master/nbo-gui-20160201.yaml
+  name: nbo-gui-20160520
+  location: https://bitbucket.org/NewByteOrder/stack-snapshots/raw/master/nbo-gui-20160520.yaml
 compiler-check: match-exact
 setup-info:
   ghcjs:
     source:
-      ghcjs-0.2.0.20160201_ghc-7.10.3:
-        url: "https://s3-eu-west-1.amazonaws.com/nbo-toolchain/ghcjs/ghcjs-0.2.0.20160201-dupa.tar.gz"
+      ghcjs-0.2.0.20160517_ghc-7.10.3:
+        url: "https://s3-eu-west-1.amazonaws.com/nbo-toolchain/ghcjs/ghcjs-0.2.0.20160517-dupa.tar.gz"
 ghc-options:
   nodelab: -DGHCJS_BROWSER
 packages:
@@ -39,10 +39,3 @@ packages:
       git: 'https://bitbucket.org/NewByteOrder/visualization-api.git'
       commit: 33bf5b9d5124d16d50dc5693adbe8c8caca1ce2e
     extra-dep: true
-
-extra-deps:
-  - data-rtuple-1.0
-  - language-glsl-0.2.0
-  - prettyclass-1.0.0.0
-  - data-repr-1.0.1
-  - uuid-types-1.0.3

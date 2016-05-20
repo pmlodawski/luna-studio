@@ -1,10 +1,12 @@
-FROM lunalang/base:v7.10
+FROM alpine
 MAINTAINER kamil.figiela@luna-lang.org
 
-RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
+
+RUN    apk update \
+    && apk add zeromq supervisor nginx gmp
 
 COPY env /etc/nodelab
 
@@ -30,7 +32,7 @@ COPY userdata /data
 
 COPY runtime /runtime
 
-RUN    cd /runtime \
-    && stack build
+#RUN    cd /runtime \
+#    && stack build
 
 VOLUME ["/userdata"]

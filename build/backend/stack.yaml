@@ -21,7 +21,7 @@ packages:
 - {location: ../../tools/batch/plugins/luna-empire}
 - extra-dep: true
   location:
-    git: 'git@bitbucket.org:NewByteOrder/luna.git'
+    git: 'https://bitbucket.org/NewByteOrder/luna.git'
     commit: b930cc9e65fbf92b9f1e673ec2eac337734ea92b
   subdirs:
   - compiler
