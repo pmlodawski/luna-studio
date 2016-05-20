@@ -45,7 +45,7 @@ exports.config =
     ghcjs:
       placeholder:  'app/env.ghcjs'
       projectName:  cabalProjectName
-      buildCommand: './gencabal nodelab.tcabal && stack build'
+      buildCommand: 'stack build'
       clearScreen:  false
       interactive:  false
       ghciCommand:  "./interactive"
