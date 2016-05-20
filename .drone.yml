@@ -19,20 +19,25 @@ build:
       - stack build --copy-bins --fast
       - cd $DRONE_DIR
       - ./run_tests.sh
-      # - cd $DRONE_DIR
-      # - 'if [ "$DRONE_BRANCH" = production -o "$DRONE_BRANCH" = fogger ]; then ./upload_backend.sh; fi'
-      # - cd $DRONE_DIR/nodelab
-      # - npm install
-      # - bower install --allow-root
-      # - mkdir -p .stack-work/install/x86_64-osx/custom-nbo-gui-20160201/ghcjs-0.2.0.20160201_ghc-7.10.3/bin/nodelab.jsexe/
-      # - touch .stack-work/install/x86_64-osx/custom-nbo-gui-20160201/ghcjs-0.2.0.20160201_ghc-7.10.3/bin/nodelab.jsexe/all.js
-      # - brunch build --env production
-      # - 'if [ "$DRONE_BRANCH" = production -o "$DRONE_BRANCH" = fogger ]; then ./upload_dist.sh; fi'
-      # - cd $DRONE_DIR && ./run_tests.sh
-      # - date
+  frontend:
+    image: lunalang/buildenv:alpine-7.10-ghcjs
+    auth_config:
+      username:  $$DOCKERHUB_USER
+      password:  $$DOCKERHUB_PASS
+      email: $$DOCKERHUB_EMAIL
+    commands:
+      - date
+      - mkdir -p .stack-ghcjs
+      - export STACK_ROOT=$DRONE_DIR/.stack-ghcjs
+      - cd $DRONE_DIR/nodelab
+      - npm install
+      - bower install --allow-root
+      - brunch build --env production
+      - date
 cache:
   mount:
     - .stack
+    - .stack-ghcjs
 
 notify:
   slack:

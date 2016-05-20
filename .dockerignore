@@ -6,4 +6,5 @@ scripts
 stdlib
 tools
 .stack
+.stack-ghcjs
 .git
