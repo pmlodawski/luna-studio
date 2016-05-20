@@ -12,7 +12,7 @@ import           Utils.PreludePlus                    hiding (Item, stripPrefix)
 import           Utils.Vector
 
 import qualified Batch.Workspace                      as Workspace
-import qualified BatchConnector.Commands              as BatchCmd
+import qualified Reactive.Commands.Batch              as BatchCmd
 import qualified Empire.API.Data.Project              as Project
 import           Event.Event                          (JSState)
 import qualified JS.GoogleAnalytics                   as GA
@@ -50,7 +50,7 @@ commands = do
 
 
 createProject :: Text -> Command Global.State ()
-createProject name = performIO $ BatchCmd.createProject name $ name <> ".luna"
+createProject name = BatchCmd.createProject name $ name <> ".luna"
 
 openProject :: Text -> Command Global.State ()
 openProject name = do

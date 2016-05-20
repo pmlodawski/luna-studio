@@ -25,14 +25,14 @@ import qualified Reactive.State.Graph          as Graph
 import qualified Reactive.State.UIRegistry     as UIRegistry
 import qualified Reactive.State.Camera         as Camera
 import qualified Reactive.State.Global         as Global
-import           Reactive.State.Global         (inRegistry, inWorkspace)
+import           Reactive.State.Global         (inRegistry)
 import           Reactive.Commands.Command     (Command, command, pureCommand, ioCommand)
 import qualified Reactive.Commands.UIRegistry  as UICmd
 import           Reactive.State.UIRegistry     (sceneGraphId)
 
 import           Control.Monad.State
 
-import qualified BatchConnector.Commands       as BatchCmd
+import qualified Reactive.Commands.Batch       as BatchCmd
 
 import qualified UI.Widget.Node                as UINode
 import qualified UI.Widget.Port                as UIPort
@@ -133,7 +133,7 @@ getConnectionLine nodePos portAngles portTypes srcPortRef dstPortRef = (srcWs, d
 
 
 batchConnectNodes :: OutPortRef -> InPortRef -> Command Global.State ()
-batchConnectNodes src dst = inWorkspace $ BatchCmd.connectNodes src dst
+batchConnectNodes src dst = BatchCmd.connectNodes src dst
 
 withArrow :: Getter InPortRef Bool
 withArrow = to $ \ref -> case ref of

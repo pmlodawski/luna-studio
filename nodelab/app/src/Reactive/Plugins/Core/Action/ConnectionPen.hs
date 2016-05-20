@@ -24,7 +24,7 @@ import qualified Event.Keyboard                    as Keyboard
 import           Event.Mouse                       hiding (Event, widget)
 import qualified Event.Mouse                       as Mouse
 
-import           Reactive.State.Global             (State, inWorkspace)
+import           Reactive.State.Global             (State)
 import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph
 import qualified Reactive.State.UIRegistry         as UIRegistry
@@ -34,7 +34,7 @@ import           Reactive.Commands.DisconnectNodes (disconnectAll)
 import           Reactive.Commands.Graph
 import qualified Reactive.State.ConnectionPen      as ConnectionPen
 
-import qualified BatchConnector.Commands           as BatchCmd
+import qualified Reactive.Commands.Batch           as BatchCmd
 
 import qualified Empire.API.Data.Port              as Port
 import           Empire.API.Data.PortRef           (InPortRef(..), OutPortRef(..))
@@ -136,5 +136,5 @@ autoConnectBackwards (srcNodeId, dstNodeId) = autoConnect (dstNodeId, srcNodeId)
 autoConnect :: (Int, Int) -> Command State ()
 autoConnect (srcNodeId, dstNodeId) = do
     graph     <- use Global.graph
-    inWorkspace $ BatchCmd.connectNodes (OutPortRef srcNodeId Port.All) (InPortRef dstNodeId Port.Self)
+    BatchCmd.connectNodes (OutPortRef srcNodeId Port.All) (InPortRef dstNodeId Port.Self)
     GA.sendEvent $ GA.Connect GA.Pen

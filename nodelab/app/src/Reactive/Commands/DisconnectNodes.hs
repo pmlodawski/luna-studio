@@ -8,12 +8,12 @@ import qualified Data.Map.Lazy                as Map
 import           Reactive.Commands.Command    (Command, performIO)
 import           Reactive.Commands.Graph      (connectionIdToWidgetId, updateConnNodes, updateConnections)
 import           Reactive.Commands.UIRegistry (removeWidget)
-import           Reactive.State.Global        (State, inWorkspace)
+import           Reactive.State.Global        (State)
 import qualified Reactive.State.Global        as Global
 import qualified Reactive.State.Graph         as Graph
 import qualified Reactive.State.UIRegistry    as UIRegistry
 
-import qualified BatchConnector.Commands      as BatchCmd
+import qualified Reactive.Commands.Batch      as BatchCmd
 import           Control.Monad.State          hiding (State)
 import           Empire.API.Data.Connection   (Connection, ConnectionId)
 import qualified Empire.API.Data.Connection   as Connection
@@ -49,7 +49,7 @@ disconnectAll connectionIds = do
     graph     <- use Global.graph
     let conns = catMaybes $ Graph.lookUpConnection graph <$> connectionIds
         refs  = connectionToRefs <$> conns
-    inWorkspace $ BatchCmd.disconnectNodes refs
+    mapM_ BatchCmd.disconnectNodes (snd <$> refs)
     localDisconnectAll connectionIds
 
 disconnect :: InPortRef -> Command State ()

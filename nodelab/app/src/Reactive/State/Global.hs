@@ -44,8 +44,3 @@ initialState = State (Vector2 200 200) def def def def def def def def def def d
 
 inRegistry :: Command UIRegistry.State a -> Command State a
 inRegistry = zoom uiRegistry
-
-inWorkspace :: (Workspace -> IO ()) -> Command State ()
-inWorkspace act = do
-    workspace <- use workspace
-    performIO $ act workspace

@@ -10,14 +10,14 @@ import qualified Reactive.State.Camera       as Camera
 import           Reactive.State.Global       (State)
 import qualified Reactive.State.Global       as Global
 
-import qualified BatchConnector.Commands     as BatchCmd
+import qualified Reactive.Commands.Batch     as BatchCmd
 import qualified Object.Node                 as Node
 import           Object.Widget               (widget)
 import qualified Object.Widget.Node          as UINode
 import           Reactive.Commands.Selection (selectedNodes)
 import           Reactive.State.Graph        (genNodeId)
 import qualified Reactive.State.UIElements   as UIElements
-import           Reactive.State.Global       (inRegistry, inWorkspace)
+import           Reactive.State.Global       (inRegistry)
 
 import           Empire.API.Data.Node        (Node (..))
 import qualified Empire.API.Data.Node        as Node
@@ -35,5 +35,5 @@ registerNode expr = do
             []     -> Nothing
             [wf]   -> Just $ wf ^. widget . UINode.nodeId
             (_:_) -> Nothing
-    inWorkspace $ BatchCmd.addNode expr nodeMeta connectTo
+    BatchCmd.addNode expr nodeMeta connectTo
     GA.sendEvent $ GA.AddNode $ if isJust connectTo then GA.AutoConnect else GA.Simple

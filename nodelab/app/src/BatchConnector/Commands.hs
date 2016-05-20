@@ -7,6 +7,7 @@ import qualified Data.Binary                       as Binary
 import           Data.ByteString.Lazy.Char8        (pack)
 import           Data.Int
 import           Data.Map                          as Map
+import           Data.UUID.Types                   (UUID)
 import qualified Data.Sequence                     as Seq
 import qualified Data.Text.Lazy                    as Text
 import qualified Data.Text.Lazy                    as Text
@@ -52,44 +53,43 @@ import qualified Empire.API.Project.ListProjects   as ListProjects
 withLibrary :: Workspace -> (GraphLocation -> a) -> a
 withLibrary w f = f (w ^. Workspace.currentLocation)
 
-addNode :: Text -> NodeMeta -> Maybe Int -> Workspace -> IO ()
-addNode expression meta connectTo workspace = sendRequest $ (withLibrary workspace AddNode.Request) (AddNode.ExpressionNode $ Text.unpack expression) meta connectTo
+addNode :: Text -> NodeMeta -> Maybe Int -> Workspace -> UUID -> IO ()
+addNode expression meta connectTo workspace uuid = sendRequest uuid $ (withLibrary workspace AddNode.Request) (AddNode.ExpressionNode $ Text.unpack expression) meta connectTo
 
-createProject :: Text -> Text -> IO ()
-createProject name path = sendRequest $ CreateProject.Request (Just $ Text.unpack name) (Text.unpack path)
+createProject :: Text -> Text -> UUID -> IO ()
+createProject name path uuid = sendRequest uuid $ CreateProject.Request (Just $ Text.unpack name) (Text.unpack path)
 
-listProjects :: IO ()
-listProjects = sendRequest $ ListProjects.Request
+listProjects :: UUID -> IO ()
+listProjects uuid = sendRequest uuid $ ListProjects.Request
 
-createLibrary :: Text -> Text -> Workspace -> IO ()
-createLibrary name path w = sendRequest $ CreateLibrary.Request (w ^. Workspace.currentLocation . GraphLocation.projectId)
-                                                                (Just $ Text.unpack name)
-                                                                (Text.unpack path)
+createLibrary :: Text -> Text -> Workspace -> UUID -> IO ()
+createLibrary name path workspace uuid = sendRequest uuid $ CreateLibrary.Request (workspace ^. Workspace.currentLocation . GraphLocation.projectId)
+                                                                                  (Just $ Text.unpack name)
+                                                                                  (Text.unpack path)
+listLibraries :: ProjectId -> UUID -> IO ()
+listLibraries projectId uuid = sendRequest uuid $ ListLibraries.Request projectId
 
-listLibraries :: ProjectId -> IO ()
-listLibraries projectId = sendRequest $ ListLibraries.Request projectId
+getProgram :: Workspace -> UUID -> IO ()
+getProgram workspace uuid = sendRequest uuid $ withLibrary workspace GetProgram.Request
 
-getProgram :: Workspace -> IO ()
-getProgram workspace = sendRequest $ withLibrary workspace GetProgram.Request
+updateNodeMeta :: NodeId -> NodeMeta -> Workspace -> UUID -> IO ()
+updateNodeMeta nid nm workspace uuid = sendRequest uuid $ withLibrary workspace UpdateNodeMeta.Request nid nm
 
-updateNodeMeta :: NodeId -> NodeMeta -> Workspace -> IO ()
-updateNodeMeta nid nm w = sendRequest $ withLibrary w UpdateNodeMeta.Request nid nm
+renameNode :: NodeId -> Text -> Workspace -> UUID -> IO ()
+renameNode nid name w uuid = sendRequest uuid $ withLibrary w RenameNode.Request nid name
 
-renameNode :: NodeId -> Text -> Workspace -> IO ()
-renameNode nid name w = sendRequest $ withLibrary w RenameNode.Request nid name
+removeNode :: [NodeId] -> Workspace -> UUID ->  IO ()
+removeNode nodeIds workspace uuid = sendRequest uuid $ withLibrary workspace RemoveNode.Request nodeIds
 
-removeNode :: [NodeId] -> Workspace ->  IO ()
-removeNode nodeIds workspace  = sendRequest $ withLibrary workspace RemoveNode.Request nodeIds
+connectNodes :: OutPortRef -> InPortRef -> Workspace -> UUID -> IO ()
+connectNodes src dst workspace uuid = sendRequest uuid $ (withLibrary workspace Connect.Request) src dst
 
-connectNodes :: OutPortRef -> InPortRef -> Workspace -> IO ()
-connectNodes src dst workspace  = sendRequest $ (withLibrary workspace Connect.Request) src dst
+disconnectNodes :: InPortRef -> Workspace -> UUID -> IO ()
+disconnectNodes dst workspace uuid = sendRequest uuid $ withLibrary workspace Disconnect.Request dst
 
-disconnectNodes :: [(OutPortRef, InPortRef)] -> Workspace -> IO ()
-disconnectNodes connections workspace = sendRequests $ (withLibrary workspace Disconnect.Request) <$> snd <$> connections
+setDefaultValue :: AnyPortRef -> DefaultValue.PortDefault -> Workspace -> UUID -> IO ()
+setDefaultValue portRef val workspace uuid = sendRequest uuid $ (withLibrary workspace SetDefaultValue.Request) portRef val
 
-setDefaultValue :: AnyPortRef -> DefaultValue.PortDefault -> Workspace -> IO ()
-setDefaultValue portRef val workspace = sendRequest $ (withLibrary workspace SetDefaultValue.Request) portRef val
-
-setInputNodeType :: NodeId -> Text -> Workspace -> IO ()
-setInputNodeType id tpe workspace  = sendRequest $ (withLibrary workspace SetInputNodeType.Request) id (Text.unpack tpe)
+setInputNodeType :: NodeId -> Text -> Workspace -> UUID -> IO ()
+setInputNodeType id tpe workspace uuid = sendRequest uuid $ (withLibrary workspace SetInputNodeType.Request) id (Text.unpack tpe)
 

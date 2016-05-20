@@ -5,7 +5,7 @@ import qualified Data.Binary                 as Binary
 import           GHC.Generics                (Generic)
 import           GHCJS.Types (JSString)
 import           Data.JSString.Text
-import qualified Data.UUID.Types as UUID
+import           Data.UUID.Types (UUID)
 import           Data.Text (Text)
 import           Data.ByteString.Lazy.Char8  (ByteString, pack, toStrict)
 import qualified Data.ByteString.Base64.Lazy as Base64
@@ -50,15 +50,12 @@ sendMessages msgs = do
 sendMessage :: WebMessage -> IO ()
 sendMessage msg = sendMessages [msg]
 
-makeMessage :: (Topic.MessageTopic (Request a), Binary a) => a -> IO WebMessage
-makeMessage body = do
-    uuid <- generateUUID
-    let body' = Request uuid body
-    return $ WebMessage (Topic.topic body') (Binary.encode body')
+makeMessage :: (Topic.MessageTopic (Request a), Binary a) => UUID -> a -> WebMessage
+makeMessage uuid body = let body' = Request uuid body in WebMessage (Topic.topic body') (Binary.encode body')
 
-sendRequest :: (Topic.MessageTopic (Request a), Binary a) => a -> IO ()
-sendRequest msg = makeMessage msg >>= sendMessage
+sendRequest :: (Topic.MessageTopic (Request a), Binary a) => UUID -> a -> IO ()
+sendRequest = sendMessage .: makeMessage
 
-sendRequests :: (Topic.MessageTopic (Request a), Binary a) => [a] -> IO ()
-sendRequests msgs = (mapM makeMessage msgs) >>= sendMessages
+sendRequests :: (Topic.MessageTopic (Request a), Binary a) => [(UUID, a)] -> IO ()
+sendRequests msgs = sendMessages $ uncurry makeMessage <$> msgs
 

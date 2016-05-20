@@ -35,6 +35,7 @@ import           Control.Concurrent.MVar
 import           JS.Config                         (getBackendAddress, isLoggerEnabled)
 import qualified JS.GraphLocation                  as GraphLocation
 import           JS.UI                             (initializeGl, render, triggerWindowResize)
+import           JS.UUID                           (generateUUID)
 import           JS.WebSocket                      (WebSocket, connect, getWebSocket)
 import           Reactive.Commands.Command         (Command, execCommand)
 import qualified Reactive.Plugins.Core.Action.Init as Init
@@ -63,7 +64,8 @@ runMainNetwork socket = do
     state <- newMVar initState'
     CoreNetwork.makeNetworkDescription socket enableLogging state
     triggerWindowResize
-    BatchCmd.listProjects
+    uuid <- generateUUID
+    BatchCmd.listProjects uuid
 
 main :: IO ()
 main = do

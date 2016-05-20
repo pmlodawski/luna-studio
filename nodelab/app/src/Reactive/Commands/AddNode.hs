@@ -53,13 +53,13 @@ import           Reactive.Commands.Graph           (colorPort, focusNode, nodeId
 import           Reactive.Commands.RemoveNode      (removeSelectedNodes)
 import           Reactive.Commands.Selection       (selectedNodes)
 import qualified Reactive.Commands.UIRegistry      as UICmd
-import           Reactive.State.Global             (State, inRegistry, inWorkspace)
+import           Reactive.State.Global             (State, inRegistry)
 import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph
 import           Reactive.State.UIRegistry         (addHandler, sceneGraphId)
 import qualified Reactive.State.UIRegistry         as UIRegistry
 
-import qualified BatchConnector.Commands           as BatchCmd
+import qualified Reactive.Commands.Batch           as BatchCmd
 import qualified JS.NodeGraph                      as UI
 
 import           Data.HMap.Lazy                    (HTMap)
@@ -207,8 +207,8 @@ makePortLabel parent port = do
 
 nodeHandlers :: Node -> HTMap
 nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
-                  $ addHandler (UINode.RenameNodeHandler $ \_ nodeId name -> inWorkspace $ BatchCmd.renameNode nodeId name)
-                  $ addHandler (UINode.ChangeInputNodeTypeHandler $ \_ nodeId name -> inWorkspace $ BatchCmd.setInputNodeType nodeId name)
+                  $ addHandler (UINode.RenameNodeHandler $ \_ nodeId name -> BatchCmd.renameNode nodeId name)
+                  $ addHandler (UINode.ChangeInputNodeTypeHandler $ \_ nodeId name -> BatchCmd.setInputNodeType nodeId name)
                   $ addHandler (UINode.FocusNodeHandler    $ \id -> inRegistry $ focusNode id)
                   $ addHandler (UINode.ExpandNodeHandler   $ inRegistry $ expandSelectedNodes)
                   $ addHandler (UINode.NodeRequiredHandler $ \nid val -> updateNodeRequired nid val)
@@ -257,7 +257,7 @@ updateNodeRequired :: NodeId -> Bool -> Command State ()
 updateNodeRequired id val = do
     Global.graph . Graph.nodesMap . ix id . Node.nodeMeta . NodeMeta.isRequired .= val
     newMeta <- preuse $ Global.graph . Graph.nodesMap . ix id . Node.nodeMeta
-    withJust newMeta $ \newMeta -> inWorkspace $ BatchCmd.updateNodeMeta id newMeta
+    withJust newMeta $ \newMeta -> BatchCmd.updateNodeMeta id newMeta
 
 
 makePortControl :: Node -> WidgetId -> WidgetId -> NodeId -> Port -> Command UIRegistry.State ()
@@ -284,7 +284,7 @@ makeInPortControl parent portRef port = case port ^. Port.state of
                         ValueType.String           -> DefaultValue.StringValue def
                         ValueType.Bool             -> DefaultValue.BoolValue   False
                         _                          -> undefined
-                    handlers = addHandler (Button.ClickedHandler $ \_ -> inWorkspace $ BatchCmd.setDefaultValue portRef (DefaultValue.Constant $ zeroValue)
+                    handlers = addHandler (Button.ClickedHandler $ \_ -> BatchCmd.setDefaultValue portRef (DefaultValue.Constant $ zeroValue)
                         ) mempty
 
                 UICmd.register_ groupId label def
@@ -298,25 +298,25 @@ makeInPortControl parent portRef port = case port ^. Port.state of
             let label = port ^. Port.name
                 value = fromMaybe 0 $ def ^? DefaultValue._Constant . DefaultValue._IntValue
                 widget = DiscreteNumber.create Style.portControlSize (Text.pack $ label) value
-                handlers = onValueChanged $ \val _ -> inWorkspace $ BatchCmd.setDefaultValue portRef (DefaultValue.Constant $ DefaultValue.IntValue val)
+                handlers = onValueChanged $ \val _ -> BatchCmd.setDefaultValue portRef (DefaultValue.Constant $ DefaultValue.IntValue val)
             UICmd.register parent widget handlers
         ValueType.ContinuousNumber -> do
             let label = port ^. Port.name
                 value = fromMaybe 0.0 $ def ^? DefaultValue._Constant . DefaultValue._DoubleValue
                 widget = ContinuousNumber.create Style.portControlSize (Text.pack $ label) value
-                handlers = onValueChanged $ \val _ -> inWorkspace $ BatchCmd.setDefaultValue portRef (DefaultValue.Constant $ DefaultValue.DoubleValue val)
+                handlers = onValueChanged $ \val _ -> BatchCmd.setDefaultValue portRef (DefaultValue.Constant $ DefaultValue.DoubleValue val)
             UICmd.register parent widget handlers
         ValueType.String -> do
             let label = port ^. Port.name
                 value = fromMaybe "" $ def ^? DefaultValue._Constant . DefaultValue._StringValue
                 widget = LabeledTextBox.create Style.portControlSize (Text.pack $ label) (Text.pack $ value)
-                handlers = onValueChanged $ \val _ -> inWorkspace $ BatchCmd.setDefaultValue portRef (DefaultValue.Constant $ DefaultValue.StringValue $ Text.unpack val)
+                handlers = onValueChanged $ \val _ -> BatchCmd.setDefaultValue portRef (DefaultValue.Constant $ DefaultValue.StringValue $ Text.unpack val)
             UICmd.register parent widget handlers
         ValueType.Bool -> do
             let label = port ^. Port.name
                 value = fromMaybe True $ def ^? DefaultValue._Constant . DefaultValue._BoolValue
                 widget = Toggle.create Style.portControlSize (Text.pack $ label) value
-                handlers = onValueChanged $ \val _ -> inWorkspace $ BatchCmd.setDefaultValue portRef (DefaultValue.Constant $ DefaultValue.BoolValue val)
+                handlers = onValueChanged $ \val _ -> BatchCmd.setDefaultValue portRef (DefaultValue.Constant $ DefaultValue.BoolValue val)
             UICmd.register parent widget handlers
         ValueType.Other -> do
             let widget = Label.create (Style.portControlSize & x -~ Style.setLabelOffsetX) (Text.pack $ (port ^. Port.name) )

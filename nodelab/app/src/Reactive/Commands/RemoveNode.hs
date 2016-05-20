@@ -1,26 +1,26 @@
 module Reactive.Commands.RemoveNode where
 
-import           Utils.PreludePlus
-import           Event.Keyboard (KeyMods)
-import           Object.UITypes (WidgetId)
-import           Object.Widget  (widget)
-import           Reactive.State.Global             (State, inWorkspace)
-import qualified Reactive.State.Global             as Global
-import qualified Reactive.State.UIRegistry         as UIRegistry
-import qualified Reactive.State.Graph              as Graph
+import           Event.Keyboard                    (KeyMods)
+import           Object.UITypes                    (WidgetId)
+import           Object.Widget                     (widget)
 import           Reactive.Commands.Command         (Command, performIO)
-import           Reactive.Commands.Selection       (selectedNodes)
-import           Reactive.Commands.Graph           (nodeIdToWidgetId)
 import           Reactive.Commands.DisconnectNodes (localDisconnectAll)
+import           Reactive.Commands.Graph           (nodeIdToWidgetId)
+import           Reactive.Commands.Selection       (selectedNodes)
+import           Reactive.State.Global             (State)
+import qualified Reactive.State.Global             as Global
+import qualified Reactive.State.Graph              as Graph
+import qualified Reactive.State.UIRegistry         as UIRegistry
+import           Utils.PreludePlus
 
-import           Reactive.Commands.UIRegistry (removeWidget)
+import           Reactive.Commands.UIRegistry      (removeWidget)
 
-import qualified BatchConnector.Commands as BatchCmd
-import qualified JS.NodeGraph            as UIGraph
-import qualified Object.Widget.Node      as NodeModel
-import           Empire.API.Data.Node (NodeId)
+import           Empire.API.Data.Node              (NodeId)
+import qualified JS.NodeGraph                      as UIGraph
+import qualified Object.Widget.Node                as NodeModel
+import qualified Reactive.Commands.Batch           as BatchCmd
 
-import qualified JS.GoogleAnalytics          as GA
+import qualified JS.GoogleAnalytics                as GA
 
 
 removeSelectedNodes :: Command State ()
@@ -31,7 +31,7 @@ removeSelectedNodes = do
 performRemoval :: [NodeId] -> Command State ()
 performRemoval nodeIds = do
     workspace  <- use Global.workspace
-    inWorkspace $ BatchCmd.removeNode nodeIds
+    BatchCmd.removeNode nodeIds
     GA.sendEvent $ GA.RemoveNode (length nodeIds)
 
 localRemoveNodes :: [NodeId] -> Command State ()
