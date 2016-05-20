@@ -13,6 +13,7 @@ class Graphics extends BaseWidget
       enabled:   { type: 'i',  value: 1 }
       dpr:       { type: 'f',  value: 1 }
       objectId:  { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
+    @uniforms[k] = v for k, v of $$.commonUniforms
 
     @relayout()
 
