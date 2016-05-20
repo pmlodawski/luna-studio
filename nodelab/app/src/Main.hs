@@ -32,6 +32,7 @@ import           Batch.Workspace                   (Workspace)
 import qualified Batch.Workspace                   as Workspace
 import qualified BatchConnector.Commands           as BatchCmd
 import           Control.Concurrent.MVar
+import           System.Random (newStdGen)
 import           JS.Config                         (getBackendAddress, isLoggerEnabled)
 import qualified JS.GraphLocation                  as GraphLocation
 import           JS.UI                             (initializeGl, render, triggerWindowResize)
@@ -57,7 +58,8 @@ runMainNetwork socket = do
 
     lastLocation <- GraphLocation.loadLocation
 
-    let initState = initialState & Global.workspace . Workspace.lastUILocation .~ lastLocation
+    random <- newStdGen
+    let initState = initialState random & Global.workspace . Workspace.lastUILocation .~ lastLocation
     let (initActions, initState') = execCommand Init.initialize initState
     initActions
 

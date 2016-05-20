@@ -18,6 +18,7 @@ import qualified Batch.Workspace                   as Workspace
 import qualified BatchConnector.Commands           as BatchCmd
 
 import           Reactive.Commands.Command     (Command, execCommand, performIO)
+import           Reactive.Commands.UUID        (getUUID)
 import qualified Reactive.Commands.UIRegistry  as UICmd
 import           Reactive.State.Global         (State, workspace)
 
@@ -38,11 +39,6 @@ import           Empire.API.Data.PortRef           (InPortRef (..), OutPortRef (
 import qualified Empire.API.Data.PortRef           as PortRef
 import           Empire.API.Data.Project           (Project, ProjectId)
 import qualified Empire.API.Data.Project           as Project
-
-
-getUUID :: Command State UUID
-getUUID = do
-    return nil
 
 
 withWorkspace :: (Workspace -> UUID -> IO ()) -> Command State ()
