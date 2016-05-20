@@ -440,13 +440,14 @@ visualizeNodeValue id (DataFrame cols) = do
 
 visualizeNodeValue id (Graphics (GR.Graphics layers)) = do
     groupId <- Node.valueGroupId id
-    let shaderTxt = case listToMaybe layers of
-                        Just (GR.Layer shader _) -> Text.pack $ Shader.createShader shader
-                        Nothing                  -> Text.pack $ ""
-    let items  = [ G.Item shaderTxt [ G.Box (Vector2 0.0 0.0) (Vector2 1.0 1.0) ] ]
-        widget = G.create (Vector2 200 200) items
+    let items = createItem <$> layers
+    let widget = G.create (Vector2 200 200) items
     UICmd.register_ groupId widget def
-
+    where
+        createItem (GR.Layer shader trans) = G.Item shaderTxt boxes where
+            shaderTxt = Text.pack $ Shader.createShader shader
+            boxes     = createBox <$> trans
+        createBox (GR.Transformation sx sy dx dy rot refl) = G.Box (Vector2 dx dy) (Vector2 sx sy)
 
 
 -- visualizeNodeValue id (IntValue v) = do -- For Image widget testing
