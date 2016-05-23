@@ -43,26 +43,54 @@ myBall = Bounded (A.vec2 400 400) (ball 100.0)
 
 -- lib
 
+toFloat :: Double -> Float
+toFloat = realToFrac
+
+toDouble :: Float -> Double
+toDouble = realToFrac
+
 toExpr :: Double -> GLSL.Expr
-toExpr v = GLSL.FloatConstant $ (realToFrac v :: Float)
+toExpr = GLSL.FloatConstant . toFloat
 
 createShape :: G.Shape -> Object 2
 createShape (G.Square s)      = hyperrectangle (A.vec2 (toExpr s) (toExpr s) :: A.BVec 2 GLSL.Expr)
 createShape (G.Rectangle w h) = hyperrectangle (A.vec2 (toExpr w) (toExpr h) :: A.BVec 2 GLSL.Expr)
 createShape (G.Circle d)      = ball (toExpr d)
 
+getSize :: G.Shape -> (Double, Double)
+getSize (G.Square s)      = (s, s)
+getSize (G.Rectangle w h) = (w, h)
+getSize (G.Circle d)      = (2.0 * d, 2.0 * d)
+
+getBound :: G.Shape -> A.BVec 2 Float
+getBound shape = let (w, h) = getSize shape in A.vec2 (toFloat w) (toFloat h)
+
 createMtl :: G.Color -> Material (Layer GLSL.Expr)
 createMtl (G.Color r g b a) = Material $ [ Fill . Solid $ color4 (toExpr r) (toExpr g) (toExpr b) (toExpr a)]
 
-createComp :: G.Component -> Bounded Float (Object 2)
-createComp (G.Component shape color) =
-    Bounded (A.vec2 400 400) (createShape shape)
-    & material .~ (createMtl color)
+createComponent :: G.Component -> Bounded Float (Object 2)
+createComponent component@(G.Component shape color) =
+    Bounded (getBound shape) (createObject component)
+
+createObject :: G.Component -> Object 2
+createObject (G.Component shape color) = (createShape shape) & material .~ (createMtl color)
+
+createCompositeComponent :: [G.Component] -> Maybe (Object 2)
+createCompositeComponent components = createCompositeObject $ fmap createObject components
+
+createCompositeObject :: [Object 2] -> Maybe (Object 2)
+createCompositeObject (object:objects@(x:xs)) = Just $ foldl merge object objects
+createCompositeObject (object:_) = Just object
+createCompositeObject [] = Nothing
 
 -- TODO: compile all components
-createShader :: G.Shader -> String
-createShader (G.Shader (component:components)) = fst $ GLSL.compileGLSL $ createComp component
-createShader _ = ""
+createShader :: G.Shader -> (String, (Double, Double))
+createShader (G.Shader (component:components)) = createShader' component
+createShader _ = ("", (0.0, 0.0))
+
+createShader' :: G.Component -> (String, (Double, Double))
+createShader' component@(G.Component shape _) = (fst $ GLSL.compileGLSL $ createComponent component, getSize shape)
+
 
 test :: IO ()
 test = do

@@ -444,10 +444,10 @@ visualizeNodeValue id (Graphics (GR.Graphics layers)) = do
     let widget = G.create (Vector2 200 200) items
     UICmd.register_ groupId widget def
     where
-        createItem (GR.Layer shader trans) = G.Item shaderTxt boxes where
-            shaderTxt = Text.pack $ Shader.createShader shader
-            boxes     = createBox <$> trans
-        createBox (GR.Transformation sx sy dx dy rot refl) = G.Box (Vector2 dx dy) (Vector2 sx sy)
+        createItem (GR.Layer shader trans) = G.Item (Text.pack shaderTxt) boxes where
+            (shaderTxt, (w, h)) = Shader.createShader shader
+            boxes               = createBox <$> trans
+            createBox (GR.Transformation sx sy dx dy rot refl) = G.Box (Vector2 dx dy) (Vector2 w h)
 
 
 -- visualizeNodeValue id (IntValue v) = do -- For Image widget testing
