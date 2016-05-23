@@ -5,18 +5,20 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
+COPY env/config /etc/nodelab/config
+
 RUN    apk update \
-    && apk add zeromq supervisor nginx gmp
+    && apk add zeromq s6 nginx gmp \
+    && ln -s /userdata/projects /etc/nodelab/projects \
+    && adduser -u 82 -D -S -G www-data www-data
 
-COPY env /etc/nodelab
-
-COPY supervisor/supervisord-prod.conf /etc/supervisord.conf
+COPY s6 /etc/s6
 
 COPY supervisor/nginx.conf /etc/nginx/nginx.conf
 
 COPY supervisor/nginx-default /etc/nginx/sites-enabled/default
 
-CMD /usr/bin/supervisord -c /etc/supervisord.conf
+CMD /bin/s6-svscan /etc/s6
 
 ENV HOME /root
 
@@ -30,9 +32,5 @@ COPY userdata /userdata
 
 COPY userdata /data
 
-COPY runtime /runtime
-
-#RUN    cd /runtime \
-#    && stack build
-
 VOLUME ["/userdata"]
+
