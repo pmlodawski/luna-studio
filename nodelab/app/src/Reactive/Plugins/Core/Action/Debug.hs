@@ -3,7 +3,7 @@
 module Reactive.Plugins.Core.Action.Debug where
 
 import           Utils.PreludePlus
-import           JS.Debug (clog, saveState, lastEv, shouldExportState, processedEvent)
+import           JS.Debug (clog, cinfo, saveState, lastEv, shouldExportState, processedEvent)
 
 import qualified Event.Debug        as Debug
 import           Event.Event        (Event(..))
@@ -49,5 +49,5 @@ toActionEv ev = Just $ do
 logBatch :: Event -> Command Global.State ()
 logBatch (Batch e) = performIO $ do
     val <- toJSVal $ toJSON e
-    clog val
+    cinfo val
 logBatch _ = return ()

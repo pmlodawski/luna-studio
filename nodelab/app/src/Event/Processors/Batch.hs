@@ -20,10 +20,15 @@ handle :: forall a. (Binary a, MessageTopic a) => (a -> Batch.Event) -> (String,
 handle cons = (Topic.topic (undefined :: a), cons . decode)
 
 handlers = Map.fromList [ handle NodeAdded
+                        , handle AddNodeResponse
                         , handle NodeRemoved
+                        , handle RemoveNodeResponse
                         , handle NodesConnected
+                        , handle ConnectResponse
                         , handle NodesDisconnected
+                        , handle DisconnectResponse
                         , handle NodeMetaUpdated
+                        , handle NodeMetaResponse
                         , handle NodeUpdated
                         , handle ProgramFetched
                         , handle CodeUpdated
@@ -41,4 +46,3 @@ processMessage (WebMessage topic bytes) = handler bytes where
     defHandler _ = UnknownEvent topic
 processMessage (ControlMessage ConnectionTakeover) = ConnectionDropped
 processMessage (ControlMessage Welcome)            = ConnectionOpened
-

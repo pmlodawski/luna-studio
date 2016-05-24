@@ -18,7 +18,7 @@ import qualified Batch.Workspace                   as Workspace
 import qualified BatchConnector.Commands           as BatchCmd
 
 import           Reactive.Commands.Command     (Command, execCommand, performIO)
-import           Reactive.Commands.UUID        (getUUID)
+import           Reactive.Commands.UUID        (registerRequest)
 import qualified Reactive.Commands.UIRegistry  as UICmd
 import           Reactive.State.Global         (State, workspace)
 
@@ -43,13 +43,13 @@ import qualified Empire.API.Data.Project           as Project
 
 withWorkspace :: (Workspace -> UUID -> IO ()) -> Command State ()
 withWorkspace act = do
-    uuid <- getUUID
+    uuid <- registerRequest
     workspace <- use workspace
     performIO $ act workspace uuid
 
 withUUID :: (UUID -> IO ()) -> Command State ()
 withUUID act = do
-    uuid <- getUUID
+    uuid <- registerRequest
     performIO $ act uuid
 
 addNode :: Text -> NodeMeta -> Maybe Int -> Command State ()

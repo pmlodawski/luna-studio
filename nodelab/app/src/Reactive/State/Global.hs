@@ -6,10 +6,14 @@ import           Utils.Vector
 
 import           Data.Aeson                    (ToJSON, toJSON)
 import           Reactive.Commands.Command     (Command, performIO)
+import qualified Data.Set                      as Set
+import           Data.Set                      (Set)
+import           Data.UUID.Types               (UUID)
 
 import           System.Random                 (StdGen)
 import qualified System.Random                 as Random
 import           Batch.Workspace
+
 import qualified Event.Event                   as Event
 import qualified Reactive.State.Camera         as Camera
 import qualified Reactive.State.Connect        as Connect
@@ -35,6 +39,7 @@ data State = State { _mousePos          :: Vector2 Int
                    , _lastEvent         :: Maybe Event.Event
                    , _eventNum          :: Int
                    , _jsState           :: Event.JSState
+                   , _pendingRequests   :: Set UUID
                    , _random            :: StdGen
                    } deriving (Show, Generic)
 
@@ -45,7 +50,7 @@ instance ToJSON StdGen where
 makeLenses ''State
 
 initialState :: StdGen -> State
-initialState = State (Vector2 200 200) def def def def def def def def def def def defJsState
+initialState = State (Vector2 200 200) def def def def def def def def def def def defJsState def
 
 inRegistry :: Command UIRegistry.State a -> Command State a
 inRegistry = zoom uiRegistry

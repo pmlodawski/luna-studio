@@ -32,13 +32,19 @@ import           Data.Int
 import           Data.Text.Lazy                      (Text)
 
 data Event = UnknownEvent String
+           | AddNodeResponse                 AddNode.Response
            | NodeAdded                       AddNode.Update
+           | RemoveNodeResponse           RemoveNode.Response
            | NodeRemoved                  RemoveNode.Update
            | ProgramFetched               GetProgram.Response
            | NodesConnected                  Connect.Update
+           | ConnectResponse                 Connect.Response
            | NodesDisconnected            Disconnect.Update
+           | DisconnectResponse           Disconnect.Response
            | NodeMetaUpdated          UpdateNodeMeta.Update
+           | NodeMetaResponse         UpdateNodeMeta.Response
            | NodeRenamed                  RenameNode.Update
+           | NodeRenameResponse           RenameNode.Response
            | NodeUpdated                  NodeUpdate.Update
            | CodeUpdated                  CodeUpdate.Update
            | NodeResultUpdated      NodeResultUpdate.Update
@@ -46,19 +52,6 @@ data Event = UnknownEvent String
            | ProjectCreated            CreateProject.Response
            | NodeSearcherUpdated  NodeSearcherUpdate.Update
            | EmpireStarted             EmpireStarted.Status
-           -- | ProjectDoesNotExist
-           -- | LibrariesList [Library]
-           -- | LibraryCreated Library
-           -- | ASTElementExists
-           -- | ASTElementDoesNotExist
-           -- | WorkspaceCreated Breadcrumbs
-           -- | InterpreterGotProjectId (Maybe Int32)
-           -- | SerializationModeInserted
-           -- | ValueUpdate Int Value
-           -- | CodeSet
-           -- | CodeSetError String
-           -- | RunFinished RunStatus
-           -- | ParseError String
            | ConnectionDropped
            | ConnectionOpened
            deriving (Eq, Show, Generic)
