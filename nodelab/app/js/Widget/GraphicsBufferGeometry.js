@@ -17,8 +17,8 @@ THREE.GraphicsBufferGeometry = function ( boxes ) {
   var offsetInd = 0;
 
   boxes.forEach(function(box, ix){
-    vertices[offset3    ] = box._boxPosition._x;
-    vertices[offset3 + 1] = box._boxPosition._y;
+    vertices[offset3    ] = box._boxPosition._x - box._boxSize._x / 2;
+    vertices[offset3 + 1] = box._boxPosition._y - box._boxSize._y / 2;
     uvs[offset2]          = 0;
     uvs[offset2 + 1]      = 0;
     sizes[offset2]        = box._boxSize._x;
@@ -26,8 +26,8 @@ THREE.GraphicsBufferGeometry = function ( boxes ) {
     offset3 += 3;
     offset2 += 2;
 
-    vertices[offset3    ] = box._boxPosition._x + box._boxSize._x;
-    vertices[offset3 + 1] = box._boxPosition._y;
+    vertices[offset3    ] = box._boxPosition._x + box._boxSize._x / 2;
+    vertices[offset3 + 1] = box._boxPosition._y - box._boxSize._y / 2;
     uvs[offset2]          = 1;
     uvs[offset2 + 1]      = 0;
     sizes[offset2]        = box._boxSize._x;
@@ -35,8 +35,8 @@ THREE.GraphicsBufferGeometry = function ( boxes ) {
     offset3 += 3;
     offset2 += 2;
 
-    vertices[offset3    ] = box._boxPosition._x;
-    vertices[offset3 + 1] = box._boxPosition._y + box._boxSize._y;
+    vertices[offset3    ] = box._boxPosition._x - box._boxSize._x / 2;
+    vertices[offset3 + 1] = box._boxPosition._y + box._boxSize._y / 2;
     uvs[offset2]          = 0;
     uvs[offset2 + 1]      = 1;
     sizes[offset2]        = box._boxSize._x;
@@ -44,8 +44,8 @@ THREE.GraphicsBufferGeometry = function ( boxes ) {
     offset3 += 3;
     offset2 += 2;
 
-    vertices[offset3    ] = box._boxPosition._x + box._boxSize._x;
-    vertices[offset3 + 1] = box._boxPosition._y + box._boxSize._y;
+    vertices[offset3    ] = box._boxPosition._x + box._boxSize._x / 2;
+    vertices[offset3 + 1] = box._boxPosition._y + box._boxSize._y / 2;
     uvs[offset2]          = 1;
     uvs[offset2 + 1]      = 1;
     sizes[offset2]        = box._boxSize._x;
