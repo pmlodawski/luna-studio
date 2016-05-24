@@ -52,7 +52,7 @@ buildGraph = API.Graph <$> buildNodes <*> buildConnections
 
 buildNodes :: Command Graph [API.Node]
 buildNodes = do
-    allNodeIds <- uses Graph.nodeMapping IntMap.keys
+    allNodeIds <- uses Graph.nodeMapping Map.keys
     mapM buildNode allNodeIds
 
 buildNode :: NodeId -> Command Graph API.Node
@@ -169,7 +169,7 @@ buildPorts ref = zoom Graph.ast $ runASTOp $ do
 
 buildConnections :: Command Graph [(OutPortRef, InPortRef)]
 buildConnections = do
-    allNodes <- uses Graph.nodeMapping IntMap.keys
+    allNodes <- uses Graph.nodeMapping Map.keys
     edges <- mapM getNodeInputs allNodes
     return $ concat edges
 

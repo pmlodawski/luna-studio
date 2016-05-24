@@ -6,7 +6,7 @@ import qualified Reactive.State.Global        as Global
 import qualified Reactive.Commands.Graph      as Graph
 import           Reactive.Commands.AddNode    (addNode)
 import           Reactive.Commands.Command    (Command)
-import           Reactive.Commands.AutoLayout (layoutGraph)
+-- import           Reactive.Commands.AutoLayout (layoutGraph)
 
 import qualified Batch.Workspace as Workspace
 import           Empire.API.Data.Node (Node)

@@ -16,6 +16,7 @@ import           Object.UITypes
 import           Object.Widget                     (WidgetFile, widget)
 import qualified Object.Widget.Connection          as UIConnection
 import qualified Object.Widget.Node                as UINode
+import           Empire.API.Data.Node              (NodeId)
 
 import qualified Event.ConnectionPen               as ConnectionPen
 import           Event.Event
@@ -123,17 +124,17 @@ zipAdj x = zip x $ tail x
 maybeLast [] = Nothing
 maybeLast xs = Just $ last xs
 
-autoConnectAll :: [(Int, Int)] -> Command State ()
+autoConnectAll :: [(NodeId, NodeId)] -> Command State ()
 autoConnectAll []    = return ()
 autoConnectAll nodes = autoConnectForward (head nodes) -- TODO: forall - foldr
 
-autoConnectForward :: (Int, Int) -> Command State ()
+autoConnectForward :: (NodeId, NodeId) -> Command State ()
 autoConnectForward (srcNodeId, dstNodeId) = autoConnect (srcNodeId, dstNodeId)
 
-autoConnectBackwards :: (Int, Int) -> Command State ()
+autoConnectBackwards :: (NodeId, NodeId) -> Command State ()
 autoConnectBackwards (srcNodeId, dstNodeId) = autoConnect (dstNodeId, srcNodeId)
 
-autoConnect :: (Int, Int) -> Command State ()
+autoConnect :: (NodeId, NodeId) -> Command State ()
 autoConnect (srcNodeId, dstNodeId) = do
     graph     <- use Global.graph
     BatchCmd.connectNodes (OutPortRef srcNodeId Port.All) (InPortRef dstNodeId Port.Self)

@@ -28,6 +28,7 @@ import           Data.Text.Lazy          (Text)
 import qualified Data.Text.Lazy          as Text
 import           Data.Maybe              (catMaybes)
 import           Data.List               (sort)
+import qualified Data.UUID               as UUID
 
 import qualified Empire.Data.Library     as Library
 import qualified Empire.Data.Graph       as Graph
@@ -55,22 +56,22 @@ import qualified Empire.Commands.GraphBuilder as GraphBuilder
 import qualified Empire.Commands.Publisher    as Publisher
 import Debug.Trace (trace)
 
-addNodeCondTC :: Bool -> GraphLocation -> Text -> NodeMeta -> Empire Node
-addNodeCondTC doTC loc expr meta = withGraph loc $ do
-    node <- addNodeNoTC loc expr meta
+addNodeCondTC :: Bool -> GraphLocation -> NodeId -> Text -> NodeMeta -> Empire Node
+addNodeCondTC doTC loc uuid expr meta = withGraph loc $ do
+    node <- addNodeNoTC loc uuid expr meta
     when doTC $ runTC loc False
     return node
 
-addNode :: GraphLocation -> Text -> NodeMeta -> Empire Node
-addNode loc expr meta = withTC loc False $ addNodeNoTC loc expr meta
+addNode :: GraphLocation -> NodeId -> Text -> NodeMeta -> Empire Node
+addNode loc uuid expr meta = withTC loc False $ addNodeNoTC loc uuid expr meta
 
-addNodeNoTC :: GraphLocation -> Text -> NodeMeta -> Command Graph Node
-addNodeNoTC loc expr meta = do
-    newNodeId <- gets Graph.nextNodeId
-    refNode <- zoom Graph.ast $ AST.addNode newNodeId ("node" ++ show newNodeId) (Text.unpack expr)
+addNodeNoTC :: GraphLocation -> NodeId -> Text -> NodeMeta -> Command Graph Node
+addNodeNoTC loc uuid expr meta = do
+    newNodeId <- uses Graph.nodeMapping Map.size
+    refNode <- zoom Graph.ast $ AST.addNode uuid ("node" ++ show newNodeId) (Text.unpack expr)
     zoom Graph.ast $ AST.writeMeta refNode meta
-    Graph.nodeMapping . at newNodeId ?= refNode
-    node <- GraphBuilder.buildNode newNodeId
+    Graph.nodeMapping . at uuid ?= refNode
+    node <- GraphBuilder.buildNode uuid
     Publisher.notifyNodeUpdate loc node
     return node
 
@@ -83,7 +84,7 @@ addPersistentNode n = case n ^. Node.nodeType of
     Graph.nodeMapping . at newNodeId ?= refNode
     mapM (setDefault newNodeId) (Map.toList $ n ^. Node.ports)
     return newNodeId
-  otherwise -> return 0
+  otherwise -> return $ UUID.nil
   where
     setDefault nodeId (portId, port) = case port ^. Port.state of
       Port.WithDefault (Constant val) -> case portId of
@@ -100,7 +101,7 @@ removeNodeNoTC nodeId = do
     obsoleteEdges <- getOutEdges nodeId
     mapM_ disconnectPort obsoleteEdges
     zoom Graph.ast $ AST.removeSubtree astRef
-    Graph.nodeMapping %= IntMap.delete nodeId
+    Graph.nodeMapping %= Map.delete nodeId
 
 updateNodeMeta :: GraphLocation -> NodeId -> NodeMeta -> Empire ()
 updateNodeMeta loc nodeId meta = withGraph loc $ do
@@ -143,7 +144,7 @@ disconnect loc port@(InPortRef dstNodeId dstPort) = withTC loc False $ disconnec
 
 getCode :: GraphLocation -> Empire String
 getCode loc = withGraph loc $ do
-    allNodes <- uses Graph.nodeMapping IntMap.keys
+    allNodes <- uses Graph.nodeMapping Map.keys
     refs     <- mapM GraphUtils.getASTPointer allNodes
     metas    <- zoom Graph.ast $ mapM AST.readMeta refs
     let sorted = fmap snd $ sort $ zip metas allNodes

@@ -17,6 +17,7 @@ dependencies:
   - luna-empire-api
   - aeson
   - uuid-types
+  - text
 
 default-extensions:
   - NoImplicitPrelude

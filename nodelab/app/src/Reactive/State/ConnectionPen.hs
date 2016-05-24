@@ -5,6 +5,7 @@ import Utils.PreludePlus
 import Utils.Vector
 import Data.Aeson (ToJSON)
 import Empire.API.Data.Node (NodeId)
+import Empire.API.JSONInstances ()
 
 data DrawingType = Connecting | Disconnecting deriving (Show, Eq, Generic)
 

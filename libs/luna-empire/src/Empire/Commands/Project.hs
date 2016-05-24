@@ -17,6 +17,9 @@ import qualified Empire.Empire           as Empire
 import qualified Empire.Utils.IdGen      as IdGen
 
 import qualified Data.IntMap             as IntMap
+import           Data.Map.Lazy           (Map)
+import qualified Data.Map.Lazy           as Map
+
 import           System.Path             (Path)
 
 createProject :: Maybe String -> Path -> Empire (ProjectId, Project)

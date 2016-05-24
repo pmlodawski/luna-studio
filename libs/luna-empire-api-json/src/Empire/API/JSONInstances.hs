@@ -2,10 +2,12 @@
 module Empire.API.JSONInstances where
 
 import           Data.Aeson.Types                    (FromJSON, ToJSON, parseJSON, toJSON, typeMismatch)
+import qualified Data.Aeson.Types                    as JSONTypes
 import           Data.Map.Lazy                       (Map)
 import qualified Data.Map.Lazy                       as Map
-import qualified Data.UUID.Types                           as UUID
-import           Data.UUID.Types                           (UUID)
+import qualified Data.Text                           as Text
+import qualified Data.UUID.Types                     as UUID
+import           Data.UUID.Types                     (UUID)
 import           Data.Maybe                          (fromMaybe)
 import           Prologue
 
@@ -170,5 +172,8 @@ instance FromJSON PEnvelope.Envelope
 instance (ToJSON a) => ToJSON (Request.Request a)
 instance ToJSON UUID where
   toJSON = toJSON . UUID.toString
--- instance FromJSON UUID where
---   parseJSON = fmap (\t -> fromMaybe (typeMismatch "UUID" t) $ UUID.fromString $ parseJSON t)
+instance FromJSON UUID where
+  parseJSON (JSONTypes.String w) = case (UUID.fromString $ Text.unpack w) of
+    Just s  -> return s
+    Nothing -> fail "expected UUID"
+  parseJSON w = typeMismatch "UUID" w

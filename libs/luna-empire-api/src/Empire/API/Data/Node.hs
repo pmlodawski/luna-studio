@@ -3,6 +3,7 @@ module Empire.API.Data.Node where
 import           Data.Binary               (Binary)
 import           Data.Map.Lazy             (Map)
 import qualified Data.Map.Lazy             as Map
+import           Data.UUID.Types           (UUID)
 import           Prologue
 
 import           Empire.API.Data.NodeMeta  (NodeMeta)
@@ -11,7 +12,7 @@ import           Empire.API.Data.Port      (Port, PortId)
 import qualified Empire.API.Data.Port      as Port
 import           Empire.API.Data.ValueType (ValueType (..))
 
-type NodeId = Int
+type NodeId = UUID
 
 type FunctionType = [String]
 

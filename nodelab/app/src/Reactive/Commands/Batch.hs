@@ -52,7 +52,7 @@ withUUID act = do
     uuid <- registerRequest
     performIO $ act uuid
 
-addNode :: Text -> NodeMeta -> Maybe Int -> Command State ()
+addNode :: Text -> NodeMeta -> Maybe NodeId -> Command State ()
 addNode = withWorkspace .:. BatchCmd.addNode
 
 createProject :: Text -> Text -> Command State ()

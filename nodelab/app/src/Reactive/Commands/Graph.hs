@@ -6,8 +6,8 @@ import           Utils.Vector
 import           Utils.Angle
 import qualified Utils.Nodes                   as NodeUtils
 
-import           Data.IntMap.Lazy              (IntMap(..))
-import qualified Data.IntMap.Lazy              as IntMap
+import           Data.Map.Lazy                 (Map(..))
+import qualified Data.Map.Lazy                 as Map
 import           Data.Map                      (Map)
 import           Data.Hashable                 (hash)
 import qualified Data.Map                      as Map
@@ -82,7 +82,7 @@ updateConnNodes :: [NodeId] -> Command Global.State ()
 updateConnNodes nodeIds = pureCommand $ \state -> let
     noConns nid   = not $ hasConnections nid (state ^. Global.graph)
     changeFun     = nodeIds & filter noConns
-                            & map   (IntMap.adjust id)
+                            & map   (Map.adjust id)
                             & foldl (.) id
     nodesMap      = changeFun . Graph.getNodesMap . view Global.graph $ state
     newState      = state &  Global.graph %~ Graph.updateNodes nodesMap
@@ -113,10 +113,10 @@ updateConnections = do
 outerPos (InPortRef _ Port.Self) = 0.0
 outerPos _ = 22.0
 
-getConnectionLine :: IntMap (Vector2 Double) -> Map AnyPortRef (Double, Int) -> Map AnyPortRef ValueType -> OutPortRef  -> InPortRef -> (Vector2 Double, Vector2 Double, Bool, Int)
+getConnectionLine :: Map NodeId (Vector2 Double) -> Map AnyPortRef (Double, Int) -> Map AnyPortRef ValueType -> OutPortRef  -> InPortRef -> (Vector2 Double, Vector2 Double, Bool, Int)
 getConnectionLine nodePos portAngles portTypes srcPortRef dstPortRef = (srcWs, dstWs, visible, color) where
-    srcNWs@(Vector2 xSrcN ySrcN) = nodePos IntMap.! (srcPortRef ^. PortRef.srcNodeId)
-    dstNWs@(Vector2 xDstN yDstN) = nodePos IntMap.! (dstPortRef ^. PortRef.dstNodeId)
+    srcNWs@(Vector2 xSrcN ySrcN) = nodePos Map.! (srcPortRef ^. PortRef.srcNodeId)
+    dstNWs@(Vector2 xDstN yDstN) = nodePos Map.! (dstPortRef ^. PortRef.dstNodeId)
     outerSrcPos                  = 20.0
     outerDstPos                  = outerPos dstPortRef
     (angleSrcPort, srcPortCount) = Map.findWithDefault missingPortPos (OutPortRef' srcPortRef) portAngles
@@ -159,15 +159,15 @@ portRefToAngleMap = do
     ports <- allPorts
     return $ Map.fromList $ (\file -> (file ^. widget . PortModel.portRef, (file ^. widget . PortModel.angle, file ^. widget . PortModel.portCount))) <$> ports
 
-nodePositionMap :: Command UIRegistry.State (IntMap (Vector2 Double))
+nodePositionMap :: Command UIRegistry.State (Map NodeId (Vector2 Double))
 nodePositionMap = do
     nodes <- allNodes
-    return $ IntMap.fromList $ (\file -> (file ^. widget . Model.nodeId, file ^. widget . widgetPosition)) <$> nodes
+    return $ Map.fromList $ (\file -> (file ^. widget . Model.nodeId, file ^. widget . widgetPosition)) <$> nodes
 
-connectionVector :: IntMap (Vector2 Double) -> AnyPortRef -> AnyPortRef -> Vector2 Double
+connectionVector :: Map NodeId (Vector2 Double) -> AnyPortRef -> AnyPortRef -> Vector2 Double
 connectionVector map src dst = dstPos - srcPos where
-    srcPos = map IntMap.! (src ^. PortRef.nodeId)
-    dstPos = map IntMap.! (dst ^. PortRef.nodeId)
+    srcPos = map Map.! (src ^. PortRef.nodeId)
+    dstPos = map Map.! (dst ^. PortRef.nodeId)
 
 angleToDimVec :: Double -> Vector2 Double
 angleToDimVec angle = (/ 10.0) <$> Vector2 (cos angle) (-sin angle)

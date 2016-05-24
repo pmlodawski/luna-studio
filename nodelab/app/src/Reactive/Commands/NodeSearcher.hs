@@ -92,7 +92,7 @@ scopedData = do
             []     -> return Nothing
             [wf]   -> do
                 let nodeId = wf ^. Widget.widget . NodeModel.nodeId
-                vt <- preuse $ Global.graph . Graph.nodes . ix nodeId . Node.ports . ix (Port.OutPortId Port.All) . Port.valueType
+                vt <- preuse $ Global.graph . Graph.nodesMap . ix nodeId . Node.ports . ix (Port.OutPortId Port.All) . Port.valueType
                 return $ case vt of
                     Nothing -> Nothing
                     Just vt -> case vt of

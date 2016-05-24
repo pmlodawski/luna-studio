@@ -106,7 +106,7 @@ addNode node = do
 
 addDummyNode :: Node -> Command State ()
 addDummyNode dummyNode = do
-    mayNode <- preuse $ Global.graph . Graph.nodes . ix (dummyNode ^. Node.nodeId)
+    mayNode <- preuse $ Global.graph . Graph.nodesMap . ix (dummyNode ^. Node.nodeId)
     case mayNode of
         Just _  -> return ()
         Nothing -> addNode dummyNode
@@ -459,7 +459,7 @@ visualizeNodeValue id (Graphics (GR.Graphics layers)) = do
 visualizeNodeValue _ _ = return ()
 
 
-visualizeError :: NodeId -> LunaError.Error TypeRep -> Command UIRegistry.State ()
+visualizeError :: WidgetId -> LunaError.Error TypeRep -> Command UIRegistry.State ()
 visualizeError id err = do
     groupId <- Node.valueGroupId id
     let msg  = case err of

@@ -5,12 +5,11 @@ module Reactive.State.Graph where
 import           Utils.PreludePlus            hiding ((.=))
 import           Utils.Vector
 
-import           Data.IntMap.Lazy             (IntMap)
-import qualified Data.IntMap.Lazy             as IntMap
 import           Data.Map.Lazy                (Map)
 import qualified Data.Map.Lazy                as Map
 import qualified Data.Text.Lazy               as Text
 import           Debug.Trace
+import           Data.UUID.Types              (UUID)
 
 import           Data.Aeson
 import           Empire.API.Data.Connection   (Connection (..), ConnectionId)
@@ -23,25 +22,22 @@ import           Empire.API.Data.PortRef      (AnyPortRef, InPortRef, OutPortRef
 import           Empire.API.Data.PortRef      (InPortRef)
 import qualified Empire.API.Data.PortRef      as PortRef
 import qualified Empire.API.JSONInstances     ()
-import           Utils.Aeson                  (intMapToJSON)
+-- import           Utils.Aeson                  (intMapToJSON)
 import           Reactive.Commands.Command    (Command)
 
-type NodesMap       = IntMap Node
+type NodesMap       = Map UUID Node
 type ConnectionsMap = Map InPortRef Connection
 
 data State = State { _nodesMap         :: NodesMap       -- don't access it directly
                    , _connectionsMap   :: ConnectionsMap -- don't access it directly
-                   } deriving (Show, Generic)
+                   } deriving (Show, Eq, Generic)
 
 makeLenses ''State
 
-instance ToJSON State where
-    toJSON st = object [ "_nodes"       .= (intMapToJSON $ st ^. nodesMap)
-                       , "_connections" .= (toJSON $ st ^. connectionsMap)
-                       ]
+instance ToJSON State
 
-instance Eq State where
-    a == b = (a ^. nodesMap) == (b ^. nodesMap)
+-- instance Eq State where
+--     a == b = (a ^. nodesMap) == (b ^. nodesMap)
 
 instance Default State where
     def = State def def
@@ -50,23 +46,23 @@ connectionToNodeIds :: Connection -> (NodeId, NodeId)
 connectionToNodeIds conn = ( conn ^. Connection.src . PortRef.srcNodeId
                            , conn ^. Connection.dst . PortRef.dstNodeId)
 
-genId :: IntMap a -> Int
-genId intMap = if IntMap.null intMap then 0
-                                     else 1 + (fst $ IntMap.findMax intMap)
-genNodeId :: State -> NodeId
-genNodeId state = genId $ state ^. nodesMap
+-- genId :: Map a -> Int
+-- genId intMap = if Map.null intMap then 0
+--                                   else 1 + (fst $ Map.findMax intMap)
+-- genNodeId :: State -> NodeId
+-- genNodeId state = genId $ state ^. nodesMap
 
 getNode :: State -> NodeId -> Node
-getNode state nodeId = IntMap.findWithDefault (error $ "Node " <> show nodeId <> " not found") nodeId $ state ^. nodesMap
+getNode state nodeId = Map.findWithDefault (error $ "Node " <> show nodeId <> " not found") nodeId $ state ^. nodesMap
 
 getNodeById :: State -> NodeId -> Maybe Node
-getNodeById state nodeId = IntMap.lookup nodeId $ state ^. nodesMap
+getNodeById state nodeId = Map.lookup nodeId $ state ^. nodesMap
 
 nodes :: Getter State [Node]
 nodes = to getNodes
 
 getNodes :: State -> [Node]
-getNodes = IntMap.elems . getNodesMap
+getNodes = Map.elems . getNodesMap
 
 getNodesMap :: State -> NodesMap
 getNodesMap = (^. nodesMap)
@@ -90,10 +86,10 @@ getPort state portRef = fromMaybe err $ node ^? Node.ports . ix (portRef ^. Port
     err   = error $ "Port " <> show portRef <> " not found"
 
 addNode :: Node -> State -> State
-addNode newNode state  = state & nodesMap     %~ IntMap.insert (newNode ^. Node.nodeId) newNode
+addNode newNode state  = state & nodesMap     %~ Map.insert (newNode ^. Node.nodeId) newNode
 
 removeNode :: NodeId -> State -> State
-removeNode remNodeId state = state & nodesMap %~ IntMap.delete remNodeId
+removeNode remNodeId state = state & nodesMap %~ Map.delete remNodeId
 
 addConnection :: OutPortRef -> InPortRef -> Command State ConnectionId
 addConnection sourcePortRef destPortRef = do

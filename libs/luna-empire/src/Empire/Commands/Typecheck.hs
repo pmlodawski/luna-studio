@@ -55,7 +55,7 @@ collect pass = return ()
 
 runTC :: Command Graph ()
 runTC = do
-    allNodeIds <- uses Graph.nodeMapping IntMap.keys
+    allNodeIds <- uses Graph.nodeMapping Map.keys
     roots <- mapM GraphUtils.getASTPointer allNodeIds
     ast   <- use Graph.ast
     (_, g) <- TypeCheck.runT $ flip ASTOp.runGraph ast $ do
@@ -82,7 +82,7 @@ runTC = do
 runInterpreter :: Command Graph ()
 runInterpreter = do
     ast        <- use Graph.ast
-    allNodes   <- uses Graph.nodeMapping IntMap.keys
+    allNodes   <- uses Graph.nodeMapping Map.keys
     refs       <- mapM GraphUtils.getASTPointer allNodes
     metas      <- zoom Graph.ast $ mapM AST.readMeta refs
     let sorted = fmap snd $ sort $ zip metas allNodes
@@ -93,43 +93,43 @@ runInterpreter = do
 
 updateNodes :: GraphLocation -> Command InterpreterEnv ()
 updateNodes loc = do
-    allNodeIds <- uses (graph . Graph.nodeMapping) IntMap.keys
+    allNodeIds <- uses (graph . Graph.nodeMapping) Map.keys
     forM_ allNodeIds $ \id -> do
         ref <- zoom graph $ GraphUtils.getASTTarget id
 
         err <- zoom (graph . Graph.ast) $ AST.getError ref
-        cachedErr <- uses errorsCache $ IntMap.lookup id
+        cachedErr <- uses errorsCache $ Map.lookup id
         if cachedErr /= err
             then do
-                errorsCache %= IntMap.alter (const err) id
-                valuesCache %= IntMap.delete id
+                errorsCache %= Map.alter (const err) id
+                valuesCache %= Map.delete id
                 case err of
                     Just e  -> Publisher.notifyResultUpdate loc id (NodeResult.Error e) 0
                     Nothing -> Publisher.notifyResultUpdate loc id (NodeResult.NoValue) 0
             else return ()
 
         rep <- zoom graph $ GraphBuilder.buildNode id
-        cached <- uses nodesCache $ IntMap.lookup id
+        cached <- uses nodesCache $ Map.lookup id
         if cached /= Just rep
             then do
                 Publisher.notifyNodeUpdate loc rep
-                nodesCache %= IntMap.insert id rep
+                nodesCache %= Map.insert id rep
             else return ()
 
 
 updateValues :: GraphLocation -> Command InterpreterEnv ()
 updateValues loc = do
-    allNodeIds <- uses (graph . Graph.nodeMapping) IntMap.keys
+    allNodeIds <- uses (graph . Graph.nodeMapping) Map.keys
     forM_ allNodeIds $ \id -> do
-        noErrors <- isNothing <$> uses errorsCache (IntMap.lookup id)
+        noErrors <- isNothing <$> uses errorsCache (Map.lookup id)
         if noErrors
             then do
                 val    <- zoom graph $ getNodeValue id
-                cached <- uses valuesCache $ IntMap.lookup id
+                cached <- uses valuesCache $ Map.lookup id
                 if cached /= Just val
                     then do
                         Publisher.notifyResultUpdate loc id (fromMaybe NodeResult.NoValue $ NodeResult.Value <$> val) 100
-                        valuesCache %= IntMap.insert id val
+                        valuesCache %= Map.insert id val
                     else return ()
             else return ()
 

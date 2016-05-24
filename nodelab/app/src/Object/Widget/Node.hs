@@ -18,7 +18,7 @@ import           Event.Mouse               (MouseButton (..))
 import           Object.UITypes
 import           Object.Widget
 
-data Node = Node { _nodeId     :: Int
+data Node = Node { _nodeId     :: N.NodeId
                  , _controls   :: [Maybe WidgetId]
                  , _ports      :: [WidgetId]
                  , _position   :: Position
@@ -38,7 +38,7 @@ data Node = Node { _nodeId     :: Int
 makeLenses ''Node
 instance ToJSON Node
 
-makeNode :: Int -> Position -> Text -> Text -> Maybe Text -> Bool -> Node
+makeNode :: N.NodeId -> Position -> Text -> Text -> Maybe Text -> Bool -> Node
 makeNode id pos expr name tpe req = Node id [] [] pos 0.0 expr name "" tpe False False False req Nothing False
 
 fromNode :: N.Node -> Node

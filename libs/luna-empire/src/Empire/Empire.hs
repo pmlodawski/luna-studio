@@ -8,7 +8,7 @@ import           Empire.API.Data.Project       (ProjectId)
 import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.AsyncUpdate   (AsyncUpdate)
 import           Empire.API.Data.DefaultValue  (Value)
-import           Empire.API.Data.Node          (Node)
+import           Empire.API.Data.Node          (Node, NodeId)
 import           Empire.API.Data.TypeRep       (TypeRep)
 import qualified Empire.API.Data.Error         as APIError
 
@@ -17,6 +17,8 @@ import           Control.Monad.Reader
 import           Control.Monad.Error          (ErrorT(..), runErrorT, throwError, MonadError)
 import           Data.IntMap                  (IntMap)
 import qualified Data.IntMap                  as IntMap
+import           Data.Map.Lazy                (Map)
+import qualified Data.Map.Lazy                as Map
 import           Control.Concurrent.STM.TChan (TChan)
 
 type Error = String
@@ -38,9 +40,9 @@ makeLenses ''CommunicationEnv
 instance Show CommunicationEnv where
     show _ = "CommunicationEnv"
 
-data InterpreterEnv = InterpreterEnv { _valuesCache :: IntMap (Maybe Value)
-                                     , _nodesCache  :: IntMap Node
-                                     , _errorsCache :: IntMap (APIError.Error TypeRep)
+data InterpreterEnv = InterpreterEnv { _valuesCache :: Map NodeId (Maybe Value)
+                                     , _nodesCache  :: Map NodeId Node
+                                     , _errorsCache :: Map NodeId (APIError.Error TypeRep)
                                      , _graph       :: Graph
                                      } deriving (Show)
 makeLenses ''InterpreterEnv

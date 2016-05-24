@@ -38,7 +38,7 @@ test = do
 
     {-Graph.addNode loc "3.floor.toString" def-}
 
-    mapM (const $ Graph.addNode loc "1.+ 1" def) [1..100]
+    -- mapM (const $ Graph.addNode loc "1.+ 1" def) [1..100]
 
 
     {-n1 <- Graph.addNode loc "3" def-}

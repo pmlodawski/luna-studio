@@ -8,8 +8,9 @@ module Empire.Server.Graph where
 import           Control.Monad.State               (StateT)
 import           Control.Monad.Error               (throwError)
 import qualified Data.Binary                       as Bin
-import           Data.UUID.Types                         (UUID)
-import qualified Data.UUID.Types                         as UUID
+import           Data.UUID.Types                   (UUID)
+import qualified Data.UUID.Types                   as UUID
+import qualified Data.UUID.V4                      as UUID
 import           Data.ByteString                   (ByteString)
 import           Data.ByteString.Lazy              (fromStrict)
 import qualified Data.IntMap                       as IntMap
@@ -122,7 +123,9 @@ handleAddNode :: Request AddNode.Request -> StateT Env BusT ()
 handleAddNode = modifyGraph action success where
   action (AddNode.Request location nodeType nodeMeta connectTo) = case nodeType of
           AddNode.ExpressionNode expression -> case parseExpr expression of
-            Expression expression -> Graph.addNodeCondTC (isNothing connectTo) location (Text.pack $ expression) nodeMeta
+            Expression expression -> do
+              uuid <- liftIO $ UUID.nextRandom
+              Graph.addNodeCondTC (isNothing connectTo) location uuid (Text.pack $ expression) nodeMeta
             Function name -> throwError "Function Nodes not yet supported"
             Module   name -> throwError "Module Nodes not yet supported"
             Input    name -> throwError "Input Nodes not yet supported"
