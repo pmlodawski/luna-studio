@@ -30,9 +30,9 @@ import qualified Text.ScopeSearcher.Scope             as Scope
 
 commands :: Command Global.State ([(Text, Item)])
 commands = do
-    projects <- uses (Global.workspace . Workspace.projects) IntMap.elems
+    projects <- uses (Global.workspace . Workspace.projects) Map.elems
     gaState  <- uses Global.jsState gaEnabled
-    let projectToItem p = (name, Element) where name = Text.pack $ fromMaybe "no_name" $ p ^. Project.name
+    let projectToItem p = (name, Element) where name = Text.pack $ p ^. Project.name
         projectList = Map.fromList $ projectToItem <$> projects
         projectCmd  = Map.fromList [ ("new",    Element)
                                                 , ("open",   Group projectList)
@@ -50,12 +50,12 @@ commands = do
 
 
 createProject :: Text -> Command Global.State ()
-createProject name = BatchCmd.createProject name $ name <> ".luna"
+createProject name = BatchCmd.createProject name
 
 openProject :: Text -> Command Global.State ()
 openProject name = do
     projs <- use $ Global.workspace . Workspace.projects
-    let mayProject = find (\(_,p) -> p ^. Project.name == (Just $ Text.unpack name)) (IntMap.toList projs)
+    let mayProject = find (\(_,p) -> p ^. Project.name == (Text.unpack name)) (Map.toList projs)
     case mayProject of
         Just (projectId, project) -> loadProject projectId
         Nothing                   -> performIO $ putStrLn "Project not found"

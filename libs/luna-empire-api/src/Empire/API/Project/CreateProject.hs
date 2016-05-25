@@ -10,8 +10,7 @@ import qualified Empire.API.Response             as Response
 import qualified Empire.API.Topic              as T
 import qualified Empire.API.Request            as R
 
-data Request = Request { _projectName :: Maybe String
-                       , _path        :: String
+data Request = Request { _name :: String
                        } deriving (Generic, Show, Eq)
 
 data Result = Result   { _projectId :: ProjectId

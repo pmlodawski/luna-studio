@@ -97,9 +97,8 @@ main = do
         lid       <- args `getArgOrExit` (argument "lid")
         getProgram endPoints (toGraphLocation pid lid)
     when (args `isPresent` (command "createProject")) $ do
-        path      <- args `getArgOrExit` (argument "path")
-        let name   = args `getArg`       (argument "name")
-        createProject endPoints name path
+        name      <- args `getArgOrExit` (argument "name")
+        createProject endPoints name
     when (args `isPresent` (command "createLibrary")) $ do
         pid       <- args `getArgOrExit` (argument "pid")
         path      <- args `getArgOrExit` (argument "path")
@@ -143,8 +142,8 @@ disconnect endPoints graphLocation  dstNodeId inPort = sendToBus endPoints $ Dis
 getProgram :: EP.BusEndPoints -> GraphLocation -> IO ()
 getProgram endPoints graphLocation = sendToBus endPoints $ GetProgram.Request graphLocation
 
-createProject :: EP.BusEndPoints -> Maybe String -> String -> IO ()
-createProject endPoints name path = sendToBus endPoints $ CreateProject.Request name path
+createProject :: EP.BusEndPoints -> String -> IO ()
+createProject endPoints name = sendToBus endPoints $ CreateProject.Request name
 
 listProjects :: EP.BusEndPoints -> IO ()
 listProjects endPoints = sendToBus endPoints $ ListProjects.Request

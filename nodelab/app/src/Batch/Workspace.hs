@@ -3,6 +3,9 @@ module Batch.Workspace where
 import           Data.Aeson                    (FromJSON, ToJSON)
 import           Data.IntMap.Lazy              (IntMap)
 import qualified Data.IntMap.Lazy              as IntMap
+import           Data.Map.Lazy                 (Map)
+import           Data.UUID.Types               (nil)
+import qualified Data.Map.Lazy                 as Map
 import           Utils.PreludePlus
 
 import           Empire.API.Data.Breadcrumb    (Breadcrumb (..))
@@ -16,13 +19,13 @@ import           Empire.API.JSONInstances      ()
 
 import           Text.ScopeSearcher.Item       (Items)
 
-data UIGraphLocation = UIGraphLocation { _projectName :: String
+data UIGraphLocation = UIGraphLocation { _projectId   :: ProjectId
                                        , _libraryName :: String
                                        , _breadcrumb  :: Breadcrumb
                                        } deriving (Show, Eq, Generic)
 
 
-data Workspace = Workspace { _projects         :: IntMap Project
+data Workspace = Workspace { _projects         :: Map ProjectId Project
                            , _currentLocation  :: GraphLocation
                            , _lastUILocation   :: Maybe UIGraphLocation
                            , _isGraphLoaded    :: Bool
@@ -32,17 +35,20 @@ data Workspace = Workspace { _projects         :: IntMap Project
 instance ToJSON Workspace
 
 instance Default Workspace where
-    def = Workspace def (GraphLocation 0 0 (Breadcrumb [])) def False def
+    def = Workspace def (GraphLocation nil 0 (Breadcrumb [])) def False def
 
 makeLenses ''Workspace
 
 currentProject' :: Workspace -> Project
 currentProject' w = fromMaybe err $ w ^? projects . ix id where
     id = w ^. currentLocation . GraphLocation.projectId
-    err = error "Invalid project id"
+    err = error $ "Invalid project id: " <> (show id)
 
 currentProject :: Getter Workspace Project
 currentProject = to currentProject'
+
+currentProjectId :: Getter Workspace ProjectId
+currentProjectId = currentLocation . GraphLocation.projectId
 
 currentLibrary' :: Workspace -> Library
 currentLibrary' w = fromMaybe err $ project ^? Project.libs . ix id where
@@ -61,15 +67,15 @@ instance FromJSON UIGraphLocation
 uiGraphLocation' :: Workspace -> UIGraphLocation
 uiGraphLocation' w = UIGraphLocation project library breadcrumb where
     breadcrumb = w ^. currentLocation . GraphLocation.breadcrumb
-    project    = w ^. currentProject  . Project.path
+    project    = w ^. currentProjectId
     library    = w ^. currentLibrary  . Library.path
 
 uiGraphLocation :: Getter Workspace UIGraphLocation
 uiGraphLocation = to uiGraphLocation'
 
-fromUIGraphLocation :: [(ProjectId, Project)] -> UIGraphLocation -> Maybe GraphLocation
-fromUIGraphLocation projs (UIGraphLocation proj lib bc) = do
-    (projectId, project) <- find (\(_,p) -> p ^. Project.path == proj) projs
+fromUIGraphLocation :: Map ProjectId Project -> UIGraphLocation -> Maybe GraphLocation
+fromUIGraphLocation projs (UIGraphLocation projId lib bc) = do
+    project <- projs ^? ix projId
     let libs  = IntMap.toList $ project ^. Project.libs
     (libraryId, _) <- find (\(_,p) -> p ^. Library.path == lib) libs
-    return $ GraphLocation projectId libraryId bc
+    return $ GraphLocation projId libraryId bc

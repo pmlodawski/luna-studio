@@ -53,7 +53,9 @@ Library
                   typelevel,
                   transformers,
                   aeson,
-                  uuid
+                  aeson-pretty,
+                  uuid,
+                  filepath
 
 Executable luna-empire-lib-test
   Main-Is:        Main.hs

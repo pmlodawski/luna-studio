@@ -22,7 +22,6 @@ import           Empire.API.Data.PortRef      (AnyPortRef, InPortRef, OutPortRef
 import           Empire.API.Data.PortRef      (InPortRef)
 import qualified Empire.API.Data.PortRef      as PortRef
 import qualified Empire.API.JSONInstances     ()
--- import           Utils.Aeson                  (intMapToJSON)
 import           Reactive.Commands.Command    (Command)
 
 type NodesMap       = Map UUID Node
@@ -33,24 +32,13 @@ data State = State { _nodesMap         :: NodesMap       -- don't access it dire
                    } deriving (Show, Eq, Generic)
 
 makeLenses ''State
-
 instance ToJSON State
-
--- instance Eq State where
---     a == b = (a ^. nodesMap) == (b ^. nodesMap)
-
 instance Default State where
     def = State def def
 
 connectionToNodeIds :: Connection -> (NodeId, NodeId)
 connectionToNodeIds conn = ( conn ^. Connection.src . PortRef.srcNodeId
                            , conn ^. Connection.dst . PortRef.dstNodeId)
-
--- genId :: Map a -> Int
--- genId intMap = if Map.null intMap then 0
---                                   else 1 + (fst $ Map.findMax intMap)
--- genNodeId :: State -> NodeId
--- genNodeId state = genId $ state ^. nodesMap
 
 getNode :: State -> NodeId -> Node
 getNode state nodeId = Map.findWithDefault (error $ "Node " <> show nodeId <> " not found") nodeId $ state ^. nodesMap

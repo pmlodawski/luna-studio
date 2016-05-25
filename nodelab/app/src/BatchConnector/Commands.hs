@@ -56,8 +56,8 @@ withLibrary w f = f (w ^. Workspace.currentLocation)
 addNode :: Text -> NodeMeta -> Maybe NodeId -> Workspace -> UUID -> IO ()
 addNode expression meta connectTo workspace uuid = sendRequest uuid $ (withLibrary workspace AddNode.Request) (AddNode.ExpressionNode $ Text.unpack expression) meta connectTo
 
-createProject :: Text -> Text -> UUID -> IO ()
-createProject name path uuid = sendRequest uuid $ CreateProject.Request (Just $ Text.unpack name) (Text.unpack path)
+createProject :: Text -> UUID -> IO ()
+createProject name uuid = sendRequest uuid $ CreateProject.Request $ Text.unpack name
 
 listProjects :: UUID -> IO ()
 listProjects uuid = sendRequest uuid $ ListProjects.Request

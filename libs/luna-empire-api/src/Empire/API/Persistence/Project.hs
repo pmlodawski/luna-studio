@@ -8,8 +8,7 @@ import Empire.API.Persistence.Library (Library)
 
 type ProjectId = Int
 
-data Project = Project { _name     :: Maybe String
-                       , _path     :: String
+data Project = Project { _name     :: String
                        , _libs     :: IntMap Library
                        } deriving (Show, Eq, Generic)
 

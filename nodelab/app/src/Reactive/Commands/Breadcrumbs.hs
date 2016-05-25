@@ -54,7 +54,7 @@ displayBreadcrumbs enterBreadcrumbs = do
                     (item:_) -> case item of
                         Breadcrumb.Function name -> name
                         Breadcrumb.Module   name -> name
-                    [] -> fromMaybe "(untitled project)" currentProjectName
+                    [] -> currentProjectName
                 name'  = Text.pack name
                 widget = Button.create Style.breadcrumbItemSize name'
                        & Button.style .~ Style.breadcrumbItemStyle

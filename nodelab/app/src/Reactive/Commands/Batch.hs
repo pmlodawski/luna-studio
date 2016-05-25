@@ -55,8 +55,8 @@ withUUID act = do
 addNode :: Text -> NodeMeta -> Maybe NodeId -> Command State ()
 addNode = withWorkspace .:. BatchCmd.addNode
 
-createProject :: Text -> Text -> Command State ()
-createProject = withUUID .: BatchCmd.createProject
+createProject :: Text -> Command State ()
+createProject = withUUID . BatchCmd.createProject
 
 listProjects ::  Command State ()
 listProjects = withUUID BatchCmd.listProjects

@@ -32,7 +32,7 @@ handleCreateProject req@(Request _ request) = do
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ do
-      (projectId, project) <- Project.createProject (request ^. CreateProject.projectName) (fromString $ request ^. CreateProject.path)
+      (projectId, project) <- Project.createProject Nothing (request ^. CreateProject.name)
       (libraryId, library) <- Library.createLibrary projectId (Just "Main") "Main.luna"
 
       let project' = project & DataProject.libs . at libraryId ?~ library

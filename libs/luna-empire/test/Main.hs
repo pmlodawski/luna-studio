@@ -5,7 +5,7 @@
 module Main where
 
 import           Prologue
-
+import           Data.UUID (nil)
 import           Empire.API.Data.DefaultValue (PortDefault (..), Value (..))
 import           Empire.API.Data.Node
 import           Empire.API.Data.NodeMeta
@@ -31,7 +31,7 @@ import           Luna.Pretty.GraphViz         (renderAndOpen, toGraphViz)
 
 test :: Empire Graph
 test = do
-    (pid, _) <- createProject (Just "dupa") "/no/elo"
+    (pid, _) <- createProject Nothing "dupa"
     (lid, _) <- createLibrary pid (Just "xd") "/xd/xd"
 
     let loc = GraphLocation pid lid $ Breadcrumb []
@@ -130,6 +130,6 @@ main = do
     case g of
         Left err -> putStrLn err
         Right g  -> do
-            res <- runEmpire (CommunicationEnv dummyNotif dummyTC) (InterpreterEnv def def def g) $ Typecheck.run $ GraphLocation 0 0 $ Breadcrumb []
+            res <- runEmpire (CommunicationEnv dummyNotif dummyTC) (InterpreterEnv def def def g) $ Typecheck.run $ GraphLocation nil 0 $ Breadcrumb []
             print res
 {-main = return ()-}

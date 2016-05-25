@@ -23,13 +23,13 @@ import           Control.Concurrent.STM.TChan (TChan)
 
 type Error = String
 
-type ProjectManager = IntMap Project
+type ProjectManager = Map ProjectId Project
 
 newtype Env = Env { _projectManager :: ProjectManager } deriving Show
 makeLenses ''Env
 
 instance Default Env where
-    def = Env IntMap.empty
+    def = Env Map.empty
 
 data CommunicationEnv = CommunicationEnv { _updatesChan   :: TChan AsyncUpdate
                                          -- FIXME[MK]: Yeah, let's use 3-tuples, way to code!
