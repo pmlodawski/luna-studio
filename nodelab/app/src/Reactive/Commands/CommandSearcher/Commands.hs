@@ -35,9 +35,10 @@ commands = do
     let projectToItem p = (name, Element) where name = Text.pack $ p ^. Project.name
         projectList = Map.fromList $ projectToItem <$> projects
         projectCmd  = Map.fromList [ ("new",    Element)
-                                                , ("open",   Group projectList)
-                                                -- , ("rename", Element)
-                                                ]
+                                   , ("export", Element)
+                                   , ("open",   Group projectList)
+                                   -- , ("rename", Element)
+                                   ]
         settingsCmd = Map.fromList [gaElement]
         gaElement   = if gaState then ("disableGoogleAnalytics", Element)
                                  else ("enableGoogleAnalytics", Element)
@@ -88,12 +89,13 @@ runCommand :: Text -> Command Global.State ()
 runCommand "project.new"                              = performIO $ UI.initNodeSearcher "project.new untitled" 0 (Vector2 200 200) True
 runCommand (stripPrefix "project.new "  -> Just name) = createProject name
 runCommand (stripPrefix "project.open." -> Just name) = openProject name
+runCommand "project.export"                           = exportCurrentProject
 runCommand "help"                                     = help
 runCommand "insert"                                   = NS.openFresh
 runCommand "toggleTextEditor"                         = toggleText
 runCommand "settings.disableGoogleAnalytics"          = enableGA False
 runCommand "settings.enableGoogleAnalytics"           = enableGA True
-runCommand _                                          = return ()
+runCommand cmd                                        = performIO $ putStrLn $ "Unknown command " <> (Text.unpack cmd)
 
 querySearchCmd :: Text -> Command Global.State ()
 querySearchCmd query = do
@@ -109,3 +111,6 @@ queryTreeCmd query = do
         items = Scope.moduleItems sd' query
     performIO $ UI.displayTreeResults UI.CommandSearcher items
 
+
+exportCurrentProject :: Command Global.State ()
+exportCurrentProject = (use $ Global.workspace . Workspace.currentProjectId) >>= BatchCmd.exportProject

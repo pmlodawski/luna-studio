@@ -26,13 +26,13 @@ module Main where
 
 -- http://www.network-science.de/ascii/
 
+import qualified Data.Set                          as Set
 import           Utils.PreludePlus
 
 import           Batch.Workspace                   (Workspace)
 import qualified Batch.Workspace                   as Workspace
 import qualified BatchConnector.Commands           as BatchCmd
 import           Control.Concurrent.MVar
-import           System.Random (newStdGen)
 import           JS.Config                         (getBackendAddress, isLoggerEnabled)
 import qualified JS.GraphLocation                  as GraphLocation
 import           JS.UI                             (initializeGl, render, triggerWindowResize)
@@ -44,6 +44,7 @@ import qualified Reactive.Plugins.Core.Network     as CoreNetwork
 import qualified Reactive.Plugins.Loader.Loader    as Loader
 import           Reactive.State.Global             (State, initialState)
 import qualified Reactive.State.Global             as Global
+import           System.Random                     (newStdGen)
 import           Utils.URIParser                   (getProjectName)
 
 import qualified Utils.Shader                      as Shader
@@ -59,15 +60,17 @@ runMainNetwork socket = do
     lastLocation <- GraphLocation.loadLocation
 
     random <- newStdGen
+    projectListRequestId <- generateUUID
     let initState = initialState random & Global.workspace . Workspace.lastUILocation .~ lastLocation
+                                        & Global.pendingRequests %~ Set.insert projectListRequestId
     let (initActions, initState') = execCommand Init.initialize initState
     initActions
 
     state <- newMVar initState'
     CoreNetwork.makeNetworkDescription socket enableLogging state
     triggerWindowResize
-    uuid <- generateUUID
-    BatchCmd.listProjects uuid
+
+    BatchCmd.listProjects projectListRequestId
 
 main :: IO ()
 main = do

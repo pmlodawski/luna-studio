@@ -85,6 +85,7 @@ function initializeGl() {
 
     initTerminal();
     initUserInfo();
+    initDragDrop();
 }
 
 function initUserInfo() {
@@ -126,6 +127,25 @@ function initTerminal() {
   $$.term.write('\x1b[31mWelcome to Nodelab!\x1b[m\r\n');
   $("#termClose").click(function (){
     $('#termContainer').css({height: "0px"});
+  });
+}
+
+function initDragDrop() {
+  $($$.canvas2D).on('dragover', function(ev){ ev.preventDefault(); });
+  $($$.canvas2D).on('dragenter', function(ev){ ev.preventDefault(); });
+  $($$.canvas2D).on('drop',  function(ev){
+    var dt = ev.originalEvent.dataTransfer;
+    var files = dt.files;
+    ev.preventDefault();
+    ev.stopPropagation();
+    for(var i = 0; i < files.length; i++) {
+      var reader = new FileReader();
+      reader.readAsText(files[i]);
+      reader.onload = function(e) {
+        console.info("read", reader.result);
+        module.exports.customEvent("file.import", reader.result);
+      };
+    }
   });
 }
 
@@ -307,6 +327,21 @@ var startGA = function (){
   }
 };
 
+var downloadFile = (function () {
+    var a = document.createElement("a");
+    document.body.appendChild(a);
+    a.style = "display: none";
+    return function (data, fileName) {
+        var blob = new Blob([data], {type: "octet/stream"}),
+            url = window.URL.createObjectURL(blob);
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    };
+}());
+
+
 module.exports = {
   start:                    start,
   initializeGl:             initializeGl,
@@ -328,7 +363,9 @@ module.exports = {
   shouldRender:             function ()      { shouldRender = true;       },
   writeToTerminal:          writeToTerminal,
   displayAppCrashed:        displayAppCrashed,
-  getJSState:				function() { return $$; }
+  getJSState:				function() { return $$; },
+  downloadFile:				downloadFile,
+  customEvent: function() { console.error("Custom event handler not registered"); }
 
 };
 

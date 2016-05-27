@@ -45,6 +45,8 @@ import           Empire.API.Persistence.Envelope     as PEnvelope
 import           Empire.API.Persistence.Library      as PLibrary
 import           Empire.API.Persistence.Project      as PProject
 import           Empire.API.Project.CreateProject    as CreateProject
+import           Empire.API.Project.ImportProject    as ImportProject
+import           Empire.API.Project.ExportProject    as ExportProject
 import           Empire.API.Project.ListProjects     as ListProjects
 import           Empire.API.Response                 as Response
 import           Empire.API.Request                  as Request
@@ -154,6 +156,14 @@ instance ToJSON CreateProject.Update
 
 instance ToJSON ListProjects.Request
 instance ToJSON ListProjects.Result
+instance ToJSON ListProjects.Update
+
+instance ToJSON ExportProject.Request
+instance ToJSON ExportProject.Result
+
+instance ToJSON ImportProject.Request
+instance ToJSON ImportProject.Result
+
 
 instance (ToJSON req, ToJSON res) => ToJSON (Response.Response req res)
 instance (ToJSON payload) => ToJSON (Response.Status payload)

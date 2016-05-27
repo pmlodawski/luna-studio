@@ -35,6 +35,8 @@ handlersMap = Map.fromList
     , makeHandler Graph.handleTypecheck
     , makeHandler Project.handleCreateProject
     , makeHandler Project.handleListProjects
+    , makeHandler Project.handleExportProject
+    , makeHandler Project.handleImportProject
     , makeHandler Library.handleCreateLibrary
     , makeHandler Library.handleListLibraries
     ]

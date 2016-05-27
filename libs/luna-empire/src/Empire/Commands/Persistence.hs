@@ -3,6 +3,8 @@ module Empire.Commands.Persistence
     , saveLocation
     , loadProject
     , createDefaultProject
+    , importProject
+    , exportProject
     ) where
 
 import           Control.Monad.Error             (throwError)
@@ -13,6 +15,7 @@ import qualified Data.ByteString.Lazy            as BS (ByteString, putStrLn, re
 import qualified Data.IntMap                     as IntMap
 import           Data.Maybe                      (fromMaybe)
 import qualified Data.UUID                       as UUID
+import qualified Data.UUID.V4                    as UUID
 import           Prologue
 import           System.Path                     (Path)
 import           System.FilePath                 (takeBaseName)
@@ -42,6 +45,7 @@ import qualified Data.Aeson                      as JSON
 import qualified Data.Aeson.Encode.Pretty        as JSON
 
 import qualified Data.Text.Lazy                  as Text
+import           Data.Text.Lazy.Encoding         (encodeUtf8, decodeUtf8)
 import           Empire.API.JSONInstances        ()
 import           System.Path                     (Path, native)
 
@@ -80,15 +84,14 @@ saveProject projectRoot pid = do
 saveLocation :: FilePath -> GraphLocation -> Empire ()
 saveLocation projectRoot (GraphLocation pid _ _) = saveProject projectRoot pid
 
-readProject :: FilePath -> IO (Maybe P.Project)
-readProject filename = do
-  bytes   <- BS.readFile filename
+readProject :: BS.ByteString -> Maybe P.Project
+readProject bytes = (view E.project) <$> envelope where
+  envelope = JSON.decode bytes
   -- TODO: migrate data
-  let envelope = JSON.decode bytes
-  return $ (view E.project) <$> envelope
 
 
-createProjectFromPersistent :: Maybe ProjectId -> P.Project -> Empire ProjectId
+
+createProjectFromPersistent :: Maybe ProjectId -> P.Project -> Empire (ProjectId, Project)
 createProjectFromPersistent maybePid p = do
   (pid, _) <- createProject maybePid (p ^. P.name)
 
@@ -100,18 +103,38 @@ createProjectFromPersistent maybePid p = do
           connections = graph ^. G.connections
       mapM Graph.addPersistentNode nodes
       mapM (uncurry Graph.connectNoTC) connections
-  return pid
+  project <- withProject pid (get >>= return)
+  return (pid, project)
 
 
 loadProject :: FilePath -> Empire ProjectId
 loadProject path = do
     logger Logger.info $ "Loading project " <> path
-    proj <- liftIO $ readProject path
-    let basename = takeBaseName path
+    bytes <- liftIO $ BS.readFile path
+    let proj = readProject bytes
+        basename = takeBaseName path
         maybeProjId = UUID.fromString basename
     case proj of
       Nothing   -> throwError $ "Cannot read JSON from " <> path
-      Just proj -> createProjectFromPersistent maybeProjId proj
+      Just proj -> do
+        (pid, _) <- createProjectFromPersistent maybeProjId proj
+        return pid
+
+
+
+importProject :: Text -> Empire (ProjectId, Project)
+importProject bytes = do
+    logger Logger.info $ "Importing project"
+    projectId <- liftIO $ UUID.nextRandom
+    let proj = readProject $ encodeUtf8 bytes
+    case proj of
+      Nothing   -> throwError $ "Cannot decode JSON"
+      Just proj -> createProjectFromPersistent (Just projectId) proj
+
+exportProject :: ProjectId -> Empire Text
+exportProject pid = do
+  project <- toPersistentProject pid
+  return $ decodeUtf8 $ serialize $ E.pack project
 
 defaultProjectName = "default"
 defaultLibraryName = "Main"

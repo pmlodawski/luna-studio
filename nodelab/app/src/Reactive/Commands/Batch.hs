@@ -90,3 +90,9 @@ setDefaultValue = withWorkspace .: BatchCmd.setDefaultValue
 
 setInputNodeType :: NodeId -> Text -> Command State ()
 setInputNodeType = withWorkspace .: BatchCmd.setInputNodeType
+
+exportProject :: ProjectId -> Command State ()
+exportProject = withUUID . BatchCmd.exportProject
+
+importProject :: Text -> Command State ()
+importProject = withUUID . BatchCmd.importProject

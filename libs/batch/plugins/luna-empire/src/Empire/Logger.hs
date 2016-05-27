@@ -34,6 +34,8 @@ import qualified Empire.API.Library.CreateLibrary  as CreateLibrary
 import qualified Empire.API.Library.ListLibraries  as ListLibraries
 import qualified Empire.API.Project.CreateProject  as CreateProject
 import qualified Empire.API.Project.ListProjects   as ListProjects
+import qualified Empire.API.Project.ImportProject  as ImportProject
+import qualified Empire.API.Project.ExportProject  as ExportProject
 import qualified Empire.API.Topic                  as Topic
 import           Empire.API.Request                (Request)
 import qualified Empire.Commands.Library           as Library
@@ -133,6 +135,11 @@ loggFormattersMap = Map.fromList
     , makeHandler (undefined :: CreateProject.Update     )
     , makeHandler (undefined :: Request ListProjects.Request     )
     , makeHandler (undefined :: ListProjects.Response    )
+    , makeHandler (undefined :: ListProjects.Update    )
+    , makeHandler (undefined :: Request ExportProject.Request     )
+    , makeHandler (undefined :: ExportProject.Response    )
+    , makeHandler (undefined :: Request ImportProject.Request     )
+    , makeHandler (undefined :: ImportProject.Response    )
     , makeHandler (undefined :: Request CreateLibrary.Request    )
     , makeHandler (undefined :: CreateLibrary.Response   )
     , makeHandler (undefined :: CreateLibrary.Update     )

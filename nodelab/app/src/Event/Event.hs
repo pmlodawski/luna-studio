@@ -14,6 +14,7 @@ import qualified Event.ConnectionPen as ConnectionPen
 import qualified Event.Batch         as Batch
 import qualified Event.TextEditor    as TextEditor
 import qualified Event.Debug         as Debug
+import qualified Event.CustomEvent   as CustomEvent
 
 newtype JSState = JSState JSVal deriving (PFromJSVal, PToJSVal)
 
@@ -33,7 +34,8 @@ data Event = Init
            | Batch                         Batch.Event
            | TextEditor               TextEditor.Event
            | Debug                         Debug.Event
-           deriving (Generic, Eq, Show)
+           | CustomEvent             CustomEvent.Event
+           deriving (Generic, Show)
 
 makeLenses ''Event
 

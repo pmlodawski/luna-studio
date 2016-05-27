@@ -48,6 +48,8 @@ import qualified Empire.API.Library.CreateLibrary  as CreateLibrary
 import qualified Empire.API.Library.ListLibraries  as ListLibraries
 import qualified Empire.API.Project.CreateProject  as CreateProject
 import qualified Empire.API.Project.ListProjects   as ListProjects
+import qualified Empire.API.Project.ExportProject  as ExportProject
+import qualified Empire.API.Project.ImportProject  as ImportProject
 
 
 withLibrary :: Workspace -> (GraphLocation -> a) -> a
@@ -92,4 +94,11 @@ setDefaultValue portRef val workspace uuid = sendRequest uuid $ (withLibrary wor
 
 setInputNodeType :: NodeId -> Text -> Workspace -> UUID -> IO ()
 setInputNodeType id tpe workspace uuid = sendRequest uuid $ (withLibrary workspace SetInputNodeType.Request) id (Text.unpack tpe)
+
+exportProject :: ProjectId -> UUID -> IO ()
+exportProject pid uuid = sendRequest uuid $ ExportProject.Request pid
+
+importProject :: Text -> UUID -> IO ()
+importProject payload uuid = sendRequest uuid $ ImportProject.Request payload
+
 

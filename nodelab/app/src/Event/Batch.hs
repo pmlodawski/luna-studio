@@ -25,6 +25,8 @@ import qualified Empire.API.Graph.UpdateNodeMeta     as UpdateNodeMeta
 import           Empire.API.JSONInstances            ()
 import qualified Empire.API.Project.CreateProject    as CreateProject
 import qualified Empire.API.Project.ListProjects     as ListProjects
+import qualified Empire.API.Project.ExportProject    as ExportProject
+import qualified Empire.API.Project.ImportProject    as ImportProject
 import qualified Empire.API.Control.EmpireStarted    as EmpireStarted
 
 import           Data.Aeson                          (ToJSON)
@@ -50,6 +52,9 @@ data Event = UnknownEvent String
            | NodeResultUpdated      NodeResultUpdate.Update
            | ProjectList                ListProjects.Response
            | ProjectCreated            CreateProject.Response
+           | ProjectCreatedUpdate      CreateProject.Update
+           | ProjectExported           ExportProject.Response
+           | ProjectImported           ImportProject.Response
            | NodeSearcherUpdated  NodeSearcherUpdate.Update
            | EmpireStarted             EmpireStarted.Status
            | ConnectionDropped

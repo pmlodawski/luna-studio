@@ -1,43 +1,47 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Reactive.Handlers where
 
-import           Utils.PreludePlus hiding (on)
+import           Utils.PreludePlus         hiding (on)
 import           Utils.Vector
 
-import           GHCJS.DOM              (currentWindow, currentDocument)
+import           GHCJS.DOM                 (currentDocument, currentWindow)
+import qualified GHCJS.DOM.Document        as Document
+import           GHCJS.DOM.Element         (Element, click, dblClick, keyDown, keyPress, keyUp, mouseDown, mouseMove,
+                                            mouseUp, wheel)
 import           GHCJS.DOM.EventM
-import           GHCJS.Prim             (fromJSString)
-import qualified GHCJS.DOM.Document      as Document
-import           GHCJS.DOM.Element       (Element, mouseDown, mouseUp, mouseMove, keyPress, keyDown, keyUp, click, dblClick, wheel)
-import           GHCJS.DOM.Window        (resize, getInnerWidth, getInnerHeight)
-import qualified GHCJS.DOM.MouseEvent    as MouseEvent
-import qualified GHCJS.DOM.WheelEvent    as WheelEvent
-import qualified GHCJS.DOM.KeyboardEvent as KeyboardEvent
-import qualified GHCJS.DOM.UIEvent       as UIEvent
-import qualified JS.WebSocket            as WebSocket
-import qualified JS.ConnectionPen        as ConnectionPen
-import qualified JS.TextEditor           as TextEditor
-import           JS.Debug                (getState)
+import qualified GHCJS.DOM.KeyboardEvent   as KeyboardEvent
+import qualified GHCJS.DOM.MouseEvent      as MouseEvent
+import qualified GHCJS.DOM.UIEvent         as UIEvent
+import qualified GHCJS.DOM.WheelEvent      as WheelEvent
+import           GHCJS.DOM.Window          (getInnerHeight, getInnerWidth, resize)
+import           GHCJS.Marshal.Pure        (pFromJSVal)
+import           GHCJS.Prim                (fromJSString)
+import qualified JS.ConnectionPen          as ConnectionPen
+import qualified JS.CustomEvent            as CustomEvent
+import           JS.Debug                  (getState)
+import qualified JS.TextEditor             as TextEditor
+import qualified JS.WebSocket              as WebSocket
 
-import           UI.Raycaster
-import           JS.NodeSearcher     ( getAction, getExpression, getNode, nsEvent )
-import qualified Object.Widget       as Widget
-import qualified Event.Keyboard      as Keyboard
-import qualified Event.Mouse         as Mouse
-import           Object.UITypes      as Mouse
-import qualified Event.Window        as Window
-import qualified Event.Debug         as Debug
-import qualified Event.NodeSearcher  as NodeSearcher
-import qualified Event.Connection    as Connection
-import qualified Event.ConnectionPen as ConnectionPen
-import qualified Event.TextEditor    as TextEditor
-import           Event.Event
-import           GHCJS.Marshal
-import           JavaScript.Array    ( JSArray )
-import qualified JavaScript.Array    as JSArray
-import           Data.JSString.Text ( lazyTextFromJSString, lazyTextToJSString )
-import qualified Data.JSString as JSString
 import qualified BatchConnector.Connection as Connection
+import qualified Data.JSString             as JSString
+import           Data.JSString.Text        (lazyTextFromJSString, lazyTextToJSString)
+import qualified Event.Connection          as Connection
+import qualified Event.ConnectionPen       as ConnectionPen
+import qualified Event.CustomEvent         as CustomEvent
+import qualified Event.Debug               as Debug
+import           Event.Event
+import qualified Event.Keyboard            as Keyboard
+import qualified Event.Mouse               as Mouse
+import qualified Event.NodeSearcher        as NodeSearcher
+import qualified Event.TextEditor          as TextEditor
+import qualified Event.Window              as Window
+import           GHCJS.Marshal
+import           JavaScript.Array          (JSArray)
+import qualified JavaScript.Array          as JSArray
+import           JS.NodeSearcher           (getAction, getExpression, getNode, nsEvent)
+import           Object.UITypes            as Mouse
+import qualified Object.Widget             as Widget
+import           UI.Raycaster
 
 
 data AddHandler a = AddHandler ((a -> IO ()) -> IO (IO ()))
@@ -194,3 +198,8 @@ debugHandler :: AddHandler Event
 debugHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
     window `on` getState $ liftIO . h $ Debug $ Debug.GetState
+
+customEventHandler :: AddHandler Event
+customEventHandler  = AddHandler $ \h -> do
+    CustomEvent.registerCallback $ \topic payload -> do
+        liftIO $ h $ CustomEvent $ CustomEvent.RawEvent (JSString.unpack $ pFromJSVal topic) payload

@@ -92,6 +92,7 @@ makeNetworkDescription conn logging state = do
                    , Handlers.connectionPenHandler
                    , Handlers.textEditorHandler
                    , Handlers.debugHandler
+                   , Handlers.customEventHandler
                    ]
 
     let registerHandler (AddHandler rh) = rh (processEvent state)
