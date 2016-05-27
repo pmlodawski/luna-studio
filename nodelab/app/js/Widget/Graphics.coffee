@@ -19,7 +19,7 @@ class Graphics extends BaseWidget
 
   setItems: (items) ->
      @items = items
-     console.log(items)
+     @mesh.remove(@mesh.children)
      @items.forEach (item) =>
 
        geom = new THREE.GraphicsBufferGeometry(item._boxes)
