@@ -12,17 +12,17 @@ RUN    apk update \
     && ln -s /userdata/projects /etc/nodelab/projects \
     && adduser -u 82 -D -S -G www-data www-data
 
-COPY s6 /etc/s6
+COPY docker/s6/combined /etc/s6/combined
+COPY docker/s6/common  /etc/s6/common
 
-COPY supervisor/nginx.conf /etc/nginx/nginx.conf
+COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY docker/nginx/combined/nginx-default /etc/nginx/sites-enabled/default
 
-COPY supervisor/nginx-default /etc/nginx/sites-enabled/default
-
-CMD /bin/s6-svscan /etc/s6
+CMD /bin/s6-svscan /etc/s6/combined
 
 ENV HOME /root
 
-EXPOSE 80 8088 9001
+EXPOSE 80 8088
 
 COPY nodelab/www /usr/share/nodelab/gui
 

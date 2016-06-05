@@ -50,7 +50,8 @@ notify:
     template: "<{{ system.link_url }}/{{ repo.full_name }}/{{ build.number }}|build #{{ build.number}}>: *{{ build.status }}* by {{ build.author }}: <https://bitbucket.org/{{ repo.full_name }}/commits/$$COMMIT|$${COMMIT:0:7}>\n\n{{ build.message }}"
 
 publish:
-  docker:
+  docker_combined:
+    image: plugins/drone-docker
     username:  $$DOCKERHUB_USER
     password:  $$DOCKERHUB_PASS
     email: $$DOCKERHUB_EMAIL
@@ -58,7 +59,36 @@ publish:
     tag:
       - $${BRANCH##docker/}-latest
       - $${BRANCH##docker/}-b$$BUILD_NUMBER
-    file: Dockerfile
+    file: docker/Dockerfile
+    insecure: false
+    storage_driver: aufs
+    when:
+      branch:
+        - docker/*
+  docker_frontend:
+    image: plugins/drone-docker
+    username:  $$DOCKERHUB_USER
+    password:  $$DOCKERHUB_PASS
+    email: $$DOCKERHUB_EMAIL
+    repo: lunalang/luna-testing
+    tag:
+      - frontend-$${BRANCH##docker/}-latest
+      - frontend-$${BRANCH##docker/}-b$$BUILD_NUMBER
+    file: docker/Dockerfile.frontend
+    insecure: false
+    storage_driver: aufs
+    when:
+      branch: docker/*
+  docker_backend:
+    image: plugins/drone-docker
+    username:  $$DOCKERHUB_USER
+    password:  $$DOCKERHUB_PASS
+    email: $$DOCKERHUB_EMAIL
+    repo: lunalang/luna-testing
+    tag:
+      - backend-$${BRANCH##docker/}-latest
+      - backend-$${BRANCH##docker/}-b$$BUILD_NUMBER
+    file: docker/Dockerfile.backend
     insecure: false
     storage_driver: aufs
     when:
