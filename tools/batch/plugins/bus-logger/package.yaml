@@ -1,0 +1,28 @@
+name:               batch-plugin-bus-logger
+version:            0.1.0.0
+author:             New Byte Order <contact@newbyteorder.com>
+
+default-extensions:
+  - NoImplicitPrelude
+
+dependencies:
+  - base
+  - binary
+  - bytestring
+  - containers
+  - either
+  - errors
+  - flowbox-bus-binary
+  - flowbox-config
+  - flowbox-utils
+  - mtl
+  - optparse-applicative
+  - protocol-buffers
+  - time
+  - transformers
+  - zeromq4-haskell >= 0.4
+
+executables:
+  bus-logger:
+    source-dirs: src
+    main:        Main.hs

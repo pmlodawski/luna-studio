@@ -1,0 +1,54 @@
+name:               batch-plugin-luna-empire
+version:            0.1.0.0
+author:             New Byte Order <contact@newbyteorder.com>
+
+default-extensions:
+  - NoImplicitPrelude
+  - TemplateHaskell
+
+ghc-options: -Wall -O2 -threaded
+
+dependencies:
+  - base
+  - prologue
+  - batch-lib-luna-empire
+  - binary
+  - flowbox-bus-binary
+  - flowbox-config
+  - optparse-applicative
+  - flowbox-utils
+
+executables:
+  luna-empire:
+    source-dirs: src
+    main:        Main.hs
+    ghc-options: -Wall -O2 -threaded
+
+  luna-empire-logger:
+    source-dirs: src
+    main:        LoggerMain.hs
+
+  luna-empire-result-saver:
+    source-dirs: src
+    main:        ResultSaverMain.hs
+    dependencies:
+      - bytestring
+      - containers
+      - text
+      - luna-empire
+      - luna-empire-api
+      - docopt
+      - uuid
+      - binary
+
+  luna-empire-invoker:
+    source-dirs: src
+    main:        Invoker.hs
+    dependencies:
+      - bytestring
+      - containers
+      - text
+      - luna-empire
+      - luna-empire-api
+      - docopt
+      - uuid

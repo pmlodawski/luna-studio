@@ -21,9 +21,10 @@ dependencies:
   - visualization-api
   - uuid-types
   - bytestring
+  - pretty-show
 
 default-extensions:
-  - NoImplicitPrelude,
+  - NoImplicitPrelude
   - DeriveGeneric
   - TemplateHaskell
   - FlexibleInstances

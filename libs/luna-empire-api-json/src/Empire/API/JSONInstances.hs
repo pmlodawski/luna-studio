@@ -68,6 +68,11 @@ instance FromJSON Node.NodeType
 
 instance ToJSON NodeMeta.NodeMeta
 instance FromJSON NodeMeta.NodeMeta
+
+-- instance (ToJSON b) => ToJSON (Map UUID b) where
+--     toJSON = toJSON . Map.mapKeys UUID.toString
+--     {-# INLINE toJSON #-}
+
 instance (ToJSON a, ToJSON b) => ToJSON (Map a b) where
     toJSON = toJSON . Map.toList
     {-# INLINE toJSON #-}

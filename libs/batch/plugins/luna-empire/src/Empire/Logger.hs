@@ -154,4 +154,4 @@ loggFormattersMap = Map.fromList
     ]
 
 defaultLogFormatter :: LogFormatter
-defaultLogFormatter = \display content -> "Not recognized message"
+defaultLogFormatter = \display _ -> "Not recognized message"
