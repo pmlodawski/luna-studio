@@ -40,7 +40,7 @@ build:
       - apk update && apk add zeromq s6 gmp supervisor
       - cd supervisord && supervisord -c $DRONE_DIR/supervisor/supervisord.conf
       - export PATH=$PATH:$DRONE_DIR/dist/bin
-      - export LUNA_ROOT=$DRONE_DIR/env
+      - export LUNAROOT=$DRONE_DIR/env
       - ./run_integration_tests.sh
 cache:
   mount:
