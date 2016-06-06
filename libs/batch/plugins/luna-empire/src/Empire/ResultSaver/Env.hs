@@ -4,7 +4,6 @@ module Empire.ResultSaver.Env where
 
 import           Flowbox.Prelude
 
-import           Data.Map.Lazy                     (Map)
 import           Data.UUID                         (UUID)
 import qualified Data.UUID                         as UUID (nil)
 import           Empire.API.Data.GraphLocation     (GraphLocation(..))

@@ -157,7 +157,7 @@ getProgramResponseHandler response = do
         Env.ProgramRequested reqId -> do
           if requestId /= reqId then return ()
                                 else do
-                                  Env.state .= (Env.ProgramReceived (ProjectDump program mempty mempty))
+                                  Env.state .= (Env.ProgramReceived (ProjectDump (program ^. GetProgram.graph) mempty mempty))
         _ -> return ()
     Response.Error msg -> Env.state .= Env.Error msg
 
@@ -186,7 +186,7 @@ checkIfDone = do
   state <- use Env.state
   case state of
       st@(Env.ProgramReceived (ProjectDump program nodes results)) -> do
-        let graphNodes = program ^. GetProgram.graph ^. Graph.nodes
+        let graphNodes = program ^. Graph.nodes
             nodeCount  = length graphNodes
             nodeUpdateCount = Map.size nodes
             nodeResultCount = Map.size results

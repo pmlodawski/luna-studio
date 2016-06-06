@@ -87,15 +87,15 @@ data Expr = Expression        String
           | Output     (Maybe String)
 
 parseExpr :: String -> Expr
-parseExpr (stripPrefix "def "  -> Just name)    = Function $ Just name
-parseExpr (stripPrefix "module "  -> Just name) = Module   $ Just name
-parseExpr (stripPrefix "in "  -> Just name)     = Input    $ Just name
-parseExpr (stripPrefix "out "  -> Just name)    = Output   $ Just name
-parseExpr "def"                                 = Function   Nothing
-parseExpr "module"                              = Module     Nothing
-parseExpr "in"                                  = Input      Nothing
-parseExpr "out"                                 = Output     Nothing
-parseExpr expr                                  = Expression expr
+parseExpr (stripPrefix "def "    -> Just name) = Function $ Just name
+parseExpr (stripPrefix "module " -> Just name) = Module   $ Just name
+parseExpr (stripPrefix "in "     -> Just name) = Input    $ Just name
+parseExpr (stripPrefix "out "    -> Just name) = Output   $ Just name
+parseExpr "def"                                = Function   Nothing
+parseExpr "module"                             = Module     Nothing
+parseExpr "in"                                 = Input      Nothing
+parseExpr "out"                                = Output     Nothing
+parseExpr expr                                 = Expression expr
 
 forceTC :: GraphLocation -> StateT Env BusT ()
 forceTC location = do

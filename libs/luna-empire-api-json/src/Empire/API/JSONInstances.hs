@@ -6,6 +6,7 @@ import qualified Data.Aeson.Types                    as JSONTypes
 import           Data.Map.Lazy                       (Map)
 import qualified Data.Map.Lazy                       as Map
 import qualified Data.Text                           as Text
+import           Text.Read                           (readMaybe)
 import qualified Data.UUID.Types                     as UUID
 import           Data.UUID.Types                     (UUID)
 import           Data.Maybe                          (fromMaybe)
@@ -69,15 +70,16 @@ instance FromJSON Node.NodeType
 instance ToJSON NodeMeta.NodeMeta
 instance FromJSON NodeMeta.NodeMeta
 
--- instance (ToJSON b) => ToJSON (Map UUID b) where
---     toJSON = toJSON . Map.mapKeys UUID.toString
---     {-# INLINE toJSON #-}
-
-instance (ToJSON a, ToJSON b) => ToJSON (Map a b) where
-    toJSON = toJSON . Map.toList
+instance (ToJSON b) => ToJSON (Map UUID b) where
+    toJSON = toJSON . Map.mapKeys UUID.toString
     {-# INLINE toJSON #-}
+
+instance (ToJSON b) => ToJSON  (Map PortId b) where
+    toJSON = toJSON . Map.mapKeys show
+    {-# INLINE toJSON #-}
+
 instance (FromJSON b) => FromJSON  (Map PortId b) where
-    parseJSON = fmap Map.fromList . parseJSON
+    parseJSON = fmap (Map.mapKeys read) . parseJSON -- TODO: use readMaybe
     {-# INLINE parseJSON #-}
 
 instance ToJSON Port.Port

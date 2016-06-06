@@ -40,6 +40,8 @@ executables:
       - docopt
       - uuid
       - binary
+      - aeson
+      - aeson-pretty
 
   luna-empire-invoker:
     source-dirs: src

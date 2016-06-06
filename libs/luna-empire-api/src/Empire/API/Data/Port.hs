@@ -6,13 +6,13 @@ import Data.Binary                  (Binary)
 import Empire.API.Data.DefaultValue (PortDefault)
 import Empire.API.Data.ValueType    (ValueType)
 
-data InPort  = Self | Arg Int        deriving (Generic, Show, Eq)
-data OutPort = All  | Projection Int deriving (Generic, Show, Eq)
+data InPort  = Self | Arg Int        deriving (Generic, Show, Eq, Read)
+data OutPort = All  | Projection Int deriving (Generic, Show, Eq, Read)
 
 instance Binary InPort
 instance Binary OutPort
 
-data PortId = InPortId InPort | OutPortId OutPort deriving (Generic, Show, Eq)
+data PortId = InPortId InPort | OutPortId OutPort deriving (Generic, Show, Read, Eq)
 
 instance Ord PortId where
   (InPortId  _) `compare` (OutPortId _) = LT
@@ -31,20 +31,6 @@ instance Ord OutPort where
   All            `compare` (Projection _) = LT
   (Projection _) `compare` All            = GT
   (Projection a) `compare` (Projection b) = a `compare` b
-
-instance Read InPort where
-    readsPrec _ ('S':'e':'l':'f':rest) = [(Self, rest)]
-    readsPrec _ ('s':'e':'l':'f':rest) = [(Self, rest)]
-    readsPrec d r = do
-        (v, r') <- readsPrec d r
-        return (Arg v, r')
-
-instance Read OutPort where
-    readsPrec _ ('A':'l':'l':rest) = [(All, rest)]
-    readsPrec _ ('a':'l':'l':rest) = [(All, rest)]
-    readsPrec d r = do
-        (v, r') <- readsPrec d r
-        return (Projection v, r')
 
 data PortState = NotConnected | Connected | WithDefault PortDefault deriving (Show, Eq, Generic)
 

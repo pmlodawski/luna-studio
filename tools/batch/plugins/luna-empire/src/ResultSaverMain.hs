@@ -2,24 +2,27 @@
 
 module Main where
 
-import           Data.Binary                   (encode)
-import qualified Data.ByteString.Lazy          as BS
-import qualified Data.List                     as List
-import qualified Data.Text.Lazy                as Text
-import           Data.Maybe                    (fromMaybe)
-import qualified Data.UUID                     as UUID
+import qualified Data.Binary                    as Bin
+import qualified Data.Aeson                     as JSON
+import qualified Data.Aeson.Encode.Pretty       as JSON
+import qualified Data.ByteString.Lazy           as BS
+import qualified Data.List                      as List
+import           Data.Maybe                     (fromMaybe)
+import qualified Data.Text.Lazy                 as Text
+import qualified Data.UUID                      as UUID
 import           Prologue
 
-import           Empire.API.Data.Breadcrumb    (Breadcrumb (..))
-import           Empire.API.Data.GraphLocation (GraphLocation (..))
-import qualified Empire.ResultSaver            as ResultSaver
-import           Empire.ResultSaver.Cmd        (Cmd)
-import qualified Empire.ResultSaver.Cmd        as Cmd
-import qualified Empire.Version                as Version
-import qualified Flowbox.Bus.EndPoint          as EP
-import qualified Flowbox.Config.Config         as Config
-import           Flowbox.Options.Applicative   (help, long, metavar, optional, short)
-import qualified Flowbox.Options.Applicative   as Opt
+import           Empire.API.Data.Breadcrumb     (Breadcrumb (..))
+import           Empire.API.Data.GraphLocation  (GraphLocation (..))
+import qualified Empire.ResultSaver             as ResultSaver
+import           Empire.ResultSaver.Cmd         (Cmd)
+import qualified Empire.ResultSaver.Cmd         as Cmd
+import           Empire.ResultSaver.ProjectDump (ProjectDump)
+import qualified Empire.Version                 as Version
+import qualified Flowbox.Bus.EndPoint           as EP
+import qualified Flowbox.Config.Config          as Config
+import           Flowbox.Options.Applicative    (help, long, metavar, optional, short)
+import qualified Flowbox.Options.Applicative    as Opt
 import           Flowbox.System.Log.Logger
 
 defaultTopic :: String
@@ -33,7 +36,7 @@ parser =   Opt.flag' Cmd.Version (short 'V' <> long "version" <> help "Version i
        <|> Cmd.Save          <$>             Opt.strOption ( long "project"     <> metavar "UUID" <> help "Project to dump" )
                              <*> (optional $ Opt.strOption ( long "out"         <> metavar "FILE" <> help "Output filename" ))
        <|> Cmd.ImportAndSave <$>             Opt.strOption ( long "projectFile" <> metavar "FILE" <> help "Project import" )
-                             <*>            (Opt.strOption ( long "out"         <> metavar "FILE" <> help "Output filename" ))
+                             <*>             Opt.strOption ( long "out"         <> metavar "FILE" <> help "Output filename" )
 
 opts :: Opt.ParserInfo Cmd
 opts = Opt.info (Opt.helper <*> parser)
@@ -41,6 +44,8 @@ opts = Opt.info (Opt.helper <*> parser)
 
 main :: IO ()
 main = Opt.execParser opts >>= run
+
+instance JSON.ToJSON ProjectDump
 
 run :: Cmd -> IO ()
 run cmd = case cmd of
@@ -53,8 +58,8 @@ run cmd = case cmd of
       case r of
           Left err   -> logger criticalFail err
           Right dump -> do
-            let outputName = fromMaybe (projectIdStr <> ".bin") outFile
-            let binData = encode dump
+            let outputName = fromMaybe (projectIdStr <> ".json") outFile
+            let binData = JSON.encodePretty dump
             BS.writeFile outputName binData
     Cmd.ImportAndSave inFile outFile -> do
       endPoints <- EP.clientFromConfig <$> Config.load
@@ -63,5 +68,5 @@ run cmd = case cmd of
       case r of
           Left err   -> logger criticalFail err
           Right dump -> do
-            let binData = encode dump
+            let binData = JSON.encodePretty dump
             BS.writeFile outFile binData
