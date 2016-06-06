@@ -41,6 +41,7 @@ build:
       - cd supervisor && supervisord -c $DRONE_DIR/supervisor/supervisord.conf
       - export PATH=$PATH:$DRONE_DIR/dist/bin
       - export LUNAROOT=$DRONE_DIR/env
+      - cd $DRONE_DIR
       - ./run_integration_tests.sh
 cache:
   mount:
