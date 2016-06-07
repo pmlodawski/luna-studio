@@ -4,13 +4,13 @@ module JS.GraphLocation (
     loadLocation
 ) where
 
-import           Data.Aeson             (encode, decode)
+import           Data.Aeson                 (decode, encode)
 import           Data.ByteString.Lazy.Char8 as ByteString
-import qualified Data.JSString          as JSString
-import           JavaScript.Web.Storage (getItem, localStorage, setItem)
+import qualified Data.JSString              as JSString
+import           JavaScript.Web.Storage     (getItem, localStorage, setItem)
 import           Utils.PreludePlus
 
-import qualified Batch.Workspace        as Workspace
+import qualified Batch.Workspace            as Workspace
 
 key = "lastLocation"
 

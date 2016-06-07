@@ -7,7 +7,6 @@ import qualified Object.Widget.Node as NodeModel
 import           Object.UITypes (WidgetId)
 import           Object.Widget  (objectId, widget, WidgetFile(..))
 import           Event.Keyboard (KeyMods(..))
-import qualified JS.NodeGraph   as UI
 
 import           Reactive.State.Global     (State)
 import qualified Reactive.State.Global     as Global

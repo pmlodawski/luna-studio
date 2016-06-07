@@ -1,17 +1,22 @@
-{-# LANGUAGE JavaScriptFFI     #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module JS.GoogleAnalytics where
+module JS.GoogleAnalytics
+    ( sendEvent
+    , Event(..)
+    , AddNodeType (..)
+    , ConnectType (..)
+    ) where
 
-import qualified Data.JSString     as JSString
+import qualified Data.JSString             as JSString
+import           Data.JSString.Text        (lazyTextToJSString)
+import           Data.Text.Lazy            (Text, pack)
 import           GHCJS.Foreign
-import           GHCJS.Types       (JSString)
+import           GHCJS.Nullable            (Nullable, maybeToNullable)
+import           GHCJS.Types               (JSString)
 import           Utils.PreludePlus
 import           Utils.Vector
-import           Data.Text.Lazy              (Text, pack)
-import           Data.JSString.Text  (lazyTextToJSString)
-import           Reactive.Commands.Command         (Command, performIO)
-import           GHCJS.Nullable            (Nullable, maybeToNullable)
+
+import           Reactive.Commands.Command (Command, performIO)
 
 data ConnectType = Manual
                  | Pen

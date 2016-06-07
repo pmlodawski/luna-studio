@@ -1,9 +1,11 @@
-module JS.MultiSelection where
+module JS.MultiSelection
+    ( displaySelectionBox
+    , hideSelectionBox
+    ) where
 
 import           Utils.PreludePlus
 import           GHCJS.Foreign
 import           Utils.Vector
-
 
 foreign import javascript safe "app.displaySelectionBox($1, $2, $3, $4)"
     displaySelectionBoxJS :: Double -> Double -> Double -> Double -> IO ()

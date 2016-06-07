@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE JavaScriptFFI #-}
 
-module JS.Config where
+module JS.Config (getBackendAddress) where
 
 import           Utils.PreludePlus
 

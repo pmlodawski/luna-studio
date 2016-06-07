@@ -4,7 +4,6 @@ module Reactive.Plugins.Core.Action.MultiSelection where
 
 import qualified Data.Set                          as Set
 import           JS.MultiSelection                 (displaySelectionBox, hideSelectionBox)
-import qualified JS.NodeGraph                      as UI
 import           Utils.PreludePlus
 import           Utils.Vector                      (Vector2 (..), x, y)
 

@@ -1,7 +1,4 @@
-{-# LANGUAGE JavaScriptFFI     #-}
-{-# LANGUAGE OverloadedStrings #-}
-
-module JS.DownloadFile where
+module JS.DownloadFile (downloadFile) where
 
 import qualified Data.JSString     as JSString
 import           GHCJS.Foreign

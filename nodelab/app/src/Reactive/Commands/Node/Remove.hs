@@ -16,7 +16,6 @@ import           Utils.PreludePlus
 import           Reactive.Commands.UIRegistry      (removeWidget)
 
 import           Empire.API.Data.Node              (NodeId)
-import qualified JS.NodeGraph                      as UIGraph
 import qualified Object.Widget.Node                as NodeModel
 import qualified Reactive.Commands.Batch           as BatchCmd
 
