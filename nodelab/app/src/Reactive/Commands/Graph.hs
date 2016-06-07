@@ -1,4 +1,16 @@
-module Reactive.Commands.Graph where
+module Reactive.Commands.Graph
+( portRefToWidgetId
+, updateConnections
+, batchConnectNodes
+, connectionIdToWidgetId
+, updateConnNodes
+, allNodes
+, nodeIdToWidgetId
+, colorPort
+, portDefaultAngle
+, focusNode
+, localConnectNodes
+) where
 
 
 import           Utils.PreludePlus
@@ -238,25 +250,4 @@ focusNode id = do
         UICmd.update id $ Model.zPos .~ newZPos
 
 ----
-
-updateNodeMeta :: NodeId -> NodeMeta -> Command Global.State ()
-updateNodeMeta nodeId meta = do
-    Global.graph . Graph.nodesMap . ix nodeId . Node.nodeMeta .= meta
-    inRegistry $ do
-        widgetId <- nodeIdToWidgetId nodeId
-        withJust widgetId $ \widgetId -> do
-            UICmd.update widgetId $ Model.isRequired .~ (meta ^. NodeMeta.isRequired)
-            UICmd.move   widgetId $ fromTuple $  meta ^. NodeMeta.position
-    updateConnections
-
-
-renameNode :: NodeId -> Text -> Command Global.State ()
-renameNode nodeId name = do
-    Global.graph . Graph.nodesMap . ix nodeId . Node.name .= name
-
-    inRegistry $ do
-        widgetId <- nodeIdToWidgetId nodeId
-
-        forM_ widgetId $ flip UICmd.update_ $ Model.name .~ name
-
 

@@ -15,7 +15,7 @@ import           Object.Widget                        (objectId, widget)
 import qualified Object.Widget.Node                   as Model
 
 import           Reactive.Commands.Command            (Command)
-import           Reactive.Commands.Graph              (nodeIdToWidgetId, updateConnections, updateNodeMeta)
+import           Reactive.Commands.Graph              (nodeIdToWidgetId, updateConnections)
 import qualified Reactive.Commands.UIRegistry         as UICmd
 import           Reactive.State.Global                (State, inRegistry)
 import qualified Reactive.State.Global                as Global
@@ -44,7 +44,6 @@ updateExistingNode node = do
     maybeWidgetId <- inRegistry $ nodeIdToWidgetId nodeId
     zoom Global.graph $ modify (Graph.addNode node)
     forM_ maybeWidgetId $ \widgetId -> do
-        updateNodeMeta nodeId $ node ^. Node.nodeMeta
         inRegistry $ displayPorts widgetId node
 
         case node ^. Node.nodeType of
