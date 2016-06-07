@@ -1,4 +1,9 @@
-module JS.NodeSearcher where
+module JS.NodeSearcher
+    ( initNodeSearcher
+    , displayQueryResults
+    , displayTreeResults
+    , TargetSearcher (..)
+    )where
 
 import           Utils.PreludePlus
 
@@ -6,7 +11,7 @@ import           GHCJS.DOM.EventM
 import           GHCJS.DOM.EventTargetClosures  (EventName, unsafeEventName)
 import           GHCJS.DOM.Types                (IsUIEvent, UIEvent, Window, toUIEvent, unUIEvent)
 import           GHCJS.Foreign
-import           GHCJS.Types                    (JSRef, JSString)
+import           GHCJS.Types                    (JSVal, JSString)
 
 import           Utils.Vector
 
@@ -35,46 +40,19 @@ initNodeSearcher expr nodeId pos = initNodeSearcher' (lazyTextToJSString expr) n
 foreign import javascript safe "app.destroyNodeSearcher()"
     destroyNodeSearcher :: IO ()
 
-foreign import javascript safe "$2[\"detail\"][$1]"
-    nodesearcher_event_get :: JSString -> JSRef UIEvent -> IO JSString
-
-foreign import javascript safe "$1[\"detail\"][\"node\"]"
-    nodesearcher_event_get_node :: JSRef UIEvent -> IO Int
-
-nsEvent :: EventName Window UIEvent
-nsEvent = (unsafeEventName (JSString.pack "ns_event"))
-
-getKey :: (MonadIO m, IsUIEvent self) => String -> self -> m Text
-getKey key self = liftIO $ do
-    action <-  nodesearcher_event_get (JSString.pack key) (unUIEvent (toUIEvent self))
-    return $ lazyTextFromJSString action
-
-getExpression :: (MonadIO m, IsUIEvent self) => self -> m Text
-getExpression = getKey "expression"
-
-getAction :: (MonadIO m, IsUIEvent self) => self -> m Text
-getAction     = getKey "action"
-
-
-getNode :: (MonadIO m, IsUIEvent self) => self -> m Int
-getNode self = liftIO $ do
-    node <- nodesearcher_event_get_node (unUIEvent (toUIEvent self))
-    return node
-
-
 -- display results
 
 data TargetSearcher = NodeSearcher | CommandSearcher
 
-data JSHighlight
+newtype JSHighlight = JSHighlight JSVal
 
-foreign import javascript safe "app.nodeSearcher().clearResults()"
+foreign import javascript safe "if(app.nodeSearcher()) app.nodeSearcher().clearResults()"
     nodesearcher_clear_results :: IO ()
 
-foreign import javascript safe "app.nodeSearcher().addResult($1, $2, $3, $4, $5)"
-    nodesearcher_add_result :: JSString -> JSString -> JSString -> JSRef JSHighlight -> JSString -> IO ()
+foreign import javascript safe "if(app.nodeSearcher()) app.nodeSearcher().addResult($1, $2, $3, $4, $5)"
+    nodesearcher_add_result :: JSString -> JSString -> JSString -> JSHighlight -> JSString -> IO ()
 
-foreign import javascript safe "app.nodeSearcher().finishResult()"
+foreign import javascript safe "if(app.nodeSearcher()) app.nodeSearcher().finishResult()"
     nodesearcher_finish_result :: IO ()
 
 foreign import javascript safe "app.nodeSearcher().addTreeResult($1, $2, $3, $4)"
@@ -106,10 +84,10 @@ displayTreeResults :: TargetSearcher -> [QueryResult] -> IO ()
 displayTreeResults target results = forM_ results $ displayTreeResult target
 
 foreign import javascript safe "[]"
-    createJSArray :: IO (JSRef JSHighlight)
+    createJSArray :: IO JSHighlight
 
 foreign import javascript safe "$1.push({start: $2, length: $3})"
-    pushHighlightJs :: JSRef JSHighlight -> Int -> Int -> IO (JSRef JSHighlight)
+    pushHighlightJs :: JSHighlight -> Int -> Int -> IO JSHighlight
 
-pushHighlight :: JSRef JSHighlight -> Highlight -> IO (JSRef JSHighlight)
+pushHighlight :: JSHighlight -> Highlight -> IO JSHighlight
 pushHighlight acc (Highlight start len) = pushHighlightJs acc start len

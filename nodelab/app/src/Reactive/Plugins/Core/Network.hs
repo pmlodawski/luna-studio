@@ -93,7 +93,6 @@ makeNetworkDescription conn state = do
                    , Handlers.keyDownHandler
                    , Handlers.keyPressedHandler
                    , Handlers.keyUpHandler
-                   , Handlers.nodeSearcherHander
                    , Handlers.webSocketHandler conn
                    , Handlers.connectionPenHandler
                    , Handlers.textEditorHandler

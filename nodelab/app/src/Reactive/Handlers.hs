@@ -37,7 +37,6 @@ import qualified Event.Window              as Window
 import           GHCJS.Marshal
 import           JavaScript.Array          (JSArray)
 import qualified JavaScript.Array          as JSArray
-import           JS.NodeSearcher           (getAction, getExpression, getNode, nsEvent)
 import           Object.UITypes            as Mouse
 import qualified Object.Widget             as Widget
 import           UI.Raycaster
@@ -154,17 +153,6 @@ resizeHandler = AddHandler $ \h -> do
         width  <- getInnerWidth  window
         height <- getInnerHeight window
         h $ Window $ Window.Resized width height
-
-nodeSearcherHander :: AddHandler Event
-nodeSearcherHander = AddHandler $ \h -> do
-    window <- fromJust <$> currentWindow
-    window `on` nsEvent $ do
-        e      <- event
-        action <- getAction e
-        expr   <- getExpression e
-        node   <- getNode e
-        let maybeNode = if node == 0 then Nothing else Just node
-        liftIO . h $ NodeSearcher $ NodeSearcher.Event action expr maybeNode
 
 webSocketHandler :: WebSocket.WebSocket -> AddHandler Event
 webSocketHandler conn = AddHandler $ \h -> do

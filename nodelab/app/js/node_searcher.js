@@ -1,7 +1,7 @@
 "use strict";
 
-var $$     = require('./common')
-  , config = require('./config')
+var $$     = require('common')
+  , config = require('config')
 ;
 
 
@@ -54,14 +54,14 @@ NodeSearcher.prototype.init = function (nodeId, command) {
   var self = this;
   this.command = command;
   if(command) {
-    this.actionTree   = 'treeCmd';
-    this.actionCreate = 'createCmd';
-    this.actionQuery  = 'queryCmd';
+    this.actionTree   = 'TreeCmd';
+    this.actionCreate = 'CreateCmd';
+    this.actionQuery  = 'QueryCmd';
     this.el.addClass('command');
   } else {
-    this.actionTree   = 'tree';
-    this.actionCreate = 'create';
-    this.actionQuery  = 'query';
+    this.actionTree   = 'Tree';
+    this.actionCreate = 'Create';
+    this.actionQuery  = 'Query';
   }
   this.prefix = "";
   this.nodeId = nodeId;
@@ -177,26 +177,18 @@ NodeSearcher.prototype.appendExpression = function (expr) {
 
 
 NodeSearcher.prototype.performSearch = function () {
-  var ev;
+  var app = require('app');
   if (this.prefix === "" && this.searchbox.val() === "") {
     this.firstColumn.removeClass('types');
     this.clearResults();
-    ev = new CustomEvent('ns_event', {
-      detail: {
-        action: this.actionTree,
-        expression: ""
-      }
-    });
-    window.dispatchEvent(ev);
+    app.customEvent("nodesearcher", { "tag": this.actionTree
+                                    , "contents": ""
+                                    });
   } else {
     this.firstColumn.addClass('types');
-    ev = new CustomEvent('ns_event', {
-      detail: {
-        action: this.actionQuery,
-        expression: this.expression()
-      }
-    });
-    window.dispatchEvent(ev);
+    app.customEvent("nodesearcher", { "tag": this.actionQuery
+                                    , "contents": this.expression()
+                                    });
   }
 
 };
@@ -250,15 +242,11 @@ NodeSearcher.prototype.isSearchboxActive = function () {
 };
 
 NodeSearcher.prototype.createNode = function () {
-  var ev = new CustomEvent('ns_event', {
-    detail: {
-      action: this.actionCreate,
-      expression: this.expression(),
-      node: this.nodeId
-    }
-  });
+  var app = require('app');
   this.destroy();
-  window.dispatchEvent(ev);
+  app.customEvent("nodesearcher", { "tag":      this.actionCreate
+                                  , "contents": this.expression()
+                                  });
 };
 
 NodeSearcher.prototype.selectColumn = function (column) {
@@ -283,13 +271,10 @@ NodeSearcher.prototype.openColumn = function () {
 
   column.data('items', column.items);
 
-  var ev = new CustomEvent('ns_event', {
-    detail: {
-      action: this.actionTree,
-      expression: this.currentSelection().data('match').fullname
-    }
-  });
-  window.dispatchEvent(ev);
+  var app = require('app');
+  app.customEvent("nodesearcher", { "tag": this.actionTree
+                                  , "contents": this.currentSelection().data('match').fullname
+                                  });
 };
 
 NodeSearcher.prototype.updatePrefixWidth = function () {

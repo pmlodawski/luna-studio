@@ -1,21 +1,33 @@
 module Event.Processors.CustomEvent (process) where
 
-import           Data.Binary                (Binary, decode)
-import           Data.ByteString.Lazy.Char8 (ByteString)
-import qualified Data.Map.Lazy              as Map
-import           Data.Monoid                (Last (..))
+import           Data.Aeson                (fromJSON)
+import qualified Data.Aeson                as AE
+import           Data.Monoid               (Last (..))
+import           GHCJS.Types               (JSVal)
+import           GHCJS.Marshal             (fromJSVal)
+import           GHCJS.Marshal.Pure        (pFromJSVal)
 import           Utils.PreludePlus
+import           Control.Monad (liftM)
 
-import           BatchConnector.Connection  (ControlCode (..), WebMessage (..))
-import           Empire.API.Response        as Response
-import           Empire.API.Topic           as Topic
-import           Event.Batch                as Batch
-import           Event.Connection           as Connection
-import           Event.CustomEvent          as CustomEvent
-import           Event.Debug                (Event (..))
-import qualified Event.Event                as Event
+import           BatchConnector.Connection (ControlCode (..), WebMessage (..))
+import           Event.CustomEvent         as CustomEvent
+import           Event.Debug               (Event (..))
+import qualified Event.Event               as Event
+import qualified Event.NodeSearcher        as NodeSearcher
 
+payloadToData :: (AE.FromJSON a) => String -> JSVal -> IO (Maybe a)
+payloadToData topic payload = do
+    d <- fromJSVal payload
+    case d of
+        Nothing -> return Nothing
+        Just v -> case (fromJSON v) of
+            AE.Success v' -> return $ Just v'
+            AE.Error msg -> do
+                putStrLn $ "Malformed JS data [" <> topic <> "]: " <> msg
+                return Nothing
 
 process :: Event.Event -> IO (Maybe Event.Event)
-process (Event.CustomEvent (CustomEvent.RawEvent "debug.getState" _)) = return $ Just $ Event.Debug $ GetState
-process _                                                             = return Nothing
+process (Event.CustomEvent (CustomEvent.RawEvent topic payload)) = case topic of
+    "debug.getState" -> return $ Just $ Event.Debug $ GetState
+    "nodesearcher"   -> (liftM Event.NodeSearcher) <$> payloadToData topic payload
+    otherwise        -> return Nothing
