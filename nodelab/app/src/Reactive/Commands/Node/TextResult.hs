@@ -2,10 +2,10 @@ module Reactive.Commands.Node.TextResult
     ( nodeValueToText
     ) where
 
+import qualified Data.Text.Lazy               as Text
 import           Utils.PreludePlus
-import qualified Data.Text.Lazy                    as Text
 
-import           Empire.API.Data.DefaultValue      (Value (..))
+import           Empire.API.Data.DefaultValue (Value (..))
 
 nodeValueToText :: Value -> Text
 nodeValueToText w = Text.pack $ case w of
