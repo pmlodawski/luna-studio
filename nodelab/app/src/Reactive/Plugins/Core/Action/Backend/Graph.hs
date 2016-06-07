@@ -27,17 +27,17 @@ import qualified Empire.API.Topic                            as Topic
 import           Event.Batch                                 (Event (..))
 import qualified Event.Batch                                 as Batch
 import qualified Event.Event                                 as Event
-import           Reactive.Commands.AddNode                   (addDummyNode, addNode, updateNode,
-                                                              updateNodeProfilingData, updateNodeValue)
 import           Reactive.Commands.Camera                    (autoZoom)
 import           Reactive.Commands.Command                   (Command, performIO)
 import           Reactive.Commands.DisconnectNodes           (disconnect)
 import           Reactive.Commands.Graph                     (localConnectNodes, renameNode, updateConnections,
                                                               updateNodeMeta)
+import           Reactive.Commands.Node.Create               (addDummyNode, addNode)
+import           Reactive.Commands.Node.Update               (updateNode, updateNodeProfilingData, updateNodeValue)
 import qualified Reactive.Commands.RemoveNode                as RemoveNode
 import           Reactive.Commands.RenderGraph               (renderGraph)
 import           Reactive.Commands.UUID                      (isOwnRequest, unregisterRequest)
-import           Reactive.Plugins.Core.Action.Backend.Common (handleResponse, doNothing)
+import           Reactive.Plugins.Core.Action.Backend.Common (doNothing, handleResponse)
 import           Reactive.State.Global                       (State)
 import qualified Reactive.State.Global                       as Global
 

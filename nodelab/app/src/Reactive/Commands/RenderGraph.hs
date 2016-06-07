@@ -1,17 +1,16 @@
 module Reactive.Commands.RenderGraph where
 
-import           Utils.PreludePlus
-import           Reactive.State.Global        (State)
-import qualified Reactive.State.Global        as Global
-import qualified Reactive.Commands.Graph      as Graph
-import           Reactive.Commands.AddNode    (addNode)
-import           Reactive.Commands.Command    (Command)
--- import           Reactive.Commands.AutoLayout (layoutGraph)
+import qualified Batch.Workspace               as Workspace
 
-import qualified Batch.Workspace as Workspace
-import           Empire.API.Data.Node (Node)
-import           Empire.API.Data.PortRef (OutPortRef, InPortRef)
-import Debug.Trace (trace)
+import           Empire.API.Data.Node          (Node)
+import           Empire.API.Data.PortRef       (InPortRef, OutPortRef)
+
+import           Reactive.Commands.Command     (Command)
+import qualified Reactive.Commands.Graph       as Graph
+import           Reactive.Commands.Node.Create (addNode)
+import           Reactive.State.Global         (State)
+import qualified Reactive.State.Global         as Global
+import           Utils.PreludePlus
 
 renderGraph :: [Node] -> [(OutPortRef, InPortRef)] -> Command State ()
 renderGraph nodes edges = do
