@@ -27,3 +27,4 @@ process (Event.CustomEvent (CustomEvent.RawEvent topic payload)) = case topic of
     "debug.getState" -> return $ Just $ Event.Debug $ GetState
     "nodesearcher"   -> (liftM Event.NodeSearcher) <$> payloadToData topic payload
     otherwise        -> return Nothing
+process _ = return Nothing
