@@ -63,15 +63,18 @@ actions =  [ Debug.toActionEv
 runCommands :: [Event.Event -> Maybe (Command State ())] -> Event.Event -> Command State ()
 runCommands cmds event = sequence_ . catMaybes $ fmap ($ event) actions
 
-preprocessEvent :: Event.Event -> Event.Event
-preprocessEvent ev = fromMaybe ev $ getLast $ (Last $ BatchEventProcessor.process  ev)
-                                           <> (Last $ CustomEventProcessor.process ev)
+preprocessEvent :: Event.Event -> IO Event.Event
+preprocessEvent ev = do
+    let batchEvent = BatchEventProcessor.process  ev
+    customEvent   <- CustomEventProcessor.process ev
+
+    return $ fromMaybe ev $ getLast $ Last batchEvent <> Last customEvent
 
 processEvent :: MVar State -> Event.Event -> IO ()
 processEvent var ev = do
-    let realEvent = preprocessEvent ev
-    state <- takeMVar var
-    jsState <- Handlers.getJSState
+    state     <- takeMVar var
+    realEvent <- preprocessEvent ev
+    jsState   <- Handlers.getJSState
     let state' = state & Global.jsState .~ jsState
     let (ioActions, newState) = execCommand (runCommands actions realEvent) state'
     catch (ioActions >> UI.shouldRender) (handleExcept newState realEvent)
@@ -102,5 +105,5 @@ makeNetworkDescription conn state = do
     sequence_ $ registerHandler <$> handlers
 
 handleExcept :: State -> Event.Event -> JSException  -> IO ()
-handleExcept state event except = do
+handleExcept _ event except = do
     putStrLn $ "JavaScriptException: " <> (show except) <> "\n\nwhile processing: " <> (show event)

@@ -16,6 +16,6 @@ import           Event.Debug                (Event (..))
 import qualified Event.Event                as Event
 
 
-process :: Event.Event -> Maybe Event.Event
-process (Event.CustomEvent (CustomEvent.RawEvent "debug.getState" _)) = Just $ Event.Debug $ GetState
-process _                                                             = Nothing
+process :: Event.Event -> IO (Maybe Event.Event)
+process (Event.CustomEvent (CustomEvent.RawEvent "debug.getState" _)) = return $ Just $ Event.Debug $ GetState
+process _                                                             = return Nothing
