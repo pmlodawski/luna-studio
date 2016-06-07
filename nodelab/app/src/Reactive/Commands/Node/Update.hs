@@ -43,7 +43,7 @@ updateExistingNode node = do
     let nodeId  = node ^. Node.nodeId
     maybeWidgetId <- inRegistry $ nodeIdToWidgetId nodeId
     zoom Global.graph $ modify (Graph.addNode node)
-    forM_ maybeWidgetId $ \widgetId -> do
+    withJust maybeWidgetId $ \widgetId -> do
         inRegistry $ displayPorts widgetId node
 
         case node ^. Node.nodeType of

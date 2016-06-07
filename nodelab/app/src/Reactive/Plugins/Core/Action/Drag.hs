@@ -79,7 +79,7 @@ startDrag coord = do
 handleMove :: Vector2 Int -> Command State ()
 handleMove coord = do
     dragHistory <- use $ Global.drag . Drag.history
-    forM_ dragHistory $ \(DragHistory start previous current) -> do
+    withJust dragHistory $ \(DragHistory start previous current) -> do
         Global.drag . Drag.history ?= DragHistory start current coord
         moveNodes $ coord - current
 
@@ -105,7 +105,7 @@ stopDrag = do
             nodes <- forM nodesToUpdate $ \(id, pos) -> do
                 Global.graph . Graph.nodesMap . ix id . Node.position .= toTuple pos
                 newMeta <- preuse $ Global.graph . Graph.nodesMap . ix id . Node.nodeMeta
-                forM_ newMeta $ \newMeta -> BatchCmd.updateNodeMeta id newMeta
+                withJust newMeta $ \newMeta -> BatchCmd.updateNodeMeta id newMeta
 
             updateConnections
 

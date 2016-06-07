@@ -104,38 +104,38 @@ nodeRequiredHandler = TypeKey :: TypeKey NodeRequiredHandler
 triggerRemoveHandler :: WidgetId -> Command Global.State ()
 triggerRemoveHandler id = do
     maybeHandler <- inRegistry $ UICmd.handler id removeNodeHandler
-    forM_ maybeHandler $ \(RemoveNodeHandler handler) -> handler
+    withJust maybeHandler $ \(RemoveNodeHandler handler) -> handler
 
 triggerFocusNodeHandler :: WidgetId -> Command Global.State ()
 triggerFocusNodeHandler id = do
     maybeHandler <- inRegistry $ UICmd.handler id focusNodeHandler
-    forM_ maybeHandler $ \(FocusNodeHandler handler) -> handler id
+    withJust maybeHandler $ \(FocusNodeHandler handler) -> handler id
 
 triggerRenameNodeHandler :: WidgetId -> Model.Node -> Command Global.State ()
 triggerRenameNodeHandler id model = do
     maybeHandler <- inRegistry $ UICmd.handler id renameNodeHandler
-    forM_ maybeHandler $ \(RenameNodeHandler handler) -> handler id (model ^. Model.nodeId) (model ^. Model.name)
+    withJust maybeHandler $ \(RenameNodeHandler handler) -> handler id (model ^. Model.nodeId) (model ^. Model.name)
 
 triggerChangeInputNodeTypeHandler :: WidgetId -> Model.Node -> Command Global.State ()
 triggerChangeInputNodeTypeHandler id model = do
     withJust (model ^. Model.tpe) $ \tpe -> do
         maybeHandler <- inRegistry $ UICmd.handler id changeInputNodeTypeHandler
-        forM_ maybeHandler $ \(ChangeInputNodeTypeHandler handler) -> handler id (model ^. Model.nodeId) tpe
+        withJust maybeHandler $ \(ChangeInputNodeTypeHandler handler) -> handler id (model ^. Model.nodeId) tpe
 
 triggerEnterNodeHandler :: WidgetId -> Command Global.State ()
 triggerEnterNodeHandler id = do
     maybeHandler <- inRegistry $ UICmd.handler id enterNodeHandler
-    forM_ maybeHandler $ \(EnterNodeHandler handler) -> handler
+    withJust maybeHandler $ \(EnterNodeHandler handler) -> handler
 
 triggerExpandNodeHandler :: WidgetId -> Command Global.State ()
 triggerExpandNodeHandler id = do
     maybeHandler <- inRegistry $ UICmd.handler id expandNodeHandler
-    forM_ maybeHandler $ \(ExpandNodeHandler handler) -> handler
+    withJust maybeHandler $ \(ExpandNodeHandler handler) -> handler
 
 triggerNodeRequiredHandler :: WidgetId -> Model.Node -> Command Global.State ()
 triggerNodeRequiredHandler id model = do
     maybeHandler <- inRegistry $ UICmd.handler id nodeRequiredHandler
-    forM_ maybeHandler $ \(NodeRequiredHandler handler) -> handler (model ^. Model.nodeId) (model ^. Model.isRequired)
+    withJust maybeHandler $ \(NodeRequiredHandler handler) -> handler (model ^. Model.nodeId) (model ^. Model.isRequired)
 
 keyDownHandler :: KeyPressedHandler Global.State
 keyDownHandler '\r'   _ _ id = triggerExpandNodeHandler id

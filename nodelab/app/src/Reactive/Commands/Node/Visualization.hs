@@ -64,7 +64,7 @@ removeVisualization :: WidgetId -> Command UIRegistry.State ()
 removeVisualization id = do
     groupId <- Node.valueGroupId id
     widgets <- UICmd.children groupId
-    forM_ widgets UICmd.removeWidget
+    void $ mapM UICmd.removeWidget widgets
 
 
 displayListTable :: WidgetId -> [Text] -> Command UIRegistry.State ()

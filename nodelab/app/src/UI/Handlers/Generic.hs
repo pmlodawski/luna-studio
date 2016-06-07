@@ -22,7 +22,7 @@ triggerValueChanged :: Typeable a => a -> WidgetId -> Command Global.State ()
 triggerValueChanged new id = do
     let key = TypeKey :: (TypeKey (ValueChangedHandler a))
     maybeHandler <- inRegistry $ UICmd.handler id key
-    forM_ maybeHandler $ \(ValueChangedHandler handler) -> handler new id
+    withJust maybeHandler $ \(ValueChangedHandler handler) -> handler new id
 
 onValueChanged :: Typeable a => (a -> WidgetId -> Command Global.State ()) -> HTMap
 onValueChanged h = addHandler (ValueChangedHandler h) mempty

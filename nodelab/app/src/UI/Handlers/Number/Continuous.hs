@@ -57,7 +57,7 @@ dragHandler ds _ id = do
     enabled <- isEnabled id
     when enabled $ do
         startValue <- inRegistry $ UICmd.get id Model.dragStartValue
-        forM_ startValue $ \startValue -> do
+        withJust startValue $ \startValue -> do
             width <- inRegistry $ UICmd.get id $ Model.size . x
             let diff    = ds ^. currentPos - ds ^. startPos
                 delta   = if (abs $ diff ^. x) > (abs $ diff ^. y) then  diff ^. x /  divider

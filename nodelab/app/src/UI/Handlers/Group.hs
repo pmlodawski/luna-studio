@@ -20,7 +20,7 @@ triggerWidgetResized :: WidgetId -> Vector2 Double -> Command UIRegistry.State (
 triggerWidgetResized id vec = do
     let key = TypeKey :: TypeKey WidgetResizedHandler
     maybeHandler <- UICmd.handler id key
-    forM_ maybeHandler $ \(WidgetResizedHandler handler) -> handler id vec
+    withJust maybeHandler $ \(WidgetResizedHandler handler) -> handler id vec
 
 instance ResizableWidget Model.Group where
     resizeWidget id vec model = do

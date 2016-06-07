@@ -22,7 +22,7 @@ clickedHandler = TypeKey :: TypeKey ClickedHandler
 triggerClicked :: WidgetId -> Command Global.State ()
 triggerClicked id = do
     maybeHandler <- inRegistry $ UICmd.handler id clickedHandler
-    forM_ maybeHandler $ \(ClickedHandler handler) -> handler id
+    withJust maybeHandler $ \(ClickedHandler handler) -> handler id
 
 clickHandler :: ClickHandler Global.State
 clickHandler _ _ id = triggerClicked id
@@ -33,7 +33,7 @@ mousePressedHandler = TypeKey :: TypeKey MousePressedHandler
 triggerMousePressed :: Mouse.Event' -> JSState -> WidgetId -> Command Global.State ()
 triggerMousePressed evt _ id = do
     maybeHandler <- inRegistry $ UICmd.handler id mousePressedHandler
-    forM_ maybeHandler $ \(MousePressedHandler handler) -> handler evt id
+    withJust maybeHandler $ \(MousePressedHandler handler) -> handler evt id
 
 
 widgetHandlers :: UIHandlers Global.State

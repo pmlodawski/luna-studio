@@ -22,7 +22,7 @@ selectedHandler = TypeKey :: TypeKey SelectedHandler
 triggerSelected :: WidgetId -> Command Global.State ()
 triggerSelected id = do
     maybeHandler <- inRegistry $ UICmd.handler id selectedHandler
-    forM_ maybeHandler $ \(SelectedHandler handler) -> handler
+    withJust maybeHandler $ \(SelectedHandler handler) -> handler
 
 clickHandler :: ClickHandler Global.State
 clickHandler _ _ id = triggerSelected id

@@ -59,7 +59,7 @@ dragHandler ds _ id = do
     enabled <- isEnabled id
     when enabled $ do
         startValue <- inRegistry $ UICmd.get id Model.dragStartValue
-        forM_ startValue $ \startValue -> do
+        withJust startValue $ \startValue -> do
             widget <- inRegistry $ UICmd.lookup id
             let width     = widget ^. Model.size . x
                 diff      = ds ^. currentPos - ds ^. startPos

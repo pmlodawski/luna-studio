@@ -69,7 +69,7 @@ startDisconnecting event@(Mouse.Event _ coord _ _ _) = do
 whileDrawing :: (ConnectionPen.Drawing -> Command State ()) -> Command State ()
 whileDrawing run = do
     drawingMay <- use $ Global.connectionPen . ConnectionPen.drawing
-    forM_ drawingMay $ \drawing -> run drawing
+    withJust drawingMay $ \drawing -> run drawing
 
 handleMove :: Vector2 Int -> ConnectionPen.Drawing -> Command State ()
 handleMove coord drawing = do

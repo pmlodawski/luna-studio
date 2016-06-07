@@ -74,7 +74,7 @@ triggerChildrenResized :: WidgetId -> WidgetId -> Command UIRegistry.State ()
 triggerChildrenResized id child = do
     let key = TypeKey :: TypeKey ChildrenResizedHandler
     maybeHandler <- handler id key
-    forM_ maybeHandler $ \(ChildrenResizedHandler handler) -> handler id child
+    withJust maybeHandler $ \(ChildrenResizedHandler handler) -> handler id child
 
 
 resize :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
@@ -90,11 +90,11 @@ resize'CB :: Bool -> WidgetId -> (Vector2 Double -> Vector2 Double) -> Command U
 resize'CB cb id f = do
     UIRegistry.widgets . ix id . widget . widgetSize %= f
     widgetFile <- preuse $ UIRegistry.widgets . ix id
-    forM_ widgetFile $ \widgetFile -> do
+    withJust widgetFile $ \widgetFile -> do
         let model   = widgetFile ^. widget
             wParent = widgetFile ^. Object.Widget.parent
         resizeWidget id (model ^. widgetSize) model
-        when cb $ forM_ wParent $ flip triggerChildrenResized id
+        when cb $ withJust wParent $ flip triggerChildrenResized id
 
 get :: DisplayObjectClass a => WidgetId -> Getter a b -> Command UIRegistry.State b
 get id f = do
@@ -151,12 +151,12 @@ triggerLostFocus :: WidgetId -> Command Global.State ()
 triggerLostFocus id = do
     let key = TypeKey :: (TypeKey LostFocus)
     maybeHandler <- Global.inRegistry $ handler id key
-    forM_ maybeHandler $ \(LostFocus handler) -> handler id
+    withJust maybeHandler $ \(LostFocus handler) -> handler id
 
 
 takeFocus :: WidgetId -> Command Global.State ()
 takeFocus id = do
     currentFocused <- use $ Global.uiRegistry . UIRegistry.focusedWidget
     when (currentFocused /= Just id) $ do
-        forM_ currentFocused triggerLostFocus
+        withJust currentFocused triggerLostFocus
         Global.uiRegistry . UIRegistry.focusedWidget ?= id
