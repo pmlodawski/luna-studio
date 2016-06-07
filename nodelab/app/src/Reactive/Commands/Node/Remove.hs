@@ -1,12 +1,12 @@
-module Reactive.Commands.RemoveNode where
+module Reactive.Commands.Node.Remove where
 
 import           Event.Keyboard                    (KeyMods)
 import           Object.UITypes                    (WidgetId)
 import           Object.Widget                     (widget)
 import           Reactive.Commands.Command         (Command, performIO)
-import           Reactive.Commands.DisconnectNodes (localDisconnectAll)
 import           Reactive.Commands.Graph           (nodeIdToWidgetId)
-import           Reactive.Commands.Selection       (selectedNodes)
+import           Reactive.Commands.Graph.Selection (selectedNodes)
+import           Reactive.Commands.Graph.Disconnect (localDisconnectAll)
 import           Reactive.State.Global             (State)
 import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph

@@ -2,36 +2,36 @@
 
 module Reactive.Plugins.Core.Action.MultiSelection where
 
+import qualified Data.Set                          as Set
+import           JS.MultiSelection                 (displaySelectionBox, hideSelectionBox)
+import qualified JS.NodeGraph                      as UI
 import           Utils.PreludePlus
-import           Utils.Vector      (Vector2(..), x, y)
-import qualified Data.Set as Set
-import           JS.MultiSelection (displaySelectionBox, hideSelectionBox)
-import qualified JS.NodeGraph   as UI
+import           Utils.Vector                      (Vector2 (..), x, y)
 
 import           Object.Node
-import           Object.Widget (DisplayObject, UIHandlers, WidgetId, WidgetFile, objectId)
-import qualified Object.Widget.Node as NodeModel
+import           Object.Widget                     (DisplayObject, UIHandlers, WidgetFile, WidgetId, objectId)
+import qualified Object.Widget.Node                as NodeModel
 
-import           Event.Keyboard (KeyMods(..))
-import qualified Event.Mouse    as Mouse
-import qualified Event.Keyboard as Keyboard
-import           Event.Event    (Event(Mouse, Keyboard), JSState)
+import           Event.Event                       (Event (Mouse, Keyboard), JSState)
+import           Event.Keyboard                    (KeyMods (..))
+import qualified Event.Keyboard                    as Keyboard
+import qualified Event.Mouse                       as Mouse
 
-import qualified Reactive.State.MultiSelection as MultiSelection
-import           Reactive.State.MultiSelection (DragHistory(..))
-import qualified Reactive.State.Graph          as Graph
-import qualified Reactive.State.Camera         as Camera
-import qualified Reactive.State.UIRegistry     as UIRegistry
-import qualified Reactive.State.Global         as Global
-import           Reactive.State.Global         (State)
+import qualified Reactive.State.Camera             as Camera
+import           Reactive.State.Global             (State)
+import qualified Reactive.State.Global             as Global
+import qualified Reactive.State.Graph              as Graph
+import           Reactive.State.MultiSelection     (DragHistory (..))
+import qualified Reactive.State.MultiSelection     as MultiSelection
+import qualified Reactive.State.UIRegistry         as UIRegistry
 
-import           Reactive.Commands.Command          (Command, performIO)
-import qualified Reactive.Commands.UIRegistry       as UICmd
-import           Reactive.Commands.Selection        (unselectAll, selectAll, focusSelectedNode, selectedNodes)
+import           Reactive.Commands.Command         (Command, performIO)
+import           Reactive.Commands.Graph.Selection (focusSelectedNode, selectAll, selectedNodes, unselectAll)
+import qualified Reactive.Commands.UIRegistry      as UICmd
 
-import           Control.Monad.State                               hiding (State)
+import           Control.Monad.State               hiding (State)
 
-import           UI.Raycaster (getObjectsInRect)
+import           UI.Raycaster                      (getObjectsInRect)
 
 toAction :: Event -> Maybe (Command State ())
 toAction (Mouse _ event@(Mouse.Event Mouse.Pressed  pos Mouse.LeftButton (KeyMods False False False False) Nothing)) = Just $ startDrag pos

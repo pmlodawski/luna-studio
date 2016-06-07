@@ -7,37 +7,37 @@ module Reactive.Commands.Node.Create
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           Control.Monad.State          (modify)
-import qualified Data.Text.Lazy               as Text
+import           Control.Monad.State               (modify)
+import qualified Data.Text.Lazy                    as Text
 
-import           Object.UITypes               (WidgetId)
-import           Object.Widget                (objectId, widget)
-import qualified Object.Widget.Node           as Model
-import qualified UI.Handlers.Node             as Node
+import           Object.UITypes                    (WidgetId)
+import           Object.Widget                     (objectId, widget)
+import qualified Object.Widget.Node                as Model
+import qualified UI.Handlers.Node                  as Node
 
-import           Reactive.Commands.Command    (Command, performIO)
-import           Reactive.Commands.EnterNode  (enterNode)
-import           Reactive.Commands.Graph      (focusNode)
-import           Reactive.Commands.RemoveNode (removeSelectedNodes)
-import           Reactive.Commands.Selection  (selectedNodes)
-import qualified Reactive.Commands.UIRegistry as UICmd
-import           Reactive.State.Global        (State, inRegistry)
-import qualified Reactive.State.Global        as Global
-import qualified Reactive.State.Graph         as Graph
-import           Reactive.State.UIRegistry    (addHandler, sceneGraphId)
-import qualified Reactive.State.UIRegistry    as UIRegistry
+import           Reactive.Commands.Command         (Command, performIO)
+import           Reactive.Commands.EnterNode       (enterNode)
+import           Reactive.Commands.Graph           (focusNode)
+import           Reactive.Commands.Graph.Selection (selectedNodes)
+import           Reactive.Commands.Node.Remove     (removeSelectedNodes)
+import qualified Reactive.Commands.UIRegistry      as UICmd
+import           Reactive.State.Global             (State, inRegistry)
+import qualified Reactive.State.Global             as Global
+import qualified Reactive.State.Graph              as Graph
+import           Reactive.State.UIRegistry         (addHandler, sceneGraphId)
+import qualified Reactive.State.UIRegistry         as UIRegistry
 
-import qualified Reactive.Commands.Batch      as BatchCmd
+import qualified Reactive.Commands.Batch           as BatchCmd
 
-import           Data.HMap.Lazy               (HTMap)
-import qualified UI.Handlers.Node             as UINode
+import           Data.HMap.Lazy                    (HTMap)
+import qualified UI.Handlers.Node                  as UINode
 
-import qualified Empire.API.Data.Breadcrumb   as Breadcrumb
-import           Empire.API.Data.Node         (Node, NodeId)
-import qualified Empire.API.Data.Node         as Node
-import qualified Empire.API.Data.NodeMeta     as NodeMeta
+import qualified Empire.API.Data.Breadcrumb        as Breadcrumb
+import           Empire.API.Data.Node              (Node, NodeId)
+import qualified Empire.API.Data.Node              as Node
+import qualified Empire.API.Data.NodeMeta          as NodeMeta
 
-import           Reactive.Commands.Node.Ports (displayPorts)
+import           Reactive.Commands.Node.Ports      (displayPorts)
 
 
 addNode :: Node -> Command State ()

@@ -1,4 +1,4 @@
-module Reactive.Commands.DisconnectNodes where
+module Reactive.Commands.Graph.Disconnect where
 
 import           Utils.PreludePlus
 

@@ -55,7 +55,6 @@ navigateToGraph location = do
     currentLocation <- use $ Global.workspace . Workspace.currentLocation
     when (currentLocation /= location) $ loadGraph location
 
-
 displayCurrentBreadcrumb :: Command State ()
 displayCurrentBreadcrumb = Breadcrumbs.update enterBreadcrumbs
 

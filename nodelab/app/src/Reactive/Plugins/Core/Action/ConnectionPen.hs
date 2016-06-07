@@ -31,7 +31,7 @@ import qualified Reactive.State.Graph              as Graph
 import qualified Reactive.State.UIRegistry         as UIRegistry
 
 import           Reactive.Commands.Command         (Command, execCommand, performIO)
-import           Reactive.Commands.DisconnectNodes (disconnectAll)
+import           Reactive.Commands.Graph.Disconnect (disconnectAll)
 import           Reactive.Commands.Graph
 import qualified Reactive.State.ConnectionPen      as ConnectionPen
 

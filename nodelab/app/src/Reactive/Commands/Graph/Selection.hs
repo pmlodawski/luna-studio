@@ -1,4 +1,4 @@
-module Reactive.Commands.Selection where
+module Reactive.Commands.Graph.Selection where
 
 import           Utils.PreludePlus
 import           Control.Monad.State hiding (State)
