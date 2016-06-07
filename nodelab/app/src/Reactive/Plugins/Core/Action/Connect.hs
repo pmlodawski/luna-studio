@@ -2,7 +2,6 @@ module Reactive.Plugins.Core.Action.Connect where
 
 import           Debug.Trace
 import           Utils.Angle                  (boundedAngle, toAngle)
-import qualified Utils.Nodes                  as NodeUtils
 import           Utils.PreludePlus
 import           Utils.Vector
 

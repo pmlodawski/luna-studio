@@ -18,9 +18,6 @@ instance Monoid IOAction where
 newtype Command a b = Command { unCommand :: StateT a (Writer IOAction) b }
                     deriving (Functor, Applicative, Monad, MonadWriter IOAction, MonadState a)
 
-instance PrettyPrinter (Command a b) where
-    display _ = "Command"
-
 type instance Zoomed (Command a) = Focusing (Writer IOAction)
 
 instance Zoom (Command s) (Command t) s t where

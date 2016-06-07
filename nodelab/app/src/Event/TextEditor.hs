@@ -9,6 +9,4 @@ data Event = CodeModified { _code :: Text } deriving (Eq, Show, Typeable, Generi
 
 makeLenses ''Event
 
-instance PrettyPrinter Event where
-    display (CodeModified m) = show m
 instance ToJSON Event

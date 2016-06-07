@@ -10,9 +10,6 @@ data Event = RawEvent String JSVal deriving (Generic)
 
 makeLenses ''Event
 
-instance PrettyPrinter Event where
-    display (RawEvent topic _)= "RawEvent " <> topic
-
 instance ToJSON Event where
     toJSON (RawEvent topic _) = toJSON $ "Event: " <> topic
 

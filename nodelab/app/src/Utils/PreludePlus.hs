@@ -30,9 +30,6 @@ import qualified Prelude
 import           Prologue                           as X (toString)
 import           Text.Show.Pretty                   (ppShow)
 
-import           Utils.Wrapper                      as X (Unwrap (unwrap), UnwrapT (unwrapT), Wrap (wrap), WrapT (wrapT), Wrapper, WrapperT, rewrap)
-import           Utils.PrettyPrinter                as X
-
 
 print :: (MonadIO m, Show s) => s -> m ()
 print    = liftIO . Prelude.print

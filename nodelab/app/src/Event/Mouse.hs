@@ -51,23 +51,6 @@ type Event'    = Event Double
 
 makeLenses ''Event
 
-instance PrettyPrinter MouseButton where
-    display = show
-
-instance PrettyPrinter EventWidget where
-    display = show
-
-instance PrettyPrinter Type where
-    display = show
-
-instance (PrettyPrinter a) => PrettyPrinter (Event a) where
-    display (Event tpe pos button keyMods widget) = "ev(" <> display tpe     <>
-                                                    " "   <> display pos     <>
-                                                    " "   <> display button  <>
-                                                    " "   <> display keyMods <>
-                                                    " "   <> display widget  <>
-                                                    ")"
-
 instance ToJSON (Event Int)
 instance ToJSON (Event Double)
 instance ToJSON Type

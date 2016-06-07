@@ -56,9 +56,6 @@ instance Monoid a => Monoid (Vector2 a) where
 negateSnd :: Num a => Vector2 a -> Vector2 a
 negateSnd (Vector2 x y) = Vector2 x (-y)
 
-instance PrettyPrinter a => PrettyPrinter (Vector2 a) where
-    display (Vector2 x y) = "(" <> display x <> "," <> display y <> ")"
-
 fromTuple :: Num a => (a, a) -> Vector2 a
 fromTuple (a, b) = Vector2 a b
 

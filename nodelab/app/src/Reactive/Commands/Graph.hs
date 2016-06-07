@@ -16,7 +16,6 @@ module Reactive.Commands.Graph
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.Angle
-import qualified Utils.Nodes                   as NodeUtils
 
 import           Data.Map.Lazy                 (Map(..))
 import qualified Data.Map.Lazy                 as Map

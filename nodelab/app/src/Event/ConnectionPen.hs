@@ -10,6 +10,4 @@ data Event = Segment { _widgets :: [WidgetId] } deriving (Eq, Show, Typeable, Ge
 
 makeLenses ''Event
 
-instance PrettyPrinter Event where
-    display (Segment m) = show m
 instance ToJSON Event

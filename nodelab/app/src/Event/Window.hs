@@ -14,9 +14,5 @@ data Event = Event { _tpe         :: Type
 
 makeLenses ''Event
 
-instance PrettyPrinter Event where
-    display (Event t w h) = show t <> " " <> show w <> " " <> show h
-
-
 instance ToJSON Event
 instance ToJSON Type

@@ -2,15 +2,7 @@ module Event.Batch where
 
 import           Utils.PreludePlus
 
-import           Batch.RunStatus
-import           Batch.Value
-import           Empire.API.Data.Library             (Library, LibraryId)
-import qualified Empire.API.Data.Library             as Library
-import           Empire.API.Data.Node                (Node)
-import           Empire.API.Data.PortRef             (InPortRef, OutPortRef)
-import           Empire.API.Data.Project             (Project, ProjectId)
-import qualified Empire.API.Data.Project             as Project
-
+import qualified Empire.API.Control.EmpireStarted    as EmpireStarted
 import qualified Empire.API.Graph.AddNode            as AddNode
 import qualified Empire.API.Graph.CodeUpdate         as CodeUpdate
 import qualified Empire.API.Graph.Connect            as Connect
@@ -24,14 +16,11 @@ import qualified Empire.API.Graph.RenameNode         as RenameNode
 import qualified Empire.API.Graph.UpdateNodeMeta     as UpdateNodeMeta
 import           Empire.API.JSONInstances            ()
 import qualified Empire.API.Project.CreateProject    as CreateProject
-import qualified Empire.API.Project.ListProjects     as ListProjects
 import qualified Empire.API.Project.ExportProject    as ExportProject
 import qualified Empire.API.Project.ImportProject    as ImportProject
-import qualified Empire.API.Control.EmpireStarted    as EmpireStarted
+import qualified Empire.API.Project.ListProjects     as ListProjects
 
 import           Data.Aeson                          (ToJSON)
-import           Data.Int
-import           Data.Text.Lazy                      (Text)
 
 data Event = UnknownEvent String
            | AddNodeResponse                 AddNode.Response

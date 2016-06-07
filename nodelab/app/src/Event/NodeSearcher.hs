@@ -12,7 +12,4 @@ data Event = Event { _action     :: Text
 
 makeLenses ''Event
 
-instance PrettyPrinter Event where
-    display (Event action expr node) = "NSev(" <> show action <> " " <> show node <> " -> " <> show expr <> ")"
-
 instance ToJSON Event
