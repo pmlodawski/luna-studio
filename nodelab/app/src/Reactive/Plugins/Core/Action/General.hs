@@ -18,7 +18,7 @@ import           Reactive.Commands.Command               (Command, execCommand, 
 
 toAction :: Event -> Maybe (Command Global.State ())
 toAction (Mouse _ (Mouse.Event Mouse.Moved pos _ _ _))       = Just $ updateMousePos pos
-toAction (Window (Window.Event Window.Resized width height)) = Just $ updateWindowSize (Vector2 width height)
+toAction (Window (Window.Resized width height)) = Just $ updateWindowSize (Vector2 width height)
 toAction _                                                   = Nothing
 
 updateWindowSize :: Vector2 Int -> Command Global.State ()
