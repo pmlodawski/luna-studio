@@ -1,7 +1,8 @@
-{-# LANGUAGE JavaScriptFFI     #-}
 {-# LANGUAGE OverloadedStrings #-}
-
-module JS.Cursor where
+module JS.Cursor
+    ( setCursor
+    , Cursor(..)
+    ) where
 
 import qualified Data.JSString     as JSString
 import           GHCJS.Foreign

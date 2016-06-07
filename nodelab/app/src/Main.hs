@@ -33,7 +33,7 @@ import           Batch.Workspace                   (Workspace)
 import qualified Batch.Workspace                   as Workspace
 import qualified BatchConnector.Commands           as BatchCmd
 import           Control.Concurrent.MVar
-import           JS.Config                         (getBackendAddress, isLoggerEnabled)
+import           JS.Config                         (getBackendAddress)
 import qualified JS.GraphLocation                  as GraphLocation
 import           JS.UI                             (initializeGl, render, triggerWindowResize)
 import           JS.UUID                           (generateUUID)
@@ -54,8 +54,6 @@ runMainNetwork :: WebSocket -> IO ()
 runMainNetwork socket = do
     initializeGl
     render
-    enableLogging <- isLoggerEnabled
-    -- Shader.test
 
     lastLocation <- GraphLocation.loadLocation
 
@@ -67,7 +65,7 @@ runMainNetwork socket = do
     initActions
 
     state <- newMVar initState'
-    CoreNetwork.makeNetworkDescription socket enableLogging state
+    CoreNetwork.makeNetworkDescription socket state
     triggerWindowResize
 
     BatchCmd.listProjects projectListRequestId

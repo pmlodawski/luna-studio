@@ -18,7 +18,6 @@ import           GHCJS.Marshal.Pure        (pFromJSVal)
 import           GHCJS.Prim                (fromJSString)
 import qualified JS.ConnectionPen          as ConnectionPen
 import qualified JS.CustomEvent            as CustomEvent
-import           JS.Debug                  (getState)
 import qualified JS.TextEditor             as TextEditor
 import qualified JS.WebSocket              as WebSocket
 
@@ -193,11 +192,6 @@ textEditorHandler  = AddHandler $ \h -> do
     TextEditor.registerCallback $ \code -> do
         codeStr <- return $ TextEditor.toJSString code
         liftIO $ h $ TextEditor $ TextEditor.CodeModified $ lazyTextFromJSString codeStr
-
-debugHandler :: AddHandler Event
-debugHandler = AddHandler $ \h -> do
-    window <- fromJust <$> currentWindow
-    window `on` getState $ liftIO . h $ Debug $ Debug.GetState
 
 customEventHandler :: AddHandler Event
 customEventHandler  = AddHandler $ \h -> do

@@ -1,17 +1,11 @@
 module JS.Debug where
 
-import Utils.PreludePlus
-import Data.JSString      (pack)
-import GHCJS.Types (JSVal, JSString)
-import GHCJS.DOM.EventTargetClosures (EventName, unsafeEventName)
-import GHCJS.DOM.Types  (UIEvent, Window)
-import Data.JSString.Text  (lazyTextToJSString)
-import Data.Aeson (ToJSON, toJSON)
-import GHCJS.Marshal (toJSVal)
-
-
-getState :: EventName Window UIEvent
-getState = (unsafeEventName (pack "getState"))
+import           Data.Aeson         (ToJSON, toJSON)
+import           Data.JSString      (pack)
+import           Data.JSString.Text (lazyTextToJSString)
+import           GHCJS.Marshal      (toJSVal)
+import           GHCJS.Types        (JSString, JSVal)
+import           Utils.PreludePlus
 
 foreign import javascript safe "window.state  = $1"         saveState :: JSVal -> IO ()
 foreign import javascript safe "window.lastEv = $1"         lastEv    :: JSVal -> IO ()

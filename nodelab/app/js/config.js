@@ -61,7 +61,8 @@ if (brunch.env !== "production") {
   };
 
   window.showState = function() {
-    window.dispatchEvent(new Event('getState'));
+    var app = require('app');
+    app.customEvent("debug.getState", null);
   };
 
 } else {

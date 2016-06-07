@@ -1,11 +1,19 @@
-module JS.ConnectionPen where
+module JS.ConnectionPen
+    ( beginPath
+    , drawSegment
+    , requestWidgetsBetween
+    , registerCallback
+    , clearCanvas
+    , endPath
+    , toJSArray
+    ) where
 
-import Utils.PreludePlus
-import Utils.Vector
-import GHCJS.Types
-import GHCJS.Foreign.Callback
-import GHCJS.Foreign
-import JavaScript.Array
+import           GHCJS.Foreign
+import           GHCJS.Foreign.Callback
+import           GHCJS.Types
+import           JavaScript.Array
+import           Utils.PreludePlus
+import           Utils.Vector
 
 
 foreign import javascript safe "connectionPen.beginPath($1, $2, $3)" beginPath'   :: Int -> Int -> Bool -> IO ()
@@ -27,15 +35,14 @@ requestWidgetsBetween :: Vector2 Int -> Vector2 Int -> IO ()
 requestWidgetsBetween (Vector2 ax ay) (Vector2 bx by) = requestWidgetsBetween' ax ay bx by
 
 foreign import javascript safe "connectionPen.callback = $1"
-    registerCallback' :: Callback (JSRef () -> IO ()) -> IO ()
+    registerCallback' :: Callback (JSVal -> IO ()) -> IO ()
 
 foreign import javascript safe "connectionPen.callback = function(){ return null; }"
-    unregisterCallback' :: Callback (JSRef () -> IO ()) -> IO ()
+    unregisterCallback' :: Callback (JSVal -> IO ()) -> IO ()
 
-foreign import javascript safe "$r = $1" toJSArray :: JSRef () -> JSArray
+foreign import javascript safe "$r = $1" toJSArray :: JSVal -> JSArray
 
-
-registerCallback :: (JSRef () -> IO ()) -> IO (IO ())
+registerCallback :: (JSVal -> IO ()) -> IO (IO ())
 registerCallback callback = do
     wrappedCallback <- asyncCallback1 callback
     registerCallback' wrappedCallback

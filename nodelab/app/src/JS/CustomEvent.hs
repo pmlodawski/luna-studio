@@ -1,4 +1,6 @@
-module JS.CustomEvent where
+module JS.CustomEvent
+    ( registerCallback
+    ) where
 
 import Utils.PreludePlus
 import Utils.Vector

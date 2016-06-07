@@ -1,16 +1,17 @@
 {-# LANGUAGE Rank2Types #-}
-module Event.Processors.Batch where
+module Event.Processors.Batch (process) where
 
-import           Utils.PreludePlus
-import           Data.Binary (decode, Binary)
+import           Data.Binary                (Binary, decode)
+import           Data.ByteString.Lazy.Char8 (ByteString)
 import qualified Data.Map.Lazy              as Map
-import qualified Event.Event                as Event
-import           Event.Connection           as Connection
+import           Utils.PreludePlus
+
+import           BatchConnector.Connection  (ControlCode (..), WebMessage (..))
+import           Empire.API.Response        as Response
+import           Empire.API.Topic           as Topic
 import           Event.Batch                as Batch
-import           BatchConnector.Connection  (WebMessage(..), ControlCode(..))
-import           Empire.API.Topic    as Topic
-import           Empire.API.Response as Response
-import           Data.ByteString.Lazy.Char8  (ByteString)
+import           Event.Connection           as Connection
+import qualified Event.Event                as Event
 
 
 process :: Event.Event -> Maybe Event.Event

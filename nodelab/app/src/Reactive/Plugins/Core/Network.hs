@@ -2,40 +2,42 @@ module Reactive.Plugins.Core.Network where
 
 import           Utils.PreludePlus
 
-import           Control.Exception (catch)
-import           GHCJS.Prim (JSException)
+import           Control.Exception                                   (catch)
+import           GHCJS.Prim                                          (JSException)
+import           Data.Monoid                (Last (..))
 
-import           Reactive.Handlers          (AddHandler(..))
-import qualified Reactive.Handlers          as Handlers
+import           Reactive.Handlers                                   (AddHandler (..))
+import qualified Reactive.Handlers                                   as Handlers
 
-import qualified Event.Event                as Event
-import qualified Event.Processors.Batch     as BatchEventProcessor
+import qualified Event.Event                                         as Event
+import qualified Event.Processors.Batch                              as BatchEventProcessor
+import qualified Event.Processors.CustomEvent                        as CustomEventProcessor
 
-import qualified Reactive.Plugins.Core.Action.General                as General
-import qualified Reactive.Plugins.Core.Action.Camera                 as Camera
-import qualified Reactive.Plugins.Core.Action.MultiSelection         as MultiSelection
-import qualified Reactive.Plugins.Core.Action.Drag                   as Drag
-import qualified Reactive.Plugins.Core.Action.Connect                as Connect
-import qualified Reactive.Plugins.Core.Action.NodeSearcher           as NodeSearcher
-import qualified Reactive.Plugins.Core.Action.Widget                 as Widget
 import qualified Reactive.Plugins.Core.Action.Backend.Control        as Control
 import qualified Reactive.Plugins.Core.Action.Backend.Graph          as Graph
 import qualified Reactive.Plugins.Core.Action.Backend.ProjectManager as ProjectManager
+import qualified Reactive.Plugins.Core.Action.Camera                 as Camera
+import qualified Reactive.Plugins.Core.Action.Connect                as Connect
 import qualified Reactive.Plugins.Core.Action.ConnectionPen          as ConnectionPen
-import qualified Reactive.Plugins.Core.Action.TextEditor             as TextEditor
 import qualified Reactive.Plugins.Core.Action.Debug                  as Debug
+import qualified Reactive.Plugins.Core.Action.Drag                   as Drag
+import qualified Reactive.Plugins.Core.Action.General                as General
+import qualified Reactive.Plugins.Core.Action.MultiSelection         as MultiSelection
+import qualified Reactive.Plugins.Core.Action.NodeSearcher           as NodeSearcher
 import qualified Reactive.Plugins.Core.Action.Sandbox                as Sandbox
+import qualified Reactive.Plugins.Core.Action.TextEditor             as TextEditor
+import qualified Reactive.Plugins.Core.Action.Widget                 as Widget
 
-import           Reactive.Commands.Command (Command, execCommand, performIO)
-import           Reactive.State.Global     (State)
-import qualified Reactive.State.Global     as Global
+import           Reactive.Commands.Command                           (Command, execCommand, performIO)
+import           Reactive.State.Global                               (State)
+import qualified Reactive.State.Global                               as Global
 
-import           Batch.Workspace           (Workspace)
-import           JS.WebSocket              (WebSocket)
-import qualified JS.UI                     as UI
+import           Batch.Workspace                                     (Workspace)
+import qualified JS.UI                                               as UI
+import           JS.WebSocket                                        (WebSocket)
 
-import Control.Concurrent.MVar
-import Debug.Trace (trace)
+import           Control.Concurrent.MVar
+import           Debug.Trace                                         (trace)
 
 toTransformer :: Command a () -> (IO (), a) -> (IO (), a)
 toTransformer cmd (_, a) = execCommand cmd a
@@ -61,12 +63,13 @@ actions =  [ Debug.toActionEv
 runCommands :: [Event.Event -> Maybe (Command State ())] -> Event.Event -> Command State ()
 runCommands cmds event = sequence_ . catMaybes $ fmap ($ event) actions
 
-preprocessBatchEvent :: Event.Event -> Event.Event
-preprocessBatchEvent ev = fromMaybe ev $ BatchEventProcessor.process ev
+preprocessEvent :: Event.Event -> Event.Event
+preprocessEvent ev = fromMaybe ev $ getLast $ (Last $ BatchEventProcessor.process  ev)
+                                           <> (Last $ CustomEventProcessor.process ev)
 
 processEvent :: MVar State -> Event.Event -> IO ()
 processEvent var ev = do
-    let realEvent = preprocessBatchEvent ev
+    let realEvent = preprocessEvent ev
     state <- takeMVar var
     jsState <- Handlers.getJSState
     let state' = state & Global.jsState .~ jsState
@@ -76,8 +79,8 @@ processEvent var ev = do
 
 
 
-makeNetworkDescription :: WebSocket -> Bool -> MVar State -> IO ()
-makeNetworkDescription conn logging state = do
+makeNetworkDescription :: WebSocket -> MVar State -> IO ()
+makeNetworkDescription conn state = do
     let handlers = [ Handlers.resizeHandler
                    , Handlers.mouseDownHandler
                    , Handlers.mouseUpHandler
@@ -91,7 +94,6 @@ makeNetworkDescription conn logging state = do
                    , Handlers.webSocketHandler conn
                    , Handlers.connectionPenHandler
                    , Handlers.textEditorHandler
-                   , Handlers.debugHandler
                    , Handlers.customEventHandler
                    ]
 
