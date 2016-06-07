@@ -42,7 +42,7 @@ build:
       - export PATH=$PATH:$DRONE_DIR/dist/bin
       - export LUNAROOT=$DRONE_DIR/env
       - cd $DRONE_DIR
-      - ./run_integration_tests.sh
+      - timeout -t 60 ./run_integration_tests.sh
 cache:
   mount:
     - .stack
