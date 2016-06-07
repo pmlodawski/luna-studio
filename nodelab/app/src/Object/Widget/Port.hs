@@ -8,11 +8,8 @@ import           Utils.Vector
 import           Empire.API.Data.PortRef  (AnyPortRef)
 import qualified Empire.API.JSONInstances ()
 
-import           Object.Node
 import           Object.UITypes
 import           Object.Widget
-
-import qualified JS.Widget                as UI
 
 data Port = Port { _portRef     :: AnyPortRef
                  , _angleVector :: Vector2 Double

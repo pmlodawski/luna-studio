@@ -1,5 +1,21 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Reactive.Handlers where
+module Reactive.Handlers
+    ( mouseDownHandler
+    , mouseUpHandler
+    , mouseMovedHandler
+    , mouseDblClickHandler
+    , AddHandler(..)
+    , getJSState
+    , resizeHandler
+    , mouseWheelHandler
+    , keyDownHandler
+    , keyUpHandler
+    , keyPressedHandler
+    , webSocketHandler
+    , connectionPenHandler
+    , textEditorHandler
+    , customEventHandler
+    ) where
 
 import           Utils.PreludePlus         hiding (on)
 import           Utils.Vector
@@ -14,12 +30,11 @@ import qualified GHCJS.DOM.MouseEvent      as MouseEvent
 import qualified GHCJS.DOM.UIEvent         as UIEvent
 import qualified GHCJS.DOM.WheelEvent      as WheelEvent
 import           GHCJS.DOM.Window          (getInnerHeight, getInnerWidth, resize)
+import           GHCJS.Marshal             (fromJSValUnchecked)
 import           GHCJS.Marshal.Pure        (pFromJSVal)
 import           GHCJS.Prim                (fromJSString)
-import qualified JS.ConnectionPen          as ConnectionPen
-import qualified JS.CustomEvent            as CustomEvent
-import qualified JS.TextEditor             as TextEditor
-import qualified JS.WebSocket              as WebSocket
+import           JavaScript.Array          (JSArray)
+import qualified JavaScript.Array          as JSArray
 
 import qualified BatchConnector.Connection as Connection
 import qualified Data.JSString             as JSString
@@ -27,16 +42,15 @@ import           Data.JSString.Text        (lazyTextFromJSString, lazyTextToJSSt
 import qualified Event.Connection          as Connection
 import qualified Event.ConnectionPen       as ConnectionPen
 import qualified Event.CustomEvent         as CustomEvent
-import qualified Event.Debug               as Debug
 import           Event.Event
 import qualified Event.Keyboard            as Keyboard
 import qualified Event.Mouse               as Mouse
-import qualified Event.NodeSearcher        as NodeSearcher
 import qualified Event.TextEditor          as TextEditor
 import qualified Event.Window              as Window
-import           GHCJS.Marshal
-import           JavaScript.Array          (JSArray)
-import qualified JavaScript.Array          as JSArray
+import qualified JS.ConnectionPen          as ConnectionPen
+import qualified JS.CustomEvent            as CustomEvent
+import qualified JS.TextEditor             as TextEditor
+import qualified JS.WebSocket              as WebSocket
 import           Object.UITypes            as Mouse
 import qualified Object.Widget             as Widget
 import           UI.Raycaster

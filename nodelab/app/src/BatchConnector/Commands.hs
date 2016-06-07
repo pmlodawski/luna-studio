@@ -2,38 +2,20 @@ module BatchConnector.Commands where
 
 import           Utils.PreludePlus
 
-import           Data.Binary                       (encode)
-import qualified Data.Binary                       as Binary
-import           Data.ByteString.Lazy.Char8        (pack)
-import           Data.Int
-import           Data.Map                          as Map
 import           Data.UUID.Types                   (UUID)
-import qualified Data.Sequence                     as Seq
 import qualified Data.Text.Lazy                    as Text
-import qualified Data.Text.Lazy                    as Text
-import           Utils.Vector                      (Vector2 (..), x, y)
 
 import           Batch.Workspace                   (Workspace)
 import qualified Batch.Workspace                   as Workspace
-import           BatchConnector.Connection         (WebMessage (..), sendRequest, sendRequests)
+import           BatchConnector.Connection         (sendRequest)
 
-import qualified Empire.API.Data.Connection        as Connection
 import qualified Empire.API.Data.DefaultValue      as DefaultValue
 import           Empire.API.Data.GraphLocation     (GraphLocation)
 import qualified Empire.API.Data.GraphLocation     as GraphLocation
-import           Empire.API.Data.Library           (Library, LibraryId)
-import qualified Empire.API.Data.Library           as Library
-import           Empire.API.Data.Node              (Node (..))
 import           Empire.API.Data.Node              (NodeId)
-import qualified Empire.API.Data.Node              as Node
 import           Empire.API.Data.NodeMeta          (NodeMeta)
-import qualified Empire.API.Data.NodeMeta          as NodeMeta
-import           Empire.API.Data.Port              (InPort (..))
-import qualified Empire.API.Data.Port              as Port
 import           Empire.API.Data.PortRef           (InPortRef (..), OutPortRef (..), AnyPortRef (..))
-import qualified Empire.API.Data.PortRef           as PortRef
-import           Empire.API.Data.Project           (Project, ProjectId)
-import qualified Empire.API.Data.Project           as Project
+import           Empire.API.Data.Project           (ProjectId)
 
 import qualified Empire.API.Graph.AddNode          as AddNode
 import qualified Empire.API.Graph.Connect          as Connect

@@ -37,9 +37,6 @@ foreign import javascript safe "app.createNodeSearcher($1, $2, $3, $4, $5)"
 initNodeSearcher :: Text -> Int -> Vector2 Int -> Bool -> IO ()
 initNodeSearcher expr nodeId pos = initNodeSearcher' (lazyTextToJSString expr) nodeId (pos ^. x) (pos ^. y)
 
-foreign import javascript safe "app.destroyNodeSearcher()"
-    destroyNodeSearcher :: IO ()
-
 -- display results
 
 data TargetSearcher = NodeSearcher | CommandSearcher

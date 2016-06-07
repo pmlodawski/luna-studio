@@ -1,4 +1,9 @@
-module Reactive.Commands.Graph.Selection where
+module Reactive.Commands.Graph.Selection
+     ( selectedNodes
+     , focusSelectedNode
+     , selectAll
+     , unselectAll
+     ) where
 
 import           Utils.PreludePlus
 import           Control.Monad.State hiding (State)

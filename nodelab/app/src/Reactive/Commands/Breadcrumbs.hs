@@ -3,36 +3,30 @@ module Reactive.Commands.Breadcrumbs (
     update
 ) where
 
-import qualified Data.IntMap.Lazy              as IntMap
 import qualified Data.Text.Lazy                as Text
 import           Utils.PreludePlus
 import           Utils.Vector                  (Vector2 (..), x, y)
 
 import qualified Batch.Workspace               as Workspace
-import qualified BatchConnector.Commands       as BatchCmd
+import qualified JS.UI                         as JS
 import           Object.UITypes                (WidgetId)
+import qualified Object.Widget.Button          as Button
+import           Object.Widget.Icon            (Icon (..))
 import           Reactive.Commands.Command     (Command, execCommand, performIO)
 import qualified Reactive.Commands.UIRegistry  as UICmd
 import           Reactive.State.Global         (State, inRegistry)
 import qualified Reactive.State.Global         as Global
 import qualified Reactive.State.UIElements     as UIElements
 import           Reactive.State.UIRegistry     (addHandler, handle, sceneInterfaceId)
-import qualified Reactive.State.UIRegistry     as UIRegistry
+import qualified Style.Layout                  as Style
+import           UI.Handlers.Button            (ClickedHandler (..))
+import           UI.Instances
 
 import           Empire.API.Data.Breadcrumb    (Breadcrumb (..))
 import qualified Empire.API.Data.Breadcrumb    as Breadcrumb
 import qualified Empire.API.Data.GraphLocation as GraphLocation
 import qualified Empire.API.Data.Project       as Project
 
-import qualified Object.Widget.Button          as Button
-import qualified Object.Widget.Group           as Group
-import           Object.Widget.Icon            (Icon(..))
-import qualified Object.Widget.LabeledTextBox  as LabeledTextBox
-import qualified Style.Layout                  as Style
-import           UI.Handlers.Button            (ClickedHandler (..))
-import           UI.Instances
-import qualified UI.Layout                     as Layout
-import qualified JS.UI                         as JS
 
 destroyBreadcrumbs :: Command State ()
 destroyBreadcrumbs = do

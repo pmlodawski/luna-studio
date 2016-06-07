@@ -1,16 +1,40 @@
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-module Reactive.Commands.UIRegistry where
+module Reactive.Commands.UIRegistry
+    ( LostFocus(..)
+    , ChildrenResizedHandler(..)
+    , children
+    , get
+    , get'
+    , handler
+    , lookup
+    , maybeGet
+    , move
+    , moveBy
+    , moveX
+    , moveY
+    , parent
+    , removeWidget
+    , resize
+    , resize'
+    , resizeNoCB
+    , register
+    , register_
+    , takeFocus
+    , triggerChildrenResized
+    , update
+    , update_
+    ) where
 
 import           Data.HMap.Lazy            (HTMap, TypeKey (..))
 import qualified Data.HMap.Lazy            as HMap
-import           Utils.PreludePlus         hiding (children)
+import           Utils.PreludePlus         hiding (children, lookup)
 import           Utils.Vector
 
 import qualified JS.Cursor                 as Cursor
-import           JS.Widget                 as UI
 import           Object.UITypes            (WidgetId)
-import           Object.Widget
+import           Object.Widget             hiding (children, parent)
+import qualified Object.Widget
 import           Reactive.Commands.Command (Command, performIO)
 import qualified Reactive.State.Global     as Global
 import qualified Reactive.State.UIRegistry as UIRegistry

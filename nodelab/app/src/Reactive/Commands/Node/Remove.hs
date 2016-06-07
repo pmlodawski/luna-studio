@@ -1,4 +1,7 @@
-module Reactive.Commands.Node.Remove where
+module Reactive.Commands.Node.Remove
+    ( removeSelectedNodes
+    , localRemoveNodes
+    ) where
 
 import           Event.Keyboard                    (KeyMods)
 import           Object.UITypes                    (WidgetId)

@@ -1,16 +1,16 @@
 module Reactive.Commands.Graph
-( portRefToWidgetId
-, updateConnections
-, batchConnectNodes
-, connectionIdToWidgetId
-, updateConnNodes
-, allNodes
-, nodeIdToWidgetId
-, colorPort
-, portDefaultAngle
-, focusNode
-, localConnectNodes
-) where
+    ( portRefToWidgetId
+    , updateConnections
+    , batchConnectNodes
+    , connectionIdToWidgetId
+    , updateConnNodes
+    , allNodes
+    , nodeIdToWidgetId
+    , colorPort
+    , portDefaultAngle
+    , focusNode
+    , localConnectNodes
+    ) where
 
 
 import           Utils.PreludePlus
@@ -158,13 +158,6 @@ localConnectNodes src dst = do
     let newConnection = not $ isJust prevConn
     when newConnection $ zoom Global.uiRegistry $ UICmd.register_ sceneGraphId (ConnectionModel.Connection connectionId True def def (dst ^. withArrow) def) def
 
-sortAndGroup assocs = Map.fromListWith (++) [(k, [v]) | (k, v) <- assocs]
-
-portRefToWidgetMap :: Command UIRegistry.State (Map AnyPortRef WidgetId)
-portRefToWidgetMap = do
-    ports <- allPorts
-    return $ Map.fromList $ (\file -> (file ^. widget . PortModel.portRef, file ^. objectId)) <$> ports
-
 portRefToAngleMap :: Command UIRegistry.State (Map AnyPortRef (Double, Int))
 portRefToAngleMap = do
     ports <- allPorts
@@ -175,11 +168,6 @@ nodePositionMap = do
     nodes <- allNodes
     return $ Map.fromList $ (\file -> (file ^. widget . Model.nodeId, file ^. widget . widgetPosition)) <$> nodes
 
-connectionVector :: Map NodeId (Vector2 Double) -> AnyPortRef -> AnyPortRef -> Vector2 Double
-connectionVector map src dst = dstPos - srcPos where
-    srcPos = map Map.! (src ^. PortRef.nodeId)
-    dstPos = map Map.! (dst ^. PortRef.nodeId)
-
 angleToDimVec :: Double -> Vector2 Double
 angleToDimVec angle = (/ 10.0) <$> Vector2 (cos angle) (-sin angle)
 
@@ -189,18 +177,6 @@ portDefaultAngle numPorts (InPortId (Port.Arg portNum)) = angleToDimVec angle wh
     angle = delta * (fromIntegral portNum) + delta / 2.0 + pi / 2.0
     delta = pi / (fromIntegral numPorts)
 portDefaultAngle numPorts (InPortId (Port.Self)) = angleToDimVec 0.0
-
--- defaultAngles :: Command Global.State (Map AnyPortRef (Vector2 Double))
--- defaultAngles = do
---     nodes <- use $ Global.graph . Graph.nodes
---
---     let angles = calculateAngles <$> nodes where
---             calculateAngles node = portAngle <$> (zip [1..] $ Map.keys $ node ^. Node.ports) where
---                 portAngle (portIx, portId) = (PortRef.toAnyPortRef nodeId portId, portDefaultAngle portNum portId portIx) where
---                 nodeId = node ^. Node.nodeId
---                 portNum = length $ node ^. Node.ports
---
---     return $ Map.fromList $ concat $ angles
 
 portTypes :: Command Global.State (Map AnyPortRef ValueType)
 portTypes = do
@@ -247,6 +223,3 @@ focusNode id = do
     forM_ (zip newOrder [1..]) $ \(id, ix) -> do
         let newZPos = negate $ (fromIntegral ix) / 100.0
         UICmd.update id $ Model.zPos .~ newZPos
-
-----
-

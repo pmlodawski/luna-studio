@@ -1,4 +1,8 @@
-module Reactive.Plugins.Core.Action.Backend.Common where
+module Reactive.Plugins.Core.Action.Backend.Common
+    ( whenOk
+    , handleResponse
+    , doNothing
+    ) where
 
 
 import qualified Data.Aeson                as JSON (ToJSON, encode)

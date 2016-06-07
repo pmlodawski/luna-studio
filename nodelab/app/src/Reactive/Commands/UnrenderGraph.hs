@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Reactive.Commands.UnrenderGraph where
+module Reactive.Commands.UnrenderGraph
+    ( unrender
+    ) where
 
 import           Reactive.Commands.Command    (Command, performIO)
 import           Reactive.State.Global        (State, inRegistry)

@@ -13,8 +13,6 @@ import           GHCJS.Types         ( JSRef, JSString )
 import           Data.JSString       (unpack)
 
 
-foreign import javascript safe "config.fontSize" fontSize :: Double
-
 foreign import javascript safe "config.backendAddress"
     getBackendAddress' :: IO JSString
 

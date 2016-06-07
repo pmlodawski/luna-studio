@@ -1,4 +1,7 @@
-module Reactive.Commands.Graph.Disconnect where
+module Reactive.Commands.Graph.Disconnect
+     ( disconnectAll
+     , localDisconnectAll
+     ) where
 
 import           Utils.PreludePlus
 
@@ -51,6 +54,3 @@ disconnectAll connectionIds = do
         refs  = connectionToRefs <$> conns
     mapM_ BatchCmd.disconnectNodes (snd <$> refs)
     localDisconnectAll connectionIds
-
-disconnect :: InPortRef -> Command State ()
-disconnect port = localDisconnectAll [port]

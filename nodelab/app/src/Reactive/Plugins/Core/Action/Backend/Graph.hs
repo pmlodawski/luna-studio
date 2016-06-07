@@ -1,4 +1,7 @@
-module Reactive.Plugins.Core.Action.Backend.Graph where
+module Reactive.Plugins.Core.Action.Backend.Graph
+    ( toAction
+    ) where
+
 
 import           Utils.PreludePlus
 
@@ -16,6 +19,7 @@ import qualified Empire.API.Data.PortRef                     as PortRef
 import qualified Empire.API.Graph.AddNode                    as AddNode
 import qualified Empire.API.Graph.Connect                    as Connect
 import qualified Empire.API.Graph.Disconnect                 as Disconnect
+import qualified Empire.API.Graph.CodeUpdate                 as CodeUpdate
 import qualified Empire.API.Graph.GetProgram                 as GetProgram
 import qualified Empire.API.Graph.NodeResultUpdate           as NodeResultUpdate
 import qualified Empire.API.Graph.NodeSearcherUpdate         as NodeSearcherUpdate
@@ -33,11 +37,11 @@ import qualified Event.Event                                 as Event
 import           Reactive.Commands.Camera                    (autoZoom)
 import           Reactive.Commands.Command                   (Command, performIO)
 import           Reactive.Commands.Graph                     (localConnectNodes, updateConnections)
-import           Reactive.Commands.Graph.Disconnect          (disconnect)
+import           Reactive.Commands.Graph.Disconnect          (localDisconnectAll)
 import           Reactive.Commands.Node                      (renameNode)
 import           Reactive.Commands.Node.Create               (addDummyNode, addNode)
 import           Reactive.Commands.Node.NodeMeta             (updateNodeMeta)
-import qualified Reactive.Commands.Node.Remove               as RemoveNode
+import           Reactive.Commands.Node.Remove               (localRemoveNodes)
 import           Reactive.Commands.Node.Update               (updateNode, updateNodeProfilingData, updateNodeValue)
 import           Reactive.Commands.RenderGraph               (renderGraph)
 import           Reactive.Commands.UUID                      (isOwnRequest, unregisterRequest)
@@ -82,7 +86,7 @@ toAction (Event.Batch ev) = Just $ case ev of
 
     NodesDisconnected update -> do
         whenM (isCurrentLocation $ update ^. Disconnect.location') $ do
-            disconnect $ update ^. Disconnect.dst'
+            localDisconnectAll $ [update ^. Disconnect.dst']
 
     NodeMetaUpdated update -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. UpdateNodeMeta.location')
@@ -102,7 +106,7 @@ toAction (Event.Batch ev) = Just $ case ev of
 
     NodeRemoved update -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. RemoveNode.location')
-        when shouldProcess $ RemoveNode.localRemoveNodes $ update ^. RemoveNode.nodeIds'
+        when shouldProcess $ localRemoveNodes $ update ^. RemoveNode.nodeIds'
 
     NodeResultUpdated update -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. NodeResultUpdate.location)
@@ -113,6 +117,9 @@ toAction (Event.Batch ev) = Just $ case ev of
     NodeSearcherUpdated update -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. NodeSearcherUpdate.location)
         when shouldProcess $ Global.workspace . Workspace.nodeSearcherData .= update ^. NodeSearcherUpdate.nodeSearcherData
+    CodeUpdated update -> do
+        shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. CodeUpdate.location)
+        when shouldProcess $ performIO $ UI.setText $ update ^. CodeUpdate.code
 
     RemoveNodeResponse response -> handleResponse response doNothing
     AddNodeResponse    response -> handleResponse response doNothing

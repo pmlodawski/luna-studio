@@ -1,49 +1,48 @@
-module Reactive.Commands.Batch where
+module Reactive.Commands.Batch  where
 
 import           Utils.PreludePlus
 
-import           Data.Binary                       (encode)
-import qualified Data.Binary                       as Binary
-import           Data.ByteString.Lazy.Char8        (pack)
+import           Data.Binary                   (encode)
+import qualified Data.Binary                   as Binary
+import           Data.ByteString.Lazy.Char8    (pack)
 import           Data.Int
-import           Data.UUID.Types                   (UUID, nil)
-import           Data.Map                          as Map
-import qualified Data.Sequence                     as Seq
-import qualified Data.Text.Lazy                    as Text
-import qualified Data.Text.Lazy                    as Text
-import           Utils.Vector                      (Vector2 (..), x, y)
+import           Data.Map                      as Map
+import qualified Data.Sequence                 as Seq
+import qualified Data.Text.Lazy                as Text
+import           Data.UUID.Types               (UUID, nil)
+import           Utils.Vector                  (Vector2 (..), x, y)
 
-import           Batch.Workspace                   (Workspace)
-import qualified Batch.Workspace                   as Workspace
-import qualified BatchConnector.Commands           as BatchCmd
+import           Batch.Workspace               (Workspace)
+import qualified Batch.Workspace               as Workspace
+import qualified BatchConnector.Commands       as BatchCmd
 
 import           Reactive.Commands.Command     (Command, execCommand, performIO)
-import           Reactive.Commands.UUID        (registerRequest)
 import qualified Reactive.Commands.UIRegistry  as UICmd
+import           Reactive.Commands.UUID        (registerRequest)
 import           Reactive.State.Global         (State, workspace)
 
-import qualified Empire.API.Data.Connection        as Connection
-import qualified Empire.API.Data.DefaultValue      as DefaultValue
-import           Empire.API.Data.GraphLocation     (GraphLocation)
-import qualified Empire.API.Data.GraphLocation     as GraphLocation
-import           Empire.API.Data.Library           (Library, LibraryId)
-import qualified Empire.API.Data.Library           as Library
-import           Empire.API.Data.Node              (Node (..))
-import           Empire.API.Data.Node              (NodeId)
-import qualified Empire.API.Data.Node              as Node
-import           Empire.API.Data.NodeMeta          (NodeMeta)
-import qualified Empire.API.Data.NodeMeta          as NodeMeta
-import           Empire.API.Data.Port              (InPort (..))
-import qualified Empire.API.Data.Port              as Port
-import           Empire.API.Data.PortRef           (InPortRef (..), OutPortRef (..), AnyPortRef (..))
-import qualified Empire.API.Data.PortRef           as PortRef
-import           Empire.API.Data.Project           (Project, ProjectId)
-import qualified Empire.API.Data.Project           as Project
+import qualified Empire.API.Data.Connection    as Connection
+import qualified Empire.API.Data.DefaultValue  as DefaultValue
+import           Empire.API.Data.GraphLocation (GraphLocation)
+import qualified Empire.API.Data.GraphLocation as GraphLocation
+import           Empire.API.Data.Library       (Library, LibraryId)
+import qualified Empire.API.Data.Library       as Library
+import           Empire.API.Data.Node          (Node (..))
+import           Empire.API.Data.Node          (NodeId)
+import qualified Empire.API.Data.Node          as Node
+import           Empire.API.Data.NodeMeta      (NodeMeta)
+import qualified Empire.API.Data.NodeMeta      as NodeMeta
+import           Empire.API.Data.Port          (InPort (..))
+import qualified Empire.API.Data.Port          as Port
+import           Empire.API.Data.PortRef       (AnyPortRef (..), InPortRef (..), OutPortRef (..))
+import qualified Empire.API.Data.PortRef       as PortRef
+import           Empire.API.Data.Project       (Project, ProjectId)
+import qualified Empire.API.Data.Project       as Project
 
 
 withWorkspace :: (Workspace -> UUID -> IO ()) -> Command State ()
 withWorkspace act = do
-    uuid <- registerRequest
+    uuid      <- registerRequest
     workspace <- use workspace
     performIO $ act workspace uuid
 

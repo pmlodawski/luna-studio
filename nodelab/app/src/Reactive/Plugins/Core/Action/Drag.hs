@@ -1,11 +1,10 @@
-module Reactive.Plugins.Core.Action.Drag where
+module Reactive.Plugins.Core.Action.Drag
+    ( toAction
+    ) where
 
-import           Utils.Angle
 import           Utils.PreludePlus
 import           Utils.Vector
 
-
-import           Object.Node
 import           Object.UITypes
 import           Object.Widget                     (WidgetFile, objectId, parent, widget, widgetPosition)
 

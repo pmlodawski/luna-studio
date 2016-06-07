@@ -19,7 +19,6 @@ import GHCJS.Foreign.Callback
 import GHCJS.Foreign
 import Data.JSString
 
-data WSRef
 newtype WebSocket      = WebSocket      { unWebSocket      :: JSVal } deriving (PFromJSVal, PToJSVal)
 newtype WSMessageEvent = WSMessageEvent { unWSMessageEvent :: JSVal } deriving (PFromJSVal, PToJSVal)
 newtype WSClosedEvent  = WSClosedEvent  { unWSClosedEvent  :: JSVal } deriving (PFromJSVal, PToJSVal)

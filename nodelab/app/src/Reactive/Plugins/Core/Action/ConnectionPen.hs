@@ -1,7 +1,8 @@
 {-# LANGUAGE TupleSections #-}
 
-module Reactive.Plugins.Core.Action.ConnectionPen where
-
+module Reactive.Plugins.Core.Action.ConnectionPen
+    ( toAction
+    ) where
 
 import           Utils.Angle
 import           Utils.PreludePlus
@@ -10,7 +11,6 @@ import           Utils.Vector
 import qualified Data.IntMap.Lazy                  as IntMap
 
 import qualified JS.ConnectionPen                  as UI
-import qualified JS.Widget                         as UI
 
 import           Object.UITypes
 import           Object.Widget                     (WidgetFile, widget)
@@ -130,9 +130,6 @@ autoConnectAll nodes = autoConnectForward (head nodes) -- TODO: forall - foldr
 
 autoConnectForward :: (NodeId, NodeId) -> Command State ()
 autoConnectForward (srcNodeId, dstNodeId) = autoConnect (srcNodeId, dstNodeId)
-
-autoConnectBackwards :: (NodeId, NodeId) -> Command State ()
-autoConnectBackwards (srcNodeId, dstNodeId) = autoConnect (dstNodeId, srcNodeId)
 
 autoConnect :: (NodeId, NodeId) -> Command State ()
 autoConnect (srcNodeId, dstNodeId) = do

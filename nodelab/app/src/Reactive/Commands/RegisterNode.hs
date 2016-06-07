@@ -1,4 +1,6 @@
-module Reactive.Commands.RegisterNode where
+module Reactive.Commands.RegisterNode
+    ( registerNode
+    ) where
 
 import           Control.Monad.State               hiding (State)
 import           Data.Text.Lazy                    (Text)
@@ -10,7 +12,6 @@ import qualified Reactive.State.Camera             as Camera
 import           Reactive.State.Global             (State)
 import qualified Reactive.State.Global             as Global
 
-import qualified Object.Node                       as Node
 import           Object.Widget                     (widget)
 import qualified Object.Widget.Node                as UINode
 import qualified Reactive.Commands.Batch           as BatchCmd

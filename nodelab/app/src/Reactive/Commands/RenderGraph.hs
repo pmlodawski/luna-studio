@@ -1,4 +1,6 @@
-module Reactive.Commands.RenderGraph where
+module Reactive.Commands.RenderGraph
+    ( renderGraph
+    ) where
 
 import qualified Batch.Workspace               as Workspace
 

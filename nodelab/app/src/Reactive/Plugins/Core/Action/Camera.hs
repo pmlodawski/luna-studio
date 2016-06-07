@@ -1,6 +1,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
-
-module Reactive.Plugins.Core.Action.Camera where
+module Reactive.Plugins.Core.Action.Camera
+    ( toAction
+    ) where
 
 import           Utils.PreludePlus
 import           Utils.Vector
@@ -14,13 +15,10 @@ import qualified JS.Camera                 as JS
 import           Reactive.State.Camera     (DragHistory (..))
 import qualified Reactive.State.Camera     as Camera
 import qualified Reactive.State.Global     as Global
-import qualified Reactive.State.Graph      as Graph
 
-import           Empire.API.Data.Node      (Node)
-import qualified Empire.API.Data.Node      as Node
 import           Reactive.Commands.Camera  (autoZoom, panCamera, panDown, panDrag, panLeft, panRight, panUp, resetZoom,
                                             syncCamera, wheelZoom, zoomDrag, zoomIn, zoomOut)
-import           Reactive.Commands.Command (Command, execCommand, ioCommand, performIO)
+import           Reactive.Commands.Command (Command)
 
 
 toAction :: Event -> Maybe (Command Global.State ())

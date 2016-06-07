@@ -1,6 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
+module Reactive.Plugins.Core.Action.Debug
+    ( toAction
+    , toActionEv
+    ) where
 
-module Reactive.Plugins.Core.Action.Debug where
 
 import           Utils.PreludePlus
 import           JS.Debug (clog, cinfo, saveState, lastEv, shouldExportState, processedEvent)

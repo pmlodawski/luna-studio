@@ -1,4 +1,6 @@
-module Reactive.Plugins.Core.Action.Backend.Control where
+module Reactive.Plugins.Core.Action.Backend.Control
+    ( toAction
+    ) where
 
 import           Utils.PreludePlus
 

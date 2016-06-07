@@ -27,6 +27,3 @@ fromCtxDynamic (CtxDynamic t el) = if t == typeOf (undefined :: a) then Just $ u
 
 withCtxDynamic :: (forall a. ctx a => a -> b) -> CtxDynamic ctx -> b
 withCtxDynamic f (CtxDynamic _ a) = f a
-
--- withCtxDynamic2 :: (forall a. ctx a => a -> a -> b) -> CtxDynamic ctx -> CtxDynamic ctx -> b
--- withCtxDynamic2 f (CtxDynamic _ a) (CtxDynamic _ b) = f a b

@@ -1,4 +1,4 @@
-module JS.UUID where
+module JS.UUID (generateUUID) where
 
 import Utils.PreludePlus
 

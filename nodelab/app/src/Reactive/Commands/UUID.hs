@@ -1,4 +1,8 @@
-module Reactive.Commands.UUID where
+module Reactive.Commands.UUID
+    ( registerRequest
+    , unregisterRequest
+    , isOwnRequest
+    ) where
 
 import           Utils.PreludePlus
 import           Reactive.Commands.Command     (Command, execCommand, performIO)

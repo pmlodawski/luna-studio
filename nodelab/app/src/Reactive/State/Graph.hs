@@ -1,6 +1,24 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Reactive.State.Graph where
+module Reactive.State.Graph
+    ( State(..)
+    , hasConnections
+    , getNodesMap
+    , updateNodes
+    , getConnections
+    , connectionsMap
+    , addConnection
+    , nodes
+    , getConnectionsMap
+    , nodesMap
+    , getConnectionNodeIds
+    , removeConnections
+    , lookUpConnection
+    , connectionsContainingNode
+    , removeNode
+    , connectionIdsContainingNode
+    , addNode
+    ) where
 
 import           Utils.PreludePlus            hiding ((.=))
 import           Utils.Vector
@@ -40,12 +58,6 @@ connectionToNodeIds :: Connection -> (NodeId, NodeId)
 connectionToNodeIds conn = ( conn ^. Connection.src . PortRef.srcNodeId
                            , conn ^. Connection.dst . PortRef.dstNodeId)
 
-getNode :: State -> NodeId -> Node
-getNode state nodeId = Map.findWithDefault (error $ "Node " <> show nodeId <> " not found") nodeId $ state ^. nodesMap
-
-getNodeById :: State -> NodeId -> Maybe Node
-getNodeById state nodeId = Map.lookup nodeId $ state ^. nodesMap
-
 nodes :: Getter State [Node]
 nodes = to getNodes
 
@@ -67,11 +79,6 @@ getConnectionNodeIds connId state = connectionToNodeIds <$> conn
 
 updateNodes :: NodesMap -> State -> State
 updateNodes newNodesMap state = state & nodesMap .~ newNodesMap
-
-getPort :: State -> AnyPortRef -> Port
-getPort state portRef = fromMaybe err $ node ^? Node.ports . ix (portRef ^. PortRef.portId) where
-    node  = getNode state $ portRef ^. PortRef.nodeId
-    err   = error $ "Port " <> show portRef <> " not found"
 
 addNode :: Node -> State -> State
 addNode newNode state  = state & nodesMap     %~ Map.insert (newNode ^. Node.nodeId) newNode
@@ -108,12 +115,6 @@ connectionsContainingNode id state = filter (containsNode id) $ getConnections s
 
 connectionIdsContainingNode :: NodeId -> State -> [ConnectionId]
 connectionIdsContainingNode id state = (^. Connection.connectionId) <$> connectionsContainingNode id state
-
-connectionsStartingWithNode :: NodeId -> State -> [Connection]
-connectionsStartingWithNode id state = filter (startsWithNode id) $ getConnections state
-
-connectionsEndingWithNode :: NodeId -> State -> [Connection]
-connectionsEndingWithNode id state = filter (endsWithNode id) $ getConnections state
 
 hasConnections :: NodeId -> State -> Bool
 hasConnections nodeId state = not . null $ connectionsContainingNode nodeId state

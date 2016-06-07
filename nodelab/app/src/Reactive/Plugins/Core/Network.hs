@@ -25,7 +25,6 @@ import qualified Reactive.Plugins.Core.Action.General                as General
 import qualified Reactive.Plugins.Core.Action.MultiSelection         as MultiSelection
 import qualified Reactive.Plugins.Core.Action.NodeSearcher           as NodeSearcher
 import qualified Reactive.Plugins.Core.Action.Sandbox                as Sandbox
-import qualified Reactive.Plugins.Core.Action.TextEditor             as TextEditor
 import qualified Reactive.Plugins.Core.Action.Widget                 as Widget
 
 import           Reactive.Commands.Command                           (Command, execCommand, performIO)
@@ -55,7 +54,6 @@ actions =  [ Debug.toActionEv
            , NodeSearcher.toAction
            , ProjectManager.toAction
            , ConnectionPen.toAction
-           , TextEditor.toAction
            , Sandbox.toAction
            , Debug.toAction
            ]

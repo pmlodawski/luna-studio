@@ -1,7 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns      #-}
 
-module Reactive.Commands.CommandSearcher.Commands where
+module Reactive.Commands.CommandSearcher.Commands
+    ( toggleText
+    , querySearchCmd
+    , queryTreeCmd
+    , runCommand
+    , help
+    ) where
 
 import qualified Data.IntMap.Lazy                     as IntMap
 import           Data.Map                             (Map)
@@ -18,6 +24,7 @@ import           Event.Event                          (JSState)
 import qualified JS.GoogleAnalytics                   as GA
 import qualified JS.NodeSearcher                      as UI
 import           Reactive.Commands.Command            (Command, performIO)
+import qualified Reactive.Commands.Camera             as Camera
 import           Reactive.Commands.NodeSearcher       as NS
 import           Reactive.Commands.ProjectManager     (loadProject)
 import qualified Reactive.Plugins.Core.Action.General as General
@@ -73,7 +80,7 @@ toggleText = do
     GA.sendEvent $ GA.ToggleText
     Global.uiElements . UIElements.textEditorVisible %= not
     size <- use $ Global.camera . Camera.camera . Camera.windowSize
-    General.updateWindowSize size
+    Camera.updateWindowSize size
 
 foreign import javascript unsafe "$('.tutorial-box').show().focus()"    openHelp'  :: IO ()
 foreign import javascript unsafe "common.enableGA($1)"    enableGA' :: Bool -> IO ()

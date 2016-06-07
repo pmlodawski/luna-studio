@@ -44,10 +44,7 @@ applyChanges id = do
         triggerValueChanged value id
 
 abortChanges :: WidgetId -> Command Global.State ()
-abortChanges id = do
-    jsState <- use $ Global.jsState
-    let value = lazyTextFromJSString $ getValue' jsState id
-    inRegistry $ UICmd.update_ id $ Model.isEditing .~ False
+abortChanges id = inRegistry $ UICmd.update_ id $ Model.isEditing .~ False
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyDown   .~ keyDownHandler

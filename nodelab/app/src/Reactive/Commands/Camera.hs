@@ -1,24 +1,40 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
-module Reactive.Commands.Camera where
+module Reactive.Commands.Camera
+     ( panCamera
+     , panDrag
+     , panDown
+     , panUp
+     , panLeft
+     , panRight
+     , autoZoom
+     , syncCamera
+     , zoomDrag
+     , zoomIn
+     , zoomOut
+     , wheelZoom
+     , resetZoom
+     , updateWindowSize
+     ) where
 
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import qualified JS.Camera             as JS
-import           Event.Event             (Event(Keyboard, Mouse))
-import           Event.Keyboard          (KeyMods(..), ctrl)
-import qualified Event.Keyboard        as Keyboard
-import           Event.Mouse             (MouseButton(..))
-import qualified Event.Mouse           as Mouse
-import           Reactive.State.Camera   (DragHistory(..))
-import qualified Reactive.State.Camera as Camera
-import qualified Reactive.State.Graph  as Graph
-import qualified Reactive.State.Global as Global
+import           Empire.API.Data.Node       (Node)
+import qualified Empire.API.Data.Node       as Node
 
-import Reactive.Commands.Command (Command, ioCommand, execCommand, performIO)
-import           Empire.API.Data.Node (Node)
-import qualified Empire.API.Data.Node as Node
+import           Event.Event                (Event (Keyboard, Mouse))
+import           Event.Keyboard             (KeyMods (..), ctrl)
+import qualified Event.Keyboard             as Keyboard
+import           Event.Mouse                (MouseButton (..))
+import qualified Event.Mouse                as Mouse
+import qualified JS.Camera                  as JS
+import           Reactive.Commands.Command  (Command, execCommand, ioCommand, performIO)
+import           Reactive.Commands.UILayout as UILayout
+import           Reactive.State.Camera      (DragHistory (..))
+import qualified Reactive.State.Camera      as Camera
+import qualified Reactive.State.Global      as Global
+import qualified Reactive.State.Graph       as Graph
 
 minCamFactor   =   0.2
 maxCamFactor   =   8.0
@@ -169,3 +185,14 @@ cameraBottom camFactor camPanY halfScreenY =  halfScreenY / camFactor + camPanY
 htmlX        camFactor camPanX halfScreenX =  halfScreenX - camPanX * camFactor
 htmlY        camFactor camPanY halfScreenY =  halfScreenY - camPanY * camFactor
 
+
+updateWindowSize :: Vector2 Int -> Command Global.State ()
+updateWindowSize size = do
+    textEditorWidth <- UILayout.relayoutTextEditor size
+    zoom Global.camera $ do
+        let canvasWidth = size ^. x - textEditorWidth
+        Camera.camera . Camera.windowSize .= size
+        Camera.camera . Camera.screenSize .= Vector2 canvasWidth (size ^. y)
+        syncCamera
+        performIO $ JS.updateScreenSize canvasWidth (size ^. y)
+    UILayout.relayout

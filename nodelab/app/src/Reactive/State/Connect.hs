@@ -5,7 +5,6 @@ import Utils.PreludePlus
 import Utils.Vector
 import Data.Aeson (ToJSON)
 
-import Object.Node
 import Object.UITypes
 import Empire.API.Data.PortRef (OutPortRef, InPortRef, AnyPortRef)
 import Empire.API.JSONInstances ()

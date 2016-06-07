@@ -7,7 +7,6 @@ import           JS.MultiSelection                 (displaySelectionBox, hideSel
 import           Utils.PreludePlus
 import           Utils.Vector                      (Vector2 (..), x, y)
 
-import           Object.Node
 import           Object.Widget                     (DisplayObject, UIHandlers, WidgetFile, WidgetId, objectId)
 import qualified Object.Widget.Node                as NodeModel
 

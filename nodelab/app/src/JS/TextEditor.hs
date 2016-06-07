@@ -1,14 +1,20 @@
-module JS.TextEditor where
+module JS.TextEditor
+    ( setText
+    , registerCallback
+    , setWidth
+    , setVisible
+    , toJSString
+    ) where
 
-import Utils.PreludePlus
-import GHCJS.Types
-import Data.JSString.Text
-import qualified Data.JSString as JSString
-import GHCJS.Types
-import GHCJS.Foreign.Callback
-import GHCJS.Foreign
-import JavaScript.Array
-import Unsafe.Coerce
+import qualified Data.JSString          as JSString
+import           Data.JSString.Text
+import           GHCJS.Foreign
+import           GHCJS.Foreign.Callback
+import           GHCJS.Types
+import           GHCJS.Types
+import           JavaScript.Array
+import           Unsafe.Coerce
+import           Utils.PreludePlus
 
 
 
@@ -18,19 +24,18 @@ setText :: Text -> IO ()
 setText = setText' . lazyTextToJSString
 
 foreign import javascript safe "textEditor.callback = $1"
-    registerCallback' :: Callback (JSRef () -> IO ()) -> IO ()
+    registerCallback' :: Callback (JSVal -> IO ()) -> IO ()
 
 foreign import javascript safe "textEditor.callback = function(){ return null; }"
-    unregisterCallback' :: Callback (JSRef () -> IO ()) -> IO ()
+    unregisterCallback' :: Callback (JSVal -> IO ()) -> IO ()
 
-foreign import javascript safe "$r = $1" toJSString :: JSRef () -> JSString
+foreign import javascript safe "$r = $1" toJSString :: JSVal -> JSString
 
-registerCallback :: (JSRef () -> IO ()) -> IO (IO ())
+registerCallback :: (JSVal -> IO ()) -> IO (IO ())
 registerCallback callback = do
     wrappedCallback <- asyncCallback1 callback
     registerCallback' wrappedCallback
     return $ unregisterCallback' wrappedCallback >> releaseCallback wrappedCallback
-
 
 foreign import javascript safe "textEditor.setWidth($1)" setWidth :: Int -> IO ()
 foreign import javascript safe "textEditor.setVisible($1)" setVisible :: Bool -> IO ()

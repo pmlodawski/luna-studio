@@ -7,8 +7,6 @@ module Main where
 --      _|    _|_|  _|          _|  _|  _|  _|
 --      _|      _|    _|_|_|      _|      _|
 
-
-
 --      _|_|_|                _|
 --      _|    _|  _|    _|  _|_|_|_|    _|_|
 --      _|_|_|    _|    _|    _|      _|_|_|_|
@@ -45,9 +43,6 @@ import qualified Reactive.Plugins.Loader.Loader    as Loader
 import           Reactive.State.Global             (State, initialState)
 import qualified Reactive.State.Global             as Global
 import           System.Random                     (newStdGen)
-import           Utils.URIParser                   (getProjectName)
-
-import qualified Utils.Shader                      as Shader
 
 
 runMainNetwork :: WebSocket -> IO ()
@@ -71,8 +66,5 @@ runMainNetwork socket = do
     BatchCmd.listProjects projectListRequestId
 
 main :: IO ()
-main = do
-    maybeProjectName <- getProjectName
-    let projectName = maybe "myFirstProject" id maybeProjectName
-    Loader.withActiveConnection $ runMainNetwork
+main = Loader.withActiveConnection runMainNetwork
 

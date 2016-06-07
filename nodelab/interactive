@@ -11,6 +11,7 @@ ghcjs  -package-db $(stack path --snapshot-pkg-db) \
        -iapp/src/ \
        -DGHCJS_BROWSER \
        --interactive \
+       -fwarn-unused-binds \
        -package base \
        -package ghcjs-base \
        -package ghcjs-dom \

@@ -1,5 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Reactive.Commands.NodeSearcher where
+module Reactive.Commands.NodeSearcher
+    ( openFresh
+    , querySearch
+    , queryTree
+    , openCommand
+    ) where
 
 
 import           Data.Map                          (Map)
@@ -13,7 +18,6 @@ import qualified JS.NodeSearcher                   as UI
 import qualified Batch.Workspace                   as Workspace
 import qualified Event.Keyboard                    as Keyboard
 import qualified Event.NodeSearcher                as NodeSearcher
-import qualified Object.Node                       as Node
 import qualified Object.Widget                     as Widget
 import qualified Object.Widget.Node                as NodeModel
 

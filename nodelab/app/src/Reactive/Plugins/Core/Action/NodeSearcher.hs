@@ -16,7 +16,6 @@ import           Event.Event                                     (Event (..))
 import           Event.Keyboard                                  (KeyMods (..))
 import qualified Event.Keyboard                                  as Keyboard
 import qualified Event.NodeSearcher                              as NodeSearcher
-import qualified Object.Node                                     as Node
 import qualified Object.Widget                                   as Widget
 import qualified Object.Widget.Node                              as NodeModel
 

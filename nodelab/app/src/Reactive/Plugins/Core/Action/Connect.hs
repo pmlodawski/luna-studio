@@ -1,4 +1,6 @@
-module Reactive.Plugins.Core.Action.Connect where
+module Reactive.Plugins.Core.Action.Connect
+    ( toAction
+    ) where
 
 import           Debug.Trace
 import           Utils.Angle                  (boundedAngle, toAngle)

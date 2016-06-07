@@ -1,5 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Reactive.Commands.ProjectManager where
+module Reactive.Commands.ProjectManager
+    ( loadProject
+    , displayCurrentBreadcrumb
+    , navigateToGraph
+    , loadGraph
+    ) where
 
 import qualified Data.IntMap.Lazy                as IntMap
 import qualified Data.Text.Lazy                  as Text
