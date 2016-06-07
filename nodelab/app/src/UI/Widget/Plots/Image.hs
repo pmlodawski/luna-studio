@@ -10,18 +10,13 @@ import           GHCJS.Types               (JSString, JSVal)
 import           Object.UITypes
 import           Object.Widget
 import qualified Object.Widget.Plots.Image as Model
-import qualified Reactive.State.UIRegistry as UIRegistry
 
-import           JavaScript.Array          (JSArray)
-import qualified JavaScript.Array          as JSArray
-import           UI.Generic                (whenChanged)
 import qualified UI.Generic                as UI
 import qualified UI.Registry               as UI
-import           UI.Widget                 (UIWidget (..))
+import           UI.Widget                 (UIWidget)
 import qualified UI.Widget                 as Widget
 
 newtype Image = Image JSVal deriving (PToJSVal, PFromJSVal)
-
 
 instance UIWidget Image
 
@@ -43,7 +38,7 @@ instance UIDisplayObject Model.Image where
         UI.register id plot
         Widget.add plot parent
 
-    updateUI id old model = do
+    updateUI id _ model = do
         plot <- UI.lookup id :: IO Image
         setData' plot $ lazyTextToJSString $ model ^. Model.image
 

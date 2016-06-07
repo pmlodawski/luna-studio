@@ -2,7 +2,6 @@ module Reactive.Commands.Node.NodeMeta
     ( updateNodeMeta
     ) where
 
-import qualified Data.Text.Lazy               as Text
 import           Utils.PreludePlus
 import           Utils.Vector
 
@@ -13,7 +12,7 @@ import qualified Empire.API.Data.NodeMeta     as NodeMeta
 
 import qualified Object.Widget.Node           as Model
 
-import           Reactive.Commands.Command    (Command, performIO)
+import           Reactive.Commands.Command    (Command)
 import           Reactive.Commands.Graph      (nodeIdToWidgetId, updateConnections)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import           Reactive.State.Global        (inRegistry)

@@ -6,7 +6,6 @@ module Reactive.Commands.Node.PortControls
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           Control.Monad.State             hiding (State)
 import qualified Data.Map.Lazy                   as Map
 import qualified Data.Text.Lazy                  as Text
 
@@ -15,15 +14,14 @@ import qualified Object.Widget.Button            as Button
 import qualified Object.Widget.Group             as Group
 import qualified Object.Widget.Label             as Label
 import qualified Object.Widget.LabeledTextBox    as LabeledTextBox
-import qualified Object.Widget.LongText          as LongText
 import qualified Object.Widget.Number.Continuous as ContinuousNumber
 import qualified Object.Widget.Number.Discrete   as DiscreteNumber
 import qualified Object.Widget.Toggle            as Toggle
 import qualified UI.Handlers.Button              as Button
 import           UI.Handlers.Generic             (onValueChanged)
+import           UI.Instances ()
 
-import           Reactive.Commands.Command       (Command, performIO)
-import           Reactive.Commands.EnterNode     (enterNode)
+import           Reactive.Commands.Command       (Command)
 import qualified Reactive.Commands.UIRegistry    as UICmd
 import           Reactive.State.UIRegistry       (addHandler)
 import qualified Reactive.State.UIRegistry       as UIRegistry
@@ -38,13 +36,9 @@ import qualified Style.Types                     as Style
 import qualified Empire.API.Data.DefaultValue    as DefaultValue
 import           Empire.API.Data.Node            (Node, NodeId)
 import qualified Empire.API.Data.Node            as Node
-import           Empire.API.Data.NodeMeta        (NodeMeta)
-import qualified Empire.API.Data.NodeMeta        as NodeMeta
 import           Empire.API.Data.Port            (InPort (..), InPort (..), OutPort (..), Port (..), PortId (..))
 import qualified Empire.API.Data.Port            as Port
-import           Empire.API.Data.PortRef         (AnyPortRef (..), InPortRef (..), toAnyPortRef)
-import           Empire.API.Data.TypeRep         (TypeRep)
-import           Empire.API.Data.ValueType       (ValueType (..))
+import           Empire.API.Data.PortRef         (AnyPortRef (..), toAnyPortRef)
 import qualified Empire.API.Data.ValueType       as ValueType
 
 isLiteral :: Getter Node Bool

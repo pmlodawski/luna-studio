@@ -3,26 +3,23 @@ module Reactive.Commands.Node.Remove
     , localRemoveNodes
     ) where
 
-import           Event.Keyboard                    (KeyMods)
-import           Object.UITypes                    (WidgetId)
-import           Object.Widget                     (widget)
-import           Reactive.Commands.Command         (Command, performIO)
-import           Reactive.Commands.Graph           (nodeIdToWidgetId)
-import           Reactive.Commands.Graph.Selection (selectedNodes)
+import           Object.Widget                      (widget)
+import           Reactive.Commands.Command          (Command)
+import           Reactive.Commands.Graph            (nodeIdToWidgetId)
 import           Reactive.Commands.Graph.Disconnect (localDisconnectAll)
-import           Reactive.State.Global             (State)
-import qualified Reactive.State.Global             as Global
-import qualified Reactive.State.Graph              as Graph
-import qualified Reactive.State.UIRegistry         as UIRegistry
+import           Reactive.Commands.Graph.Selection  (selectedNodes)
+import           Reactive.State.Global              (State)
+import qualified Reactive.State.Global              as Global
+import qualified Reactive.State.Graph               as Graph
 import           Utils.PreludePlus
 
-import           Reactive.Commands.UIRegistry      (removeWidget)
+import           Reactive.Commands.UIRegistry       (removeWidget)
 
-import           Empire.API.Data.Node              (NodeId)
-import qualified Object.Widget.Node                as NodeModel
-import qualified Reactive.Commands.Batch           as BatchCmd
+import           Empire.API.Data.Node               (NodeId)
+import qualified Object.Widget.Node                 as NodeModel
+import qualified Reactive.Commands.Batch            as BatchCmd
 
-import qualified JS.GoogleAnalytics                as GA
+import qualified JS.GoogleAnalytics                 as GA
 
 
 removeSelectedNodes :: Command State ()

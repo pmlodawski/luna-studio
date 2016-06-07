@@ -1,18 +1,17 @@
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE KindSignatures        #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
 module Utils.CtxDynamic where
 
-import Utils.PreludePlus
-import Data.Dynamic
-import Data.Typeable
-import Unsafe.Coerce
+import           Data.Dynamic
+import           Unsafe.Coerce
+import           Utils.PreludePlus
 
 data CtxDynamic ctx where
     CtxDynamic :: ctx a => TypeRep -> a -> CtxDynamic ctx

@@ -2,7 +2,6 @@ module UI.Widget.Number where
 
 import           Utils.PreludePlus
 
-import           GHCJS.Foreign
 import           GHCJS.Marshal.Pure (PFromJSVal (..), PToJSVal (..))
 import           GHCJS.Types        (JSString, JSVal)
 

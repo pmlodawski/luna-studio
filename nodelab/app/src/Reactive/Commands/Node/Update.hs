@@ -6,12 +6,9 @@ module Reactive.Commands.Node.Update
     ) where
 
 import           Utils.PreludePlus
-import           Utils.Vector
 
 import           Control.Monad.State                  (modify)
 
-import           Object.UITypes                       (WidgetId)
-import           Object.Widget                        (objectId, widget)
 import qualified Object.Widget.Node                   as Model
 
 import           Reactive.Commands.Command            (Command)

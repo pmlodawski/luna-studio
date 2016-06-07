@@ -12,8 +12,6 @@ module JS.UI
     ) where
 
 import           Utils.PreludePlus
-import           Utils.Vector
-import           GHCJS.Foreign
 import           GHCJS.Types (JSString)
 import           Data.JSString.Text  (lazyTextToJSString)
 

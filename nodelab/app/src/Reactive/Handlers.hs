@@ -22,8 +22,8 @@ import           Utils.Vector
 
 import           GHCJS.DOM                 (currentDocument, currentWindow)
 import qualified GHCJS.DOM.Document        as Document
-import           GHCJS.DOM.Element         (Element, click, dblClick, keyDown, keyPress, keyUp, mouseDown, mouseMove,
-                                            mouseUp, wheel)
+import           GHCJS.DOM.Element         (Element, dblClick, keyDown, keyPress, keyUp, mouseDown, mouseMove, mouseUp,
+                                            wheel)
 import           GHCJS.DOM.EventM
 import qualified GHCJS.DOM.KeyboardEvent   as KeyboardEvent
 import qualified GHCJS.DOM.MouseEvent      as MouseEvent
@@ -33,12 +33,11 @@ import           GHCJS.DOM.Window          (getInnerHeight, getInnerWidth, resiz
 import           GHCJS.Marshal             (fromJSValUnchecked)
 import           GHCJS.Marshal.Pure        (pFromJSVal)
 import           GHCJS.Prim                (fromJSString)
-import           JavaScript.Array          (JSArray)
 import qualified JavaScript.Array          as JSArray
 
 import qualified BatchConnector.Connection as Connection
 import qualified Data.JSString             as JSString
-import           Data.JSString.Text        (lazyTextFromJSString, lazyTextToJSString)
+import           Data.JSString.Text        (lazyTextFromJSString)
 import qualified Event.Connection          as Connection
 import qualified Event.ConnectionPen       as ConnectionPen
 import qualified Event.CustomEvent         as CustomEvent
@@ -52,7 +51,6 @@ import qualified JS.CustomEvent            as CustomEvent
 import qualified JS.TextEditor             as TextEditor
 import qualified JS.WebSocket              as WebSocket
 import           Object.UITypes            as Mouse
-import qualified Object.Widget             as Widget
 import           UI.Raycaster
 
 

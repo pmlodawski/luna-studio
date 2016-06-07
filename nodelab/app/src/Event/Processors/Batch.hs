@@ -7,7 +7,6 @@ import qualified Data.Map.Lazy              as Map
 import           Utils.PreludePlus
 
 import           BatchConnector.Connection  (ControlCode (..), WebMessage (..))
-import           Empire.API.Response        as Response
 import           Empire.API.Topic           as Topic
 import           Event.Batch                as Batch
 import           Event.Connection           as Connection

@@ -4,16 +4,16 @@ import           Utils.PreludePlus
 
 import           Data.HMap.Lazy               (TypeKey (..))
 
-import qualified Event.Mouse as Mouse
-import           Event.Event    (JSState)
-import           Object.Widget                (ClickHandler, UIHandlers, WidgetId, click, mouseOver, mouseOut, mousePressed)
-import qualified Object.Widget.Button         as Model
+import           Event.Event                  (JSState)
+import qualified Event.Mouse                  as Mouse
+import           Object.Widget                (ClickHandler, UIHandlers, WidgetId, click, mouseOut, mouseOver,
+                                               mousePressed)
 import           Reactive.Commands.Command    (Command, performIO)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import           Reactive.State.Global        (inRegistry)
 import qualified Reactive.State.Global        as Global
 
-import           JS.Cursor                    (setCursor, Cursor(Normal, Pointer))
+import           JS.Cursor                    (Cursor (Normal, Pointer), setCursor)
 import           UI.Widget.Toggle             ()
 
 newtype ClickedHandler = ClickedHandler (WidgetId -> Command Global.State ())

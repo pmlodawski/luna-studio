@@ -2,9 +2,11 @@ module Reactive.Plugins.Core.Network where
 
 import           Utils.PreludePlus
 
+import           Control.Concurrent.MVar
 import           Control.Exception                                   (catch)
+import           Data.Monoid                                         (Last (..))
 import           GHCJS.Prim                                          (JSException)
-import           Data.Monoid                (Last (..))
+
 
 import           Reactive.Handlers                                   (AddHandler (..))
 import qualified Reactive.Handlers                                   as Handlers
@@ -27,16 +29,13 @@ import qualified Reactive.Plugins.Core.Action.NodeSearcher           as NodeSear
 import qualified Reactive.Plugins.Core.Action.Sandbox                as Sandbox
 import qualified Reactive.Plugins.Core.Action.Widget                 as Widget
 
-import           Reactive.Commands.Command                           (Command, execCommand, performIO)
+import           Reactive.Commands.Command                           (Command, execCommand)
 import           Reactive.State.Global                               (State)
 import qualified Reactive.State.Global                               as Global
 
-import           Batch.Workspace                                     (Workspace)
 import qualified JS.UI                                               as UI
 import           JS.WebSocket                                        (WebSocket)
 
-import           Control.Concurrent.MVar
-import           Debug.Trace                                         (trace)
 
 toTransformer :: Command a () -> (IO (), a) -> (IO (), a)
 toTransformer cmd (_, a) = execCommand cmd a

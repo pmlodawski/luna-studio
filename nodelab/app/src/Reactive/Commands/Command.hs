@@ -5,7 +5,6 @@ module Reactive.Commands.Command where
 import Utils.PreludePlus
 import Control.Monad.State
 import Control.Monad.Writer
-import Control.Lens.Zoom
 import Control.Lens.Internal.Zoom
 
 

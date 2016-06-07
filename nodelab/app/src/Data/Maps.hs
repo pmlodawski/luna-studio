@@ -5,26 +5,24 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Data.Maps where
 
-import Prelude hiding (lookup, foldr)
-import qualified Data.Map     as Map
-import           Data.Map     (Map)
-import qualified Data.IntMap  as IntMap
-import           Data.IntMap  (IntMap)
-import qualified Data.HashMap.Lazy as HashMap
-import           Data.HashMap.Lazy (HashMap)
 import           Data.Hashable     (Hashable)
-import Data.Monoid
-import Data.Foldable (Foldable, foldr)
-import Data.Maybe (isJust)
+import           Data.HashMap.Lazy (HashMap)
+import qualified Data.HashMap.Lazy as HashMap
+import           Data.IntMap       (IntMap)
+import qualified Data.IntMap       as IntMap
+import           Data.Map          (Map)
+import qualified Data.Map          as Map
+import           Data.Maybe        (isJust)
+import           Prelude           hiding (foldr, lookup)
 
 
 ----------------------------------------------------------------------
@@ -69,7 +67,7 @@ class GenMap m k a | m k -> a where
     member k = isJust . lookup k
 
     default notMember :: k -> m -> Bool
-    notMember k = not . member k    
+    notMember k = not . member k
 
     default findWithDefault :: a -> k -> m -> a
     findWithDefault def k m = case lookup k m of
@@ -82,7 +80,7 @@ class GenMap m k a | m k -> a where
 
 -- Data.Map
 instance Ord k => ValPartMap (Map k a) k a
-instance Ord k => ValMap (Map k a) k a where 
+instance Ord k => ValMap (Map k a) k a where
     elems           = Map.elems
     keys            = Map.keys
 
@@ -106,7 +104,7 @@ instance ValPartMap (IntMap a) Int a
 instance ValMap (IntMap a) Int a where
     elems           = IntMap.elems
     keys            = IntMap.keys
-    
+
 instance (a~a') => GenMap (IntMap a) Int a' where
     null            = IntMap.null
     size            = IntMap.size

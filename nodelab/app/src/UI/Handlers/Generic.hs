@@ -3,11 +3,7 @@
 module UI.Handlers.Generic where
 
 import           Utils.PreludePlus
-
 import           Data.HMap.Lazy               (HTMap, TypeKey (..))
-import qualified Data.HMap.Lazy               as HMap
-
-import           Utils.Vector
 
 import           Object.Widget                (WidgetId)
 import           Reactive.Commands.Command    (Command)

@@ -4,7 +4,6 @@ import           Data.Aeson          (ToJSON)
 import           Utils.PreludePlus   hiding (Choice)
 import           Utils.Vector
 
-import           Object.UITypes
 import           Object.Widget
 import           Object.Widget.Group (Group (..))
 

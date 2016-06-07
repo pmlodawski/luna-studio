@@ -1,11 +1,9 @@
 module Object.Widget.Number.Discrete where
 
-import Utils.PreludePlus
-import Utils.Vector
-import Data.Fixed
-import Object.Widget
-import Numeric
-import Data.Aeson (ToJSON)
+import           Data.Aeson        (ToJSON)
+import           Object.Widget
+import           Utils.PreludePlus
+import           Utils.Vector
 
 data DiscreteNumber = DiscreteNumber { _position       :: Vector2 Double
                                      , _size           :: Vector2 Double
@@ -24,7 +22,7 @@ create s l v = DiscreteNumber def s l v True def
 instance IsDisplayObject DiscreteNumber where
     widgetPosition = position
     widgetSize     = size
-    widgetVisible  = to $ const True    
+    widgetVisible  = to $ const True
 
 displayValue' :: DiscreteNumber -> String
 displayValue' model = show $ model ^. value

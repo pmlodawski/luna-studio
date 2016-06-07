@@ -3,22 +3,17 @@ module UI.Widget.Plots.ScatterPlot where
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           Data.JSString.Text            (lazyTextToJSString)
-import           GHCJS.Marshal.Pure            (PFromJSVal (..), PToJSVal (..))
-import           GHCJS.Types                   (JSString, JSVal)
+import           GHCJS.Marshal.Pure              (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Types                     (JSVal)
 
 import           Object.UITypes
 import           Object.Widget
 import qualified Object.Widget.Plots.ScatterPlot as Model
-import qualified Reactive.State.UIRegistry       as UIRegistry
 
-import           UI.Generic                    (whenChanged)
-import qualified UI.Generic                    as UI
-import qualified UI.Registry                   as UI
-import           UI.Widget                     (UIWidget (..))
-import qualified UI.Widget                     as Widget
-import           JavaScript.Array              (JSArray)
-import qualified JavaScript.Array              as JSArray
+import qualified UI.Generic                      as UI
+import qualified UI.Registry                     as UI
+import           UI.Widget                       (UIWidget)
+import qualified UI.Widget                       as Widget
 
 newtype ScatterPlot = ScatterPlot JSVal deriving (PToJSVal, PFromJSVal)
 
@@ -53,7 +48,7 @@ instance UIDisplayObject Model.ScatterPlot where
         UI.register id plot
         Widget.add plot parent
 
-    updateUI id old model = do
+    updateUI id _ model = do
         plot <- UI.lookup id :: IO ScatterPlot
         setData plot model
 

@@ -15,15 +15,15 @@ import qualified Object.Widget.Node                  as Model
 import qualified Object.Widget.Port                  as PortModel
 import qualified UI.Handlers.Node                    as Node
 
-import           Reactive.Commands.Command           (Command, performIO)
+import           Reactive.Commands.Command           (Command)
 import           Reactive.Commands.Graph             (colorPort, portDefaultAngle)
 import           Reactive.Commands.Node.PortControls (makePortControl)
 import qualified Reactive.Commands.UIRegistry        as UICmd
 import qualified Reactive.State.UIRegistry           as UIRegistry
 
-import           Empire.API.Data.Node                (Node, NodeId)
+import           Empire.API.Data.Node                (Node)
 import qualified Empire.API.Data.Node                as Node
-import           Empire.API.Data.Port                (InPort (..), InPort (..), OutPort (..), Port (..), PortId (..))
+import           Empire.API.Data.Port                (InPort (..), InPort (..), Port (..), PortId (..))
 import qualified Empire.API.Data.Port                as Port
 import           Empire.API.Data.PortRef             (toAnyPortRef)
 import           Empire.API.Data.ValueType           (ValueType (..))

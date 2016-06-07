@@ -3,17 +3,17 @@ module UI.Handlers.Slider.Discrete where
 import           Utils.PreludePlus
 
 import           Utils.Vector                  (Vector2(..), x, y)
-import           Data.HMap.Lazy                (HTMap, TypeKey (..))
+import           Data.HMap.Lazy                (HTMap)
 import qualified Data.Text.Lazy                as Text
 import           Data.Text.Lazy.Read           (signed, decimal)
 
-import           Event.Keyboard                (KeyMods (..), shift)
+import           Event.Keyboard                (shift)
 import qualified Event.Mouse                   as Mouse
 import           Object.UITypes                (WidgetId)
 import           Object.Widget                 (DblClickHandler, DragEndHandler, DragMoveHandler, KeyUpHandler,
                                                 MousePressedHandler, UIHandlers, currentPos, dblClick, dragEnd,
                                                 dragMove, keyMods, keyUp, mousePressed, startPos, click,
-                                                ClickHandler, CompositeWidget, createWidget, updateWidget, ResizableWidget, resizeWidget)
+                                                CompositeWidget, createWidget, updateWidget, ResizableWidget, resizeWidget)
 import qualified Object.Widget.Slider.Discrete as Model
 import qualified Object.Widget.TextBox         as TextBox
 import           Reactive.Commands.Command     (Command, performIO)
@@ -21,18 +21,14 @@ import qualified Reactive.Commands.UIRegistry  as UICmd
 import           Reactive.State.Global         (inRegistry)
 import qualified Reactive.State.Global         as Global
 import           Reactive.State.UIRegistry     (addHandler)
-import qualified Reactive.State.UIRegistry     as UIRegistry
 
-import           UI.Generic                    (startDrag, whenChanged)
+import           UI.Generic                    (startDrag)
 import           UI.Handlers.Generic           (ValueChangedHandler (..), triggerValueChanged)
 import qualified UI.Handlers.TextBox           as TextBox
 import           UI.Widget.Number              (keyModMult)
 import           UI.Widget.Slider.Discrete     (setTicks)
 import           UI.Widget.Slider              (Slider)
-import qualified UI.Generic                    as UI
 import qualified UI.Registry                   as UI
-
-
 
 isEnabled :: WidgetId -> Command Global.State Bool
 isEnabled id = inRegistry $ UICmd.get id Model.enabled

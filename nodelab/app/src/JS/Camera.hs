@@ -4,8 +4,6 @@
 module JS.Camera where
 
 import           Utils.PreludePlus
-import           Utils.Vector
-import           GHCJS.Foreign
 
 foreign import javascript safe "common.camera.updateProjectionMatrix()"
     updateProjectionMatrix :: IO ()

@@ -1,18 +1,17 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
 
 module Object.Widget.List where
 
-import           Utils.PreludePlus hiding (Choice)
+import           Data.Aeson          (ToJSON)
+import           Utils.PreludePlus   hiding (Choice)
 import           Utils.Vector
-import           Data.Aeson (ToJSON, toJSON, object, Value)
 
-import           Object.Widget
-import           Object.UITypes
 import           Object.LunaValue
-import           Object.Widget.Group (Group(..))
+import           Object.Widget
+import           Object.Widget.Group (Group (..))
 
 data List = List { _position    :: Vector2 Double
                  , _size        :: Vector2 Double

@@ -3,23 +3,22 @@ module UI.Widget.Button where
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import qualified Data.JSString             as JSString
-import           Data.JSString.Text        (lazyTextToJSString)
-import           GHCJS.Marshal.Pure        (PFromJSVal (..), PToJSVal (..))
-import           GHCJS.Nullable            (Nullable, maybeToNullable)
-import           GHCJS.Types               (JSString, JSVal)
+import qualified Data.JSString        as JSString
+import           Data.JSString.Text   (lazyTextToJSString)
+import           GHCJS.Marshal.Pure   (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Nullable       (Nullable, maybeToNullable)
+import           GHCJS.Types          (JSString, JSVal)
 
 import           Object.UITypes
 import           Object.Widget
-import qualified Object.Widget.Button      as Model
-import qualified Reactive.State.UIRegistry as UIRegistry
+import qualified Object.Widget.Button as Model
 
-import           Style.Types               (Color (..))
-import           UI.Generic                (whenChanged)
-import qualified UI.Generic                as UI
-import qualified UI.Registry               as UI
-import           UI.Widget                 (UIWidget (..))
-import qualified UI.Widget                 as Widget
+import           Style.Types          (Color (..))
+import           UI.Generic           (whenChanged)
+import qualified UI.Generic           as UI
+import qualified UI.Registry          as UI
+import           UI.Widget            (UIWidget)
+import qualified UI.Widget            as Widget
 
 newtype Button = Button JSVal deriving (PToJSVal, PFromJSVal)
 

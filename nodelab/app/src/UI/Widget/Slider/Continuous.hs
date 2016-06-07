@@ -1,24 +1,19 @@
 module UI.Widget.Slider.Continuous where
 
 import           Utils.PreludePlus
-import           Data.Text.Lazy                  (Text)
 import           Utils.Vector
 
-import qualified Data.JSString                   as JSString
 import           Data.JSString.Text              (lazyTextToJSString)
-import           GHCJS.Foreign
 
 import           Object.UITypes
 import           Object.Widget
-import           Object.Widget.Slider.Continuous (ContinuousSlider)
 import qualified Object.Widget.Slider.Continuous as Model
-import qualified Reactive.State.UIRegistry       as UIRegistry
 
-import           UI.Generic                    (whenChanged)
+import           UI.Generic                      (whenChanged)
 import qualified UI.Generic                      as UI
 import qualified UI.Registry                     as UI
 import qualified UI.Widget                       as Widget
-import           UI.Widget.Slider                (Slider, create', setFocus', setLabel', setValue', setValueLabel')
+import           UI.Widget.Slider                (Slider, create', setFocus', setLabel', setValue')
 
 createSlider :: WidgetId -> Model.ContinuousSlider -> IO Slider
 createSlider oid model = do

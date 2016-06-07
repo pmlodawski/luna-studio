@@ -2,15 +2,12 @@
 
 module UI.Command.Group where
 
-import           Control.Monad                (foldM, forM)
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           Object.Widget                (WidgetId, widget, widgetPosition, widgetSize)
-import           Reactive.Commands.Command    (Command, performIO)
+import           Object.Widget                (WidgetId, widgetPosition, widgetSize)
+import           Reactive.Commands.Command    (Command)
 import qualified Reactive.Commands.UIRegistry as UICmd
-import qualified Reactive.State.Global        as Global
-import           Reactive.State.UIRegistry    (addHandler, sceneGraphId, sceneInterfaceId)
 import qualified Reactive.State.UIRegistry    as UIRegistry
 
 import           Style.Types                  (Padding (..))

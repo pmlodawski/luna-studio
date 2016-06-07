@@ -1,7 +1,7 @@
 module Style.Types where
 
-import Utils.PreludePlus
-import Data.Aeson (ToJSON)
+import           Data.Aeson        (ToJSON)
+import           Utils.PreludePlus
 
 data Color   = Color { _r :: Double
                      , _g :: Double

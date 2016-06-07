@@ -10,15 +10,13 @@ import           Utils.Vector
 import           Object.Widget
 import qualified Object.Widget  as Widget
 import           Event.Event
-import           Event.Mouse    (EventWidget(..), MouseButton)
+import           Event.Mouse    (EventWidget(..))
 import qualified Event.Mouse    as Mouse
 import qualified Event.Keyboard as Keyboard
-import           Object.UITypes
 import qualified Reactive.State.Global       as Global
-import           Reactive.State.UIRegistry   (WidgetMap)
 import qualified Reactive.State.UIRegistry   as UIRegistry
 import qualified Reactive.State.Camera       as Camera
-import           Reactive.Commands.Command   (Command, execCommand)
+import           Reactive.Commands.Command   (Command)
 import           Object.Widget.Port   ()
 import           UI.Handlers   (widgetHandlers)
 

@@ -5,8 +5,7 @@ import           Utils.PreludePlus
 import           Utils.Vector
 
 import           Data.Aeson                    (ToJSON, toJSON)
-import           Reactive.Commands.Command     (Command, performIO)
-import qualified Data.Set                      as Set
+import           Reactive.Commands.Command     (Command)
 import           Data.Set                      (Set)
 import           Data.UUID.Types               (UUID)
 

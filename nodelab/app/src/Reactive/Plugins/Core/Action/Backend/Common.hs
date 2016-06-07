@@ -5,20 +5,14 @@ module Reactive.Plugins.Core.Action.Backend.Common
     ) where
 
 
-import qualified Data.Aeson                as JSON (ToJSON, encode)
-import           Data.Text.Encoding        (decodeUtf8)
+import qualified Data.Aeson                as JSON (ToJSON)
 import qualified Data.Text.Lazy            as Text
 import qualified Data.UUID.Types           as UUID (toString)
 import           Utils.PreludePlus
 
-import qualified Batch.Workspace           as Workspace
-import           Event.Batch               (Event (..))
-import qualified Event.Batch               as Batch
-import qualified Event.Event               as Event
 import           Reactive.Commands.Command (Command, performIO)
 import           Reactive.Commands.UUID    (isOwnRequest, unregisterRequest)
 import           Reactive.State.Global     (State)
-import qualified Reactive.State.Global     as Global
 
 import qualified Empire.API.Response       as Response
 import qualified Empire.API.Topic          as Topic

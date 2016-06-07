@@ -1,17 +1,15 @@
 module Batch.Workspace where
 
 import           Data.Aeson                    (FromJSON, ToJSON)
-import           Data.IntMap.Lazy              (IntMap)
 import qualified Data.IntMap.Lazy              as IntMap
 import           Data.Map.Lazy                 (Map)
 import           Data.UUID.Types               (nil)
-import qualified Data.Map.Lazy                 as Map
 import           Utils.PreludePlus
 
 import           Empire.API.Data.Breadcrumb    (Breadcrumb (..))
 import           Empire.API.Data.GraphLocation (GraphLocation (..))
 import qualified Empire.API.Data.GraphLocation as GraphLocation
-import           Empire.API.Data.Library       (Library, LibraryId)
+import           Empire.API.Data.Library       (Library)
 import qualified Empire.API.Data.Library       as Library
 import           Empire.API.Data.Project       (Project, ProjectId)
 import qualified Empire.API.Data.Project       as Project

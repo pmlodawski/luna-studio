@@ -15,8 +15,7 @@ import qualified Reactive.State.Global          as Global
 import           Reactive.Commands.Command      (Command, performIO)
 import           Control.Monad.State
 
-import           Data.Aeson (encode, toJSON)
-import           GHCJS.Types (JSVal)
+import           Data.Aeson (toJSON)
 import           GHCJS.Marshal (toJSVal)
 
 toAction :: Event -> Maybe (Command Global.State ())

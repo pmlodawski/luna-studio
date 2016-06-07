@@ -4,20 +4,16 @@ module UI.Handlers.Node where
 import           Utils.PreludePlus
 
 import           Data.HMap.Lazy               (HTMap, TypeKey (..))
-import qualified Data.HMap.Lazy               as HMap
 import qualified Data.Text.Lazy               as Text
-import           Data.Text.Lazy.Read          (rational)
 import           Utils.Vector
 
-import           Event.Event                  (JSState)
 import           Event.Keyboard               (KeyMods (..))
-import           Event.Mouse                  (MouseButton (..))
 import qualified Event.Mouse                  as Mouse
-import           Object.Widget                (CompositeWidget, DblClickHandler, DragEndHandler, DragMoveHandler,
-                                               KeyPressedHandler, KeyUpHandler, MousePressedHandler, ResizableWidget,
-                                               UIHandlers, WidgetFile, WidgetId, click, createWidget, currentPos,
-                                               dblClick, dragEnd, dragMove, keyDown, keyMods, keyUp, mouseOut,
-                                               mouseOver, mousePressed, objectId, resizeWidget, startPos, updateWidget)
+import           Object.Widget                (CompositeWidget, DblClickHandler,
+                                               KeyPressedHandler, ResizableWidget,
+                                               UIHandlers, WidgetFile, WidgetId, createWidget, 
+                                               dblClick, keyDown, mouseOut,
+                                               mouseOver, mousePressed, objectId, updateWidget)
 
 import qualified Object.Widget.Group          as Group
 import qualified Object.Widget.Label          as Label
@@ -25,7 +21,7 @@ import qualified Object.Widget.LabeledTextBox as LabeledTextBox
 import qualified Object.Widget.Node           as Model
 import qualified Object.Widget.TextBox        as TextBox
 import qualified Object.Widget.Toggle         as Toggle
-import           Reactive.Commands.Command    (Command, performIO)
+import           Reactive.Commands.Command    (Command)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import           Reactive.State.Global        (inRegistry)
 import qualified Reactive.State.Global        as Global
@@ -33,10 +29,9 @@ import           Reactive.State.UIRegistry    (addHandler)
 import qualified Reactive.State.UIRegistry    as UIRegistry
 
 import qualified Style.Node                   as Style
-import           UI.Generic                   (defaultResize, startDrag, whenChanged)
+import           UI.Generic                   (whenChanged)
 import           UI.Handlers.Button           (MousePressedHandler (..))
-import           UI.Handlers.Generic          (triggerValueChanged)
-import           UI.Handlers.Generic          (ValueChangedHandler (..), triggerValueChanged)
+import           UI.Handlers.Generic          (ValueChangedHandler (..))
 import           UI.Handlers.LabeledTextBox   ()
 import           UI.Layout                    as Layout
 import           UI.Widget.Group              ()

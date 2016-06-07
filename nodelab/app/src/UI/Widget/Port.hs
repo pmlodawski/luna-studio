@@ -2,33 +2,27 @@
 
 module UI.Widget.Port where
 
-import           Utils.CtxDynamic             (toCtxDynamic)
 import           Utils.PreludePlus
-import           Utils.Vector
 
-import           Data.JSString.Text           (lazyTextFromJSString, lazyTextToJSString)
-import           GHCJS.DOM.Element            (Element)
 import           GHCJS.Marshal.Pure           (PFromJSVal (..), PToJSVal (..))
-import           GHCJS.Types                  (JSString, JSVal)
+import           GHCJS.Types                  (JSVal)
 
-import           Event.Mouse                  (MouseButton (..))
 import           Object.UITypes
 import           Object.Widget
 import qualified Object.Widget.Port           as Model
 
-import           Reactive.Commands.Command    (Command, ioCommand, performIO)
+import           Reactive.Commands.Command    (Command)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import           Reactive.State.Global        (inRegistry)
 import qualified Reactive.State.Global        as Global
-import qualified Reactive.State.UIRegistry    as UIRegistry
 
 import qualified UI.Registry                  as UIR
-import           UI.Widget                    (UIContainer (..), UIWidget (..))
+import           UI.Widget                    (UIWidget)
 import           UI.Widget                    (GenericWidget (..))
 import qualified UI.Widget                    as Widget
 import qualified UI.Handlers.Node             as Node
 
-import           Empire.API.Data.Port (PortId (InPortId), InPort (Self))
+import           Empire.API.Data.Port (InPort (Self))
 import           Empire.API.Data.PortRef (AnyPortRef (InPortRef'), InPortRef(..))
 
 newtype Port = Port { unPort :: JSVal } deriving (PToJSVal, PFromJSVal)

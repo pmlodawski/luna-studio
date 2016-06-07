@@ -3,14 +3,13 @@ module UI.Layout where
 
 import           Utils.PreludePlus
 
-import           Control.Monad                (foldM, forM)
+import           Control.Monad                (foldM)
 import           Utils.Vector
 
 import           Object.Widget                (WidgetId, widgetSize, widgetVisible)
-import           Reactive.Commands.Command    (Command, performIO)
+import           Reactive.Commands.Command    (Command)
 import qualified Reactive.Commands.UIRegistry as UICmd
-import qualified Reactive.State.Global        as Global
-import           Reactive.State.UIRegistry    (addHandler, sceneGraphId, sceneInterfaceId)
+import           Reactive.State.UIRegistry    (addHandler)
 import qualified Reactive.State.UIRegistry    as UIRegistry
 
 import qualified Object.Widget.Group          as Group

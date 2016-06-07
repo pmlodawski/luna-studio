@@ -15,7 +15,7 @@ import           Object.Widget                     (objectId, widget)
 import qualified Object.Widget.Node                as Model
 import qualified UI.Handlers.Node                  as Node
 
-import           Reactive.Commands.Command         (Command, performIO)
+import           Reactive.Commands.Command         (Command)
 import           Reactive.Commands.EnterNode       (enterNode)
 import           Reactive.Commands.Graph           (focusNode)
 import           Reactive.Commands.Graph.Selection (selectedNodes)

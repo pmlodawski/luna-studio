@@ -32,7 +32,6 @@ import           Utils.PreludePlus         hiding (children, lookup)
 import           Utils.Vector
 
 import qualified JS.Cursor                 as Cursor
-import           Object.UITypes            (WidgetId)
 import           Object.Widget             hiding (children, parent)
 import qualified Object.Widget
 import           Reactive.Commands.Command (Command, performIO)

@@ -5,8 +5,7 @@ import Utils.PreludePlus
 import Utils.Vector
 import Data.Aeson (ToJSON)
 
-import Object.UITypes
-import Empire.API.Data.PortRef (OutPortRef, InPortRef, AnyPortRef)
+import Empire.API.Data.PortRef (AnyPortRef)
 import Empire.API.JSONInstances ()
 
 data DragHistory = DragHistory { _dragStartPos    :: Vector2 Int

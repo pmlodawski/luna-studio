@@ -1,11 +1,11 @@
 module Reactive.State.ConnectionPen where
 
 
-import Utils.PreludePlus
-import Utils.Vector
-import Data.Aeson (ToJSON)
-import Empire.API.Data.Node (NodeId)
-import Empire.API.JSONInstances ()
+import           Data.Aeson               (ToJSON)
+import           Empire.API.Data.Node     (NodeId)
+import           Empire.API.JSONInstances ()
+import           Utils.PreludePlus
+import           Utils.Vector
 
 data DrawingType = Connecting | Disconnecting deriving (Show, Eq, Generic)
 
@@ -16,7 +16,7 @@ data Drawing = Drawing { _previousPos  :: Vector2 Int
                        } deriving (Eq, Show, Generic)
 
 
-data State = State { _drawing  :: Maybe Drawing
+data State = State { _drawing :: Maybe Drawing
                    } deriving (Eq, Show, Generic)
 
 

@@ -1,9 +1,8 @@
 module Event.TextEditor where
 
 
-import Utils.PreludePlus
-import Object.UITypes
-import Data.Aeson (ToJSON)
+import           Data.Aeson        (ToJSON)
+import           Utils.PreludePlus
 
 data Event = CodeModified { _code :: Text } deriving (Eq, Show, Typeable, Generic)
 

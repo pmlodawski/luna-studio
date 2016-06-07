@@ -3,18 +3,14 @@
 
 module Object.Widget.Node where
 
-import           Data.Aeson                (ToJSON)
-import           Data.Fixed
-import           Utils.CtxDynamic
+import           Data.Aeson               (ToJSON)
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import qualified Data.Text.Lazy            as Text
-import qualified Empire.API.Data.Node      as N
-import qualified Empire.API.Data.NodeMeta  as NM
-import qualified Empire.API.Data.Port      as P
-import qualified Empire.API.Data.ValueType as VT
-import           Event.Mouse               (MouseButton (..))
+import qualified Data.Text.Lazy           as Text
+import qualified Empire.API.Data.Node     as N
+import qualified Empire.API.Data.NodeMeta as NM
+import qualified Empire.API.Data.Port     as P
 import           Object.UITypes
 import           Object.Widget
 

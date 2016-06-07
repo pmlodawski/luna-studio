@@ -4,15 +4,13 @@ module Reactive.Commands.UUID
     , isOwnRequest
     ) where
 
+import qualified Data.Set                  as Set
+import           Data.UUID.Types           (UUID)
+import           Data.UUID.Types.Internal  (buildFromBytes)
 import           Utils.PreludePlus
-import           Reactive.Commands.Command     (Command, execCommand, performIO)
-import qualified Reactive.Commands.UIRegistry  as UICmd
-import           Reactive.State.Global         (State, nextRandom, pendingRequests)
-import qualified Data.Set                      as Set
 
-import Data.UUID.Types
-import Data.UUID.Types.Internal ( buildFromBytes )
-import Data.ByteString ( unpack )
+import           Reactive.Commands.Command (Command)
+import           Reactive.State.Global     (State, nextRandom, pendingRequests)
 
 getUUID :: Command State UUID
 getUUID = do

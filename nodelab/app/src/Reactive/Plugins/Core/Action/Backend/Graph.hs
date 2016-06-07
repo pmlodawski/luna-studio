@@ -6,16 +6,9 @@ module Reactive.Plugins.Core.Action.Backend.Graph
 import           Utils.PreludePlus
 
 import qualified Batch.Workspace                             as Workspace
-import qualified Data.Aeson                                  as JSON (ToJSON, encode)
-import           Data.Text.Encoding                          (decodeUtf8)
-import qualified Data.Text.Lazy                              as Text
-import qualified Data.UUID.Types                             as UUID (toString)
 
 import qualified Empire.API.Data.Graph                       as Graph
 import           Empire.API.Data.GraphLocation               (GraphLocation)
-import qualified Empire.API.Data.Node                        as Node
-import           Empire.API.Data.PortRef                     (InPortRef (..), OutPortRef (..))
-import qualified Empire.API.Data.PortRef                     as PortRef
 import qualified Empire.API.Graph.AddNode                    as AddNode
 import qualified Empire.API.Graph.Connect                    as Connect
 import qualified Empire.API.Graph.Disconnect                 as Disconnect
@@ -28,10 +21,8 @@ import qualified Empire.API.Graph.RemoveNode                 as RemoveNode
 import qualified Empire.API.Graph.RenameNode                 as RenameNode
 import qualified Empire.API.Graph.UpdateNodeMeta             as UpdateNodeMeta
 import qualified Empire.API.Response                         as Response
-import qualified Empire.API.Topic                            as Topic
 
 import           Event.Batch                                 (Event (..))
-import qualified Event.Batch                                 as Batch
 import qualified Event.Event                                 as Event
 
 import           Reactive.Commands.Camera                    (autoZoom)
@@ -39,12 +30,11 @@ import           Reactive.Commands.Command                   (Command, performIO
 import           Reactive.Commands.Graph                     (localConnectNodes, updateConnections)
 import           Reactive.Commands.Graph.Disconnect          (localDisconnectAll)
 import           Reactive.Commands.Node                      (renameNode)
-import           Reactive.Commands.Node.Create               (addDummyNode, addNode)
+import           Reactive.Commands.Node.Create               (addDummyNode)
 import           Reactive.Commands.Node.NodeMeta             (updateNodeMeta)
 import           Reactive.Commands.Node.Remove               (localRemoveNodes)
 import           Reactive.Commands.Node.Update               (updateNode, updateNodeProfilingData, updateNodeValue)
 import           Reactive.Commands.RenderGraph               (renderGraph)
-import           Reactive.Commands.UUID                      (isOwnRequest, unregisterRequest)
 import           Reactive.Plugins.Core.Action.Backend.Common (doNothing, handleResponse)
 import           Reactive.State.Global                       (State)
 import qualified Reactive.State.Global                       as Global

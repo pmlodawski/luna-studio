@@ -4,11 +4,9 @@ module JS.Cursor
     , Cursor(..)
     ) where
 
-import qualified Data.JSString     as JSString
-import           GHCJS.Foreign
+import           Data.JSString     ()
 import           GHCJS.Types       (JSString)
 import           Utils.PreludePlus
-import           Utils.Vector
 
 foreign import javascript safe "$('#canvas2d').css({cursor: $1})" setCursor' :: JSString -> IO ()
 

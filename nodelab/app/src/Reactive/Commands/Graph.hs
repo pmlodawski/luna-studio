@@ -19,11 +19,8 @@ import           Utils.Angle
 
 import           Data.Map.Lazy                 (Map(..))
 import qualified Data.Map.Lazy                 as Map
-import           Data.Map                      (Map)
 import           Data.Hashable                 (hash)
-import qualified Data.Map                      as Map
 import           Data.Ord                      (comparing)
-import           Data.Fixed                    (mod')
 import           Object.UITypes
 import           Object.Widget
 import qualified Object.Widget.Node            as Model
@@ -31,13 +28,10 @@ import qualified Object.Widget.Connection      as ConnectionModel
 import qualified Object.Widget.Port            as PortModel
 
 import           Reactive.State.Graph
-import qualified Reactive.State.Connect        as Connect
 import qualified Reactive.State.Graph          as Graph
 import qualified Reactive.State.UIRegistry     as UIRegistry
-import qualified Reactive.State.Camera         as Camera
 import qualified Reactive.State.Global         as Global
-import           Reactive.State.Global         (inRegistry)
-import           Reactive.Commands.Command     (Command, command, pureCommand, ioCommand)
+import           Reactive.Commands.Command     (Command, pureCommand)
 import qualified Reactive.Commands.UIRegistry  as UICmd
 import           Reactive.State.UIRegistry     (sceneGraphId)
 
@@ -45,25 +39,17 @@ import           Control.Monad.State
 
 import qualified Reactive.Commands.Batch       as BatchCmd
 
-import qualified UI.Widget.Node                as UINode
-import qualified UI.Widget.Port                as UIPort
-import qualified UI.Widget.Connection          as UIConnection
-import qualified UI.Generic                    as UIGeneric
-import           Reactive.State.Camera         (Camera, screenToWorkspace)
 import           UI.Instances                  ()
-import           Empire.API.Data.Node          (Node, NodeId)
+import           Empire.API.Data.Node          (NodeId)
 import qualified Empire.API.Data.Node          as Node
-import           Empire.API.Data.NodeMeta      (NodeMeta)
-import qualified Empire.API.Data.NodeMeta      as NodeMeta
 import           Empire.API.Data.PortRef       (AnyPortRef(..), InPortRef(..), OutPortRef(..))
 import qualified Empire.API.Data.PortRef       as PortRef
-import           Empire.API.Data.Connection    (Connection, ConnectionId)
+import           Empire.API.Data.Connection    (ConnectionId)
 import qualified Empire.API.Data.Connection    as Connection
 import           Empire.API.Data.ValueType     (ValueType (..))
 import           Empire.API.Data.TypeRep       (TypeRep (..))
 import           Empire.API.Data.Port          (PortId(..))
 import qualified Empire.API.Data.Port          as Port
-import qualified Empire.API.Data.ValueType     as ValueType
 
 hashMany :: [TypeRep] -> Int
 hashMany as = sum $ zipWith (*) powers (tpRepToColor <$> as) where

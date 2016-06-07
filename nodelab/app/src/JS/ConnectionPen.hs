@@ -8,9 +8,8 @@ module JS.ConnectionPen
     , toJSArray
     ) where
 
-import           GHCJS.Foreign
 import           GHCJS.Foreign.Callback
-import           GHCJS.Types
+import           GHCJS.Types            (JSVal)
 import           JavaScript.Array
 import           Utils.PreludePlus
 import           Utils.Vector

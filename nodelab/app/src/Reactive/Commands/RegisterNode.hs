@@ -2,13 +2,10 @@ module Reactive.Commands.RegisterNode
     ( registerNode
     ) where
 
-import           Control.Monad.State               hiding (State)
-import           Data.Text.Lazy                    (Text)
 import           Utils.PreludePlus
-import           Utils.Vector                      (Vector2, toTuple)
+import           Utils.Vector                      (toTuple)
 
-import           Reactive.Commands.Command         (Command, performIO)
-import qualified Reactive.State.Camera             as Camera
+import           Reactive.Commands.Command         (Command)
 import           Reactive.State.Global             (State)
 import qualified Reactive.State.Global             as Global
 
@@ -19,9 +16,6 @@ import           Reactive.Commands.Graph.Selection (selectedNodes)
 import           Reactive.State.Global             (inRegistry)
 import qualified Reactive.State.UIElements         as UIElements
 
-import           Empire.API.Data.Node              (Node (..))
-import qualified Empire.API.Data.Node              as Node
-import           Empire.API.Data.NodeMeta          (NodeMeta (..))
 import qualified Empire.API.Data.NodeMeta          as NodeMeta
 import qualified JS.GoogleAnalytics                as GA
 

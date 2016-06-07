@@ -1,8 +1,7 @@
 module Utils.Vector where
 
+import           Data.Aeson        (ToJSON)
 import           Utils.PreludePlus
-
-import Data.Aeson (ToJSON)
 
 data Vector2 a = Vector2 { _x :: a
                          , _y :: a

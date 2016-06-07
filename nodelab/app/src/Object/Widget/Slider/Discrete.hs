@@ -1,10 +1,9 @@
 module Object.Widget.Slider.Discrete where
 
-import Utils.PreludePlus
-import Utils.Vector
-import Object.Widget
-import Numeric
-import Data.Aeson (ToJSON)
+import           Data.Aeson        (ToJSON)
+import           Object.Widget
+import           Utils.PreludePlus
+import           Utils.Vector
 
 data DiscreteSlider = DiscreteSlider { _position       :: Vector2 Double
                                      , _size           :: Vector2 Double

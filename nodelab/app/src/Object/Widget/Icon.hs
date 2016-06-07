@@ -1,17 +1,15 @@
 module Object.Widget.Icon where
 
-import            Utils.PreludePlus
-import            Utils.Vector
-import Data.Aeson (ToJSON)
-import Style.Types
-import qualified Style.Group as Style
+import           Data.Aeson        (ToJSON)
+import           Utils.PreludePlus
+import           Utils.Vector
 
-import            Object.Widget
+import           Object.Widget
 
 
-data Icon = Icon { _position   :: Vector2 Double
-                 , _size      :: Vector2 Double
-                 , _shader    :: Text
+data Icon = Icon { _position :: Vector2 Double
+                 , _size     :: Vector2 Double
+                 , _shader   :: Text
                  } deriving (Eq, Show, Typeable, Generic)
 
 

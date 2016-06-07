@@ -4,14 +4,12 @@ import           Utils.PreludePlus
 
 import           Utils.Vector
 
-import           GHCJS.Foreign
 import           GHCJS.Marshal     (fromJSVal)
-import           GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
-import           GHCJS.Types       (JSString, JSVal)
+import           GHCJS.Marshal.Pure (pFromJSVal)
+import           GHCJS.Types       (JSVal)
 import           JavaScript.Array  (JSArray)
 import qualified JavaScript.Array  as JSArray
 
-import qualified Event.Mouse       as Mouse
 import           Object.Widget (WidgetId, SceneType(..))
 import           Event.Event (JSState)
 

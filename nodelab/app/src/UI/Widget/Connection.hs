@@ -2,23 +2,18 @@
 
 module UI.Widget.Connection where
 
-import           Utils.CtxDynamic          (toCtxDynamic)
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           Data.JSString.Text        (lazyTextFromJSString, lazyTextToJSString)
-import           GHCJS.DOM.Element         (Element)
 import           GHCJS.Marshal.Pure        (PFromJSVal (..), PToJSVal (..))
-import           GHCJS.Types               (JSString, JSVal)
+import           GHCJS.Types               (JSVal)
 
-import           Event.Mouse               (MouseButton (..))
 import           Object.UITypes
 import           Object.Widget
 import qualified Object.Widget.Connection  as Model
-import           Reactive.Commands.Command (Command, ioCommand, performIO)
 
 import qualified UI.Registry               as UIR
-import           UI.Widget                 (UIContainer (..), UIWidget (..))
+import           UI.Widget                 (UIWidget)
 import           UI.Widget                 (GenericWidget (..))
 import qualified UI.Widget                 as UIT
 

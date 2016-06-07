@@ -7,7 +7,7 @@ import           JS.MultiSelection                 (displaySelectionBox, hideSel
 import           Utils.PreludePlus
 import           Utils.Vector                      (Vector2 (..), x, y)
 
-import           Object.Widget                     (DisplayObject, UIHandlers, WidgetFile, WidgetId, objectId)
+import           Object.Widget                     (WidgetFile, WidgetId, objectId)
 import qualified Object.Widget.Node                as NodeModel
 
 import           Event.Event                       (Event (Mouse, Keyboard), JSState)
@@ -18,7 +18,6 @@ import qualified Event.Mouse                       as Mouse
 import qualified Reactive.State.Camera             as Camera
 import           Reactive.State.Global             (State)
 import qualified Reactive.State.Global             as Global
-import qualified Reactive.State.Graph              as Graph
 import           Reactive.State.MultiSelection     (DragHistory (..))
 import qualified Reactive.State.MultiSelection     as MultiSelection
 import qualified Reactive.State.UIRegistry         as UIRegistry
@@ -27,7 +26,6 @@ import           Reactive.Commands.Command         (Command, performIO)
 import           Reactive.Commands.Graph.Selection (focusSelectedNode, selectAll, selectedNodes, unselectAll)
 import qualified Reactive.Commands.UIRegistry      as UICmd
 
-import           Control.Monad.State               hiding (State)
 
 import           UI.Raycaster                      (getObjectsInRect)
 

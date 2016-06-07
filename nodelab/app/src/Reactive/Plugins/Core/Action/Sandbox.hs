@@ -12,9 +12,7 @@ import qualified Reactive.State.Global            as Global
 import qualified Reactive.Commands.UIRegistry     as UICmd
 import           Reactive.State.UIRegistry        (addHandler, sceneGraphId,
                                                    sceneInterfaceId)
-import qualified Reactive.State.UIRegistry        as UIRegistry
 
-import           UI.Instances
 
 import qualified Object.Widget.Group              as Group
 import qualified Object.Widget.LabeledTextBox     as LabeledTextBox
@@ -23,32 +21,17 @@ import qualified Object.Widget.Number.Continuous  as ContinuousNumber
 import qualified Object.Widget.Number.Discrete    as DiscreteNumber
 import qualified Object.Widget.Slider.Continuous  as ContinuousSlider
 import qualified Object.Widget.Slider.Discrete    as DiscreteSlider
-import qualified Object.Widget.TextBox            as TextBox
 import qualified Object.Widget.Toggle             as Toggle
 import qualified Object.Widget.Plots.ScatterPlot  as ScatterPlot
 import qualified Object.Widget.Graphics           as G
 
-import           Object.Widget.Choice.RadioButton (RadioButton (..))
-import qualified Object.Widget.Choice.RadioButton as RadioButton
-
-import           Object.Widget.Choice             (Choice (..))
 import qualified Object.Widget.Choice             as Choice
 
-import           Data.HMap.Lazy                   (HTMap)
-import qualified Data.HMap.Lazy                   as HMap
 import           Object.LunaValue
-import           Object.LunaValue.Instances
-import           Object.UITypes
-import           Object.Widget
+import           Object.LunaValue.Instances ()
 import           Reactive.State.Global            (inRegistry)
 import           UI.Layout                        as Layout
 import           UI.Handlers.Generic              (ValueChangedHandler(..))
-
-import qualified BatchConnector.Connection as BC
-import           Data.Binary (encode)
-import           Empire.API.Graph.AddNode (Request(..))
-import           Empire.API.Data.NodeMeta (NodeMeta(..))
-import qualified BatchConnector.Commands as BatchCmd
 
 f1 = '\112'
 f2 = '\113'

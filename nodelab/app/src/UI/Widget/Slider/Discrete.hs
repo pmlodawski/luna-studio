@@ -1,24 +1,19 @@
 module UI.Widget.Slider.Discrete where
 
-import           Data.Text.Lazy                (Text)
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import qualified Data.JSString                 as JSString
 import           Data.JSString.Text            (lazyTextToJSString)
-import           GHCJS.Foreign
 
 import           Object.UITypes
 import           Object.Widget
-import           Object.Widget.Slider.Discrete (DiscreteSlider)
 import qualified Object.Widget.Slider.Discrete as Model
-import qualified Reactive.State.UIRegistry     as UIRegistry
 
 import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                    as UI
 import qualified UI.Registry                   as UI
 import qualified UI.Widget                     as Widget
-import           UI.Widget.Slider              (Slider, create', setFocus', setLabel', setValue', setValueLabel', setTicks', limitTicks)
+import           UI.Widget.Slider              (Slider, create', setFocus', setLabel', setValue', setTicks', limitTicks)
 
 createSlider :: WidgetId -> Model.DiscreteSlider -> IO Slider
 createSlider oid model = do

@@ -1,16 +1,9 @@
 module UI.Widget where
 
 import           Utils.PreludePlus
-import           Utils.Vector
 
-import qualified Data.JSString             as JSString
-import           GHCJS.Foreign
 import           GHCJS.Marshal.Pure        (PFromJSVal (..), PToJSVal (..))
 import           GHCJS.Types               (JSVal)
-
-import           Object.UITypes
-import           Object.Widget
-import           Reactive.Commands.Command (Command, ioCommand, performIO)
 
 newtype Container = Container { unContainer :: JSVal } deriving (PFromJSVal, PToJSVal)
 newtype Mesh      = Mesh      { unMesh :: JSVal } deriving (PFromJSVal, PToJSVal)

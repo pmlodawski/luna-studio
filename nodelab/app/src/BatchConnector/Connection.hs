@@ -2,17 +2,14 @@ module BatchConnector.Connection where
 
 import           Data.Binary (Binary)
 import qualified Data.Binary                 as Binary
-import           GHC.Generics                (Generic)
 import           GHCJS.Types (JSString)
 import           Data.JSString.Text
 import           Data.UUID.Types (UUID)
-import           Data.Text (Text)
-import           Data.ByteString.Lazy.Char8  (ByteString, pack, toStrict)
+import           Data.ByteString.Lazy.Char8  (ByteString, pack)
 import qualified Data.ByteString.Base64.Lazy as Base64
 import           Data.Text.Lazy.Encoding     (decodeUtf8)
 import           Utils.PreludePlus           hiding (Text)
 import           JS.WebSocket
-import           JS.UUID (generateUUID)
 import qualified Empire.API.Topic                  as Topic
 import           Empire.API.Request                (Request(..))
 

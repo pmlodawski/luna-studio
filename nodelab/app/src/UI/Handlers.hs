@@ -5,53 +5,53 @@ import           Utils.PreludePlus
 import           Data.Typeable                    (typeOf)
 import           Utils.CtxDynamic
 
-import           Reactive.State.Global            (State)
 import           Object.Widget                    (DisplayObject, UIHandlers)
 import           Object.Widget.Button             (Button)
 import           Object.Widget.Choice.RadioButton (RadioButton)
 import           Object.Widget.Connection         (Connection, CurrentConnection)
+import           Object.Widget.DataFrame          (DataFrame)
+import           Object.Widget.Graphics           (Graphics)
 import           Object.Widget.Group              (Group)
+import           Object.Widget.Label              (Label)
 import           Object.Widget.LabeledTextBox     (LabeledTextBox)
 import           Object.Widget.List               (List)
+import           Object.Widget.LongText           (LongText)
 import           Object.Widget.Node               (Node, PendingNode)
 import           Object.Widget.Number.Continuous  (ContinuousNumber)
 import           Object.Widget.Number.Discrete    (DiscreteNumber)
+import           Object.Widget.Plots.Image        (Image)
+import           Object.Widget.Plots.ScatterPlot  (ScatterPlot)
 import           Object.Widget.Port               (Port)
+import           Object.Widget.Scene              (Scene)
 import           Object.Widget.Slider.Continuous  (ContinuousSlider)
 import           Object.Widget.Slider.Discrete    (DiscreteSlider)
 import           Object.Widget.TextBox            (TextBox)
 import           Object.Widget.Toggle             (Toggle)
-import           Object.Widget.Scene              (Scene)
-import           Object.Widget.Label              (Label)
-import           Object.Widget.Plots.ScatterPlot  (ScatterPlot)
-import           Object.Widget.Plots.Image        (Image)
-import           Object.Widget.LongText           (LongText)
-import           Object.Widget.DataFrame          (DataFrame)
-import           Object.Widget.Graphics           (Graphics)
+import           Reactive.State.Global            (State)
 
-import           UI.Widget                        (GenericWidget (..), UIContainer, UIWidget)
-import qualified UI.Widget.Button                 as Button
-import qualified UI.Widget.Choice                 as Choice
-import qualified UI.Widget.Choice.RadioButton     as RadioButton
-import qualified UI.Widget.Connection             as Connection
-import qualified UI.Widget.Group                  as Group
-import qualified UI.Widget.LabeledTextBox         as LabeledTextBox
-import qualified UI.Widget.Node                   as Node
+import           UI.Widget                        ()
+import           UI.Widget.Button                 ()
+import           UI.Widget.Choice                 ()
+import           UI.Widget.Choice.RadioButton     ()
+import           UI.Widget.Connection             ()
+import           UI.Widget.DataFrame              ()
+import           UI.Widget.Graphics               ()
+import           UI.Widget.Group                  ()
+import           UI.Widget.LabeledTextBox         ()
+import           UI.Widget.LongText               ()
+import           UI.Widget.Node                   ()
+import           UI.Widget.Plots.Image            ()
+import           UI.Widget.Plots.ScatterPlot      ()
 import qualified UI.Widget.Port                   as Port
-import qualified UI.Widget.Slider                 as Slider
-import qualified UI.Widget.TextBox                as TextBox
-import qualified UI.Widget.Toggle                 as Toggle
-import qualified UI.Widget.Plots.ScatterPlot      as ScatterPlot
-import qualified UI.Widget.Plots.Image            as Image
-import qualified UI.Widget.LongText               as LongText
-import qualified UI.Widget.DataFrame              as DataFrame
-import qualified UI.Widget.Graphics               as Graphics
+import           UI.Widget.Slider                 ()
+import           UI.Widget.TextBox                ()
+import           UI.Widget.Toggle                 ()
 
 import qualified UI.Handlers.Button               as Button
-import qualified UI.Handlers.Node                 as Node
-import qualified UI.Handlers.Choice               as Choice
+import           UI.Handlers.Choice               ()
 import qualified UI.Handlers.Choice.RadioButton   as RadioButton
 import qualified UI.Handlers.LabeledTextBox       as LabeledTextBox
+import qualified UI.Handlers.Node                 as Node
 import qualified UI.Handlers.Number.Continuous    as ContinuousNumber
 import qualified UI.Handlers.Number.Discrete      as DiscreteNumber
 import qualified UI.Handlers.Slider.Continuous    as ContinuousSlider

@@ -2,12 +2,10 @@ module Reactive.Plugins.Core.Action.Connect
     ( toAction
     ) where
 
-import           Debug.Trace
 import           Utils.Angle                  (boundedAngle, toAngle)
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           Object.UITypes
 import           Object.Widget                (WidgetFile, parent, widget)
 import qualified Object.Widget.Connection     as UIConnection
 import qualified Object.Widget.Node           as NodeModel
@@ -15,11 +13,10 @@ import qualified Object.Widget.Port           as PortModel
 
 import           Event.Event                  (Event (..))
 import           Event.Keyboard               hiding (Event)
-import qualified Event.Keyboard               as Keyboard
 import           Event.Mouse                  hiding (Event, widget)
 import qualified Event.Mouse                  as Mouse
 
-import           Reactive.Commands.Command    (Command, execCommand, performIO)
+import           Reactive.Commands.Command    (Command)
 import           Reactive.Commands.Graph
 import qualified Reactive.Commands.UIRegistry as UICmd
 import qualified Reactive.State.Camera        as Camera
@@ -30,9 +27,6 @@ import qualified Reactive.State.Global        as Global
 import qualified Reactive.State.Graph         as Graph
 import qualified Reactive.State.UIRegistry    as UIRegistry
 
-import qualified BatchConnector.Commands      as BatchCmd
-
-import qualified Empire.API.Data.Node         as Node
 import           Empire.API.Data.Port         (InPort (Self))
 import           Empire.API.Data.PortRef      (AnyPortRef (..), InPortRef (..), OutPortRef (..))
 import qualified Empire.API.Data.PortRef      as PortRef (dstNodeId, srcNodeId)

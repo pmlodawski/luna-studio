@@ -6,7 +6,7 @@ module Reactive.Commands.EnterNode
 import           Utils.PreludePlus
 
 import qualified Batch.Workspace                  as Workspace
-import           Reactive.Commands.Command        (Command, performIO)
+import           Reactive.Commands.Command        (Command)
 import           Reactive.Commands.ProjectManager as ProjectManager
 import           Reactive.State.Global            (State)
 import qualified Reactive.State.Global            as Global

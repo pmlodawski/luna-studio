@@ -12,7 +12,6 @@ import           Data.List.Split                 (wordsBy)
 import qualified Data.Text.Lazy                  as Text
 
 import           Object.UITypes                  (WidgetId)
-import           Object.Widget                   (objectId, widget)
 import qualified Object.Widget.DataFrame         as DataFrame
 import qualified Object.Widget.Graphics          as Graphics
 import qualified Object.Widget.LongText          as LongText
@@ -21,7 +20,7 @@ import qualified Object.Widget.Plots.ScatterPlot as ScatterPlot
 import qualified UI.Handlers.Node                as Node
 import qualified UI.Instances                    ()
 
-import           Reactive.Commands.Command       (Command, performIO)
+import           Reactive.Commands.Command       (Command)
 import qualified Reactive.Commands.UIRegistry    as UICmd
 import qualified Reactive.State.UIRegistry       as UIRegistry
 
@@ -30,10 +29,7 @@ import qualified Style.Node                      as Style
 import           Empire.API.Data.DefaultValue    (Value (..))
 import qualified Empire.API.Data.DefaultValue    as DefaultValue
 import qualified Empire.API.Data.Error           as LunaError
-import           Empire.API.Data.Node            (Node, NodeId)
-import           Empire.API.Data.PortRef         (toAnyPortRef)
 import           Empire.API.Data.TypeRep         (TypeRep)
-import qualified Empire.API.Data.ValueType       as ValueType
 
 import qualified Graphics.API                    as GR
 import qualified Utils.Shader                    as Shader

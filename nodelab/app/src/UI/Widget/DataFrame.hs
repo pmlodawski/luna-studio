@@ -3,28 +3,22 @@
 
 module UI.Widget.DataFrame where
 
+import           Data.Aeson              (toJSON)
+import           GHCJS.Marshal           (toJSVal)
+import           GHCJS.Types             (JSVal)
 import           Utils.PreludePlus
 import           Utils.Vector
-import           Data.Aeson (encode, toJSON)
-import           GHCJS.Types (JSVal)
-import           GHCJS.Marshal (toJSVal)
 
-import qualified Data.JSString                 as JSString
-import           Data.JSString.Text            (lazyTextToJSString)
-import qualified Data.Text.Lazy                as Text
-import           GHCJS.Marshal.Pure            (PFromJSVal (..), PToJSVal (..))
-import           GHCJS.Types                   (JSString, JSVal)
+import           GHCJS.Marshal.Pure      (PFromJSVal (..), PToJSVal (..))
 
-import           Object.UITypes
 import           Object.Widget
-import qualified Object.Widget.DataFrame         as Model
-import qualified Reactive.State.UIRegistry     as UIRegistry
+import qualified Object.Widget.DataFrame as Model
 
-import           UI.Generic                    (whenChanged)
-import qualified UI.Generic                    as UI
-import qualified UI.Registry                   as UI
-import           UI.Widget                     (UIWidget (..))
-import qualified UI.Widget                     as Widget
+import           UI.Generic              (whenChanged)
+import qualified UI.Generic              as UI
+import qualified UI.Registry             as UI
+import           UI.Widget               (UIWidget)
+import qualified UI.Widget               as Widget
 
 
 newtype DataFrame = DataFrame JSVal deriving (PToJSVal, PFromJSVal)

@@ -12,7 +12,7 @@ import           Utils.PreludePlus hiding ((.=), children)
 import           Utils.Vector
 import           Utils.CtxDynamic
 import           Event.Event    (JSState)
-import           Event.Mouse    (MousePosition, MouseButton)
+import           Event.Mouse    (MouseButton)
 import           Object.UITypes
 import qualified Event.Keyboard as Keyboard
 import qualified Event.Mouse as Mouse
@@ -20,7 +20,6 @@ import           Event.Keyboard (KeyMods)
 import           Reactive.State.Camera     (Camera)
 import qualified Reactive.State.Camera     as Camera
 import           Reactive.Commands.Command (Command)
-import           Object.UITypes
 import           Data.Aeson (ToJSON, toJSON, object, (.=))
 import           Data.HMap.Lazy (HTMap)
 import           Data.IntMap.Lazy (IntMap)
@@ -132,10 +131,10 @@ data State = State { _widgets         :: WidgetMap
 instance ToJSON DragState
 
 sceneToLocal :: Vector2 Double -> [Double] -> Vector2 Double
-sceneToLocal (Vector2 x y) [ aa, ab, ac, ad
-                           , ba, bb, bc, bd
-                           , ca, cb, cc, cd
-                           , da, db, dc, dd
+sceneToLocal (Vector2 x y) [ aa, ab, _ , _
+                           , ba, bb, _ , _
+                           , _ , _ , _ , _
+                           , da, db, _ , _
                            ] = Vector2 x' y' where
                                x' = aa * x + ba * y + da
                                y' = ab * x + bb * y + db

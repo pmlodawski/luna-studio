@@ -6,12 +6,8 @@ module Reactive.Commands.UILayout
 import           Utils.PreludePlus
 import           Utils.Vector                 (Vector2 (..), x, y)
 
-import           Event.Event                  (Event (Window))
-import qualified Event.Window                 as Window
 import qualified JS.TextEditor                as UI
-import           Object.UITypes               (WidgetId)
 import qualified Object.Widget.Button         as Button
-import qualified Object.Widget.Group          as Group
 import           Reactive.Commands.Command    (Command, performIO)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import qualified Reactive.State.Camera        as Camera
@@ -19,7 +15,6 @@ import           Reactive.State.Global        (State, inRegistry)
 import qualified Reactive.State.Global        as Global
 import qualified Reactive.State.UIElements    as UIElements
 import qualified Style.Layout                 as Style
-import qualified UI.Layout                    as Layout
 
 
 relayout = resizeSidebar >> resizeTextEditorToggle

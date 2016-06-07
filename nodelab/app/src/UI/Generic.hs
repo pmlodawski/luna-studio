@@ -2,28 +2,20 @@
 
 module UI.Generic where
 
-import           Utils.PreludePlus
-
-import           Utils.Vector
-
-import qualified Data.JSString             as JSString
-import           GHCJS.Foreign
-import           GHCJS.Marshal.Pure        (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Marshal.Pure        (pToJSVal)
 import           GHCJS.Types               (JSVal)
-import qualified Data.HMap.Lazy as HMap
-import           Data.HMap.Lazy (HTMap,TypeKey(..))
-
+import           Utils.PreludePlus
+import           Utils.Vector
 
 import qualified Event.Mouse               as Mouse
 import           Object.Widget             (DragState (..), IsDisplayObject, WidgetFile, WidgetId, objectId, widget,
-                                            widgetPosition, widgetSize)
-import           Reactive.Commands.Command (Command, ioCommand, performIO)
+                                            widgetPosition)
+import           Reactive.Commands.Command (Command, performIO)
 import qualified Reactive.State.Camera     as Camera
 import qualified Reactive.State.Global     as Global
 import qualified Reactive.State.UIRegistry as UIRegistry
-
 import qualified UI.Registry               as UIR
-import           UI.Widget                 (GenericWidget (..), UIContainer, UIWidget)
+import           UI.Widget                 (GenericWidget (..), UIWidget)
 
 
 foreign import javascript safe "$1.mesh.position.x = $2; $1.mesh.position.y = $3; $1.widgetMoved()"
@@ -58,7 +50,7 @@ defaultResize :: WidgetId -> Vector2 Double -> a -> Command UIRegistry.State ()
 defaultResize id size _ = performIO $ setSize id size
 
 startDrag :: Mouse.Event' -> WidgetId -> Command Global.State ()
-startDrag event@(Mouse.Event eventType pos button keymods (Just (Mouse.EventWidget widgetId mat scene))) id = do
+startDrag (Mouse.Event _ pos button keymods (Just (Mouse.EventWidget widgetId mat scene))) id = do
     camera <- use $ Global.camera . Camera.camera
     Global.uiRegistry . UIRegistry.dragState ?= DragState widgetId mat scene button keymods pos pos pos
 

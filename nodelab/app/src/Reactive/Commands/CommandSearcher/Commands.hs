@@ -9,10 +9,8 @@ module Reactive.Commands.CommandSearcher.Commands
     , help
     ) where
 
-import qualified Data.IntMap.Lazy                     as IntMap
-import           Data.Map                             (Map)
 import qualified Data.Map                             as Map
-import           Data.Text.Lazy                       (Text, stripPrefix)
+import           Data.Text.Lazy                       (stripPrefix)
 import qualified Data.Text.Lazy                       as Text
 import           Utils.PreludePlus                    hiding (Item, stripPrefix)
 import           Utils.Vector
@@ -27,7 +25,6 @@ import           Reactive.Commands.Command            (Command, performIO)
 import qualified Reactive.Commands.Camera             as Camera
 import           Reactive.Commands.NodeSearcher       as NS
 import           Reactive.Commands.ProjectManager     (loadProject)
-import qualified Reactive.Plugins.Core.Action.General as General
 import qualified Reactive.State.Camera                as Camera
 import qualified Reactive.State.Global                as Global
 import qualified Reactive.State.UIElements            as UIElements

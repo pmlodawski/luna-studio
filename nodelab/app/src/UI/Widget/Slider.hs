@@ -5,7 +5,7 @@ import           Utils.PreludePlus
 import           GHCJS.Types        (JSVal, JSString)
 import           GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
 
-import           UI.Widget          (UIWidget(..))
+import           UI.Widget          (UIWidget)
 
 newtype Slider = Slider { unSlider :: JSVal } deriving (PToJSVal, PFromJSVal)
 

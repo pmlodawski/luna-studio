@@ -16,7 +16,6 @@ import Utils.PreludePlus
 import GHCJS.Types (JSVal, IsJSVal)
 import GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
 import GHCJS.Foreign.Callback
-import GHCJS.Foreign
 import Data.JSString
 
 newtype WebSocket      = WebSocket      { unWebSocket      :: JSVal } deriving (PFromJSVal, PToJSVal)

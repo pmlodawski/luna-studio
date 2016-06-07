@@ -6,21 +6,14 @@ module Reactive.Commands.Graph.Selection
      ) where
 
 import           Utils.PreludePlus
-import           Control.Monad.State hiding (State)
 
-import qualified Object.Widget.Node as NodeModel
-import           Object.UITypes (WidgetId)
-import           Object.Widget  (objectId, widget, WidgetFile(..))
-import           Event.Keyboard (KeyMods(..))
+import           Object.Widget                (WidgetFile (..), objectId, widget)
+import qualified Object.Widget.Node           as NodeModel
 
-import           Reactive.State.Global     (State)
-import qualified Reactive.State.Global     as Global
-import qualified Reactive.State.UIRegistry as UIRegistry
-import qualified Reactive.State.Graph      as Graph
-
-import           Reactive.Commands.Command          (Command, performIO)
-import           Reactive.Commands.Graph            (allNodes)
-import qualified Reactive.Commands.UIRegistry  as UICmd
+import           Reactive.Commands.Command    (Command)
+import           Reactive.Commands.Graph      (allNodes)
+import qualified Reactive.Commands.UIRegistry as UICmd
+import qualified Reactive.State.UIRegistry    as UIRegistry
 
 
 unselectAll :: Command UIRegistry.State ()

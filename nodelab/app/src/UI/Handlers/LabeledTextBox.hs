@@ -2,32 +2,24 @@ module UI.Handlers.LabeledTextBox where
 
 import           Utils.PreludePlus
 
-import           Data.HMap.Lazy                  (HTMap, TypeKey (..))
-import qualified Data.HMap.Lazy                  as HMap
-import qualified Data.Text.Lazy                  as Text
-import           Data.Text.Lazy.Read             (rational)
+import           Data.HMap.Lazy               (HTMap)
 import           Utils.Vector
 
-import           Event.Event                     (JSState)
-import           Object.Widget                   (DblClickHandler, DragEndHandler, DragMoveHandler, KeyUpHandler,
-                                                  MousePressedHandler, UIHandlers, WidgetId, currentPos, dblClick,
-                                                  dragEnd, dragMove, keyMods, keyUp, mousePressed, startPos,
-                                                  CompositeWidget, createWidget, updateWidget, ResizableWidget, resizeWidget)
-import qualified Object.Widget.LabeledTextBox    as Model
-import qualified Object.Widget.TextBox           as TextBox
-import           Reactive.Commands.Command       (Command, performIO)
-import qualified Reactive.Commands.UIRegistry    as UICmd
-import           Reactive.State.Global           (inRegistry)
-import qualified Reactive.State.Global           as Global
-import           Reactive.State.UIRegistry       (addHandler)
-import qualified Reactive.State.UIRegistry       as UIRegistry
+import           Object.Widget                (CompositeWidget, DblClickHandler, ResizableWidget, UIHandlers, WidgetId,
+                                               createWidget, dblClick, resizeWidget, updateWidget)
+import qualified Object.Widget.LabeledTextBox as Model
+import qualified Object.Widget.TextBox        as TextBox
+import           Reactive.Commands.Command    (Command)
+import qualified Reactive.Commands.UIRegistry as UICmd
+import           Reactive.State.Global        (inRegistry)
+import qualified Reactive.State.Global        as Global
+import           Reactive.State.UIRegistry    (addHandler)
 
-import           UI.Generic                      (startDrag, defaultResize)
-import           UI.Handlers.Generic             (triggerValueChanged)
-import           UI.Widget.LabeledTextBox        ()
+import           UI.Generic                   (defaultResize)
+import           UI.Widget.LabeledTextBox     ()
 
-import           UI.Handlers.Generic             (ValueChangedHandler (..), triggerValueChanged)
-import qualified UI.Handlers.TextBox             as TextBox
+import           UI.Handlers.Generic          (ValueChangedHandler (..), triggerValueChanged)
+import qualified UI.Handlers.TextBox          as TextBox
 
 dblClickHandler :: DblClickHandler Global.State
 dblClickHandler _ _ id = do

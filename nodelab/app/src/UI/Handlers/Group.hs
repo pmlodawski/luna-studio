@@ -9,8 +9,6 @@ import           Object.Widget                (WidgetId, ResizableWidget, resize
 import qualified Object.Widget.Group          as Model
 import           Reactive.Commands.Command    (Command)
 import qualified Reactive.Commands.UIRegistry as UICmd
-import           Reactive.State.Global        (inRegistry)
-import qualified Reactive.State.Global        as Global
 import qualified Reactive.State.UIRegistry    as UIRegistry
 
 import           UI.Generic                   (defaultResize)

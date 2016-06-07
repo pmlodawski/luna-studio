@@ -2,22 +2,20 @@ module UI.Handlers.Choice where
 
 import           Utils.PreludePlus                hiding (Choice)
 
-import           Data.HMap.Lazy                   (HTMap, TypeKey (..))
+import           Data.HMap.Lazy                   (HTMap)
 import           Utils.Vector
 
-import qualified Event.Mouse                      as Mouse
-import           Object.Widget                    (UIHandlers, WidgetId, CompositeWidget, createWidget, updateWidget, ResizableWidget, resizeWidget)
+import           Object.Widget                    (CompositeWidget, ResizableWidget, UIHandlers, WidgetId, createWidget,
+                                                   resizeWidget, updateWidget)
 import           Object.Widget.Choice             (Choice (..))
 import           Object.Widget.Choice.RadioButton (RadioButton (..))
 
 import           Reactive.Commands.Command        (Command)
 import           Reactive.State.Global            (inRegistry)
 import           Reactive.State.UIRegistry        (addHandler)
-import qualified Reactive.State.UIRegistry        as UIRegistry
 
 import           UI.Command.Group                 as Group
-import           UI.Generic                       (startDrag, defaultResize)
-import           UI.Handlers.Generic              (triggerValueChanged)
+import           UI.Generic                       (defaultResize)
 import           UI.Handlers.Group                ()
 import           UI.Layout                        as Layout
 
@@ -26,8 +24,6 @@ import           UI.Widget.Choice.RadioButton     ()
 import           UI.Widget.Group                  ()
 import           UI.Widget.Label                  ()
 import           UI.Widget.Toggle                 ()
-
-import qualified Data.HMap.Lazy                   as HMap
 
 import qualified Object.Widget.Choice             as Choice
 import qualified Object.Widget.Choice.RadioButton as RadioButton

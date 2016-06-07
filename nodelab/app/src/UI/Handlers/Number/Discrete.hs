@@ -2,7 +2,7 @@ module UI.Handlers.Number.Discrete where
 
 import           Utils.PreludePlus
 
-import           Data.HMap.Lazy                (HTMap, TypeKey (..))
+import           Data.HMap.Lazy                (HTMap)
 import qualified Data.Text.Lazy                as Text
 import           Data.Text.Lazy.Read           (signed, decimal)
 import           Utils.Vector

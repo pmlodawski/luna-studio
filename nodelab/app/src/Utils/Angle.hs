@@ -1,8 +1,8 @@
 module Utils.Angle where
 
+import           Data.Fixed
 import           Utils.PreludePlus
 import           Utils.Vector
-import           Data.Fixed
 
 type Angle  = Double
 

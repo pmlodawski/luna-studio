@@ -4,13 +4,10 @@ module Object.LunaValue where
 
 import           Utils.PreludePlus         hiding (Choice)
 import qualified Reactive.State.UIRegistry as UIRegistry
-import qualified Reactive.State.Global as Global
 import           Object.UITypes            (WidgetId)
 import           Reactive.Commands.Command (Command)
 import           Data.HMap.Lazy (HTMap)
 import           Data.Aeson (ToJSON, toJSON)
-import           UI.Handlers.Generic
-
 newtype LunaExpression = LunaExpression String
 
 instance Show LunaExpression where

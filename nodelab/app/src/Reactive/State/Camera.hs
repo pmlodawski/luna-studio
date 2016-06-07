@@ -1,15 +1,15 @@
 module Reactive.State.Camera where
 
 
-import Utils.PreludePlus
-import Utils.Vector
-import Reactive.Commands.Command (Command)
-import Data.Aeson (ToJSON)
+import           Data.Aeson                (ToJSON)
+import           Reactive.Commands.Command (Command)
+import           Utils.PreludePlus
+import           Utils.Vector
 
-data DragHistory =  PanDragHistory  { _panPreviousPos         :: Vector2 Int }
-                 | ZoomDragHistory  { _zoomPreviousPos        :: Vector2 Int
-                                    , _zoomFPScreen           :: Vector2 Int
-                                    , _zoomFPWorkspace        :: Vector2 Double }
+data DragHistory =  PanDragHistory  { _panPreviousPos :: Vector2 Int }
+                 | ZoomDragHistory  { _zoomPreviousPos :: Vector2 Int
+                                    , _zoomFPScreen    :: Vector2 Int
+                                    , _zoomFPWorkspace :: Vector2 Double }
                  deriving (Eq, Show, Generic)
 
 data Camera = Camera { _screenSize :: Vector2 Int
@@ -18,8 +18,8 @@ data Camera = Camera { _screenSize :: Vector2 Int
                      , _factor     :: Double
                      } deriving (Eq, Show, Generic)
 
-data State = State { _camera   :: Camera
-                   , _history  :: Maybe DragHistory
+data State = State { _camera  :: Camera
+                   , _history :: Maybe DragHistory
                    } deriving (Eq, Show, Generic)
 
 makeLenses ''State

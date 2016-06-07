@@ -1,11 +1,10 @@
 module Object.Widget.Number.Continuous where
 
-import Utils.PreludePlus
-import Utils.Vector
-import Data.Fixed
-import Object.Widget
-import Numeric
-import Data.Aeson (ToJSON)
+import           Data.Aeson        (ToJSON)
+import           Numeric
+import           Object.Widget
+import           Utils.PreludePlus
+import           Utils.Vector
 
 data ContinuousNumber =  ContinuousNumber { _position       :: Vector2 Double
                                           , _size           :: Vector2 Double
@@ -25,7 +24,7 @@ instance IsDisplayObject ContinuousNumber where
     widgetPosition = position
     widgetSize     = size
     widgetVisible  = to $ const True
-    
+
 displayValue' :: ContinuousNumber -> String
 displayValue' model = showGFloatAlt (Just 2) (model ^. value) ""
 

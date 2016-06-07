@@ -4,7 +4,6 @@ module JS.MultiSelection
     ) where
 
 import           Utils.PreludePlus
-import           GHCJS.Foreign
 import           Utils.Vector
 
 foreign import javascript safe "app.displaySelectionBox($1, $2, $3, $4)"

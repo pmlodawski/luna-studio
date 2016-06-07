@@ -4,44 +4,36 @@ module Reactive.Plugins.Core.Action.ConnectionPen
     ( toAction
     ) where
 
-import           Utils.Angle
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import qualified Data.IntMap.Lazy                  as IntMap
+import qualified JS.ConnectionPen                   as UI
 
-import qualified JS.ConnectionPen                  as UI
-
+import           Empire.API.Data.Node               (NodeId)
 import           Object.UITypes
-import           Object.Widget                     (WidgetFile, widget)
-import qualified Object.Widget.Connection          as UIConnection
-import qualified Object.Widget.Node                as UINode
-import           Empire.API.Data.Node              (NodeId)
+import           Object.Widget                      (WidgetFile, widget)
+import qualified Object.Widget.Connection           as UIConnection
+import qualified Object.Widget.Node                 as UINode
 
-import qualified Event.ConnectionPen               as ConnectionPen
+import qualified Event.ConnectionPen                as ConnectionPen
 import           Event.Event
-import           Event.Keyboard                    hiding (Event)
-import qualified Event.Keyboard                    as Keyboard
-import           Event.Mouse                       hiding (Event, widget)
-import qualified Event.Mouse                       as Mouse
+import           Event.Keyboard                     hiding (Event)
+import qualified Event.Mouse                        as Mouse
 
-import           Reactive.State.Global             (State)
-import qualified Reactive.State.Global             as Global
-import qualified Reactive.State.Graph              as Graph
-import qualified Reactive.State.UIRegistry         as UIRegistry
+import           Reactive.State.Global              (State)
+import qualified Reactive.State.Global              as Global
+import qualified Reactive.State.UIRegistry          as UIRegistry
 
-import           Reactive.Commands.Command         (Command, execCommand, performIO)
+import           Reactive.Commands.Command          (Command, performIO)
 import           Reactive.Commands.Graph.Disconnect (disconnectAll)
-import           Reactive.Commands.Graph
-import qualified Reactive.State.ConnectionPen      as ConnectionPen
+import qualified Reactive.State.ConnectionPen       as ConnectionPen
 
-import qualified Reactive.Commands.Batch           as BatchCmd
+import qualified Reactive.Commands.Batch            as BatchCmd
 
-import qualified Empire.API.Data.Port              as Port
-import           Empire.API.Data.PortRef           (InPortRef(..), OutPortRef(..))
+import qualified Empire.API.Data.Port               as Port
+import           Empire.API.Data.PortRef            (InPortRef (..), OutPortRef (..))
 
-import           Control.Monad.State               hiding (State)
-import qualified JS.GoogleAnalytics          as GA
+import qualified JS.GoogleAnalytics                 as GA
 
 
 toAction :: Event -> Maybe (Command State ())

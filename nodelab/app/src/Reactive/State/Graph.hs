@@ -21,12 +21,9 @@ module Reactive.State.Graph
     ) where
 
 import           Utils.PreludePlus            hiding ((.=))
-import           Utils.Vector
 
 import           Data.Map.Lazy                (Map)
 import qualified Data.Map.Lazy                as Map
-import qualified Data.Text.Lazy               as Text
-import           Debug.Trace
 import           Data.UUID.Types              (UUID)
 
 import           Data.Aeson
@@ -34,10 +31,7 @@ import           Empire.API.Data.Connection   (Connection (..), ConnectionId)
 import qualified Empire.API.Data.Connection   as Connection
 import           Empire.API.Data.Node         (Node, NodeId)
 import qualified Empire.API.Data.Node         as Node
-import           Empire.API.Data.Port         (Port)
-import qualified Empire.API.Data.Port         as Port
-import           Empire.API.Data.PortRef      (AnyPortRef, InPortRef, OutPortRef)
-import           Empire.API.Data.PortRef      (InPortRef)
+import           Empire.API.Data.PortRef      (InPortRef, OutPortRef)
 import qualified Empire.API.Data.PortRef      as PortRef
 import qualified Empire.API.JSONInstances     ()
 import           Reactive.Commands.Command    (Command)

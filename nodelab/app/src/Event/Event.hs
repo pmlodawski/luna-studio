@@ -3,7 +3,7 @@ module Event.Event where
 import           Utils.PreludePlus
 import           GHCJS.Types (JSVal)
 import           GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
-import           Data.Aeson (ToJSON, encode, toJSON)
+import           Data.Aeson (ToJSON, toJSON)
 
 import qualified Event.Keyboard      as Keyboard
 import qualified Event.Mouse         as Mouse

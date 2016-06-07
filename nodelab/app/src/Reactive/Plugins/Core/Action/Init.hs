@@ -1,24 +1,19 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Reactive.Plugins.Core.Action.Init where
 
-import qualified Data.IntMap.Lazy                           as IntMap
 import           Utils.PreludePlus
 import           Utils.Vector                               (Vector2 (..))
 
 import           Object.UITypes                             (WidgetId)
-import qualified Object.Widget.Button                       as Button
 import qualified Object.Widget.Group                        as Group
-import           Reactive.Commands.Command                  (Command, execCommand, performIO)
+import           Reactive.Commands.Command                  (Command)
 import           Reactive.Commands.CommandSearcher.Commands (toggleText)
-import           Reactive.Commands.ProjectManager           (displayCurrentBreadcrumb)
 import qualified Reactive.Commands.UIRegistry               as UICmd
 import           Reactive.State.Global                      (State, inRegistry)
 import qualified Reactive.State.Global                      as Global
 import qualified Reactive.State.UIElements                  as UIElements
-import           Reactive.State.UIRegistry                  (addHandler, handle, sceneInterfaceId)
-import qualified Reactive.State.UIRegistry                  as UIRegistry
+import           Reactive.State.UIRegistry                  (addHandler, sceneInterfaceId)
 import qualified Style.Layout                               as Style
-import           Style.Types                                (uniformPadding, xyPadding)
 import qualified UI.Handlers.Button                         as Button
 import qualified UI.Layout                                  as Layout
 

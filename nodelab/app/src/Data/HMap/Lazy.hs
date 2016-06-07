@@ -18,14 +18,11 @@ module Data.HMap.Lazy (
 import           Data.Maps         as X
 import           Prelude           hiding (lookup)
 import qualified Data.Maps         as Maps
-import           Data.Monoid
 import           Data.Typeable
 import           Data.Default
-import           Data.Traversable
 import           Data.Map          (Map)
 import           Data.IntMap       (IntMap)
 import           Data.HashMap.Lazy (HashMap)
-import           Data.Foldable     (Foldable)
 import           Data.Type.Hide    (HideType, hideType, revealType, Simple)
 import           GHC.Generics      (Generic)
 

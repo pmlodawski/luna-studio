@@ -1,5 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Reactive.State.UIRegistry
@@ -25,32 +25,22 @@ module Reactive.State.UIRegistry
     , LookupFor
     ) where
 
-import           Utils.PreludePlus hiding (children, lookup)
-import           Utils.Vector
+import qualified Control.Monad.State       as MState
+import           Control.Monad.Trans.RWS   (RWS)
+import qualified Control.Monad.Trans.RWS   as RWS
+import           Data.Aeson                (ToJSON, object, toJSON)
+import           Data.HMap.Lazy            (HTMap)
+import qualified Data.HMap.Lazy            as HMap
+import qualified Data.IntMap.Lazy          as IntMap
+import           Utils.CtxDynamic
+import           Utils.PreludePlus         hiding (children, lookup)
 
 import           Object.Widget
-import           Object.Widget.Scene
 import           Object.Widget.Connection
-import           UI.Widget.Connection ()
-
-import           Data.IntMap.Lazy (IntMap)
-import qualified Data.Text.Lazy as Text
-import qualified Data.IntMap.Lazy as IntMap
-import           Data.Tuple       (swap)
-
-import           Object.UITypes
-import           Utils.CtxDynamic
-
-import qualified Control.Monad.State     as MState
-import qualified Control.Monad.Trans.RWS as RWS
-import           Control.Monad.Trans.RWS (RWS)
-
-import           Reactive.Commands.Command (Command, performIO, pureCommand)
-
-import           Data.Aeson (ToJSON, toJSON, object, Value)
-import           Utils.Aeson (intMapToJSON)
-import           Data.HMap.Lazy (HTMap)
-import qualified Data.HMap.Lazy as HMap
+import           Object.Widget.Scene
+import           Reactive.Commands.Command (Command)
+import           UI.Widget.Connection      ()
+import           Utils.Aeson               (intMapToJSON)
 
 instance CompositeWidget Scene where
     createWidget _   _ = return ()
@@ -73,8 +63,6 @@ instance ToJSON State where
                        , ("_mouseDownWidget", toJSON $ st ^. mouseDownWidget)
                        ]
 
-instance Eq State where
-    a == b = (IntMap.size $ a ^. widgets) == (IntMap.size $ a ^. widgets)
 instance Show State where
     show a = show $ IntMap.size $ a ^. widgets
 

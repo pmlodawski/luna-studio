@@ -2,13 +2,9 @@ module JS.CustomEvent
     ( registerCallback
     ) where
 
-import Utils.PreludePlus
-import Utils.Vector
-import GHCJS.Types
-import GHCJS.Foreign.Callback
-import GHCJS.Foreign
-import JavaScript.Array
-
+import           GHCJS.Foreign.Callback
+import           GHCJS.Types
+import           Utils.PreludePlus
 
 foreign import javascript safe "app.customEvent = $1"
     registerCallback' :: Callback (JSVal -> JSVal -> IO ()) -> IO ()

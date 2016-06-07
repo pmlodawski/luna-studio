@@ -5,13 +5,10 @@ module Reactive.Plugins.Core.Action.Backend.Control
 import           Utils.PreludePlus
 
 import qualified Event.Batch                      as Batch
-import           Event.Event                      (Event (Init, Batch))
+import           Event.Event                      (Event (Batch))
 
-import           Reactive.Commands.Command        (Command, execCommand, performIO)
+import           Reactive.Commands.Command        (Command)
 import           Reactive.State.Global            (State)
-import qualified Reactive.State.Global            as Global
-
-
 
 toAction :: Event -> Maybe (Command State ())
 toAction (Batch (Batch.EmpireStarted _)) = Just $ do

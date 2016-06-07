@@ -2,33 +2,30 @@ module UI.Handlers.Number.Continuous where
 
 import           Utils.PreludePlus
 
-import           Data.HMap.Lazy                  (HTMap, TypeKey (..))
-import qualified Data.HMap.Lazy                  as HMap
+import           Data.HMap.Lazy                  (HTMap)
 import qualified Data.Text.Lazy                  as Text
 import           Data.Text.Lazy.Read             (rational)
 import           Utils.Vector
 
 import qualified Event.Mouse                     as Mouse
-import           Event.Event                     (JSState)
 import           Object.Widget                   (DblClickHandler, DragEndHandler, DragMoveHandler, KeyUpHandler,
                                                   MousePressedHandler, UIHandlers, WidgetId, currentPos, dblClick,
                                                   dragEnd, dragMove, keyMods, keyUp, mousePressed, startPos,
                                                   CompositeWidget, createWidget, updateWidget, ResizableWidget, resizeWidget)
 import qualified Object.Widget.Number.Continuous as Model
 import qualified Object.Widget.TextBox           as TextBox
-import           Reactive.Commands.Command       (Command, performIO)
+import           Reactive.Commands.Command       (Command)
 import qualified Reactive.Commands.UIRegistry    as UICmd
 import           Reactive.State.Global           (inRegistry)
 import qualified Reactive.State.Global           as Global
 import           Reactive.State.UIRegistry       (addHandler)
-import qualified Reactive.State.UIRegistry       as UIRegistry
 
 import           UI.Generic                      (startDrag)
 import           UI.Handlers.Generic             (triggerValueChanged)
 import           UI.Widget.Number                (keyModMult)
 import           UI.Widget.Number.Continuous     ()
 
-import           UI.Handlers.Generic             (ValueChangedHandler (..), triggerValueChanged)
+import           UI.Handlers.Generic             (ValueChangedHandler (..))
 import qualified UI.Handlers.TextBox             as TextBox
 
 isEnabled :: WidgetId -> Command Global.State Bool

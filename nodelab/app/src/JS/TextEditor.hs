@@ -6,14 +6,9 @@ module JS.TextEditor
     , toJSString
     ) where
 
-import qualified Data.JSString          as JSString
 import           Data.JSString.Text
-import           GHCJS.Foreign
 import           GHCJS.Foreign.Callback
 import           GHCJS.Types
-import           GHCJS.Types
-import           JavaScript.Array
-import           Unsafe.Coerce
 import           Utils.PreludePlus
 
 

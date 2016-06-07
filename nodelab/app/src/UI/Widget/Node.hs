@@ -4,30 +4,19 @@ module UI.Widget.Node where
 
 import           Utils.PreludePlus
 import           Utils.Vector
-import           Utils.CtxDynamic              (toCtxDynamic)
-import           Data.HMap.Lazy                (TypeKey (..))
-import qualified Data.HMap.Lazy                as HMap
 
-import           Data.JSString.Text            (lazyTextFromJSString, lazyTextToJSString)
-import           GHCJS.DOM.Element             (Element)
-import           GHCJS.Marshal.Pure            (PFromJSVal (..), PToJSVal (..))
-import           GHCJS.Types                   (JSString, JSVal)
+import           GHCJS.Marshal.Pure (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Types        (JSVal)
 
 import           Object.UITypes
 import           Object.Widget
-import qualified Object.Widget.Node            as Model
-import qualified Object.Widget.TextBox         as TextBox
-import           Reactive.Commands.Command     (Command, ioCommand, performIO)
-import qualified Reactive.Commands.UIRegistry  as UICmd
-import           Reactive.State.Global         (inRegistry)
-import qualified Reactive.State.Global         as Global
-import qualified Reactive.State.UIRegistry     as UIRegistry
+import qualified Object.Widget.Node as Model
 
-import qualified UI.Registry                   as UIR
-import           UI.Widget                     (UIContainer (..), UIWidget (..))
-import           UI.Widget                     (GenericWidget (..))
-import           UI.Generic                    (whenChanged)
-import qualified UI.Widget                     as UIT
+import           UI.Generic         (whenChanged)
+import qualified UI.Registry        as UIR
+import           UI.Widget          (UIContainer, UIWidget)
+import           UI.Widget          (GenericWidget (..))
+import qualified UI.Widget          as UIT
 
 newtype Node = Node { unNode :: JSVal } deriving (PToJSVal, PFromJSVal)
 

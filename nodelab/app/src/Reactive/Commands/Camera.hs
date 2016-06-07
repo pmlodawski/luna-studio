@@ -20,16 +20,11 @@ module Reactive.Commands.Camera
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           Empire.API.Data.Node       (Node)
 import qualified Empire.API.Data.Node       as Node
 
-import           Event.Event                (Event (Keyboard, Mouse))
-import           Event.Keyboard             (KeyMods (..), ctrl)
-import qualified Event.Keyboard             as Keyboard
-import           Event.Mouse                (MouseButton (..))
 import qualified Event.Mouse                as Mouse
 import qualified JS.Camera                  as JS
-import           Reactive.Commands.Command  (Command, execCommand, ioCommand, performIO)
+import           Reactive.Commands.Command  (Command, performIO)
 import           Reactive.Commands.UILayout as UILayout
 import           Reactive.State.Camera      (DragHistory (..))
 import qualified Reactive.State.Camera      as Camera

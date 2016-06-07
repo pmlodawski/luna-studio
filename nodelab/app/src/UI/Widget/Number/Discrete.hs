@@ -2,11 +2,8 @@ module UI.Widget.Number.Discrete where
 
 import           Utils.PreludePlus
 import           Utils.Vector
-import           Data.Text.Lazy                (Text)
 
-import qualified Data.JSString                 as JSString
 import           Data.JSString.Text            (lazyTextToJSString)
-import           GHCJS.Foreign
 
 import           Object.UITypes
 import           Object.Widget
@@ -16,7 +13,7 @@ import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                    as UI
 import qualified UI.Registry                   as UI
 import qualified UI.Widget                     as Widget
-import           UI.Widget.Number              (Number, create', setFocus', setLabel', setValueLabel')
+import           UI.Widget.Number              (Number, create', setLabel')
 
 createNumber :: WidgetId -> Model.DiscreteNumber -> IO Number
 createNumber oid model = do

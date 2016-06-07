@@ -2,7 +2,6 @@ module Reactive.Plugins.Core.Action.Backend.ProjectManager
     ( toAction
     ) where
 
-import qualified Data.IntMap.Lazy                            as IntMap
 import qualified Data.Map.Lazy                               as Map
 import qualified Data.Text.Lazy                              as Text
 import qualified Data.UUID.Types                             as UUID
@@ -10,27 +9,21 @@ import           GHCJS.Marshal.Pure                          (pFromJSVal)
 import           Utils.PreludePlus
 
 import           Empire.API.Data.Breadcrumb                  (Breadcrumb (..))
-import qualified Empire.API.Data.Graph                       as Graph
 import qualified Empire.API.Data.GraphLocation               as GraphLocation
-import           Empire.API.Data.Node                        (Node)
-import           Empire.API.Data.PortRef                     (InPortRef, OutPortRef)
-import qualified Empire.API.Project.CreateProject            as CreateProject
 import qualified Empire.API.Project.ExportProject            as ExportProject
 import qualified Empire.API.Project.ImportProject            as ImportProject
 import qualified Empire.API.Project.ListProjects             as ListProjects
-import qualified Empire.API.Response                         as Response
+import qualified Empire.API.Project.CreateProject            as CreateProject
 
 import qualified Batch.Workspace                             as Workspace
 import qualified Event.Batch                                 as Batch
 import qualified Event.CustomEvent                           as CustomEvent
-import           Event.Event                                 (Event (Init, Batch, CustomEvent))
+import           Event.Event                                 (Event (Batch, CustomEvent))
 import           JS.DownloadFile                             (downloadFile)
-import qualified Object.Widget.Button                        as Button
 import qualified Reactive.Commands.Batch                     as BatchCmd (importProject)
-import           Reactive.Commands.Command                   (Command, execCommand, performIO)
+import           Reactive.Commands.Command                   (Command, performIO)
 import           Reactive.Commands.ProjectManager            (loadGraph, loadProject)
-import           Reactive.Commands.RenderGraph               (renderGraph)
-import           Reactive.Plugins.Core.Action.Backend.Common (doNothing, handleResponse, whenOk)
+import           Reactive.Plugins.Core.Action.Backend.Common (handleResponse)
 import           Reactive.State.Global                       (State)
 import qualified Reactive.State.Global                       as Global
 

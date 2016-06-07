@@ -5,20 +5,17 @@ module Reactive.Plugins.Core.Action.Drag
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           Object.UITypes
 import           Object.Widget                     (WidgetFile, objectId, parent, widget, widgetPosition)
 
 import           Control.Monad.State               hiding (State)
-import           Control.Monad.Trans
 import           Control.Monad.Trans.Maybe
 
 import           Event.Event
 import           Event.Keyboard                    hiding (Event)
-import qualified Event.Keyboard                    as Keyboard
-import           Event.Mouse                       hiding (Event, widget)
 import qualified Event.Mouse                       as Mouse
 
-import           Reactive.Commands.Command         (Command, execCommand, performIO)
+import qualified Reactive.Commands.Batch           as BatchCmd
+import           Reactive.Commands.Command         (Command)
 import           Reactive.Commands.Graph
 import           Reactive.Commands.Graph.Selection (selectedNodes)
 import qualified Reactive.Commands.UIRegistry      as UICmd
@@ -29,16 +26,13 @@ import           Reactive.State.Global             (State)
 import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph
 import qualified Reactive.State.UIRegistry         as UIRegistry
-import qualified Reactive.Commands.Batch           as BatchCmd
 
 import           Object.Widget.Label               (Label)
 import qualified Object.Widget.Node                as Model
 
-import qualified UI.Generic                        as UI
 import qualified UI.Handlers.Node                  as Node
 
-import           Empire.API.Data.Node (Node)
-import qualified Empire.API.Data.Node as Node
+import qualified Empire.API.Data.Node              as Node
 
 
 toAction :: Event -> Maybe (Command State ())

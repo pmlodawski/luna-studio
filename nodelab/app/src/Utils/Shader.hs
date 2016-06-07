@@ -9,14 +9,13 @@ import           Control.Lens
 import qualified Data.Array.Linear                   as A
 
 import           Data.Array.Linear.Color.Class
-import           Graphics.Rendering.GLSL.SDF         (Object, diff, merge,
-                                                      object, translate)
-import           Graphics.Rendering.GLSL.SDF.Figures -- (ball)
+import           Graphics.Rendering.GLSL.SDF         (Object, diff, merge, object, translate)
+import           Graphics.Rendering.GLSL.SDF.Figures
 import           Graphics.Shading.Flat
 import           Graphics.Shading.Material
 import           Graphics.Shading.Pattern
 
-import           Math.Space.Metric.Bounded           -- (Bounded(..))
+import           Math.Space.Metric.Bounded
 
 import qualified Language.GLSL                       as GLSL
 import qualified Language.GLSL.Builder               as GLSL

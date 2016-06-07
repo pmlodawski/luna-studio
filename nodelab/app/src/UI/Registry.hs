@@ -2,13 +2,11 @@ module UI.Registry where
 
 import           Utils.PreludePlus
 
-import qualified Data.JSString      as JSString
-import           GHCJS.Foreign
 import           GHCJS.Marshal.Pure (PFromJSVal (..), PToJSVal (..))
 import           GHCJS.Types        (JSVal)
 
 import           Object.Widget      (WidgetId)
-import           UI.Widget          (UIWidget (..))
+import           UI.Widget          (UIWidget)
 
 foreign import javascript safe "common.registry[$1]"            lookup' :: Int -> IO JSVal
 foreign import javascript safe "common.registry[$1] = $2"     register' :: Int -> JSVal -> IO ()
