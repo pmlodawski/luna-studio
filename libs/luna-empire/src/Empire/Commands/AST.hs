@@ -42,6 +42,8 @@ import           Luna.Compilation.Pass.Interpreter.Layer (InterpreterData (..))
 import           Luna.Compilation.Error            as TCError
 import           Unsafe.Coerce
 
+import           Empire.Commands.Graphics     (fromGraphics, fromLayer)
+
 import           Debug.Trace (trace)
 
 metaKey :: TypeKey NodeMeta
@@ -69,7 +71,8 @@ getNodeValue ref = runASTOp $ do
                     "Double"    -> return $ Just $ DoubleValue $ unsafeCoerce v
                     "Bool"      -> return $ Just $ BoolValue   $ unsafeCoerce v
                     "Histogram" -> return $ Just $ Histogram   $ unsafeCoerce v
-                    "Graphics"  -> return $ Just $ Graphics    $ unsafeCoerce v
+                    "Graphics"  -> return $ Just $ Graphics    $ fromGraphics v
+                    "Layer"     -> return $ Just $ Graphics    $ fromLayer v
                     "List"      -> do
                         args <- ASTBuilder.unpackArguments as
                         case args of

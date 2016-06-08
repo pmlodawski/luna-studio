@@ -55,7 +55,8 @@ Library
                   aeson,
                   aeson-pretty,
                   uuid,
-                  filepath
+                  filepath,
+                  visualization-api
 
 Executable luna-empire-lib-test
   Main-Is:        Main.hs

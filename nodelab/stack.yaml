@@ -9,6 +9,8 @@ setup-info:
         url: "https://s3-eu-west-1.amazonaws.com/nbo-toolchain/ghcjs/ghcjs-0.2.0.20160517-dupa.tar.gz"
 ghc-options:
   nodelab: -DGHCJS_BROWSER
+extra-deps:
+  - placeholders-0.1
 packages:
   - .
   - location: ../libs/luna-empire-api
@@ -37,5 +39,5 @@ packages:
     extra-dep: true
   - location:
       git: 'https://bitbucket.org/NewByteOrder/visualization-api.git'
-      commit: 33bf5b9d5124d16d50dc5693adbe8c8caca1ce2e
+      commit: 64429b7dd74260aca46f7380e533fa040af92b02
     extra-dep: true
