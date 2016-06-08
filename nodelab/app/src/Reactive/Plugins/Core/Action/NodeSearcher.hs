@@ -2,18 +2,18 @@
 
 module Reactive.Plugins.Core.Action.NodeSearcher where
 
-import           Utils.PreludePlus                               hiding (stripPrefix)
+import           Utils.PreludePlus                          hiding (stripPrefix)
 
-import           Event.Event                                     (Event (..))
-import           Event.Keyboard                                  (KeyMods (..))
-import qualified Event.Keyboard                                  as Keyboard
-import qualified Event.NodeSearcher                              as NodeSearcher
+import           Event.Event                                (Event (..))
+import           Event.Keyboard                             (KeyMods (..))
+import qualified Event.Keyboard                             as Keyboard
+import qualified Event.NodeSearcher                         as NodeSearcher
 
-import           Reactive.Commands.Command                       (Command)
-import qualified Reactive.Commands.CommandSearcher.Commands      as CS
-import qualified Reactive.Commands.NodeSearcher                  as NS
-import           Reactive.Commands.RegisterNode                  (registerNode)
-import qualified Reactive.State.Global                           as Global
+import           Reactive.Commands.Command                  (Command)
+import qualified Reactive.Commands.CommandSearcher.Commands as CS
+import           Reactive.Commands.Node.Register            (registerNode)
+import qualified Reactive.Commands.NodeSearcher             as NS
+import qualified Reactive.State.Global                      as Global
 
 
 toAction :: Event -> Maybe (Command Global.State ())

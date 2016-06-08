@@ -11,7 +11,7 @@ import           Event.Keyboard               (KeyMods (..))
 import qualified Event.Mouse                  as Mouse
 import           Object.Widget                (CompositeWidget, DblClickHandler,
                                                KeyPressedHandler, ResizableWidget,
-                                               UIHandlers, WidgetFile, WidgetId, createWidget, 
+                                               UIHandlers, WidgetFile, WidgetId, createWidget,
                                                dblClick, keyDown, mouseOut,
                                                mouseOver, mousePressed, objectId, updateWidget)
 

@@ -8,21 +8,21 @@ module Reactive.Commands.ProjectManager
 
 import           Utils.PreludePlus
 
-import qualified Batch.Workspace                 as Workspace
-import qualified Reactive.Commands.Batch         as BatchCmd
-import qualified Reactive.Commands.Breadcrumbs   as Breadcrumbs
-import           Reactive.Commands.Command       (Command, performIO)
-import           Reactive.Commands.UnrenderGraph (unrender)
-import           Reactive.State.Global           (State)
-import qualified Reactive.State.Global           as Global
+import qualified Batch.Workspace                  as Workspace
+import qualified Reactive.Commands.Batch          as BatchCmd
+import qualified Reactive.Commands.Breadcrumbs    as Breadcrumbs
+import           Reactive.Commands.Command        (Command, performIO)
+import           Reactive.Commands.Graph.Unrender (unrender)
+import           Reactive.State.Global            (State)
+import qualified Reactive.State.Global            as Global
 
-import           Empire.API.Data.Breadcrumb      (Breadcrumb (..))
-import           Empire.API.Data.GraphLocation   (GraphLocation (..))
-import qualified Empire.API.Data.GraphLocation   as GraphLocation
-import           Empire.API.Data.Project         (ProjectId)
+import           Empire.API.Data.Breadcrumb       (Breadcrumb (..))
+import           Empire.API.Data.GraphLocation    (GraphLocation (..))
+import qualified Empire.API.Data.GraphLocation    as GraphLocation
+import           Empire.API.Data.Project          (ProjectId)
 
-import qualified JS.GraphLocation                as JS
-import           UI.Instances                    ()
+import qualified JS.GraphLocation                 as JS
+import           UI.Instances                     ()
 
 
 loadProject :: ProjectId -> Command State ()

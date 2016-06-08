@@ -10,9 +10,7 @@ import           Reactive.Commands.Command        (Command, performIO)
 import qualified Reactive.State.Global            as Global
 
 import qualified Reactive.Commands.UIRegistry     as UICmd
-import           Reactive.State.UIRegistry        (addHandler, sceneGraphId,
-                                                   sceneInterfaceId)
-
+import           Reactive.State.UIRegistry        (addHandler, sceneGraphId)
 
 import qualified Object.Widget.Group              as Group
 import qualified Object.Widget.LabeledTextBox     as LabeledTextBox

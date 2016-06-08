@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Reactive.Commands.UnrenderGraph
+module Reactive.Commands.Graph.Unrender
     ( unrender
     ) where
 

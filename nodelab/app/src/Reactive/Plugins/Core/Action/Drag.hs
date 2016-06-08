@@ -96,7 +96,6 @@ stopDrag = do
                 Global.graph . Graph.nodesMap . ix id . Node.position .= toTuple pos
                 newMeta <- preuse $ Global.graph . Graph.nodesMap . ix id . Node.nodeMeta
                 withJust newMeta $ \newMeta -> BatchCmd.updateNodeMeta id newMeta
-
             updateConnections
 
 scaledDelta :: Vector2 Int -> Command State (Vector2 Double)

@@ -16,7 +16,7 @@ nodeValueToText w = Text.pack $ case w of
     IntList        v -> "Vector ["  <> (show $ length v) <> "]"
     DoubleList     v -> "Vector ["  <> (show $ length v) <> "]"
     BoolList       v -> "Vector ["  <> (show $ length v) <> "]"
-    StringList     v -> "Velctor [" <> (show $ length v) <> "]"
+    StringList     v -> "Vector ["  <> (show $ length v) <> "]"
     DoublePairList v -> "Vector2 [" <> (show $ length v) <> "]"
     IntPairList    v -> "Vector2 [" <> (show $ length v) <> "]"
     Histogram      v -> "Hist ["    <> (show $ length v) <> "]"

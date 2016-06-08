@@ -27,14 +27,15 @@ import qualified Event.Event                                 as Event
 
 import           Reactive.Commands.Camera                    (autoZoom)
 import           Reactive.Commands.Command                   (Command, performIO)
-import           Reactive.Commands.Graph                     (localConnectNodes, updateConnections)
+import           Reactive.Commands.Graph                     (updateConnections)
+import           Reactive.Commands.Graph.Connect             (localConnectNodes)
 import           Reactive.Commands.Graph.Disconnect          (localDisconnectAll)
 import           Reactive.Commands.Node                      (renameNode)
 import           Reactive.Commands.Node.Create               (addDummyNode)
 import           Reactive.Commands.Node.NodeMeta             (updateNodeMeta)
 import           Reactive.Commands.Node.Remove               (localRemoveNodes)
 import           Reactive.Commands.Node.Update               (updateNode, updateNodeProfilingData, updateNodeValue)
-import           Reactive.Commands.RenderGraph               (renderGraph)
+import           Reactive.Commands.Graph.Render              (renderGraph)
 import           Reactive.Plugins.Core.Action.Backend.Common (doNothing, handleResponse)
 import           Reactive.State.Global                       (State)
 import qualified Reactive.State.Global                       as Global

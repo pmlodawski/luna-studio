@@ -1,4 +1,4 @@
-module Reactive.Commands.RegisterNode
+module Reactive.Commands.Node.Register
     ( registerNode
     ) where
 

@@ -47,3 +47,16 @@ instance ToJSON Event
 instance ToJSON JSState where
     toJSON _ = toJSON "(..)"
 
+name :: Getter Event String
+name = to $ \n -> case n of
+    Init              -> "Init"
+    Window        _   -> "Window"
+    Keyboard      _ _ -> "Keyboard"
+    Mouse         _ _ -> "Mouse"
+    NodeSearcher  _   -> "NodeSearcher"
+    Connection    _   -> "Connection"
+    ConnectionPen _   -> "ConnectionPen"
+    Batch         _   -> "Batch"
+    TextEditor    _   -> "TextEditor"
+    Debug         _   -> "Debug"
+    CustomEvent   _   -> "CustomEvent"

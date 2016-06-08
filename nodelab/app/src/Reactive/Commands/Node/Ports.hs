@@ -16,8 +16,8 @@ import qualified Object.Widget.Port                  as PortModel
 import qualified UI.Handlers.Node                    as Node
 
 import           Reactive.Commands.Command           (Command)
-import           Reactive.Commands.Graph             (colorPort, portDefaultAngle)
 import           Reactive.Commands.Node.PortControls (makePortControl)
+import           Reactive.Commands.Node.Ports.Colors (colorPort)
 import qualified Reactive.Commands.UIRegistry        as UICmd
 import qualified Reactive.State.UIRegistry           as UIRegistry
 
@@ -40,7 +40,7 @@ makePorts node = makePort <$> ports where
     nodeId  = node ^. Node.nodeId
     makePort port = PortModel.Port portRef angle (portCount portId) isOnly (colorPort port) False where
         portRef = toAnyPortRef nodeId portId
-        angle   = portDefaultAngle (portCount portId) (port ^. Port.portId)
+        angle   = PortModel.defaultAngle (portCount portId) (port ^. Port.portId)
         portId  = port ^. Port.portId
         isOnly  = 0 == portCount (InPortId Self)
     ports = Map.elems $ node ^. Node.ports

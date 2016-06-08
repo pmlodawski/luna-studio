@@ -36,10 +36,16 @@ import qualified Reactive.State.Global                               as Global
 import qualified JS.UI                                               as UI
 import           JS.WebSocket                                        (WebSocket)
 
+import qualified Data.JSString     as JSString
+
+foreign import javascript unsafe "console.time($1);"    consoleTimeStart' :: JSString.JSString -> IO ()
+foreign import javascript unsafe "console.timeEnd($1);" consoleTimeEnd'   :: JSString.JSString -> IO ()
+
+consoleTimeStart = consoleTimeStart' . JSString.pack
+consoleTimeEnd   = consoleTimeEnd'   . JSString.pack
 
 toTransformer :: Command a () -> (IO (), a) -> (IO (), a)
 toTransformer cmd (_, a) = execCommand cmd a
-
 
 actions =  [ Debug.toActionEv
            , Control.toAction
@@ -71,13 +77,15 @@ processEvent :: MVar State -> Event.Event -> IO ()
 processEvent var ev = do
     state     <- takeMVar var
     realEvent <- preprocessEvent ev
+    -- consoleTimeStart $ (realEvent ^. Event.name) <> " State"
     jsState   <- Handlers.getJSState
     let state' = state & Global.jsState .~ jsState
     let (ioActions, newState) = execCommand (runCommands actions realEvent) state'
+    -- seq newState $ consoleTimeEnd $ (realEvent ^. Event.name) <> " State"
+    -- consoleTimeStart $ (realEvent ^. Event.name) <> " IO"
     catch (ioActions >> UI.shouldRender) (handleExcept newState realEvent)
+    -- consoleTimeEnd $ (realEvent ^. Event.name) <> " IO"
     putMVar var newState
-
-
 
 makeNetworkDescription :: WebSocket -> MVar State -> IO ()
 makeNetworkDescription conn state = do

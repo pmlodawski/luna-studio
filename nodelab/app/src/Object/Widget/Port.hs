@@ -6,6 +6,7 @@ import           Utils.PreludePlus
 import           Utils.Vector
 
 import           Empire.API.Data.PortRef  (AnyPortRef)
+import           Empire.API.Data.Port     (PortId(..), InPort(..))
 import qualified Empire.API.JSONInstances ()
 
 import           Object.Widget
@@ -30,3 +31,13 @@ instance IsDisplayObject Port where
         get _      = Vector2 0.0 0.0
         set w _    = w
     widgetVisible  = to $ const True
+
+angleToDimVec :: Double -> Vector2 Double
+angleToDimVec angle = (/ 10.0) <$> Vector2 (cos angle) (-sin angle)
+
+defaultAngle :: Int -> PortId -> Vector2 Double
+defaultAngle numPorts (OutPortId _) = angleToDimVec $ 0.0
+defaultAngle numPorts (InPortId (Arg portNum)) = angleToDimVec angle where
+    angle = delta * (fromIntegral portNum) + delta / 2.0 + pi / 2.0
+    delta = pi / (fromIntegral numPorts)
+defaultAngle numPorts (InPortId (Self)) = angleToDimVec 0.0
