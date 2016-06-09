@@ -122,7 +122,7 @@ resize'CB cb id f = do
 get :: DisplayObjectClass a => WidgetId -> Getter a b -> Command UIRegistry.State b
 get id f = do
     maybeFile <- UIRegistry.lookupTypedM id
-    let file     = fromMaybe (error "get: invalid type or widget not exists") maybeFile
+    let file     = fromMaybe (error $ "get: invalid type or widget " <> (show id) <> "  not exists") maybeFile
     return $ file ^. widget . f
 
 maybeGet :: DisplayObjectClass a => WidgetId -> Getter a b -> Command UIRegistry.State (Maybe b)
@@ -140,19 +140,19 @@ get' id f = do
 lookup :: DisplayObjectClass a => WidgetId -> Command UIRegistry.State a
 lookup id = do
     maybeFile <- UIRegistry.lookupTypedM id
-    let file   = fromMaybe (error "updateWidgetM: invalidType") maybeFile
+    let file   = fromMaybe (error $ "lookup: " <> (show id) <> "  invalidType") maybeFile
     return $ file ^. widget
 
 children :: WidgetId -> Command UIRegistry.State [WidgetId]
 children id = do
     maybeFile <- UIRegistry.lookupM id
-    let file   = fromMaybe (error "children: widget not exists") maybeFile
+    let file   = fromMaybe (error $ "children: " <> (show id) <> " widget not exists") maybeFile
     return $ file ^. Object.Widget.children
 
 parent :: WidgetId -> Command UIRegistry.State WidgetId
 parent id = do
     maybeFile <- UIRegistry.lookupM id
-    let file   = fromMaybe (error "parent: widget not exists") maybeFile
+    let file   = fromMaybe (error $ "parent: widget " <> (show id) <> " not exists") maybeFile
     return $ fromMaybe (error "parent: called on scene") $ file ^. Object.Widget.parent
 
 handler :: Typeable k => WidgetId -> TypeKey k -> Command UIRegistry.State (Maybe k)
