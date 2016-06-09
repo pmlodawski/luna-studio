@@ -2,6 +2,7 @@
 module Reactive.Commands.Node.Create
     ( addNode
     , addDummyNode
+    , registerNode
     ) where
 
 import           Utils.PreludePlus
@@ -43,7 +44,10 @@ import           Reactive.Commands.Node.Ports      (displayPorts)
 addNode :: Node -> Command State ()
 addNode node = do
     zoom Global.graph $ modify (Graph.addNode node)
-    widgetId <- zoom Global.uiRegistry $ registerNode node
+    widgetId <- zoom Global.uiRegistry $ do
+        widgetId <- registerNode node
+        focusNode widgetId
+        return widgetId
     Node.selectNode' Node.performSelect widgetId
 
 addDummyNode :: Node -> Command State ()
@@ -60,7 +64,6 @@ registerNode node = do
     nodeWidget <- UICmd.register sceneGraphId nodeModel (nodeHandlers node)
 
     displayPorts nodeWidget node
-    focusNode nodeWidget
     return nodeWidget
 
 nodeHandlers :: Node -> HTMap

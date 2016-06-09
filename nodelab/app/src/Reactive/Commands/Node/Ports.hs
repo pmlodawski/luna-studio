@@ -29,9 +29,6 @@ import           Empire.API.Data.PortRef             (toAnyPortRef)
 import           Empire.API.Data.ValueType           (ValueType (..))
 import qualified Empire.API.Data.ValueType           as ValueType
 
-nodePorts :: WidgetId -> Command UIRegistry.State [WidgetId]
-nodePorts id = UICmd.get id (Model.elements . Model.portGroup) >>= UICmd.children
-
 makePorts :: Node -> [PortModel.Port]
 makePorts node = makePort <$> ports where
     nodeId  = node ^. Node.nodeId
@@ -56,7 +53,8 @@ makePorts node = makePort <$> ports where
 displayPorts :: WidgetId -> Node -> Command UIRegistry.State ()
 displayPorts id node = do
     let nodeId = node ^. Node.nodeId
-    oldPorts <- nodePorts id
+    portGroup <- UICmd.get id (Model.elements . Model.portGroup)
+    oldPorts <- UICmd.children portGroup
     mapM_ UICmd.removeWidget oldPorts
 
     groupId <- Node.portControlsGroupId id
@@ -74,7 +72,7 @@ displayPorts id node = do
     let newPorts = makePorts node
 
     forM_ newPorts $ \p -> UICmd.register id p def
-    forM_ (node ^. Node.ports) $ makePortControl node groupId nodeId
+    forM_ (node ^. Node.ports) $ makePortControl node portGroup nodeId
     forM_ (node ^. Node.ports) $ \p -> case p ^. Port.portId of
         InPortId  Self -> return ()
         InPortId  _    -> makePortLabel inLabelsGroupId  p

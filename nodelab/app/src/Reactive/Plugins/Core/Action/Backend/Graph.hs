@@ -10,9 +10,9 @@ import qualified Batch.Workspace                             as Workspace
 import qualified Empire.API.Data.Graph                       as Graph
 import           Empire.API.Data.GraphLocation               (GraphLocation)
 import qualified Empire.API.Graph.AddNode                    as AddNode
+import qualified Empire.API.Graph.CodeUpdate                 as CodeUpdate
 import qualified Empire.API.Graph.Connect                    as Connect
 import qualified Empire.API.Graph.Disconnect                 as Disconnect
-import qualified Empire.API.Graph.CodeUpdate                 as CodeUpdate
 import qualified Empire.API.Graph.GetProgram                 as GetProgram
 import qualified Empire.API.Graph.NodeResultUpdate           as NodeResultUpdate
 import qualified Empire.API.Graph.NodeSearcherUpdate         as NodeSearcherUpdate
@@ -30,12 +30,12 @@ import           Reactive.Commands.Command                   (Command, performIO
 import           Reactive.Commands.Graph                     (updateConnections)
 import           Reactive.Commands.Graph.Connect             (localConnectNodes)
 import           Reactive.Commands.Graph.Disconnect          (localDisconnectAll)
+import           Reactive.Commands.Graph.Render              (renderGraph)
 import           Reactive.Commands.Node                      (renameNode)
 import           Reactive.Commands.Node.Create               (addDummyNode)
 import           Reactive.Commands.Node.NodeMeta             (updateNodeMeta)
 import           Reactive.Commands.Node.Remove               (localRemoveNodes)
 import           Reactive.Commands.Node.Update               (updateNode, updateNodeProfilingData, updateNodeValue)
-import           Reactive.Commands.Graph.Render              (renderGraph)
 import           Reactive.Plugins.Core.Action.Backend.Common (doNothing, handleResponse)
 import           Reactive.State.Global                       (State)
 import qualified Reactive.State.Global                       as Global
