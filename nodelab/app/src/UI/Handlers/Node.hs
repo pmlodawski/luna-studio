@@ -211,159 +211,114 @@ onClicked h = addHandler (MousePressedHandler $ h) mempty
 instance ResizableWidget Model.Node
 instance CompositeWidget Model.Node where
     createWidget id model = do
-        let label  = Style.expressionLabel $ model ^. Model.expression
-        UICmd.register id label $ onClicked (\evt _ -> selectNode evt id)
+        let label = Style.expressionLabel $ model ^. Model.expression
+        expressionLabelId <- UICmd.register id label $ onClicked (\evt _ -> selectNode evt id)
 
         let group  = Group.create & Group.position .~ Style.controlsPosition
         controlGroups <- UICmd.register id group Style.controlsLayout
 
-        let outPortControlGroup  = Group.create
-        UICmd.register id outPortControlGroup Style.controlsLayout
-
         let inLabelsGroup  = Group.create & Group.position .~ (Vector2 (-400) (-30))
                                           & Group.visible .~ False
-        UICmd.register id inLabelsGroup Style.inLabelsLayout
+        inLabelsGroupId <- UICmd.register id inLabelsGroup Style.inLabelsLayout
 
         let outLabelsGroup  = Group.create & Group.position .~ (Vector2 (40) (-30))
                                            & Group.visible .~ False
-        UICmd.register id outLabelsGroup Style.inLabelsLayout
+        outLabelsGroupId <- UICmd.register id outLabelsGroup Style.inLabelsLayout
 
         let grp    = Group.create & Group.style   .~ Style.expandedGroupStyle
                                   & Group.visible .~ (model ^. Model.isExpanded)
         expandedGroup <- UICmd.register controlGroups grp Style.expandedGroupLayout
 
         let label  = Style.execTimeLabel "Execution time: --"
-        void $ UICmd.register expandedGroup label def
+        execTimeLabelId <- UICmd.register expandedGroup label def
 
-        let grp    = Group.create
-        nodeGroup <- UICmd.register expandedGroup grp Style.expandedGroupLayout
+        nodeGroupId <- UICmd.register expandedGroup (Group.create) Style.expandedGroupLayout
 
-        let widget = LabeledTextBox.create Style.portControlSize "Name" (model ^. Model.name)
-        UICmd.register nodeGroup widget $ nameHandlers id
+        let widget = LabeledTextBox.create Style.portControlSize "Name" $ model ^. Model.name
+        nameTextBoxId <- UICmd.register nodeGroupId widget $ nameHandlers id
 
-        let widget = Toggle.create Style.portControlSize "Required" (model ^. Model.isRequired)
-        UICmd.register nodeGroup widget $ isRequiredHandlers id
+        let widget = Toggle.create Style.portControlSize "Required" $ model ^. Model.isRequired
+        requiredToggleId <- UICmd.register nodeGroupId widget $ isRequiredHandlers id
 
         withJust (model ^. Model.tpe) $ \tpe -> do
             let widget = LabeledTextBox.create Style.portControlSize "Type" (fromMaybe "" $ model ^. Model.tpe)
-            UICmd.register_ nodeGroup widget $ typeHandlers id
+            nodeTpeId <- UICmd.register nodeGroupId widget $ typeHandlers id
+            void $ UIRegistry.updateWidgetM id $ Model.elements . Model.nodeType     ?~ nodeTpeId
 
         let grp    = Group.create
-        UICmd.register expandedGroup grp Style.expandedGroupLayout
+        portControlsGroupId <- UICmd.register expandedGroup grp Style.expandedGroupLayout
+
+        let grp    = Group.create
+        portGroup <- UICmd.register id grp def
 
         let label  = Style.valueLabel ""
-        UICmd.register controlGroups label def
+        valueLabelId <- UICmd.register controlGroups label def
 
         let group  = Group.create & Group.style   .~ Style.visualizationGroupStyle
                                   & Group.visible .~ (model ^. Model.isExpanded)
-        UICmd.register_ controlGroups group (Layout.verticalLayoutHandler 0.0)
+        visualizationGroupId <- UICmd.register controlGroups group (Layout.verticalLayoutHandler 0.0)
 
+        void $ UIRegistry.updateWidgetM id $ Model.elements %~ ( (Model.expressionLabel    .~ expressionLabelId    )
+                                                               . (Model.expandedGroup      .~ expandedGroup        )
+                                                               . (Model.portGroup          .~ portGroup            )
+                                                               . (Model.portControls       .~ portControlsGroupId  )
+                                                               . (Model.inLabelsGroup      .~ inLabelsGroupId      )
+                                                               . (Model.outLabelsGroup     .~ outLabelsGroupId     )
+                                                               . (Model.nameTextBox        .~ nameTextBoxId        )
+                                                               . (Model.valueLabel         .~ valueLabelId         )
+                                                               . (Model.visualizationGroup .~ visualizationGroupId )
+                                                               . (Model.execTimeLabel      .~ execTimeLabelId      )
+                                                               . (Model.requiredToggle     .~ requiredToggleId     )
+                                                               )
 
     updateWidget id old model = do
         whenChanged old model Model.isExpanded $ do
-            controlsId <- expandedGroupId id
-            valueVisId <- valueGroupId    id
+            let controlsId = model ^. Model.elements . Model.expandedGroup
+                valueVisId = model ^. Model.elements . Model.visualizationGroup
             UICmd.update_ controlsId $ Group.visible .~ (model ^. Model.isExpanded)
             UICmd.update_ valueVisId $ Group.visible .~ (model ^. Model.isExpanded)
+
         whenChanged old model Model.expression $ do
-            exprId     <- expressionId    id
+            let exprId = model ^. Model.elements . Model.expressionLabel
             UICmd.update_ exprId     $ Label.label   .~ (model ^. Model.expression)
+
         whenChanged old model Model.name  $ do
-            nameTbId   <- nameTextBoxId   id
+            let nameTbId = model ^. Model.elements . Model.nameTextBox
             UICmd.update_ nameTbId   $ LabeledTextBox.value .~ (model ^. Model.name)
+
         whenChanged old model Model.value $ do
-            valueId    <- valueLabelId    id
+            let valueId = model ^. Model.elements . Model.valueLabel
             UICmd.update_ valueId    $ Label.label   .~ (model ^. Model.value)
+
         whenChanged old model Model.tpe   $ withJust (model ^. Model.tpe) $ \tpe -> do
-            typeTbId   <- typeTextBoxId   id
+            let typeTbId = model ^. Model.elements . Model.nodeType
             withJust typeTbId $ \typeTbId -> UICmd.update_ typeTbId $ LabeledTextBox.value .~ tpe
 
         whenChanged old model Model.execTime $ do
-            etId       <- execTimeLabelId id
+            let etId = model ^. Model.elements . Model.execTimeLabel
             UICmd.update_ etId $ Label.label     .~ (fromMaybe "Execution time: --" $ (\v -> "Execution time: " <> v <> " ms") <$> (Text.pack . show) <$> model ^. Model.execTime)
 
         whenChanged old model Model.isExpanded $ do
-            valueId    <- valueLabelId    id
+            let valueId = model ^. Model.elements . Model.valueLabel
             UICmd.update_ valueId  $ Label.alignment .~ (if model ^. Model.isExpanded then Label.Left else Label.Center)
             UICmd.moveX   valueId  $ if model ^. Model.isExpanded then 0.0 else -25.0
 
         whenChanged old model Model.isRequired $ do
-            toggleId  <- isRequiredId  id
+            let toggleId = model ^. Model.elements . Model.requiredToggle
             UICmd.update_ toggleId $ Toggle.value .~ (model ^. Model.isRequired)
 
 
 portControlsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
-portControlsGroupId id = do
-    expGroup <- expandedGroupId id
-    (_:_:controlsId:_) <- UICmd.children expGroup
-    return controlsId
-
-outPortControlsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
-outPortControlsGroupId id = do
-    (_:_:groupId:_) <- UICmd.children id
-    return groupId
+portControlsGroupId id = UICmd.get id $ Model.elements . Model.portControls
 
 inLabelsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
-inLabelsGroupId id = do
-    (_:_:_:groupId:_) <- UICmd.children id
-    return groupId
+inLabelsGroupId id = UICmd.get id $ Model.elements . Model.inLabelsGroup
 
 outLabelsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
-outLabelsGroupId id = do
-    (_:_:_:_:groupId:_) <- UICmd.children id
-    return groupId
-
-nodeControlsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
-nodeControlsGroupId id = do
-    expGroup <- expandedGroupId id
-    (_:controlsId:_) <- UICmd.children expGroup
-
-    return controlsId
-
-nameTextBoxId :: WidgetId -> Command UIRegistry.State WidgetId
-nameTextBoxId id = do
-    group <- nodeControlsGroupId id
-    (nodeNameId:_) <- UICmd.children group
-    return nodeNameId
-
-isRequiredId :: WidgetId -> Command UIRegistry.State WidgetId
-isRequiredId id = do
-    group <- nodeControlsGroupId id
-    (_:toggleId:_) <- UICmd.children group
-    return toggleId
-
-typeTextBoxId :: WidgetId -> Command UIRegistry.State (Maybe WidgetId)
-typeTextBoxId id = do
-    group <- nodeControlsGroupId id
-    children <- UICmd.children group
-    return $ children ^? ix 2
-
-expandedGroupId :: WidgetId -> Command UIRegistry.State WidgetId
-expandedGroupId id = do
-    (_:groupId:_) <- UICmd.children id
-    (expandedId:_) <- UICmd.children groupId
-    return expandedId
+outLabelsGroupId id = UICmd.get id $ Model.elements . Model.outLabelsGroup
 
 expressionId :: WidgetId -> Command UIRegistry.State WidgetId
-expressionId id = do
-    (exprId:_) <- UICmd.children id
-    return exprId
+expressionId id = UICmd.get id $ Model.elements . Model.expressionLabel
 
 valueGroupId :: WidgetId -> Command UIRegistry.State WidgetId
-valueGroupId id = do
-    (_:groupId:_) <- UICmd.children id
-    (_:_:valGrpId:_) <- UICmd.children groupId
-    return valGrpId
-
-valueLabelId :: WidgetId -> Command UIRegistry.State WidgetId
-valueLabelId id = do
-    (_:groupId:_) <- UICmd.children id
-    (_:valLabelId:_) <- UICmd.children groupId
-    return valLabelId
-
-execTimeLabelId :: WidgetId -> Command UIRegistry.State WidgetId
-execTimeLabelId id = do
-    expGroup <- expandedGroupId id
-    (etId:_) <- UICmd.children expGroup
-
-    return etId
+valueGroupId id = UICmd.get id $ Model.elements . Model.visualizationGroup

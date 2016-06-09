@@ -14,6 +14,25 @@ import qualified Empire.API.Data.Port     as P
 import           Object.UITypes
 import           Object.Widget
 
+
+data Elements = Elements { _expressionLabel    :: WidgetId
+                         , _portGroup          :: WidgetId
+                         , _portControls       :: WidgetId
+                         , _inLabelsGroup      :: WidgetId
+                         , _outLabelsGroup     :: WidgetId
+                         , _expandedGroup      :: WidgetId
+                         , _nameTextBox        :: WidgetId
+                         , _valueLabel         :: WidgetId
+                         , _visualizationGroup :: WidgetId
+                         , _execTimeLabel      :: WidgetId
+                         , _requiredToggle     :: WidgetId
+                         , _nodeType           :: Maybe WidgetId
+                         } deriving (Eq, Show, Generic)
+
+instance Default Elements where
+    def = Elements def def def def def def def def def def def def
+
+
 data Node = Node { _nodeId     :: N.NodeId
                  , _controls   :: [Maybe WidgetId]
                  , _ports      :: [WidgetId]
@@ -29,13 +48,17 @@ data Node = Node { _nodeId     :: N.NodeId
                  , _isRequired :: Bool
                  , _execTime   :: Maybe Integer
                  , _highlight  :: Bool
+                 , _elements   :: Elements
                  } deriving (Eq, Show, Typeable, Generic)
 
 makeLenses ''Node
 instance ToJSON Node
 
+makeLenses ''Elements
+instance ToJSON Elements
+
 makeNode :: N.NodeId -> Position -> Text -> Text -> Maybe Text -> Bool -> Node
-makeNode id pos expr name tpe req = Node id [] [] pos 0.0 expr name "" tpe False False False req Nothing False
+makeNode id pos expr name tpe req = Node id [] [] pos 0.0 expr name "" tpe False False False req Nothing False def
 
 fromNode :: N.Node -> Node
 fromNode n = let position' = uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position

@@ -8,7 +8,7 @@ import           Reactive.Commands.Command          (Command)
 import           Reactive.Commands.Graph            (nodeIdToWidgetId)
 import           Reactive.Commands.Graph.Disconnect (localDisconnectAll)
 import           Reactive.Commands.Graph.Selection  (selectedNodes)
-import           Reactive.State.Global              (State)
+import           Reactive.State.Global              (State, inRegistry)
 import qualified Reactive.State.Global              as Global
 import qualified Reactive.State.Graph               as Graph
 import           Utils.PreludePlus
@@ -38,8 +38,9 @@ localRemoveNodes nodeIds = forM_ nodeIds $ \nodeId -> do
     danglingConns <- uses Global.graph (Graph.connectionIdsContainingNode $ nodeId)
     localDisconnectAll danglingConns
 
-    Global.graph %= Graph.removeNode (nodeId)
+    Global.graph %= Graph.removeNode nodeId
 
-    nodeWidgetId <- zoom Global.uiRegistry $ nodeIdToWidgetId nodeId
-    zoom Global.uiRegistry $ mapM_ removeWidget $ maybeToList nodeWidgetId
+    inRegistry $ do
+        nodeWidgetId <- nodeIdToWidgetId nodeId
+        withJust nodeWidgetId removeWidget
 

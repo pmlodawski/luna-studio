@@ -50,11 +50,11 @@ isLiteral = to $ isLiteral' where
         isIn' (InPortId  _) = 1
 
 
-makePortControl :: Node -> WidgetId -> WidgetId -> NodeId -> Port -> Command UIRegistry.State ()
-makePortControl node outPortParent groupParent nodeId port = let portRef = toAnyPortRef nodeId $ port ^. Port.portId in
+makePortControl :: Node -> WidgetId -> NodeId -> Port -> Command UIRegistry.State ()
+makePortControl node groupParent nodeId port = let portRef = toAnyPortRef nodeId $ port ^. Port.portId in
     case port ^. Port.portId of
         InPortId  (Arg ix) -> makeInPortControl groupParent portRef port
-        OutPortId All      -> when (node ^. isLiteral) $ makeInPortControl groupParent portRef port -- TODO: change groupParent to outPortParent
+        OutPortId All      -> when (node ^. isLiteral) $ makeInPortControl groupParent portRef port
         _ -> return ()
 
 makeInPortControl :: WidgetId -> AnyPortRef -> Port -> Command UIRegistry.State ()

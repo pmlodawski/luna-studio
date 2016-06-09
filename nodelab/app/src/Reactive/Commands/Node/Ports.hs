@@ -30,21 +30,18 @@ import           Empire.API.Data.ValueType           (ValueType (..))
 import qualified Empire.API.Data.ValueType           as ValueType
 
 nodePorts :: WidgetId -> Command UIRegistry.State [WidgetId]
-nodePorts id = do
-    children <- UICmd.children id
-    let isPort id = (UIRegistry.lookupTypedM id :: UIRegistry.LookupFor PortModel.Port) >>= return . isJust
-    filterM isPort children
+nodePorts id = UICmd.get id (Model.elements . Model.portGroup) >>= UICmd.children
 
 makePorts :: Node -> [PortModel.Port]
 makePorts node = makePort <$> ports where
     nodeId  = node ^. Node.nodeId
     makePort port = PortModel.Port portRef angle (portCount portId) isOnly (colorPort port) False where
-        portRef = toAnyPortRef nodeId portId
-        angle   = PortModel.defaultAngle (portCount portId) (port ^. Port.portId)
         portId  = port ^. Port.portId
+        portRef = toAnyPortRef nodeId portId
+        angle   = PortModel.defaultAngle (portCount portId) portId
         isOnly  = 0 == portCount (InPortId Self)
-    ports = Map.elems $ node ^. Node.ports
-    portIds = Map.keys $  node ^. Node.ports
+    ports   = Map.elems $ node ^. Node.ports
+    portIds = Map.keys  $ node ^. Node.ports
     portCount :: PortId -> Int
     portCount (OutPortId _) = sum $ fmap isOut portIds where
         isOut :: PortId -> Int
@@ -52,23 +49,19 @@ makePorts node = makePort <$> ports where
         isOut (InPortId  _) = 0
     portCount (InPortId  _) = sum $ fmap isIn  portIds where
         isIn :: PortId -> Int
-        isIn (OutPortId _) = 0
+        isIn (OutPortId _)      = 0
         isIn (InPortId (Arg _)) = 1
-        isIn (InPortId Self) = 0
+        isIn (InPortId Self)    = 0
 
 displayPorts :: WidgetId -> Node -> Command UIRegistry.State ()
 displayPorts id node = do
-    nodeId <- UICmd.get id Model.nodeId
+    let nodeId = node ^. Node.nodeId
     oldPorts <- nodePorts id
     mapM_ UICmd.removeWidget oldPorts
 
     groupId <- Node.portControlsGroupId id
     portControls <- UICmd.children groupId
     mapM_ UICmd.removeWidget portControls
-
-    outPortGroupId <- Node.outPortControlsGroupId id
-    outPortControls <- UICmd.children outPortGroupId
-    mapM_ UICmd.removeWidget outPortControls
 
     inLabelsGroupId <- Node.inLabelsGroupId id
     inLabels <- UICmd.children inLabelsGroupId
@@ -81,10 +74,10 @@ displayPorts id node = do
     let newPorts = makePorts node
 
     forM_ newPorts $ \p -> UICmd.register id p def
-    forM_ (node ^. Node.ports) $ \p -> makePortControl node outPortGroupId groupId (node ^. Node.nodeId) p
+    forM_ (node ^. Node.ports) $ makePortControl node groupId nodeId
     forM_ (node ^. Node.ports) $ \p -> case p ^. Port.portId of
         InPortId  Self -> return ()
-        InPortId  _    -> makePortLabel inLabelsGroupId p
+        InPortId  _    -> makePortLabel inLabelsGroupId  p
         OutPortId _    -> makePortLabel outLabelsGroupId p
 
 vtToText :: Getter ValueType Text
