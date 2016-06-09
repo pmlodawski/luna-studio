@@ -17,7 +17,7 @@ import           Event.Mouse                     hiding (Event, widget)
 import qualified Event.Mouse                     as Mouse
 
 import           Reactive.Commands.Command       (Command)
-import           Reactive.Commands.Graph         (portRefToWidgetId, updateConnections)
+import           Reactive.Commands.Graph         (portRefToWidgetId)
 import           Reactive.Commands.Graph.Connect (batchConnectNodes)
 import qualified Reactive.Commands.UIRegistry    as UICmd
 import qualified Reactive.State.Camera           as Camera
@@ -102,7 +102,6 @@ handleMove coord (Connecting sourceRef sourceVector nodePos _ (DragHistory start
             InPortRef'   (InPortRef _ Self) -> showCurrentConnection current' startLine False
             InPortRef'   (InPortRef _ _)    -> showCurrentConnection current' startLine True
             OutPortRef'  _                  -> showCurrentConnection startLine current' True
-    updateConnections
 
 stopDrag' :: Connect.Connecting -> Command State ()
 stopDrag' _ = do
