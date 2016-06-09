@@ -15,7 +15,7 @@ import qualified Object.Widget.Node                  as Model
 import qualified Object.Widget.Port                  as PortModel
 import qualified UI.Handlers.Node                    as Node
 
-import           Reactive.Commands.Command           (Command)
+import           Reactive.Commands.Command           (Command, performIO)
 import           Reactive.Commands.Node.PortControls (makePortControl)
 import           Reactive.Commands.Node.Ports.Colors (colorPort)
 import qualified Reactive.Commands.UIRegistry        as UICmd
@@ -52,27 +52,24 @@ makePorts node = makePort <$> ports where
 
 displayPorts :: WidgetId -> Node -> Command UIRegistry.State ()
 displayPorts id node = do
-    let nodeId = node ^. Node.nodeId
-    portGroup <- UICmd.get id (Model.elements . Model.portGroup)
-    oldPorts <- UICmd.children portGroup
+    portGroup <- UICmd.get id $ Model.elements . Model.portGroup
+    oldPorts  <- UICmd.children portGroup
     mapM_ UICmd.removeWidget oldPorts
 
-    groupId <- Node.portControlsGroupId id
+    groupId      <- Node.portControlsGroupId id
     portControls <- UICmd.children groupId
     mapM_ UICmd.removeWidget portControls
 
     inLabelsGroupId <- Node.inLabelsGroupId id
-    inLabels <- UICmd.children inLabelsGroupId
+    inLabels        <- UICmd.children inLabelsGroupId
     mapM_ UICmd.removeWidget inLabels
 
     outLabelsGroupId <- Node.outLabelsGroupId id
-    outLabels <- UICmd.children outLabelsGroupId
+    outLabels        <- UICmd.children outLabelsGroupId
     mapM_ UICmd.removeWidget outLabels
 
-    let newPorts = makePorts node
-
-    forM_ newPorts $ \p -> UICmd.register id p def
-    forM_ (node ^. Node.ports) $ makePortControl node portGroup nodeId
+    forM_ (makePorts node    ) $ \p -> UICmd.register portGroup p def -- FIXME
+    forM_ (node ^. Node.ports) $ makePortControl groupId node
     forM_ (node ^. Node.ports) $ \p -> case p ^. Port.portId of
         InPortId  Self -> return ()
         InPortId  _    -> makePortLabel inLabelsGroupId  p

@@ -34,7 +34,7 @@ import qualified Style.Node                      as Style
 import qualified Style.Types                     as Style
 
 import qualified Empire.API.Data.DefaultValue    as DefaultValue
-import           Empire.API.Data.Node            (Node, NodeId)
+import           Empire.API.Data.Node            (Node)
 import qualified Empire.API.Data.Node            as Node
 import           Empire.API.Data.Port            (InPort (..), InPort (..), OutPort (..), Port (..), PortId (..))
 import qualified Empire.API.Data.Port            as Port
@@ -50,8 +50,11 @@ isLiteral = to $ isLiteral' where
         isIn' (InPortId  _) = 1
 
 
-makePortControl :: Node -> WidgetId -> NodeId -> Port -> Command UIRegistry.State ()
-makePortControl node groupParent nodeId port = let portRef = toAnyPortRef nodeId $ port ^. Port.portId in
+makePortControl :: WidgetId -> Node  -> Port -> Command UIRegistry.State ()
+makePortControl groupParent node port =
+    let portRef = toAnyPortRef nodeId $ port ^. Port.portId
+        nodeId  = node ^. Node.nodeId
+    in
     case port ^. Port.portId of
         InPortId  (Arg ix) -> makeInPortControl groupParent portRef port
         OutPortId All      -> when (node ^. isLiteral) $ makeInPortControl groupParent portRef port

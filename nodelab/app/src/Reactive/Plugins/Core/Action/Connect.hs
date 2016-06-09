@@ -23,7 +23,7 @@ import qualified Reactive.Commands.UIRegistry    as UICmd
 import qualified Reactive.State.Camera           as Camera
 import           Reactive.State.Connect          (Connecting (..), DragHistory (..))
 import qualified Reactive.State.Connect          as Connect
-import           Reactive.State.Global           (State)
+import           Reactive.State.Global           (State, inRegistry)
 import qualified Reactive.State.Global           as Global
 import qualified Reactive.State.Graph            as Graph
 import qualified Reactive.State.UIRegistry       as UIRegistry
@@ -65,7 +65,8 @@ startDrag event@(Mouse.Event _ coord _ _ (Just evWd)) = do
         let sourceRef = model ^. PortModel.portRef
         graph  <- use Global.graph
         camera <- use $ Global.camera . Camera.camera
-        sourceNodePos <- zoom Global.uiRegistry $ UICmd.get (fromJust $ file ^. parent) NodeModel.position
+        nodeWidget <- inRegistry $ UICmd.parent (fromJust $ file ^. parent)
+        sourceNodePos <- inRegistry $ UICmd.get nodeWidget NodeModel.position
         Global.connect . Connect.connecting ?= (Connecting sourceRef (model ^. PortModel.angleVector) sourceNodePos Nothing (DragHistory coord coord))
         zoom Global.uiRegistry $ setCurrentConnectionColor $ model ^. PortModel.color
 

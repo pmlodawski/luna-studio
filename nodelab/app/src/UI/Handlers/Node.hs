@@ -211,6 +211,9 @@ onClicked h = addHandler (MousePressedHandler $ h) mempty
 instance ResizableWidget Model.Node
 instance CompositeWidget Model.Node where
     createWidget id model = do
+        let grp    = Group.create & Group.size .~ (Vector2 1 1)
+        portGroup <- UICmd.register id grp def
+
         let label = Style.expressionLabel $ model ^. Model.expression
         expressionLabelId <- UICmd.register id label $ onClicked (\evt _ -> selectNode evt id)
 
@@ -247,9 +250,6 @@ instance CompositeWidget Model.Node where
 
         let grp    = Group.create
         portControlsGroupId <- UICmd.register expandedGroup grp Style.expandedGroupLayout
-
-        let grp    = Group.create
-        portGroup <- UICmd.register id grp def
 
         let label  = Style.valueLabel ""
         valueLabelId <- UICmd.register controlGroups label def

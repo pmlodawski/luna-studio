@@ -15,6 +15,7 @@ import           Reactive.Commands.Command    (Command)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import           Reactive.State.Global        (inRegistry)
 import qualified Reactive.State.Global        as Global
+import qualified Reactive.State.UIRegistry    as UIRegistry (State)
 
 import qualified UI.Registry                  as UIR
 import           UI.Widget                    (UIWidget)
@@ -42,8 +43,8 @@ isSelf _ = False
 create :: WidgetId -> Model.Port -> IO Port
 create id model = do
     port <- create' id (isSelf $ model ^. Model.portRef)
-    setAngle port (model ^. Model.angle) (model ^. Model.portCount) (model ^. Model.isOnly)
-    setColor port $ model ^. Model.color
+    setAngle     port  (model ^. Model.angle) (model ^. Model.portCount) (model ^. Model.isOnly)
+    setColor     port $ model ^. Model.color
     setHighlight port $ model ^. Model.highlight
     return port
 
@@ -56,23 +57,26 @@ instance UIDisplayObject Model.Port where
 
     updateUI id old model = do
         port <- UIR.lookup id :: IO Port
-        setAngle port (model ^. Model.angle) (model ^. Model.portCount) (model ^. Model.isOnly)
-        setColor port $ model ^. Model.color
+        setAngle     port  (model ^. Model.angle) (model ^. Model.portCount) (model ^. Model.isOnly)
+        setColor     port $ model ^. Model.color
         setHighlight port $ model ^. Model.highlight
+
+toNodeId :: WidgetId -> Command UIRegistry.State WidgetId
+toNodeId id = UICmd.parent id >>= UICmd.parent
 
 onMouseOver, onMouseOut :: WidgetId -> Command Global.State ()
 onMouseOver id = inRegistry $ do
     UICmd.update_ id $ Model.highlight .~ True
-    nodeId <- UICmd.parent id
+    nodeId <- toNodeId id
     Node.showHidePortLabels True nodeId
 onMouseOut  id = inRegistry $ do
     UICmd.update_ id $ Model.highlight .~ False
-    nodeId <- UICmd.parent id
+    nodeId <- toNodeId id
     Node.showHidePortLabels False nodeId
 
 selectNode evt _ id = do
-    nid <- inRegistry $ UICmd.parent id
-    Node.selectNode evt nid
+    nodeId <- inRegistry $ toNodeId id
+    Node.selectNode evt nodeId
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & mouseOver .~ const onMouseOver
