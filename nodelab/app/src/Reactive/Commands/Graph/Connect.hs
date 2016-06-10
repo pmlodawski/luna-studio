@@ -28,7 +28,9 @@ localConnectNodes src dst = do
     prevConn <- preuse $ Global.graph . Graph.connectionsMap . ix dst
     connectionId <- zoom Global.graph $ Graph.addConnection src dst
     let newConnection = not $ isJust prevConn
-    when newConnection $ zoom Global.uiRegistry $ UICmd.register_ sceneGraphId (ConnectionModel.Connection connectionId True def def (dst ^. withArrow) def) def
+    when newConnection $ do
+        widgetId <- zoom Global.uiRegistry $ UICmd.register sceneGraphId (ConnectionModel.Connection connectionId True def def (dst ^. withArrow) def) def
+        Global.graph . Graph.connectionWidgetsMap . at dst ?= widgetId
 
 batchConnectNodes :: OutPortRef -> InPortRef -> Command Global.State ()
 batchConnectNodes src dst = BatchCmd.connectNodes src dst

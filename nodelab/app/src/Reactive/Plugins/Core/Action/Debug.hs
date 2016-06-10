@@ -46,8 +46,6 @@ toActionEv ev = Just $ do
             val <- toJSVal $ toJSON ev
             lastEv val
 
-
-
 logBatch :: Event -> Command Global.State ()
 logBatch (Batch e) = performIO $ do
     val <- toJSVal $ toJSON e

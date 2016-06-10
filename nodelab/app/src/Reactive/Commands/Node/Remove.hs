@@ -24,7 +24,7 @@ import qualified JS.GoogleAnalytics                 as GA
 
 removeSelectedNodes :: Command State ()
 removeSelectedNodes = do
-    selectedNodes <- zoom Global.uiRegistry selectedNodes
+    selectedNodes <- selectedNodes
     performRemoval $ (^. widget . NodeModel.nodeId) <$> selectedNodes
 
 performRemoval :: [NodeId] -> Command State ()
@@ -39,8 +39,8 @@ localRemoveNodes nodeIds = forM_ nodeIds $ \nodeId -> do
     localDisconnectAll danglingConns
 
     Global.graph %= Graph.removeNode nodeId
+    Global.graph . Graph.nodeWidgetsMap . at nodeId .= Nothing
 
-    inRegistry $ do
-        nodeWidgetId <- nodeIdToWidgetId nodeId
-        withJust nodeWidgetId removeWidget
+    nodeWidgetId <- nodeIdToWidgetId nodeId
+    inRegistry $ withJust nodeWidgetId removeWidget
 

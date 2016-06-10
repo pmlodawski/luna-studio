@@ -23,7 +23,7 @@ registerNode :: Text -> Command State ()
 registerNode expr = do
     nodePos <- use $ Global.uiElements . UIElements.nsPos
     let nodeMeta = def & NodeMeta.position .~ (toTuple nodePos)
-    selected   <- inRegistry selectedNodes
+    selected   <- selectedNodes
     let connectTo = case selected of
             []     -> Nothing
             [wf]   -> Just $ wf ^. widget . UINode.nodeId

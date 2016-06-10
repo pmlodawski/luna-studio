@@ -119,7 +119,6 @@ toAction (Event.Batch ev) = Just $ case ev of
     NodeMetaResponse   response -> handleResponse response doNothing
     NodeRenameResponse response -> handleResponse response doNothing
 
-
     _ -> return ()
 
 toAction _ = Nothing

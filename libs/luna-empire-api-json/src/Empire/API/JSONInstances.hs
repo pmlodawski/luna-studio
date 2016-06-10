@@ -74,6 +74,10 @@ instance (ToJSON b) => ToJSON (Map UUID b) where
     toJSON = toJSON . Map.mapKeys UUID.toString
     {-# INLINE toJSON #-}
 
+instance (ToJSON b) => ToJSON  (Map AnyPortRef b) where
+    toJSON = toJSON . Map.mapKeys show
+    {-# INLINE toJSON #-}
+
 instance (ToJSON b) => ToJSON  (Map InPortRef b) where
     toJSON = toJSON . Map.mapKeys show
     {-# INLINE toJSON #-}

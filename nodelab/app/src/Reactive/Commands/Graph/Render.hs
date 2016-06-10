@@ -22,7 +22,7 @@ fastAddNodes :: [Node] -> Command State ()
 fastAddNodes nodes = do
     let nodeIds = (view Node.nodeId) <$> nodes
     Global.graph . Graph.nodesMap .= (Map.fromList $ nodeIds `zip` nodes)
-    zoom Global.uiRegistry $ forM_ nodes $ \node -> registerNode node
+    forM_ nodes $ \node -> registerNode node
 
 renderGraph :: [Node] -> [(OutPortRef, InPortRef)] -> Command State ()
 renderGraph nodes edges = do

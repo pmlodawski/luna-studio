@@ -54,7 +54,7 @@ position = do
     mousePos <- use Global.mousePos
     mousePos' <- zoom Global.camera $ Camera.screenToWorkspaceM mousePos
     factor <- use $ Global.camera . Camera.camera . Camera.factor
-    selected <- inRegistry selectedNodes
+    selected <- selectedNodes
     nsPos <- zoom Global.camera $ Camera.workspaceToScreen $ case selected of
             [wf]   -> (wf ^. Widget.widget . NodeModel.position) + (Vector2 230.0 0)
             _     -> mousePos'
@@ -86,7 +86,7 @@ globalFunctions items = Map.filter (== Element) items
 scopedData :: Command Global.State Items
 scopedData = do
     completeData <- searcherData
-    selected   <- inRegistry selectedNodes
+    selected   <- selectedNodes
     scope <- case selected of
             []     -> return Nothing
             [wf]   -> do

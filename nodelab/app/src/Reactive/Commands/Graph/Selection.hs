@@ -14,29 +14,30 @@ import           Reactive.Commands.Command    (Command)
 import           Reactive.Commands.Graph      (allNodes)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import qualified Reactive.State.UIRegistry    as UIRegistry
+import           Reactive.State.Global        (State, inRegistry)
 
 
-unselectAll :: Command UIRegistry.State ()
+unselectAll :: Command State ()
 unselectAll = do
     widgets <- allNodes
-    forM_ widgets $ \wf -> do
+    inRegistry $ forM_ widgets $ \wf -> do
         let widgetId = wf ^. objectId
         when (wf ^. widget . NodeModel.isSelected) $ UICmd.update_ widgetId $ NodeModel.isSelected .~ False
 
-selectAll :: Command UIRegistry.State ()
+selectAll :: Command State ()
 selectAll = do
     widgets <- allNodes
     let widgetIds = (^. objectId) <$> widgets
-    forM_ widgetIds $ (flip UICmd.update) (NodeModel.isSelected .~ True)
+    inRegistry $ forM_ widgetIds $ (flip UICmd.update) (NodeModel.isSelected .~ True)
     focusSelectedNode
 
 
-selectedNodes :: Command UIRegistry.State [WidgetFile NodeModel.Node]
+selectedNodes :: Command State [WidgetFile NodeModel.Node]
 selectedNodes = do
     widgets <- allNodes
     return $ filter (^. widget . NodeModel.isSelected) widgets
 
-focusSelectedNode :: Command UIRegistry.State ()
+focusSelectedNode :: Command State ()
 focusSelectedNode = do
     widgets <- selectedNodes
-    UIRegistry.focusedWidget .= (view objectId <$> widgets ^? ix 0)
+    inRegistry $ UIRegistry.focusedWidget .= (view objectId <$> widgets ^? ix 0)

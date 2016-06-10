@@ -25,6 +25,7 @@ import           Reactive.Commands.Command    (Command)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import           Reactive.State.Global        (inRegistry)
 import qualified Reactive.State.Global        as Global
+import qualified Reactive.State.Graph         as Graph
 import           Reactive.State.UIRegistry    (addHandler)
 import qualified Reactive.State.UIRegistry    as UIRegistry
 
@@ -143,35 +144,34 @@ selectNode evt id = do
     let action = handleSelection evt
     selectNode' action id
 
-selectNode' :: (WidgetId -> Command UIRegistry.State ()) -> WidgetId -> Command Global.State ()
+selectNode' :: (WidgetId -> Command Global.State ()) -> WidgetId -> Command Global.State ()
 selectNode' action id = do
     triggerFocusNodeHandler id
     UICmd.takeFocus id
-    inRegistry $ action id
+    action id
 
-handleSelection :: Mouse.Event' -> (WidgetId -> Command UIRegistry.State ())
+handleSelection :: Mouse.Event' -> (WidgetId -> Command Global.State ())
 handleSelection evt = case evt ^. Mouse.keyMods of
     KeyMods False False False False -> performSelect
     KeyMods False False True  False -> toggleSelect
     otherwise                       -> const $ return ()
 
-performSelect :: WidgetId -> Command UIRegistry.State ()
+performSelect :: WidgetId -> Command Global.State ()
 performSelect id = do
-    isSelected <- UICmd.get id Model.isSelected
+    isSelected <- inRegistry $ UICmd.get id Model.isSelected
     unless isSelected $ do
         unselectAll
-        UICmd.update_ id (Model.isSelected .~ True)
+        inRegistry $ UICmd.update_ id (Model.isSelected .~ True)
 
-toggleSelect :: WidgetId -> Command UIRegistry.State ()
-toggleSelect id = UICmd.update_ id (Model.isSelected %~ not)
+toggleSelect :: WidgetId -> Command Global.State ()
+toggleSelect id = inRegistry $ UICmd.update_ id (Model.isSelected %~ not)
 
 
-
-unselectAll :: Command UIRegistry.State ()
+unselectAll :: Command Global.State ()
 unselectAll = do
     widgets <- allNodes
     let widgetIds = (^. objectId) <$> widgets
-    forM_ widgetIds $ (flip UICmd.update) (Model.isSelected .~ False)
+    inRegistry $ forM_ widgetIds $ (flip UICmd.update) (Model.isSelected .~ False)
 
 
 dblClickHandler :: DblClickHandler Global.State
@@ -199,8 +199,11 @@ widgetHandlers = def & keyDown      .~ keyDownHandler
                      & mouseOver .~ const onMouseOver
                      & mouseOut  .~ const onMouseOut
 
-allNodes :: Command UIRegistry.State [WidgetFile Model.Node]
-allNodes = UIRegistry.lookupAllM
+allNodes :: Command Global.State [WidgetFile Model.Node]
+allNodes = do
+    widgetIds <- use $ Global.graph . Graph.nodeWidgets
+    mayWidgets <- mapM (\id -> inRegistry $ UIRegistry.lookupTypedM id) widgetIds
+    return $ catMaybes mayWidgets
 
 unselectNode :: WidgetId -> Command UIRegistry.State ()
 unselectNode = flip UICmd.update_ (Model.isSelected .~ False)

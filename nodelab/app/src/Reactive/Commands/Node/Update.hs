@@ -38,10 +38,10 @@ updateNode node = do
 updateExistingNode :: Node -> Command State ()
 updateExistingNode node = do
     let nodeId  = node ^. Node.nodeId
-    maybeWidgetId <- inRegistry $ nodeIdToWidgetId nodeId
+    maybeWidgetId <- nodeIdToWidgetId nodeId
     zoom Global.graph $ modify (Graph.addNode node)
     withJust maybeWidgetId $ \widgetId -> do
-        inRegistry $ displayPorts widgetId node
+        displayPorts widgetId node
 
         case node ^. Node.nodeType of
             Node.ExpressionNode expression -> do
@@ -52,24 +52,25 @@ updateExistingNode node = do
 
 
 updateNodeValue :: NodeId -> NodeResult.NodeValue -> Command State ()
-updateNodeValue id val = inRegistry $ do
+updateNodeValue id val = do
     widgetId <- nodeIdToWidgetId id
-    withJust widgetId $ \widgetId -> do
-        removeVisualization widgetId
-        case val of
-            NodeResult.Value val -> do
-                UICmd.update_ widgetId $ Model.value   .~ (nodeValueToText val)
-                UICmd.update_ widgetId $ Model.isError .~ False
-                visualizeNodeValue widgetId val
-            NodeResult.NoValue -> do
-                UICmd.update_ widgetId $ Model.value   .~ ""
-                UICmd.update_ widgetId $ Model.isError .~ False
-            NodeResult.Error msg -> do
-                UICmd.update_ widgetId $ Model.value   .~ "Error!"
-                UICmd.update_ widgetId $ Model.isError .~ True
-                visualizeError widgetId msg
+    inRegistry $ do
+        withJust widgetId $ \widgetId -> do
+            removeVisualization widgetId
+            case val of
+                NodeResult.Value val -> do
+                    UICmd.update_ widgetId $ Model.value   .~ (nodeValueToText val)
+                    UICmd.update_ widgetId $ Model.isError .~ False
+                    visualizeNodeValue widgetId val
+                NodeResult.NoValue -> do
+                    UICmd.update_ widgetId $ Model.value   .~ ""
+                    UICmd.update_ widgetId $ Model.isError .~ False
+                NodeResult.Error msg -> do
+                    UICmd.update_ widgetId $ Model.value   .~ "Error!"
+                    UICmd.update_ widgetId $ Model.isError .~ True
+                    visualizeError widgetId msg
 
 updateNodeProfilingData :: NodeId -> Integer -> Command State ()
-updateNodeProfilingData id execTime = inRegistry $ do
+updateNodeProfilingData id execTime = do
     widgetId <- nodeIdToWidgetId id
-    withJust widgetId $ flip UICmd.update_ $ Model.execTime ?~ execTime
+    inRegistry $ withJust widgetId $ flip UICmd.update_ $ Model.execTime ?~ execTime

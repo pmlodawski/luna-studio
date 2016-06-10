@@ -75,7 +75,7 @@ handleMove coord = do
 
 moveNodes :: Vector2 Int -> Command State ()
 moveNodes delta = do
-    widgets <- zoom Global.uiRegistry selectedNodes
+    widgets <- selectedNodes
     delta'  <- scaledDelta delta
     let selectedIds = (^. objectId) <$> widgets
     forM_ selectedIds $ \id -> zoom Global.uiRegistry $ UICmd.moveBy id delta'
@@ -88,7 +88,7 @@ stopDrag = do
     withJust dragHistory $ \(DragHistory start current _) -> do
         Global.drag . Drag.history .= Nothing
         when (start /= current) $ do
-            widgets <- zoom Global.uiRegistry allNodes
+            widgets <- allNodes
             let selected = filter (^. widget . Model.isSelected) widgets
                 nodesToUpdate = (\w -> (w ^. widget . Model.nodeId, w ^. widget . widgetPosition)) <$> selected
 

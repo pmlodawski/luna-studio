@@ -22,10 +22,11 @@ localDisconnectAll connectionIds = do
     uiRegistry             <- use Global.uiRegistry
     graph                  <- use Global.graph
 
-    widgetIds <- mapM ((zoom Global.uiRegistry) . connectionIdToWidgetId) connectionIds
+    widgetIds <- mapM connectionIdToWidgetId connectionIds
 
     zoom Global.uiRegistry $ mapM removeWidget $ catMaybes widgetIds
     Global.graph           %= Graph.removeConnections connectionIds
+    forM_ connectionIds $ \connId -> Global.graph . Graph.connectionWidgetsMap . at connId .= Nothing
 
 connectionToRefs :: Connection -> (OutPortRef, InPortRef)
 connectionToRefs conn = (conn ^. Connection.src, conn ^. Connection.dst)

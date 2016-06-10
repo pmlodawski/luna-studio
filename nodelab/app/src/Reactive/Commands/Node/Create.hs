@@ -26,7 +26,6 @@ import           Reactive.State.Global             (State, inRegistry)
 import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph
 import           Reactive.State.UIRegistry         (addHandler, sceneGraphId)
-import qualified Reactive.State.UIRegistry         as UIRegistry
 
 import qualified Reactive.Commands.Batch           as BatchCmd
 
@@ -44,10 +43,9 @@ import           Reactive.Commands.Node.Ports      (displayPorts)
 addNode :: Node -> Command State ()
 addNode node = do
     zoom Global.graph $ modify (Graph.addNode node)
-    widgetId <- zoom Global.uiRegistry $ do
-        widgetId <- registerNode node
-        focusNode widgetId
-        return widgetId
+
+    widgetId <- registerNode node
+    focusNode widgetId
     Node.selectNode' Node.performSelect widgetId
 
 addDummyNode :: Node -> Command State ()
@@ -58,11 +56,12 @@ addDummyNode dummyNode = do
         Nothing -> addNode dummyNode
 
 
-registerNode :: Node -> Command UIRegistry.State WidgetId
+registerNode :: Node -> Command State WidgetId
 registerNode node = do
     let nodeModel = Model.fromNode node
-    nodeWidget <- UICmd.register sceneGraphId nodeModel (nodeHandlers node)
-
+        nodeId    = node ^. Node.nodeId
+    nodeWidget <- inRegistry $ UICmd.register sceneGraphId nodeModel (nodeHandlers node)
+    Global.graph . Graph.nodeWidgetsMap . at nodeId ?= nodeWidget
     displayPorts nodeWidget node
     return nodeWidget
 
@@ -70,8 +69,8 @@ nodeHandlers :: Node -> HTMap
 nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
                   $ addHandler (UINode.RenameNodeHandler $ \_ nodeId name -> BatchCmd.renameNode nodeId name)
                   $ addHandler (UINode.ChangeInputNodeTypeHandler $ \_ nodeId name -> BatchCmd.setInputNodeType nodeId name)
-                  $ addHandler (UINode.FocusNodeHandler    $ \id -> inRegistry $ focusNode id)
-                  $ addHandler (UINode.ExpandNodeHandler   $ inRegistry $ expandSelectedNodes)
+                  $ addHandler (UINode.FocusNodeHandler    $ focusNode)
+                  $ addHandler (UINode.ExpandNodeHandler   $ expandSelectedNodes)
                   $ addHandler (UINode.NodeRequiredHandler $ \nid val -> updateNodeRequired nid val)
                   $ addEnterNodeHandler where
                         addEnterNodeHandler = case node ^. Node.nodeType of
@@ -79,13 +78,13 @@ nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
                             Node.ModuleNode     -> addHandler (UINode.EnterNodeHandler $ enterNode $ Breadcrumb.Module   $ Text.unpack $ node ^. Node.name) mempty
                             _                   -> mempty
 
-expandSelectedNodes :: Command UIRegistry.State ()
+expandSelectedNodes :: Command Global.State ()
 expandSelectedNodes = do
     sn <- selectedNodes
     let allSelected = all (view $ widget . Model.isExpanded) sn
         update      = if allSelected then Model.isExpanded %~ not
                                      else Model.isExpanded .~ True
-    forM_ sn $ \wf -> do
+    inRegistry $ forM_ sn $ \wf -> do
         let id = wf ^. objectId
         UICmd.update_ id update
         UICmd.moveBy  id (Vector2 0 0) -- FIXME: trigger moved handler for html widgets

@@ -16,7 +16,7 @@ import qualified Event.Keyboard                    as Keyboard
 import qualified Event.Mouse                       as Mouse
 
 import qualified Reactive.State.Camera             as Camera
-import           Reactive.State.Global             (State)
+import           Reactive.State.Global             (State, inRegistry)
 import qualified Reactive.State.Global             as Global
 import           Reactive.State.MultiSelection     (DragHistory (..))
 import qualified Reactive.State.MultiSelection     as MultiSelection
@@ -39,19 +39,19 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down  '\27' _)) = Just tryUnselect
 toAction _ = Nothing
 
 trySelectAll :: Command State ()
-trySelectAll = zoom Global.uiRegistry $ do
-    focusedWidget <- use UIRegistry.focusedWidget
+trySelectAll = do
+    focusedWidget <- inRegistry $ use UIRegistry.focusedWidget
     when (isNothing focusedWidget) selectAll
 
 tryUnselectAll :: Command State ()
-tryUnselectAll = zoom Global.uiRegistry $ do
-    focusedWidget <- use UIRegistry.focusedWidget
+tryUnselectAll = do
+    focusedWidget <- inRegistry $ use UIRegistry.focusedWidget
     when (isNothing focusedWidget) unselectAll
 
 startDrag :: Vector2 Int -> Command State ()
 startDrag coord = do
     Global.multiSelection . MultiSelection.history ?= (DragHistory coord coord)
-    zoom Global.uiRegistry $ unselectAll
+    unselectAll
 
 handleMove :: JSState -> Vector2 Int -> Command State ()
 handleMove jsstate coord = do
@@ -68,19 +68,19 @@ lookupNode :: WidgetId -> Command UIRegistry.State (Maybe (WidgetFile NodeModel.
 lookupNode = UIRegistry.lookupTypedM
 
 updateSelection :: JSState -> Vector2 Int -> Vector2 Int -> Command State ()
-updateSelection jsstate start end = zoom Global.uiRegistry $ do
+updateSelection jsstate start end = do
     let leftTop     = Vector2 (min (start ^. x) (end ^. x)) (min (start ^. y) (end ^. y))
         rightBottom = Vector2 (max (start ^. x) (end ^. x)) (max (start ^. y) (end ^. y))
         ids         = getObjectsInRect jsstate leftTop (rightBottom - leftTop)
     oldSelected <- selectedNodes
-    newSelectedFiles <-  mapM lookupNode ids
+    newSelectedFiles <-  inRegistry $ mapM lookupNode ids
     let oldSet = Set.fromList $ (view objectId) <$> oldSelected
         newSet = Set.fromList $ (view objectId) <$> catMaybes newSelectedFiles
         toSelect = Set.difference newSet oldSet
         toUnselect = Set.difference oldSet newSet
-
-    forM_ toSelect   $ flip UICmd.update_ $ NodeModel.isSelected .~ True
-    forM_ toUnselect $ flip UICmd.update_ $ NodeModel.isSelected .~ False
+    inRegistry $ do
+        forM_ toSelect   $ flip UICmd.update_ $ NodeModel.isSelected .~ True
+        forM_ toUnselect $ flip UICmd.update_ $ NodeModel.isSelected .~ False
 
 
 drawSelectionBox :: Vector2 Int -> Vector2 Int -> Command State ()
@@ -96,4 +96,4 @@ stopDrag = do
     when wasSelecting $ do
         Global.multiSelection . MultiSelection.history .= Nothing
         performIO hideSelectionBox
-        zoom Global.uiRegistry focusSelectedNode
+        focusSelectedNode

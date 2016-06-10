@@ -20,9 +20,7 @@ import qualified Reactive.State.Graph      as Graph
 renameNode :: NodeId -> Text -> Command Global.State ()
 renameNode nodeId name = do
     Global.graph . Graph.nodesMap . ix nodeId . Node.name .= name
-    inRegistry $ do
-        widgetId <- nodeIdToWidgetId nodeId
-
-        withJust widgetId $ flip UICmd.update_ $ Model.name .~ name
+    widgetId <- nodeIdToWidgetId nodeId
+    inRegistry $ withJust widgetId $ flip UICmd.update_ $ Model.name .~ name
 
 

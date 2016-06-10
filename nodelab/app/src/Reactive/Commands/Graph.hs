@@ -25,6 +25,8 @@ import           Reactive.State.Graph
 import qualified Reactive.State.Graph          as Graph
 import qualified Reactive.State.UIRegistry     as UIRegistry
 import qualified Reactive.State.Global         as Global
+import qualified Reactive.State.Graph         as Graph
+import           Reactive.State.Global         (State, inRegistry)
 import           Reactive.Commands.Command     (Command)
 import qualified Reactive.Commands.UIRegistry  as UICmd
 import           Reactive.Commands.Node.Ports.Colors  (vtToColor)
@@ -39,52 +41,49 @@ import qualified Empire.API.Data.Connection    as Connection
 import           Empire.API.Data.ValueType     (ValueType (..))
 import qualified Empire.API.Data.Port          as Port
 
-allNodes :: Command UIRegistry.State [WidgetFile Model.Node]
-allNodes = UIRegistry.lookupAllM
+allNodes :: Command Global.State [WidgetFile Model.Node]
+allNodes = do
+    widgetIds <- use $ Global.graph . Graph.nodeWidgets
+    mayWidgets <- mapM (\id -> inRegistry $ UIRegistry.lookupTypedM id) widgetIds
+    return $ catMaybes mayWidgets
 
-allPorts :: Command UIRegistry.State [WidgetFile PortModel.Port]
-allPorts = UIRegistry.lookupAllM
+allPorts :: Command Global.State [WidgetFile PortModel.Port]
+allPorts = do
+    widgetIds <- use $ Global.graph . Graph.portWidgets
+    mayWidgets <- mapM (\id -> inRegistry $ UIRegistry.lookupTypedM id) widgetIds
+    return $ catMaybes mayWidgets
 
-allConnections :: Command UIRegistry.State [WidgetFile ConnectionModel.Connection]
-allConnections = UIRegistry.lookupAllM
+allConnections :: Command Global.State [WidgetFile ConnectionModel.Connection]
+allConnections = do
+    widgetIds <- use $ Global.graph . Graph.connectionWidgets
+    mayWidgets <- mapM (\id -> inRegistry $ UIRegistry.lookupTypedM id) widgetIds
+    return $ catMaybes mayWidgets
 
-nodeIdToWidgetId :: NodeId -> Command UIRegistry.State (Maybe WidgetId)
-nodeIdToWidgetId nodeId = do
-    files <- allNodes
-    let matching = find (\file -> (file ^. widget . Model.nodeId) == nodeId) files
-    return (view objectId <$> matching)
+nodeIdToWidgetId :: NodeId -> Command Global.State (Maybe WidgetId)
+nodeIdToWidgetId nodeId = preuse $ Global.graph . Graph.nodeWidgetsMap . ix nodeId
 
-connectionIdToWidgetId :: ConnectionId -> Command UIRegistry.State (Maybe WidgetId)
-connectionIdToWidgetId connectionId = do
-    files <- allConnections
-    let matching = find (\file -> (file ^. widget . ConnectionModel.connectionId) == connectionId) files
-    return (view objectId <$> matching)
+connectionIdToWidgetId :: ConnectionId -> Command Global.State (Maybe WidgetId)
+connectionIdToWidgetId connectionId = preuse $ Global.graph . Graph.connectionWidgetsMap . ix connectionId
 
-portRefToWidgetId :: AnyPortRef -> Command UIRegistry.State (Maybe WidgetId)
-portRefToWidgetId portRef = do
-    files <- allPorts
-    let matching = find (\file -> (file ^. widget . PortModel.portRef) == portRef) files
-    return (view objectId <$> matching)
+portRefToWidgetId :: AnyPortRef -> Command Global.State (Maybe WidgetId)
+portRefToWidgetId portRef = preuse $ Global.graph . Graph.portWidgetsMap . ix portRef
 
-focusNode :: WidgetId -> Command UIRegistry.State ()
+focusNode :: WidgetId -> Command Global.State ()
 focusNode id = do
     nodes <- allNodes
     let sortedNodes = sortBy (comparing $ negate . (view $ widget . Model.zPos)) nodes
         sortedIds   = (view objectId) <$> sortedNodes
         newOrder    = id : (delete id sortedIds)
-    forM_ (zip newOrder [1..]) $ \(id, ix) -> do
+    inRegistry $ forM_ (zip newOrder [1..]) $ \(id, ix) -> do
         let newZPos = negate $ (fromIntegral ix) / 100.0
         UICmd.update id $ Model.zPos .~ newZPos
-
----
-
 
 -- TODO: Refactor & optimize
 updateConnections :: Command Global.State ()
 updateConnections = do
-    allConnections <- zoom Global.uiRegistry allConnections
-    nodePositions  <- zoom Global.uiRegistry nodePositionMap
-    portAngles     <- zoom Global.uiRegistry portRefToAngleMap
+    allConnections <- allConnections
+    nodePositions  <- nodePositionMap
+    portAngles     <- portRefToAngleMap
     portTypes      <- portTypes
     connectionsMap <- uses Global.graph getConnectionsMap
     forM_ allConnections $ \widgetFile -> do
@@ -119,12 +118,12 @@ getConnectionLine nodePos portAngles portTypes srcPortRef dstPortRef = (srcWs, d
     missingPortPos               = (-1, 0)
     missingPortColor             = 13
 
-portRefToAngleMap :: Command UIRegistry.State (Map AnyPortRef (Double, Int))
+portRefToAngleMap :: Command Global.State (Map AnyPortRef (Double, Int))
 portRefToAngleMap = do
     ports <- allPorts
     return $ Map.fromList $ (\file -> (file ^. widget . PortModel.portRef, (file ^. widget . PortModel.angle, file ^. widget . PortModel.portCount))) <$> ports
 
-nodePositionMap :: Command UIRegistry.State (Map NodeId (Vector2 Double))
+nodePositionMap :: Command Global.State (Map NodeId (Vector2 Double))
 nodePositionMap = do
     nodes <- allNodes
     return $ Map.fromList $ (\file -> (file ^. widget . Model.nodeId, file ^. widget . widgetPosition)) <$> nodes
@@ -137,3 +136,4 @@ portTypes = do
             getPortsValueType node = portVT <$> (Map.toList $ node ^. Node.ports) where
                 portVT (portId, port) = (PortRef.toAnyPortRef nodeId portId, port ^. Port.valueType) where
                 nodeId = node ^. Node.nodeId
+

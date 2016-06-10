@@ -82,13 +82,12 @@ handleMove coord (Connecting sourceRef sourceVector nodePos _ (DragHistory start
     Global.connect . Connect.connecting . _Just . Connect.history . Connect.dragCurrentPos .= coord
     start'   <- zoom Global.camera $ Camera.screenToWorkspaceM start
     current' <- zoom Global.camera $ Camera.screenToWorkspaceM coord
-    zoom Global.uiRegistry $ do
-        startLine <- case sourceRef of
+    startLine <- case sourceRef of
             (InPortRef' (InPortRef _ Self)) -> return nodePos
             _                   -> do
                 sourceWidget <- portRefToWidgetId sourceRef
                 case sourceWidget of
-                    Just sourceWidget -> do
+                    Just sourceWidget -> inRegistry $ do
                         newVector <- UICmd.get sourceWidget PortModel.angleVector
                         portCount <- UICmd.get sourceWidget PortModel.portCount
                         let
@@ -99,10 +98,10 @@ handleMove coord (Connecting sourceRef sourceVector nodePos _ (DragHistory start
                             outerPos  = 22.0
                         return $ Vector2 sx sy
                     Nothing -> return nodePos
-        case sourceRef of
-            InPortRef'   (InPortRef _ Self) -> showCurrentConnection current' startLine False
-            InPortRef'   (InPortRef _ _)    -> showCurrentConnection current' startLine True
-            OutPortRef'  _                  -> showCurrentConnection startLine current' True
+    inRegistry $ case sourceRef of
+        InPortRef'   (InPortRef _ Self) -> showCurrentConnection current' startLine False
+        InPortRef'   (InPortRef _ _)    -> showCurrentConnection current' startLine True
+        OutPortRef'  _                  -> showCurrentConnection startLine current' True
 
 stopDrag' :: Connect.Connecting -> Command State ()
 stopDrag' _ = do

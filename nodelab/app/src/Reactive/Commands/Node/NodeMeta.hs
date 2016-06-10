@@ -22,8 +22,8 @@ import qualified Reactive.State.Graph         as Graph
 updateNodeMeta :: NodeId -> NodeMeta -> Command Global.State ()
 updateNodeMeta nodeId meta = do
     Global.graph . Graph.nodesMap . ix nodeId . Node.nodeMeta .= meta
+    widgetId <- nodeIdToWidgetId nodeId
     inRegistry $ do
-        widgetId <- nodeIdToWidgetId nodeId
         withJust widgetId $ \widgetId -> do
             UICmd.update widgetId $ Model.isRequired .~ (meta ^. NodeMeta.isRequired)
             UICmd.move   widgetId $ fromTuple $  meta ^. NodeMeta.position

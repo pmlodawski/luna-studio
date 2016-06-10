@@ -2,51 +2,60 @@
 
 module Reactive.State.Graph
     ( State(..)
-    , hasConnections
-    , getNodesMap
-    , updateNodes
-    , getConnections
-    , connectionsMap
     , addConnection
-    , nodes
-    , getConnectionsMap
-    , nodesMap
-    , getConnectionNodeIds
-    , removeConnections
-    , lookUpConnection
-    , connectionsContainingNode
-    , removeNode
-    , connectionIdsContainingNode
     , addNode
+    , connectionIdsContainingNode
+    , connectionWidgets
+    , connectionWidgetsMap
+    , connectionsContainingNode
+    , connectionsMap
+    , getConnectionNodeIds
+    , getConnections
+    , getConnectionsMap
+    , getNodesMap
+    , hasConnections
+    , lookUpConnection
+    , nodeWidgets
+    , nodeWidgetsMap
+    , nodes
+    , nodesMap
+    , portWidgets
+    , portWidgetsMap
+    , removeConnections
+    , removeNode
+    , updateNodes
     ) where
 
-import           Utils.PreludePlus            hiding ((.=))
+import           Utils.PreludePlus          hiding ((.=))
 
-import           Data.Map.Lazy                (Map)
-import qualified Data.Map.Lazy                as Map
-import           Data.UUID.Types              (UUID)
+import           Data.Map.Lazy              (Map)
+import qualified Data.Map.Lazy              as Map
 
 import           Data.Aeson
-import           Empire.API.Data.Connection   (Connection (..), ConnectionId)
-import qualified Empire.API.Data.Connection   as Connection
-import           Empire.API.Data.Node         (Node, NodeId)
-import qualified Empire.API.Data.Node         as Node
-import           Empire.API.Data.PortRef      (InPortRef, OutPortRef)
-import qualified Empire.API.Data.PortRef      as PortRef
-import qualified Empire.API.JSONInstances     ()
-import           Reactive.Commands.Command    (Command)
+import           Empire.API.Data.Connection (Connection (..), ConnectionId)
+import qualified Empire.API.Data.Connection as Connection
+import           Empire.API.Data.Node       (Node, NodeId)
+import qualified Empire.API.Data.Node       as Node
+import           Empire.API.Data.PortRef    (AnyPortRef, InPortRef, OutPortRef)
+import qualified Empire.API.Data.PortRef    as PortRef
+import qualified Empire.API.JSONInstances   ()
+import           Object.UITypes             (WidgetId)
+import           Reactive.Commands.Command  (Command)
 
-type NodesMap       = Map UUID Node
+type NodesMap       = Map NodeId Node
 type ConnectionsMap = Map InPortRef Connection
 
-data State = State { _nodesMap         :: NodesMap       -- don't access it directly
-                   , _connectionsMap   :: ConnectionsMap -- don't access it directly
+data State = State { _nodesMap              :: NodesMap
+                   , _connectionsMap        :: ConnectionsMap
+                   , _nodeWidgetsMap        :: Map NodeId     WidgetId
+                   , _connectionWidgetsMap  :: Map InPortRef  WidgetId
+                   , _portWidgetsMap        :: Map AnyPortRef WidgetId
                    } deriving (Show, Eq, Generic)
 
 makeLenses ''State
 instance ToJSON State
 instance Default State where
-    def = State def def
+    def = State def def def def def
 
 connectionToNodeIds :: Connection -> (NodeId, NodeId)
 connectionToNodeIds conn = ( conn ^. Connection.src . PortRef.srcNodeId
@@ -54,6 +63,15 @@ connectionToNodeIds conn = ( conn ^. Connection.src . PortRef.srcNodeId
 
 nodes :: Getter State [Node]
 nodes = to getNodes
+
+nodeWidgets :: Getter State [WidgetId]
+nodeWidgets = to $ Map.elems . (view nodeWidgetsMap)
+
+connectionWidgets :: Getter State [WidgetId]
+connectionWidgets = to $ Map.elems . (view connectionWidgetsMap)
+
+portWidgets :: Getter State [WidgetId]
+portWidgets = to $ Map.elems . (view portWidgetsMap)
 
 getNodes :: State -> [Node]
 getNodes = Map.elems . getNodesMap
