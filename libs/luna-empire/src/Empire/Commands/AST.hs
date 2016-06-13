@@ -3,48 +3,50 @@
 
 module Empire.Commands.AST where
 
-import           Prologue                     hiding ((#))
+import           Control.Monad.Error                     (throwError)
 import           Control.Monad.State
-import           Control.Monad.Error          (throwError)
-import           Data.Record                  (ANY (..), caseTest, of')
-import           Data.Maybe                   (maybeToList)
-import           Data.Prop                    (prop, (#))
-import           Data.Graph                   (source, Inputs (..))
-import           Data.HMap.Lazy               (TypeKey (..))
-import qualified Data.HMap.Lazy               as HMap
-import           GHC.Prim                     (Any)
-import           Data.Layer_OLD.Cover_OLD     (uncover, covered)
+import           Data.Graph                              (Inputs (..), source)
+import           Data.HMap.Lazy                          (TypeKey (..))
+import qualified Data.HMap.Lazy                          as HMap
+import           Data.Layer_OLD.Cover_OLD                (covered, uncover)
+import           Data.Maybe                              (maybeToList)
+import           Data.Prop                               (prop, ( # ))
+import           Data.Record                             (ANY (..), caseTest, of')
+import           GHC.Prim                                (Any)
+import           Prologue                                hiding (( # ))
 
+import           Empire.API.Data.DefaultValue            (PortDefault, Value (..))
+import qualified Empire.API.Data.Error                   as APIError
+import           Empire.API.Data.Node                    (NodeId)
+import           Empire.API.Data.NodeMeta                (NodeMeta)
+import           Empire.API.Data.TypeRep                 (TypeRep)
+import           Empire.Data.AST                         (AST, ASTNode, NodeRef)
+import           Empire.Data.NodeMarker                  (NodeMarker (..))
 import           Empire.Empire
-import           Empire.API.Data.DefaultValue (PortDefault, Value (..))
-import           Empire.API.Data.NodeMeta     (NodeMeta)
-import           Empire.API.Data.Node         (NodeId)
-import           Empire.API.Data.TypeRep      (TypeRep)
-import qualified Empire.API.Data.Error        as APIError
-import           Empire.Data.NodeMarker       (NodeMarker (..))
-import           Empire.Data.AST              (AST, NodeRef, ASTNode)
 
-import           Empire.ASTOp                 (runASTOp, ASTOp)
-import qualified Empire.ASTOps.Builder        as ASTBuilder
-import qualified Empire.ASTOps.Parse          as Parser
-import qualified Empire.ASTOps.Print          as Printer
-import           Empire.ASTOps.Remove         (safeRemove)
+import           Empire.ASTOp                            (ASTOp, runASTOp)
+import qualified Empire.ASTOps.Builder                   as ASTBuilder
+import qualified Empire.ASTOps.Parse                     as Parser
+import qualified Empire.ASTOps.Print                     as Printer
+import           Empire.ASTOps.Remove                    (safeRemove)
 
-import           Luna.Pretty.GraphViz         (renderAndOpen)
+import           Luna.Pretty.GraphViz                    (renderAndOpen)
 
-import           Luna.Syntax.Model.Network.Builder (Meta (..), Type (..), TCData (..), tcErrors)
-import qualified Luna.Syntax.Model.Network.Builder as Builder
-import           Old.Luna.Syntax.Term.Class        (Cons (..), Unify (..), Var (..), Acc (..), App (..))
-import qualified Old.Luna.Syntax.Term.Expr.Lit              as Lit
+import           Luna.Syntax.Model.Network.Builder       (Meta (..), TCData (..), Type (..), tcErrors)
+import qualified Luna.Syntax.Model.Network.Builder       as Builder
+import           Old.Luna.Syntax.Term.Class              (Acc (..), App (..), Cons (..), Unify (..), Var (..))
+import qualified Old.Luna.Syntax.Term.Expr.Lit           as Lit
 
-import qualified Luna.Compilation.Pass.Interpreter.Layer as Interpreter
+import           Luna.Compilation.Error                  as TCError
 import           Luna.Compilation.Pass.Interpreter.Layer (InterpreterData (..))
-import           Luna.Compilation.Error            as TCError
+import qualified Luna.Compilation.Pass.Interpreter.Layer as Interpreter
 import           Unsafe.Coerce
 
-import           Empire.Commands.Graphics     (fromGraphics, fromLayer)
+import           Empire.Commands.Graphics                (fromFigure, fromGeoComponent, fromGeometry, fromGraphics, fromLayer, fromMaterial,
+                                                          fromPrimitive, fromShape, fromSurface)
 
-import           Debug.Trace (trace)
+import           Debug.Trace                             (trace)
+
 
 metaKey :: TypeKey NodeMeta
 metaKey = TypeKey
@@ -66,14 +68,21 @@ getNodeValue ref = runASTOp $ do
             v <- liftIO (unsafeCoerce val :: IO Any)
             caseTest (uncover tpNode) $ do
                 of' $ \(Cons (Lit.String n) as) -> case n of
-                    "Int"       -> return $ Just $ IntValue    $ unsafeCoerce v
-                    "String"    -> return $ Just $ StringValue $ unsafeCoerce v
-                    "Double"    -> return $ Just $ DoubleValue $ unsafeCoerce v
-                    "Bool"      -> return $ Just $ BoolValue   $ unsafeCoerce v
-                    "Histogram" -> return $ Just $ Histogram   $ unsafeCoerce v
-                    "Graphics"  -> return $ Just $ Graphics    $ fromGraphics v
-                    "Layer"     -> return $ Just $ Graphics    $ fromLayer v
-                    "List"      -> do
+                    "Int"          -> return $ Just $ IntValue    $ unsafeCoerce     v
+                    "String"       -> return $ Just $ StringValue $ unsafeCoerce     v
+                    "Double"       -> return $ Just $ DoubleValue $ unsafeCoerce     v
+                    "Bool"         -> return $ Just $ BoolValue   $ unsafeCoerce     v
+                    "Histogram"    -> return $ Just $ Histogram   $ unsafeCoerce     v
+                    "Graphics"     -> return $ Just $ Graphics    $ fromGraphics     v
+                    "Layer"        -> return $ Just $ Graphics    $ fromLayer        v
+                    "Geometry"     -> return $ Just $ Graphics    $ fromGeometry     v
+                    "GeoComponent" -> return $ Just $ Graphics    $ fromGeoComponent v
+                    "Surface"      -> return $ Just $ Graphics    $ fromSurface      v
+                    "Shape"        -> return $ Just $ Graphics    $ fromShape        v
+                    "Primitive"    -> return $ Just $ Graphics    $ fromPrimitive    v
+                    "Figure"       -> return $ Just $ Graphics    $ fromFigure       v
+                    "Material"     -> return $ Just $ Graphics    $ fromMaterial     v
+                    "List"         -> do
                         args <- ASTBuilder.unpackArguments as
                         case args of
                             [a] -> do

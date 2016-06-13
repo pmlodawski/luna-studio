@@ -67,6 +67,7 @@ mergeObjects (object:objects@(_:_)) = Just $ foldl merge object objects
 mergeObjects (object:_)             = Just object
 mergeObjects []                     = Nothing
 
+-- TODO: fix behaviour
 transObject :: Double -> Double -> Object 2 -> Object 2
 transObject 0.0 0.0 object = object
 transObject dx  dy  object = translate tr object where
