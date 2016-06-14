@@ -22,7 +22,7 @@ packages:
 - extra-dep: true
   location:
     git: 'https://bitbucket.org/NewByteOrder/luna.git'
-    commit: 0d55d699b5c9c3d69d8898ef68fc2d4789ae91eb
+    commit: 33abf06d6687501c287605f16f8977654efe61ca
   subdirs:
   - compiler
   - core
@@ -68,5 +68,5 @@ packages:
 - extra-dep: true
   location: {commit: 9e1f4671b5bd061bca8e392ffb39271f3626702a, git: 'https://github.com/wdanilo/data-shell.git'}
 - extra-dep: true
-  location: {commit: 64429b7dd74260aca46f7380e533fa040af92b02, git: 'https://bitbucket.org/NewByteOrder/visualization-api.git'}
+  location: {commit: fc8acbadfa615b64cbcbd6db27888c118bfbaae0, git: 'https://bitbucket.org/NewByteOrder/visualization-api.git'}
 resolver: lts-5.10
