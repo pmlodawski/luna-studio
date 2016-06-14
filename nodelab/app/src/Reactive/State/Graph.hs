@@ -28,8 +28,12 @@ module Reactive.State.Graph
 
 import           Utils.PreludePlus          hiding ((.=))
 
+import           Data.Hashable              (Hashable)
+import           Data.HashMap.Lazy          (HashMap)
+import qualified Data.HashMap.Lazy          as HashMap
 import           Data.Map.Lazy              (Map)
 import qualified Data.Map.Lazy              as Map
+import           Data.UUID.Types            (UUID)
 
 import           Data.Aeson
 import           Empire.API.Data.Connection (Connection (..), ConnectionId)
@@ -37,6 +41,7 @@ import qualified Empire.API.Data.Connection as Connection
 import           Empire.API.Data.Node       (Node, NodeId)
 import qualified Empire.API.Data.Node       as Node
 import           Empire.API.Data.PortRef    (AnyPortRef, InPortRef, OutPortRef)
+import           Empire.API.Data.Port       (InPort, OutPort)
 import qualified Empire.API.Data.PortRef    as PortRef
 import qualified Empire.API.JSONInstances   ()
 import           Object.UITypes             (WidgetId)
@@ -45,11 +50,31 @@ import           Reactive.Commands.Command  (Command)
 type NodesMap       = Map NodeId Node
 type ConnectionsMap = Map InPortRef Connection
 
-data State = State { _nodesMap              :: NodesMap
-                   , _connectionsMap        :: ConnectionsMap
-                   , _nodeWidgetsMap        :: Map NodeId     WidgetId
-                   , _connectionWidgetsMap  :: Map InPortRef  WidgetId
-                   , _portWidgetsMap        :: Map AnyPortRef WidgetId
+
+instance (ToJSON b) => ToJSON (HashMap UUID b) where
+    toJSON = toJSON . Map.fromList . HashMap.toList
+    {-# INLINE toJSON #-}
+
+instance (ToJSON b) => ToJSON  (HashMap AnyPortRef b) where
+    toJSON = toJSON . Map.fromList . HashMap.toList
+    {-# INLINE toJSON #-}
+
+instance (ToJSON b) => ToJSON  (HashMap InPortRef b) where
+    toJSON = toJSON . Map.fromList . HashMap.toList
+    {-# INLINE toJSON #-}
+
+instance Default (HashMap a b) where def = HashMap.empty
+instance Hashable InPort
+instance Hashable OutPort
+instance Hashable InPortRef
+instance Hashable OutPortRef
+instance Hashable AnyPortRef
+
+data State = State { _nodesMap             :: NodesMap
+                   , _connectionsMap       :: ConnectionsMap
+                   , _nodeWidgetsMap       :: HashMap NodeId     WidgetId
+                   , _connectionWidgetsMap :: HashMap InPortRef  WidgetId
+                   , _portWidgetsMap       :: HashMap AnyPortRef WidgetId
                    } deriving (Show, Eq, Generic)
 
 makeLenses ''State
@@ -65,13 +90,13 @@ nodes :: Getter State [Node]
 nodes = to getNodes
 
 nodeWidgets :: Getter State [WidgetId]
-nodeWidgets = to $ Map.elems . (view nodeWidgetsMap)
+nodeWidgets = to $ HashMap.elems . (view nodeWidgetsMap)
 
 connectionWidgets :: Getter State [WidgetId]
-connectionWidgets = to $ Map.elems . (view connectionWidgetsMap)
+connectionWidgets = to $ HashMap.elems . (view connectionWidgetsMap)
 
 portWidgets :: Getter State [WidgetId]
-portWidgets = to $ Map.elems . (view portWidgetsMap)
+portWidgets = to $ HashMap.elems . (view portWidgetsMap)
 
 getNodes :: State -> [Node]
 getNodes = Map.elems . getNodesMap

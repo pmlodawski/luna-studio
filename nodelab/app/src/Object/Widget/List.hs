@@ -19,7 +19,7 @@ data List = List { _position    :: Vector2 Double
                  , _value       :: [AnyLunaValue]
                  , _empty       :: AnyLunaValue
                  , _fixedLength :: Bool
-                 } deriving (Show, Typeable, Generic)
+                 } deriving (Show, Typeable, Generic, Eq)
 
 makeLenses ''List
 instance ToJSON List

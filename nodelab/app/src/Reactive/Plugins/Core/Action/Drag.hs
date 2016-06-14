@@ -16,7 +16,7 @@ import qualified Event.Mouse                       as Mouse
 
 import qualified Reactive.Commands.Batch           as BatchCmd
 import           Reactive.Commands.Command         (Command)
-import           Reactive.Commands.Graph
+import           Reactive.Commands.Graph           (allNodes, updateConnectionsForNodes)
 import           Reactive.Commands.Graph.Selection (selectedNodes)
 import qualified Reactive.Commands.UIRegistry      as UICmd
 import qualified Reactive.State.Camera             as Camera
@@ -79,7 +79,7 @@ moveNodes delta = do
     delta'  <- scaledDelta delta
     let selectedIds = (^. objectId) <$> widgets
     forM_ selectedIds $ \id -> zoom Global.uiRegistry $ UICmd.moveBy id delta'
-    updateConnections
+    updateConnectionsForNodes $ (view $ widget . Model.nodeId) <$> widgets
 
 stopDrag :: Command State ()
 stopDrag = do
@@ -89,14 +89,15 @@ stopDrag = do
         Global.drag . Drag.history .= Nothing
         when (start /= current) $ do
             widgets <- allNodes
+
             let selected = filter (^. widget . Model.isSelected) widgets
                 nodesToUpdate = (\w -> (w ^. widget . Model.nodeId, w ^. widget . widgetPosition)) <$> selected
 
-            nodes <- forM nodesToUpdate $ \(id, pos) -> do
+            forM nodesToUpdate $ \(id, pos) -> do
                 Global.graph . Graph.nodesMap . ix id . Node.position .= toTuple pos
                 newMeta <- preuse $ Global.graph . Graph.nodesMap . ix id . Node.nodeMeta
                 withJust newMeta $ \newMeta -> BatchCmd.updateNodeMeta id newMeta
-            updateConnections
+            updateConnectionsForNodes $ fst <$> nodesToUpdate
 
 scaledDelta :: Vector2 Int -> Command State (Vector2 Double)
 scaledDelta delta = do

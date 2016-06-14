@@ -39,7 +39,6 @@ toAnyPortRef :: NodeId -> PortId -> AnyPortRef
 toAnyPortRef nid (InPortId pid)  = InPortRef'  $ InPortRef  nid pid
 toAnyPortRef nid (OutPortId pid) = OutPortRef' $ OutPortRef nid pid
 
-
 makeLenses ''AnyPortRef
 makeLenses ''OutPortRef
 makeLenses ''InPortRef

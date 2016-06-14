@@ -12,7 +12,7 @@ import           Control.Monad.State                  (modify)
 import qualified Object.Widget.Node                   as Model
 
 import           Reactive.Commands.Command            (Command)
-import           Reactive.Commands.Graph              (nodeIdToWidgetId, updateConnections)
+import           Reactive.Commands.Graph              (nodeIdToWidgetId, updateConnectionsForNodes)
 import qualified Reactive.Commands.UIRegistry         as UICmd
 import           Reactive.State.Global                (State, inRegistry)
 import qualified Reactive.State.Global                as Global
@@ -48,7 +48,7 @@ updateExistingNode node = do
                 inRegistry $ UICmd.update_ widgetId $ Model.expression .~ expression
             _ -> return ()
         -- TODO: obsluzyc to ze moga zniknac polaczenia
-    updateConnections
+    updateConnectionsForNodes [nodeId]
 
 
 updateNodeValue :: NodeId -> NodeResult.NodeValue -> Command State ()

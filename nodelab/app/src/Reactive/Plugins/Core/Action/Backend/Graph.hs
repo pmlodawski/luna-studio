@@ -27,7 +27,7 @@ import qualified Event.Event                                 as Event
 
 import           Reactive.Commands.Camera                    (autoZoom)
 import           Reactive.Commands.Command                   (Command, performIO)
-import           Reactive.Commands.Graph                     (updateConnections)
+import           Reactive.Commands.Graph                     (updateConnection)
 import           Reactive.Commands.Graph.Connect             (localConnectNodes)
 import           Reactive.Commands.Graph.Disconnect          (localDisconnectAll)
 import           Reactive.Commands.Graph.Render              (renderGraph)
@@ -72,8 +72,8 @@ toAction (Event.Batch ev) = Just $ case ev of
 
     NodesConnected update -> do
         whenM (isCurrentLocation $ update ^. Connect.location') $ do
-            localConnectNodes (update ^. Connect.src') (update ^. Connect.dst')
-            updateConnections
+            connectionId <- localConnectNodes (update ^. Connect.src') (update ^. Connect.dst')
+            updateConnection connectionId
 
     NodesDisconnected update -> do
         whenM (isCurrentLocation $ update ^. Disconnect.location') $ do

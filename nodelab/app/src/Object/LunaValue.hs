@@ -17,7 +17,11 @@ class (Eq a, Show a, ToJSON a) => LunaValue a where
     asLunaExpr           :: a -> LunaExpression
     createValueWidget'   :: WidgetId -> a -> Text -> Double -> HTMap -> Command UIRegistry.State WidgetId
 
-data AnyLunaValue = forall a. LunaValue a => AnyLunaValue {unAnyLunaValue :: a}
+
+data AnyLunaValue = forall a. (LunaValue a)=> AnyLunaValue {unAnyLunaValue :: a}
+
+instance Eq AnyLunaValue where
+    a == b = undefined
 
 createValueWidget :: WidgetId -> AnyLunaValue -> Text -> Double -> HTMap -> Command UIRegistry.State WidgetId
 createValueWidget id (AnyLunaValue a) label width handlers = createValueWidget' id a label width handlers
@@ -25,3 +29,4 @@ createValueWidget id (AnyLunaValue a) label width handlers = createValueWidget' 
 deriving instance Show AnyLunaValue
 instance ToJSON AnyLunaValue where
     toJSON (AnyLunaValue a) = toJSON a
+
