@@ -71,7 +71,6 @@ nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
                   $ addHandler (UINode.ChangeInputNodeTypeHandler $ \_ nodeId name -> BatchCmd.setInputNodeType nodeId name)
                   $ addHandler (UINode.FocusNodeHandler    $ focusNode)
                   $ addHandler (UINode.ExpandNodeHandler   $ expandSelectedNodes)
-                  $ addHandler (UINode.NodeRequiredHandler $ \nid val -> updateNodeRequired nid val)
                   $ addEnterNodeHandler where
                         addEnterNodeHandler = case node ^. Node.nodeType of
                             Node.FunctionNode _ -> addHandler (UINode.EnterNodeHandler $ enterNode $ Breadcrumb.Function $ Text.unpack $ node ^. Node.name) mempty
@@ -88,9 +87,3 @@ expandSelectedNodes = do
         let id = wf ^. objectId
         UICmd.update_ id update
         UICmd.moveBy  id (Vector2 0 0) -- FIXME: trigger moved handler for html widgets
-
-updateNodeRequired :: NodeId -> Bool -> Command State ()
-updateNodeRequired id val = do
-    Global.graph . Graph.nodesMap . ix id . Node.nodeMeta . NodeMeta.isRequired .= val
-    newMeta <- preuse $ Global.graph . Graph.nodesMap . ix id . Node.nodeMeta
-    withJust newMeta $ \newMeta -> BatchCmd.updateNodeMeta id newMeta

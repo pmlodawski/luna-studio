@@ -25,7 +25,6 @@ updateNodeMeta nodeId meta = do
     widgetId <- nodeIdToWidgetId nodeId
     inRegistry $ do
         withJust widgetId $ \widgetId -> do
-            UICmd.update widgetId $ Model.isRequired .~ (meta ^. NodeMeta.isRequired)
             UICmd.move   widgetId $ fromTuple $  meta ^. NodeMeta.position
     updateConnectionsForNodes [nodeId]
 

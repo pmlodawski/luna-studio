@@ -20,7 +20,6 @@ import qualified Object.Widget.Label          as Label
 import qualified Object.Widget.LabeledTextBox as LabeledTextBox
 import qualified Object.Widget.Node           as Model
 import qualified Object.Widget.TextBox        as TextBox
-import qualified Object.Widget.Toggle         as Toggle
 import           Reactive.Commands.Command    (Command)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import           Reactive.State.Global        (inRegistry)
@@ -64,16 +63,6 @@ typeValueChangedHandler parent val tbId = do
     model <- inRegistry $ UICmd.update parent $ Model.tpe ?~ val
     triggerChangeInputNodeTypeHandler parent model
 
-isRequiredHandlers :: WidgetId -> HTMap
-isRequiredHandlers id = addHandler (ValueChangedHandler $ isRequiredHandler id)
-                      $ mempty
-
-isRequiredHandler :: WidgetId -> Bool -> WidgetId -> Command Global.State ()
-isRequiredHandler parent val _ = do
-    model <- inRegistry $ UICmd.update parent $ Model.isRequired .~ val
-    triggerNodeRequiredHandler parent model
-
-
 newtype RemoveNodeHandler = RemoveNodeHandler (Command Global.State ())
 removeNodeHandler = TypeKey :: TypeKey RemoveNodeHandler
 
@@ -91,10 +80,6 @@ enterNodeHandler = TypeKey :: TypeKey EnterNodeHandler
 
 newtype ExpandNodeHandler = ExpandNodeHandler (Command Global.State ())
 expandNodeHandler = TypeKey :: TypeKey ExpandNodeHandler
-
-newtype NodeRequiredHandler = NodeRequiredHandler (NodeId -> Bool -> Command Global.State ())
-nodeRequiredHandler = TypeKey :: TypeKey NodeRequiredHandler
-
 
 
 triggerRemoveHandler :: WidgetId -> Command Global.State ()
@@ -127,11 +112,6 @@ triggerExpandNodeHandler :: WidgetId -> Command Global.State ()
 triggerExpandNodeHandler id = do
     maybeHandler <- inRegistry $ UICmd.handler id expandNodeHandler
     withJust maybeHandler $ \(ExpandNodeHandler handler) -> handler
-
-triggerNodeRequiredHandler :: WidgetId -> Model.Node -> Command Global.State ()
-triggerNodeRequiredHandler id model = do
-    maybeHandler <- inRegistry $ UICmd.handler id nodeRequiredHandler
-    withJust maybeHandler $ \(NodeRequiredHandler handler) -> handler (model ^. Model.nodeId) (model ^. Model.isRequired)
 
 keyDownHandler :: KeyPressedHandler Global.State
 keyDownHandler '\r'   _ _ id = triggerExpandNodeHandler id
@@ -243,9 +223,6 @@ instance CompositeWidget Model.Node where
         let widget = LabeledTextBox.create Style.portControlSize "Name" $ model ^. Model.name
         nameTextBoxId <- UICmd.register nodeGroupId widget $ nameHandlers id
 
-        let widget = Toggle.create Style.portControlSize "Required" $ model ^. Model.isRequired
-        requiredToggleId <- UICmd.register nodeGroupId widget $ isRequiredHandlers id
-
         withJust (model ^. Model.tpe) $ \tpe -> do
             let widget = LabeledTextBox.create Style.portControlSize "Type" (fromMaybe "" $ model ^. Model.tpe)
             nodeTpeId <- UICmd.register nodeGroupId widget $ typeHandlers id
@@ -271,7 +248,6 @@ instance CompositeWidget Model.Node where
                                                                . (Model.valueLabel         .~ valueLabelId         )
                                                                . (Model.visualizationGroup .~ visualizationGroupId )
                                                                . (Model.execTimeLabel      .~ execTimeLabelId      )
-                                                               . (Model.requiredToggle     .~ requiredToggleId     )
                                                                )
 
     updateWidget id old model = do
@@ -305,10 +281,6 @@ instance CompositeWidget Model.Node where
             let valueId = model ^. Model.elements . Model.valueLabel
             UICmd.update_ valueId  $ Label.alignment .~ (if model ^. Model.isExpanded then Label.Left else Label.Center)
             UICmd.moveX   valueId  $ if model ^. Model.isExpanded then 0.0 else -25.0
-
-        whenChanged old model Model.isRequired $ do
-            let toggleId = model ^. Model.elements . Model.requiredToggle
-            UICmd.update_ toggleId $ Toggle.value .~ (model ^. Model.isRequired)
 
 
 portControlsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
