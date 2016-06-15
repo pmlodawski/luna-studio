@@ -38,9 +38,10 @@ localRemoveNodes nodeIds = forM_ nodeIds $ \nodeId -> do
     danglingConns <- uses Global.graph (Graph.connectionIdsContainingNode $ nodeId)
     localDisconnectAll danglingConns
 
+    nodeWidgetId <- nodeIdToWidgetId nodeId
+    inRegistry $ withJust nodeWidgetId removeWidget
+
     Global.graph %= Graph.removeNode nodeId
     Global.graph . Graph.nodeWidgetsMap . at nodeId .= Nothing
 
-    nodeWidgetId <- nodeIdToWidgetId nodeId
-    inRegistry $ withJust nodeWidgetId removeWidget
 
