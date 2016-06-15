@@ -87,7 +87,7 @@ fromPrimitive :: G.Primitive -> Object 2
 fromPrimitive (G.Primitive figure (G.Point2 dx dy) attr) = transObject dx dy $ fromFigure figure
 
 fromShape :: G.Shape -> Object 2
-fromShape (G.Single    primitive)     = fromPrimitive primitive
+fromShape (G.Shape     primitive)     = fromPrimitive primitive
 fromShape (G.Merge     shape1 shape2) = merge     (fromShape shape1) (fromShape shape2)
 fromShape (G.Subtract  shape1 shape2) = diff      (fromShape shape1) (fromShape shape2)
 fromShape (G.Intersect shape1 shape2) = intersect (fromShape shape1) (fromShape shape2)
@@ -143,7 +143,7 @@ test = do
         justMat   = Just $ G.SolidColor 1.0 0.0 0.0 1.0
         geoComp   = G.GeoElem [surface]
         surface   = G.ShapeSurface shape
-        shape     = G.Single primitive
+        shape     = G.Shape primitive
         primitive = G.Primitive figure def def
         figure    = G.Square 0.25
         ShaderBox shaderTxt (Vector2 w h) = createShaderBox geometry
