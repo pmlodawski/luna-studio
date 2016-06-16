@@ -29,7 +29,9 @@ fromPrimitive    v = convert . geoComponentToLayer' . convert $ (unsafeCoerce v 
 fromFigure       v = convert . geoComponentToLayer' . convert $ (unsafeCoerce v :: Figure)
 fromMaterial     v = convert . geometryToLayer'               $ geometry where
     mat      = unsafeCoerce v :: Material
-    geometry = Geometry (GeoElem [ShapeSurface (Shape (Primitive (Square 1.0) def def))]) def (Just mat)
+    geometry = Geometry geoComp def (Just mat)
+    geoComp  = GeoElem [ShapeSurface $ Shape $ Primitive (Square 1.0) def def]
+
 
 -- internal
 

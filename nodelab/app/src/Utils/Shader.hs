@@ -71,7 +71,7 @@ mergeObjects []                     = Nothing
 transObject :: Double -> Double -> Object 2 -> Object 2
 transObject 0.0 0.0 object = object
 transObject dx  dy  object = translate tr object where
-    tr = fromListUnsafe [toExpr dx, toExpr dy, toExpr 0.0] :: A.BVec 3 GLSL.Expr
+    tr = fromListUnsafe [toExpr (-dx), toExpr (-dy), toExpr 0.0] :: A.BVec 3 GLSL.Expr
 
 -- calc object
 
