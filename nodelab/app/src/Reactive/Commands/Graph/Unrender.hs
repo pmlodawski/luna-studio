@@ -22,12 +22,11 @@ import           UI.Instances                 ()
 
 unrender :: Command State ()
 unrender = do
-    Global.graph .= def
     uiRegistry <- use Global.uiRegistry
     nodeWidgets <- use $ Global.graph . Graph.nodeWidgets
     connWidgets <- use $ Global.graph . Graph.connectionWidgets
-    let allWidgetIds = nodeWidgets ++ connWidgets
 
+    let allWidgetIds = nodeWidgets ++ connWidgets
     inRegistry $ mapM_ removeWidget allWidgetIds
 
     Global.graph     . Graph.nodeWidgetsMap       .= def
@@ -35,3 +34,5 @@ unrender = do
     Global.workspace . Workspace.isGraphLoaded    .= False
 
     performIO $ UI.setText ""
+
+    Global.graph .= def
