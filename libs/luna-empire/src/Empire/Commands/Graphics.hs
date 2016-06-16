@@ -39,7 +39,7 @@ defaultMat :: Maybe Material
 defaultMat = Just $ SolidColor 0.6 0.6 0.6 1.0
 
 defaultTrans :: Transformation
-defaultTrans = translate 0.5 0.5 def
+defaultTrans = translate def 0.5 0.5
 
 geometryToLayer' :: Geometry -> Layer
 geometryToLayer' geometry = Layer geometry [defaultTrans]
