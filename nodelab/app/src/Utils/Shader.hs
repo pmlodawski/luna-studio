@@ -125,7 +125,7 @@ createShader size objectMay = fromMaybe "" $ compileObject <$> objectMay where
 -- size calculation
 
 calcGeoSize :: G.Geometry -> Size
-calcGeoSize geo = Vector2 1.0 1.0
+calcGeoSize geo = Vector2 2.0 2.0
 -- calcGeoSize (G.GeoElem  surfaces)   = Vector2 1.0 1.0
 -- calcGeoSize (G.GeoGroup geometries) = Vector2 1.0 1.0
 
