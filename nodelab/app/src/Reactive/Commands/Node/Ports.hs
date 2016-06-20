@@ -53,15 +53,12 @@ makePorts node = makePort <$> ports where
         isIn (InPortId (Arg _)) = 1
         isIn (InPortId Self)    = 0
 
-
-
-
 displayPorts :: WidgetId -> Node -> Command Global.State ()
 displayPorts id node = do
         portGroup <- inRegistry $ UICmd.get id $ Model.elements . Model.portGroup
         oldPorts  <- inRegistry $ UICmd.children portGroup
-        oldPortWidgets <- forM oldPorts $ \id -> inRegistry $ (UIRegistry.lookupTypedM id :: UIRegistry.LookupFor PortModel.Port)
-        let portRefs = (view $ widget . PortModel.portRef) <$> (catMaybes oldPortWidgets)
+        oldPortWidgets <- forM oldPorts $ \id -> inRegistry $ (UICmd.lookup id)
+        let portRefs = (view PortModel.portRef) <$> oldPortWidgets
         forM_ portRefs $ \id -> Global.graph . Graph.portWidgetsMap . at id .= Nothing
         inRegistry $ mapM_ UICmd.removeWidget oldPorts
 

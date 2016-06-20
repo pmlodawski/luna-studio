@@ -4,7 +4,7 @@ module Reactive.Commands.Graph.Render
 
 import           Utils.PreludePlus
 
-import qualified Data.Map.Lazy                   as Map
+import qualified Data.HashMap.Lazy               as HashMap
 
 import           Empire.API.Data.Node            (Node)
 import qualified Empire.API.Data.Node            as Node
@@ -21,8 +21,8 @@ import qualified Reactive.State.Graph            as Graph
 fastAddNodes :: [Node] -> Command State ()
 fastAddNodes nodes = do
     let nodeIds = (view Node.nodeId) <$> nodes
-    Global.graph . Graph.nodesMap .= (Map.fromList $ nodeIds `zip` nodes)
-    forM_ nodes $ \node -> registerNode node
+    Global.graph . Graph.nodesMap .= (HashMap.fromList $ nodeIds `zip` nodes)
+    mapM_ registerNode nodes
 
 renderGraph :: [Node] -> [(OutPortRef, InPortRef)] -> Command State ()
 renderGraph nodes edges = do

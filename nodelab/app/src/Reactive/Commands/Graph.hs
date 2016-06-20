@@ -10,7 +10,7 @@ module Reactive.Commands.Graph
     ) where
 
 
-import qualified Data.Map.Lazy                       as Map
+import qualified Data.HashMap.Lazy                   as HashMap
 import qualified Data.Set                            as Set
 import           Data.Ord                            (comparing)
 import           Utils.Angle
@@ -87,44 +87,54 @@ focusNode id = do
 
 updateConnections :: Command Global.State ()
 updateConnections = do
-    connectionIds <- uses (Global.graph . Graph.connectionsMap) Map.keys
+    connectionIds <- uses (Global.graph . Graph.connectionsMap) HashMap.keys
     mapM_ updateConnection connectionIds
 
 updateConnectionsForNodes :: [NodeId] -> Command Global.State ()
 updateConnectionsForNodes nodes = do
-    connections <- uses (Global.graph . Graph.connectionsMap) Map.toList
+    connections <- uses (Global.graph . Graph.connectionsMap) HashMap.toList
     let nodes' = Set.fromList nodes
         connectionsToUpdate = [id | (id, conn) <- connections, (Set.member (conn ^. Connection.src . PortRef.srcNodeId) nodes' || Set.member (conn ^. Connection.dst  . PortRef.dstNodeId) nodes') ]
     mapM_ updateConnection connectionsToUpdate
 
-updateConnection :: ConnectionId -> Command Global.State ()
+-- lineEndPos :: Vector2 Double -> Maybe PortModel.Port -> Angle
+-- lineEndPos nodePos port =
+--     let dstNodePos     = dstNode ^. widgetPosition
+--         dstRadius      = portRadius $ connection ^. Connection.dst
+--         dstPortAngle   = dstPort ^. PortModel.angle
+--         dstPortCount   = dstPort ^. PortModel.portCount
+--         dstPortAngle'  = boundedAngle dstPortAngle dstPortCount dstNodePos srcNodePos
+--         posDst         = moveByAngle  dstNodePos   dstRadius    dstPortAngle'
+--
+
+updateConnection :: ConnectionId -> Command Global.State () -- FIXME: run in MaybeT
 updateConnection connectionId = do
-    (Just connection) <- preuse $ Global.graph . Graph.connectionsMap       . ix connectionId
-    (Just widgetId  ) <- preuse $ Global.graph . Graph.connectionWidgetsMap . ix connectionId
+    (Just connection) <- preuse $ Global.graph . Graph.connectionsMap       . ix connectionId -- fatal
+    (Just widgetId  ) <- preuse $ Global.graph . Graph.connectionWidgetsMap . ix connectionId -- fatal
 
-    (Just srcPort   ) <- getPort $ OutPortRef' $ connection ^. Connection.src
-    (Just srcNode   ) <- getNode $ connection ^. Connection.src . PortRef.srcNodeId
-    (Just srcGraphPort) <- getGraphPort $ OutPortRef' $ connection ^. Connection.src
+    (Just srcNode   ) <- getNode $ connection ^. Connection.src . PortRef.srcNodeId           -- fatal
+    (Just dstNode   ) <- getNode $ connection ^. Connection.dst . PortRef.dstNodeId           -- fatal
 
-    (Just dstPort   ) <- getPort $ InPortRef' $ connection ^. Connection.dst
-    (Just dstNode   ) <- getNode $ connection ^. Connection.dst . PortRef.dstNodeId
-    let dstRadius      = portRadius $ connection ^. Connection.dst
-        srcNodePos     = srcNode ^. widgetPosition
-        dstNodePos     = dstNode ^. widgetPosition
+    (Just srcGraphPort)      <- getGraphPort $ OutPortRef' $ connection ^. Connection.src            -- non-fatal
+    (Just srcPort)           <- getPort $ OutPortRef' $ connection ^. Connection.src                 -- non-fatal
+    let dstNodePos     = dstNode ^. widgetPosition
+    let srcNodePos     = srcNode ^. widgetPosition
 
     let srcPortAngle   = srcPort ^. PortModel.angle
         srcPortCount   = srcPort ^. PortModel.portCount
+        srcPortAngle'  = boundedAngle srcPortAngle srcPortCount srcNodePos dstNodePos
+        posSrc         = moveByAngle srcNodePos normalPortRadius srcPortAngle'
+
+    (Just dstPort)           <- getPort $ InPortRef' $ connection ^. Connection.dst                  -- non-fatal
+    let dstRadius      = portRadius $ connection ^. Connection.dst
         dstPortAngle   = dstPort ^. PortModel.angle
         dstPortCount   = dstPort ^. PortModel.portCount
-
-    let srcPortAngle'  = boundedAngle srcPortAngle srcPortCount srcNodePos dstNodePos
         dstPortAngle'  = boundedAngle dstPortAngle dstPortCount dstNodePos srcNodePos
-
-    let posSrc         = moveByAngle srcNodePos normalPortRadius srcPortAngle'
-        posDst         = moveByAngle dstNodePos dstRadius        dstPortAngle'
+        posDst         = moveByAngle  dstNodePos   dstRadius    dstPortAngle'
 
     let visible        = lengthSquared (dstNodePos - srcNodePos) > 100
-        color          = vtToColor $ srcGraphPort ^. Port.valueType
+        fallbackColor  = 13
+        color          = vtToColor  (srcGraphPort ^. Port.valueType)
 
     void $ inRegistry $ UICmd.update widgetId $ (ConnectionModel.from    .~ posSrc)
                                               . (ConnectionModel.to      .~ posDst)

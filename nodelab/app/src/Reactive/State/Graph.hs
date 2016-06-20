@@ -29,10 +29,9 @@ module Reactive.State.Graph
 import           Utils.PreludePlus          hiding ((.=))
 
 import           Data.Hashable              (Hashable)
-import           Data.HashMap.Lazy          (HashMap)
-import qualified Data.HashMap.Lazy          as HashMap
-import           Data.Map.Lazy              (Map)
-import qualified Data.Map.Lazy              as Map
+import           Data.HashMap.Strict        (HashMap)
+import qualified Data.HashMap.Strict        as HashMap
+import qualified Data.Map.Strict            as Map
 import           Data.UUID.Types            (UUID)
 
 import           Data.Aeson
@@ -40,15 +39,15 @@ import           Empire.API.Data.Connection (Connection (..), ConnectionId)
 import qualified Empire.API.Data.Connection as Connection
 import           Empire.API.Data.Node       (Node, NodeId)
 import qualified Empire.API.Data.Node       as Node
-import           Empire.API.Data.PortRef    (AnyPortRef, InPortRef, OutPortRef)
 import           Empire.API.Data.Port       (InPort, OutPort)
+import           Empire.API.Data.PortRef    (AnyPortRef, InPortRef, OutPortRef)
 import qualified Empire.API.Data.PortRef    as PortRef
 import qualified Empire.API.JSONInstances   ()
 import           Object.UITypes             (WidgetId)
 import           Reactive.Commands.Command  (Command)
 
-type NodesMap       = Map NodeId Node
-type ConnectionsMap = Map InPortRef Connection
+type NodesMap       = HashMap NodeId Node
+type ConnectionsMap = HashMap InPortRef Connection
 
 
 instance (ToJSON b) => ToJSON (HashMap UUID b) where
@@ -99,13 +98,13 @@ portWidgets :: Getter State [WidgetId]
 portWidgets = to $ HashMap.elems . (view portWidgetsMap)
 
 getNodes :: State -> [Node]
-getNodes = Map.elems . getNodesMap
+getNodes = HashMap.elems . getNodesMap
 
 getNodesMap :: State -> NodesMap
 getNodesMap = (^. nodesMap)
 
 getConnections :: State -> [Connection]
-getConnections = Map.elems . getConnectionsMap
+getConnections = HashMap.elems . getConnectionsMap
 
 getConnectionsMap :: State -> ConnectionsMap
 getConnectionsMap = (^. connectionsMap)
@@ -118,28 +117,28 @@ updateNodes :: NodesMap -> State -> State
 updateNodes newNodesMap state = state & nodesMap .~ newNodesMap
 
 addNode :: Node -> State -> State
-addNode newNode state  = state & nodesMap     %~ Map.insert (newNode ^. Node.nodeId) newNode
+addNode newNode state  = state & nodesMap . at (newNode ^. Node.nodeId) ?~ newNode
 
 removeNode :: NodeId -> State -> State
-removeNode remNodeId state = state & nodesMap %~ Map.delete remNodeId
+removeNode remNodeId state = state & nodesMap . at remNodeId .~ Nothing
 
 addConnection :: OutPortRef -> InPortRef -> Command State ConnectionId
 addConnection sourcePortRef destPortRef = do
-    connectionsMap %= (Map.insert destPortRef $ Connection sourcePortRef destPortRef)
+    connectionsMap . at destPortRef ?= Connection sourcePortRef destPortRef
     return destPortRef
 
 removeConnections :: [ConnectionId] -> State -> State
 removeConnections connIds state = foldr removeConnection state connIds
 
 removeConnection :: ConnectionId -> State -> State
-removeConnection connId state = state & connectionsMap %~ Map.delete connId
+removeConnection connId state = state & connectionsMap . at connId .~ Nothing
 
 lookUpConnection :: State -> ConnectionId -> Maybe Connection
-lookUpConnection state connId = Map.lookup connId $ getConnectionsMap state
+lookUpConnection state connId = HashMap.lookup connId $ getConnectionsMap state
 
 containsNode :: NodeId -> Connection -> Bool
 containsNode id conn = (startsWithNode id conn)
-                    || (endsWithNode id conn)
+                    || (endsWithNode   id conn)
 
 startsWithNode :: NodeId -> Connection -> Bool
 startsWithNode id conn = conn ^. Connection.src . PortRef.srcNodeId == id
