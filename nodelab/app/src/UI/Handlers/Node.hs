@@ -200,7 +200,7 @@ instance CompositeWidget Model.Node where
         let grp    = Group.create & Group.size .~ (Vector2 1 1)
         portGroup <- UICmd.register id grp def
 
-        let label = Style.expressionLabel $ model ^. Model.expression
+        let label = Style.expressionLabel $ mockupExpression $ model ^. Model.expression
         expressionLabelId <- UICmd.register id label $ onClicked (\evt _ -> selectNode evt id)
 
         let group  = Group.create & Group.position .~ Style.controlsPosition
