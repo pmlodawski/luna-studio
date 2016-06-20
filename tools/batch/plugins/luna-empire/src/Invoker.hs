@@ -24,9 +24,10 @@ import qualified Empire.API.Data.Node             as Node
 import qualified Empire.API.Data.NodeMeta         as NodeMeta
 import qualified Empire.API.Data.NodeMeta         as NodeMeta
 import           Empire.API.Data.GraphLocation    (GraphLocation)
+import           Empire.API.Data.DefaultValue     (Value(DoubleValue), PortDefault(Constant))
 import qualified Empire.API.Data.GraphLocation    as GraphLocation
-import           Empire.API.Data.Port             (OutPort, InPort)
-import           Empire.API.Data.PortRef          (OutPortRef(..), InPortRef(..))
+import           Empire.API.Data.Port             (OutPort, InPort(..))
+import           Empire.API.Data.PortRef          (OutPortRef(..), InPortRef(..), AnyPortRef(..))
 import qualified Empire.API.Data.Breadcrumb       as Breadcrumb
 import           Empire.API.Data.Project          (ProjectId)
 import qualified Empire.API.Graph.AddNode         as AddNode
@@ -37,6 +38,7 @@ import qualified Empire.API.Graph.UpdateNodeMeta  as UpdateNodeMeta
 import qualified Empire.API.Graph.GetProgram      as GetProgram
 import qualified Empire.API.Graph.DumpGraphViz    as DumpGraphViz
 import qualified Empire.API.Graph.TypeCheck       as TypeCheck
+import qualified Empire.API.Graph.SetDefaultValue       as SetDefaultValue
 import qualified Empire.API.Project.CreateProject as CreateProject
 import qualified Empire.API.Project.ListProjects  as ListProjects
 import qualified Empire.API.Library.CreateLibrary as CreateLibrary
@@ -92,6 +94,13 @@ main = do
         dstNodeId <- args `getArgOrExit` (argument "dstNodeId")
         inPort    <- args `getArgOrExit` (argument "inPort")
         disconnect endPoints (toGraphLocation pid lid) (read dstNodeId) (read inPort)
+    when (args `isPresent` (command "setValue")) $ do
+        pid       <- args `getArgOrExit` (argument "pid")
+        lid       <- args `getArgOrExit` (argument "lid")
+        nodeId    <- args `getArgOrExit` (argument "nodeId")
+        portId    <- args `getArgOrExit` (argument "portId")
+        value     <- args `getArgOrExit` (argument "value")
+        setPortValue endPoints (toGraphLocation pid lid) (read nodeId) (read portId) (read value)
     when (args `isPresent` (command "getProgram")) $ do
         pid       <- args `getArgOrExit` (argument "pid")
         lid       <- args `getArgOrExit` (argument "lid")
@@ -138,6 +147,9 @@ connect endPoints graphLocation srcNodeId outPort dstNodeId inPort = sendToBus e
 
 disconnect :: EP.BusEndPoints -> GraphLocation -> NodeId -> InPort -> IO ()
 disconnect endPoints graphLocation  dstNodeId inPort = sendToBus endPoints $ Disconnect.Request graphLocation (InPortRef dstNodeId inPort)
+
+setPortValue :: EP.BusEndPoints -> GraphLocation -> NodeId -> Int -> Double -> IO ()
+setPortValue endPoints graphLocation nodeId portId value = sendToBus endPoints $ SetDefaultValue.Request graphLocation (InPortRef' $ InPortRef nodeId (Arg portId)) (Constant $ DoubleValue value)
 
 getProgram :: EP.BusEndPoints -> GraphLocation -> IO ()
 getProgram endPoints graphLocation = sendToBus endPoints $ GetProgram.Request graphLocation

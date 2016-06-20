@@ -1,19 +1,20 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ViewPatterns      #-}
+
 module UI.Handlers.Node where
 
-import           Utils.PreludePlus
+import           Utils.PreludePlus            hiding (stripPrefix)
 
 import           Data.HMap.Lazy               (HTMap, TypeKey (..))
+import           Data.Text.Lazy               (stripPrefix)
 import qualified Data.Text.Lazy               as Text
 import           Utils.Vector
 
 import           Event.Keyboard               (KeyMods (..))
 import qualified Event.Mouse                  as Mouse
-import           Object.Widget                (CompositeWidget, DblClickHandler,
-                                               KeyPressedHandler, ResizableWidget,
-                                               UIHandlers, WidgetFile, WidgetId, createWidget,
-                                               dblClick, keyDown, mouseOut,
-                                               mouseOver, mousePressed, objectId, updateWidget)
+import           Object.Widget                (CompositeWidget, DblClickHandler, KeyPressedHandler, ResizableWidget, UIHandlers, WidgetFile,
+                                               WidgetId, createWidget, dblClick, keyDown, mouseOut, mouseOver, mousePressed, objectId,
+                                               updateWidget)
 
 import qualified Object.Widget.Group          as Group
 import qualified Object.Widget.Label          as Label
@@ -191,6 +192,8 @@ unselectNode = flip UICmd.update_ (Model.isSelected .~ False)
 
 onClicked h = addHandler (MousePressedHandler $ h) mempty
 
+
+
 instance ResizableWidget Model.Node
 instance CompositeWidget Model.Node where
     createWidget id model = do
@@ -259,7 +262,8 @@ instance CompositeWidget Model.Node where
 
         whenChanged old model Model.expression $ do
             let exprId = model ^. Model.elements . Model.expressionLabel
-            UICmd.update_ exprId     $ Label.label   .~ (model ^. Model.expression)
+
+            UICmd.update_ exprId     $ Label.label   .~ (mockupExpression $ model ^. Model.expression)
 
         whenChanged old model Model.name  $ do
             let nameTbId = model ^. Model.elements . Model.nameTextBox
@@ -297,3 +301,9 @@ expressionId id = UICmd.get id $ Model.elements . Model.expressionLabel
 
 valueGroupId :: WidgetId -> Command UIRegistry.State WidgetId
 valueGroupId id = UICmd.get id $ Model.elements . Model.visualizationGroup
+
+mockupExpression :: Text -> Text
+mockupExpression (stripPrefix "inside "  -> Just name) = "inside"
+mockupExpression (stripPrefix "outside " -> Just name) = "outside"
+mockupExpression (stripPrefix "knob "    -> Just name) = "knob"
+mockupExpression name = name
