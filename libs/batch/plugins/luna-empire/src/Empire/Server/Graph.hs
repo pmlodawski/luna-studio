@@ -125,9 +125,9 @@ handleAddNode = modifyGraph action success where
           AddNode.ExpressionNode expression -> case parseExpr expression of
             Expression expression -> do
               uuid <- case expression of
-                  "inside"  -> return $ fromJust $ UUID.fromString "1a9eeda0-4627-4597-9d09-167c44cbe87e"
-                  "outside" -> return $ fromJust $ UUID.fromString "1a9eeda0-4627-4597-9d09-167c44cbe87f"
-                  "knob"    -> return $ fromJust $ UUID.fromString "77962bb1-32f1-4f4d-ae5f-4328b7c83708"
+                  "inside"               -> return $ fromJust $ UUID.fromString "1a9eeda0-4627-4597-9d09-167c44cbe87e"
+                  "outside"              -> return $ fromJust $ UUID.fromString "1a9eeda0-4627-4597-9d09-167c44cbe87f"
+                  "temperatureThreshold" -> return $ fromJust $ UUID.fromString "77962bb1-32f1-4f4d-ae5f-4328b7c83708"
                   _  -> liftIO $ UUID.nextRandom
 
               Graph.addNodeCondTC (isNothing connectTo) location uuid (Text.pack $ expression) nodeMeta

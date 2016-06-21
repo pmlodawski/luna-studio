@@ -303,7 +303,7 @@ valueGroupId :: WidgetId -> Command UIRegistry.State WidgetId
 valueGroupId id = UICmd.get id $ Model.elements . Model.visualizationGroup
 
 mockupExpression :: Text -> Text
-mockupExpression (stripPrefix "inside "  -> Just name) = "inside"
-mockupExpression (stripPrefix "outside " -> Just name) = "outside"
-mockupExpression (stripPrefix "knob "    -> Just name) = "knob"
+mockupExpression (stripPrefix "inside "                  -> Just name) = "inside"
+mockupExpression (stripPrefix "outside "                 -> Just name) = "outside"
+mockupExpression (stripPrefix "temperatureThreshold "    -> Just name) = "temperatureThreshold"
 mockupExpression name = name
