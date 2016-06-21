@@ -6,6 +6,7 @@ import           Data.Record              (ANY (..), caseTest, of')
 import qualified Data.Text.Lazy           as Text
 import           Data.Layer_OLD.Cover_OLD (uncover, covered)
 import           Data.Direction           (source)
+import           Text.Printf              (printf)
 
 import           Empire.ASTOp             (ASTOp)
 import           Empire.Data.AST          (NodeRef)
@@ -73,7 +74,7 @@ printExpression' suppresNodes paren nodeRef = do
         of' $ \(Lit.Number _ s) -> return $ case s of
             Lit.Rational r -> show r
             Lit.Integer  i -> show i
-            Lit.Double   d -> show d
+            Lit.Double   d -> printf "%f" d
         of' $ \(Lit.String s) -> return $ show s
         of' $ \(Cons (Lit.String n) _) -> return n
         of' $ \ANY -> return ""
