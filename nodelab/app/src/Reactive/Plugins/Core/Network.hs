@@ -77,14 +77,12 @@ processEvent :: MVar State -> Event.Event -> IO ()
 processEvent var ev = do
     state     <- takeMVar var
     realEvent <- preprocessEvent ev
-    -- consoleTimeStart $ (realEvent ^. Event.name) <> " State"
+    consoleTimeStart $ (realEvent ^. Event.name)
     jsState   <- Handlers.getJSState
     let state' = state & Global.jsState .~ jsState
     let (ioActions, newState) = execCommand (runCommands actions realEvent) state'
-    -- seq newState $ consoleTimeEnd $ (realEvent ^. Event.name) <> " State"
-    -- consoleTimeStart $ (realEvent ^. Event.name) <> " IO"
     catch (ioActions >> UI.shouldRender) (handleExcept newState realEvent)
-    -- consoleTimeEnd $ (realEvent ^. Event.name) <> " IO"
+    consoleTimeEnd $ (realEvent ^. Event.name)
     putMVar var newState
 
 makeNetworkDescription :: WebSocket -> MVar State -> IO ()

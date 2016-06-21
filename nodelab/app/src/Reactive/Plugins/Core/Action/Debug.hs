@@ -27,7 +27,7 @@ toAction (Debug Debug.GetState) = Just $ do
         clog val
         saveState val
 toAction ev = Just $ do
-    logBatch ev
+    -- logBatch ev
     when shouldExportState $ do
         state <- get
         let json = toJSON state
@@ -37,8 +37,8 @@ toAction ev = Just $ do
 
 toActionEv :: Event -> Maybe (Command Global.State ())
 toActionEv ev = Just $ do
-    Global.lastEvent ?= ev
-    Global.eventNum  += 1
+    -- Global.lastEvent ?= ev
+    -- Global.eventNum  += 1
     when shouldExportState $ do
         evN <- use $ Global.eventNum
         performIO $ do
