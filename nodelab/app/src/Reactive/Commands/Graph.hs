@@ -97,14 +97,14 @@ updateConnectionsForNodes nodes = do
         connectionsToUpdate = [id | (id, conn) <- connections, (Set.member (conn ^. Connection.src . PortRef.srcNodeId) nodes' || Set.member (conn ^. Connection.dst  . PortRef.dstNodeId) nodes') ]
     mapM_ updateConnection connectionsToUpdate
 
--- lineEndPos :: Vector2 Double -> Maybe PortModel.Port -> Angle
--- lineEndPos nodePos port =
---     let dstNodePos     = dstNode ^. widgetPosition
---         dstRadius      = portRadius $ connection ^. Connection.dst
---         dstPortAngle   = dstPort ^. PortModel.angle
---         dstPortCount   = dstPort ^. PortModel.portCount
---         dstPortAngle'  = boundedAngle dstPortAngle dstPortCount dstNodePos srcNodePos
---         posDst         = moveByAngle  dstNodePos   dstRadius    dstPortAngle'
+lineEndPos :: Vector2 Double -> Vector2 Double -> Double -> Maybe PortModel.Port -> Vector2 Double
+lineEndPos node1Pos node2Pos radius (Just port) = moveByAngle node1Pos radius portAngle' where
+    portAngle   = port ^. PortModel.angle
+    portCount   = port ^. PortModel.portCount
+    portAngle'  = boundedAngle portAngle portCount node1Pos node2Pos
+lineEndPos node1Pos node2Pos radius Nothing = moveByAngle node1Pos radius portAngle where
+    portAngle = toAngle $ node2Pos - node1Pos
+
 --
 
 updateConnection :: ConnectionId -> Command Global.State () -- FIXME: run in MaybeT
@@ -115,26 +115,18 @@ updateConnection connectionId = do
     (Just srcNode   ) <- getNode $ connection ^. Connection.src . PortRef.srcNodeId           -- fatal
     (Just dstNode   ) <- getNode $ connection ^. Connection.dst . PortRef.dstNodeId           -- fatal
 
-    (Just srcGraphPort)      <- getGraphPort $ OutPortRef' $ connection ^. Connection.src            -- non-fatal
-    (Just srcPort)           <- getPort $ OutPortRef' $ connection ^. Connection.src                 -- non-fatal
+    srcPort           <- getPort      $ OutPortRef' $ connection ^. Connection.src            -- non-fatal
+    dstPort           <- getPort      $ InPortRef'  $ connection ^. Connection.dst            -- non-fatal
     let dstNodePos     = dstNode ^. widgetPosition
-    let srcNodePos     = srcNode ^. widgetPosition
+        srcNodePos     = srcNode ^. widgetPosition
+        dstRadius      = portRadius $ connection ^. Connection.dst
+        posSrc         = lineEndPos srcNodePos dstNodePos normalPortRadius srcPort
+        posDst         = lineEndPos dstNodePos srcNodePos dstRadius        dstPort
 
-    let srcPortAngle   = srcPort ^. PortModel.angle
-        srcPortCount   = srcPort ^. PortModel.portCount
-        srcPortAngle'  = boundedAngle srcPortAngle srcPortCount srcNodePos dstNodePos
-        posSrc         = moveByAngle srcNodePos normalPortRadius srcPortAngle'
-
-    (Just dstPort)           <- getPort $ InPortRef' $ connection ^. Connection.dst                  -- non-fatal
-    let dstRadius      = portRadius $ connection ^. Connection.dst
-        dstPortAngle   = dstPort ^. PortModel.angle
-        dstPortCount   = dstPort ^. PortModel.portCount
-        dstPortAngle'  = boundedAngle dstPortAngle dstPortCount dstNodePos srcNodePos
-        posDst         = moveByAngle  dstNodePos   dstRadius    dstPortAngle'
-
+    srcGraphPort      <- getGraphPort $ OutPortRef' $ connection ^. Connection.src            -- non-fatal
     let visible        = lengthSquared (dstNodePos - srcNodePos) > 100
         fallbackColor  = 13
-        color          = vtToColor  (srcGraphPort ^. Port.valueType)
+        color          = fromMaybe fallbackColor $ vtToColor <$> (view Port.valueType) <$> srcGraphPort
 
     void $ inRegistry $ UICmd.update widgetId $ (ConnectionModel.from    .~ posSrc)
                                               . (ConnectionModel.to      .~ posDst)
