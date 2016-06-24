@@ -28,7 +28,15 @@ import qualified Language.GLSL.Builder               as GLSL
 import qualified Graphics.API                        as G
 
 
+import           Debug.Trace
+
+
 type Size = Vector2 Double
+
+data Bound = Bound { _leftTop     :: Vector2 Double
+                   , _rightBottom :: Vector2 Double
+                   } deriving (Show, Eq)
+
 type Shader = String
 
 data ShaderBox = ShaderBox { _shader :: Shader
@@ -48,16 +56,20 @@ toDouble = realToFrac
 toExpr :: Double -> GLSL.Expr
 toExpr = GLSL.FloatConstant . toFloat
 
+toTranslation :: G.Transformation -> Vector2 Double
+toTranslation (G.Transformation _ _ dx dy _ _) = Vector2 dx dy
+
 -- object helpers
 
+-- TODO: change pattern to object : []; object : objects ?
 mergeObjects :: [Object 2] -> Maybe (Object 2)
 mergeObjects (object:objects@(_:_)) = Just $ foldl merge object objects
 mergeObjects (object:_)             = Just object
 mergeObjects []                     = Nothing
 
--- TODO: fix behaviour
+-- TODO: check behaviour
 transObject :: Double -> Double -> Object 2 -> Object 2
-transObject 0.0 0.0 object = object
+transObject 0.0 0.0 object = object -- TODO: the translation below overrides existing translation
 transObject dx  dy  object = translate tr object where
     tr = fromListUnsafe [toExpr (-dx), toExpr (-dy), toExpr 0.0] :: A.BVec 3 GLSL.Expr
 
@@ -94,7 +106,7 @@ fromGeoComponent (G.GeoGroup geometries) = fromGeometries geometries
 
 fromGeometry :: G.Geometry -> Maybe (Object 2)
 fromGeometry (G.Geometry geoComp trans matMay) = go <$> fromGeoComponent geoComp where
-    (G.Transformation _ _ dx dy _ _) = trans
+    Vector2 dx dy = toTranslation trans
     go :: Object 2 -> Object 2
     go = appMat . transObject dx dy
     appMat :: Object 2 -> Object 2
@@ -108,57 +120,77 @@ fromGeometries geometries = mergeObjects . catMaybes $ fromGeometry <$> geometri
 createShader :: Size -> Maybe (Object 2) -> Shader
 createShader size objectMay = fromMaybe "" $ compileObject <$> objectMay where
     compileObject :: Object 2 -> Shader
-    compileObject object = fst $ GLSL.compileGLSL $ Bounded (toBound size) object
+    compileObject object = fst $ GLSL.compileGLSL $ Bounded (toShaderBound size) object
 
 -- size calculation
 
-defSize = Vector2 2.0 2.0
+defBound = Bound (Vector2 (-1.0) (-1.0)) (Vector2 1.0 1.0)
 
-maxSizes :: Size -> Size -> Size
-maxSizes (Vector2 sx1 sy1) (Vector2 sx2 sy2) = Vector2 (max sx1 sx2) (max sy1 sy2)
+toSize :: Bound -> Size
+toSize (Bound (Vector2 x1 y1) (Vector2 x2 y2)) = Vector2 w h where
+    w = max 0.0 $ x2 - x1
+    h = max 0.0 $ y2 - y1
 
-minSizes :: Size -> Size -> Size
-minSizes (Vector2 sx1 sy1) (Vector2 sx2 sy2) = Vector2 (min sx1 sx2) (min sy1 sy2)
+expandBound :: Double -> Double -> Bound -> Bound
+expandBound 0.0 0.0 bound = bound
+expandBound dx  dy (Bound (Vector2 x1 y1) (Vector2 x2 y2)) = (Bound (Vector2 x1' y1') (Vector2 x2' y2')) where
+    x1' = min x1 $ x1 + dx
+    y1' = min y1 $ y1 + dy
+    x2' = max x2 $ x2 + dx
+    y2' = max y2 $ y2 + dy
 
-maxSizesList :: [Size] -> Size
-maxSizesList (size:sizes@(x:xs)) = maxSizes size $ maxSizesList sizes
-maxSizesList (size:_)            = size
-maxSizesList []                  = defSize
+minCorner :: Ord a => Vector2 a -> Vector2 a -> Vector2 a
+minCorner (Vector2 x1 y1) (Vector2 x2 y2) = Vector2 (min x1 x2) (min y1 y2)
 
--- getBound :: G.Figure -> A.BVec 2 Float
--- getBound shape = let Vector2 w h = getSize shape in A.vec2 (toFloat w) (toFloat h)
+maxCorner :: Ord a => Vector2 a -> Vector2 a -> Vector2 a
+maxCorner (Vector2 x1 y1) (Vector2 x2 y2) = Vector2 (max x1 x2) (max y1 y2)
 
-toBound :: Size -> A.BVec 2 Float
-toBound (Vector2 x y) = A.vec2 (toFloat x) (toFloat y)
+maxBounds :: Bound -> Bound -> Bound
+maxBounds (Bound lt1 rb1) (Bound lt2 rb2) = Bound (minCorner lt1 lt2) (maxCorner rb1 rb2)
 
-calcFigureSize :: G.Figure -> Size
-calcFigureSize (G.Square s)      = Vector2 s s
-calcFigureSize (G.Rectangle w h) = Vector2 w h
-calcFigureSize (G.Circle d)      = Vector2 (2.0 * d) (2.0 * d)
+minBounds :: Bound -> Bound -> Bound
+minBounds (Bound lt1 rb1) (Bound lt2 rb2) = Bound (maxCorner lt1 lt2) (minCorner rb1 rb2)
 
-calcPrimitiveSize :: G.Primitive -> Size
-calcPrimitiveSize (G.Primitive figure (G.Point2 dx dy) attr) = calcFigureSize figure
+maxBoundsList :: [Bound] -> Bound
+maxBoundsList (bound:bounds@(_:_)) = foldl maxBounds bound bounds
+maxBoundsList (bound:_)            = bound
+maxBoundsList []                   = defBound
 
-calcShapeSize :: G.Shape -> Size
-calcShapeSize (G.Shape     primitive)     = calcPrimitiveSize primitive
-calcShapeSize (G.Merge     shape1 shape2) = maxSizes (calcShapeSize shape1) (calcShapeSize shape2)
-calcShapeSize (G.Subtract  shape1 shape2) = maxSizes (calcShapeSize shape1) (calcShapeSize shape2)
-calcShapeSize (G.Intersect shape1 shape2) = minSizes (calcShapeSize shape1) (calcShapeSize shape2)
+toShaderBound :: Size -> A.BVec 2 Float
+toShaderBound (Vector2 x y) = A.vec2 (toFloat x) (toFloat y)
 
-calcSurfaceSize :: G.Surface -> Size
-calcSurfaceSize (G.ShapeSurface shape) = calcShapeSize shape
-calcSurfaceSize G.PolygonSurface       = $notImplemented
-calcSurfaceSize G.NumbsSurface         = $notImplemented
+calcFigureBound :: G.Figure -> Bound
+calcFigureBound (G.Square s)      = Bound (Vector2 (-s2) (-s2)) (Vector2 s2 s2) where s2 = s / 2.0
+calcFigureBound (G.Rectangle w h) = Bound (Vector2 (-w2) (-h2)) (Vector2 w2 h2) where w2 = w / 2.0; h2 = h / 2.0
+calcFigureBound (G.Circle d)      = Bound (Vector2 (-d)  (-d))  (Vector2 d  d)
 
-calcSurfacesSize :: [G.Surface] -> Size
-calcSurfacesSize surfaces = maxSizesList $ calcSurfaceSize <$> surfaces
+calcPrimitiveBound :: G.Primitive -> Bound
+calcPrimitiveBound (G.Primitive figure (G.Point2 dx dy) attr) = expandBound dx dy $ calcFigureBound figure
 
-calcGeoCompSize :: G.GeoComponent -> Size
-calcGeoCompSize (G.GeoElem  surfaces)   = calcSurfacesSize surfaces
-calcGeoCompSize (G.GeoGroup geometries) = maxSizesList $ calcGeometrySize <$> geometries
+calcShapeBound :: G.Shape -> Bound
+calcShapeBound (G.Shape     primitive)     = calcPrimitiveBound primitive
+calcShapeBound (G.Merge     shape1 shape2) = maxBounds (calcShapeBound shape1) (calcShapeBound shape2)
+calcShapeBound (G.Subtract  shape1 shape2) = maxBounds (calcShapeBound shape1) (calcShapeBound shape2)
+calcShapeBound (G.Intersect shape1 shape2) = minBounds (calcShapeBound shape1) (calcShapeBound shape2)
+
+calcSurfaceBound :: G.Surface -> Bound
+calcSurfaceBound (G.ShapeSurface shape) = calcShapeBound shape
+calcSurfaceBound G.PolygonSurface       = $notImplemented
+calcSurfaceBound G.NumbsSurface         = $notImplemented
+
+calcSurfacesBound :: [G.Surface] -> Bound
+calcSurfacesBound surfaces = maxBoundsList $ calcSurfaceBound <$> surfaces
+
+calcGeoCompBound :: G.GeoComponent -> Bound
+calcGeoCompBound (G.GeoElem  surfaces)   = calcSurfacesBound surfaces
+calcGeoCompBound (G.GeoGroup geometries) = maxBoundsList $ calcGeometryBound <$> geometries
+
+calcGeometryBound :: G.Geometry -> Bound
+calcGeometryBound (G.Geometry geoComp trans matMay) = expandBound dx dy $ calcGeoCompBound geoComp where
+    Vector2 dx dy = toTranslation trans
 
 calcGeometrySize :: G.Geometry -> Size
-calcGeometrySize (G.Geometry geoComp trans matMay) = calcGeoCompSize geoComp
+calcGeometrySize = toSize . calcGeometryBound
 
 -- -- --
 
