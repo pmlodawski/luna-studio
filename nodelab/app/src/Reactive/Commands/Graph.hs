@@ -94,7 +94,8 @@ updateConnectionsForNodes :: [NodeId] -> Command Global.State ()
 updateConnectionsForNodes nodes = do
     connections <- uses (Global.graph . Graph.connectionsMap) HashMap.toList
     let nodes' = Set.fromList nodes
-        connectionsToUpdate = [id | (id, conn) <- connections, (Set.member (conn ^. Connection.src . PortRef.srcNodeId) nodes' || Set.member (conn ^. Connection.dst  . PortRef.dstNodeId) nodes') ]
+        connectionsToUpdate = [id | (id, conn) <- connections, (    (conn ^. Connection.src . PortRef.srcNodeId) `Set.member` nodes'
+                                                                 || (conn ^. Connection.dst . PortRef.dstNodeId) `Set.member` nodes') ]
     mapM_ updateConnection connectionsToUpdate
 
 lineEndPos :: Vector2 Double -> Vector2 Double -> Double -> Maybe PortModel.Port -> Vector2 Double
