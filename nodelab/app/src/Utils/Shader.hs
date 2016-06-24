@@ -28,8 +28,7 @@ import qualified Language.GLSL.Builder               as GLSL
 import qualified Graphics.API                        as G
 
 
-
-type Size   = Vector2 Double
+type Size = Vector2 Double
 type Shader = String
 
 data ShaderBox = ShaderBox { _shader :: Shader
@@ -48,17 +47,6 @@ toDouble = realToFrac
 
 toExpr :: Double -> GLSL.Expr
 toExpr = GLSL.FloatConstant . toFloat
-
-getSize :: G.Figure -> Size
-getSize (G.Square s)      = Vector2 s s
-getSize (G.Rectangle w h) = Vector2 w h
-getSize (G.Circle d)      = Vector2 (2.0 * d) (2.0 * d)
-
-getBound :: G.Figure -> A.BVec 2 Float
-getBound shape = let Vector2 w h = getSize shape in A.vec2 (toFloat w) (toFloat h)
-
-toBound :: Size -> A.BVec 2 Float
-toBound (Vector2 x y) = A.vec2 (toFloat x) (toFloat y)
 
 -- object helpers
 
@@ -124,14 +112,59 @@ createShader size objectMay = fromMaybe "" $ compileObject <$> objectMay where
 
 -- size calculation
 
-calcGeoSize :: G.Geometry -> Size
-calcGeoSize geo = Vector2 2.0 2.0
--- calcGeoSize (G.GeoElem  surfaces)   = Vector2 1.0 1.0
--- calcGeoSize (G.GeoGroup geometries) = Vector2 1.0 1.0
+defSize = Vector2 2.0 2.0
+
+maxSizes :: Size -> Size -> Size
+maxSizes (Vector2 sx1 sy1) (Vector2 sx2 sy2) = Vector2 (max sx1 sx2) (max sy1 sy2)
+
+minSizes :: Size -> Size -> Size
+minSizes (Vector2 sx1 sy1) (Vector2 sx2 sy2) = Vector2 (min sx1 sx2) (min sy1 sy2)
+
+maxSizesList :: [Size] -> Size
+maxSizesList (size:sizes@(x:xs)) = maxSizes size $ maxSizesList sizes
+maxSizesList (size:_)            = size
+maxSizesList []                  = defSize
+
+-- getBound :: G.Figure -> A.BVec 2 Float
+-- getBound shape = let Vector2 w h = getSize shape in A.vec2 (toFloat w) (toFloat h)
+
+toBound :: Size -> A.BVec 2 Float
+toBound (Vector2 x y) = A.vec2 (toFloat x) (toFloat y)
+
+calcFigureSize :: G.Figure -> Size
+calcFigureSize (G.Square s)      = Vector2 s s
+calcFigureSize (G.Rectangle w h) = Vector2 w h
+calcFigureSize (G.Circle d)      = Vector2 (2.0 * d) (2.0 * d)
+
+calcPrimitiveSize :: G.Primitive -> Size
+calcPrimitiveSize (G.Primitive figure (G.Point2 dx dy) attr) = calcFigureSize figure
+
+calcShapeSize :: G.Shape -> Size
+calcShapeSize (G.Shape     primitive)     = calcPrimitiveSize primitive
+calcShapeSize (G.Merge     shape1 shape2) = maxSizes (calcShapeSize shape1) (calcShapeSize shape2)
+calcShapeSize (G.Subtract  shape1 shape2) = maxSizes (calcShapeSize shape1) (calcShapeSize shape2)
+calcShapeSize (G.Intersect shape1 shape2) = minSizes (calcShapeSize shape1) (calcShapeSize shape2)
+
+calcSurfaceSize :: G.Surface -> Size
+calcSurfaceSize (G.ShapeSurface shape) = calcShapeSize shape
+calcSurfaceSize G.PolygonSurface       = $notImplemented
+calcSurfaceSize G.NumbsSurface         = $notImplemented
+
+calcSurfacesSize :: [G.Surface] -> Size
+calcSurfacesSize surfaces = maxSizesList $ calcSurfaceSize <$> surfaces
+
+calcGeoCompSize :: G.GeoComponent -> Size
+calcGeoCompSize (G.GeoElem  surfaces)   = calcSurfacesSize surfaces
+calcGeoCompSize (G.GeoGroup geometries) = maxSizesList $ calcGeometrySize <$> geometries
+
+calcGeometrySize :: G.Geometry -> Size
+calcGeometrySize (G.Geometry geoComp trans matMay) = calcGeoCompSize geoComp
+
+-- -- --
 
 createShaderBox :: G.Geometry -> ShaderBox
 createShaderBox geometry = ShaderBox (createShader size objMay) size
-    where size   = calcGeoSize geometry
+    where size   = calcGeometrySize geometry
           objMay = fromGeometry geometry
 
 -- tests
