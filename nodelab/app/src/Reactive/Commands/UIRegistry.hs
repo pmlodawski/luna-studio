@@ -22,6 +22,7 @@ module Reactive.Commands.UIRegistry
     , register_
     , takeFocus
     , triggerChildrenResized
+    , tryUpdate
     , update
     , update_
     ) where
@@ -61,6 +62,18 @@ update id fun = do
                 performIO $ updateUI id (oldWidget ^. widget) newWidget
                 updateWidget id (oldWidget ^. widget) newWidget
             return newWidget
+
+tryUpdate :: (Eq a, CompositeWidget a, DisplayObjectClass a) => WidgetId -> (a -> a) -> Command UIRegistry.State Bool
+tryUpdate id fun = do
+    oldWidget <- UIRegistry.lookupTypedM  id
+    case oldWidget of
+        Nothing        -> return False
+        Just oldWidget -> do
+            newWidget  <- UIRegistry.updateWidgetM id fun
+            when ((oldWidget ^. widget) /= newWidget) $ do
+                performIO $ updateUI id (oldWidget ^. widget) newWidget
+                updateWidget id (oldWidget ^. widget) newWidget
+            return True
 
 update_ :: (Eq a, CompositeWidget a, DisplayObjectClass a) => WidgetId -> (a -> a) -> Command UIRegistry.State ()
 update_ id fun = void $ update id fun

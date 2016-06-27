@@ -12,6 +12,7 @@ import           Data.List.Split                 (wordsBy)
 import qualified Data.Text.Lazy                  as Text
 
 import           Object.UITypes                  (WidgetId)
+import           Object.Widget                   (DisplayObjectClass, CompositeWidget)
 import qualified Object.Widget.DataFrame         as DataFrame
 import qualified Object.Widget.Graphics          as Graphics
 import qualified Object.Widget.LongText          as LongText
@@ -71,83 +72,114 @@ displayListTable groupId col = do
         df = DataFrame.create Style.plotSize ["Index", "Value"] rows
     UICmd.register_ groupId df def
 
-visualizeNodeValue :: WidgetId -> Value -> Command UIRegistry.State ()
-visualizeNodeValue id (IntList v) = do
+visualize :: (Eq a, CompositeWidget a, DisplayObjectClass a) => WidgetId -> (WidgetId -> Command UIRegistry.State ()) -> (a -> a) -> Command UIRegistry.State ()
+visualize id create update = do
     groupId <- Node.valueGroupId id
+    currentVisualizations <- UICmd.children groupId
+    let currentVisualization = listToMaybe currentVisualizations
+        cleanup = do
+            widgets <- UICmd.children groupId
+            void $ mapM UICmd.removeWidget widgets
 
-    let dataPoints = zipVectorInt v []
-        widget = ScatterPlot.create Style.plotSize
-               & ScatterPlot.dataPoints .~ dataPoints
-    UICmd.register_ groupId widget def
+    case currentVisualization of
+        Nothing -> do
+            cleanup
+            create groupId
+        Just currentVis -> do
+            status <- UICmd.tryUpdate id update
+            when (status == False) $ create groupId
 
-    displayListTable groupId $ Text.pack . show <$> v
 
+visualizeNodeValue :: WidgetId -> Value -> Command UIRegistry.State ()
 visualizeNodeValue id (StringList v) = do
     groupId <- Node.valueGroupId id
     displayListTable groupId $ Text.pack . show <$> v
 
+visualizeNodeValue id (IntList v) = do
+    let dataPoints = zipVectorInt v []
+    let create groupId = do
+            let widget = ScatterPlot.create Style.plotSize
+                       & ScatterPlot.dataPoints .~ dataPoints
+            -- displayListTable groupId $ Text.pack . show <$> v
+            UICmd.register_ groupId widget def
+        update      = ScatterPlot.dataPoints .~ dataPoints
+    visualize id create update
+
 visualizeNodeValue id (DoubleList v) = do
-    groupId <- Node.valueGroupId id
-
     let dataPoints = zipVector v []
-        widget = ScatterPlot.create Style.plotSize
-               & ScatterPlot.dataPoints .~ dataPoints
-    UICmd.register_ groupId widget def
-
-    displayListTable groupId $ Text.pack . show <$> v
+    let create groupId = do
+            let widget = ScatterPlot.create Style.plotSize
+                       & ScatterPlot.dataPoints .~ dataPoints
+            -- displayListTable groupId $ Text.pack . show <$> v
+            UICmd.register_ groupId widget def
+        update      = ScatterPlot.dataPoints .~ dataPoints
+    visualize id create update
 
 visualizeNodeValue id (IntPairList v) = do
-    groupId <- Node.valueGroupId id
-
     let dataPoints = (\(a,b) -> Vector2 (fromIntegral a) (fromIntegral b)) <$> v
-        widget = ScatterPlot.create Style.plotSize
-               & ScatterPlot.dataPoints .~ dataPoints
-    UICmd.register_ groupId widget def
+    let create groupId = do
+            let widget = ScatterPlot.create Style.plotSize
+                       & ScatterPlot.dataPoints .~ dataPoints
+            UICmd.register_ groupId widget def
+        update      = ScatterPlot.dataPoints .~ dataPoints
+    visualize id create update
 
 visualizeNodeValue id (DoublePairList v) = do
-    groupId <- Node.valueGroupId id
-
     let dataPoints = uncurry Vector2 <$> v
-        widget = ScatterPlot.create Style.plotSize
-               & ScatterPlot.dataPoints .~ dataPoints
-    UICmd.register_ groupId widget def
+    let create groupId = do
+            let widget = ScatterPlot.create Style.plotSize
+                       & ScatterPlot.dataPoints .~ dataPoints
+            UICmd.register_ groupId widget def
+        update      = ScatterPlot.dataPoints .~ dataPoints
+    visualize id create update
 
 visualizeNodeValue id (Histogram v) = do
-    groupId <- Node.valueGroupId id
-
     let dataPoints = (\(a,b) -> Vector2 (fromIntegral a) (fromIntegral b)) <$> v
-        widget = ScatterPlot.create Style.plotSize
-               & ScatterPlot.dataPoints .~ dataPoints
-               & ScatterPlot.display    .~ ScatterPlot.Bars
-    UICmd.register_ groupId widget def
+    let create groupId = do
+            let widget = ScatterPlot.create Style.plotSize
+                       & ScatterPlot.dataPoints .~ dataPoints
+                       & ScatterPlot.display    .~ ScatterPlot.Bars
+            UICmd.register_ groupId widget def
+        update      = ScatterPlot.dataPoints .~ dataPoints
+    visualize id create update
 
 visualizeNodeValue id (Image url w h) = do
-    groupId <- Node.valueGroupId id
-
-    let widget = Image.create (Vector2 w h) $ Text.pack url
-    UICmd.register_ groupId widget def
+    let create groupId = do
+            let widget = Image.create (Vector2 w h) $ Text.pack url
+            UICmd.register_ groupId widget def
+        update = (Image.size . x .~ w)
+               . (Image.size . y .~ h)
+               . (Image.image  .~ (Text.pack url))
+    visualize id create update
 
 visualizeNodeValue id (StringValue str) = do
-    groupId <- Node.valueGroupId id
-
     let normalize = intercalate "<br />" . wordsBy (== '\n')
-    let widget = LongText.create (Vector2 200 200) (Text.pack $ normalize str) LongText.Left
-    UICmd.register_ groupId widget def
+        create groupId = do
+            let widget = LongText.create (Vector2 200 200) (Text.pack $ normalize str) LongText.Left
+            UICmd.register_ groupId widget def
+        update = LongText.value .~ (Text.pack $ normalize str)
+    visualize id create update
 
 visualizeNodeValue id (DataFrame cols) = do
-    groupId <- Node.valueGroupId id
-
     let heads = Text.pack <$> fst <$> cols
         cols' = (fmap DefaultValue.stringify) <$> snd <$> cols
         rows = transpose cols'
-        df = DataFrame.create (Vector2 400 200) heads rows
-    UICmd.register_ groupId df def
+
+    let create groupId = do
+            let df = DataFrame.create (Vector2 400 200) heads rows
+            UICmd.register_ groupId df def
+        update      = (DataFrame.headers .~ heads )
+                    . (DataFrame.rows    .~ rows  )
+    visualize id create update
 
 visualizeNodeValue id (Graphics (GR.Graphics layers)) = do
     groupId <- Node.valueGroupId id
     let items = createItem <$> layers
-    let widget = Graphics.create (Vector2 200 200) items
-    UICmd.register_ groupId widget def
+    let create groupId = do
+            let widget = Graphics.create (Vector2 200 200) items
+            UICmd.register_ groupId widget def
+        update = Graphics.items .~ items
+    visualize id create update
     where
         createItem (GR.Layer geometry trans) = Graphics.Item (Text.pack shaderTxt) boxes size offset where
             Shader.ShaderBox shaderTxt (Shader.Location size offset) = Shader.createShaderBox geometry
