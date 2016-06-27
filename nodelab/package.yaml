@@ -7,23 +7,24 @@ author:              New Byte Order
 maintainer:          contact@nodelab.io
 
 default-extensions:
-  - DoAndIfThenElse
-  - NoImplicitPrelude
-  - TemplateHaskell
-  - DeriveGeneric
-  - StandaloneDeriving
-  - FlexibleContexts
-  - MultiParamTypeClasses
-  - DefaultSignatures
-  - DeriveFunctor
-  - DeriveTraversable
-  - DeriveFoldable
-  - FlexibleInstances
-  - LambdaCase
+  - BangPatterns
   - ConstraintKinds
-  - GeneralizedNewtypeDeriving
+  - DefaultSignatures
   - DeriveDataTypeable
+  - DeriveFoldable
+  - DeriveFunctor
+  - DeriveGeneric
+  - DeriveTraversable
+  - DoAndIfThenElse
+  - FlexibleContexts
+  - FlexibleInstances
+  - GeneralizedNewtypeDeriving
+  - LambdaCase
+  - MultiParamTypeClasses
+  - NoImplicitPrelude
   - ScopedTypeVariables
+  - StandaloneDeriving
+  - TemplateHaskell
 
 #
 # ACHTUNG! Zmieniasz tu - zmien w interactive
