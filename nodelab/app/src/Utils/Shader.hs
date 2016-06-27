@@ -2,6 +2,7 @@
 
 module Utils.Shader (
     ShaderBox(..)
+  , Location(..)
   , createShaderBox
   ) where
 
@@ -31,16 +32,24 @@ import qualified Graphics.API                        as G
 import           Debug.Trace
 
 
-type Size = Vector2 Double
-
-data Bound = Bound { _leftTop     :: Vector2 Double
-                   , _rightBottom :: Vector2 Double
-                   } deriving (Show, Eq)
-
+type Vector = Vector2 Double
+type Size   = Vector
 type Shader = String
 
-data ShaderBox = ShaderBox { _shader :: Shader
-                           , _size   :: Size
+data Bound = Bound { _leftTop     :: Vector
+                   , _rightBottom :: Vector
+                   } deriving (Show, Eq)
+
+makeLenses ''Bound
+
+data Location = Location { _size   :: Size
+                         , _offset :: Vector
+                         } deriving (Show, Eq)
+
+makeLenses ''Location
+
+data ShaderBox = ShaderBox { _shader   :: Shader
+                           , _location :: Location
                            } deriving (Show, Eq)
 
 makeLenses ''ShaderBox
@@ -56,16 +65,16 @@ toDouble = realToFrac
 toExpr :: Double -> GLSL.Expr
 toExpr = GLSL.FloatConstant . toFloat
 
-toTranslation :: G.Transformation -> Vector2 Double
+toTranslation :: G.Transformation -> Vector
 toTranslation (G.Transformation _ _ dx dy _ _) = Vector2 dx dy
 
 -- object helpers
 
 -- TODO: change pattern to object : []; object : objects ?
 mergeObjects :: [Object 2] -> Maybe (Object 2)
-mergeObjects (object:objects@(_:_)) = Just $ foldl merge object objects
-mergeObjects (object:_)             = Just object
-mergeObjects []                     = Nothing
+mergeObjects []               = Nothing
+mergeObjects (object:[])      = Just object
+mergeObjects (object:objects) = Just $ foldl merge object objects
 
 -- TODO: check behaviour
 transObject :: Double -> Double -> Object 2 -> Object 2
@@ -124,16 +133,19 @@ createShader size objectMay = fromMaybe "" $ compileObject <$> objectMay where
 
 -- size calculation
 
+defSize  = Vector2 2.0 2.0
 defBound = Bound (Vector2 (-1.0) (-1.0)) (Vector2 1.0 1.0)
 
-toSize :: Bound -> Size
-toSize (Bound (Vector2 x1 y1) (Vector2 x2 y2)) = Vector2 w h where
-    w = max 0.0 $ x2 - x1
-    h = max 0.0 $ y2 - y1
+toLocation :: Bound -> Location
+toLocation (Bound (Vector2 x1 y1) (Vector2 x2 y2)) = Location (Vector2 w h) (Vector2 sx sy) where
+    w  = max 0.0 $ x2 - x1
+    h  = max 0.0 $ y2 - y1
+    sx = (x1 + x2) / 2.0
+    sy = (y1 + y2) / 2.0
 
 expandBound :: Double -> Double -> Bound -> Bound
 expandBound 0.0 0.0 bound = bound
-expandBound dx  dy (Bound (Vector2 x1 y1) (Vector2 x2 y2)) = (Bound (Vector2 x1' y1') (Vector2 x2' y2')) where
+expandBound dx  dy (Bound (Vector2 x1 y1) (Vector2 x2 y2)) = Bound (Vector2 x1' y1') (Vector2 x2' y2') where
     x1' = min x1 $ x1 + dx
     y1' = min y1 $ y1 + dy
     x2' = max x2 $ x2 + dx
@@ -152,9 +164,9 @@ minBounds :: Bound -> Bound -> Bound
 minBounds (Bound lt1 rb1) (Bound lt2 rb2) = Bound (maxCorner lt1 lt2) (minCorner rb1 rb2)
 
 maxBoundsList :: [Bound] -> Bound
-maxBoundsList (bound:bounds@(_:_)) = foldl maxBounds bound bounds
-maxBoundsList (bound:_)            = bound
-maxBoundsList []                   = defBound
+maxBoundsList []             = defBound
+maxBoundsList (bound:[])     = bound
+maxBoundsList (bound:bounds) = foldl maxBounds bound bounds
 
 toShaderBound :: Size -> A.BVec 2 Float
 toShaderBound (Vector2 x y) = A.vec2 (toFloat x) (toFloat y)
@@ -165,7 +177,8 @@ calcFigureBound (G.Rectangle w h) = Bound (Vector2 (-w2) (-h2)) (Vector2 w2 h2) 
 calcFigureBound (G.Circle d)      = Bound (Vector2 (-d)  (-d))  (Vector2 d  d)
 
 calcPrimitiveBound :: G.Primitive -> Bound
-calcPrimitiveBound (G.Primitive figure (G.Point2 dx dy) attr) = expandBound dx dy $ calcFigureBound figure
+calcPrimitiveBound (G.Primitive figure (G.Point2 dx dy) attr) = trace ("pri " <> show figure <> " " <> show bound <> " dx " <> show dx <> " dy " <> show dy) $ bound where
+    bound = expandBound dx dy $ calcFigureBound figure
 
 calcShapeBound :: G.Shape -> Bound
 calcShapeBound (G.Shape     primitive)     = calcPrimitiveBound primitive
@@ -186,18 +199,19 @@ calcGeoCompBound (G.GeoElem  surfaces)   = calcSurfacesBound surfaces
 calcGeoCompBound (G.GeoGroup geometries) = maxBoundsList $ calcGeometryBound <$> geometries
 
 calcGeometryBound :: G.Geometry -> Bound
-calcGeometryBound (G.Geometry geoComp trans matMay) = expandBound dx dy $ calcGeoCompBound geoComp where
+calcGeometryBound (G.Geometry geoComp trans matMay) = trace ("geo " <> show bound <> " dx " <> show dx <> " dy " <> show dy) $ bound where
+    bound = expandBound dx dy $ calcGeoCompBound geoComp
     Vector2 dx dy = toTranslation trans
 
-calcGeometrySize :: G.Geometry -> Size
-calcGeometrySize = toSize . calcGeometryBound
+calcGeometryLocation :: G.Geometry -> Location
+calcGeometryLocation = toLocation . calcGeometryBound
 
 -- -- --
 
 createShaderBox :: G.Geometry -> ShaderBox
-createShaderBox geometry = ShaderBox (createShader size objMay) size
-    where size   = calcGeometrySize geometry
-          objMay = fromGeometry geometry
+createShaderBox geometry = ShaderBox (createShader (location ^. size) objMay) location where
+    location = calcGeometryLocation geometry
+    objMay   = fromGeometry geometry
 
 -- tests
 
@@ -211,7 +225,7 @@ test = do
         shape     = G.Shape primitive
         primitive = G.Primitive figure def def
         figure    = G.Square 0.25
-        ShaderBox shaderTxt (Vector2 w h) = createShaderBox geometry
+        ShaderBox shaderTxt (Location (Vector2 w h) (Vector2 0.0 0.0)) = createShaderBox geometry
     return ()
 
 

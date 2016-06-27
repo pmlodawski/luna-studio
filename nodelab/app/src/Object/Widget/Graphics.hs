@@ -7,11 +7,12 @@ import           Utils.Vector
 import           Object.Widget
 
 data Box = Box { _boxPosition :: Vector2 Double
-               , _boxSize     :: Vector2 Double
                } deriving (Eq, Show, Typeable, Generic)
 
 data Item = Item { _shader :: Text
                  , _boxes  :: [Box]
+                 , _boxSize   :: Vector2 Double
+                 , _boxOffset :: Vector2 Double
                  } deriving (Eq, Show, Typeable, Generic)
 
 data Graphics = Graphics { _position :: Vector2 Double

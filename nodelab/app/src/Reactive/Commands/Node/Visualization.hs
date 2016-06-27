@@ -149,9 +149,9 @@ visualizeNodeValue id (Graphics (GR.Graphics layers)) = do
     let widget = Graphics.create (Vector2 200 200) items
     UICmd.register_ groupId widget def
     where
-        createItem (GR.Layer geometry trans) = Graphics.Item (Text.pack shaderTxt) boxes where
-            Shader.ShaderBox shaderTxt (Vector2 w h) = Shader.createShaderBox geometry
+        createItem (GR.Layer geometry trans) = Graphics.Item (Text.pack shaderTxt) boxes size offset where
+            Shader.ShaderBox shaderTxt (Shader.Location size offset) = Shader.createShaderBox geometry
             boxes = createBox <$> trans
-            createBox (GR.Transformation sx sy dx dy rot refl) = Graphics.Box (Vector2 dx dy) (Vector2 w h)
+            createBox (GR.Transformation sx sy dx dy rot refl) = Graphics.Box (Vector2 dx dy)
 
 visualizeNodeValue _ _ = return ()

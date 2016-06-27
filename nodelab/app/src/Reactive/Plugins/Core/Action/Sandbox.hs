@@ -125,8 +125,8 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\115' _)) = Just $ Global.in
         shader2 = "void main() { gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0); } "
         n       = 4.0
         n'      = 4
-        items   = [ G.Item shader  [ G.Box (Vector2 0.0 0.0) (Vector2 1.0 1.0) ]
-                  , G.Item shader2 [ G.Box (Vector2 (i / n) 0.0) (Vector2 (1/n) (i / n)) | i <- [1..n']]
+        items   = [ G.Item shader  [ G.Box (Vector2 0.0 0.0) ] (Vector2 1.0 1.0) (Vector2 0.0 0.0)
+                  , G.Item shader2 [ G.Box (Vector2 (i / n) 0.0) | i <- [1..n']] (Vector2 1.0 1.0) (Vector2 0.0 0.0)
                   ]
         widget = G.create (Vector2 400 400) items
     UICmd.register parent widget def

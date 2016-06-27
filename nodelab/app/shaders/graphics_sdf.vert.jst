@@ -2,12 +2,9 @@
 precision highp float;
 #endif
 
-attribute vec2 boxSize;
 varying vec2 luv;
-varying vec2 size;
 
 void main() {
     luv = uv;
-    size = boxSize;
 	gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }

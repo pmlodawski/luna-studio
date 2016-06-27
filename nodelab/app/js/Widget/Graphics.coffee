@@ -18,21 +18,26 @@ class Graphics extends BaseWidget
     @relayout()
 
   setItems: (items) ->
-     @items = items
-     @mesh.remove(@mesh.children)
-     @items.forEach (item) =>
+    console.log items
+    @items = items
+    @mesh.remove(@mesh.children)
+    @items.forEach (item) =>
+      uniforms =
+           objectId:  @uniforms.objectId
+           boxSize:   { type:'v2', value: new THREE.Vector2(item._boxSize._x, item._boxSize._y)}
+           boxOffset: { type:'v2', value: new THREE.Vector2(item._boxOffset._x, item._boxOffset._y)}
+      uniforms[k] = v for k, v of $$.commonUniforms
+      geom = new THREE.GraphicsBufferGeometry(item._boxes, item._boxSize, item._boxOffset)
+      item = new THREE.Mesh geom, new THREE.ShaderMaterial
+                 uniforms:       uniforms
+                 vertexShader:   vs
+                 fragmentShader: item._shader
+                 transparent:    true
+                 blending:       THREE.NormalBlending
+                 derivatives:    true
+      @mesh.add item
 
-       geom = new THREE.GraphicsBufferGeometry(item._boxes)
-       item = new THREE.Mesh geom, new THREE.ShaderMaterial
-                  uniforms: @uniforms
-                  vertexShader:   vs
-                  fragmentShader: item._shader
-                  transparent:    true
-                  blending:       THREE.NormalBlending
-                  derivatives:    true
-       @mesh.add item
-
-     @relayout()
+    @relayout()
 
   relayout: ->
     @mesh.scale.x = @width
