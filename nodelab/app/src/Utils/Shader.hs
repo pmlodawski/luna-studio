@@ -151,6 +151,14 @@ expandBound dx  dy (Bound (Vector2 x1 y1) (Vector2 x2 y2)) = Bound (Vector2 x1' 
     x2' = max x2 $ x2 + dx
     y2' = max y2 $ y2 + dy
 
+moveBound :: Double -> Double -> Bound -> Bound
+moveBound 0.0 0.0 bound = bound
+moveBound dx  dy (Bound (Vector2 x1 y1) (Vector2 x2 y2)) = Bound (Vector2 x1' y1') (Vector2 x2' y2') where
+    x1' = x1 + dx
+    y1' = y1 + dy
+    x2' = x2 + dx
+    y2' = y2 + dy
+
 minCorner :: Ord a => Vector2 a -> Vector2 a -> Vector2 a
 minCorner (Vector2 x1 y1) (Vector2 x2 y2) = Vector2 (min x1 x2) (min y1 y2)
 
@@ -177,8 +185,9 @@ calcFigureBound (G.Rectangle w h) = Bound (Vector2 (-w2) (-h2)) (Vector2 w2 h2) 
 calcFigureBound (G.Circle d)      = Bound (Vector2 (-d)  (-d))  (Vector2 d  d)
 
 calcPrimitiveBound :: G.Primitive -> Bound
-calcPrimitiveBound (G.Primitive figure (G.Point2 dx dy) attr) = trace ("pri " <> show figure <> " " <> show bound <> " dx " <> show dx <> " dy " <> show dy) $ bound where
-    bound = expandBound dx dy $ calcFigureBound figure
+calcPrimitiveBound (G.Primitive figure (G.Point2 dx dy) attr) = moveBound dx dy $ calcFigureBound figure
+-- calcPrimitiveBound (G.Primitive figure (G.Point2 dx dy) attr) = trace ("pri " <> "dx " <> show dx <> " dy " <> show dy <> " " <> show bound <> " " <> show figure) $ bound where
+--     bound = moveBound dx dy $ calcFigureBound figure
 
 calcShapeBound :: G.Shape -> Bound
 calcShapeBound (G.Shape     primitive)     = calcPrimitiveBound primitive
@@ -199,9 +208,11 @@ calcGeoCompBound (G.GeoElem  surfaces)   = calcSurfacesBound surfaces
 calcGeoCompBound (G.GeoGroup geometries) = maxBoundsList $ calcGeometryBound <$> geometries
 
 calcGeometryBound :: G.Geometry -> Bound
-calcGeometryBound (G.Geometry geoComp trans matMay) = trace ("geo " <> show bound <> " dx " <> show dx <> " dy " <> show dy) $ bound where
-    bound = expandBound dx dy $ calcGeoCompBound geoComp
+calcGeometryBound (G.Geometry geoComp trans matMay) = moveBound dx dy $ calcGeoCompBound geoComp where
     Vector2 dx dy = toTranslation trans
+-- calcGeometryBound (G.Geometry geoComp trans matMay) = trace ("geo " <> "dx " <> show dx <> " dy " <> show dy <> " " <> show bound) $ bound where
+--     bound = moveBound dx dy $ calcGeoCompBound geoComp
+--     Vector2 dx dy = toTranslation trans
 
 calcGeometryLocation :: G.Geometry -> Location
 calcGeometryLocation = toLocation . calcGeometryBound
