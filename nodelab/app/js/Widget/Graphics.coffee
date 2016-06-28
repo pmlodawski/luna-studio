@@ -18,10 +18,8 @@ class Graphics extends BaseWidget
     @relayout()
 
   setItems: (items) ->
-    console.log items
     @items = items
-    @mesh.remove(@mesh.children)
-    @items.forEach (item) =>
+    newchildren = @items.map (item) =>
       uniforms =
            objectId:  @uniforms.objectId
            boxSize:   { type:'v2', value: new THREE.Vector2(item._boxSize._x, item._boxSize._y)}
@@ -35,8 +33,9 @@ class Graphics extends BaseWidget
                  transparent:    true
                  blending:       THREE.NormalBlending
                  derivatives:    true
-      @mesh.add item
-
+      item
+    @mesh.remove(@mesh.children)
+    newchildren.forEach (it) => @mesh.add it
     @relayout()
 
   relayout: ->
