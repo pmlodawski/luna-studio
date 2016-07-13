@@ -27,5 +27,7 @@ updateSize (Padding top right bottom left) id = do
     widgets <- UICmd.children id
     widths  <- mapM (getFarEdge x) widgets
     heights <- mapM (getFarEdge y) widgets
-
-    UICmd.resize id $ Vector2 (left + right + maximum' widths) (top + bottom + maximum' heights)
+    if length widgets == 0 then
+        UICmd.resize id $ Vector2 0 0
+    else
+        UICmd.resize id $ Vector2 (left + right + maximum' widths) (top + bottom + maximum' heights)

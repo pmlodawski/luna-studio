@@ -239,6 +239,7 @@ instance CompositeWidget Model.Node where
 
         let group  = Group.create & Group.style   .~ Style.visualizationGroupStyle
                                   & Group.visible .~ (model ^. Model.isExpanded)
+                                  & Group.size    . y .~ 0
         visualizationGroupId <- UICmd.register controlGroups group (Layout.verticalLayoutHandler 0.0)
 
         void $ UIRegistry.updateWidgetM id $ Model.elements %~ ( (Model.expressionLabel    .~ expressionLabelId    )

@@ -41,8 +41,8 @@ moveX spacing offset (id, width, False) = do
 
 verticalLayoutHandler spacing = addHandler (UICmd.ChildrenResizedHandler $ verticalLayoutHandler' spacing) mempty
 
-verticalLayoutHandler' :: Double -> WidgetId -> WidgetId -> Command UIRegistry.State ()
-verticalLayoutHandler' spacing id _ = do
+verticalLayoutHandler' :: Double -> WidgetId -> Command UIRegistry.State ()
+verticalLayoutHandler' spacing id = do
     verticalLayout spacing id
     maybePadding <- UICmd.maybeGet id $ Group.style . Group.padding
     let padding = fromMaybe def maybePadding
@@ -58,8 +58,8 @@ horizontalLayoutHandler spacing = addHandler (UICmd.ChildrenResizedHandler $ hor
 
 horizontalLayoutHandlerNoResize spacing = addHandler (UICmd.ChildrenResizedHandler $ horizontalLayoutHandler' spacing False) mempty
 
-horizontalLayoutHandler' :: Double -> Bool -> WidgetId -> WidgetId -> Command UIRegistry.State ()
-horizontalLayoutHandler' spacing resize id _ = do
+horizontalLayoutHandler' :: Double -> Bool -> WidgetId -> Command UIRegistry.State ()
+horizontalLayoutHandler' spacing resize id = do
     horizontalLayout spacing id
     maybePadding <- UICmd.maybeGet id $ Group.style . Group.padding
     let padding = fromMaybe def maybePadding

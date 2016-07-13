@@ -74,4 +74,4 @@ instance CompositeWidget Model.Group where
         let vis = model ^. Model.visible
         when (old ^. Model.visible /= vis) $ do
             parent <- UICmd.parent id
-            UICmd.triggerChildrenResized parent id
+            UICmd.triggerChildrenResized parent

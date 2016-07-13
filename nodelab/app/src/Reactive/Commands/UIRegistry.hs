@@ -45,7 +45,7 @@ register parent model handlers = do
     file <- UIRegistry.registerM parent model handlers
     performIO $ createUI parent (file ^. objectId) model
     createWidget (file ^. objectId) model
-    triggerChildrenResized parent (file ^. objectId)
+    triggerChildrenResized parent
     return (file ^. objectId)
 
 register_ :: (CompositeWidget a, DisplayObjectClass a) => WidgetId -> a -> HTMap -> Command UIRegistry.State ()
@@ -106,12 +106,12 @@ moveBy id vec = do
     withJust pos $ performIO . (UI.updatePosition' id)
 
 
-newtype ChildrenResizedHandler = ChildrenResizedHandler (WidgetId -> WidgetId -> Command UIRegistry.State ())
-triggerChildrenResized :: WidgetId -> WidgetId -> Command UIRegistry.State ()
-triggerChildrenResized id child = do
+newtype ChildrenResizedHandler = ChildrenResizedHandler (WidgetId -> Command UIRegistry.State ())
+triggerChildrenResized :: WidgetId -> Command UIRegistry.State ()
+triggerChildrenResized id = do
     let key = TypeKey :: TypeKey ChildrenResizedHandler
     maybeHandler <- handler id key
-    withJust maybeHandler $ \(ChildrenResizedHandler handler) -> handler id child
+    withJust maybeHandler $ \(ChildrenResizedHandler handler) -> handler id
 
 
 resize :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
@@ -131,7 +131,7 @@ resize'CB cb id f = do
         let model   = widgetFile ^. widget
             wParent = widgetFile ^. Object.Widget.parent
         resizeWidget id (model ^. widgetSize) model
-        when cb $ withJust wParent $ flip triggerChildrenResized id
+        when cb $ withJust wParent triggerChildrenResized
 
 get :: DisplayObjectClass a => WidgetId -> Getter a b -> Command UIRegistry.State b
 get id f = do
@@ -178,10 +178,13 @@ handler id k = do
 
 removeWidget :: WidgetId -> Command UIRegistry.State ()
 removeWidget id = do
+    parent <- parent id
     widgetOver <- use $ UIRegistry.widgetOver
     widgets <- UIRegistry.unregisterM id
     when (elem id widgets) $ performIO $ Cursor.setCursor Cursor.Normal
     forM_ widgets $ performIO . UI.removeWidget
+    triggerChildrenResized parent
+
 
 newtype LostFocus = LostFocus (WidgetId -> Command Global.State ())
 triggerLostFocus :: WidgetId -> Command Global.State ()
