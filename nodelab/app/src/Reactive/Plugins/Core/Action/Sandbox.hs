@@ -24,6 +24,7 @@ import qualified Object.Widget.Plots.ScatterPlot  as ScatterPlot
 import qualified Object.Widget.Graphics           as G
 
 import qualified Object.Widget.Choice             as Choice
+import qualified Reactive.Commands.Batch              as BatchCmd
 
 import           Object.LunaValue
 import           Object.LunaValue.Instances ()
@@ -132,5 +133,7 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\115' _)) = Just $ Global.in
     UICmd.register parent widget def
 
     return ()
+
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\116' _)) = Just BatchCmd.dumpGraphViz
 
 toAction _  = Nothing

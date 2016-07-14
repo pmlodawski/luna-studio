@@ -72,3 +72,6 @@ exportProject = withUUID . BatchCmd.exportProject
 
 importProject :: Text -> Command State ()
 importProject = withUUID . BatchCmd.importProject
+
+dumpGraphViz :: Command State ()
+dumpGraphViz = withWorkspace BatchCmd.dumpGraphViz

@@ -25,6 +25,7 @@ import qualified Empire.API.Graph.RemoveNode       as RemoveNode
 import qualified Empire.API.Graph.RenameNode       as RenameNode
 import qualified Empire.API.Graph.SetDefaultValue  as SetDefaultValue
 import qualified Empire.API.Graph.SetInputNodeType as SetInputNodeType
+import qualified Empire.API.Graph.DumpGraphViz     as DumpGraphViz
 import qualified Empire.API.Graph.UpdateNodeMeta   as UpdateNodeMeta
 import qualified Empire.API.Library.CreateLibrary  as CreateLibrary
 import qualified Empire.API.Library.ListLibraries  as ListLibraries
@@ -84,3 +85,5 @@ importProject :: Text -> UUID -> IO ()
 importProject payload uuid = sendRequest uuid $ ImportProject.Request payload
 
 
+dumpGraphViz :: Workspace -> UUID -> IO ()
+dumpGraphViz workspace uuid = sendRequest uuid $ withLibrary workspace DumpGraphViz.Request
