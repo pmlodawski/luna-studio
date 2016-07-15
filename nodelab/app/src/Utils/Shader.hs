@@ -93,7 +93,7 @@ fromFigure (G.Rectangle w h) = hyperrectangle (A.vec2 (toExpr w) (toExpr h) :: A
 fromFigure (G.Circle d)      = ball (toExpr d)
 
 fromPrimitive :: G.Primitive -> Object 2
-fromPrimitive (G.Primitive figure (G.Point2 dx dy) attr) = transObject dx dy $ fromFigure figure
+fromPrimitive (G.Primitive figure (G.Point dx dy) attr) = transObject dx dy $ fromFigure figure
 
 fromShape :: G.Shape -> Object 2
 fromShape (G.Shape     primitive)     = fromPrimitive primitive
@@ -185,8 +185,8 @@ calcFigureBound (G.Rectangle w h) = Bound (Vector2 (-w2) (-h2)) (Vector2 w2 h2) 
 calcFigureBound (G.Circle d)      = Bound (Vector2 (-d)  (-d))  (Vector2 d  d)
 
 calcPrimitiveBound :: G.Primitive -> Bound
-calcPrimitiveBound (G.Primitive figure (G.Point2 dx dy) attr) = moveBound dx dy $ calcFigureBound figure
--- calcPrimitiveBound (G.Primitive figure (G.Point2 dx dy) attr) = trace ("pri " <> "dx " <> show dx <> " dy " <> show dy <> " " <> show bound <> " " <> show figure) $ bound where
+calcPrimitiveBound (G.Primitive figure (G.Point dx dy) attr) = moveBound dx dy $ calcFigureBound figure
+-- calcPrimitiveBound (G.Primitive figure (G.Point dx dy) attr) = trace ("pri " <> "dx " <> show dx <> " dy " <> show dy <> " " <> show bound <> " " <> show figure) $ bound where
 --     bound = moveBound dx dy $ calcFigureBound figure
 
 calcShapeBound :: G.Shape -> Bound
