@@ -21,12 +21,20 @@ newtype Connection = Connection { unConnection :: JSVal } deriving (PToJSVal, PF
 
 instance UIWidget Connection
 
-foreign import javascript safe "new Connection($1)"            create'    :: WidgetId   -> IO Connection
-foreign import javascript safe "$1.setPos($2, $3, $4, $5, $6)" setPos     :: Connection -> Double -> Double -> Double -> Double -> Int -> IO ()
-foreign import javascript safe "$1.setVisible($2)"             setVisible :: Connection -> Bool    -> IO ()
+foreign import javascript safe "new Connection($1)"            create'       :: WidgetId   -> IO Connection
+foreign import javascript safe "$1.setPos($2, $3, $4, $5, $6)" setPos        :: Connection -> Double -> Double -> Double -> Double -> Int -> IO ()
+foreign import javascript safe "$1.setVisible($2)"             setVisible    :: Connection -> Bool    -> IO ()
 foreign import javascript safe "common.commonUniforms.isConnecting.value = ($1?1:0)" setIsConnecting :: Bool    -> IO ()
-foreign import javascript safe "$1.setColor($2)"               setColor   :: Connection -> Int     -> IO ()
-foreign import javascript safe "$1.setArrow($2)"               setArrow   :: Connection -> Bool    -> IO ()
+foreign import javascript safe "$1.setColor($2)"               setColor      :: Connection -> Int     -> IO ()
+foreign import javascript safe "$1.setArrow($2)"               setArrow      :: Connection -> Bool    -> IO ()
+foreign import javascript safe "$1.setHighlight($2)"           setHighlight' :: Connection -> Int     -> IO ()
+
+
+setHighlight :: Connection -> Model.ConnectionHighlight -> IO ()
+setHighlight conn hl = setHighlight' conn $ case hl of
+    Model.None         -> 0
+    Model.SrcHighlight -> 1
+    Model.DstHighlight -> 2
 
 create :: WidgetId -> Model.Connection -> IO Connection
 create id model = do
@@ -35,6 +43,7 @@ create id model = do
     setVisible connection (model ^. Model.visible)
     setArrow   connection (model ^. Model.arrow)
     setColor   connection (model ^. Model.color)
+    setHighlight connection (model ^. Model.highlight)
     return connection
 
 instance UIDisplayObject Model.Connection where
@@ -50,6 +59,7 @@ instance UIDisplayObject Model.Connection where
         setVisible connection (model ^. Model.visible)
         setArrow   connection (model ^. Model.arrow)
         setColor   connection (model ^. Model.color)
+        setHighlight connection (model ^. Model.highlight)
 
 instance UIDisplayObject Model.CurrentConnection where
     createUI = undefined

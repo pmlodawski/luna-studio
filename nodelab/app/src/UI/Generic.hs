@@ -54,6 +54,8 @@ startDrag (Mouse.Event _ pos button keymods (Just (Mouse.EventWidget widgetId ma
     camera <- use $ Global.camera . Camera.camera
     Global.uiRegistry . UIRegistry.dragState ?= DragState widgetId mat scene button keymods pos pos pos
 
+abortDrag :: Command Global.State ()
+abortDrag = Global.uiRegistry . UIRegistry.dragState .= Nothing
 
 whenChanged :: (Eq b, Monad m) => a -> a -> Getter a b -> m () -> m ()
 whenChanged old new get action = if (old ^. get) /= (new ^. get) then action

@@ -46,7 +46,7 @@ class Label extends BaseWidget
   setLabel: (text) ->
     @text = text
     @mesh.remove @label if @label
-    if @text
+    if @text and @text != ""
       layout =
         text: text
         font: font
@@ -75,7 +75,7 @@ class Label extends BaseWidget
         when 'Center' then (@width - bgWidth) / 2.0
         else throw 'Invalid text alignment'
       @bg.scale.x = bgWidth
-
+    @bg.visible = (@text != "")
   relayout: ->
     super
     @setLabel @text

@@ -1,5 +1,6 @@
 module Reactive.Plugins.Core.Action.Connect
     ( toAction
+    , handleMove
     ) where
 
 import           Utils.Angle                     (boundedAngle, toAngle)
@@ -21,7 +22,7 @@ import           Reactive.Commands.Graph         (portRefToWidgetId)
 import           Reactive.Commands.Graph.Connect (batchConnectNodes)
 import qualified Reactive.Commands.UIRegistry    as UICmd
 import qualified Reactive.State.Camera           as Camera
-import           Reactive.State.Connect          (Connecting (..), DragHistory (..))
+import           Reactive.State.Connect          (Connecting (..))
 import qualified Reactive.State.Connect          as Connect
 import           Reactive.State.Global           (State, inRegistry)
 import qualified Reactive.State.Global           as Global
@@ -67,7 +68,7 @@ startDrag event@(Mouse.Event _ coord _ _ (Just evWd)) = do
         camera <- use $ Global.camera . Camera.camera
         nodeWidget <- inRegistry $ UICmd.parent (fromJust $ file ^. parent)
         sourceNodePos <- inRegistry $ UICmd.get nodeWidget NodeModel.position
-        Global.connect . Connect.connecting ?= (Connecting sourceRef (model ^. PortModel.angleVector) sourceNodePos Nothing (DragHistory coord coord))
+        Global.connect . Connect.connecting ?= (Connecting sourceRef (model ^. PortModel.angleVector) sourceNodePos Nothing)
         zoom Global.uiRegistry $ setCurrentConnectionColor $ model ^. PortModel.color
 
 whileConnecting :: (Connect.Connecting -> Command State ()) -> Command State ()
@@ -76,11 +77,9 @@ whileConnecting run = do
     withJust connectingMay $ \connecting -> run connecting
 
 handleMove :: Vector2 Int -> Connect.Connecting -> Command State ()
-handleMove coord (Connecting sourceRef sourceVector nodePos _ (DragHistory start current)) = do
+handleMove coord (Connecting sourceRef sourceVector nodePos _) = do
     graph  <- use Global.graph
     camera <- use $ Global.camera . Camera.camera
-    Global.connect . Connect.connecting . _Just . Connect.history . Connect.dragCurrentPos .= coord
-    start'   <- zoom Global.camera $ Camera.screenToWorkspaceM start
     current' <- zoom Global.camera $ Camera.screenToWorkspaceM coord
     startLine <- case sourceRef of
             (InPortRef' (InPortRef _ Self)) -> return nodePos
@@ -118,7 +117,7 @@ toValidConnection a b = (normalize a b) >>= toOtherNode where
         | otherwise                                        = Nothing
 
 stopDrag :: Mouse.RawEvent -> Connect.Connecting -> Command State ()
-stopDrag event@(Mouse.Event _ coord _ _ mayEvWd) (Connecting sourceRef _ _ _ (DragHistory start current)) = do
+stopDrag event@(Mouse.Event _ coord _ _ mayEvWd) (Connecting sourceRef _ _ _) = do
     Global.connect . Connect.connecting .= Nothing
     zoom Global.uiRegistry hideCurrentConnection
 

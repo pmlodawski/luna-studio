@@ -8,15 +8,10 @@ import Data.Aeson (ToJSON)
 import Empire.API.Data.PortRef (AnyPortRef)
 import Empire.API.JSONInstances ()
 
-data DragHistory = DragHistory { _dragStartPos    :: Vector2 Int
-                               , _dragCurrentPos  :: Vector2 Int
-                               } deriving (Eq, Show, Generic)
-
 data Connecting = Connecting { _sourcePortRef      :: AnyPortRef
                              , _sourcePortAngleVec :: Vector2 Double
                              , _sourceNodePos      :: Vector2 Double
                              , _destinationPortMay :: Maybe AnyPortRef
-                             , _history            :: DragHistory
                              } deriving (Eq, Show, Generic)
 
 data State = State { _connecting  :: Maybe Connecting
@@ -25,11 +20,9 @@ data State = State { _connecting  :: Maybe Connecting
 
 makeLenses ''State
 makeLenses ''Connecting
-makeLenses ''DragHistory
 
 instance ToJSON State
 instance ToJSON Connecting
-instance ToJSON DragHistory
 
 instance Default State where
     def = State def

@@ -30,7 +30,7 @@ localConnectNodes src dst = do
     connectionId <- zoom Global.graph $ Graph.addConnection src dst
     let newConnection = not $ isJust prevConn
     when newConnection $ do
-        widgetId <- zoom Global.uiRegistry $ UICmd.register sceneGraphId (ConnectionModel.Connection connectionId True def def (dst ^. withArrow) def) def
+        widgetId <- zoom Global.uiRegistry $ UICmd.register sceneGraphId (ConnectionModel.Connection connectionId True def def (dst ^. withArrow) def def) def
         Global.graph . Graph.connectionWidgetsMap . at dst ?= widgetId
     return connectionId
 

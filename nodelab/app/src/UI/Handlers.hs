@@ -50,6 +50,7 @@ import           UI.Widget.Toggle                 ()
 import qualified UI.Handlers.Button               as Button
 import           UI.Handlers.Choice               ()
 import qualified UI.Handlers.Choice.RadioButton   as RadioButton
+import qualified UI.Handlers.Connection           as Connection
 import qualified UI.Handlers.LabeledTextBox       as LabeledTextBox
 import qualified UI.Handlers.Node                 as Node
 import qualified UI.Handlers.Number.Continuous    as ContinuousNumber
@@ -90,7 +91,7 @@ graphicsType          = typeOf (undefined :: Graphics)
 instance HasHandlers State where
     widgetHandlers (CtxDynamic tpe _)
         | tpe == nodeType              =             Node.widgetHandlers
-        | tpe == connectionType        = def
+        | tpe == connectionType        =       Connection.widgetHandlers
         | tpe == currentConnectionType = def
         | tpe == pendingNodeType       = def
         | tpe == portType              =             Port.widgetHandlers

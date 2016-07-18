@@ -9,13 +9,13 @@ class Connection
     @geometry = new (THREE.PlaneBufferGeometry)(1.0, 16.0)
 
     @uniforms =
-      color:      {type: 'v4', value: colors[5]}
-      visible:    {type: 'f',  value: 0}
-      connecting: {type: 'i',  value: if widgetId == 3 then 1 else 0}
-      size:       {type: 'v2', value: new THREE.Vector2(1.0, 16.0)}
-      focused:    {type: 'i',  value: 0}
-      arrow:      {type: 'i',  value: 1}
-      objectId:   {type: 'v3', value: new (THREE.Vector3)(widgetId % 256 / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0)}
+      color:        {type: 'v4', value: colors[5]}
+      visible:      {type: 'f',  value: 0}
+      connecting:   {type: 'i',  value: if widgetId == 3 then 1 else 0}
+      size:         {type: 'v2', value: new THREE.Vector2(1.0, 16.0)}
+      highlight:    {type: 'i',  value: 0}
+      arrow:        {type: 'i',  value: 1}
+      objectId:     {type: 'v3', value: new (THREE.Vector3)(widgetId % 256 / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0)}
 
     @uniforms[k] = v for k, v of $$.commonUniforms
 
@@ -46,7 +46,7 @@ class Connection
 
   setVisible: (visible) -> @mesh.visible           = visible
   setColor:   (colorId) -> @uniforms.color.value   = colors[colorId]
-  setFocused: (focused) -> @uniforms.focused.value = if focused then 1 else 0
+  setHighlight: (val)   -> @uniforms.highlight.value    = val
   setArrow:   (arrow)   -> @uniforms.arrow.value   = if arrow then 1 else 0
   widgetMoved: -> null
 module.exports = Connection

@@ -7,16 +7,22 @@ import           Object.Widget
 import           Data.Aeson (ToJSON)
 import           Empire.API.Data.Connection (ConnectionId)
 
+data ConnectionHighlight = None | SrcHighlight | DstHighlight deriving (Eq, Show, Generic)
+
 data Connection = Connection { _connectionId :: ConnectionId
                              , _visible      :: Bool
                              , _from         :: Vector2 Double
                              , _to           :: Vector2 Double
                              , _arrow        :: Bool
                              , _color        :: Int
+                             , _highlight    :: ConnectionHighlight
                              } deriving (Eq, Show, Typeable, Generic)
 
 makeLenses ''Connection
 instance ToJSON Connection
+instance ToJSON ConnectionHighlight
+instance Default ConnectionHighlight where
+    def = None
 
 instance IsDisplayObject Connection where
     widgetPosition = from
