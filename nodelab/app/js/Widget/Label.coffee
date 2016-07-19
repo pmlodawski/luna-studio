@@ -1,11 +1,11 @@
-$$ = require('common')
-config = require('config')
-createText = require('bmfont').render
-font = require('font/default')
+$$           = require('common')
+config       = require('config')
+createText   = require('bmfont').render
+font         = require('font/default')
 textMaterial = require('font/text_material').hud
-layoutText = require('bmfont').layout
+layoutText   = require('bmfont').layout
 
-BaseWidget = require ('Widget/BaseWidget')
+BaseWidget   = require ('Widget/BaseWidget')
 
 calculateTextWidth = (txt) -> layoutText(font: font, text: txt).width
 
@@ -76,6 +76,7 @@ class Label extends BaseWidget
         else throw 'Invalid text alignment'
       @bg.scale.x = bgWidth
     @bg.visible = (@text != "")
+
   relayout: ->
     super
     @setLabel @text

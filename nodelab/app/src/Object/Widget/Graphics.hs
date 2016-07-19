@@ -15,19 +15,29 @@ data Item = Item { _shader :: Text
                  , _boxOffset :: Vector2 Double
                  } deriving (Eq, Show, Typeable, Generic)
 
+data Label = Label { _labelPosition :: Vector2 Double
+                   -- , _textAlign     :: Object.Widget.Label ??
+                   , _fontSize      :: Double
+                   , _text          :: Text
+                   } deriving (Eq, Show, Typeable, Generic)
+
 data Graphics = Graphics { _position :: Vector2 Double
                          , _size     :: Vector2 Double
                          , _items    :: [Item]
+                         , _labels   :: [Label]
                          } deriving (Eq, Show, Typeable, Generic)
 
 makeLenses ''Box
 makeLenses ''Item
+makeLenses ''Label
 makeLenses ''Graphics
+
 instance ToJSON Box
 instance ToJSON Item
+instance ToJSON Label
 instance ToJSON Graphics
 
-create :: Size -> [Item] -> Graphics
+create :: Size -> [Item] -> [Label] -> Graphics
 create = Graphics def
 
 instance IsDisplayObject Graphics where

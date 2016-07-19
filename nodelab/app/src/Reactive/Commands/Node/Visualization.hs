@@ -168,17 +168,19 @@ visualizeNodeValue id (DataFrame cols) = do
     let create groupId = do
             let df = DataFrame.create (Vector2 400 200) heads rows
             UICmd.register_ groupId df def
-        update      = (DataFrame.headers .~ heads )
-                    . (DataFrame.rows    .~ rows  )
+        update      = (DataFrame.headers .~ heads)
+                    . (DataFrame.rows    .~ rows )
     visualize id create update
 
 visualizeNodeValue id (Graphics (GR.Graphics layers)) = do
     groupId <- Node.valueGroupId id
-    let items = createItem <$> layers
+    let items  = createItem <$> layers
+        labels = [] -- createLabel <$> layers
     let create groupId = do
-            let widget = Graphics.create (Vector2 200 200) items
+            let widget = Graphics.create (Vector2 200 200) items labels
             UICmd.register_ groupId widget def
-        update = Graphics.items .~ items
+        update = (Graphics.items  .~ items )
+               . (Graphics.labels .~ labels)
     visualize id create update
     where
         createItem (GR.Layer geometry trans) = Graphics.Item (Text.pack shaderTxt) boxes size offset where
