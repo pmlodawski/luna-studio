@@ -50,28 +50,28 @@ class Graphics extends BaseWidget
 
   setLabels: (labels) ->
     @labelGroup.remove @labelGroup.children
-    @labels.forEach (label) =>
-      layout =
-        text: label._text
-        font: font
-        align: 'Center'
-      #  mode: 'pre'
-      width = layoutText(layout).width * config.fontSize * label._fontSize
-      #layout.width = @width / (config.fontSize)
-      #width = Math.min width, @width
-      geometry = createText layout
-      material = textMaterial()
+    # @labels.forEach (label) =>
+    #   layout =
+    #     text: label._text
+    #     font: font
+    #     align: 'Center'
+    #   #  mode: 'pre'
+    #   width = layoutText(layout).width * config.fontSize * label._fontSize
+    #   #layout.width = @width / (config.fontSize)
+    #   #width = Math.min width, @width
+    #   geometry = createText layout
+    #   material = textMaterial()
 
-      label = new THREE.Mesh(geometry, material)
-      label.scale.multiplyScalar config.fontSize * label._fontSize
-      label.position.y = 0
-      label.position.x = 0
-        # switch label._textAlign
-        # when 'Left'   then  0
-        # when 'Right'  then  @width - width
-        # when 'Center' then (@width - width) / 2.0
-        # else throw 'Invalid text alignment'
-      @labelGroup.add label
+    #   label = new THREE.Mesh(geometry, material)
+    #   label.scale.multiplyScalar config.fontSize * label._fontSize
+    #   label.position.y = 0
+    #   label.position.x = 0
+    #     # switch label._textAlign
+    #     # when 'Left'   then  0
+    #     # when 'Right'  then  @width - width
+    #     # when 'Center' then (@width - width) / 2.0
+    #     # else throw 'Invalid text alignment'
+    #   @labelGroup.add label
 
   relayout: ->
     @mesh.scale.x = @width
