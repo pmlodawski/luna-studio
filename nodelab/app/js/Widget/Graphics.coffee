@@ -64,8 +64,6 @@ class Graphics extends BaseWidget
 
         @labelGroup.add label
 
-      @labelGroup.add label
-
   relayout: ->
     @mesh.scale.x = @width
     @mesh.scale.y = @height

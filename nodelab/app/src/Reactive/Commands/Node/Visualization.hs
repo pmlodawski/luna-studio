@@ -175,7 +175,7 @@ visualizeNodeValue id (DataFrame cols) = do
 visualizeNodeValue id (Graphics (GR.Graphics layers)) = do
     groupId <- Node.valueGroupId id
     let items  = createItem <$> layers
-        labels = [] -- createLabel <$> layers
+        labels = []
     let create groupId = do
             let widget = Graphics.create (Vector2 200 200) items labels
             UICmd.register_ groupId widget def
@@ -187,5 +187,26 @@ visualizeNodeValue id (Graphics (GR.Graphics layers)) = do
             Shader.ShaderBox shaderTxt (Shader.Location size offset) = Shader.createShaderBox geometry
             boxes = createBox <$> trans
             createBox (GR.Transformation sx sy dx dy rot refl) = Graphics.Box (Vector2 dx dy)
+
+-- TODO: uncomment after wdanilo fixes Luna
+-- visualizeNodeValue id (Graphics (GR.Graphics layers)) = do
+--     groupId <- Node.valueGroupId id
+--     let items  = createItem <$> layers
+--         labels = createLabels =<< layers
+--     let create groupId = do
+--             let widget = Graphics.create (Vector2 200 200) items labels
+--             UICmd.register_ groupId widget def
+--         update = (Graphics.items  .~ items )
+--                . (Graphics.labels .~ labels)
+--     visualize id create update
+--     where
+--         createItem (GR.Layer geometry trans _) = Graphics.Item (Text.pack shaderTxt) boxes size offset where
+--             Shader.ShaderBox shaderTxt (Shader.Location size offset) = Shader.createShaderBox geometry
+--             boxes = createBox <$> trans
+--             createBox (GR.Transformation sx sy dx dy rot refl) = Graphics.Box (Vector2 dx dy)
+--         createLabels (GR.Layer _ _ labels) = [Graphics.Label (Vector2 0.4 0.4) 13.0 "test"]
+--         -- createLabels (GR.Layer _ _ labels) = createLabel <$> labels
+--         createLabel (GR.Label (GR.Point x y) size text) = Graphics.Label (Vector2 x y) size $ Text.pack text
+
 
 visualizeNodeValue _ _ = return ()
