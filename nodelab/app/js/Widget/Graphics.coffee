@@ -1,10 +1,9 @@
 $$           = require('common')
 vs           = require('shaders/graphics_sdf.vert')()
 config       = require('config')
-createText   = require('bmfont').render
-font         = require('font/default')
-textMaterial = require('font/text_material').hud
-layoutText   = require('bmfont').layout
+
+textAlign    = require('Text2D/textAlign')
+Text2D       = require('Text2D/Text2D')
 
 BaseWidget   = require ('Widget/BaseWidget')
 require('Widget/GraphicsBufferGeometry')
@@ -32,8 +31,8 @@ class Graphics extends BaseWidget
     newchildren = @items.map (item) =>
       uniforms =
            objectId:  @uniforms.objectId
-           boxSize:   { type:'v2', value: new THREE.Vector2(item._boxSize._x, item._boxSize._y)}
-           boxOffset: { type:'v2', value: new THREE.Vector2(item._boxOffset._x, item._boxOffset._y)}
+           boxSize:   { type: 'v2', value: new THREE.Vector2(item._boxSize._x,   item._boxSize._y  )}
+           boxOffset: { type: 'v2', value: new THREE.Vector2(item._boxOffset._x, item._boxOffset._y)}
       uniforms[k] = v for k, v of $$.commonUniforms
       geom = new THREE.GraphicsBufferGeometry(item._boxes, item._boxSize, item._boxOffset)
       item = new THREE.Mesh geom, new THREE.ShaderMaterial
@@ -49,33 +48,30 @@ class Graphics extends BaseWidget
     @relayout()
 
   setLabels: (labels) ->
+    @labels = labels
     @labelGroup.remove @labelGroup.children
-    # @labels.forEach (label) =>
-    #   layout =
-    #     text: label._text
-    #     font: font
-    #     align: 'Center'
-    #   #  mode: 'pre'
-    #   width = layoutText(layout).width * config.fontSize * label._fontSize
-    #   #layout.width = @width / (config.fontSize)
-    #   #width = Math.min width, @width
-    #   geometry = createText layout
-    #   material = textMaterial()
+    @labels.forEach (label) =>
 
-    #   label = new THREE.Mesh(geometry, material)
-    #   label.scale.multiplyScalar config.fontSize * label._fontSize
-    #   label.position.y = 0
-    #   label.position.x = 0
-    #     # switch label._textAlign
-    #     # when 'Left'   then  0
-    #     # when 'Right'  then  @width - width
-    #     # when 'Center' then (@width - width) / 2.0
-    #     # else throw 'Invalid text alignment'
-    #   @labelGroup.add label
+        align = textAlign.center
+
+        cf = $$.commonUniforms.camFactor.value
+        fontSize = (item._fontSize * cf).toFixed(2)
+        label = new Text2D(label._text, { align: align, font: fs + 'px "Futura"', fillStyle: '#ffffff', antialias: true })
+        label.rotation.x = Math.PI
+        label.position.x = @width / 2.0
+        label.scale.x = 1.0 / cf
+        label.scale.y = 1.0 / cf
+
+        @labelGroup.add label
+
+      @labelGroup.add label
 
   relayout: ->
     @mesh.scale.x = @width
     @mesh.scale.y = @height
+
+  redrawTextures: ->
+    @setLabels @labels
 
 module.exports = Graphics;
 
