@@ -160,14 +160,14 @@ function initCommonWidgets() {
   $$.scene.add($$.selectionBox.mesh);
 }
 
-var redrawTextures = _.debounce(function() {
+var redrawTextures = _.throttle(function() {
   console.time('redrawTextures');
 
   _($$.registry).each(function(e){
     if (e.redrawTextures !== undefined) e.redrawTextures();
   });
   console.timeEnd('redrawTextures');
-}, 100);
+}, 120, {leading: false});
 
 function render() {
   if (shouldRender) {
@@ -189,7 +189,7 @@ function render() {
     raycaster.cacheMap();
     shouldRender = false;
   }
-  if($$.commonUniforms.camFactor.value !== $$.lastFactor) {
+  if(Math.abs($$.commonUniforms.camFactor.value/$$.lastFactor - 1.0) > 0.05) {
     redrawTextures();
     $$.lastFactor = $$.commonUniforms.camFactor.value;
   }
@@ -363,9 +363,9 @@ module.exports = {
   shouldRender:             function ()      { shouldRender = true;       },
   writeToTerminal:          writeToTerminal,
   displayAppCrashed:        displayAppCrashed,
-  getJSState:				function() { return $$; },
-  downloadFile:				downloadFile,
-  customEvent: function() { console.error("Custom event handler not registered"); }
+  getJSState:               function() { return $$; },
+  downloadFile:             downloadFile,
+  customEvent:              function() { console.error("Custom event handler not registered"); }
 
 };
 

@@ -1,12 +1,7 @@
 $$ = require('common')
 config       = require('config')
-createText   = require('bmfont').render
-font         = require('font/default')
-textMaterial = require('font/text_material').hud
-layoutText   = require('bmfont').layout
 
 LabeledWidget = require('Widget/LabeledWidget')
-
 
 class Slider extends LabeledWidget
   constructor: (widgetId, width, height) ->

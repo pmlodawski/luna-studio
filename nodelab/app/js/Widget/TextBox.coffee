@@ -1,8 +1,9 @@
 config       = require('config')
 createText   = require('bmfont').render
-font         = require('font/default')
-textMaterial = require('font/text_material').hud
-layoutText   = require('bmfont').layout
+
+textAlign    = require('Text2D/textAlign')
+Text2D       = require('Text2D/Text2D')
+
 BaseWidget   = require ('Widget/BaseWidget')
 
 htmlCanvas = (mesh) ->
@@ -26,34 +27,41 @@ class TextBox extends BaseWidget
     @value     = ''
     @alignment = 'Left'
 
+  destructor: ->
+    @input.remove() if @input
+
   relayout: ->
     @setValueLabel @value
 
   setValueLabel: (text) ->
     @value = text
     @mesh.remove @valueLabel if @valueLabel
+    if @value and @value != ""
+      align = switch @alignment
+        when 'Left'   then textAlign.bottomLeft
+        when 'Center' then textAlign.bottomCenter
+        when 'Right'  then textAlign.bottomRight
+        else throw 'Invalid text alignment'
 
-    layout =
-      text: text
-      font: font
-      align: @alignment
-      mode: 'pre'
-    width = layoutText(layout).width * 0.8 * config.fontSize
-    layout.width = @width / (0.8 * config.fontSize)
-    width = Math.min width, @width
-    geometry = createText layout
-    material = textMaterial()
+      cf = $$.commonUniforms.camFactor.value
+      fs = (13 * cf * 0.8).toFixed(2)
 
-    @valueLabel = new THREE.Mesh(geometry, material)
-    @valueLabel.scale.multiplyScalar 0.8 * config.fontSize
-    @valueLabel.position.y = 5 + @height / 2.0
-    @valueLabel.position.x = switch @alignment
-      when 'Left'   then  0
-      when 'Right'  then  @width - width
-      when 'Center' then (@width - width) / 2.0
-      else throw 'Invalid text alignment'
+      @valueLabel = new Text2D(@value, { align: align, font: fs + 'px "Futura"', fillStyle: '#ffffff', antialias: true })
+      @valueLabel.rotation.x = Math.PI
+      @valueLabel.position.x = switch @alignment
+        when 'Left'   then 0
+        when 'Center' then @width / 2.0
+        when 'Right'  then @width
+        else throw 'Invalid text alignment'
+      @valueLabel.scale.x = 1.0 / cf
+      @valueLabel.scale.y = 1.0 / cf
 
-    @mesh.add @valueLabel
+      @valueLabel.position.y = @height / 2.0
+
+      @mesh.add @valueLabel
+
+  redrawTextures: ->
+    @setValueLabel @value
 
   setAlignment: (align) ->
     @alignment = align

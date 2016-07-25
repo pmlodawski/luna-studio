@@ -1,11 +1,10 @@
 $$           = require('common')
 config       = require('config')
-createText   = require('bmfont').render
-font         = require('font/default')
-textMaterial = require('font/text_material').hud
-layoutText   = require('bmfont').layout
 
-BaseWidget   = require ('Widget/BaseWidget')
+textAlign    = require('Text2D/textAlign')
+Text2D       = require('Text2D/Text2D')
+
+BaseWidget   = require('Widget/BaseWidget')
 
 calculateTextWidth = (txt) -> layoutText(font: font, text: txt).width
 
@@ -47,28 +46,29 @@ class Label extends BaseWidget
     @text = text
     @mesh.remove @label if @label
     if @text and @text != ""
-      layout =
-        text: text
-        font: font
-        align: @alignment
-        mode: 'pre'
-      width = layoutText(layout).width * config.fontSize
-      layout.width = @width / (config.fontSize)
-      width = Math.min width, @width
-      geometry = createText layout
-      material = textMaterial()
-
-      @label = new THREE.Mesh(geometry, material)
-      @label.scale.multiplyScalar config.fontSize
-      @label.position.y = 5 + @height / 2.0
-      @label.position.x = switch @alignment
-        when 'Left'   then  0
-        when 'Right'  then  @width - width
-        when 'Center' then (@width - width) / 2.0
+      align = switch @alignment
+        when 'Left'   then textAlign.bottomLeft
+        when 'Center' then textAlign.bottomCenter
+        when 'Right'  then textAlign.bottomRight
         else throw 'Invalid text alignment'
+
+      cf = $$.commonUniforms.camFactor.value
+      fs = (13 * cf).toFixed(2)
+
+      @label = new Text2D(@text, { align: align, font: fs + 'px "Futura"', fillStyle: '#ffffff', antialias: true })
+      @label.rotation.x = Math.PI
+      @label.position.x = switch @alignment
+        when 'Left'   then 0
+        when 'Center' then @width / 2.0
+        when 'Right'  then @width
+        else throw 'Invalid text alignment'
+      @label.position.y = @height / 2.0
+      @label.scale.x = 1.0 / cf
+      @label.scale.y = 1.0 / cf
+
       @mesh.add @label
 
-      bgWidth = Math.max(width, 40.0)
+      bgWidth = Math.max(@label.width / cf, 40.0)
       @bg.position.x = switch @alignment
         when 'Left'   then 0
         when 'Right'  then (@width - bgWidth)
@@ -80,4 +80,7 @@ class Label extends BaseWidget
   relayout: ->
     super
     @setLabel @text
+  redrawTextures: ->
+    @setLabel @text
+
 module.exports = Label

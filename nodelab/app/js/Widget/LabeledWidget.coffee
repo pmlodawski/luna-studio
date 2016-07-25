@@ -2,9 +2,9 @@ $$           = require('common')
 vs           = require('shaders/sdf.vert')()
 config       = require('config')
 
-createText   = require('bmfont').render
-font         = require("font/default")
-textMaterial = require('font/text_material').hud
+textAlign    = require('Text2D/textAlign')
+Text2D       = require('Text2D/Text2D')
+
 BaseWidget   = require('Widget/BaseWidget')
 
 class LabeledWidget extends BaseWidget
@@ -26,6 +26,7 @@ class LabeledWidget extends BaseWidget
       @bgShader = require('shaders/transparent.frag')()
 
     @createBg()
+    @text = ""
 
 
   bgShader: require('shaders/generic_bg.frag')()
@@ -47,24 +48,26 @@ class LabeledWidget extends BaseWidget
 
   setFocus: (value) -> @bgUniforms.focus.value = value ? 1 : 0
 
-  setLabel: (text)  ->
+  setLabel: (text) ->
+    @text = text
     @mesh.remove @label if @label
+    if @text and @text != ""
+      align = textAlign.bottomLeft
 
-    geometry = createText
-      text:  text
-      font:  font
-      align: 'left'
-      width: (@width / 2.0 - @height / 2.0) / config.fontSize
-      mode:  'pre'
+      cf = $$.commonUniforms.camFactor.value
+      fs = (13 * cf).toFixed(2)
 
-    material = textMaterial()
+      @label = new Text2D(@text, { align: align, font: fs + 'px "Futura"', fillStyle: '#ffffff', antialias: true })
+      @label.rotation.x = Math.PI
+      @label.position.x = 0
+      @label.position.y = @height / 2.0
 
-    @label = new THREE.Mesh geometry, material
-    @label.scale.multiplyScalar config.fontSize
+      @label.scale.x = 1.0 / cf
+      @label.scale.y = 1.0 / cf
 
-    @relayout()
+      @mesh.add @label
 
-    @mesh.add @label
+      @relayout()
 
   relayout: ->
     @bg.scale.x = @width
@@ -73,6 +76,9 @@ class LabeledWidget extends BaseWidget
 
     if @label
       @label.position.x = @height / 2.0
-      @label.position.y = @height / 2.0 + 5.0
+
+  redrawTextures: ->
+    @setLabel @text
+
 
 module.exports = LabeledWidget

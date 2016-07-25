@@ -3,10 +3,8 @@ vs           = require('shaders/sdf.vert')()
 fs           = require('shaders/generic_bg.frag')()
 config       = require('config')
 
-createText   = require('bmfont').render
-font         = require("font/default")
-textMaterial = require('font/text_material').hud
-layoutText   = require('bmfont').layout
+textAlign    = require('Text2D/textAlign')
+Text2D       = require('Text2D/Text2D')
 
 BaseWidget   = require ('Widget/BaseWidget')
 Label        = require ('Widget/Label')
@@ -66,48 +64,24 @@ class Button extends BaseWidget
   setLabel: (text) ->
     @text = text
     @mesh.remove @label if @label
-    if @text
-      layout =
-        text: text
-        font: font
-        align: @alignment
-        mode: 'pre'
-      width = layoutText(layout).width * config.fontSize
-      layout.width = @width / (config.fontSize)
-      width = Math.min width, @width
-      geometry = createText layout
-      material = textMaterial()
+    if @text and @text != ""
+      align = textAlign.bottomLeft
 
-      @label = new THREE.Mesh(geometry, material)
-      @label.scale.multiplyScalar config.fontSize
-      @label.position.y = 5 + @height / 2.0
-      @label.position.x = switch @alignment
-        when 'Left'   then  0
-        when 'Right'  then  @width - width
-        when 'Center' then (@width - width) / 2.0
-        else throw 'Invalid text alignment'
+      cf = $$.commonUniforms.camFactor.value
+      fontSize = (13 * cf).toFixed(2)
+
+      @label = new Text2D(@text, { align: align, font: fontSize + 'px "Futura"', fillStyle: '#ffffff', antialias: true })
+      @label.rotation.x = Math.PI
+      @label.position.x = 0
+      @label.position.y = @height / 2.0
+
+      @label.scale.x = 1.0 / cf
+      @label.scale.y = 1.0 / cf
 
       @mesh.add @label
 
-  setIcon: (icon) ->
-     @iconShader = icon
-     @mesh.remove @icon if @icon
-     if icon
-       bgMesh = new THREE.PlaneBufferGeometry(1, 1)
-       bgMesh.applyMatrix( new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0))
-
-       @icon = new THREE.Mesh bgMesh, new THREE.ShaderMaterial
-          uniforms:       this.uniforms
-          vertexShader:   vs
-          fragmentShader: require(icon)()
-          transparent:    true
-          blending:       THREE.NormalBlending
-          side:           THREE.DoubleSide
-          derivatives:    true
-
-       @mesh.add @icon
-
-     @relayout()
+  redrawTextures: ->
+    @setLabel @text
 
   relayout: ->
     @bg.scale.set @width, @height, 1.0
@@ -122,6 +96,22 @@ class Button extends BaseWidget
       @icon.position.x = @width / 2.0 - @height / 2.0
       @icon.position.y = 0.0
 
+  setIcon: (icon) ->
+    @iconShader = icon
+    @mesh.remove @icon if @icon
 
+    if icon
+      bgMesh = new THREE.PlaneBufferGeometry(1, 1)
+      bgMesh.applyMatrix( new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0))
+      @icon = new THREE.Mesh bgMesh, new THREE.ShaderMaterial
+          uniforms:       this.uniforms
+          vertexShader:   vs
+          fragmentShader: require(icon)()
+          transparent:    true
+          blending:       THREE.NormalBlending
+          side:           THREE.DoubleSide
+          derivatives:    true
+      @mesh.add @icon
+    @relayout()
 
 module.exports = Button;
