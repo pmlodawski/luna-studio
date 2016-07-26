@@ -65,14 +65,22 @@ class Button extends BaseWidget
     @text = text
     @mesh.remove @label if @label
     if @text and @text != ""
-      align = textAlign.bottomLeft
+      align = switch @alignment
+        when 'Left'   then textAlign.bottomLeft
+        when 'Center' then textAlign.bottomCenter
+        when 'Right'  then textAlign.bottomRight
+        else throw 'Invalid text alignment'
 
       cf = $$.commonUniforms.camFactor.value
       fontSize = (13 * cf).toFixed(2)
 
       @label = new Text2D(@text, { align: align, font: fontSize + 'px "Futura"', fillStyle: '#ffffff', antialias: true })
       @label.rotation.x = Math.PI
-      @label.position.x = 0
+      @label.position.x = switch @alignment
+        when 'Left'   then 0
+        when 'Center' then @width / 2.0
+        when 'Right'  then @width
+        else throw 'Invalid text alignment'
       @label.position.y = @height / 2.0
 
       @label.scale.x = 1.0 / cf
