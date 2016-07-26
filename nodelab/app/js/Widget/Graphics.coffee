@@ -51,21 +51,21 @@ class Graphics extends BaseWidget
     @labels = labels
     @labelGroup.remove @labelGroup.children
     @labels.forEach (label) =>
-      console.log "label " + label._text + " fs " + label._fontSize + " pos " + label._labelPosition
       align = textAlign.center
       cf = $$.commonUniforms.camFactor.value
       fontSize = (label._fontSize * cf).toFixed(2)
-      label = new Text2D(label._text, { align: align, font: fontSize + 'px "Futura"', fillStyle: '#ffffff', antialias: true })
-      label.rotation.x = Math.PI
-      label.position.x = @width / 2.0
-      label.scale.x = 1.0 / cf
-      label.scale.y = 1.0 / cf
+      textLabel = new Text2D(label._text, { align: align, font: fontSize + 'px "Futura"', fillStyle: '#ffffff', antialias: true })
+      textLabel.rotation.x = Math.PI
+      textLabel.position.x = label._labelPosition._x * @width
+      textLabel.position.y = label._labelPosition._y * @height
+      textLabel.scale.x = 1.0 / cf
+      textLabel.scale.y = 1.0 / cf
 
-      @labelGroup.add label
+      @labelGroup.add textLabel
 
   relayout: ->
-    @mesh.scale.x = @width
-    @mesh.scale.y = @height
+    @itemGroup.scale.x = @width
+    @itemGroup.scale.y = @height
 
   redrawTextures: ->
     @setLabels @labels
