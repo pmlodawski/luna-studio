@@ -25,6 +25,7 @@ import qualified Text.ParserCombinators.ReadP as ReadP
 import           Flowbox.Prelude
 
 
+deriving instance Generic Version
 
 newtype Name = Name String
 

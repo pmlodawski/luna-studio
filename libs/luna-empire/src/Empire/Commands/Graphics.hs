@@ -42,7 +42,7 @@ defaultTrans :: Transformation
 defaultTrans = translate def 0.5 0.5
 
 geometryToLayer' :: Geometry -> Layer
-geometryToLayer' geometry = Layer geometry [defaultTrans]
+geometryToLayer' geometry = Layer geometry [defaultTrans] []
 
 geoComponentToGeometry' :: GeoComponent -> Geometry
 geoComponentToGeometry' geoComponent = Geometry geoComponent def defaultMat

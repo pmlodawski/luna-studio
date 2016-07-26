@@ -24,7 +24,7 @@ import           Control.Lens                   as X
 import           Control.Monad                  as X (MonadPlus, mplus, mzero, void)
 import           Control.Monad.IO.Class         as X (MonadIO, liftIO)
 import           Control.Monad.Trans            as X (MonadTrans, lift)
-import           Data.Binary.Instances.Missing  ()
+-- import           Data.Binary.Instances.Missing  ()
 import           Data.Convert                   as X
 --import           Data.Convertible.Instances.Missing as X
 import           Data.Default                   as X

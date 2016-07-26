@@ -55,8 +55,8 @@ class Graphics extends BaseWidget
         align = textAlign.center
 
         cf = $$.commonUniforms.camFactor.value
-        fontSize = (item._fontSize * cf).toFixed(2)
-        label = new Text2D(label._text, { align: align, font: fs + 'px "Futura"', fillStyle: '#ffffff', antialias: true })
+        fontSize = (label._fontSize * cf).toFixed(2)
+        label = new Text2D(label._text, { align: align, font: fontSize + 'px "Futura"', fillStyle: '#ffffff', antialias: true })
         label.rotation.x = Math.PI
         label.position.x = @width / 2.0
         label.scale.x = 1.0 / cf
