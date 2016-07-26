@@ -232,14 +232,8 @@
                         "contents": []
                     },
                     "_valueType": {
-                        "tag": "TypeIdent",
-                        "contents": {
-                            "tag": "TCons",
-                            "contents": [
-                                "Int",
-                                []
-                            ]
-                        }
+                        "tag": "AnyType",
+                        "contents": []
                     },
                     "_portId": {
                         "tag": "InPortId",
@@ -324,14 +318,8 @@
                         "contents": []
                     },
                     "_valueType": {
-                        "tag": "TypeIdent",
-                        "contents": {
-                            "tag": "TCons",
-                            "contents": [
-                                "String",
-                                []
-                            ]
-                        }
+                        "tag": "AnyType",
+                        "contents": []
                     },
                     "_portId": {
                         "tag": "InPortId",
