@@ -172,22 +172,6 @@ visualizeNodeValue id (DataFrame cols) = do
                     . (DataFrame.rows    .~ rows )
     visualize id create update
 
--- visualizeNodeValue id (Graphics (GR.Graphics layers)) = do
---     groupId <- Node.valueGroupId id
---     let items  = createItem <$> layers
---         labels = []
---     let create groupId = do
---             let widget = Graphics.create (Vector2 200 200) items labels
---             UICmd.register_ groupId widget def
---         update = (Graphics.items  .~ items )
---                . (Graphics.labels .~ labels)
---     visualize id create update
---     where
---         createItem (GR.Layer geometry trans) = Graphics.Item (Text.pack shaderTxt) boxes size offset where
---             Shader.ShaderBox shaderTxt (Shader.Location size offset) = Shader.createShaderBox geometry
---             boxes = createBox <$> trans
---             createBox (GR.Transformation sx sy dx dy rot refl) = Graphics.Box (Vector2 dx dy)
-
 visualizeNodeValue id (Graphics (GR.Graphics layers)) = do
     groupId <- Node.valueGroupId id
     let items  = createItem <$> layers
