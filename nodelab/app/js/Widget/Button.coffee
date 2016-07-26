@@ -71,11 +71,7 @@ class Button extends BaseWidget
         when 'Right'  then textAlign.bottomRight
         else throw 'Invalid text alignment'
 
-      cf = $$.commonUniforms.camFactor.value
-      fontSize = (13 * cf).toFixed(2)
-
-      @label = new Text2D(@text, { align: align, font: fontSize + 'px "Futura"', fillStyle: '#ffffff', antialias: true })
-      @label.rotation.x = Math.PI
+      @label = new Text2D(@text, { align: align, zoom: $$.commonUniforms.camFactor.value })
       @label.position.x = switch @alignment
         when 'Left'   then 0
         when 'Center' then @width / 2.0
@@ -83,13 +79,10 @@ class Button extends BaseWidget
         else throw 'Invalid text alignment'
       @label.position.y = @height / 2.0
 
-      @label.scale.x = 1.0 / cf
-      @label.scale.y = 1.0 / cf
-
       @mesh.add @label
 
   redrawTextures: ->
-    @setLabel @text
+    @label.setZoom $$.commonUniforms.camFactor.value if @label
 
   relayout: ->
     @bg.scale.set @width, @height, 1.0

@@ -46,22 +46,19 @@ class TextBox extends BaseWidget
       cf = $$.commonUniforms.camFactor.value
       fs = (13 * cf * 0.8).toFixed(2)
 
-      @valueLabel = new Text2D(@value, { align: align, font: fs + 'px "Futura"', fillStyle: '#ffffff', antialias: true })
-      @valueLabel.rotation.x = Math.PI
+      @valueLabel = new Text2D(@value, { align: align, zoom: $$.commonUniforms.camFactor.value })
       @valueLabel.position.x = switch @alignment
         when 'Left'   then 0
         when 'Center' then @width / 2.0
         when 'Right'  then @width
         else throw 'Invalid text alignment'
-      @valueLabel.scale.x = 1.0 / cf
-      @valueLabel.scale.y = 1.0 / cf
 
       @valueLabel.position.y = @height / 2.0
 
       @mesh.add @valueLabel
 
   redrawTextures: ->
-    @setValueLabel @value
+    @valueLabel.setZoom $$.commonUniforms.camFactor.value if @valueLabel
 
   setAlignment: (align) ->
     @alignment = align

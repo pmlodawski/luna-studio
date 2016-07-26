@@ -162,15 +162,20 @@ function initCommonWidgets() {
 
 var redrawTextures = _.throttle(function() {
   console.time('redrawTextures');
-
+  $$.lastFactor = $$.commonUniforms.camFactor.value;
   _($$.registry).each(function(e){
     if (e.redrawTextures !== undefined) e.redrawTextures();
   });
+  $$.shouldRender = true;
   console.timeEnd('redrawTextures');
-}, 120, {leading: false});
+}, 120);
 
 function render() {
+  if(Math.abs($$.commonUniforms.camFactor.value/$$.lastFactor - 1.0) > 0.005) {
+    redrawTextures();
+  }
   if (shouldRender) {
+
     $$.commonUniforms.objectMap.value = 0;
     $$.commonUniforms.antialias.value = 1;
     var oldCf = $$.commonUniforms.camFactor.value;
@@ -189,10 +194,6 @@ function render() {
     raycaster.cacheMap();
     shouldRender = false;
   }
-  if(Math.abs($$.commonUniforms.camFactor.value/$$.lastFactor - 1.0) > 0.05) {
-    redrawTextures();
-    $$.lastFactor = $$.commonUniforms.camFactor.value;
-  }
 
   connectionPen.fadeCanvas();
   requestAnimationFrame(render);
@@ -208,6 +209,8 @@ function updateScreenSize(width, height) {
   $$.rendererMap.setSize(width, height);
   $$.canvas2D.width  = width;
   $$.canvas2D.height = height;
+
+  $$.shouldRender = true;
 }
 
 function updateCamera(factor, left, right, top, bottom) {
@@ -216,6 +219,7 @@ function updateCamera(factor, left, right, top, bottom) {
   $$.camera.right    = right;
   $$.camera.top      = top;
   $$.camera.bottom   = bottom;
+  $$.shouldRender    = true;
 }
 
 function updateCameraHUD(left, right, top, bottom) {
@@ -223,6 +227,7 @@ function updateCameraHUD(left, right, top, bottom) {
   $$.cameraHUD.right    = right;
   $$.cameraHUD.top      = top;
   $$.cameraHUD.bottom   = bottom;
+  $$.shouldRender       = true;
 }
 
 function createPendingNode(widgetId, expr, x, y) {

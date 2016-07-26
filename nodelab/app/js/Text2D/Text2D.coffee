@@ -1,20 +1,25 @@
-textAlign = require('./textAlign')
+textAlign  = require('./textAlign')
 CanvasText = require('./CanvasText')
+$$         = require('common')
+fs         = require('shaders/texFont.frag')
+vs         = require('shaders/texFont.vert')
 
 class Text2D extends THREE.Object3D
 
   constructor: (text = '', options = {}) ->
     super()
 
-    @font = options.font || '30px Arial';
-    @fillStyle = options.fillStyle || '#FFFFFF';
+    @font      = options.font      || 'Consolas';
+    @fontSize  = options.fontSize  || 13;
+    @fillStyle = options.fillStyle || '#ffffff';
+    @zoom      = options.zoom      || 1.0
 
     @canvas = new CanvasText()
 
     @align = options.align || textAlign.center
     @side  = options.side  || THREE.DoubleSide
 
-    @antialias = options.antialias || true
+    @antialias = options.antialias || false
     @setText text
 
   # delegate raycast method to mesh instance
@@ -33,20 +38,29 @@ class Text2D extends THREE.Object3D
       @font = value
       @updateText()
 
+  setFontSize: (value) ->
+    if @fontSize != value
+      @fontSize = value
+      updateText()
+
   setFillStyle: (value) ->
     if @fillStyle != value
       @fillStyle = value
       @updateText()
 
   setZoom: (zoom) ->
-    @zoom = zoom
-    @updateText()
+    if @zoom != zoom
+      @zoom = zoom
+      @updateText()
+
+  getFontStyle: ->
+    (@fontSize * @zoom).toFixed(2) + 'px "' + @font + '"'
 
   updateText: ->
     @cleanUp() # cleanup previous texture
 
     @canvas.drawText @text, {
-        font: @font,
+        font: @getFontStyle(),
         fillStyle: @fillStyle
       }
 
@@ -55,10 +69,18 @@ class Text2D extends THREE.Object3D
     @applyAntiAlias()
 
     if !@material
-      @material = new THREE.MeshBasicMaterial({ map: @texture, side: @side });
-      @material.transparent = true
+      @material = new THREE.ShaderMaterial
+          uniforms:
+            texture: { type: "t", value: @texture }
+            objectMap: $$.commonUniforms.objectMap
+          vertexShader:   vs()
+          fragmentShader: fs()
+          transparent:    true
+          blending:       THREE.NormalBlending
+          side:           @side
+          derivatives:    true
     else
-      @material.map = @texture
+      @material.uniforms.texture.value = @texture
 
     if !@mesh
       @mesh = new THREE.Mesh(new THREE.PlaneGeometry(@canvas.width, @canvas.height), @material);
@@ -68,6 +90,11 @@ class Text2D extends THREE.Object3D
 
     @mesh.position.x = ( (@canvas.width  / 2) -  (@canvas.textWidth  / 2)) + ((@canvas.textWidth / 2) * @align.x)
     @mesh.position.y = (- @canvas.height / 2) + ((@canvas.textHeight / 2)  * @align.y)
+
+    @rotation.x = Math.PI
+    @scale.x = 1.0 / @zoom
+    @scale.y = 1.0 / @zoom
+
 
     # manually update geometry vertices
     @geometry.vertices[0].x = @geometry.vertices[2].x = -@canvas.width  / 2
@@ -82,5 +109,8 @@ class Text2D extends THREE.Object3D
     if @antialias == false
       @texture.magFilter = THREE.NearestFilter
       @texture.minFilter = THREE.LinearMipMapLinearFilter
+    else
+      @texture.magFilter = THREE.NearestFilter
+      @texture.minFilter = THREE.NearestFilter
 
 module.exports = Text2D

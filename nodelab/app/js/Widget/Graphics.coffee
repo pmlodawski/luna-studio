@@ -54,12 +54,9 @@ class Graphics extends BaseWidget
       align = textAlign.center
       cf = $$.commonUniforms.camFactor.value
       fontSize = (label._fontSize * cf).toFixed(2)
-      textLabel = new Text2D(label._text, { align: align, font: fontSize + 'px "Futura"', fillStyle: '#ffffff', antialias: true })
-      textLabel.rotation.x = Math.PI
+      textLabel = new Text2D(label._text, { align: align, zoom: $$.commonUniforms.camFactor.value })
       textLabel.position.x = label._labelPosition._x * @width
       textLabel.position.y = label._labelPosition._y * @height
-      textLabel.scale.x = 1.0 / cf
-      textLabel.scale.y = 1.0 / cf
 
       @labelGroup.add textLabel
 
@@ -68,7 +65,7 @@ class Graphics extends BaseWidget
     @itemGroup.scale.y = @height
 
   redrawTextures: ->
-    @setLabels @labels
+    @setLabels @labels # FIXME: iterate on @labelGroup.children and call #setZoom $$.commonUniforms.camFactor.value
 
 module.exports = Graphics;
 

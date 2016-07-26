@@ -54,16 +54,9 @@ class LabeledWidget extends BaseWidget
     if @text and @text != ""
       align = textAlign.bottomLeft
 
-      cf = $$.commonUniforms.camFactor.value
-      fs = (13 * cf).toFixed(2)
-
-      @label = new Text2D(@text, { align: align, font: fs + 'px "Futura"', fillStyle: '#ffffff', antialias: true })
-      @label.rotation.x = Math.PI
+      @label = new Text2D(@text, { align: align, zoom: $$.commonUniforms.camFactor.value })
       @label.position.x = 0
       @label.position.y = @height / 2.0
-
-      @label.scale.x = 1.0 / cf
-      @label.scale.y = 1.0 / cf
 
       @mesh.add @label
 
@@ -74,11 +67,10 @@ class LabeledWidget extends BaseWidget
     @bg.scale.y = @height
     @bgUniforms.size.value.set @width,  @height
 
-    if @label
-      @label.position.x = @height / 2.0
+    @label.position.x = @height / 2.0 if @label
 
   redrawTextures: ->
-    @setLabel @text
+    @label.setZoom $$.commonUniforms.camFactor.value if @label
 
 
 module.exports = LabeledWidget
