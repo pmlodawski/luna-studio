@@ -9,7 +9,7 @@ class Text2D extends THREE.Object3D
   constructor: (text = '', options = {}) ->
     super()
 
-    @font      = options.font      || 'Consolas';
+    @font      = options.font      || 'Open Sans';
     @fontSize  = options.fontSize  || 13;
     @fillStyle = options.fillStyle || '#ffffff';
     @zoom      = options.zoom      || 1.0
