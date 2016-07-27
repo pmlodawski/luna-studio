@@ -187,8 +187,8 @@ visualizeNodeValue id (Graphics (GR.Graphics layers)) = do
             Shader.ShaderBox shaderTxt (Shader.Location size offset) = Shader.createShaderBox geometry
             boxes = createBox <$> trans
             createBox (GR.Transformation sx sy dx dy rot refl) = Graphics.Box (Vector2 dx dy)
-        createLabels (GR.Layer _ _ labels) = [Graphics.Label (Vector2 0.4 0.4) 13.0 "test"]
-        -- createLabels (GR.Layer _ _ labels) = createLabel <$> labels
+        -- createLabels (GR.Layer _ _ labels) = [Graphics.Label (Vector2 0.4 0.4) 13.0 "test"]
+        createLabels (GR.Layer _ _ labels) = createLabel <$> labels
         createLabel (GR.Label (GR.Point x y) size text) = Graphics.Label (Vector2 x y) size $ Text.pack text
 
 
