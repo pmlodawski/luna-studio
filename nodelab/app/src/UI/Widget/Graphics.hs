@@ -32,7 +32,6 @@ create :: WidgetId -> Model.Graphics -> IO Graphics
 create oid model = do
     widget   <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
     setItems  model widget
-    setLabels model widget
     UI.setWidgetPosition (model ^. widgetPosition) widget
     return widget
 
@@ -52,6 +51,7 @@ instance UIDisplayObject Model.Graphics where
         parent   <- UI.lookup parentId :: IO Widget.GenericWidget
         UI.register id widget
         Widget.add widget parent
+        setLabels model widget
 
     updateUI id old model = do
         widget <- UI.lookup id :: IO Graphics

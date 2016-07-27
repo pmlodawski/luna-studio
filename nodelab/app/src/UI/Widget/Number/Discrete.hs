@@ -18,7 +18,6 @@ import           UI.Widget.Number              (Number, create', setLabel')
 createNumber :: WidgetId -> Model.DiscreteNumber -> IO Number
 createNumber oid model = do
     slider   <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
-    setLabel    model slider
     UI.setWidgetPosition (model ^. Model.position) slider
     return slider
 
@@ -31,6 +30,7 @@ instance UIDisplayObject Model.DiscreteNumber where
         parent <- UI.lookup parentId :: IO Widget.GenericWidget
         UI.register id slider
         Widget.add slider parent
+        setLabel    model slider
 
     updateUI id old model = do
         slider <- UI.lookup id :: IO Number

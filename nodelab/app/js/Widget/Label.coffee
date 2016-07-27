@@ -6,6 +6,7 @@ Text2D       = require('Text2D/Text2D')
 
 BaseWidget   = require('Widget/BaseWidget')
 
+
 calculateTextWidth = (txt) -> layoutText(font: font, text: txt).width
 
 class Label extends BaseWidget

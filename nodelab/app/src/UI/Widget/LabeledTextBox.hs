@@ -30,7 +30,6 @@ foreign import javascript safe "$1.setLabel($2)"                     setLabel' :
 create :: WidgetId -> Model.LabeledTextBox -> IO LabeledTextBox
 create oid model = do
     textBox      <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
-    setLabel       model textBox
     UI.setWidgetPosition (model ^. widgetPosition) textBox
     return textBox
 
@@ -43,6 +42,7 @@ instance UIDisplayObject Model.LabeledTextBox where
         parent   <- UI.lookup parentId :: IO Widget.GenericWidget
         UI.register id textBox
         Widget.add textBox parent
+        setLabel       model textBox
 
     updateUI id old model = do
         textBox <- UI.lookup id :: IO LabeledTextBox

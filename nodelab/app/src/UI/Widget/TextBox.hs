@@ -36,7 +36,6 @@ create :: WidgetId -> Model.TextBox -> IO TextBox
 create oid model = do
     textBox      <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
     setAlignment   model textBox
-    setValueLabel  model textBox
     UI.setWidgetPosition (model ^. widgetPosition) textBox
     return textBox
 
@@ -52,6 +51,7 @@ instance UIDisplayObject Model.TextBox where
         parent    <- UI.lookup parentId :: IO Widget.GenericWidget
         UI.register id textBox
         Widget.add textBox parent
+        setValueLabel  model textBox
 
     updateUI id old model = do
         textBox <- UI.lookup id :: IO TextBox

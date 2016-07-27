@@ -4,6 +4,13 @@ $$         = require('common')
 fs         = require('shaders/texFont.frag')
 vs         = require('shaders/texFont.vert')
 
+getTopParent = (w) ->
+  p = w
+  while p != undefined and p != null
+    w = p
+    p = w.parent
+  w
+
 class Text2D extends THREE.Object3D
 
   constructor: (text = '', options = {}) ->
@@ -12,7 +19,7 @@ class Text2D extends THREE.Object3D
     @font      = options.font      || 'Open Sans';
     @fontSize  = options.fontSize  || 13;
     @fillStyle = options.fillStyle || '#ffffff';
-    @zoom      = options.zoom      || 1.0
+    @zoom      = if (getTopParent this) == $$.sceneHUD then 1.0 else options.zoom || 1.0
 
     @canvas = new CanvasText()
 
@@ -49,6 +56,8 @@ class Text2D extends THREE.Object3D
       @updateText()
 
   setZoom: (zoom) ->
+    if (getTopParent this) == $$.sceneHUD
+      zoom = 1
     if @zoom != zoom
       @zoom = zoom
       @updateText()
