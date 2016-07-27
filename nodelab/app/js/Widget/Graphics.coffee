@@ -65,7 +65,7 @@ class Graphics extends BaseWidget
     @itemGroup.scale.y = @height
 
   redrawTextures: ->
-    @setLabels @labels # FIXME: iterate on @labelGroup.children and call #setZoom $$.commonUniforms.camFactor.value
+    @labelGroup.children.forEach (item) => item.setZoom $$.commonUniforms.camFactor.value
 
 module.exports = Graphics;
 

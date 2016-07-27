@@ -41,7 +41,7 @@ class Text2D extends THREE.Object3D
   setFontSize: (value) ->
     if @fontSize != value
       @fontSize = value
-      updateText()
+      @updateText()
 
   setFillStyle: (value) ->
     if @fillStyle != value

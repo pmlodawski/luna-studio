@@ -166,7 +166,7 @@ var redrawTextures = _.throttle(function() {
   _($$.registry).each(function(e){
     if (e.redrawTextures !== undefined) e.redrawTextures();
   });
-  $$.shouldRender = true;
+  shouldRender = true;
   console.timeEnd('redrawTextures');
 }, 120);
 
@@ -210,7 +210,7 @@ function updateScreenSize(width, height) {
   $$.canvas2D.width  = width;
   $$.canvas2D.height = height;
 
-  $$.shouldRender = true;
+  shouldRender = true;
 }
 
 function updateCamera(factor, left, right, top, bottom) {
@@ -219,7 +219,7 @@ function updateCamera(factor, left, right, top, bottom) {
   $$.camera.right    = right;
   $$.camera.top      = top;
   $$.camera.bottom   = bottom;
-  $$.shouldRender    = true;
+  shouldRender    = true;
 }
 
 function updateCameraHUD(left, right, top, bottom) {
@@ -227,7 +227,7 @@ function updateCameraHUD(left, right, top, bottom) {
   $$.cameraHUD.right    = right;
   $$.cameraHUD.top      = top;
   $$.cameraHUD.bottom   = bottom;
-  $$.shouldRender       = true;
+  shouldRender       = true;
 }
 
 function createPendingNode(widgetId, expr, x, y) {
