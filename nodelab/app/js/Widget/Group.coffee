@@ -6,6 +6,7 @@ class Group extends BaseWidget
   constructor: (widgetId, width, height) ->
     super widgetId, width, height
     @container = new THREE.Group()
+    @container.position.z = 0.001
     @mesh.add @container
 
     @bgVisible   = true

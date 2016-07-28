@@ -45,7 +45,7 @@ class LabeledWidget extends BaseWidget
       derivatives:    true
 
     @mesh.add @bg
-
+    @bg.position.z = 0.0005
   setFocus: (value) -> @bgUniforms.focus.value = value ? 1 : 0
 
   setLabel: (text) ->
@@ -57,6 +57,7 @@ class LabeledWidget extends BaseWidget
       @label = new Text2D(@text, { align: align, zoom: $$.commonUniforms.camFactor.value })
       @label.position.x = 0
       @label.position.y = @height / 2.0
+      @label.position.z = 0.001
 
       @mesh.add @label
 
@@ -71,6 +72,5 @@ class LabeledWidget extends BaseWidget
 
   redrawTextures: ->
     @label.setZoom $$.commonUniforms.camFactor.value if @label
-
 
 module.exports = LabeledWidget

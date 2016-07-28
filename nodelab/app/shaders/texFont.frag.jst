@@ -7,4 +7,5 @@ uniform int objectMap;
 void main(void) {
     gl_FragColor = texture2D(texture, luv);
     gl_FragColor.a *= float(1 - objectMap);
+    if (gl_FragColor.a < 0.01) discard;
 }

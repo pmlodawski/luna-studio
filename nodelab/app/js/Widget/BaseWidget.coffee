@@ -7,6 +7,7 @@ class BaseWidget
 
     @mesh     = new (THREE.Group)
     @mesh.visible = @visible && (width != 0 && height != 0)
+    @mesh.position.z = 0.001
 
   setSize: (width, height) ->
     @width  = width

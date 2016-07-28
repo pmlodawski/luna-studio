@@ -92,25 +92,27 @@ class Text2D extends THREE.Object3D
       @material.uniforms.texture.value = @texture
 
     if !@mesh
-      @mesh = new THREE.Mesh(new THREE.PlaneGeometry(@canvas.width, @canvas.height), @material);
+      @mesh = new THREE.Mesh(new THREE.PlaneGeometry(@canvas.width(), @canvas.height()), @material);
       @geometry = @mesh.geometry
       @add @mesh
 
 
-    @mesh.position.x = ( (@canvas.width  / 2) -  (@canvas.textWidth  / 2)) + ((@canvas.textWidth / 2) * @align.x)
-    @mesh.position.y = (- @canvas.height / 2) + ((@canvas.textHeight / 2)  * @align.y)
+    @mesh.position.x = ( (@canvas.width()  / 2) -  (@canvas.textWidth  / 2)) + ((@canvas.textWidth / 2) * @align.x)
+    @mesh.position.y = (- @canvas.height() / 2) + ((@canvas.textHeight / 2)  * @align.y)
 
     @rotation.x = Math.PI
     @scale.x = 1.0 / @zoom
     @scale.y = 1.0 / @zoom
+    @position.z = 0.01
 
 
     # manually update geometry vertices
-    @geometry.vertices[0].x = @geometry.vertices[2].x = -@canvas.width  / 2
-    @geometry.vertices[1].x = @geometry.vertices[3].x =  @canvas.width  / 2
-    @geometry.vertices[0].y = @geometry.vertices[1].y =  @canvas.height / 2
-    @geometry.vertices[2].y = @geometry.vertices[3].y = -@canvas.height / 2
+    @geometry.vertices[0].x = @geometry.vertices[2].x = -@canvas.width()  / 2
+    @geometry.vertices[1].x = @geometry.vertices[3].x =  @canvas.width()  / 2
+    @geometry.vertices[0].y = @geometry.vertices[1].y =  @canvas.height() / 2
+    @geometry.vertices[2].y = @geometry.vertices[3].y = -@canvas.height() / 2
     @geometry.verticesNeedUpdate = true
+    @visible = @canvas.width() > 0
 
   cleanUp: -> @texture.dispose() if @texture
 
