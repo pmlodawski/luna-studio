@@ -103,7 +103,6 @@ class Text2D extends THREE.Object3D
     @rotation.x = Math.PI
     @scale.x = 1.0 / @zoom
     @scale.y = 1.0 / @zoom
-    @position.z = 0.01
 
 
     # manually update geometry vertices

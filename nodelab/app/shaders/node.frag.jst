@@ -58,4 +58,5 @@ void main(void) {
         vec4 bkgC      = vec4(selectedColor, 0.25 * float(highlight) * sdf_aa(nodeShape));
         gl_FragColor = blend(blend(bkgC, errorC), selectedC);
     }
+    if (gl_FragColor.a < 0.01) discard;
 }

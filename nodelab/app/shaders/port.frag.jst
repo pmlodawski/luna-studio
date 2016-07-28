@@ -41,4 +41,5 @@ void main(void) {
     } else {
         gl_FragColor = vec4(color.xyz + vec3(0.3,0.3,0.3) * float(highlight), sdf_aa(opacity));
     }
+    if (gl_FragColor.a < 0.01) discard;    
 }
