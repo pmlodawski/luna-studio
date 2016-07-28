@@ -52,7 +52,11 @@ class Graphics extends BaseWidget
     @labels = labels
     @labelGroup.remove @labelGroup.children
     @labels.forEach (label) =>
-      align = textAlign.center
+      align = switch label._textAlignment
+        when 'Left'   then textAlign.left
+        when 'Center' then textAlign.center
+        when 'Right'  then textAlign.right
+        else throw 'Invalid text alignment'
       cf = $$.commonUniforms.camFactor.value
       textLabel = new Text2D(label._text, { align: align, zoom: $$.commonUniforms.camFactor.value, fontSize: label._fontSize })
       textLabel.position.x = label._labelPosition._x * @width

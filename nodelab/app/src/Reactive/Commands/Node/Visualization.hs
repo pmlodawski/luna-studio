@@ -13,6 +13,7 @@ import qualified Data.Text.Lazy                  as Text
 
 import           Object.UITypes                  (WidgetId)
 import           Object.Widget                   (DisplayObjectClass, CompositeWidget)
+import qualified Object.Widget.Label             as Label
 import qualified Object.Widget.DataFrame         as DataFrame
 import qualified Object.Widget.Graphics          as Graphics
 import qualified Object.Widget.LongText          as LongText
@@ -188,7 +189,11 @@ visualizeNodeValue id (Graphics (GR.Graphics layers)) = do
             boxes = createBox <$> trans
             createBox (GR.Transformation sx sy dx dy rot refl) = Graphics.Box (Vector2 dx dy)
         createLabels (GR.Layer _ _ labels) = createLabel <$> labels
-        createLabel  (GR.Label (GR.Point x y) fontSize text) = Graphics.Label (Vector2 x y) fontSize $ Text.pack text
+        createLabel  (GR.Label (GR.Point x y) fontSize align text) = Graphics.Label (Vector2 x y) fontSize (labelAlign align) $ Text.pack text
+        labelAlign GR.Left   = Label.Left
+        labelAlign GR.Center = Label.Center
+        labelAlign GR.Right  = Label.Right
+
 
 
 visualizeNodeValue _ _ = return ()
