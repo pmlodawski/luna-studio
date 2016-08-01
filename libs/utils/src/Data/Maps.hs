@@ -48,9 +48,9 @@ class GenMap m k a | m k -> a where
     insertWithKey   :: (k -> a -> a -> a) -> k -> a -> m -> m
     foldrWithKey    :: (k -> a -> b -> b) -> b -> m -> b
     delete          :: k -> m -> m
-    size            :: m -> Int
-    null            :: m -> Bool
-    union           :: m -> m -> m
+    -- size            :: m -> Int -- GHC8
+    -- null            :: m -> Bool -- GHC8
+    -- union           :: m -> m -> m -- GHC8
 
     -- optional
     insert          :: k -> a -> m -> m
@@ -69,7 +69,7 @@ class GenMap m k a | m k -> a where
     member k = isJust . lookup k
 
     default notMember :: k -> m -> Bool
-    notMember k = not . member k    
+    notMember k = not . member k
 
     default findWithDefault :: a -> k -> m -> a
     findWithDefault def k m = case lookup k m of
@@ -82,13 +82,13 @@ class GenMap m k a | m k -> a where
 
 -- Data.Map
 instance Ord k => ValPartMap (Map k a) k a
-instance Ord k => ValMap (Map k a) k a where 
+instance Ord k => ValMap (Map k a) k a where
     elems           = Map.elems
     keys            = Map.keys
 
 instance (Ord k, k~k', a~a') => GenMap (Map k a) k' a' where
-    null            = Map.null
-    size            = Map.size
+    -- null            = Map.null
+    -- size            = Map.size
     member          = Map.member
     notMember       = Map.notMember
     lookup          = Map.lookup
@@ -99,17 +99,17 @@ instance (Ord k, k~k', a~a') => GenMap (Map k a) k' a' where
     insertWithKey   = Map.insertWithKey
     foldrWithKey    = Map.foldrWithKey
     delete          = Map.delete
-    union           = Map.union
+    -- union           = Map.union
 
 -- Data.IntMap
 instance ValPartMap (IntMap a) Int a
 instance ValMap (IntMap a) Int a where
     elems           = IntMap.elems
     keys            = IntMap.keys
-    
+
 instance (a~a') => GenMap (IntMap a) Int a' where
-    null            = IntMap.null
-    size            = IntMap.size
+    -- null            = IntMap.null
+    -- size            = IntMap.size
     member          = IntMap.member
     notMember       = IntMap.notMember
     lookup          = IntMap.lookup
@@ -120,7 +120,7 @@ instance (a~a') => GenMap (IntMap a) Int a' where
     insertWithKey   = IntMap.insertWithKey
     foldrWithKey    = IntMap.foldrWithKey
     delete          = IntMap.delete
-    union           = IntMap.union
+    -- union           = IntMap.union
 
 -- Data.HashMap
 instance (Hashable k, Eq k) => ValPartMap (HashMap k a) k a
@@ -129,8 +129,8 @@ instance (Hashable k, Eq k) => ValMap (HashMap k a) k a where
     keys            = HashMap.keys
 
 instance (Hashable k, Eq k, k~k', a~a') => GenMap (HashMap k a) k' a' where
-    null            = HashMap.null
-    size            = HashMap.size
+    -- null            = HashMap.null
+    -- size            = HashMap.size
     member          = HashMap.member
     lookup          = HashMap.lookup
 
@@ -139,4 +139,4 @@ instance (Hashable k, Eq k, k~k', a~a') => GenMap (HashMap k a) k' a' where
     insertWithKey   = error "FIXME: Data.Maps does not define insertWithKey for HashMap"
     foldrWithKey    = HashMap.foldrWithKey
     delete          = HashMap.delete
-    union           = HashMap.union
+    -- union           = HashMap.union

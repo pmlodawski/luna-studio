@@ -38,14 +38,14 @@ logger :: LoggerIO
 logger = getLoggerIO $moduleName
 
 
-type Callback s m = (Proto.Serializable args, Proto.Serializable result)
+type Callback s m = forall args result. (Proto.Serializable args, Proto.Serializable result)
                   => (Topic -> Topic) -> (args -> RPC s m ([result], [Message])) -> StateT s m [Message]
 
 
 type HandlerMap s m = Callback s m -> Map Topic (StateT s m [Message])
 
 
-type CallbackWithCid s m = (Proto.Serializable args, Proto.Serializable result)
+type CallbackWithCid s m = forall args result. (Proto.Serializable args, Proto.Serializable result)
                   => (Topic -> Topic) -> (CorrelationID -> args -> RPC s m ([result], [Message])) -> StateT s m [Message]
 
 

@@ -25,7 +25,7 @@ module Flowbox.Generics.Deriving.FShow (
   ) where
 
 
-import           Generics.Deriving.Base        
+import           Generics.Deriving.Base
 import           Generics.Deriving.Instances   ()
 
 import           Flowbox.Prelude             hiding (from)
@@ -58,16 +58,16 @@ instance (FShow c) => FShow' (K1 i c) where
 -- No instances for P or Rec because fshow is only applicable to types of kind *
 
 instance (FShow' a, Constructor c) => FShow' (M1 C c a) where
-  fshowsPrec' _ n f c@(M1 x) = 
+  fshowsPrec' _ n f c@(M1 x) =
     case fixity of
-      Prefix    -> showParen (n > appPrec && not (isNullary x)) 
-                    ( showString (conName c) 
+      Prefix    -> showParen (n > appPrec && not (isNullary x))
+                    ( showString (conName c)
                     . if isNullary x then id else showChar ' '
                     . showBraces t (fshowsPrec' t appPrec f x))
       Infix _ m -> showParen (n > m) (showBraces t (fshowsPrec' t m f x))
       where fixity = conFixity c
-            t | conIsRecord c = Rec 
-              | conIsTuple  c = Tup
+            t | conIsRecord c = Rec
+              -- | conIsTuple  c = Tup -- GHC8
               | otherwise     = case fixity of
                                       Prefix    -> Pref
                                       Infix _ _ -> Inf (show (conName c))
@@ -100,12 +100,12 @@ instance (FShow' a, FShow' b) => FShow' (a :*: b) where
   fshowsPrec' t@(Inf s) n f (a :*: b) = fshowsPrec' t n     f a . showString s    . fshowsPrec' t n     f b
   fshowsPrec' t@Tup     n f (a :*: b) = fshowsPrec' t n     f a . showChar   ','  . fshowsPrec' t n     f b
   fshowsPrec' t@Pref    n f (a :*: b) = fshowsPrec' t (n+1) f a . showChar   ' '  . fshowsPrec' t (n+1) f b
-  
+
   -- If we have a product then it is not a nullary constructor
   isNullary _ = False
 
 
-class FShow a where 
+class FShow a where
   fshowsPrec :: Int -> FType -> a -> ShowS
   fshows :: FType -> a -> ShowS
   fshows = fshowsPrec 0

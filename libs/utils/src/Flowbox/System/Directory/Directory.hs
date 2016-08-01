@@ -14,7 +14,7 @@ import           Control.Applicative
 import qualified Data.List              as List
 import           System.Directory       hiding (copyFile, createDirectory, createDirectoryIfMissing, doesDirectoryExist, doesFileExist,
                                          getCurrentDirectory, getDirectoryContents, getTemporaryDirectory, removeDirectoryRecursive,
-                                         removeFile, renameDirectory, renameFile, setCurrentDirectory)
+                                         removeFile, renameDirectory, renameFile, setCurrentDirectory, listDirectory)
 import qualified System.Directory       as Directory
 import qualified System.IO              as IO
 #ifdef mingw32_HOST_OS

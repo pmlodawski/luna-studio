@@ -28,9 +28,9 @@ instance (Packable k Int) => GM.GenMap (IntConvertibleMap k v) k v where
     insertWithKey   = insertWithKey
     foldrWithKey    = foldrWithKey
     delete          = delete
-    size            = size
-    null            = null
-    union           = union
+    -- size            = size
+    -- null            = null
+    -- union           = union
 
     insert          = insert
     insertWith      = insertWith

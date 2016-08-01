@@ -38,5 +38,5 @@ selectWith (l:locations) selector = do
 selectWithExt :: [UniPath] -> FilePath -> IO (Maybe FilePath)
 selectWithExt locations ext = selectWith locations selector where
     selector filePath = if List.isSuffixOf ext filePath
-        then Directory.doesFileExist $ fromString filePath
+        then Directory.doesFileExist $ UniPath.fromUnixString filePath
         else return False

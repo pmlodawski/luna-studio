@@ -1,5 +1,7 @@
-extra-deps: [ghc-session-0.1.2.0, graphviz-2999.18.0.2, string-qq-0.0.2, error-util-0.0.1.1,
-  cond-0.4.1.1, tuple-0.3.0.2, OneTuple-0.2.1, docopt-0.7.0.4, saltine-0.0.0.4]
+# extra-deps: [ghc-session-0.1.2.0, graphviz-2999.18.0.2, string-qq-0.0.2, error-util-0.0.1.1,
+#   cond-0.4.1.1, tuple-0.3.0.2, OneTuple-0.2.1, docopt-0.7.0.4, saltine-0.0.0.4]
+extra-deps: [ghc-mtl-1.2.1.0, placeholders-0.1, graphviz-2999.18.1.2, string-qq-0.0.2,
+  cond-0.4.1.1, tuple-0.3.0.2, OneTuple-0.2.1, trifecta-1.6]
 ghc-options: {'*': -DFastCompilation -threaded -O}
 local-bin-path: ../../dist/bin
 packages:
@@ -20,7 +22,7 @@ packages:
 - {location: ../../tools/batch/plugins/bus-logger}
 - {location: ../../tools/batch/plugins/luna-empire}
 - extra-dep: true
-  location: {commit: 7781d0119e74bc27e789cffe839aee5523801e1a, git: 'https://bitbucket.org/NewByteOrder/luna.git'}
+  location: {commit: 5c4a0bf57403bfec0c543d8b49dc9ed2c3f508b1, git: 'https://bitbucket.org/NewByteOrder/luna.git'}
   subdirs: [compiler, core, parser]
 - extra-dep: true
   location: {commit: 1b2f65d6cc55e51e8d222819cd828fdf8af6e25c, git: 'https://github.com/wdanilo/container.git'}
@@ -64,4 +66,5 @@ packages:
   location: {commit: 2070935673fb6b0a382387ba80bd950b4718eadb, git: 'https://github.com/wdanilo/data-shell.git'}
 - extra-dep: true
   location: {commit: 933fbba7d5e5d964b0d3d36fca25768077ab78ef, git: 'https://bitbucket.org/NewByteOrder/visualization-api.git'}
-resolver: lts-5.10
+
+resolver: nightly-2016-07-19

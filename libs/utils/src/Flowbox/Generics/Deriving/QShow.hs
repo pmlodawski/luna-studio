@@ -26,7 +26,7 @@ module Flowbox.Generics.Deriving.QShow (
   ) where
 
 
-import           Generics.Deriving.Base        
+import           Generics.Deriving.Base
 import           Generics.Deriving.Instances   ()
 
 import           Flowbox.Prelude             hiding (from)
@@ -56,16 +56,16 @@ instance (QShow c) => QShow' (K1 i c) where
 -- No instances for P or Rec because qshow is only applicable to types of kind *
 
 instance (QShow' a, Constructor c) => QShow' (M1 C c a) where
-  qshowsPrec' _ n c@(M1 x) = 
+  qshowsPrec' _ n c@(M1 x) =
     case fixity of
-      Prefix    -> showParen (n > appPrec && not (isNullary x)) 
-                    ( showString (conName c) 
+      Prefix    -> showParen (n > appPrec && not (isNullary x))
+                    ( showString (conName c)
                     . if isNullary x then id else showChar ' '
                     . showBraces t (qshowsPrec' t appPrec x))
       Infix _ m -> showParen (n > m) (showBraces t (qshowsPrec' t m x))
       where fixity = conFixity c
             t | conIsRecord c = Rec
-              | conIsTuple  c = Tup
+              -- | conIsTuple  c = Tup -- GHC8
               | otherwise     = case fixity of
                                     Prefix    -> Pref
                                     Infix _ _ -> Inf (show (conName c))
@@ -102,12 +102,12 @@ instance (QShow' a, QShow' b) => QShow' (a :*: b) where
     qshowsPrec' t n     a . showChar ','    . qshowsPrec' t n     b
   qshowsPrec' t@Pref    n (a :*: b) =
     qshowsPrec' t (n+1) a . showChar ' '    . qshowsPrec' t (n+1) b
-  
+
   -- If we have a product then it is not a nullary constructor
   isNullary _ = False
 
 
-class QShow a where 
+class QShow a where
   qshowsPrec :: Int -> a -> ShowS
   qshows :: a -> ShowS
   qshows = qshowsPrec 0

@@ -54,11 +54,11 @@ main = do
     loggerIO error "IO error"
 
     print ("colored text test" :: String)
-    let x = "ala"
-        y = Text.green "ola"
-        txt = x ++ y ++ x
-    Text.print txt
-    Text.print $ Text.clearFormatting txt
-    print $ toText txt
+    -- let x = "ala"
+    --     y = Text.green "ola"
+    --     txt = x ++ y ++ x
+    -- Text.print txt
+    -- Text.print $ Text.clearFormatting txt
+    -- print $ toText txt
 
     return ()

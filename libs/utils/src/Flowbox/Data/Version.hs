@@ -25,8 +25,6 @@ import qualified Text.ParserCombinators.ReadP as ReadP
 import           Flowbox.Prelude
 
 
-deriving instance Generic Version
-
 newtype Name = Name String
 
 
@@ -65,6 +63,3 @@ instance Default Version where
     def = Version { versionBranch = [0,1,0]
                   , versionTags   = def
                   }
-
-instance ToJSON Version
-instance FromJSON Version

@@ -15,7 +15,7 @@ import Data.Text.CodeBuilder     as X (Builder)
 import Data.Text.CodeBuilder.Tok as X (Tok)
 
 import Data.Text.CodeBuilder as X ((<+>))
-import GHC.Prim (Constraint)
+import Data.Kind (Constraint)
 
 class Repr  s a        where repr  ::       a -> Builder s Tok
 class ReprT s (a :: k) where reprT :: Proxy a -> Builder s Tok

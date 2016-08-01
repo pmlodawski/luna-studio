@@ -66,10 +66,12 @@ newState name el = sequence [ genDataType
                                         , "Applicative"
                                         , "Alternative"
                                         ]
+            ctx <- mapM conT derivings
             return $ NewtypeD [] transName
                         [PlainTV m,PlainTV t]
-                        (RecC transName [(fieldName,NotStrict,appsT (ConT stateT) [elCon, VarT m, VarT t])])
-                        derivings
+                        Nothing
+                        (RecC transName [(fieldName, Bang NoSourceUnpackedness NoSourceStrictness, appsT (ConT stateT) [elCon, VarT m, VarT t])])
+                        ctx
 
         -- type MyData = MyDataT Identity
         genAlias :: Q Dec
@@ -92,7 +94,7 @@ newState name el = sequence [ genDataType
             m <- VarT <$> newName "m"
             let stateGet = mkName "State.get"
                 statePut = mkName "State.put"
-            return $ InstanceD [classP n_monad [m], classP n_functor [m]]
+            return $ InstanceD Nothing [classP n_monad [m], classP n_functor [m]]
                          (appsT (ConT className) [AppT (ConT transName) m])
                          [ mkFunc getName []       $ appChainE (ConE transName) [VarE stateGet]
                          , mkFunc putName [VarP a] $ appChainE (ConE transName) [VarE statePut, VarE a]
@@ -108,7 +110,7 @@ newState name el = sequence [ genDataType
             m <- VarT <$> newName "m"
             let stateGet = mkName "State.get"
                 statePut = mkName "State.put"
-            return $ InstanceD [classP n_monadState [s, m]]
+            return $ InstanceD Nothing [classP n_monadState [s, m]]
                          (appsT (ConT n_monadState) [s, AppT (ConT transName) m])
                          [ mkFunc getName []       $ appChainE (ConE transName) [VarE liftName, VarE stateGet]
                          , mkFunc putName [VarP a] $ appChainE (ConE transName) [VarE liftName, VarE statePut, VarE a]
@@ -128,7 +130,7 @@ newState name el = sequence [ genDataType
                           , classP n_monad       [AppT t m]
                           , classP n_applicative [AppT t m]
                           ]
-            return $ InstanceD premise
+            return $ InstanceD Nothing premise
                          (appsT (ConT className) [AppT t m])
                          [ mkFunc getName []       $ appChainE (VarE liftName) [VarE getName]
                          , mkFunc putName [VarP a] $ appChainE (VarE liftName) [VarE putName, VarE a]

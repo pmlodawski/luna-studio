@@ -13,7 +13,6 @@ import           Data.ByteString.Char8             (unpack)
 import           Data.ByteString.Lazy              (fromStrict, toStrict)
 import           Data.Map.Strict                   (Map)
 import qualified Data.Map.Strict                   as Map
-import           Prelude                           (undefined)
 import           Prologue
 
 import qualified Empire.API.Control.EmpireStarted  as EmpireStarted
@@ -93,65 +92,70 @@ handleMessage = do
 
 type LogFormatter = (forall a. Show a => a -> String) -> ByteString -> String
 
+-- How existentials should be used:
+-- newtype Ex1 = forall a. Show a => Ex1 a
+-- type LogFormatter = (Ex1 -> String) -> ByteString -> String
+
 logMessage :: String -> String -> ByteString -> StateT LoggerEnv BusT ()
 logMessage logMsg topic content = do
-    formatted <- use Env.formatLog
-    logger Logger.info logMsg
-    let logFormatter = Map.findWithDefault defaultLogFormatter topic loggFormattersMap
-    logger Logger.debug $ logFormatter (Utils.display formatted) content
+    return ()
+--     formatted <- use Env.formatLog
+--     logger Logger.info logMsg
+--     let logFormatter = Map.findWithDefault defaultLogFormatter topic loggFormattersMap :: LogFormatter
+--     logger Logger.debug $ logFormatter (Utils.display formatted) content
 
+-- TODO: Fix this
+-- makeHandler :: (Topic.MessageTopic a, Bin.Binary a, Show a) => Proxy a -> (String, LogFormatter)
+-- makeHandler h = (Topic.topic h, process) where
+--    process display content = display request where request = ((Bin.decode . fromStrict $ content) :: a)
 
-makeHandler :: forall a. (Topic.MessageTopic a, Bin.Binary a, Show a) => a -> (String, LogFormatter)
-makeHandler h = (Topic.topic (undefined :: a), process) where
-   process display content = display request where request = ((Bin.decode . fromStrict $ content) :: a)
-
-loggFormattersMap :: Map String LogFormatter
-loggFormattersMap = Map.fromList
-    [ makeHandler (undefined :: Request AddNode.Request          )
-    , makeHandler (undefined :: AddNode.Response         )
-    , makeHandler (undefined :: AddNode.Update           )
-    , makeHandler (undefined :: Request RemoveNode.Request       )
-    , makeHandler (undefined :: RemoveNode.Response      )
-    , makeHandler (undefined :: RemoveNode.Update        )
-    , makeHandler (undefined :: Request UpdateNodeMeta.Request   )
-    , makeHandler (undefined :: UpdateNodeMeta.Response  )
-    , makeHandler (undefined :: UpdateNodeMeta.Update    )
-    , makeHandler (undefined :: Request RenameNode.Request       )
-    , makeHandler (undefined :: RenameNode.Response      )
-    , makeHandler (undefined :: RenameNode.Update        )
-    , makeHandler (undefined :: Request Connect.Request          )
-    , makeHandler (undefined :: Connect.Response         )
-    , makeHandler (undefined :: Connect.Update           )
-    , makeHandler (undefined :: Request Disconnect.Request       )
-    , makeHandler (undefined :: Disconnect.Response      )
-    , makeHandler (undefined :: Disconnect.Update        )
-    , makeHandler (undefined :: Request GetProgram.Request       )
-    , makeHandler (undefined :: GetProgram.Response      )
-    , makeHandler (undefined :: NodeUpdate.Update        )
-    , makeHandler (undefined :: NodeResultUpdate.Update  )
-    , makeHandler (undefined :: CodeUpdate.Update        )
-    , makeHandler (undefined :: Request CreateProject.Request    )
-    , makeHandler (undefined :: CreateProject.Response   )
-    , makeHandler (undefined :: CreateProject.Update     )
-    , makeHandler (undefined :: Request ListProjects.Request     )
-    , makeHandler (undefined :: ListProjects.Response    )
-    , makeHandler (undefined :: ListProjects.Update    )
-    , makeHandler (undefined :: Request ExportProject.Request     )
-    , makeHandler (undefined :: ExportProject.Response    )
-    , makeHandler (undefined :: Request ImportProject.Request     )
-    , makeHandler (undefined :: ImportProject.Response    )
-    , makeHandler (undefined :: Request CreateLibrary.Request    )
-    , makeHandler (undefined :: CreateLibrary.Response   )
-    , makeHandler (undefined :: CreateLibrary.Update     )
-    , makeHandler (undefined :: Request ListLibraries.Request    )
-    , makeHandler (undefined :: ListLibraries.Response   )
-    , makeHandler (undefined :: Request SetDefaultValue.Request  )
-    , makeHandler (undefined :: SetDefaultValue.Response )
-    , makeHandler (undefined :: EmpireStarted.Status     )
-    , makeHandler (undefined :: Request DumpGraphViz.Request     )
-    , makeHandler (undefined :: Request TypeCheck.Request       )
-    , makeHandler (undefined :: TypeCheck.Response       )
-    ]
+-- loggFormattersMap :: Map String LogFormatter
+-- loggFormattersMap = Map.fromList
+--     [ makeHandler (Proxy :: Proxy (Request AddNode.Request          ))
+--     , makeHandler (Proxy :: Proxy (AddNode.Response         ))
+--     , makeHandler (Proxy :: Proxy (AddNode.Update           ))
+--     , makeHandler (Proxy :: Proxy (Request RemoveNode.Request       ))
+--     , makeHandler (Proxy :: Proxy (RemoveNode.Response      ))
+--     , makeHandler (Proxy :: Proxy (RemoveNode.Update        ))
+--     , makeHandler (Proxy :: Proxy (Request UpdateNodeMeta.Request   ))
+--     , makeHandler (Proxy :: Proxy (UpdateNodeMeta.Response  ))
+--     , makeHandler (Proxy :: Proxy (UpdateNodeMeta.Update    ))
+--     , makeHandler (Proxy :: Proxy (Request RenameNode.Request       ))
+--     , makeHandler (Proxy :: Proxy (RenameNode.Response      ))
+--     , makeHandler (Proxy :: Proxy (RenameNode.Update        ))
+--     , makeHandler (Proxy :: Proxy (Request Connect.Request          ))
+--     , makeHandler (Proxy :: Proxy (Connect.Response         ))
+--     , makeHandler (Proxy :: Proxy (Connect.Update           ))
+--     , makeHandler (Proxy :: Proxy (Request Disconnect.Request       ))
+--     , makeHandler (Proxy :: Proxy (Disconnect.Response      ))
+--     , makeHandler (Proxy :: Proxy (Disconnect.Update        ))
+--     , makeHandler (Proxy :: Proxy (Request GetProgram.Request       ))
+--     , makeHandler (Proxy :: Proxy (GetProgram.Response      ))
+--     , makeHandler (Proxy :: Proxy (NodeUpdate.Update        ))
+--     , makeHandler (Proxy :: Proxy (NodeResultUpdate.Update  ))
+--     , makeHandler (Proxy :: Proxy (CodeUpdate.Update        ))
+--     , makeHandler (Proxy :: Proxy (Request CreateProject.Request    ))
+--     , makeHandler (Proxy :: Proxy (CreateProject.Response   ))
+--     , makeHandler (Proxy :: Proxy (CreateProject.Update     ))
+--     , makeHandler (Proxy :: Proxy (Request ListProjects.Request     ))
+--     , makeHandler (Proxy :: Proxy (ListProjects.Response    ))
+--     , makeHandler (Proxy :: Proxy (ListProjects.Update    ))
+--     , makeHandler (Proxy :: Proxy (Request ExportProject.Request     ))
+--     , makeHandler (Proxy :: Proxy (ExportProject.Response    ))
+--     , makeHandler (Proxy :: Proxy (Request ImportProject.Request     ))
+--     , makeHandler (Proxy :: Proxy (ImportProject.Response    ))
+--     , makeHandler (Proxy :: Proxy (Request CreateLibrary.Request    ))
+--     , makeHandler (Proxy :: Proxy (CreateLibrary.Response   ))
+--     , makeHandler (Proxy :: Proxy (CreateLibrary.Update     ))
+--     , makeHandler (Proxy :: Proxy (Request ListLibraries.Request    ))
+--     , makeHandler (Proxy :: Proxy (ListLibraries.Response   ))
+--     , makeHandler (Proxy :: Proxy (Request SetDefaultValue.Request  ))
+--     , makeHandler (Proxy :: Proxy (SetDefaultValue.Response ))
+--     , makeHandler (Proxy :: Proxy (EmpireStarted.Status     ))
+--     , makeHandler (Proxy :: Proxy (Request DumpGraphViz.Request     ))
+--     , makeHandler (Proxy :: Proxy (Request TypeCheck.Request       ))
+--     , makeHandler (Proxy :: Proxy (TypeCheck.Response       ))
+--     ]
 
 defaultLogFormatter :: LogFormatter
 defaultLogFormatter = \display _ -> "Not recognized message"

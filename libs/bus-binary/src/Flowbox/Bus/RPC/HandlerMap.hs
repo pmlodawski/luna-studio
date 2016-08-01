@@ -61,7 +61,7 @@ instance MonadTrans (BatchT s) where
 type BatchWriter s m a = BatchT s (WriterT [Value] (ExceptT String (StateT s m))) a
 
 
-type Callback s m = (Binary arg, Typeable arg, Binary res, Typeable res) => (CorrelationID -> arg -> RPC s m (res, [Value])) -> StateT s m (Result, [Value])
+type Callback s m = forall arg res. (Binary arg, Typeable arg, Binary res, Typeable res) => (CorrelationID -> arg -> RPC s m (res, [Value])) -> StateT s m (Result, [Value])
 
 
 type HandlerMap s m = Callback s m -> Map FunctionName (StateT s m (Result, [Value]))

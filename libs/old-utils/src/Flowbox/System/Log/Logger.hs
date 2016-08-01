@@ -40,9 +40,9 @@ import qualified Flowbox.System.Log.LogEntry as LogEntry
 type LogList     = DList LogEntry
 type LogWriter m = MonadWriter LogList m
 
-type LogAction b = LogWriter m => String -> String -> m b
+type LogAction b = forall m. LogWriter m => String -> String -> m b
 type Logger      = forall t t1. (t1 -> String -> t) -> t1 -> t
-type LoggerIO    = MonadIO m => forall t. (t -> String -> Writer LogList ()) -> t -> m ()
+type LoggerIO    = forall m. MonadIO m => forall t. (t -> String -> Writer LogList ()) -> t -> m ()
 
 
 getLogger :: String -> Logger
