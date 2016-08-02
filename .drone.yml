@@ -2,7 +2,7 @@ clone:
   recursive: true
 build:
   backend:
-    image: lunalang/buildenv:alpine-7.10
+    image: lunalang/buildenv:alpine-8.0
     auth_config:
       username:  $$DOCKERHUB_USER
       password:  $$DOCKERHUB_PASS
