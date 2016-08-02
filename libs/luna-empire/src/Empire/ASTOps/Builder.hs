@@ -13,6 +13,7 @@ import           Data.Direction           (source)
 import qualified Data.HMap.Lazy           as HMap
 import           Data.HMap.Lazy           (HTMap)
 import           Data.Maybe               (isJust, isNothing)
+import           Data.List                (dropWhileEnd)
 
 import           Empire.ASTOp               (ASTOp)
 import           Empire.Empire              ((<?!>))
@@ -53,8 +54,9 @@ removeArg fun pos = do
     (f, args)  <- destructApp fun
     freshBlank <- Builder.blank
     let newArgs = args & ix pos .~ freshBlank
-    allBlanks <- and <$> mapM isBlank newArgs
-    Builder.app f (Builder.arg <$> newArgs)
+    areBlanks <- mapM isBlank newArgs
+    let argsLength = length $ dropWhileEnd id areBlanks
+    Builder.app f (Builder.arg <$> (take argsLength newArgs))
 
 destructApp :: ASTOp m => NodeRef -> m (NodeRef, [NodeRef])
 destructApp fun = do

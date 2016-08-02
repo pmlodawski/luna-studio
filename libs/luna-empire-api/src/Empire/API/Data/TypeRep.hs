@@ -23,9 +23,9 @@ instance ToString TypeRep where
             _      -> let reps = toString' True True <$> args
                           par  = parenCons && (not . null $ reps)
                       in parenIf par $ unwords (name : reps)
-        toString' _ parenLam (TLam args out) = parenIf parenLam $ intercalate " -> " reps <> " => " <> outRep where
+        toString' _ parenLam (TLam args out) = parenIf parenLam $ intercalate " -> " reps <> " -> " <> outRep where
             reps   = toString' False True <$> args
-            outRep = toString' False True out
+            outRep = toString' False False out
         toString' _ _ (TVar n) = n
         toString' _ _ TStar = "*"
         toString' _ _ TBlank = ""

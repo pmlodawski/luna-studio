@@ -119,10 +119,11 @@ buildArgPorts ref = do
     node <- Builder.read ref
     (types, states) <- caseTest (uncover node) $ do
         of' $ \(App f args) -> do
-            portTypes  <- extractAppArgTypes ref
-            unpacked   <- ASTBuilder.unpackArguments args
-            portStates <- mapM getPortState unpacked
-            return (portTypes, portStates)
+            unpacked       <- ASTBuilder.unpackArguments args
+            connectedTypes <- mapM (Builder.follow (prop Type) >=> Builder.follow source >=> getTypeRep) unpacked
+            unconnTypes    <- Builder.follow (prop Type) ref >>= Builder.follow source >>= extractArgTypes
+            portStates     <- mapM getPortState unpacked
+            return (connectedTypes ++ unconnTypes, portStates)
         of' $ \(Var _) -> do
             tpRef <- Builder.follow source $ node ^. prop Type
             types <- extractArgTypes tpRef
