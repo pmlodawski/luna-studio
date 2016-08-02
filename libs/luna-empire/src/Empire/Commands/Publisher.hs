@@ -20,7 +20,6 @@ notifyNodeUpdate loc n = do
     chan <- asks $ view updatesChan
     liftIO $ atomically $ writeTChan chan $ NodeUpdate $ Node.Update loc n
 
-
 notifyResultUpdate :: GraphLocation -> NodeId -> NodeResult.NodeValue -> Integer -> Command s ()
 notifyResultUpdate loc nid v t = do
     chan <- asks $ view updatesChan

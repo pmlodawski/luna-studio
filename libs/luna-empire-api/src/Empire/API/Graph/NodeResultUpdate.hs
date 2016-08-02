@@ -1,7 +1,8 @@
 module Empire.API.Graph.NodeResultUpdate where
 
-import           Data.Binary                   (Binary)
 import           Prologue
+import           Data.Binary                   (Binary)
+import           Data.Text.Lazy                (Text)
 
 import qualified Empire.API.Data.DefaultValue  as DV (Value)
 import           Empire.API.Data.GraphLocation (GraphLocation)
@@ -10,12 +11,12 @@ import           Empire.API.Data.TypeRep       (TypeRep)
 import           Empire.API.Data.Error         (Error)
 import qualified Empire.API.Topic              as T
 
-data NodeValue = NoValue | Value DV.Value | Error (Error TypeRep) deriving (Show, Eq, Generic)
+data NodeValue = Value Text [DV.Value] | Error (Error TypeRep) deriving (Show, Eq, Generic)
 
-data Update = Update { _location :: GraphLocation
-                     , _nodeId   :: NodeId
-                     , _value    :: NodeValue
-                     , _execTime :: Integer
+data Update = Update { _location  :: GraphLocation
+                     , _nodeId    :: NodeId
+                     , _value     :: NodeValue
+                     , _execTime  :: Integer
                      } deriving (Generic, Show, Eq)
 
 makeLenses ''Update

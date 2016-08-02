@@ -17,6 +17,7 @@ import qualified Data.IntMap                       as IntMap
 import qualified Data.Map                          as Map
 import           Data.Maybe                        (fromMaybe, isJust, isNothing)
 import qualified Data.Text.Lazy                    as Text
+import           Data.Text.Lazy                    (Text)
 import           Data.List                         (partition, break, stripPrefix)
 import           Data.List.Split                   (splitOneOf)
 import           Prologue                          hiding (Item)
@@ -55,7 +56,9 @@ import           Empire.Server.Server              (errorMessage, sendToBus', re
 import           Flowbox.Bus.BusT                  (BusT (..))
 import qualified Flowbox.System.Log.Logger         as Logger
 import qualified StdLibMock
-import qualified Empire.API.Graph.Request      as G
+import qualified Empire.API.Graph.Request          as G
+import           Empire.Utils.TextResult           (nodeValueToText)
+
 
 logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)
@@ -69,8 +72,8 @@ notifyCodeUpdate location = do
         Left err -> logger Logger.error $ errorMessage <> err
         Right code -> sendToBus' $ CodeUpdate.Update location $ Text.pack code
 
-notifyNodeResultUpdate :: GraphLocation -> NodeId -> Value -> StateT Env BusT ()
-notifyNodeResultUpdate location nodeId value = sendToBus' $ NodeResultUpdate.Update location nodeId (NodeResultUpdate.Value value) 42
+notifyNodeResultUpdate :: GraphLocation -> NodeId -> [Value] -> Text -> StateT Env BusT ()
+notifyNodeResultUpdate location nodeId values name = sendToBus' $ NodeResultUpdate.Update location nodeId (NodeResultUpdate.Value name values) 42
 -- FIXME: report correct execution time
 
 saveCurrentProject :: GraphLocation -> StateT Env BusT ()

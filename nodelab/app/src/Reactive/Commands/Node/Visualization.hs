@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Reactive.Commands.Node.Visualization
     ( removeVisualization
-    , visualizeNodeValue
+    , visualizeNodeValues
     , visualizeError
     ) where
 
@@ -90,6 +90,8 @@ visualize id create update = do
             status <- UICmd.tryUpdate id update
             when (status == False) $ create groupId
 
+visualizeNodeValues :: WidgetId -> [Value] -> Command UIRegistry.State ()
+visualizeNodeValues id values = mapM_ (visualizeNodeValue id) values
 
 visualizeNodeValue :: WidgetId -> Value -> Command UIRegistry.State ()
 visualizeNodeValue id (StringList v) = do
@@ -193,7 +195,5 @@ visualizeNodeValue id (Graphics (GR.Graphics layers)) = do
         labelAlign GR.Left   = Label.Left
         labelAlign GR.Center = Label.Center
         labelAlign GR.Right  = Label.Right
-
-
 
 visualizeNodeValue _ _ = return ()

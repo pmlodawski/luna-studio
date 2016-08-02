@@ -101,7 +101,6 @@ untilFinished act = do
     Env.Error errMsg  -> error $ "Invalid response: " <> errMsg
     _                 -> act >> untilFinished act
 
-
 handleMessage :: StateT ResultSaverEnv BusT ()
 handleMessage = do
     msgFrame <- lift $ BusT Bus.receive'
@@ -143,7 +142,6 @@ importProjectResponseHandler response = do
                                     let request = Request uuid $ GetProgram.Request $ GraphLocation projectId 0 (Breadcrumb [])
                                     sendToBus request
                                     Env.state .= Env.ProgramRequested uuid
-
         _ -> return ()
     Response.Error msg -> Env.state .= Env.Error msg
 
@@ -170,7 +168,6 @@ nodeUpdateHandler (NodeUpdate.Update gl node) = do
         Env.state .= Env.ProgramReceived (ProjectDump program (Map.insert nodeId node nodes) results)
         checkIfDone
       _ -> return ()
-
 
 nodeResultUpdateHandler :: NodeResultUpdate.Update -> StateT ResultSaverEnv BusT ()
 nodeResultUpdateHandler (NodeResultUpdate.Update gl nodeId result _) = do

@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Empire.Commands.Typecheck where
 
 import           Prologue
@@ -9,7 +11,7 @@ import           Data.IntMap             (IntMap)
 import qualified Data.IntMap             as IntMap
 import           Data.List               (sort)
 import qualified Data.Map                as Map
-import           Data.Maybe              (isNothing, fromMaybe)
+import           Data.Maybe              (isNothing, fromMaybe, maybeToList)
 
 import qualified Empire.Data.Graph       as Graph
 import           Empire.Data.Graph       (Graph)
@@ -42,6 +44,7 @@ import qualified Luna.Compilation.Pass.Interpreter.Interpreter   as Interpreter
 
 import qualified Empire.ASTOp as ASTOp
 import           Empire.Data.AST                                 (AST, NodeRef)
+import           Empire.Utils.TextResult                         (nodeValueToText)
 
 getNodeValue :: NodeId -> Command Graph (Maybe Value)
 getNodeValue nid = do
@@ -104,8 +107,8 @@ updateNodes loc = do
                 errorsCache %= Map.alter (const err) id
                 valuesCache %= Map.delete id
                 case err of
-                    Just e  -> Publisher.notifyResultUpdate loc id (NodeResult.Error e) 0
-                    Nothing -> Publisher.notifyResultUpdate loc id (NodeResult.NoValue) 0
+                    Just e  -> Publisher.notifyResultUpdate loc id (NodeResult.Error e)     0
+                    Nothing -> Publisher.notifyResultUpdate loc id (NodeResult.Value "" []) 0
             else return ()
 
         rep <- zoom graph $ GraphBuilder.buildNode id
@@ -115,7 +118,6 @@ updateNodes loc = do
                 Publisher.notifyNodeUpdate loc rep
                 nodesCache %= Map.insert id rep
             else return ()
-
 
 updateValues :: GraphLocation -> Command InterpreterEnv ()
 updateValues loc = do
@@ -128,7 +130,8 @@ updateValues loc = do
                 cached <- uses valuesCache $ Map.lookup id
                 if cached /= Just val
                     then do
-                        Publisher.notifyResultUpdate loc id (fromMaybe NodeResult.NoValue $ NodeResult.Value <$> val) 100
+                        let name = fromMaybe "" $ nodeValueToText <$> val
+                        Publisher.notifyResultUpdate loc id (NodeResult.Value name $ maybeToList val) 100
                         valuesCache %= Map.insert id val
                     else return ()
             else return ()

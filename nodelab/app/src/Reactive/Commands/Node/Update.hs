@@ -25,7 +25,7 @@ import qualified Empire.API.Graph.NodeResultUpdate    as NodeResult
 import           Reactive.Commands.Node.Create        (addNode)
 import           Reactive.Commands.Node.Ports         (displayPorts)
 import           Reactive.Commands.Node.TextResult    (nodeValueToText)
-import           Reactive.Commands.Node.Visualization (removeVisualization, visualizeError, visualizeNodeValue)
+import           Reactive.Commands.Node.Visualization (removeVisualization, visualizeError, visualizeNodeValues)
 
 updateNode :: Node -> Command State ()
 updateNode node = do
@@ -50,7 +50,6 @@ updateExistingNode node = do
         -- TODO: obsluzyc to ze moga zniknac polaczenia
     updateConnectionsForNodes [nodeId]
 
-
 updateNodeValue :: NodeId -> NodeResult.NodeValue -> Command State ()
 updateNodeValue id val = do
     widgetId <- nodeIdToWidgetId id
@@ -58,13 +57,13 @@ updateNodeValue id val = do
         withJust widgetId $ \widgetId -> do
             removeVisualization widgetId
             case val of
-                NodeResult.Value val -> do
-                    UICmd.update_ widgetId $ Model.value   .~ (nodeValueToText val)
+                NodeResult.Value name [] -> do
+                    UICmd.update_ widgetId $ Model.value   .~ name
                     UICmd.update_ widgetId $ Model.isError .~ False
-                    visualizeNodeValue widgetId val
-                NodeResult.NoValue -> do
-                    UICmd.update_ widgetId $ Model.value   .~ ""
+                NodeResult.Value name values -> do
+                    UICmd.update_ widgetId $ Model.value   .~ name
                     UICmd.update_ widgetId $ Model.isError .~ False
+                    visualizeNodeValues widgetId values
                 NodeResult.Error msg -> do
                     UICmd.update_ widgetId $ Model.value   .~ "Error!"
                     UICmd.update_ widgetId $ Model.isError .~ True
