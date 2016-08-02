@@ -9,7 +9,7 @@ build:
       email: $$DOCKERHUB_EMAIL
     commands:
       - date
-      - apk update && apk add ssh
+      - apk update && apk add openssh-client
       - mkdir -p .stack
       - export STACK_ROOT=$DRONE_DIR/.stack
       - mkdir -p dist/proto
