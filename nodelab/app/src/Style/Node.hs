@@ -11,7 +11,7 @@ import qualified UI.Layout           as Layout
 
 nodeRadius = 25.0
 
-expressionLabel = Label.Label position size align  where
+expressionLabel = Label.Label position size align Label.Monospace where
     position = Vector2 (-150.0) (-50.0)
     size     = Vector2 300.0 20.0
     align    = Label.Center
@@ -33,7 +33,7 @@ expandedGroupStyle = def & Group.background ?~ Color 0.15 0.15 0.15 0.8
 
 expandedGroupLayout = Layout.verticalLayoutHandler 5.0
 
-valueLabel = Label.Label position size align  where
+valueLabel = Label.Label position size align def where
     position = Vector2 (-25.0) 0
     size     = Vector2 100.0 20.0
     align    = Label.Center
@@ -52,6 +52,6 @@ setLabelOffsetX = 10.0
 labeledPadding = xyPadding setLabelOffsetX 0.0
 
 
-execTimeLabel = Label.Label (Vector2 setLabelOffsetX 0) size align  where
+execTimeLabel = Label.Label (Vector2 setLabelOffsetX 0) size align def where
     size     = Vector2 0 0 -- (portControlSize & x -~ setLabelOffsetX)
     align    = Label.Left

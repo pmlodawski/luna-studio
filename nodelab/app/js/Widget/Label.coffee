@@ -15,6 +15,7 @@ class Label extends BaseWidget
 
     @alignment = 'Left'
     @text = ""
+    @monospace = false
 
     @uniforms =
       size:      { type: 'v2', value: new THREE.Vector2(width, height) }
@@ -43,6 +44,10 @@ class Label extends BaseWidget
     @alignment = align
     @setLabel @text
 
+  setMonospace: (mono) ->
+    @monospace = mono
+    @setLabel @text
+
   setLabel: (text) ->
     @text = text
     @mesh.remove @label if @label
@@ -54,8 +59,8 @@ class Label extends BaseWidget
         else throw 'Invalid text alignment'
 
       cf = $$.commonUniforms.camFactor.value
-
-      @label = new Text2D(@text, { align: align, zoom: $$.commonUniforms.camFactor.value})
+      fontName = if @monospace then "dejavu_sans_monobook" else "Open Sans"
+      @label = new Text2D(@text, { align: align, zoom: $$.commonUniforms.camFactor.value, font: fontName})
       @label.position.x = switch @alignment
         when 'Left'   then 0
         when 'Center' then @width / 2.0
