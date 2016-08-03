@@ -42,7 +42,7 @@ printExpression' suppresNodes paren nodeRef = do
     let displayFun funExpr args = do
         unpackedArgs <- ASTBuilder.unpackArguments args
         argsRep <- mapM (recur True) unpackedArgs
-        let dropTailBlanks = dropWhileEnd (\x -> x == "_" || x == "@") argsRep
+        let dropTailBlanks = dropWhileEnd (== "_") argsRep
         let shouldParen = paren && not (null args)
         case argsRep of
             a : as -> return $ (if shouldParen then "(" else "")
@@ -60,17 +60,20 @@ printExpression' suppresNodes paren nodeRef = do
             isNode <- ASTBuilder.isGraphNode nodeRef
             return $ if isNode && suppresNodes then "_" else unwrap n
         of' $ \(Acc n t) -> do
-            targetRep <- Builder.follow source t >>= recur True
-            if targetRep == "_"
-                then return $ unwrap n
-                else return $ targetRep ++ "." ++ unwrap n
+            targetRef <- Builder.follow source t
+            target    <- Builder.read targetRef
+            caseTest (uncover target) $ do
+                of' $ \Blank -> return $ "_." <> unwrap n
+                of' $ \ANY -> do
+                    targetRep <- recur True targetRef
+                    return $ if targetRep == "_" then unwrap n else targetRep <> "." <> unwrap n
         of' $ \(App f args) -> do
             funExpr <- Builder.follow source f >>= recur True
             displayFun funExpr args
         of' $ \(Curry f args) -> do
             funExpr <- Builder.follow source f >>= recur True
             displayFun ("@" <> funExpr) args
-        of' $ \Blank -> return "@"
+        of' $ \Blank -> return "_"
         of' $ \(Lit.Number _ s) -> return $ case s of
             Lit.Rational r -> show r
             Lit.Integer  i -> show i
