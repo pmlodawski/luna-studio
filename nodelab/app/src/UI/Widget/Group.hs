@@ -13,6 +13,7 @@ import qualified Reactive.Commands.UIRegistry as UICmd
 
 import           Style.Types                  (Color (..), Padding (..))
 import qualified UI.Generic                   as UI
+import           UI.Generic                   (whenChanged)
 import qualified UI.Registry                  as UI
 import           UI.Widget                    (UIWidget)
 import qualified UI.Widget                    as Widget
@@ -64,10 +65,10 @@ instance UIDisplayObject Model.Group where
 
     updateUI id old model = do
         group <- UI.lookup id :: IO Group
-        setVisible' group $ model ^. Model.visible
-        setBgColor  group model
-        setBorderRadius  group model
-        setPadding group model
+        whenChanged old model Model.visible $ setVisible' group $ model ^. Model.visible
+        whenChanged old model (Model.style . Model.background  ) $ setBgColor  group model
+        whenChanged old model (Model.style . Model.borderRadius) $ setBorderRadius  group model
+        whenChanged old model (Model.style . Model.padding     ) $ setPadding group model
 
 instance CompositeWidget Model.Group where
     updateWidget id old model = do

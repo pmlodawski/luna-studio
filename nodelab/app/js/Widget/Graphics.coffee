@@ -23,7 +23,7 @@ class Graphics extends BaseWidget
 
     @labelGroup = new THREE.Group()
     @mesh.add @labelGroup
-    @labelGroup.position.z = 0.001
+    # @labelGroup.position.z = 0.001
     @relayout()
 
   setItems: (items) ->
@@ -42,7 +42,7 @@ class Graphics extends BaseWidget
                  transparent:    true
                  blending:       THREE.NormalBlending
                  derivatives:    true
-      item.position.z = ix * 0.00001
+      # item.position.z = ix * -0.00001
       item
     @itemGroup.remove(@itemGroup.children)
     newchildren.forEach (it) => @itemGroup.add it

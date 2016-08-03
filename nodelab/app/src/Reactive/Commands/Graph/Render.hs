@@ -11,7 +11,7 @@ import qualified Empire.API.Data.Node            as Node
 import           Empire.API.Data.PortRef         (InPortRef, OutPortRef)
 
 import           Reactive.Commands.Command       (Command)
-import           Reactive.Commands.Graph         (updateConnections)
+import           Reactive.Commands.Graph         (updateConnections, updateNodeZOrder)
 import           Reactive.Commands.Graph.Connect (localConnectNodes)
 import           Reactive.Commands.Node.Create   (registerNode)
 import           Reactive.State.Global           (State)
@@ -29,3 +29,4 @@ renderGraph nodes edges = do
     fastAddNodes nodes
     mapM_ (uncurry localConnectNodes) edges
     updateConnections
+    updateNodeZOrder

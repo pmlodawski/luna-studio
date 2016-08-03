@@ -45,10 +45,10 @@ function initializeGl() {
     $$.registry[2] = {mesh: $$.scene   , container: $$.scene, widgetMoved: function(){} };
 
 
-    $$.camera                = new THREE.OrthographicCamera(-500, 500, -500, 500, 1, 1000);
-    $$.cameraHUD             = new THREE.OrthographicCamera(-500, 500, -500, 500, 1, 1000);
-    $$.camera.position.z     = 500;
-    $$.cameraHUD.position.z  = 500;
+    $$.camera                = new THREE.OrthographicCamera(-500, 500, -500, 500, 0, 120);
+    $$.cameraHUD             = new THREE.OrthographicCamera(-500, 500, -500, 500, 0, 120);
+    $$.camera.position.z     = 100;
+    $$.cameraHUD.position.z  = 100;
     $$.renderer              = new THREE.WebGLRenderer({ antialias: false });
     $$.renderer.autoClear    = false;
     $$.rendererMap           = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true });
