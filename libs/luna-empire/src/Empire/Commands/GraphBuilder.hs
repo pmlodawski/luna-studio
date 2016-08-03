@@ -121,7 +121,8 @@ buildArgPorts ref = do
         of' $ \(App f args) -> do
             unpacked       <- ASTBuilder.unpackArguments args
             connectedTypes <- mapM (Builder.follow (prop Type) >=> Builder.follow source >=> getTypeRep) unpacked
-            unconnTypes    <- Builder.follow (prop Type) ref >>= Builder.follow source >>= extractArgTypes
+            blanksCount    <- length <$> filterM ASTBuilder.isBlank unpacked
+            unconnTypes    <- fmap (drop blanksCount) $ Builder.follow (prop Type) ref >>= Builder.follow source >>= extractArgTypes
             portStates     <- mapM getPortState unpacked
             return (connectedTypes ++ unconnTypes, portStates)
         of' $ \(Var _) -> do
