@@ -40,7 +40,7 @@ makeLenses ''CommunicationEnv
 instance Show CommunicationEnv where
     show _ = "CommunicationEnv"
 
-data InterpreterEnv = InterpreterEnv { _valuesCache :: Map NodeId (Maybe Value)
+data InterpreterEnv = InterpreterEnv { _valuesCache :: Map NodeId [Value]
                                      , _nodesCache  :: Map NodeId Node
                                      , _errorsCache :: Map NodeId (APIError.Error TypeRep)
                                      , _graph       :: Graph

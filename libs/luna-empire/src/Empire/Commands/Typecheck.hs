@@ -11,7 +11,7 @@ import           Data.IntMap             (IntMap)
 import qualified Data.IntMap             as IntMap
 import           Data.List               (sort)
 import qualified Data.Map                as Map
-import           Data.Maybe              (isNothing, fromMaybe, maybeToList)
+import           Data.Maybe              (isNothing, fromMaybe, maybeToList, listToMaybe)
 
 import qualified Empire.Data.Graph       as Graph
 import           Empire.Data.Graph       (Graph)
@@ -46,10 +46,10 @@ import qualified Empire.ASTOp as ASTOp
 import           Empire.Data.AST                                 (AST, NodeRef)
 import           Empire.Utils.TextResult                         (nodeValueToText)
 
-getNodeValue :: NodeId -> Command Graph (Maybe Value)
-getNodeValue nid = do
+getNodeValueReprs :: NodeId -> Command Graph [Value]
+getNodeValueReprs nid = do
     ref <- GraphUtils.getASTTarget nid
-    zoom Graph.ast $ AST.getNodeValue ref
+    zoom Graph.ast $ AST.getNodeValueReprs ref
 
 collect pass = return ()
     {-putStrLn $ "After pass: " <> pass-}
@@ -126,12 +126,13 @@ updateValues loc = do
         noErrors <- isNothing <$> uses errorsCache (Map.lookup id)
         if noErrors
             then do
-                val    <- zoom graph $ getNodeValue id
+                val    <- zoom graph $ getNodeValueReprs id
+                -- val :: [Value]
                 cached <- uses valuesCache $ Map.lookup id
                 if cached /= Just val
                     then do
-                        let name = fromMaybe "" $ nodeValueToText <$> val
-                        Publisher.notifyResultUpdate loc id (NodeResult.Value name $ maybeToList val) 100
+                        let name = fromMaybe "" $ nodeValueToText <$> listToMaybe val
+                        Publisher.notifyResultUpdate loc id (NodeResult.Value name val) 100
                         valuesCache %= Map.insert id val
                     else return ()
             else return ()

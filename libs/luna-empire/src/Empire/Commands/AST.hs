@@ -48,6 +48,9 @@ import           Empire.Commands.Graphics                (fromFigure, fromGeoCom
 import           Debug.Trace                             (trace)
 
 
+-- TODO: This might deserve rewriting to some more general solution
+import           Luna.Compilation.Pass.Interpreter.Charts (autoScatterChartInt, autoScatterChartDouble)
+
 metaKey :: TypeKey NodeMeta
 metaKey = TypeKey
 
@@ -56,6 +59,13 @@ addNode nid name expr = runASTOp $ Parser.parseExpr expr >>= ASTBuilder.makeNode
 
 addDefault :: PortDefault -> Command AST (NodeRef)
 addDefault val = runASTOp $ Parser.parsePortDefault val
+
+getNodeValueReprs :: NodeRef -> Command AST [Value]
+getNodeValueReprs ref = do
+    nodeValue <- getNodeValue ref
+    return $ case nodeValue of
+        Nothing  -> []
+        Just val -> [val]
 
 getNodeValue :: NodeRef -> Command AST (Maybe Value)
 getNodeValue ref = runASTOp $ do
