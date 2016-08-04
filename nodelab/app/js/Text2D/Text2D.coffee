@@ -16,7 +16,7 @@ class Text2D extends THREE.Object3D
   constructor: (text = '', options = {}) ->
     super()
 
-    @font      = options.font      || 'Open Sans';
+    @font      = options.font      || 'Roboto';
     @fontSize  = options.fontSize  || 13;
     @fillStyle = options.fillStyle || '#ffffff';
     @zoom      = if (getTopParent this) == $$.sceneHUD then 1.0 else options.zoom || 1.0
@@ -88,6 +88,8 @@ class Text2D extends THREE.Object3D
           blending:       THREE.NormalBlending
           side:           @side
           derivatives:    true
+          depthWrite: false
+          depthTest: false
     else
       @material.uniforms.texture.value = @texture
 
