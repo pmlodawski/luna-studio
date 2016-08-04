@@ -98,25 +98,24 @@ visualizeNodeValue id (StringList v) = do
     groupId <- Node.valueGroupId id
     displayListTable groupId $ Text.pack . show <$> v
 
-visualizeNodeValue id (IntList v) = do
-    let dataPoints = zipVectorInt v []
-    let create groupId = do
-            let widget = ScatterPlot.create Style.plotSize
-                       & ScatterPlot.dataPoints .~ dataPoints
-            -- displayListTable groupId $ Text.pack . show <$> v
-            UICmd.register_ groupId widget def
-        update      = ScatterPlot.dataPoints .~ dataPoints
-    visualize id create update
+-- visualizeNodeValue id (IntList v) = do
+    -- let dataPoints = zipVectorInt v []
+    -- let create groupId = do
+    --         let widget = ScatterPlot.create Style.plotSize
+    --                    & ScatterPlot.dataPoints .~ dataPoints
+    --         -- displayListTable groupId $ Text.pack . show <$> v
+    --         UICmd.register_ groupId widget def
+    --     update      = ScatterPlot.dataPoints .~ dataPoints
+    -- visualize id create update
 
-visualizeNodeValue id (DoubleList v) = do
-    let dataPoints = zipVector v []
-    let create groupId = do
-            let widget = ScatterPlot.create Style.plotSize
-                       & ScatterPlot.dataPoints .~ dataPoints
-            -- displayListTable groupId $ Text.pack . show <$> v
-            UICmd.register_ groupId widget def
-        update      = ScatterPlot.dataPoints .~ dataPoints
-    visualize id create update
+-- visualizeNodeValue id (DoubleList v) = do
+    -- let create groupId = do
+    --         let widget = ScatterPlot.create Style.plotSize
+    --                    & ScatterPlot.dataPoints .~ dataPoints
+    --         -- displayListTable groupId $ Text.pack . show <$> v
+    --         UICmd.register_ groupId widget def
+    --     update      = ScatterPlot.dataPoints .~ dataPoints
+    -- visualize id create update
 
 visualizeNodeValue id (IntPairList v) = do
     let dataPoints = (\(a,b) -> Vector2 (fromIntegral a) (fromIntegral b)) <$> v

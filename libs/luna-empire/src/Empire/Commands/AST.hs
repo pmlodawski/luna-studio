@@ -50,6 +50,7 @@ import           Debug.Trace                             (trace)
 
 -- TODO: This might deserve rewriting to some more general solution
 import           Luna.Compilation.Pass.Interpreter.Charts (autoScatterChartInt, autoScatterChartDouble)
+import           Graphics.API                             (Material(SolidColor), Figure(..))
 
 metaKey :: TypeKey NodeMeta
 metaKey = TypeKey
@@ -65,7 +66,15 @@ getNodeValueReprs ref = do
     nodeValue <- getNodeValue ref
     return $ case nodeValue of
         Nothing  -> []
-        Just val -> [val]
+        Just val -> case val of
+            IntList    list -> [val, Graphics $ autoScatterChartInt    gridMat mat figure scale list]
+            DoubleList list -> [val, Graphics $ autoScatterChartDouble gridMat mat figure scale list]
+            otherwise -> [val]
+            where
+                gridMat = SolidColor 0.3 0.3 0.3 1.0
+                mat     = SolidColor 0.2 0.5 0.7 1.0
+                figure  = Circle 0.02
+                scale   = 0.86
 
 getNodeValue :: NodeRef -> Command AST (Maybe Value)
 getNodeValue ref = runASTOp $ do
