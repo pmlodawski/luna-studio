@@ -1,7 +1,7 @@
 {-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.WSConnector.Workers.BusWorker (start) where
+module WSConnector.Workers.BusWorker (start) where
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
@@ -17,7 +17,7 @@ import qualified Flowbox.Bus.Data.Message           as Message
 import qualified Flowbox.Bus.Data.MessageFrame      as MessageFrame
 import           Flowbox.Bus.EndPoint               (BusEndPoints)
 
-import           Flowbox.WSConnector.Data.WSMessage (WSMessage (..))
+import           WSConnector.Data.WSMessage (WSMessage (..))
 
 logger :: LoggerIO
 logger = getLoggerIO $moduleName

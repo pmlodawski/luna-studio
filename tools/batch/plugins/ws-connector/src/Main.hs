@@ -13,10 +13,10 @@ import           Flowbox.Options.Applicative     hiding (info)
 import qualified Flowbox.Options.Applicative     as Opt
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import           Flowbox.WSConnector.Cmd         (Cmd (..))
-import qualified Flowbox.WSConnector.Version     as Version
-import qualified Flowbox.WSConnector.WSConfig    as WSConfig
-import qualified Flowbox.WSConnector.WSConnector as WSConnector
+import           WSConnector.Cmd         (Cmd (..))
+import qualified WSConnector.Version     as Version
+import qualified WSConnector.WSConfig    as WSConfig
+import qualified WSConnector.WSConnector as WSConnector
 import qualified FlowboxData.Config.Config       as WSConfigLoader
 
 rootLogger :: Logger

@@ -1,4 +1,4 @@
-module Flowbox.WSConnector.Cmd where
+module WSConnector.Cmd where
 
 import           Flowbox.Prelude
 

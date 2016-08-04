@@ -1,0 +1,30 @@
+name:               lib-ws-connector
+version:            0.1.0.0
+license:             AllRightsReserved
+author:              New Byte Order
+maintainer:          contact@nodelab.io
+
+default-extensions:
+  - NoImplicitPrelude
+
+library:
+  source-dirs: src
+
+  ghc-options:    -Wall -O2 -threaded
+
+dependencies:
+  - async
+  - base
+  - bytestring
+  - base64-bytestring
+  - binary
+  - text
+  - either
+  - exceptions
+  - flowbox-bus-binary
+  - flowbox-config
+  - flowbox-utils
+  - mtl
+  - websockets
+  - stm
+  - zeromq4-haskell

@@ -1,4 +1,4 @@
-module Flowbox.WSConnector.Config (
+module WSConnector.Config (
     module Paths_batch_plugin_ws_connector
 ) where
 

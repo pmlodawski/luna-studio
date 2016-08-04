@@ -1,13 +1,7 @@
----------------------------------------------------------------------------
--- Copyright (C) Flowbox, Inc - All Rights Reserved
--- Flowbox Team <contact@flowbox.io>, 2015
--- Proprietary and confidential
--- Unauthorized copying of this file, via any medium is strictly prohibited
----------------------------------------------------------------------------
 {-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.WSConnector.WSConnector where
+module WSConnector.WSConnector where
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
@@ -22,10 +16,10 @@ import qualified Network.WebSockets                    as WS
 
 import           Flowbox.Bus.EndPoint                  (BusEndPoints)
 
-import           Flowbox.WSConnector.Data.WSFrame      (WSFrame (..), deserializeFrame, messages, serializeFrame)
-import           Flowbox.WSConnector.Data.WSMessage    (ControlCode (..), WSMessage (..))
-import qualified Flowbox.WSConnector.Workers.BusWorker as BusWorker
-import qualified Flowbox.WSConnector.WSConfig          as WSConfig
+import           WSConnector.Data.WSFrame      (WSFrame (..), deserializeFrame, messages, serializeFrame)
+import           WSConnector.Data.WSMessage    (ControlCode (..), WSMessage (..))
+import qualified WSConnector.Workers.BusWorker as BusWorker
+import qualified WSConnector.WSConfig          as WSConfig
 
 logger :: LoggerIO
 logger = getLoggerIO $moduleName

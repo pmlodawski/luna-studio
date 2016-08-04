@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Flowbox.WSConnector.Data.WSMessage where
+module WSConnector.Data.WSMessage where
 
 import           Data.Binary
 import           Data.ByteString (ByteString)
