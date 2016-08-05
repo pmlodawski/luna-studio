@@ -49,7 +49,7 @@ import           Debug.Trace                             (trace)
 
 
 -- TODO: This might deserve rewriting to some more general solution
-import           Luna.Compilation.Pass.Interpreter.Charts (autoScatterChartInt, autoScatterChartDouble)
+import           Luna.Compilation.Pass.Interpreter.Charts (autoScatterChartInt, autoScatterChartDouble, autoScatterChartIntTuple, autoScatterChartDoubleTuple)
 import           Graphics.API                             (Material(SolidColor), Figure(..))
 
 metaKey :: TypeKey NodeMeta
@@ -67,8 +67,11 @@ getNodeValueReprs ref = do
     return $ case nodeValue of
         Nothing  -> []
         Just val -> case val of
-            IntList    list -> [val, Graphics $ autoScatterChartInt    gridMat mat figure scale list]
-            DoubleList list -> [val, Graphics $ autoScatterChartDouble gridMat mat figure scale list]
+            IntList        list -> [val, Graphics $ autoScatterChartInt         gridMat mat figure scale list]
+            DoubleList     list -> [val, Graphics $ autoScatterChartDouble      gridMat mat figure scale list]
+            Histogram      list -> [val, Graphics $ autoScatterChartIntTuple    gridMat mat figure scale list]
+            IntPairList    list -> [val, Graphics $ autoScatterChartIntTuple    gridMat mat figure scale list]
+            DoublePairList list -> [val, Graphics $ autoScatterChartDoubleTuple gridMat mat figure scale list]
             otherwise -> [val]
             where
                 gridMat = SolidColor 0.3 0.3 0.3 1.0
