@@ -45,35 +45,24 @@ application clientCounter currentClient pingTime toBusChan fromBusChan pending =
 
     fromBusListenChan <- atomically $ dupTChan fromBusChan
 
-    forkIO $ fromWeb newId clientCounter conn toBusChan
+    forkIO $ fromWeb newId clientCounter conn toBusChan fromBusChan
     toWeb conn fromBusListenChan
-
-isActive :: Int -> TVar Int -> STM Bool
-isActive clientId currentClient = return True
--- do
---     currentClientId <- readTVar currentClient
---     return $ clientId == currentClientId
 
 whileActive :: Int -> TVar Int -> IO () -> IO ()
 whileActive clientId currentClient action = do
-    active <- atomically $ isActive clientId currentClient
-    if active
-        then do action
-                whileActive clientId currentClient action
-        else return ()
+    action
+    whileActive clientId currentClient action
 
-fromWebLoop :: Int -> TVar Int -> WS.Connection -> TChan WSMessage -> IO ()
-fromWebLoop clientId currentClient conn chan = whileActive clientId currentClient $ do
+fromWebLoop :: Int -> TVar Int -> WS.Connection -> TChan WSMessage -> TChan WSMessage -> IO ()
+fromWebLoop clientId currentClient conn chan wsChan = whileActive clientId currentClient $ do
     webMessage <- WS.receiveData conn
     let frame = deserializeFrame webMessage
-    active <- atomically $ isActive clientId currentClient
-    if active
-        then atomically $ mapM_ (writeTChan chan) $ frame ^. messages
-        else return ()
+    atomically $ mapM_ (writeTChan chan) $ frame ^. messages
+    atomically $ mapM_ (writeTChan wsChan) $ frame ^. messages
 
-fromWeb :: Int -> TVar Int -> WS.Connection -> TChan WSMessage -> IO ()
-fromWeb clientId currentClient conn chan = do
-    flip catch handleDisconnect $ fromWebLoop clientId currentClient conn chan
+fromWeb :: Int -> TVar Int -> WS.Connection -> TChan WSMessage -> TChan WSMessage -> IO ()
+fromWeb clientId currentClient conn chan wsChan = do
+    flip catch handleDisconnect $ fromWebLoop clientId currentClient conn chan wsChan
     let takeoverMessage = serializeFrame $ WSFrame [ControlMessage ConnectionTakeover]
     WS.sendTextData conn takeoverMessage
     WS.sendClose conn takeoverMessage
