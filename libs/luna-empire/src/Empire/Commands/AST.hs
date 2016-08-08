@@ -67,17 +67,18 @@ getNodeValueReprs ref = do
     return $ case nodeValue of
         Nothing  -> []
         Just val -> case val of
-            IntList        list -> [val, Graphics $ autoScatterChartInt         gridMat mat figure scale list]
-            DoubleList     list -> [val, Graphics $ autoScatterChartDouble      gridMat mat figure scale list]
-            Histogram      list -> [val, Graphics $ autoScatterChartIntTuple    gridMat mat figure scale list]
-            IntPairList    list -> [val, Graphics $ autoScatterChartIntTuple    gridMat mat figure scale list]
-            DoublePairList list -> [val, Graphics $ autoScatterChartDoubleTuple gridMat mat figure scale list]
+            IntList        list -> [val, Graphics $ autoScatterChartInt         gridMat mat figure scale shift list]
+            DoubleList     list -> [val, Graphics $ autoScatterChartDouble      gridMat mat figure scale shift list]
+            Histogram      list -> [val, Graphics $ autoScatterChartIntTuple    gridMat mat figure scale shift list]
+            IntPairList    list -> [val, Graphics $ autoScatterChartIntTuple    gridMat mat figure scale shift list]
+            DoublePairList list -> [val, Graphics $ autoScatterChartDoubleTuple gridMat mat figure scale shift list]
             otherwise -> [val]
             where
                 gridMat = SolidColor 0.3 0.3 0.3 1.0
                 mat     = SolidColor 0.2 0.5 0.7 1.0
-                figure  = Circle 0.02
-                scale   = 0.86
+                figure  = Circle 0.016
+                scale   = 0.84
+                shift   = 0.05
 
 getNodeValue :: NodeRef -> Command AST (Maybe Value)
 getNodeValue ref = runASTOp $ do
@@ -90,21 +91,23 @@ getNodeValue ref = runASTOp $ do
             v <- liftIO (unsafeCoerce val :: IO Any)
             caseTest (uncover tpNode) $ do
                 of' $ \(Cons (Lit.String n) as) -> case n of
-                    "Int"          -> return $ Just $ IntValue    $ unsafeCoerce     v
-                    "String"       -> return $ Just $ StringValue $ unsafeCoerce     v
-                    "Double"       -> return $ Just $ DoubleValue $ unsafeCoerce     v
-                    "Bool"         -> return $ Just $ BoolValue   $ unsafeCoerce     v
-                    "Histogram"    -> return $ Just $ Histogram   $ unsafeCoerce     v
-                    "Graphics"     -> return $ Just $ Graphics    $ fromGraphics     v
-                    "Layer"        -> return $ Just $ Graphics    $ fromLayer        v
-                    "Geometry"     -> return $ Just $ Graphics    $ fromGeometry     v
-                    "GeoComponent" -> return $ Just $ Graphics    $ fromGeoComponent v
-                    "Surface"      -> return $ Just $ Graphics    $ fromSurface      v
-                    "Shape"        -> return $ Just $ Graphics    $ fromShape        v
-                    "Primitive"    -> return $ Just $ Graphics    $ fromPrimitive    v
-                    "Figure"       -> return $ Just $ Graphics    $ fromFigure       v
-                    "Material"     -> return $ Just $ Graphics    $ fromMaterial     v
-                    "List"         -> do
+                    "Int"            -> return $ Just $ IntValue       $ unsafeCoerce     v
+                    "String"         -> return $ Just $ StringValue    $ unsafeCoerce     v
+                    "Double"         -> return $ Just $ DoubleValue    $ unsafeCoerce     v
+                    "Bool"           -> return $ Just $ BoolValue      $ unsafeCoerce     v
+                    "Histogram"      -> return $ Just $ Histogram      $ unsafeCoerce     v
+                    "IntPairList"    -> return $ Just $ IntPairList    $ unsafeCoerce     v
+                    "DoublePairList" -> return $ Just $ DoublePairList $ unsafeCoerce     v
+                    "Graphics"       -> return $ Just $ Graphics       $ fromGraphics     v
+                    "Layer"          -> return $ Just $ Graphics       $ fromLayer        v
+                    "Geometry"       -> return $ Just $ Graphics       $ fromGeometry     v
+                    "GeoComponent"   -> return $ Just $ Graphics       $ fromGeoComponent v
+                    "Surface"        -> return $ Just $ Graphics       $ fromSurface      v
+                    "Shape"          -> return $ Just $ Graphics       $ fromShape        v
+                    "Primitive"      -> return $ Just $ Graphics       $ fromPrimitive    v
+                    "Figure"         -> return $ Just $ Graphics       $ fromFigure       v
+                    "Material"       -> return $ Just $ Graphics       $ fromMaterial     v
+                    "List"           -> do
                         args <- ASTBuilder.unpackArguments as
                         case args of
                             [a] -> do

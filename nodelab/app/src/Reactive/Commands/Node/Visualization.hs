@@ -117,23 +117,23 @@ visualizeNodeValue id (StringList v) = do
     --     update      = ScatterPlot.dataPoints .~ dataPoints
     -- visualize id create update
 
-visualizeNodeValue id (IntPairList v) = do
-    let dataPoints = (\(a,b) -> Vector2 (fromIntegral a) (fromIntegral b)) <$> v
-    let create groupId = do
-            let widget = ScatterPlot.create Style.plotSize
-                       & ScatterPlot.dataPoints .~ dataPoints
-            UICmd.register_ groupId widget def
-        update      = ScatterPlot.dataPoints .~ dataPoints
-    visualize id create update
+-- visualizeNodeValue id (IntPairList v) = do
+--     let dataPoints = (\(a,b) -> Vector2 (fromIntegral a) (fromIntegral b)) <$> v
+--     let create groupId = do
+--             let widget = ScatterPlot.create Style.plotSize
+--                        & ScatterPlot.dataPoints .~ dataPoints
+--             UICmd.register_ groupId widget def
+--         update      = ScatterPlot.dataPoints .~ dataPoints
+--     visualize id create update
 
-visualizeNodeValue id (DoublePairList v) = do
-    let dataPoints = uncurry Vector2 <$> v
-    let create groupId = do
-            let widget = ScatterPlot.create Style.plotSize
-                       & ScatterPlot.dataPoints .~ dataPoints
-            UICmd.register_ groupId widget def
-        update      = ScatterPlot.dataPoints .~ dataPoints
-    visualize id create update
+-- visualizeNodeValue id (DoublePairList v) = do
+--     let dataPoints = uncurry Vector2 <$> v
+--     let create groupId = do
+--             let widget = ScatterPlot.create Style.plotSize
+--                        & ScatterPlot.dataPoints .~ dataPoints
+--             UICmd.register_ groupId widget def
+--         update      = ScatterPlot.dataPoints .~ dataPoints
+--     visualize id create update
 
 visualizeNodeValue id (Histogram v) = do
     let dataPoints = (\(a,b) -> Vector2 (fromIntegral a) (fromIntegral b)) <$> v
