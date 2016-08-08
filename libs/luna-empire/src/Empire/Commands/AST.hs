@@ -74,8 +74,8 @@ getNodeValueReprs ref = do
             DoublePairList list -> [val, Graphics $ autoScatterChartDoubleTuple gridMat mat figure scale shift list]
             otherwise -> [val]
             where
-                gridMat = SolidColor 0.3 0.3 0.3 1.0
-                mat     = SolidColor 0.2 0.5 0.7 1.0
+                gridMat = SolidColor 0.25 0.25 0.25 1.0
+                mat     = SolidColor 0.2  0.5  0.7  1.0
                 figure  = Circle 0.016
                 scale   = 0.84
                 shift   = 0.05
