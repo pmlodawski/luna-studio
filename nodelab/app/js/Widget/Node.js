@@ -8,7 +8,7 @@ var fs = require('shaders/node.frag')();
 var unselectedColor    = new THREE.Color(0x3a3a3a);
 var selectedColor      = new THREE.Color(0xb87410).multiplyScalar(0.8);
 var errorColor         = new THREE.Color(0x651401);
-var collaborationColor = new THREE.Color(0x651401);
+var collaborationColor = new THREE.Color(0x45ffff);
 
 var nodeGeometry    = new THREE.PlaneBufferGeometry(1.0, 1.0);
 nodeGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0));

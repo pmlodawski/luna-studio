@@ -28,6 +28,9 @@ import qualified Object.Widget.Node                          as NodeModel
 import           Reactive.Commands.UIRegistry                as UICmd
 
 
+refreshTime :: Integer
+refreshTime = 10
+
 isCurrentLocation :: GraphLocation -> Command State Bool
 isCurrentLocation location = uses (Global.workspace . Workspace.currentLocation) (== location)
 
@@ -36,6 +39,25 @@ isCurrentLocationAndGraphLoaded location = do
     icl <- isCurrentLocation location
     igl <- use $ Global.workspace . Workspace.isGraphLoaded
     return $ icl && igl
+
+touchCurrentlySelected :: Command State ()
+touchCurrentlySelected = do
+    selected <- selectedNodes
+    let nodeIds = (view $ widget . NodeModel.nodeId) <$> selected
+    collaborativeTouch nodeIds
+
+expireTouchedNodes :: Command State ()
+expireTouchedNodes = do
+    widgetIds <- use $ Global.graph . GraphST.nodeWidgets
+    currentTime  <- use Global.lastEventTimestamp
+    forM_ widgetIds $ \nodeWidget -> do
+        inRegistry $ UICmd.update_ nodeWidget $ NodeModel.collaboratingClients %~ Map.filter (\ts -> (DT.diffSeconds ts currentTime) > 0)
+
+
+everyNSeconds :: Integer -> Command State () -> Command State ()
+everyNSeconds interval action = do
+    currentTime  <- use Global.lastEventTimestamp
+    when ((DT.toSeconds currentTime) `mod` interval == 0) action
 
 toAction :: Event.Event -> Maybe (Command State ())
 toAction (Event.Batch ev) = Just $ case ev of
@@ -50,7 +72,7 @@ toAction (Event.Batch ev) = Just $ case ev of
                     forM_ nodeIds $ \nodeId -> do
                         nodeWidget <- nodeIdToWidgetId nodeId
                         inRegistry $ withJust nodeWidget $ \nodeWidget ->
-                            UICmd.update_ nodeWidget $ NodeModel.collaboratingClients . at clientId ?~ currentTime
+                            UICmd.update_ nodeWidget $ NodeModel.collaboratingClients . at clientId ?~ (DT.addSeconds (2 * refreshTime) currentTime)
                 Collaboration.CancelTouch nodeIds -> do
                     forM_ nodeIds $ \nodeId -> do
                         nodeWidget <- nodeIdToWidgetId nodeId
@@ -60,14 +82,9 @@ toAction (Event.Batch ev) = Just $ case ev of
                 _ -> return ()
 
     _ -> return ()
+
 toAction Event.Tick = Just $ do
-    widgetIds <- use $ Global.graph . GraphST.nodeWidgets
-    currentTime  <- use Global.lastEventTimestamp
-    forM_ widgetIds $ \nodeWidget -> do
-        inRegistry $ UICmd.update_ nodeWidget $ NodeModel.collaboratingClients %~ Map.filter (\ts -> (DT.diffSeconds currentTime ts) < 30)
-    when ((DT.toSeconds currentTime) `mod` 15 == 0) $ do
-        selected <- selectedNodes
-        let nodeIds = (view $ widget . NodeModel.nodeId) <$> selected
-        collaborativeTouch nodeIds
+    expireTouchedNodes
+    everyNSeconds refreshTime touchCurrentlySelected
 
 toAction _ = Nothing

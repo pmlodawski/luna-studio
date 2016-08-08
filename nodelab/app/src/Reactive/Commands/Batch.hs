@@ -15,6 +15,7 @@ import           Empire.API.Data.Node         (NodeId)
 import           Empire.API.Data.Project      (ProjectId)
 import           Empire.API.Data.NodeMeta     (NodeMeta)
 import           Empire.API.Data.PortRef      (AnyPortRef (..), InPortRef (..), OutPortRef (..))
+import qualified Empire.API.Data.PortRef      as PortRef (nodeId)
 
 
 withWorkspace :: (Workspace -> UUID -> IO ()) -> Command State ()
@@ -67,7 +68,9 @@ disconnectNodes :: InPortRef -> Command State ()
 disconnectNodes = withWorkspace . BatchCmd.disconnectNodes
 
 setDefaultValue :: AnyPortRef -> DefaultValue.PortDefault -> Command State ()
-setDefaultValue = withWorkspace .: BatchCmd.setDefaultValue
+setDefaultValue portRef value = do
+    collaborativeTouch [portRef ^. PortRef.nodeId]
+    withWorkspace (BatchCmd.setDefaultValue portRef value)
 
 setInputNodeType :: NodeId -> Text -> Command State ()
 setInputNodeType = withWorkspace .: BatchCmd.setInputNodeType
