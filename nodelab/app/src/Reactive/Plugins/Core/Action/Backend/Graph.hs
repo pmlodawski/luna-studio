@@ -112,6 +112,7 @@ toAction (Event.Batch ev) = Just $ case ev of
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. CodeUpdate.location)
         when shouldProcess $ performIO $ UI.setText $ update ^. CodeUpdate.code
 
+    -- CollaborationUpdate update -> -- handled in Collaboration.hs
     RemoveNodeResponse response -> handleResponse response doNothing
     AddNodeResponse    response -> handleResponse response doNothing
     ConnectResponse    response -> handleResponse response doNothing
@@ -120,5 +121,4 @@ toAction (Event.Batch ev) = Just $ case ev of
     NodeRenameResponse response -> handleResponse response doNothing
 
     _ -> return ()
-
 toAction _ = Nothing

@@ -8,7 +8,7 @@ import qualified BatchConnector.Commands      as BatchCmd
 
 import           Reactive.Commands.Command    (Command, performIO)
 import           Reactive.Commands.UUID       (registerRequest)
-import           Reactive.State.Global        (State, workspace)
+import           Reactive.State.Global        (State, workspace, clientId)
 
 import qualified Empire.API.Data.DefaultValue as DefaultValue
 import           Empire.API.Data.Node         (NodeId)
@@ -22,6 +22,11 @@ withWorkspace act = do
     uuid      <- registerRequest
     workspace <- use workspace
     performIO $ act workspace uuid
+
+withWorkspace' :: (Workspace -> IO ()) -> Command State ()
+withWorkspace' act = do
+    workspace <- use workspace
+    performIO $ act workspace
 
 withUUID :: (UUID -> IO ()) -> Command State ()
 withUUID act = do
@@ -67,6 +72,16 @@ setDefaultValue = withWorkspace .: BatchCmd.setDefaultValue
 setInputNodeType :: NodeId -> Text -> Command State ()
 setInputNodeType = withWorkspace .: BatchCmd.setInputNodeType
 
+collaborativeTouch :: [NodeId] -> Command State ()
+collaborativeTouch nodeIds = do
+    clId <- use $ clientId
+    withWorkspace' (BatchCmd.collaborativeTouch clId nodeIds)
+
+cancelCollaborativeTouch :: [NodeId] -> Command State ()
+cancelCollaborativeTouch nodeIds = do
+    clId <- use $ clientId
+    withWorkspace' (BatchCmd.cancelCollaborativeTouch clId nodeIds)
+
 exportProject :: ProjectId -> Command State ()
 exportProject = withUUID . BatchCmd.exportProject
 
@@ -75,3 +90,4 @@ importProject = withUUID . BatchCmd.importProject
 
 dumpGraphViz :: Command State ()
 dumpGraphViz = withWorkspace BatchCmd.dumpGraphViz
+

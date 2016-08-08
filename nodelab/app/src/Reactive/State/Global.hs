@@ -8,11 +8,12 @@ import           Data.Aeson                    (ToJSON, toJSON)
 import           Reactive.Commands.Command     (Command)
 import           Data.Set                      (Set)
 import           Data.UUID.Types               (UUID)
-
+import           Data.DateTime                 (DateTime)
 import           System.Random                 (StdGen)
 import qualified System.Random                 as Random
-import           Batch.Workspace
 
+import           Batch.Workspace
+import qualified Empire.API.Graph.Collaboration    as Collaboration
 import qualified Event.Event                   as Event
 import qualified Reactive.State.Camera         as Camera
 import qualified Reactive.State.Connect        as Connect
@@ -25,21 +26,23 @@ import qualified Reactive.State.UIRegistry     as UIRegistry
 
 foreign import javascript unsafe "{}" defJsState :: Event.JSState
 
-data State = State { _mousePos          :: Vector2 Int
-                   , _graph             :: Graph.State
-                   , _camera            :: Camera.State
-                   , _multiSelection    :: MultiSelection.State
-                   , _drag              :: Drag.State
-                   , _connect           :: Connect.State
-                   , _uiRegistry        :: UIRegistry.State
-                   , _connectionPen     :: ConnectionPen.State
-                   , _workspace         :: Workspace
-                   , _uiElements        :: UIElements.State
-                   , _lastEvent         :: Maybe Event.Event
-                   , _eventNum          :: Int
-                   , _jsState           :: Event.JSState
-                   , _pendingRequests   :: Set UUID
-                   , _random            :: StdGen
+data State = State { _mousePos           :: Vector2 Int
+                   , _graph              :: Graph.State
+                   , _camera             :: Camera.State
+                   , _multiSelection     :: MultiSelection.State
+                   , _drag               :: Drag.State
+                   , _connect            :: Connect.State
+                   , _uiRegistry         :: UIRegistry.State
+                   , _connectionPen      :: ConnectionPen.State
+                   , _workspace          :: Workspace
+                   , _uiElements         :: UIElements.State
+                   , _lastEvent          :: Maybe Event.Event
+                   , _eventNum           :: Int
+                   , _jsState            :: Event.JSState
+                   , _pendingRequests    :: Set UUID
+                   , _lastEventTimestamp :: DateTime
+                   , _clientId           :: Collaboration.ClientId
+                   , _random             :: StdGen
                    } deriving (Show, Generic)
 
 instance ToJSON State
@@ -48,7 +51,7 @@ instance ToJSON StdGen where
 
 makeLenses ''State
 
-initialState :: StdGen -> State
+initialState :: DateTime -> Collaboration.ClientId -> StdGen -> State
 initialState = State (Vector2 200 200) def def def def def def def def def def def defJsState def
 
 inRegistry :: Command UIRegistry.State a -> Command State a

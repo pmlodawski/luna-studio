@@ -35,6 +35,7 @@ data Event = Init
            | TextEditor               TextEditor.Event
            | Debug                         Debug.Event
            | CustomEvent             CustomEvent.Event
+           | Tick
            deriving (Generic, Show)
 
 makeLenses ''Event

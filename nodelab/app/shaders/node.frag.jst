@@ -1,13 +1,12 @@
-#ifdef GL_ES
-precision highp float;
-#endif
 uniform int   selected;
 uniform int   error;
 uniform int   highlight;
+uniform int   collaboration;
 
 uniform vec3  unselectedColor;
 uniform vec3  selectedColor;
 uniform vec3  errorColor;
+uniform vec3  collaborationColor;
 uniform int   connectionPen;
 
 <%= require('shaders/stdlib')() %>
@@ -25,7 +24,7 @@ void main(void) {
 
         float nodeShape = sdf_ball(p, 20.0);
 
-        float cycek =sdf_intersect(
+        float cycek = sdf_intersect(
                         sdf_pie(sdf_rotateCCW(p, 1.0 * M_PI / 4.0), M_PI / 2.0),
                         sdf_subtract(
                           sdf_ball(p, 22.0),
@@ -33,12 +32,11 @@ void main(void) {
                         )
                     );
 
-        cycek = 1.0;
-
-        float selectedShape = sdf_merge(
+        float collaborationShape = sdf_merge(
                 sdf_ring(p, 25.0, 3.0),
                 cycek
             );
+        float selectedShape = sdf_ring(p, 25.0, 3.0);
         float errorShape = sdf_subtract(
                              sdf_rect(sdf_rotateCCW(p + vec2(-16.0, -16.0), 0.785), vec2(11.0, 100.0)),
                              sdf_subtract(
@@ -53,10 +51,11 @@ void main(void) {
                              )
                            );
 
-        vec4 errorC    = vec4(errorColor,    float(error) * sdf_aa(errorShape));
-        vec4 selectedC = vec4(selectedColor, float(selected) * sdf_aa(selectedShape));
-        vec4 bkgC      = vec4(selectedColor, 0.25 * float(highlight) * sdf_aa(nodeShape));
-        gl_FragColor = blend(blend(bkgC, errorC), selectedC);
+        vec4 errorC         = vec4(errorColor,    float(error) * sdf_aa(errorShape));
+        vec4 collaborationC = vec4(collaborationColor, float(collaboration) * sdf_aa(collaborationShape));
+        vec4 selectedC      = vec4(selectedColor, float(selected) * sdf_aa(selectedShape));
+        vec4 bkgC           = vec4(selectedColor, 0.25 * float(highlight) * sdf_aa(nodeShape));
+        gl_FragColor = blend(blend(bkgC, errorC), blend(collaborationC, selectedC));
     }
     if (gl_FragColor.a < 0.01) discard;
 }

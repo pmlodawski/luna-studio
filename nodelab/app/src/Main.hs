@@ -24,9 +24,10 @@ module Main where
 
 -- http://www.network-science.de/ascii/
 
+import           Data.DateTime                     (getCurrentTime)
 import qualified Data.Set                          as Set
+import           System.Random                     (newStdGen)
 import           Utils.PreludePlus
-import           System.Random (newStdGen)
 
 import qualified Batch.Workspace                   as Workspace
 import qualified BatchConnector.Commands           as BatchCmd
@@ -52,8 +53,10 @@ runMainNetwork socket = do
 
     random <- newStdGen
     projectListRequestId <- generateUUID
-    let initState = initialState random & Global.workspace . Workspace.lastUILocation .~ lastLocation
-                                        & Global.pendingRequests %~ Set.insert projectListRequestId
+    clientId             <- generateUUID
+    initTime             <- getCurrentTime
+    let initState = initialState initTime clientId random & Global.workspace . Workspace.lastUILocation .~ lastLocation
+                                                          & Global.pendingRequests %~ Set.insert projectListRequestId
     let (initActions, initState') = execCommand Init.initialize initState
     initActions
 

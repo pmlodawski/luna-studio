@@ -14,7 +14,7 @@ import           Event.Keyboard               (KeyMods (..))
 import qualified Event.Mouse                  as Mouse
 import           Object.Widget                (CompositeWidget, DblClickHandler, KeyPressedHandler, ResizableWidget, UIHandlers, WidgetFile,
                                                WidgetId, createWidget, dblClick, keyDown, mouseOut, mouseOver, mousePressed, objectId,
-                                               updateWidget)
+                                               updateWidget, widget)
 
 import qualified Object.Widget.Group          as Group
 import qualified Object.Widget.Label          as Label
@@ -28,6 +28,7 @@ import qualified Reactive.State.Global        as Global
 import qualified Reactive.State.Graph         as Graph
 import           Reactive.State.UIRegistry    (addHandler)
 import qualified Reactive.State.UIRegistry    as UIRegistry
+import           Reactive.Commands.Batch           (collaborativeTouch, cancelCollaborativeTouch)
 
 import qualified Style.Node                   as Style
 import           UI.Generic                   (whenChanged)
@@ -140,20 +141,33 @@ handleSelection evt = case evt ^. Mouse.keyMods of
 performSelect :: WidgetId -> Command Global.State ()
 performSelect id = do
     isSelected <- inRegistry $ UICmd.get id Model.isSelected
+    nodeId     <- inRegistry $ UICmd.get id Model.nodeId
     unless isSelected $ do
         unselectAll
         inRegistry $ UICmd.update_ id (Model.isSelected .~ True)
+        collaborativeTouch [nodeId]
 
 toggleSelect :: WidgetId -> Command Global.State ()
-toggleSelect id = inRegistry $ UICmd.update_ id (Model.isSelected %~ not)
+toggleSelect id = do
+    newNode <- inRegistry $ UICmd.update id (Model.isSelected %~ not)
+    let nodeId = newNode ^. Model.nodeId
+    if newNode ^. Model.isSelected then
+      collaborativeTouch [nodeId]
+    else
+      cancelCollaborativeTouch [nodeId]
 
 
 unselectAll :: Command Global.State ()
 unselectAll = do
     widgets <- allNodes
-    let widgetIds = (^. objectId) <$> widgets
-    inRegistry $ forM_ widgetIds $ (flip UICmd.update) (Model.isSelected .~ False)
+    nodesToCancelTouch <- inRegistry $ flip mapM widgets $ \wf -> do
+        let widgetId = wf ^. objectId
+        if (wf ^. widget . Model.isSelected) then do
+                UICmd.update_ widgetId $ Model.isSelected .~ False
+                return $ Just $ wf ^. widget . Model.nodeId
+        else return Nothing
 
+    cancelCollaborativeTouch $ catMaybes nodesToCancelTouch
 
 dblClickHandler :: DblClickHandler Global.State
 dblClickHandler _ _ id = triggerEnterNodeHandler id

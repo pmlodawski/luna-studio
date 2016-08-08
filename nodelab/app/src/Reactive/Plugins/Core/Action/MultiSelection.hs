@@ -7,7 +7,7 @@ import           JS.MultiSelection                 (displaySelectionBox, hideSel
 import           Utils.PreludePlus
 import           Utils.Vector                      (Vector2 (..), x, y)
 
-import           Object.Widget                     (WidgetFile, WidgetId, objectId)
+import           Object.Widget                     (WidgetFile, WidgetId, objectId, widget)
 import qualified Object.Widget.Node                as NodeModel
 
 import           Event.Event                       (Event (Mouse, Keyboard), JSState)
@@ -23,6 +23,7 @@ import qualified Reactive.State.MultiSelection     as MultiSelection
 import qualified Reactive.State.UIRegistry         as UIRegistry
 
 import           Reactive.Commands.Command         (Command, performIO)
+import           Reactive.Commands.Batch           (collaborativeTouch, cancelCollaborativeTouch)
 import           Reactive.Commands.Graph.Selection (focusSelectedNode, selectAll, selectedNodes, unselectAll)
 import qualified Reactive.Commands.UIRegistry      as UICmd
 
@@ -74,13 +75,22 @@ updateSelection jsstate start end = do
         ids         = getObjectsInRect jsstate leftTop (rightBottom - leftTop)
     oldSelected <- selectedNodes
     newSelectedFiles <-  inRegistry $ mapM lookupNode ids
-    let oldSet = Set.fromList $ (view objectId) <$> oldSelected
-        newSet = Set.fromList $ (view objectId) <$> catMaybes newSelectedFiles
-        toSelect = Set.difference newSet oldSet
+    let oldSet     = Set.fromList $ (view objectId) <$> oldSelected
+        newSet     = Set.fromList $ (view objectId) <$> catMaybes newSelectedFiles
+        toSelect   = Set.difference newSet oldSet
         toUnselect = Set.difference oldSet newSet
     inRegistry $ do
         forM_ toSelect   $ flip UICmd.update_ $ NodeModel.isSelected .~ True
         forM_ toUnselect $ flip UICmd.update_ $ NodeModel.isSelected .~ False
+
+    do
+        let oldSet     = Set.fromList $ (view $ widget . NodeModel.nodeId) <$> oldSelected
+            newSet     = Set.fromList $ (view $ widget . NodeModel.nodeId) <$> catMaybes newSelectedFiles
+            toSelect   = Set.difference newSet oldSet
+            toUnselect = Set.difference oldSet newSet
+
+        collaborativeTouch $ Set.toList toSelect
+        cancelCollaborativeTouch $ Set.toList toUnselect
 
 
 drawSelectionBox :: Vector2 Int -> Vector2 Int -> Command State ()

@@ -6,7 +6,7 @@ import           Control.Concurrent.MVar
 import           Control.Exception                                   (catch)
 import           Data.Monoid                                         (Last (..))
 import           GHCJS.Prim                                          (JSException)
-
+import           Data.DateTime                                       (getCurrentTime)
 
 import           Reactive.Handlers                                   (AddHandler (..))
 import qualified Reactive.Handlers                                   as Handlers
@@ -28,6 +28,7 @@ import qualified Reactive.Plugins.Core.Action.MultiSelection         as MultiSel
 import qualified Reactive.Plugins.Core.Action.NodeSearcher           as NodeSearcher
 import qualified Reactive.Plugins.Core.Action.Sandbox                as Sandbox
 import qualified Reactive.Plugins.Core.Action.Widget                 as Widget
+import qualified Reactive.Plugins.Core.Action.Collaboration          as Collaboration
 
 import           Reactive.Commands.Command                           (Command, execCommand)
 import           Reactive.State.Global                               (State)
@@ -56,6 +57,7 @@ actions =  [ Debug.toActionEv
            , MultiSelection.toAction
            , Drag.toAction
            , Connect.toAction
+           , Collaboration.toAction
            , NodeSearcher.toAction
            , ProjectManager.toAction
            , ConnectionPen.toAction
@@ -79,7 +81,9 @@ processEvent var ev = do
     realEvent <- preprocessEvent ev
     -- consoleTimeStart $ (realEvent ^. Event.name)
     jsState   <- Handlers.getJSState
+    timestamp <- getCurrentTime
     let state' = state & Global.jsState .~ jsState
+                       & Global.lastEventTimestamp .~ timestamp
     let (ioActions, newState) = execCommand (runCommands actions realEvent) state'
     catch (ioActions >> UI.shouldRender) (handleExcept newState realEvent)
     -- consoleTimeEnd $ (realEvent ^. Event.name)

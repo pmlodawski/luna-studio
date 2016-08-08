@@ -11,6 +11,7 @@ ghc-options:
   nodelab: -DGHCJS_BROWSER
 extra-deps:
   - placeholders-0.1
+  - datetime-0.3.1
 packages:
   - .
   - location: ../libs/luna-empire-api

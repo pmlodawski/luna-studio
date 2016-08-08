@@ -65,7 +65,8 @@ dependencies:
   - visualization-api
   - uuid-types
   - placeholders
-
+  - datetime
+  - time
 
 executables:
   nodelab:

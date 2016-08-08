@@ -40,6 +40,7 @@ import           Empire.API.Graph.RenameNode         as RenameNode
 import           Empire.API.Graph.SetDefaultValue    as SetDefaultValue
 import           Empire.API.Graph.SetInputNodeType   as SetInputNodeType
 import           Empire.API.Graph.UpdateNodeMeta     as UpdateNodeMeta
+import           Empire.API.Graph.Collaboration      as Collaboration
 import           Empire.API.Library.CreateLibrary    as CreateLibrary
 import           Empire.API.Library.ListLibraries    as ListLibraries
 import           Empire.API.Persistence.Envelope     as PEnvelope
@@ -161,6 +162,9 @@ instance ToJSON GetProgram.Result
 instance ToJSON SetDefaultValue.Request
 
 instance ToJSON SetInputNodeType.Request
+
+instance ToJSON Collaboration.Update
+instance ToJSON Collaboration.Event
 
 instance ToJSON CreateLibrary.Request
 instance ToJSON CreateLibrary.Result

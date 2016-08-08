@@ -3,17 +3,19 @@
 
 module Object.Widget.Node where
 
-import           Data.Aeson               (ToJSON)
+import           Data.Aeson                     (ToJSON)
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import qualified Data.Text.Lazy           as Text
-import qualified Empire.API.Data.Node     as N
-import qualified Empire.API.Data.NodeMeta as NM
-import qualified Empire.API.Data.Port     as P
+import           Data.Map.Lazy                  (Map)
+import qualified Data.Text.Lazy                 as Text
+import           Data.Time.Clock                (UTCTime)
+import qualified Empire.API.Data.Node           as N
+import qualified Empire.API.Data.NodeMeta       as NM
+import qualified Empire.API.Data.Port           as P
+import           Empire.API.Graph.Collaboration (ClientId)
 import           Object.UITypes
 import           Object.Widget
-
 
 data Elements = Elements { _expressionLabel    :: WidgetId
                          , _portGroup          :: WidgetId
@@ -31,22 +33,24 @@ data Elements = Elements { _expressionLabel    :: WidgetId
 instance Default Elements where
     def = Elements def def def def def def def def def def def
 
+type CollaborationMap = Map ClientId UTCTime
 
-data Node = Node { _nodeId     :: N.NodeId
-                 , _controls   :: [Maybe WidgetId]
-                 , _ports      :: [WidgetId]
-                 , _position   :: Position
-                 , _zPos       :: Double
-                 , _expression :: Text
-                 , _name       :: Text
-                 , _value      :: Text
-                 , _tpe        :: Maybe Text
-                 , _isExpanded :: Bool
-                 , _isSelected :: Bool
-                 , _isError    :: Bool
-                 , _execTime   :: Maybe Integer
-                 , _highlight  :: Bool
-                 , _elements   :: Elements
+data Node = Node { _nodeId               :: N.NodeId
+                 , _controls             :: [Maybe WidgetId]
+                 , _ports                :: [WidgetId]
+                 , _position             :: Position
+                 , _zPos                 :: Double
+                 , _expression           :: Text
+                 , _name                 :: Text
+                 , _value                :: Text
+                 , _tpe                  :: Maybe Text
+                 , _isExpanded           :: Bool
+                 , _isSelected           :: Bool
+                 , _isError              :: Bool
+                 , _collaboratingClients :: CollaborationMap
+                 , _execTime             :: Maybe Integer
+                 , _highlight            :: Bool
+                 , _elements             :: Elements
                  } deriving (Eq, Show, Typeable, Generic)
 
 makeLenses ''Node
@@ -56,7 +60,7 @@ makeLenses ''Elements
 instance ToJSON Elements
 
 makeNode :: N.NodeId -> Position -> Text -> Text -> Maybe Text -> Node
-makeNode id pos expr name tpe = Node id [] [] pos 0.0 expr name "" tpe False False False Nothing False def
+makeNode id pos expr name tpe = Node id [] [] pos 0.0 expr name "" tpe False False False mempty Nothing False def
 
 fromNode :: N.Node -> Node
 fromNode n = let position' = uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position

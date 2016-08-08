@@ -12,6 +12,7 @@ import qualified Empire.API.Graph.NodeResultUpdate   as NodeResultUpdate
 import qualified Empire.API.Graph.NodeSearcherUpdate as NodeSearcherUpdate
 import qualified Empire.API.Graph.NodeUpdate         as NodeUpdate
 import qualified Empire.API.Graph.RemoveNode         as RemoveNode
+import qualified Empire.API.Graph.Collaboration      as Collaboration
 import qualified Empire.API.Graph.RenameNode         as RenameNode
 import qualified Empire.API.Graph.UpdateNodeMeta     as UpdateNodeMeta
 import           Empire.API.JSONInstances            ()
@@ -45,6 +46,7 @@ data Event = UnknownEvent String
            | ProjectExported           ExportProject.Response
            | ProjectImported           ImportProject.Response
            | NodeSearcherUpdated  NodeSearcherUpdate.Update
+           | CollaborationUpdate       Collaboration.Update
            | EmpireStarted             EmpireStarted.Status
            | ConnectionDropped
            | ConnectionOpened

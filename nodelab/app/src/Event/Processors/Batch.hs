@@ -34,6 +34,7 @@ handlers = Map.fromList [ handle NodeAdded
                         , handle ProgramFetched
                         , handle CodeUpdated
                         , handle NodeResultUpdated
+                        , handle CollaborationUpdate
                         , handle ProjectList
                         , handle ProjectCreated
                         , handle ProjectCreatedUpdate

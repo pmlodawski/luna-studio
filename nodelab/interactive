@@ -29,6 +29,7 @@ ghcjs  -package-db $(stack path --snapshot-pkg-db) \
        -package vector \
        -package aeson \
        -package luna-empire-api \
+       -package datetime \
        -XNoImplicitPrelude \
        -XDoAndIfThenElse \
        -XTemplateHaskell \

@@ -32,6 +32,7 @@ function start() {
     startGA();
     require('env')();
     window.h$errorMsg = displayAppCrashed;
+    setInterval(function(){module.exports.customEvent("tick", null);}, 1000);
   });
 }
 

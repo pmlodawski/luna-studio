@@ -2,37 +2,39 @@ module BatchConnector.Commands where
 
 import           Utils.PreludePlus
 
-import           Data.UUID.Types                   (UUID)
 import qualified Data.Text.Lazy                    as Text
+import           Data.UUID.Types                   (UUID)
+import qualified Data.UUID.Types                   as UUID
 
 import           Batch.Workspace                   (Workspace)
 import qualified Batch.Workspace                   as Workspace
-import           BatchConnector.Connection         (sendRequest)
+import           BatchConnector.Connection         (sendRequest, sendUpdate)
 
 import qualified Empire.API.Data.DefaultValue      as DefaultValue
 import           Empire.API.Data.GraphLocation     (GraphLocation)
 import qualified Empire.API.Data.GraphLocation     as GraphLocation
 import           Empire.API.Data.Node              (NodeId)
 import           Empire.API.Data.NodeMeta          (NodeMeta)
-import           Empire.API.Data.PortRef           (InPortRef (..), OutPortRef (..), AnyPortRef (..))
+import           Empire.API.Data.PortRef           (AnyPortRef (..), InPortRef (..), OutPortRef (..))
 import           Empire.API.Data.Project           (ProjectId)
 
 import qualified Empire.API.Graph.AddNode          as AddNode
+import qualified Empire.API.Graph.Collaboration    as Collaboration
 import qualified Empire.API.Graph.Connect          as Connect
 import qualified Empire.API.Graph.Disconnect       as Disconnect
+import qualified Empire.API.Graph.DumpGraphViz     as DumpGraphViz
 import qualified Empire.API.Graph.GetProgram       as GetProgram
 import qualified Empire.API.Graph.RemoveNode       as RemoveNode
 import qualified Empire.API.Graph.RenameNode       as RenameNode
 import qualified Empire.API.Graph.SetDefaultValue  as SetDefaultValue
 import qualified Empire.API.Graph.SetInputNodeType as SetInputNodeType
-import qualified Empire.API.Graph.DumpGraphViz     as DumpGraphViz
 import qualified Empire.API.Graph.UpdateNodeMeta   as UpdateNodeMeta
 import qualified Empire.API.Library.CreateLibrary  as CreateLibrary
 import qualified Empire.API.Library.ListLibraries  as ListLibraries
 import qualified Empire.API.Project.CreateProject  as CreateProject
-import qualified Empire.API.Project.ListProjects   as ListProjects
 import qualified Empire.API.Project.ExportProject  as ExportProject
 import qualified Empire.API.Project.ImportProject  as ImportProject
+import qualified Empire.API.Project.ListProjects   as ListProjects
 
 
 withLibrary :: Workspace -> (GraphLocation -> a) -> a
@@ -78,12 +80,17 @@ setDefaultValue portRef val workspace uuid = sendRequest uuid $ (withLibrary wor
 setInputNodeType :: NodeId -> Text -> Workspace -> UUID -> IO ()
 setInputNodeType id tpe workspace uuid = sendRequest uuid $ (withLibrary workspace SetInputNodeType.Request) id (Text.unpack tpe)
 
+collaborativeTouch :: Collaboration.ClientId ->[NodeId] -> Workspace -> IO ()
+collaborativeTouch clientId ids workspace = sendUpdate $ (withLibrary workspace Collaboration.Update) clientId  $ Collaboration.Touch ids
+
+cancelCollaborativeTouch :: Collaboration.ClientId -> [NodeId] -> Workspace -> IO ()
+cancelCollaborativeTouch clientId ids workspace = sendUpdate $ (withLibrary workspace Collaboration.Update) clientId $ Collaboration.CancelTouch ids
+
 exportProject :: ProjectId -> UUID -> IO ()
 exportProject pid uuid = sendRequest uuid $ ExportProject.Request pid
 
 importProject :: Text -> UUID -> IO ()
 importProject payload uuid = sendRequest uuid $ ImportProject.Request payload
-
 
 dumpGraphViz :: Workspace -> UUID -> IO ()
 dumpGraphViz workspace uuid = sendRequest uuid $ withLibrary workspace DumpGraphViz.Request

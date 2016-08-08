@@ -5,9 +5,10 @@ var $$       = require('common');
 var vs = require('shaders/sdf.vert')();
 var fs = require('shaders/node.frag')();
 
-var unselectedColor = new THREE.Color(0x3a3a3a);
-var selectedColor   = new THREE.Color(0xb87410).multiplyScalar(0.8);
-var errorColor      = new THREE.Color(0x651401);
+var unselectedColor    = new THREE.Color(0x3a3a3a);
+var selectedColor      = new THREE.Color(0xb87410).multiplyScalar(0.8);
+var errorColor         = new THREE.Color(0x651401);
+var collaborationColor = new THREE.Color(0x651401);
 
 var nodeGeometry    = new THREE.PlaneBufferGeometry(1.0, 1.0);
 nodeGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0));
@@ -21,17 +22,19 @@ function Node(position, z, widgetId) {
   this.position = position;
 
   this.uniforms = {
-    selected:          { type: 'i',  value:                               0 },
-    mouseDist:         { type: 'f',  value:                             0.0 },
-    expanded:          { type: 'f',  value:                             0.0 },
-    size:              { type: 'v2', value:   new THREE.Vector2(nodeSize, nodeSize) },
-    unselectedColor:   { type: 'c',  value:                 unselectedColor },
-    selectedColor:     { type: 'c',  value:                   selectedColor },
-    errorColor:        { type: 'c',  value:                      errorColor },
-    alpha:             { type: 'f',  value:                             1.0 },
-    error:             { type: 'i',  value:                               0 },
-    highlight:         { type: 'i',  value:                               0 },
-    objectId:          { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
+    selected:           { type: 'i',  value:                               0 },
+    collaboration:      { type: 'i',  value:                               0 },
+    mouseDist:          { type: 'f',  value:                             0.0 },
+    expanded:           { type: 'f',  value:                             0.0 },
+    size:               { type: 'v2', value:   new THREE.Vector2(nodeSize, nodeSize) },
+    unselectedColor:    { type: 'c',  value:                 unselectedColor },
+    selectedColor:      { type: 'c',  value:                   selectedColor },
+    errorColor:         { type: 'c',  value:                      errorColor },
+    collaborationColor: { type: 'c',  value:              collaborationColor },
+    alpha:              { type: 'f',  value:                             1.0 },
+    error:              { type: 'i',  value:                               0 },
+    highlight:          { type: 'i',  value:                               0 },
+    objectId:           { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
   };
 
   Object.keys($$.commonUniforms).forEach(function (k) {
@@ -77,6 +80,10 @@ Node.prototype.setHighlight = function (val) {
 };
 Node.prototype.setError = function (val) {
   this.uniforms.error.value = val?1:0;
+};
+
+Node.prototype.setCollaboration = function (val) {
+  this.uniforms.collaboration.value = val?1:0;
 };
 
 
