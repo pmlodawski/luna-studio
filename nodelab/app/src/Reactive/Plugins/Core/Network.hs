@@ -29,6 +29,7 @@ import qualified Reactive.Plugins.Core.Action.NodeSearcher           as NodeSear
 import qualified Reactive.Plugins.Core.Action.Sandbox                as Sandbox
 import qualified Reactive.Plugins.Core.Action.Widget                 as Widget
 import qualified Reactive.Plugins.Core.Action.Collaboration          as Collaboration
+import qualified Reactive.Plugins.Core.Action.Navigation             as Navigation
 
 import           Reactive.Commands.Command                           (Command, execCommand)
 import           Reactive.State.Global                               (State)
@@ -57,6 +58,7 @@ actions =  [ Debug.toActionEv
            , MultiSelection.toAction
            , Drag.toAction
            , Connect.toAction
+           , Navigation.toAction
            , Collaboration.toAction
            , NodeSearcher.toAction
            , ProjectManager.toAction

@@ -5,7 +5,7 @@ module Reactive.Plugins.Core.Action.NodeSearcher where
 import           Utils.PreludePlus                          hiding (stripPrefix)
 
 import           Event.Event                                (Event (..))
-import           Event.Keyboard                             (KeyMods (..))
+import           Event.Keyboard                             (KeyMods (..), shift)
 import qualified Event.Keyboard                             as Keyboard
 import qualified Event.NodeSearcher                         as NodeSearcher
 
@@ -25,7 +25,7 @@ toAction (NodeSearcher (NodeSearcher.QueryCmd  expr)) = Just $ CS.querySearchCmd
 toAction (NodeSearcher (NodeSearcher.TreeCmd   expr)) = Just $ CS.queryTreeCmd expr
 toAction (NodeSearcher (NodeSearcher.CreateCmd expr)) = Just $ CS.runCommand expr
 
-toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\t'   mods)) = Just $ NS.openFresh
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\t'   mods@(KeyMods { _shift = False }))) = Just $ NS.openFresh
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\191' (KeyMods False False False False))) = Just $ NS.openCommand -- 191 = /
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\191' (KeyMods True False False False))) = Just $ CS.help
 toAction _ = Nothing

@@ -15,13 +15,13 @@ import           Reactive.Commands.Graph      (allNodes)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import qualified Reactive.State.UIRegistry    as UIRegistry
 import           Reactive.State.Global        (State, inRegistry)
-import           Reactive.Commands.Batch           (collaborativeTouch, cancelCollaborativeTouch)
+import           Reactive.Commands.Batch      (collaborativeTouch, cancelCollaborativeTouch)
 
 
 unselectAll :: Command State ()
 unselectAll = do
     widgets <- allNodes
-    nodesToCancelTouch <- inRegistry $ flip mapM widgets $ \wf -> do
+    nodesToCancelTouch <- inRegistry $ forM widgets $ \wf -> do
         let widgetId = wf ^. objectId
         if (wf ^. widget . NodeModel.isSelected) then do
                 UICmd.update_ widgetId $ NodeModel.isSelected .~ False

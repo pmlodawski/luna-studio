@@ -20,7 +20,7 @@ import           Data.Maybe                         as X
 import           Data.String                        as X (IsString (fromString))
 import           Data.Char                          as X
 import           Data.Text.Lazy                     as X (Text)
-import           Data.Traversable                   as X (sequenceA, mapM)
+import           Data.Traversable                   as X (sequenceA, forM, mapM)
 import           Data.Typeable                      as X (Typeable)
 import           Data.Function                      as X (on)
 import           GHC.Exts                           as X (IsList, Item, fromList, fromListN, toList)
