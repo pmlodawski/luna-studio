@@ -48,7 +48,7 @@ import           Empire.Utils.TextResult                         (nodeValueToTex
 
 getNodeValueReprs :: NodeId -> Command Graph [Value]
 getNodeValueReprs nid = do
-    ref <- GraphUtils.getASTTarget nid
+    ref <- GraphUtils.getASTVar nid
     zoom Graph.ast $ AST.getNodeValueReprs ref
 
 collect pass = return ()

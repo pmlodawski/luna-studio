@@ -39,6 +39,7 @@ import qualified Old.Luna.Syntax.Term.Expr.Lit           as Lit
 
 import           Luna.Compilation.Error                  as TCError
 import           Luna.Compilation.Pass.Interpreter.Layer (InterpreterData (..))
+import           Luna.Compilation.Pass.Interpreter.Value (toIO, unsafeFromData)
 import qualified Luna.Compilation.Pass.Interpreter.Layer as Interpreter
 import           Unsafe.Coerce
 
@@ -88,25 +89,25 @@ getNodeValue ref = runASTOp $ do
     case (node ^. prop InterpreterData . Interpreter.value) of
         Left  err -> trace (show err) $ return Nothing
         Right val -> do
-            v <- liftIO (unsafeCoerce val :: IO Any)
+            v <- liftIO $ toIO val
             caseTest (uncover tpNode) $ do
                 of' $ \(Cons (Lit.String n) as) -> case n of
-                    "Int"            -> return $ Just $ IntValue       $ unsafeCoerce     v
-                    "String"         -> return $ Just $ StringValue    $ unsafeCoerce     v
-                    "Double"         -> return $ Just $ DoubleValue    $ unsafeCoerce     v
-                    "Bool"           -> return $ Just $ BoolValue      $ unsafeCoerce     v
-                    "Histogram"      -> return $ Just $ Histogram      $ unsafeCoerce     v
-                    "IntPairList"    -> return $ Just $ IntPairList    $ unsafeCoerce     v
-                    "DoublePairList" -> return $ Just $ DoublePairList $ unsafeCoerce     v
-                    "Graphics"       -> return $ Just $ Graphics       $ fromGraphics     v
-                    "Layer"          -> return $ Just $ Graphics       $ fromLayer        v
-                    "Geometry"       -> return $ Just $ Graphics       $ fromGeometry     v
-                    "GeoComponent"   -> return $ Just $ Graphics       $ fromGeoComponent v
-                    "Surface"        -> return $ Just $ Graphics       $ fromSurface      v
-                    "Shape"          -> return $ Just $ Graphics       $ fromShape        v
-                    "Primitive"      -> return $ Just $ Graphics       $ fromPrimitive    v
-                    "Figure"         -> return $ Just $ Graphics       $ fromFigure       v
-                    "Material"       -> return $ Just $ Graphics       $ fromMaterial     v
+                    "Int"            -> return $ Just $ IntValue       $ unsafeFromData v
+                    "String"         -> return $ Just $ StringValue    $ unsafeFromData v
+                    "Double"         -> return $ Just $ DoubleValue    $ unsafeFromData v
+                    "Bool"           -> return $ Just $ BoolValue      $ unsafeFromData v
+                    "Histogram"      -> return $ Just $ Histogram      $ unsafeFromData v
+                    "IntPairList"    -> return $ Just $ IntPairList    $ unsafeFromData v
+                    "DoublePairList" -> return $ Just $ DoublePairList $ unsafeFromData v
+                    {-"Graphics"       -> return $ Just $ Graphics       $ fromGraphics     v-}
+                    {-"Layer"          -> return $ Just $ Graphics       $ fromLayer        v-}
+                    {-"Geometry"       -> return $ Just $ Graphics       $ fromGeometry     v-}
+                    {-"GeoComponent"   -> return $ Just $ Graphics       $ fromGeoComponent v-}
+                    {-"Surface"        -> return $ Just $ Graphics       $ fromSurface      v-}
+                    {-"Shape"          -> return $ Just $ Graphics       $ fromShape        v-}
+                    {-"Primitive"      -> return $ Just $ Graphics       $ fromPrimitive    v-}
+                    {-"Figure"         -> return $ Just $ Graphics       $ fromFigure       v-}
+                    {-"Material"       -> return $ Just $ Graphics       $ fromMaterial     v-}
                     "List"           -> do
                         args <- ASTBuilder.unpackArguments as
                         case args of
@@ -114,10 +115,10 @@ getNodeValue ref = runASTOp $ do
                                 arg <- Builder.read a
                                 caseTest (uncover arg) $ do
                                     of' $ \(Cons (Lit.String n) _) -> case n of
-                                        "Int"    -> return $ Just $ IntList    $ unsafeCoerce v
-                                        "Double" -> return $ Just $ DoubleList $ unsafeCoerce v
-                                        "Bool"   -> return $ Just $ BoolList   $ unsafeCoerce v
-                                        "String" -> return $ Just $ StringList $ unsafeCoerce v
+                                        "Int"    -> return $ Just $ IntList    $ unsafeFromData v
+                                        "Double" -> return $ Just $ DoubleList $ unsafeFromData v
+                                        "Bool"   -> return $ Just $ BoolList   $ unsafeFromData v
+                                        "String" -> return $ Just $ StringList $ unsafeFromData v
                                         _        -> return Nothing
                                     of' $ \ANY -> return Nothing
                             _ -> return Nothing
