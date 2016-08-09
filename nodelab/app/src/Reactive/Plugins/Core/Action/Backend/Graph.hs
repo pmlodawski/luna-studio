@@ -26,6 +26,7 @@ import           Event.Batch                                 (Event (..))
 import qualified Event.Event                                 as Event
 
 import           Reactive.Commands.Camera                    (autoZoom)
+import           Reactive.Commands.Batch                     (collaborativeModify)
 import           Reactive.Commands.Command                   (Command, performIO)
 import           Reactive.Commands.Graph                     (updateConnection)
 import           Reactive.Commands.Graph.Connect             (localConnectNodes)
@@ -114,7 +115,7 @@ toAction (Event.Batch ev) = Just $ case ev of
 
     -- CollaborationUpdate update -> -- handled in Collaboration.hs
     RemoveNodeResponse response -> handleResponse response doNothing
-    AddNodeResponse    response -> handleResponse response doNothing
+    AddNodeResponse    response -> handleResponse response $ \_ nodeId -> collaborativeModify [nodeId]
     ConnectResponse    response -> handleResponse response doNothing
     DisconnectResponse response -> handleResponse response doNothing
     NodeMetaResponse   response -> handleResponse response doNothing

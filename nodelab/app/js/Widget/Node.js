@@ -83,7 +83,7 @@ Node.prototype.setError = function (val) {
 };
 
 Node.prototype.setCollaboration = function (val) {
-  this.uniforms.collaboration.value = val?1:0;
+  this.uniforms.collaboration.value = val;
 };
 
 

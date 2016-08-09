@@ -18,7 +18,7 @@ import qualified Event.Event                                 as Event
 import           Reactive.Commands.Batch                     (collaborativeTouch)
 import           Reactive.Commands.Command                   (Command)
 import           Reactive.Commands.Graph                     (nodeIdToWidgetId)
-import           Reactive.Commands.Graph.Selection (selectedNodes)
+import           Reactive.Commands.Graph.Selection           (selectedNodes)
 import           Reactive.State.Global                       (State, inRegistry)
 import qualified Reactive.State.Global                       as Global
 import qualified Reactive.State.Graph                        as GraphST
@@ -28,8 +28,9 @@ import qualified Object.Widget.Node                          as NodeModel
 import           Reactive.Commands.UIRegistry                as UICmd
 
 
-refreshTime :: Integer
+refreshTime, modifyTime :: Integer
 refreshTime = 10
+modifyTime  =  5
 
 isCurrentLocation :: GraphLocation -> Command State Bool
 isCurrentLocation location = uses (Global.workspace . Workspace.currentLocation) (== location)
@@ -51,7 +52,8 @@ expireTouchedNodes = do
     widgetIds <- use $ Global.graph . GraphST.nodeWidgets
     currentTime  <- use Global.lastEventTimestamp
     forM_ widgetIds $ \nodeWidget -> do
-        inRegistry $ UICmd.update_ nodeWidget $ NodeModel.collaboratingClients %~ Map.filter (\ts -> (DT.diffSeconds ts currentTime) > 0)
+        inRegistry $ UICmd.update_ nodeWidget $ (NodeModel.collaboration . NodeModel.touch  %~ Map.filter (\ts -> (DT.diffSeconds ts currentTime) > 0))
+                                              . (NodeModel.collaboration . NodeModel.modify %~ Map.filter (\ts -> (DT.diffSeconds ts currentTime) > 0))
 
 
 everyNSeconds :: Integer -> Command State () -> Command State ()
@@ -64,21 +66,16 @@ toAction (Event.Batch ev) = Just $ case ev of
     CollaborationUpdate update -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. Collaboration.location)
         let clientId = update ^. Collaboration.clientId
+            touchNodes nodeIds setter = forM_ nodeIds $ \nodeId -> do
+                    nodeWidget <- nodeIdToWidgetId nodeId
+                    inRegistry $ withJust nodeWidget $ \nodeWidget -> UICmd.update_ nodeWidget  setter
         myClientId   <- use Global.clientId
         currentTime  <- use Global.lastEventTimestamp
         when (shouldProcess && clientId /= myClientId) $
             case update ^. Collaboration.event of
-                Collaboration.Touch nodeIds -> do
-                    forM_ nodeIds $ \nodeId -> do
-                        nodeWidget <- nodeIdToWidgetId nodeId
-                        inRegistry $ withJust nodeWidget $ \nodeWidget ->
-                            UICmd.update_ nodeWidget $ NodeModel.collaboratingClients . at clientId ?~ (DT.addSeconds (2 * refreshTime) currentTime)
-                Collaboration.CancelTouch nodeIds -> do
-                    forM_ nodeIds $ \nodeId -> do
-                        nodeWidget <- nodeIdToWidgetId nodeId
-                        inRegistry $ withJust nodeWidget $ \nodeWidget ->
-                            UICmd.update_ nodeWidget $ NodeModel.collaboratingClients . at clientId .~ Nothing
-
+                Collaboration.Touch       nodeIds -> touchNodes nodeIds $ NodeModel.collaboration . NodeModel.touch  . at clientId ?~ (DT.addSeconds (2 * refreshTime) currentTime)
+                Collaboration.Modify      nodeIds -> touchNodes nodeIds $ NodeModel.collaboration . NodeModel.modify . at clientId ?~ (DT.addSeconds modifyTime currentTime)
+                Collaboration.CancelTouch nodeIds -> touchNodes nodeIds $ NodeModel.collaboration . NodeModel.touch  . at clientId .~ Nothing
                 _ -> return ()
 
     _ -> return ()

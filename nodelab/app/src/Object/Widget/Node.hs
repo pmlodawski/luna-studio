@@ -34,6 +34,15 @@ instance Default Elements where
     def = Elements def def def def def def def def def def def
 
 type CollaborationMap = Map ClientId UTCTime
+data Collaboration = Collaboration { _touch  :: CollaborationMap
+                                   , _modify :: CollaborationMap
+                                   } deriving (Eq, Show, Generic)
+
+instance Default Collaboration where
+    def = Collaboration def def
+
+makeLenses ''Collaboration
+instance ToJSON Collaboration
 
 data Node = Node { _nodeId               :: N.NodeId
                  , _controls             :: [Maybe WidgetId]
@@ -47,11 +56,12 @@ data Node = Node { _nodeId               :: N.NodeId
                  , _isExpanded           :: Bool
                  , _isSelected           :: Bool
                  , _isError              :: Bool
-                 , _collaboratingClients :: CollaborationMap
+                 , _collaboration        :: Collaboration
                  , _execTime             :: Maybe Integer
                  , _highlight            :: Bool
                  , _elements             :: Elements
                  } deriving (Eq, Show, Typeable, Generic)
+
 
 makeLenses ''Node
 instance ToJSON Node
@@ -60,7 +70,7 @@ makeLenses ''Elements
 instance ToJSON Elements
 
 makeNode :: N.NodeId -> Position -> Text -> Text -> Maybe Text -> Node
-makeNode id pos expr name tpe = Node id [] [] pos 0.0 expr name "" tpe False False False mempty Nothing False def
+makeNode id pos expr name tpe = Node id [] [] pos 0.0 expr name "" tpe False False False def Nothing False def
 
 fromNode :: N.Node -> Node
 fromNode n = let position' = uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position

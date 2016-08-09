@@ -11,8 +11,7 @@ import           Data.UUID.Types (UUID)
 
 type ClientId = UUID
 
-data Event = ModifyStart [NodeId]
-           | ModifyEnd   [NodeId]
+data Event = Modify      [NodeId]
            | Touch       [NodeId]
            | CancelTouch [NodeId]
            deriving (Generic, Show, Eq)

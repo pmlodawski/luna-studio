@@ -83,6 +83,9 @@ setInputNodeType id tpe workspace uuid = sendRequest uuid $ (withLibrary workspa
 collaborativeTouch :: Collaboration.ClientId ->[NodeId] -> Workspace -> IO ()
 collaborativeTouch clientId ids workspace = sendUpdate $ (withLibrary workspace Collaboration.Update) clientId  $ Collaboration.Touch ids
 
+collaborativeModify :: Collaboration.ClientId ->[NodeId] -> Workspace -> IO ()
+collaborativeModify clientId ids workspace = sendUpdate $ (withLibrary workspace Collaboration.Update) clientId  $ Collaboration.Modify ids
+
 cancelCollaborativeTouch :: Collaboration.ClientId -> [NodeId] -> Workspace -> IO ()
 cancelCollaborativeTouch clientId ids workspace = sendUpdate $ (withLibrary workspace Collaboration.Update) clientId $ Collaboration.CancelTouch ids
 

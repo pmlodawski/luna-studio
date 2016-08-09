@@ -10,8 +10,6 @@ import qualified Empire.API.Data.Node         as Node
 import           Empire.API.Data.NodeMeta     (NodeMeta (..))
 import qualified Empire.API.Data.NodeMeta     as NodeMeta
 
-import qualified Object.Widget.Node           as Model
-
 import           Reactive.Commands.Command    (Command)
 import           Reactive.Commands.Graph      (nodeIdToWidgetId, updateConnectionsForNodes)
 import qualified Reactive.Commands.UIRegistry as UICmd

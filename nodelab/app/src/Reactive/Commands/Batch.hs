@@ -15,7 +15,7 @@ import           Empire.API.Data.Node         (NodeId)
 import           Empire.API.Data.Project      (ProjectId)
 import           Empire.API.Data.NodeMeta     (NodeMeta)
 import           Empire.API.Data.PortRef      (AnyPortRef (..), InPortRef (..), OutPortRef (..))
-import qualified Empire.API.Data.PortRef      as PortRef (nodeId)
+import qualified Empire.API.Data.PortRef      as PortRef (nodeId, dstNodeId)
 
 
 withWorkspace :: (Workspace -> UUID -> IO ()) -> Command State ()
@@ -62,15 +62,17 @@ removeNode :: [NodeId] -> Command State ()
 removeNode = withWorkspace . BatchCmd.removeNode
 
 connectNodes :: OutPortRef -> InPortRef -> Command State ()
-connectNodes = withWorkspace .: BatchCmd.connectNodes
+connectNodes src dst = do
+    collaborativeModify [dst ^. PortRef.dstNodeId]
+    withWorkspace $ BatchCmd.connectNodes src dst
 
 disconnectNodes :: InPortRef -> Command State ()
 disconnectNodes = withWorkspace . BatchCmd.disconnectNodes
 
 setDefaultValue :: AnyPortRef -> DefaultValue.PortDefault -> Command State ()
 setDefaultValue portRef value = do
-    collaborativeTouch [portRef ^. PortRef.nodeId]
-    withWorkspace (BatchCmd.setDefaultValue portRef value)
+    collaborativeModify [portRef ^. PortRef.nodeId]
+    withWorkspace $ BatchCmd.setDefaultValue portRef value
 
 setInputNodeType :: NodeId -> Text -> Command State ()
 setInputNodeType = withWorkspace .: BatchCmd.setInputNodeType
@@ -78,12 +80,17 @@ setInputNodeType = withWorkspace .: BatchCmd.setInputNodeType
 collaborativeTouch :: [NodeId] -> Command State ()
 collaborativeTouch nodeIds = do
     clId <- use $ clientId
-    withWorkspace' (BatchCmd.collaborativeTouch clId nodeIds)
+    withWorkspace' $ BatchCmd.collaborativeTouch clId nodeIds
+
+collaborativeModify :: [NodeId] -> Command State ()
+collaborativeModify nodeIds = do
+    clId <- use $ clientId
+    withWorkspace' $ BatchCmd.collaborativeModify clId nodeIds
 
 cancelCollaborativeTouch :: [NodeId] -> Command State ()
 cancelCollaborativeTouch nodeIds = do
     clId <- use $ clientId
-    withWorkspace' (BatchCmd.cancelCollaborativeTouch clId nodeIds)
+    withWorkspace' $ BatchCmd.cancelCollaborativeTouch clId nodeIds
 
 exportProject :: ProjectId -> Command State ()
 exportProject = withUUID . BatchCmd.exportProject

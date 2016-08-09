@@ -2,7 +2,6 @@ module UI.Handlers.Connection where
 
 import           Utils.PreludePlus
 
-import           Control.Monad.Trans.Maybe          (runMaybeT)
 import           Data.HMap.Lazy                     (TypeKey (..))
 import           Utils.Vector
 

@@ -29,7 +29,7 @@ foreign import javascript safe "$1.setZPos($2)"                                 
 foreign import javascript safe "$1.setSelected($2)"                                  setSelected       :: Node -> Bool   -> IO ()
 foreign import javascript safe "$1.setError($2)"                                     setError          :: Node -> Bool   -> IO ()
 foreign import javascript safe "$1.setHighlight($2)"                                 setHighlight      :: Node -> Bool   -> IO ()
-foreign import javascript safe "$1.setCollaboration($2)"                             setCollaboration' :: Node -> Bool   -> IO ()
+foreign import javascript safe "$1.setCollaboration($2)"                             setCollaboration' :: Node -> Int    -> IO ()
 
 
 createNode :: WidgetId -> Model.Node -> IO Node
@@ -41,8 +41,11 @@ ifChanged :: (Eq b) => a -> a -> Lens' a b -> IO () -> IO ()
 ifChanged old new get action = if (old ^. get) /= (new ^. get) then action
                                                                else return ()
 
-setCollaboration :: Node -> Model.CollaborationMap -> IO ()
-setCollaboration n m = setCollaboration' n $ not $ Map.null m
+setCollaboration :: Node -> Model.Collaboration -> IO ()
+setCollaboration n col
+    | not $ Map.null $ col ^. Model.modify = setCollaboration' n 2
+    | not $ Map.null $ col ^. Model.touch  = setCollaboration' n 1
+    | otherwise                            = setCollaboration' n 0
 
 instance UIDisplayObject Model.Node where
     createUI parentId id model = do
@@ -54,8 +57,8 @@ instance UIDisplayObject Model.Node where
     updateUI id old model = do
         node <- UIR.lookup id :: IO Node
 
-        whenChanged old model Model.isSelected           $ setSelected      node $ model ^. Model.isSelected
-        whenChanged old model Model.isError              $ setError         node $ model ^. Model.isError
-        whenChanged old model Model.zPos                 $ setZPos          node $ model ^. Model.zPos
-        whenChanged old model Model.highlight            $ setHighlight     node $ model ^. Model.highlight
-        whenChanged old model Model.collaboratingClients $ setCollaboration node $ model ^. Model.collaboratingClients
+        whenChanged old model Model.isSelected    $ setSelected      node $ model ^. Model.isSelected
+        whenChanged old model Model.isError       $ setError         node $ model ^. Model.isError
+        whenChanged old model Model.zPos          $ setZPos          node $ model ^. Model.zPos
+        whenChanged old model Model.highlight     $ setHighlight     node $ model ^. Model.highlight
+        whenChanged old model Model.collaboration $ setCollaboration node $ model ^. Model.collaboration
