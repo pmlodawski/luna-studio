@@ -67,7 +67,9 @@ connectNodes src dst = do
     withWorkspace $ BatchCmd.connectNodes src dst
 
 disconnectNodes :: InPortRef -> Command State ()
-disconnectNodes = withWorkspace . BatchCmd.disconnectNodes
+disconnectNodes dst = do
+    collaborativeModify [dst ^. PortRef.dstNodeId]
+    withWorkspace $ BatchCmd.disconnectNodes dst
 
 setDefaultValue :: AnyPortRef -> DefaultValue.PortDefault -> Command State ()
 setDefaultValue portRef value = do

@@ -30,7 +30,7 @@ import           Reactive.Commands.UIRegistry                as UICmd
 
 refreshTime, modifyTime :: Integer
 refreshTime = 10
-modifyTime  =  5
+modifyTime  =  3
 
 isCurrentLocation :: GraphLocation -> Command State Bool
 isCurrentLocation location = uses (Global.workspace . Workspace.currentLocation) (== location)
@@ -77,7 +77,6 @@ toAction (Event.Batch ev) = Just $ case ev of
                 Collaboration.Modify      nodeIds -> touchNodes nodeIds $ NodeModel.collaboration . NodeModel.modify . at clientId ?~ (DT.addSeconds modifyTime currentTime)
                 Collaboration.CancelTouch nodeIds -> touchNodes nodeIds $ NodeModel.collaboration . NodeModel.touch  . at clientId .~ Nothing
                 Collaboration.Refresh             -> touchCurrentlySelected
-                _ -> return ()
 
     _ -> return ()
 
