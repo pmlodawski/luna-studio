@@ -80,6 +80,9 @@ setDefaultValue portRef val workspace uuid = sendRequest uuid $ (withLibrary wor
 setInputNodeType :: NodeId -> Text -> Workspace -> UUID -> IO ()
 setInputNodeType id tpe workspace uuid = sendRequest uuid $ (withLibrary workspace SetInputNodeType.Request) id (Text.unpack tpe)
 
+requestCollaborationRefresh :: Collaboration.ClientId -> Workspace -> IO ()
+requestCollaborationRefresh clientId workspace = sendUpdate $ (withLibrary workspace Collaboration.Update) clientId  $ Collaboration.Refresh
+
 collaborativeTouch :: Collaboration.ClientId ->[NodeId] -> Workspace -> IO ()
 collaborativeTouch clientId ids workspace = sendUpdate $ (withLibrary workspace Collaboration.Update) clientId  $ Collaboration.Touch ids
 

@@ -26,7 +26,7 @@ import           Event.Batch                                 (Event (..))
 import qualified Event.Event                                 as Event
 
 import           Reactive.Commands.Camera                    (autoZoom)
-import           Reactive.Commands.Batch                     (collaborativeModify)
+import           Reactive.Commands.Batch                     (collaborativeModify, requestCollaborationRefresh)
 import           Reactive.Commands.Command                   (Command, performIO)
 import           Reactive.Commands.Graph                     (updateConnection)
 import           Reactive.Commands.Graph.Connect             (localConnectNodes)
@@ -70,6 +70,7 @@ toAction (Event.Batch ev) = Just $ case ev of
                 autoZoom
                 performIO $ UI.setText code
                 Global.workspace . Workspace.isGraphLoaded .= True
+                requestCollaborationRefresh
 
     NodesConnected update -> do
         whenM (isCurrentLocation $ update ^. Connect.location') $ do

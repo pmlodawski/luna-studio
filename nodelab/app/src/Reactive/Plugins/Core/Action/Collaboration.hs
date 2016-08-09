@@ -76,6 +76,7 @@ toAction (Event.Batch ev) = Just $ case ev of
                 Collaboration.Touch       nodeIds -> touchNodes nodeIds $ NodeModel.collaboration . NodeModel.touch  . at clientId ?~ (DT.addSeconds (2 * refreshTime) currentTime)
                 Collaboration.Modify      nodeIds -> touchNodes nodeIds $ NodeModel.collaboration . NodeModel.modify . at clientId ?~ (DT.addSeconds modifyTime currentTime)
                 Collaboration.CancelTouch nodeIds -> touchNodes nodeIds $ NodeModel.collaboration . NodeModel.touch  . at clientId .~ Nothing
+                Collaboration.Refresh             -> touchCurrentlySelected
                 _ -> return ()
 
     _ -> return ()

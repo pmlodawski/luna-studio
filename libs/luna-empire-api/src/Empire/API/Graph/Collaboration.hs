@@ -14,6 +14,7 @@ type ClientId = UUID
 data Event = Modify      [NodeId]
            | Touch       [NodeId]
            | CancelTouch [NodeId]
+           | Refresh
            deriving (Generic, Show, Eq)
 
 data Update   = Update { _location  :: GraphLocation

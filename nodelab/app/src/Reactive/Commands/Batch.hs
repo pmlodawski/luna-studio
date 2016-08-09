@@ -77,6 +77,11 @@ setDefaultValue portRef value = do
 setInputNodeType :: NodeId -> Text -> Command State ()
 setInputNodeType = withWorkspace .: BatchCmd.setInputNodeType
 
+requestCollaborationRefresh :: Command State ()
+requestCollaborationRefresh = do
+    clId <- use $ clientId
+    withWorkspace' $ BatchCmd.requestCollaborationRefresh clId
+
 collaborativeTouch :: [NodeId] -> Command State ()
 collaborativeTouch nodeIds = do
     clId <- use $ clientId
