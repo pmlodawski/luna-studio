@@ -78,8 +78,8 @@ findNodesOnDown  = filter . isOnDown
 findNodesOnUp    = filter . isOnUp
 
 isOnRight, isOnLeft, isOnDown, isOnUp :: Position -> WidgetFile Model.Node -> Bool
-isOnRight = isOnSide (>) skip (>)
-isOnLeft  = isOnSide (<) skip (>)
+isOnRight = isOnSide (>) skip (>=)
+isOnLeft  = isOnSide (<) skip (>=)
 isOnDown  = isOnSide skip (>) (<)
 isOnUp    = isOnSide skip (<) (<)
 
