@@ -109,23 +109,28 @@ extractArgTypes :: ASTOp m => NodeRef -> m [ValueType]
 extractArgTypes ref = do
     node <- Builder.read ref
     caseTest (uncover node) $ do
-        of' $ \(Lam args _) -> do
+        of' $ \(Lam args out) -> do
             unpacked <- ASTBuilder.unpackArguments args
-            mapM getTypeRep unpacked
+            as     <- mapM getTypeRep unpacked
+            tailAs <- Builder.follow source out >>= extractArgTypes
+            return $ as ++ tailAs
         of' $ \ANY -> return []
 
 buildArgPorts :: ASTOp m => NodeRef -> m [Port]
 buildArgPorts ref = do
-    node <- Builder.read ref
+    node  <- Builder.read ref
     (types, states) <- caseTest (uncover node) $ do
         of' $ \(App f args) -> do
             unpacked       <- ASTBuilder.unpackArguments args
-            connectedTypes <- mapM (Builder.follow (prop Type) >=> Builder.follow source >=> getTypeRep) unpacked
-            blanksCount    <- length <$> filterM ASTBuilder.isBlank unpacked
-            unconnTypes    <- fmap (drop blanksCount) $ Builder.follow (prop Type) ref >>= Builder.follow source >>= extractArgTypes
             portStates     <- mapM getPortState unpacked
-            return (connectedTypes ++ unconnTypes, portStates)
+            tp    <- Builder.follow source f >>= Builder.follow (prop Type) >>= Builder.follow source
+            types <- extractArgTypes tp
+            return (types, portStates)
         of' $ \(Var _) -> do
+            tpRef <- Builder.follow source $ node ^. prop Type
+            types <- extractArgTypes tpRef
+            return (types, [])
+        of' $ \(Acc _ _) -> do
             tpRef <- Builder.follow source $ node ^. prop Type
             types <- extractArgTypes tpRef
             return (types, [])

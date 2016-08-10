@@ -31,6 +31,9 @@ getTypeRep tp = do
             argReps <- mapM getTypeRep args
             outRep <- getTypeRep =<< Builder.follow source out
             return $ TLam argReps outRep
+        of' $ \(Acc (Lit.String n) t) -> do
+            rep <- Builder.follow source t >>= getTypeRep
+            return $ TAcc n rep
         of' $ \(Var (Lit.String n)) -> return $ TVar $ delete '#' n
         of' $ \Lit.Star -> return TStar
         of' $ \ANY -> return TBlank

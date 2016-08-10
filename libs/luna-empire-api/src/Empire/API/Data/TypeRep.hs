@@ -10,6 +10,7 @@ data TypeRep = TCons String    [TypeRep]
              | TLam  [TypeRep] TypeRep
              | TStar
              | TBlank
+             | TAcc  String TypeRep
              deriving (Show, Eq, Generic)
 
 instance Binary TypeRep
@@ -29,4 +30,5 @@ instance ToString TypeRep where
         toString' _ _ (TVar n) = n
         toString' _ _ TStar = "*"
         toString' _ _ TBlank = ""
+        toString' _ _ (TAcc n t) = toString' True True t <> "." <> n
 

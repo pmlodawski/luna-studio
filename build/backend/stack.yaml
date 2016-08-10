@@ -22,7 +22,7 @@ packages:
 - {location: ../../tools/batch/plugins/bus-logger}
 - {location: ../../tools/batch/plugins/luna-empire}
 - extra-dep: true
-  location: {commit: c527742a1dde3f9781cf79e2364a599ac0bcb614, git: 'https://bitbucket.org/NewByteOrder/luna.git'}
+  location: {commit: 5904458f9ec6ddb32809d8a75c45694f0402594e, git: 'https://bitbucket.org/NewByteOrder/luna.git'}
   subdirs: [compiler, core, parser]
 - extra-dep: true
   location: {commit: 1b2f65d6cc55e51e8d222819cd828fdf8af6e25c, git: 'https://github.com/wdanilo/container.git'}
