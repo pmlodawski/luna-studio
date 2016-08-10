@@ -72,10 +72,25 @@ findDownMost  = maximumBy (compare `on` (^. widget . Model.position . y))
 findUpMost    = minimumBy (compare `on` (^. widget . Model.position . y))
 
 findNodesOnRight, findNodesOnLeft, findNodesOnDown, findNodesOnUp :: Position -> [WidgetFile Model.Node] -> [WidgetFile Model.Node]
-findNodesOnRight pos = filter $ \wf -> wf ^. widget . Model.position . x > pos ^. x
-findNodesOnLeft  pos = filter $ \wf -> wf ^. widget . Model.position . x < pos ^. x
-findNodesOnDown  pos = filter $ \wf -> wf ^. widget . Model.position . y > pos ^. y
-findNodesOnUp    pos = filter $ \wf -> wf ^. widget . Model.position . y < pos ^. y
+findNodesOnRight = filter . isOnRight
+findNodesOnLeft  = filter . isOnLeft
+findNodesOnDown  = filter . isOnDown
+findNodesOnUp    = filter . isOnUp
+
+isOnRight, isOnLeft, isOnDown, isOnUp :: Position -> WidgetFile Model.Node -> Bool
+isOnRight = isOnSide (>) skip (>)
+isOnLeft  = isOnSide (<) skip (>)
+isOnDown  = isOnSide skip (>) (<)
+isOnUp    = isOnSide skip (<) (<)
+
+skip :: Double -> Double -> Bool
+skip _ _ = True
+
+isOnSide :: (Double -> Double -> Bool) -> (Double -> Double -> Bool) -> (Double -> Double -> Bool) -> Position -> WidgetFile Model.Node -> Bool
+isOnSide cmpDXZero cmpDYZero cmpDims pos wf = dx `cmpDXZero` 0.0 && dy `cmpDYZero` 0.0 && abs dx `cmpDims` abs dy where
+    nodePos = wf ^. widget . Model.position
+    dx = nodePos ^. x - pos ^. x
+    dy = nodePos ^. y - pos ^. y
 
 findSelected :: [WidgetFile Model.Node] -> [WidgetFile Model.Node]
 findSelected = filter $ \wf -> wf ^. widget . Model.isSelected
