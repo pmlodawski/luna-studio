@@ -16,24 +16,28 @@ import qualified Event.Keyboard                    as Keyboard
 import qualified Event.Mouse                       as Mouse
 
 import           Reactive.State.Global             (State, inRegistry)
+import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.UIRegistry         as UIRegistry
+import qualified Reactive.State.Graph              as Graph
 
 import qualified Empire.API.Data.Node              as N
+import qualified Empire.API.Data.PortRef           as R
+import qualified Empire.API.Data.Port              as P
+import qualified Empire.API.Data.Connection        as C
 
 import           Reactive.Commands.Command         (Command, performIO)
 import           Reactive.Commands.Graph           (allNodes)
 import           Reactive.Commands.Graph.Selection (focusSelectedNode, selectAll, selectedNodes, unselectAll)
 import qualified Reactive.Commands.UIRegistry      as UICmd
+import           Reactive.Commands.Batch           (collaborativeTouch, cancelCollaborativeTouch)
 
 
 
 toAction :: Event -> Maybe (Command State ())
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down char KeyMods { _shift = True })) = case char of
-    '\t'  -> Just goLeft
-    '\37' -> Just goLeft
-    '\39' -> Just goRight
-    '\40' -> Just goDown
-    '\38' -> Just goUp
+    '\t'  -> Just goPrev
+    '\37' -> Just goPrev
+    '\39' -> Just goNext
     _     -> Nothing
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down char (KeyMods False False False False))) = case char of
     '\37' -> Just goLeft
@@ -43,9 +47,44 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down char (KeyMods False False Fal
     _     -> Nothing
 toAction _ = Nothing
 
-goPrev, goNext :: Command State ()
-goPrev  = return ()
-goNext  = return ()
+goNext, goPrev :: Command State ()
+goNext = do
+    nodes <- allNodes
+    let selectedNodes = findSelected nodes
+    when (not $ null selectedNodes) $ do
+        let nodeSrc = findRightMost selectedNodes
+            nodeId = nodeSrc ^. widget . Model.nodeId
+            outPortRefAll = R.OutPortRef' $ R.OutPortRef nodeId P.All
+        nextWidgetIdMay <- preuse $ Global.graph . Graph.portWidgetsMap . ix outPortRefAll
+        forM_ nextWidgetIdMay $ \nextWidgetId -> do
+            nextWidgetMay <- inRegistry $ lookupNode nextWidgetId
+            forM_ nextWidgetMay $ \nextWidget -> do
+                let nextNodeId = nextWidget ^. widget . Model.nodeId
+                changeSelection' selectedNodes nextNodeId nextWidgetId
+goPrev = do
+    nodes <- allNodes
+    let selectedNodes = findSelected nodes
+    when (not $ null selectedNodes) $ do
+        let nodeSrc = findLeftMost selectedNodes
+            nodeId = nodeSrc ^. widget . Model.nodeId
+            inPortRefSelf      = R.InPortRef nodeId P.Self
+            inPortRefFirstPort = R.InPortRef nodeId $ P.Arg 0
+        prevSelfNodeIdMay <- preuse $ Global.graph . Graph.connectionsMap . ix inPortRefSelf . C.src . R.srcNodeId
+        case prevSelfNodeIdMay of
+            Just prevSelfNodeId -> goToNodeId selectedNodes prevSelfNodeId
+            Nothing -> do
+                prevFirstPortNodeIdMay <- preuse $ Global.graph . Graph.connectionsMap . ix inPortRefFirstPort . C.src . R.srcNodeId
+                forM_ prevFirstPortNodeIdMay $ \prevFirstPortNodeId -> goToNodeId selectedNodes prevFirstPortNodeId
+
+-- TODO: merge with MultiSelection.hs
+lookupNode :: WidgetId -> Command UIRegistry.State (Maybe (WidgetFile Model.Node))
+lookupNode = UIRegistry.lookupTypedM
+
+goToNodeId :: [WidgetFile Model.Node] -> N.NodeId -> Command State ()
+goToNodeId selectedNodes nodeId = do
+    widgetIdMay <- preuse $ Global.graph . Graph.nodeWidgetsMap . ix nodeId
+    forM_ widgetIdMay $ \widgetId -> do
+        changeSelection' selectedNodes nodeId widgetId
 
 goLeft, goRight, goDown, goUp :: Command State ()
 goRight = go findRightMost findNodesOnRight
@@ -78,10 +117,10 @@ findNodesOnDown  = filter . isOnDown
 findNodesOnUp    = filter . isOnUp
 
 isOnRight, isOnLeft, isOnDown, isOnUp :: Position -> WidgetFile Model.Node -> Bool
-isOnRight = isOnSide (>) skip (>=)
-isOnLeft  = isOnSide (<) skip (>=)
-isOnDown  = isOnSide skip (>) (<)
-isOnUp    = isOnSide skip (<) (<)
+isOnRight = isOnSide (>)  skip (>=)
+isOnLeft  = isOnSide (<)  skip (>=)
+isOnDown  = isOnSide skip (>)  (<)
+isOnUp    = isOnSide skip (<)  (<)
 
 skip :: Double -> Double -> Bool
 skip _ _ = True
@@ -103,6 +142,24 @@ distance pos wf = lengthSquared (wpos - pos) where
     wpos = wf ^. widget . Model.position
 
 changeSelection :: [WidgetFile Model.Node] -> WidgetFile Model.Node -> Command State ()
-changeSelection selectedNodes nodeDst = inRegistry $ do
-    forM selectedNodes $ \node -> UICmd.update_ (node ^. objectId) $ Model.isSelected .~ False
-    UICmd.update_ (nodeDst ^. objectId) $ Model.isSelected .~ True
+changeSelection selectedNodes node = do
+    unselectNodes selectedNodes
+    selectNode node
+
+changeSelection' :: [WidgetFile Model.Node] -> N.NodeId -> WidgetId -> Command State ()
+changeSelection' selectedNodes nodeId widgetId = do
+    unselectNodes selectedNodes
+    selectNode' nodeId widgetId
+
+unselectNodes :: [WidgetFile Model.Node] -> Command State ()
+unselectNodes selectedNodes = do
+    inRegistry $ forM selectedNodes $ \node -> UICmd.update_ (node ^. objectId) $ Model.isSelected .~ False
+    cancelCollaborativeTouch $ (^. widget . Model.nodeId) <$> selectedNodes
+
+selectNode :: WidgetFile Model.Node -> Command State ()
+selectNode node = selectNode' (node ^. widget . Model.nodeId) (node ^. objectId)
+
+selectNode' :: N.NodeId -> WidgetId -> Command State ()
+selectNode' nodeId widgetId = do
+    inRegistry $ UICmd.update_ widgetId $ Model.isSelected .~ True
+    collaborativeTouch [nodeId]
