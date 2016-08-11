@@ -5,27 +5,29 @@ module Reactive.Plugins.Core.Action.Collaboration
 
 import           Utils.PreludePlus
 
-import qualified Batch.Workspace                             as Workspace
-import qualified Data.DateTime as DT
-import qualified Data.Map.Lazy as Map
+import qualified Batch.Workspace                   as Workspace
+import qualified Data.DateTime                     as DT
+import qualified Data.Map.Lazy                     as Map
 
-import           Empire.API.Data.GraphLocation               (GraphLocation)
-import qualified Empire.API.Graph.Collaboration              as Collaboration
+import           Empire.API.Data.GraphLocation     (GraphLocation)
+import qualified Empire.API.Graph.Collaboration    as Collaboration
 
-import           Event.Batch                                 (Event (..))
-import qualified Event.Event                                 as Event
+import           Event.Batch                       (Event (..))
+import qualified Event.Event                       as Event
 
-import           Reactive.Commands.Batch                     (collaborativeTouch)
-import           Reactive.Commands.Command                   (Command)
-import           Reactive.Commands.Graph                     (nodeIdToWidgetId)
-import           Reactive.Commands.Graph.Selection           (selectedNodes)
-import           Reactive.State.Global                       (State, inRegistry)
-import qualified Reactive.State.Global                       as Global
-import qualified Reactive.State.Graph                        as GraphST
+import           Reactive.Commands.Batch           (collaborativeTouch)
+import           Reactive.Commands.Collaboration   (updateClient)
+import           Reactive.Commands.Command         (Command)
+import           Reactive.Commands.Graph           (nodeIdToWidgetId)
+import           Reactive.Commands.Graph.Selection (selectedNodes)
+import           Reactive.State.Global             (State, inRegistry)
+import qualified Reactive.State.Global             as Global
+import qualified Reactive.State.Graph              as GraphST
+import           Reactive.State.Collaboration      (ColorId)
 
-import           Object.Widget                               (widget)
-import qualified Object.Widget.Node                          as NodeModel
-import           Reactive.Commands.UIRegistry                as UICmd
+import           Object.Widget                     (widget)
+import qualified Object.Widget.Node                as NodeModel
+import           Reactive.Commands.UIRegistry      as UICmd
 
 
 refreshTime, modifyTime :: Integer
@@ -49,11 +51,11 @@ touchCurrentlySelected = do
 
 expireTouchedNodes :: Command State ()
 expireTouchedNodes = do
-    widgetIds <- use $ Global.graph . GraphST.nodeWidgets
-    currentTime  <- use Global.lastEventTimestamp
-    forM_ widgetIds $ \nodeWidget -> do
-        inRegistry $ UICmd.update_ nodeWidget $ (NodeModel.collaboration . NodeModel.touch  %~ Map.filter (\ts -> (DT.diffSeconds ts currentTime) > 0))
-                                              . (NodeModel.collaboration . NodeModel.modify %~ Map.filter (\ts -> (DT.diffSeconds ts currentTime) > 0))
+    widgetIds   <- use $ Global.graph . GraphST.nodeWidgets
+    currentTime <- use Global.lastEventTimestamp
+    inRegistry $ forM_ widgetIds $ \nodeWidget -> do
+        UICmd.update_ nodeWidget $ (NodeModel.collaboration . NodeModel.touch  %~ Map.filter (\(ts, _) -> (DT.diffSeconds ts currentTime) > 0))
+                                 . (NodeModel.collaboration . NodeModel.modify %~ Map.filter (\ ts     -> (DT.diffSeconds ts currentTime) > 0))
 
 
 everyNSeconds :: Integer -> Command State () -> Command State ()
@@ -71,10 +73,12 @@ toAction (Event.Batch ev) = Just $ case ev of
                     inRegistry $ withJust nodeWidget $ \nodeWidget -> UICmd.update_ nodeWidget  setter
         myClientId   <- use Global.clientId
         currentTime  <- use Global.lastEventTimestamp
-        when (shouldProcess && clientId /= myClientId) $
-            case update ^. Collaboration.event of
-                Collaboration.Touch       nodeIds -> touchNodes nodeIds $ NodeModel.collaboration . NodeModel.touch  . at clientId ?~ (DT.addSeconds (2 * refreshTime) currentTime)
-                Collaboration.Modify      nodeIds -> touchNodes nodeIds $ NodeModel.collaboration . NodeModel.modify . at clientId ?~ (DT.addSeconds modifyTime currentTime)
+        when (shouldProcess && clientId /= myClientId) $ do
+            clientColor <- updateClient clientId
+            case (update ^. Collaboration.event) of
+                Collaboration.Touch       nodeIds -> touchNodes nodeIds $ NodeModel.collaboration . NodeModel.touch  . at clientId ?~ ((DT.addSeconds (2 * refreshTime) currentTime), clientColor)
+                Collaboration.Modify      nodeIds -> touchNodes nodeIds $ (NodeModel.collaboration . NodeModel.modify . at clientId ?~ (DT.addSeconds modifyTime currentTime))
+                                                                        . (NodeModel.collaboration . NodeModel.touch  . at clientId %~ bumpTime (DT.addSeconds modifyTime currentTime) clientColor)
                 Collaboration.CancelTouch nodeIds -> touchNodes nodeIds $ NodeModel.collaboration . NodeModel.touch  . at clientId .~ Nothing
                 Collaboration.Refresh             -> touchCurrentlySelected
 
@@ -85,3 +89,7 @@ toAction Event.Tick = Just $ do
     everyNSeconds refreshTime touchCurrentlySelected
 
 toAction _ = Nothing
+
+bumpTime :: DT.DateTime -> ColorId -> Maybe (DT.DateTime, ColorId) -> Maybe (DT.DateTime, ColorId)
+bumpTime time color (Just (time', _)) = Just (max time time', color)
+bumpTime time color Nothing           = Just (time, color)

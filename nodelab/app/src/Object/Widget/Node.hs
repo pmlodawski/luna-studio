@@ -7,6 +7,7 @@ import           Data.Aeson                     (ToJSON)
 import           Utils.PreludePlus
 import           Utils.Vector
 
+import           Reactive.State.Collaboration   (ColorId)
 import           Data.Map.Lazy                  (Map)
 import qualified Data.Text.Lazy                 as Text
 import           Data.Time.Clock                (UTCTime)
@@ -34,7 +35,7 @@ instance Default Elements where
     def = Elements def def def def def def def def def def def
 
 type CollaborationMap = Map ClientId UTCTime
-data Collaboration = Collaboration { _touch  :: CollaborationMap
+data Collaboration = Collaboration { _touch  :: Map ClientId (UTCTime, ColorId)
                                    , _modify :: CollaborationMap
                                    } deriving (Eq, Show, Generic)
 

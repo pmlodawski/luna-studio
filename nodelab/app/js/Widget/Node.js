@@ -4,6 +4,7 @@ var $$       = require('common');
 
 var vs = require('shaders/sdf.vert')();
 var fs = require('shaders/node.frag')();
+var userFs = require('shaders/node_user.frag')();
 
 var unselectedColor    = new THREE.Color(0x3a3a3a);
 var selectedColor      = new THREE.Color(0xb87410).multiplyScalar(0.8);
@@ -66,6 +67,10 @@ function Node(position, z, widgetId) {
   this.mesh.position.x = position.x;
   this.mesh.position.y = position.y;
 
+  this.collaborationGroup = new THREE.Group();
+  this.collaborationGroup.position.x = 30;
+  this.collaborationGroup.position.y = -30;
+  this.mesh.add(this.collaborationGroup);
 }
 
 Node.prototype.setPending = function () {
@@ -82,8 +87,39 @@ Node.prototype.setError = function (val) {
   this.uniforms.error.value = val?1:0;
 };
 
-Node.prototype.setCollaboration = function (val) {
+Node.prototype.setCollaboration = function (val, users) {
+  var _this = this;
   this.uniforms.collaboration.value = val;
+  this.collaborationGroup.children.forEach(function(obj) {
+    _this.collaborationGroup.remove(obj);
+  });
+  users.forEach(function(user, ix) {
+    var uniforms = {
+      colorId: { type: 'i',   value: user },
+      size:    { type: 'v2',  value: new THREE.Vector2(14, 14)},
+    };
+
+    Object.keys($$.commonUniforms).forEach(function (k) {
+      uniforms[k] = $$.commonUniforms[k];
+    });
+
+    var userMesh =  new THREE.Mesh(
+      nodeGeometry,
+      new THREE.ShaderMaterial( {
+        uniforms:       uniforms,
+        vertexShader:   vs,
+        fragmentShader: userFs,
+        transparent:    true,
+        blending:       THREE.NormalBlending,
+        side:           THREE.DoubleSide,
+        derivatives:    true
+      })
+    );
+    userMesh.position.x = 13*ix;
+    userMesh.scale.x = 14;
+    userMesh.scale.y = 14;
+    _this.collaborationGroup.add(userMesh);
+  });
 };
 
 

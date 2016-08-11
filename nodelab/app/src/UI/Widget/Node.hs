@@ -8,9 +8,13 @@ import           Utils.Vector
 
 import           GHCJS.Marshal.Pure (PFromJSVal (..), PToJSVal (..))
 import           GHCJS.Types        (JSVal)
+import           Data.Aeson         (toJSON)
+import           GHCJS.Marshal      (toJSVal)
+
 
 import           Object.UITypes
 import           Object.Widget
+import           Reactive.State.Collaboration (unColorId)
 import qualified Object.Widget.Node as Model
 
 import           UI.Generic         (whenChanged)
@@ -29,7 +33,7 @@ foreign import javascript safe "$1.setZPos($2)"                                 
 foreign import javascript safe "$1.setSelected($2)"                                  setSelected       :: Node -> Bool   -> IO ()
 foreign import javascript safe "$1.setError($2)"                                     setError          :: Node -> Bool   -> IO ()
 foreign import javascript safe "$1.setHighlight($2)"                                 setHighlight      :: Node -> Bool   -> IO ()
-foreign import javascript safe "$1.setCollaboration($2)"                             setCollaboration' :: Node -> Int    -> IO ()
+foreign import javascript safe "$1.setCollaboration($2, $3)"                         setCollaboration' :: Node -> Int    -> JSVal -> IO ()
 
 
 createNode :: WidgetId -> Model.Node -> IO Node
@@ -42,10 +46,13 @@ ifChanged old new get action = if (old ^. get) /= (new ^. get) then action
                                                                else return ()
 
 setCollaboration :: Node -> Model.Collaboration -> IO ()
-setCollaboration n col
-    | not $ Map.null $ col ^. Model.modify = setCollaboration' n 2
-    | not $ Map.null $ col ^. Model.touch  = setCollaboration' n 1
-    | otherwise                            = setCollaboration' n 0
+setCollaboration n col = do
+    let color | not $ Map.null $ col ^. Model.modify = 2
+              | not $ Map.null $ col ^. Model.touch  = 1
+              | otherwise                            = 0
+        users = unColorId . snd <$> (Map.elems $ col ^. Model.touch)
+    users' <- toJSVal $ toJSON users
+    setCollaboration' n color users'
 
 instance UIDisplayObject Model.Node where
     createUI parentId id model = do
