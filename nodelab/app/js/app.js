@@ -371,7 +371,7 @@ module.exports = {
   displayAppCrashed:        displayAppCrashed,
   getJSState:               function() { return $$; },
   downloadFile:             downloadFile,
-  customEvent:              function() { console.error("Custom event handler not registered"); }
+  customEvent:              function() { }
 
 };
 
