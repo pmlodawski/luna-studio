@@ -3,10 +3,10 @@
 module Empire.API.Project.CreateProject where
 
 import           Prologue
-import           Data.Binary                      (Binary)
+import           Data.Binary                   (Binary)
 
-import           Empire.API.Data.Project          (ProjectId, Project)
-import qualified Empire.API.Response             as Response
+import           Empire.API.Data.Project       (ProjectId, Project)
+import qualified Empire.API.Response           as Response
 import qualified Empire.API.Topic              as T
 import qualified Empire.API.Request            as R
 

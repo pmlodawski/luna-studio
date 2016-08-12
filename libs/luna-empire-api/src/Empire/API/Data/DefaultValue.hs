@@ -22,6 +22,7 @@ data Value = IntValue       Int
            | Image          String Double Double
            | DataFrame      [(String, [Value])]
            | Graphics       G.Graphics
+           | Lambda         String
            deriving (Generic, Show, Eq)
 
 data PortDefault = Expression String | Constant Value deriving (Generic, Show, Eq)

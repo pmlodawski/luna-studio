@@ -67,6 +67,12 @@ class LongText extends BaseWidget
     @alignment = align
     @relayout()
 
+  setMonospace: (mono) ->
+    if mono
+      @element.addClass('monospace')
+    else
+      @element.removeClass('monospace')
+
   relayout: ->
     super
     @mesh.updateMatrix()

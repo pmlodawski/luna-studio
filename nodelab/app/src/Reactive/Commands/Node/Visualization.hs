@@ -55,7 +55,7 @@ visualizeError id err = do
             LunaError.ImportError   name     -> "Cannot find symbol \"" <> name        <> "\""
             LunaError.NoMethodError name tpe -> "Cannot find method \"" <> name        <> "\" for type \"" <> toString tpe <> "\""
             LunaError.TypeError     t1   t2  -> "Cannot match type  \"" <> toString t1 <> "\" with \""     <> toString t2  <> "\""
-        widget = LongText.create (Vector2 200 200) (Text.pack msg) LongText.Left
+        widget = LongText.create (Vector2 200 200) (Text.pack msg) LongText.Left LongText.Code
     UICmd.register_ groupId widget def
 
 removeVisualization :: WidgetId -> Command UIRegistry.State ()
@@ -157,7 +157,15 @@ visualizeNodeValue id (Image url w h) = do
 visualizeNodeValue id (StringValue str) = do
     let normalize = intercalate "<br />" . wordsBy (== '\n')
         create groupId = do
-            let widget = LongText.create (Vector2 200 200) (Text.pack $ normalize str) LongText.Left
+            let widget = LongText.create (Vector2 200 200) (Text.pack $ normalize str) LongText.Left LongText.Text
+            UICmd.register_ groupId widget def
+        update = LongText.value .~ (Text.pack $ normalize str)
+    visualize id create update
+
+visualizeNodeValue id (Lambda str) = do
+    let normalize = intercalate "<br />" . wordsBy (== '\n')
+        create groupId = do
+            let widget = LongText.create (Vector2 200 200) (Text.pack $ normalize str) LongText.Left LongText.Code
             UICmd.register_ groupId widget def
         update = LongText.value .~ (Text.pack $ normalize str)
     visualize id create update
