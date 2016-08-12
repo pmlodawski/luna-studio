@@ -36,26 +36,25 @@ class TextBox extends BaseWidget
   setValueLabel: (text) ->
     @value = text
     @mesh.remove @valueLabel if @valueLabel
-    if @value and @value != ""
-      align = switch @alignment
-        when 'Left'   then textAlign.bottomLeft
-        when 'Center' then textAlign.bottomCenter
-        when 'Right'  then textAlign.bottomRight
-        else throw 'Invalid text alignment'
+    align = switch @alignment
+      when 'Left'   then textAlign.bottomLeft
+      when 'Center' then textAlign.bottomCenter
+      when 'Right'  then textAlign.bottomRight
+      else throw 'Invalid text alignment'
 
-      cf = $$.commonUniforms.camFactor.value
-      fs = (13 * cf * 0.8).toFixed(2)
+    cf = $$.commonUniforms.camFactor.value
+    fs = (13 * cf * 0.8).toFixed(2)
 
-      @valueLabel = new Text2D(@value, { align: align, zoom: $$.commonUniforms.camFactor.value })
-      @valueLabel.position.x = switch @alignment
-        when 'Left'   then 0
-        when 'Center' then @width / 2.0
-        when 'Right'  then @width
-        else throw 'Invalid text alignment'
+    @valueLabel = new Text2D(@value, { align: align, zoom: $$.commonUniforms.camFactor.value })
+    @valueLabel.position.x = switch @alignment
+      when 'Left'   then 0
+      when 'Center' then @width / 2.0
+      when 'Right'  then @width
+      else throw 'Invalid text alignment'
 
-      @valueLabel.position.y = @height / 2.0
+    @valueLabel.position.y = @height / 2.0
 
-      @mesh.add @valueLabel
+    @mesh.add @valueLabel
 
   redrawTextures: ->
     @valueLabel.setZoom $$.commonUniforms.camFactor.value if @valueLabel
