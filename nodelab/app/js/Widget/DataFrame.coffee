@@ -23,6 +23,10 @@ isVisible = (m) ->
     m = m.parent
   return v
 
+cloneMouseEvent      = (e) -> new MouseEvent(e.type, e)
+cloneKeyboardEvent   = (e) -> new KeyboardEvent(e.type, e)
+cloneMouseWheelEvent = (e) -> new WheelEvent(e.type, e)
+
 
 class DataFrame extends BaseWidget
   constructor: (widgetId, width, height) ->
@@ -31,6 +35,28 @@ class DataFrame extends BaseWidget
     @data = ""
     @element  = $('<div class="data-frame"></div>')
     htmlCanvas(@mesh).append @element
+
+    passThroughHandlerMouse = (evt) =>
+      evt.preventDefault()
+      $('#canvas2d')[0].dispatchEvent(cloneMouseEvent(evt.originalEvent))
+
+    passThroughHandlerKbd = (evt) =>
+      evt.preventDefault()
+      $('#canvas2d')[0].dispatchEvent(cloneKeyboardEvent(evt.originalEvent))
+
+
+    @element.on 'mousemove', passThroughHandlerMouse
+    @element.on 'mouseup',   passThroughHandlerMouse
+    @element.on 'mousedown', passThroughHandlerMouse
+    @element.on 'keyup',     passThroughHandlerKbd
+    @element.on 'keydown',   passThroughHandlerKbd
+    @element.on 'keypress',  passThroughHandlerKbd
+    @element.on 'mousewheel', (evt) =>
+      evt.stopPropagation()
+      if evt.ctrlKey
+        evt.preventDefault()
+        $('#canvas2d')[0].dispatchEvent(cloneMouseWheelEvent(evt.originalEvent))
+
 
   setData: (headers, rows) ->
     console.log(arguments)
