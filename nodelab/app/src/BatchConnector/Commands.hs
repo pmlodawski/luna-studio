@@ -2,46 +2,50 @@ module BatchConnector.Commands where
 
 import           Utils.PreludePlus
 
-import qualified Data.Text.Lazy                    as Text
-import           Data.UUID.Types                   (UUID)
-import qualified Data.UUID.Types                   as UUID
+import qualified Data.Text.Lazy                        as Text
+import           Data.UUID.Types                       (UUID)
+import qualified Data.UUID.Types                       as UUID
 
-import           Batch.Workspace                   (Workspace)
-import qualified Batch.Workspace                   as Workspace
-import           BatchConnector.Connection         (sendRequest, sendUpdate)
+import           Batch.Workspace                       (Workspace)
+import qualified Batch.Workspace                       as Workspace
+import           BatchConnector.Connection             (sendRequest, sendUpdate)
 
-import qualified Empire.API.Data.DefaultValue      as DefaultValue
-import           Empire.API.Data.GraphLocation     (GraphLocation)
-import qualified Empire.API.Data.GraphLocation     as GraphLocation
-import           Empire.API.Data.Node              (NodeId)
-import           Empire.API.Data.NodeMeta          (NodeMeta)
-import           Empire.API.Data.PortRef           (AnyPortRef (..), InPortRef (..), OutPortRef (..))
-import           Empire.API.Data.Project           (ProjectId)
+import qualified Empire.API.Data.DefaultValue          as DefaultValue
+import           Empire.API.Data.GraphLocation         (GraphLocation)
+import qualified Empire.API.Data.GraphLocation         as GraphLocation
+import           Empire.API.Data.Node                  (NodeId)
+import           Empire.API.Data.NodeMeta              (NodeMeta)
+import           Empire.API.Data.PortRef               (AnyPortRef (..),
+                                                        InPortRef (..),
+                                                        OutPortRef (..))
+import           Empire.API.Data.Project               (ProjectId)
 
-import qualified Empire.API.Graph.AddNode          as AddNode
-import qualified Empire.API.Graph.Collaboration    as Collaboration
-import qualified Empire.API.Graph.Connect          as Connect
-import qualified Empire.API.Graph.Disconnect       as Disconnect
-import qualified Empire.API.Graph.DumpGraphViz     as DumpGraphViz
-import qualified Empire.API.Graph.GetProgram       as GetProgram
-import qualified Empire.API.Graph.RemoveNode       as RemoveNode
-import qualified Empire.API.Graph.RenameNode       as RenameNode
-import qualified Empire.API.Graph.SetDefaultValue  as SetDefaultValue
-import qualified Empire.API.Graph.SetInputNodeType as SetInputNodeType
-import qualified Empire.API.Graph.UpdateNodeMeta   as UpdateNodeMeta
-import qualified Empire.API.Library.CreateLibrary  as CreateLibrary
-import qualified Empire.API.Library.ListLibraries  as ListLibraries
-import qualified Empire.API.Project.CreateProject  as CreateProject
-import qualified Empire.API.Project.ExportProject  as ExportProject
-import qualified Empire.API.Project.ImportProject  as ImportProject
-import qualified Empire.API.Project.ListProjects   as ListProjects
+import qualified Empire.API.Graph.AddNode              as AddNode
+import qualified Empire.API.Graph.Collaboration        as Collaboration
+import qualified Empire.API.Graph.Connect              as Connect
+import qualified Empire.API.Graph.Disconnect           as Disconnect
+import qualified Empire.API.Graph.DumpGraphViz         as DumpGraphViz
+import qualified Empire.API.Graph.GetProgram           as GetProgram
+import qualified Empire.API.Graph.RemoveNode           as RemoveNode
+import qualified Empire.API.Graph.RenameNode           as RenameNode
+import qualified Empire.API.Graph.SetDefaultValue      as SetDefaultValue
+import qualified Empire.API.Graph.SetInputNodeType     as SetInputNodeType
+import qualified Empire.API.Graph.UpdateNodeExpression as UpdateNodeExpression
+import qualified Empire.API.Graph.UpdateNodeMeta       as UpdateNodeMeta
+import qualified Empire.API.Library.CreateLibrary      as CreateLibrary
+import qualified Empire.API.Library.ListLibraries      as ListLibraries
+import qualified Empire.API.Project.CreateProject      as CreateProject
+import qualified Empire.API.Project.ExportProject      as ExportProject
+import qualified Empire.API.Project.ImportProject      as ImportProject
+import qualified Empire.API.Project.ListProjects       as ListProjects
+
 
 
 withLibrary :: Workspace -> (GraphLocation -> a) -> a
 withLibrary w f = f (w ^. Workspace.currentLocation)
 
 addNode :: Text -> NodeMeta -> Maybe NodeId -> Workspace -> UUID -> IO ()
-addNode expression meta connectTo workspace uuid = sendRequest uuid $ (withLibrary workspace AddNode.Request) (AddNode.ExpressionNode $ Text.unpack expression) meta connectTo
+addNode expression meta connectTo workspace uuid = sendRequest uuid $ (withLibrary workspace AddNode.Request) (AddNode.ExpressionNode expression) meta connectTo
 
 createProject :: Text -> UUID -> IO ()
 createProject name uuid = sendRequest uuid $ CreateProject.Request $ Text.unpack name
@@ -58,6 +62,9 @@ listLibraries projectId uuid = sendRequest uuid $ ListLibraries.Request projectI
 
 getProgram :: Workspace -> UUID -> IO ()
 getProgram workspace uuid = sendRequest uuid $ withLibrary workspace GetProgram.Request
+
+updateNodeExpression :: NodeId -> Text -> Workspace -> UUID -> IO ()
+updateNodeExpression nodeId expression workspace uuid = sendRequest uuid $ withLibrary workspace UpdateNodeExpression.Request nodeId expression
 
 updateNodeMeta :: NodeId -> NodeMeta -> Workspace -> UUID -> IO ()
 updateNodeMeta nid nm workspace uuid = sendRequest uuid $ withLibrary workspace UpdateNodeMeta.Request nid nm

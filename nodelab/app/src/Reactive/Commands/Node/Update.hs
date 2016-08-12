@@ -3,6 +3,7 @@ module Reactive.Commands.Node.Update
     ( updateNode
     , updateNodeValue
     , updateNodeProfilingData
+    , updateExpression
     ) where
 
 import           Utils.PreludePlus
@@ -26,6 +27,8 @@ import           Reactive.Commands.Node.Create        (addNode)
 import           Reactive.Commands.Node.Ports         (displayPorts)
 import           Reactive.Commands.Node.TextResult    (nodeValueToText)
 import           Reactive.Commands.Node.Visualization (removeVisualization, visualizeError, visualizeNodeValueReprs)
+import qualified Reactive.Commands.Batch              as BatchCmd
+
 
 updateNode :: Node -> Command State ()
 updateNode node = do
@@ -73,3 +76,8 @@ updateNodeProfilingData :: NodeId -> Integer -> Command State ()
 updateNodeProfilingData id execTime = do
     widgetId <- nodeIdToWidgetId id
     inRegistry $ withJust widgetId $ flip UICmd.update_ $ Model.execTime ?~ execTime
+
+updateExpression :: NodeId -> Text -> Command State ()
+updateExpression nodeId expr = do
+    -- BatchCmd.
+    return ()

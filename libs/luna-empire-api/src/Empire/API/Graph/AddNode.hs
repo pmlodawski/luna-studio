@@ -2,6 +2,7 @@ module Empire.API.Graph.AddNode where
 
 import           Data.Binary                   (Binary)
 import           Prologue
+import qualified Data.Text.Lazy                as Text
 
 import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.Node          (Node, NodeId)
@@ -11,7 +12,7 @@ import qualified Empire.API.Graph.Request      as G
 import qualified Empire.API.Topic              as T
 import qualified Empire.API.Request            as R
 
-data NodeType = ExpressionNode { _expression :: String } deriving (Generic, Show, Eq)
+data NodeType = ExpressionNode { _expression :: Text } deriving (Generic, Show, Eq)
 
 data Request = Request { _location  :: GraphLocation
                        , _nodeType  :: NodeType

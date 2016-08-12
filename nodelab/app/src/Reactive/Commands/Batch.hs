@@ -40,7 +40,7 @@ addNode = withWorkspace .:. BatchCmd.addNode
 createProject :: Text -> Command State ()
 createProject = withUUID . BatchCmd.createProject
 
-listProjects ::  Command State ()
+listProjects :: Command State ()
 listProjects = withUUID BatchCmd.listProjects
 
 createLibrary :: Text -> Text -> Command State ()
@@ -51,6 +51,9 @@ listLibraries = withUUID . BatchCmd.listLibraries
 
 getProgram :: Command State ()
 getProgram = withWorkspace BatchCmd.getProgram
+
+updateNodeExpression :: NodeId -> Text -> Command State ()
+updateNodeExpression = withWorkspace .: BatchCmd.updateNodeExpression
 
 updateNodeMeta :: NodeId -> NodeMeta -> Command State ()
 updateNodeMeta = withWorkspace .: BatchCmd.updateNodeMeta

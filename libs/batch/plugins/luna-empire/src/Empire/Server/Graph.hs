@@ -83,22 +83,22 @@ saveCurrentProject loc = do
   projectRoot      <- use Env.projectRoot
   void $ liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Persistence.saveLocation projectRoot loc
 
-data Expr = Expression        String
-          | Function   (Maybe String)
-          | Module     (Maybe String)
-          | Input      (Maybe String)
-          | Output     (Maybe String)
+data Expr = Expression        Text
+          | Function   (Maybe Text)
+          | Module     (Maybe Text)
+          | Input      (Maybe Text)
+          | Output     (Maybe Text)
 
-parseExpr :: String -> Expr
-parseExpr (stripPrefix "def "    -> Just name) = Function $ Just name
-parseExpr (stripPrefix "module " -> Just name) = Module   $ Just name
-parseExpr (stripPrefix "in "     -> Just name) = Input    $ Just name
-parseExpr (stripPrefix "out "    -> Just name) = Output   $ Just name
-parseExpr "def"                                = Function   Nothing
-parseExpr "module"                             = Module     Nothing
-parseExpr "in"                                 = Input      Nothing
-parseExpr "out"                                = Output     Nothing
-parseExpr expr                                 = Expression expr
+parseExpr :: Text -> Expr
+parseExpr (Text.stripPrefix "def "    -> Just name) = Function $ Just name
+parseExpr (Text.stripPrefix "module " -> Just name) = Module   $ Just name
+parseExpr (Text.stripPrefix "in "     -> Just name) = Input    $ Just name
+parseExpr (Text.stripPrefix "out "    -> Just name) = Output   $ Just name
+parseExpr "def"                                     = Function   Nothing
+parseExpr "module"                                  = Module     Nothing
+parseExpr "in"                                      = Input      Nothing
+parseExpr "out"                                     = Output     Nothing
+parseExpr expr                                      = Expression expr
 
 forceTC :: GraphLocation -> StateT Env BusT ()
 forceTC location = do
@@ -133,7 +133,7 @@ handleAddNode = modifyGraph action success where
                   "temperatureThreshold" -> return $ fromJust $ UUID.fromString "77962bb1-32f1-4f4d-ae5f-4328b7c83708"
                   _  -> liftIO $ UUID.nextRandom
 
-              Graph.addNodeCondTC (isNothing connectTo) location uuid (Text.pack $ expression) nodeMeta
+              Graph.addNodeCondTC (isNothing connectTo) location uuid expression nodeMeta
             Function name -> throwError "Function Nodes not yet supported"
             Module   name -> throwError "Module Nodes not yet supported"
             Input    name -> throwError "Input Nodes not yet supported"
@@ -143,7 +143,7 @@ handleAddNode = modifyGraph action success where
     sendToBus' $ AddNode.Update location node
     case nodeType of
         AddNode.ExpressionNode expr -> forM_ connectTo $ \srcNodeId -> do
-                let exprCall = head $ splitOneOf " ." expr
+                let exprCall = head $ splitOneOf " ." $ Text.unpack expr
                     inPort = if exprCall `elem` stdlibFunctions then Arg 0 else Self
                     connectRequest = Request UUID.nil $ Connect.Request location (OutPortRef srcNodeId All) (InPortRef (node ^. Node.nodeId) inPort)
                 handleConnectReq False connectRequest
