@@ -90,7 +90,7 @@ enableGA val = do
 
 
 runCommand :: Text -> Command Global.State ()
-runCommand "project.new"                              = performIO $ UI.initNodeSearcher "project.new untitled" 0 (Vector2 200 200) True
+runCommand "project.new"                              = performIO $ UI.initNodeSearcher "project.new untitled" Nothing (Vector2 200 200) True
 runCommand (stripPrefix "project.new "  -> Just name) = createProject name
 runCommand (stripPrefix "project.open." -> Just name) = openProject name
 runCommand "project.export"                           = exportCurrentProject

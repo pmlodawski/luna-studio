@@ -47,7 +47,7 @@ openFresh = do
     let offset = Vector2 0 (floor $ -40.0 * factor)
     (nsPos', nsPos) <- ensureNSVisible
     Global.uiElements . UIElements.nsPos .= nsPos'
-    performIO $ UI.initNodeSearcher "" 0 (nsPos + offset) False
+    performIO $ UI.initNodeSearcher "" Nothing (nsPos + offset) False
 
 position :: Command Global.State (Vector2 Double, Vector2 Int)
 position = do
@@ -126,4 +126,4 @@ openCommand :: Command Global.State ()
 openCommand = do
     GA.sendEvent GA.CommandSearcher
     mousePos <- use Global.mousePos
-    performIO $ UI.initNodeSearcher "" 0 mousePos True
+    performIO $ UI.initNodeSearcher "" Nothing mousePos True

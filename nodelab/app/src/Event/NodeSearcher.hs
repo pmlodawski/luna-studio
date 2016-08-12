@@ -6,10 +6,10 @@ import           Utils.PreludePlus
 
 data Event = Query     Text
            | Tree      Text
-           | Create    Text
+           | Create    {_expression :: Text, _nodeId :: Maybe Int}
            | QueryCmd  Text
            | TreeCmd   Text
-           | CreateCmd Text
+           | CreateCmd {_expression :: Text, _nodeId :: Maybe Int}
            deriving (Eq, Show, Generic)
 
 makeLenses ''Event

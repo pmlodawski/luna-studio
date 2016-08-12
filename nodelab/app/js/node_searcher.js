@@ -244,8 +244,9 @@ NodeSearcher.prototype.isSearchboxActive = function () {
 NodeSearcher.prototype.createNode = function () {
   var app = require('app');
   this.destroy();
-  app.customEvent("nodesearcher", { "tag":      this.actionCreate
-                                  , "contents": this.expression()
+  app.customEvent("nodesearcher", { "tag":         this.actionCreate
+                                  , "_expression": this.expression()
+                                  , "_nodeId":     this.nodeId
                                   });
 };
 

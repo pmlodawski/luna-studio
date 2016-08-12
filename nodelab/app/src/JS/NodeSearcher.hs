@@ -9,15 +9,17 @@ import           GHCJS.Types                    (JSString, JSVal)
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Data.JSString.Text             (lazyTextToJSString)
+import           GHCJS.Nullable            (Nullable, maybeToNullable)
 
 import           Text.ScopeSearcher.QueryResult (Highlight (..), QueryResult (..))
 
 
 foreign import javascript safe "app.createNodeSearcher($1, $2, $3, $4, $5)"
-    initNodeSearcher' :: JSString -> Int -> Int -> Int -> Bool -> IO ()
+    initNodeSearcher' :: JSString -> Nullable Int -> Int -> Int -> Bool -> IO ()
 
-initNodeSearcher :: Text -> Int -> Vector2 Int -> Bool -> IO ()
-initNodeSearcher expr nodeId pos = initNodeSearcher' (lazyTextToJSString expr) nodeId (pos ^. x) (pos ^. y)
+initNodeSearcher :: Text -> Maybe Int -> Vector2 Int -> Bool -> IO ()
+initNodeSearcher expr nodeId pos = let nodeId' = maybeToNullable nodeId in
+    initNodeSearcher' (lazyTextToJSString expr) nodeId' (pos ^. x) (pos ^. y)
 
 -- display results
 
