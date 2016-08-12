@@ -193,6 +193,8 @@ function render() {
 
     raycaster.renderMap();
     raycaster.cacheMap();
+    module.exports.nextFrameCallbacks.forEach(function(cb){cb();});
+    module.exports.nextFrameCallbacks = [];
     shouldRender = false;
   }
 
@@ -371,7 +373,8 @@ module.exports = {
   displayAppCrashed:        displayAppCrashed,
   getJSState:               function() { return $$; },
   downloadFile:             downloadFile,
-  customEvent:              function() { }
+  customEvent:              function() { },
+  nextFrameCallbacks: []
 
 };
 

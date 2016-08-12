@@ -52,6 +52,6 @@ class Port
   setColor:        (color)     -> @uniforms.color.value     = colors[color]
   setHighlight:    (val)       -> @uniforms.highlight.value = if val then 1 else 0
   updateMouseDist: (mouseDist) -> @uniforms.mouseDist.value = mouseDist
-
+  widgetMoved: -> null
 module.exports = Port
 

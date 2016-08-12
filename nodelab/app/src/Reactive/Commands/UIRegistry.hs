@@ -81,7 +81,7 @@ update_ id fun = void $ update id fun
 move :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
 move id vec = do
     UIRegistry.widgets . ix id . widget . widgetPosition .= vec
-    performIO $ UI.updatePosition' id vec
+    UI.updatePosition' id vec
 
 moveY :: WidgetId -> Double -> Command UIRegistry.State ()
 moveY id ny = do
@@ -89,7 +89,7 @@ moveY id ny = do
     withJust pos $ \(Vector2 px _) -> do
         UIRegistry.widgets . ix id . widget . widgetPosition . y .= ny
         let vec = Vector2 px ny
-        performIO $ UI.updatePosition' id vec
+        UI.updatePosition' id vec
 
 moveX :: WidgetId -> Double -> Command UIRegistry.State ()
 moveX id nx = do
@@ -97,13 +97,13 @@ moveX id nx = do
     withJust pos $ \(Vector2 _ py) -> do
         UIRegistry.widgets . ix id . widget . widgetPosition . x .= nx
         let vec = Vector2 nx py
-        performIO $ UI.updatePosition' id vec
+        UI.updatePosition' id vec
 
 moveBy :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
 moveBy id vec = do
     UIRegistry.widgets . ix id . widget . widgetPosition += vec
     pos <- preuse $ UIRegistry.widgets . ix id . widget . widgetPosition
-    withJust pos $ performIO . (UI.updatePosition' id)
+    withJust pos $ (UI.updatePosition' id)
 
 
 newtype ChildrenResizedHandler = ChildrenResizedHandler (WidgetId -> Command UIRegistry.State ())

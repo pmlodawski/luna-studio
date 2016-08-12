@@ -1,5 +1,6 @@
 $$     = require('common')
 config = require('config')
+app    = require('app')
 
 BaseWidget = require ('Widget/BaseWidget')
 
@@ -55,7 +56,7 @@ class LongText extends BaseWidget
       textAlign: @alignment
       display: if isVisible(@mesh) then 'block' else 'none'
   widgetMoved: =>
-    setTimeout((=> @relayout()), 0)
+    app.nextFrameCallbacks.push(=> @relayout())
   destructor: ->
     @element.remove()
 

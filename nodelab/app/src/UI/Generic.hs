@@ -4,12 +4,12 @@ module UI.Generic where
 
 import           GHCJS.Marshal.Pure        (pToJSVal)
 import           GHCJS.Types               (JSVal)
-import           Utils.PreludePlus
+import           Utils.PreludePlus         hiding (children)
 import           Utils.Vector
 
 import qualified Event.Mouse               as Mouse
 import           Object.Widget             (DragState (..), IsDisplayObject, WidgetFile, WidgetId, objectId, widget,
-                                            widgetPosition)
+                                            widgetPosition, children)
 import           Reactive.Commands.Command (Command, performIO)
 import qualified Reactive.State.Camera     as Camera
 import qualified Reactive.State.Global     as Global
@@ -21,6 +21,9 @@ import           UI.Widget                 (GenericWidget (..), UIWidget)
 foreign import javascript safe "$1.mesh.position.x = $2; $1.mesh.position.y = $3; $1.widgetMoved()"
     setWidgetPosition'      :: JSVal -> Double -> Double -> IO ()
 
+foreign import javascript safe "$1.widgetMoved()"
+    widgetMoved :: JSVal -> IO ()
+
 foreign import javascript safe "$1.setSize($2, $3)"
     setSize'                :: GenericWidget -> Double -> Double -> IO ()
 
@@ -31,15 +34,30 @@ setWidgetPosition :: UIWidget a => Vector2 Double -> a -> IO ()
 setWidgetPosition (Vector2 x y) widget = setWidgetPosition' (pToJSVal widget) x y
 
 updatePosition :: (IsDisplayObject b) => WidgetFile b -> Command UIRegistry.State ()
-updatePosition file = performIO $ do
+updatePosition file = do
     let position = file ^. widget . widgetPosition
-    w <- UIR.lookup $ file ^. objectId :: IO (GenericWidget)
-    setWidgetPosition position w
+        widgetId = file ^. objectId
+    performIO $ do
+        w <- UIR.lookup $ widgetId :: IO (GenericWidget)
+        setWidgetPosition position w
+    recursiveWidgetMoved widgetId
 
-updatePosition' :: WidgetId -> Vector2 Double -> IO ()
-updatePosition' id pos = do
-        w <- UIR.lookup $ id :: IO (GenericWidget)
-        setWidgetPosition pos w
+recursiveWidgetMoved :: WidgetId -> Command UIRegistry.State ()
+recursiveWidgetMoved widgetId = do
+    wf <- UIRegistry.lookupM widgetId
+    withJust wf $ \wf -> do
+        forM_ (wf ^. children) $ \widgetId -> do
+            performIO $ do
+                w <- UIR.lookup $ widgetId :: IO (GenericWidget)
+                widgetMoved (pToJSVal w)
+            recursiveWidgetMoved widgetId
+
+updatePosition' :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
+updatePosition' widgetId position = do
+    performIO $ do
+        w <- UIR.lookup $ widgetId :: IO (GenericWidget)
+        setWidgetPosition position w
+    recursiveWidgetMoved widgetId
 
 setSize :: WidgetId -> Vector2 Double -> IO ()
 setSize id (Vector2 x y) = do
