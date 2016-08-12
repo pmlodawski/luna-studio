@@ -5,59 +5,59 @@
 
 module Empire.Server.Graph where
 
-import           Control.Monad.State               (StateT)
-import           Control.Monad.Error               (throwError)
-import qualified Data.Binary                       as Bin
-import           Data.UUID.Types                   (UUID)
-import qualified Data.UUID.Types                   as UUID
-import qualified Data.UUID.V4                      as UUID
-import           Data.ByteString                   (ByteString)
-import           Data.ByteString.Lazy              (fromStrict)
-import qualified Data.IntMap                       as IntMap
-import qualified Data.Map                          as Map
-import           Data.Maybe                        (fromMaybe, isJust, isNothing)
-import qualified Data.Text.Lazy                    as Text
-import           Data.Text.Lazy                    (Text, stripPrefix)
-import           Data.List                         (partition, break)
-import           Data.List.Split                   (splitOneOf)
-import           Prologue                          hiding (Item)
-import           Prologue                          hiding (Item)
+import           Control.Monad.State                   (StateT)
+import           Control.Monad.Error                   (throwError)
+import qualified Data.Binary                           as Bin
+import           Data.UUID.Types                       (UUID)
+import qualified Data.UUID.Types                       as UUID
+import qualified Data.UUID.V4                          as UUID
+import           Data.ByteString                       (ByteString)
+import           Data.ByteString.Lazy                  (fromStrict)
+import qualified Data.IntMap                           as IntMap
+import qualified Data.Map                              as Map
+import           Data.Maybe                            (fromMaybe, isJust, isNothing)
+import qualified Data.Text.Lazy                        as Text
+import           Data.Text.Lazy                        (Text, stripPrefix)
+import           Data.List                             (partition, break)
+import           Data.List.Split                       (splitOneOf)
+import           Prologue                              hiding (Item)
 
-import           Empire.API.Data.DefaultValue      (Value (..))
-import           Empire.API.Data.GraphLocation     (GraphLocation)
-import           Empire.API.Data.Node              (Node (..), NodeId)
-import qualified Empire.API.Data.Node              as Node
-import qualified Empire.API.Data.NodeSearcher      as NS
-import           Empire.API.Data.Port              (InPort (..), OutPort (..), Port (..), PortId (..), PortState (..))
-import           Empire.API.Data.PortRef           (InPortRef (..), OutPortRef (..))
-import           Empire.API.Data.ValueType         (ValueType (..))
-import qualified Empire.API.Graph.AddNode          as AddNode
-import qualified Empire.API.Graph.CodeUpdate       as CodeUpdate
-import qualified Empire.API.Graph.Connect          as Connect
-import qualified Empire.API.Graph.Disconnect       as Disconnect
-import qualified Empire.API.Graph.DumpGraphViz     as DumpGraphViz
-import qualified Empire.API.Graph.GetProgram       as GetProgram
-import qualified Empire.API.Graph.TypeCheck        as TypeCheck
-import qualified Empire.API.Graph.NodeResultUpdate as NodeResultUpdate
-import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
-import qualified Empire.API.Graph.RemoveNode       as RemoveNode
-import qualified Empire.API.Graph.RenameNode       as RenameNode
-import qualified Empire.API.Graph.SetDefaultValue  as SetDefaultValue
-import qualified Empire.API.Graph.UpdateNodeMeta   as UpdateNodeMeta
-import qualified Empire.API.Topic                  as Topic
-import qualified Empire.API.Response               as Response
-import           Empire.API.Request                (Request(..))
-import qualified Empire.Commands.Graph             as Graph
-import qualified Empire.Commands.Persistence       as Persistence
-import qualified Empire.Empire                     as Empire
-import           Empire.Env                        (Env)
-import qualified Empire.Env                        as Env
-import           Empire.Server.Server              (errorMessage, sendToBus', replyFail, replyResult, replyOk)
-import           Flowbox.Bus.BusT                  (BusT (..))
-import qualified Flowbox.System.Log.Logger         as Logger
+import           Empire.API.Data.DefaultValue          (Value (..))
+import           Empire.API.Data.GraphLocation         (GraphLocation)
+import           Empire.API.Data.Node                  (Node (..), NodeId)
+import qualified Empire.API.Data.Node                  as Node
+import qualified Empire.API.Data.NodeSearcher          as NS
+import           Empire.API.Data.Port                  (InPort (..), OutPort (..), Port (..), PortId (..), PortState (..))
+import           Empire.API.Data.PortRef               (InPortRef (..), OutPortRef (..))
+import           Empire.API.Data.ValueType             (ValueType (..))
+import qualified Empire.API.Graph.AddNode              as AddNode
+import qualified Empire.API.Graph.CodeUpdate           as CodeUpdate
+import qualified Empire.API.Graph.Connect              as Connect
+import qualified Empire.API.Graph.Disconnect           as Disconnect
+import qualified Empire.API.Graph.DumpGraphViz         as DumpGraphViz
+import qualified Empire.API.Graph.GetProgram           as GetProgram
+import qualified Empire.API.Graph.TypeCheck            as TypeCheck
+import qualified Empire.API.Graph.NodeResultUpdate     as NodeResultUpdate
+import qualified Empire.API.Graph.NodeUpdate           as NodeUpdate
+import qualified Empire.API.Graph.RemoveNode           as RemoveNode
+import qualified Empire.API.Graph.RenameNode           as RenameNode
+import qualified Empire.API.Graph.SetDefaultValue      as SetDefaultValue
+import qualified Empire.API.Graph.UpdateNodeExpression as UpdateNodeExpression
+import qualified Empire.API.Graph.UpdateNodeMeta       as UpdateNodeMeta
+import qualified Empire.API.Topic                      as Topic
+import qualified Empire.API.Response                   as Response
+import           Empire.API.Request                    (Request(..))
+import qualified Empire.Commands.Graph                 as Graph
+import qualified Empire.Commands.Persistence           as Persistence
+import qualified Empire.Empire                         as Empire
+import           Empire.Env                            (Env)
+import qualified Empire.Env                            as Env
+import           Empire.Server.Server                  (errorMessage, sendToBus', replyFail, replyResult, replyOk)
+import           Flowbox.Bus.BusT                      (BusT (..))
+import qualified Flowbox.System.Log.Logger             as Logger
 import qualified StdLibMock
-import qualified Empire.API.Graph.Request          as G
-import           Empire.Utils.TextResult           (nodeValueToText)
+import qualified Empire.API.Graph.Request              as G
+import           Empire.Utils.TextResult               (nodeValueToText)
 
 
 logger :: Logger.LoggerIO
@@ -153,6 +153,11 @@ handleRemoveNode :: Request RemoveNode.Request -> StateT Env BusT ()
 handleRemoveNode = modifyGraphOk action success where
   action  (RemoveNode.Request location nodeIds) = Graph.removeNodes location nodeIds
   success (RemoveNode.Request location nodeIds) result = sendToBus' $ RemoveNode.Update location nodeIds
+
+handleUpdateNodeExpression :: Request UpdateNodeExpression.Request -> StateT Env BusT ()
+handleUpdateNodeExpression = modifyGraphOk action success where
+  action (UpdateNodeExpression.Request location nodeId expression) = Graph.updateNodeExpression location nodeId expression
+  success _ _ = return ()
 
 handleUpdateNodeMeta :: Request UpdateNodeMeta.Request -> StateT Env BusT ()
 handleUpdateNodeMeta = modifyGraphOk action success where

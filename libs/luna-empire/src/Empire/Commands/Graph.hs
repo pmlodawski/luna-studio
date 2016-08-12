@@ -3,6 +3,7 @@ module Empire.Commands.Graph
     , addNodeCondTC
     , addPersistentNode
     , removeNodes
+    , updateNodeExpression
     , updateNodeMeta
     , connect
     , connectCondTC
@@ -102,6 +103,11 @@ removeNodeNoTC nodeId = do
     mapM_ disconnectPort obsoleteEdges
     zoom Graph.ast $ AST.removeSubtree astRef
     Graph.nodeMapping %= Map.delete nodeId
+
+updateNodeExpression :: GraphLocation -> NodeId -> Text -> Empire ()
+updateNodeExpression loc nodeId expression = withGraph loc $ do
+    ref <- GraphUtils.getASTPointer nodeId
+    return () -- TODO: implement
 
 updateNodeMeta :: GraphLocation -> NodeId -> NodeMeta -> Empire ()
 updateNodeMeta loc nodeId meta = withGraph loc $ do
