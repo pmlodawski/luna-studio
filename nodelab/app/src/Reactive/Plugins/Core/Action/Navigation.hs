@@ -100,28 +100,38 @@ goToNodeId selectedNodes nodeId = do
         changeSelection' selectedNodes nodeId widgetId
 
 goLeft, goRight, goDown, goUp :: Command State ()
-goRight = go findRightMost findNodesOnRight
-goLeft  = go findLeftMost  findNodesOnLeft
-goDown  = go findDownMost  findNodesOnDown
-goUp    = go findUpMost    findNodesOnUp
+goRight = go findRightMost findNodesOnRight findNodesOnRightSide
+goLeft  = go findLeftMost  findNodesOnLeft  findNodesOnLeftSide
+goDown  = go findDownMost  findNodesOnDown  findNodesOnDownSide
+goUp    = go findUpMost    findNodesOnUp    findNodesOnUpSide
 
-go :: ([WidgetFile Model.Node] -> WidgetFile Model.Node) -> (Position -> [WidgetFile Model.Node] -> [WidgetFile Model.Node]) -> Command State ()
-go findMost findNodesOnSide = do
+go :: ([WidgetFile Model.Node] -> WidgetFile Model.Node) ->
+      (Position -> [WidgetFile Model.Node] -> [WidgetFile Model.Node]) ->
+      (Position -> [WidgetFile Model.Node] -> [WidgetFile Model.Node]) ->
+      Command State ()
+go findMost findNodesInCone findNodesOnSide = do
     nodes <- allNodes
     let selectedNodes = findSelected nodes
     when (not $ null selectedNodes) $ do
         let nodeSrc = findMost selectedNodes
             pos = nodeSrc ^. widget . Model.position
+            nodesCone = findNodesInCone pos nodes
             nodesSide = findNodesOnSide pos nodes
-        when (not $ null nodesSide) $ do
-            let nodeDst = findNearestNode pos nodesSide
-            changeSelection selectedNodes nodeDst
+        if not $ null nodesCone
+            then                               changeSelection selectedNodes $ findNearestNode pos nodesCone
+            else when (not $ null nodesSide) $ changeSelection selectedNodes $ findNearestNode pos nodesSide
 
 findRightMost, findLeftMost, findDownMost, findUpMost :: [WidgetFile Model.Node] -> WidgetFile Model.Node
 findRightMost = maximumBy (compare `on` (^. widget . Model.position . x))
 findLeftMost  = minimumBy (compare `on` (^. widget . Model.position . x))
 findDownMost  = maximumBy (compare `on` (^. widget . Model.position . y))
 findUpMost    = minimumBy (compare `on` (^. widget . Model.position . y))
+
+findNodesOnRightSide, findNodesOnLeftSide, findNodesOnDownSide, findNodesOnUpSide :: Position -> [WidgetFile Model.Node] -> [WidgetFile Model.Node]
+findNodesOnRightSide pos = filter $ \wf -> wf ^. widget . Model.position . x > pos ^. x
+findNodesOnLeftSide  pos = filter $ \wf -> wf ^. widget . Model.position . x < pos ^. x
+findNodesOnDownSide  pos = filter $ \wf -> wf ^. widget . Model.position . y > pos ^. y
+findNodesOnUpSide    pos = filter $ \wf -> wf ^. widget . Model.position . y < pos ^. y
 
 findNodesOnRight, findNodesOnLeft, findNodesOnDown, findNodesOnUp :: Position -> [WidgetFile Model.Node] -> [WidgetFile Model.Node]
 findNodesOnRight = filter . isOnRight
@@ -130,16 +140,16 @@ findNodesOnDown  = filter . isOnDown
 findNodesOnUp    = filter . isOnUp
 
 isOnRight, isOnLeft, isOnDown, isOnUp :: Position -> WidgetFile Model.Node -> Bool
-isOnRight = isOnSide (>)  skip (>=)
-isOnLeft  = isOnSide (<)  skip (>=)
-isOnDown  = isOnSide skip (>)  (<)
-isOnUp    = isOnSide skip (<)  (<)
+isOnRight = isInCone (>)  skip (>=)
+isOnLeft  = isInCone (<)  skip (>=)
+isOnDown  = isInCone skip (>)  (<)
+isOnUp    = isInCone skip (<)  (<)
 
 skip :: Double -> Double -> Bool
 skip _ _ = True
 
-isOnSide :: (Double -> Double -> Bool) -> (Double -> Double -> Bool) -> (Double -> Double -> Bool) -> Position -> WidgetFile Model.Node -> Bool
-isOnSide cmpDXZero cmpDYZero cmpDims pos wf = dx `cmpDXZero` 0.0 && dy `cmpDYZero` 0.0 && abs dx `cmpDims` abs dy where
+isInCone :: (Double -> Double -> Bool) -> (Double -> Double -> Bool) -> (Double -> Double -> Bool) -> Position -> WidgetFile Model.Node -> Bool
+isInCone cmpDXZero cmpDYZero cmpDims pos wf = dx `cmpDXZero` 0.0 && dy `cmpDYZero` 0.0 && abs dx `cmpDims` abs dy where
     nodePos = wf ^. widget . Model.position
     dx = nodePos ^. x - pos ^. x
     dy = nodePos ^. y - pos ^. y
