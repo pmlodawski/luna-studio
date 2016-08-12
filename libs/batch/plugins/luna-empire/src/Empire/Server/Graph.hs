@@ -17,8 +17,8 @@ import qualified Data.IntMap                       as IntMap
 import qualified Data.Map                          as Map
 import           Data.Maybe                        (fromMaybe, isJust, isNothing)
 import qualified Data.Text.Lazy                    as Text
-import           Data.Text.Lazy                    (Text)
-import           Data.List                         (partition, break, stripPrefix)
+import           Data.Text.Lazy                    (Text, stripPrefix)
+import           Data.List                         (partition, break)
 import           Data.List.Split                   (splitOneOf)
 import           Prologue                          hiding (Item)
 import           Prologue                          hiding (Item)
@@ -90,15 +90,15 @@ data Expr = Expression        Text
           | Output     (Maybe Text)
 
 parseExpr :: Text -> Expr
-parseExpr (Text.stripPrefix "def "    -> Just name) = Function $ Just name
-parseExpr (Text.stripPrefix "module " -> Just name) = Module   $ Just name
-parseExpr (Text.stripPrefix "in "     -> Just name) = Input    $ Just name
-parseExpr (Text.stripPrefix "out "    -> Just name) = Output   $ Just name
-parseExpr "def"                                     = Function   Nothing
-parseExpr "module"                                  = Module     Nothing
-parseExpr "in"                                      = Input      Nothing
-parseExpr "out"                                     = Output     Nothing
-parseExpr expr                                      = Expression expr
+parseExpr (stripPrefix "def "    -> Just name) = Function $ Just name
+parseExpr (stripPrefix "module " -> Just name) = Module   $ Just name
+parseExpr (stripPrefix "in "     -> Just name) = Input    $ Just name
+parseExpr (stripPrefix "out "    -> Just name) = Output   $ Just name
+parseExpr "def"                                = Function   Nothing
+parseExpr "module"                             = Module     Nothing
+parseExpr "in"                                 = Input      Nothing
+parseExpr "out"                                = Output     Nothing
+parseExpr expr                                 = Expression expr
 
 forceTC :: GraphLocation -> StateT Env BusT ()
 forceTC location = do

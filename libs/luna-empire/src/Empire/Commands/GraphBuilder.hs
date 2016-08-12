@@ -15,7 +15,7 @@ import           Data.Maybe                   (catMaybes, fromMaybe, maybeToList
 import qualified Data.List                    as List
 import qualified Data.Text.Lazy               as Text
 import           Data.Record                  (ANY (..), caseTest, of')
-import           Data.Layer_OLD.Cover_OLD (uncover, covered)
+import           Data.Layer_OLD.Cover_OLD     (uncover, covered)
 import           Data.Graph                   (source)
 import           Data.Prop                    (prop)
 
@@ -39,12 +39,12 @@ import qualified Empire.Commands.AST          as AST
 import qualified Empire.Commands.GraphUtils   as GraphUtils
 import           Empire.Empire
 
-import           Old.Luna.Syntax.Term.Class       (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..), Lam (..))
-import qualified Old.Luna.Syntax.Term.Expr.Lit         as Lit
-import qualified Luna.Syntax.Term.Function    as Function
+import           Old.Luna.Syntax.Term.Class         (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..), Lam (..))
+import qualified Old.Luna.Syntax.Term.Expr.Lit      as Lit
+import qualified Luna.Syntax.Term.Function          as Function
 
 import qualified Luna.Syntax.Model.Network.Builder  as Builder
-import           Luna.Syntax.Model.Network.Builder  (Type (..), TCData (..), replacement, Lambda (..))
+import           Luna.Syntax.Model.Network.Builder  (Type (..), TCData (..), replacement)
 
 
 buildGraph :: Command Graph API.Graph
@@ -96,7 +96,7 @@ extractAppArgTypes ref = do
     node <- Builder.read ref
     args <- runMaybeT $ do
         repl :: ClusRef <- MaybeT $ cast <$> Builder.follow (prop TCData . replacement) ref
-        sig <- MaybeT $ Builder.follow (prop Lambda) repl
+        sig <- MaybeT $ Builder.follow (prop Builder.Lambda) repl
         return $ sig ^. Function.args
     case args of
         Nothing -> return []
