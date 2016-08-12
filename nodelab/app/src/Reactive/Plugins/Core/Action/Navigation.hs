@@ -3,6 +3,7 @@ module Reactive.Plugins.Core.Action.Navigation where
 
 import           Data.List (maximumBy)
 import           Data.Function (on)
+import qualified Data.HashMap.Strict               as HashMap
 
 import           Utils.PreludePlus
 import           Utils.Vector
@@ -47,20 +48,7 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down char (KeyMods False False Fal
     _     -> Nothing
 toAction _ = Nothing
 
-goNext, goPrev :: Command State ()
-goNext = do
-    nodes <- allNodes
-    let selectedNodes = findSelected nodes
-    when (not $ null selectedNodes) $ do
-        let nodeSrc = findRightMost selectedNodes
-            nodeId = nodeSrc ^. widget . Model.nodeId
-            outPortRefAll = R.OutPortRef' $ R.OutPortRef nodeId P.All
-        nextWidgetIdMay <- preuse $ Global.graph . Graph.portWidgetsMap . ix outPortRefAll
-        forM_ nextWidgetIdMay $ \nextWidgetId -> do
-            nextWidgetMay <- inRegistry $ lookupNode nextWidgetId
-            forM_ nextWidgetMay $ \nextWidget -> do
-                let nextNodeId = nextWidget ^. widget . Model.nodeId
-                changeSelection' selectedNodes nextNodeId nextWidgetId
+goPrev, goNext :: Command State ()
 goPrev = do
     nodes <- allNodes
     let selectedNodes = findSelected nodes
@@ -74,7 +62,32 @@ goPrev = do
             Just prevSelfNodeId -> goToNodeId selectedNodes prevSelfNodeId
             Nothing -> do
                 prevFirstPortNodeIdMay <- preuse $ Global.graph . Graph.connectionsMap . ix inPortRefFirstPort . C.src . R.srcNodeId
-                forM_ prevFirstPortNodeIdMay $ \prevFirstPortNodeId -> goToNodeId selectedNodes prevFirstPortNodeId
+                withJust prevFirstPortNodeIdMay $ \prevFirstPortNodeId -> goToNodeId selectedNodes prevFirstPortNodeId
+goNext = do
+    nodes <- allNodes
+    let selectedNodes = findSelected nodes
+    when (not $ null selectedNodes) $ do
+        let nodeSrc = findRightMost selectedNodes
+            nodeId = nodeSrc ^. widget . Model.nodeId
+        nextNodeIds <- getDstNodeIds nodeId
+        nextNodes <- catMaybes <$> mapM toWidgetFile nextNodeIds
+        when (not $ null nextNodes) $ do
+            let nextNode = findUpMost nextNodes
+            changeSelection selectedNodes nextNode
+
+getDstNodeIds :: N.NodeId -> Command State [N.NodeId]
+getDstNodeIds nodeId = do
+    connMap <- use $ Global.graph . Graph.connectionsMap
+    let connections = filter matchNodeId $ HashMap.elems connMap
+    return $ (^. C.dst . R.dstNodeId) <$> connections
+    where
+        matchNodeId conn = conn ^. C.src . R.srcNodeId == nodeId
+
+toWidgetFile :: N.NodeId -> Command State (Maybe (WidgetFile Model.Node))
+toWidgetFile nodeId = do
+    widgetIdMay <- preuse $ Global.graph . Graph.nodeWidgetsMap . ix nodeId
+    nodeMayMay <- inRegistry $ mapM lookupNode widgetIdMay
+    return $ join nodeMayMay
 
 -- TODO: merge with MultiSelection.hs
 lookupNode :: WidgetId -> Command UIRegistry.State (Maybe (WidgetFile Model.Node))
@@ -83,7 +96,7 @@ lookupNode = UIRegistry.lookupTypedM
 goToNodeId :: [WidgetFile Model.Node] -> N.NodeId -> Command State ()
 goToNodeId selectedNodes nodeId = do
     widgetIdMay <- preuse $ Global.graph . Graph.nodeWidgetsMap . ix nodeId
-    forM_ widgetIdMay $ \widgetId -> do
+    withJust widgetIdMay $ \widgetId -> do
         changeSelection' selectedNodes nodeId widgetId
 
 goLeft, goRight, goDown, goUp :: Command State ()
