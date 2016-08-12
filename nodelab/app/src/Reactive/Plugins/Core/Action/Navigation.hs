@@ -126,7 +126,7 @@ go findMost findNodesOnSide findNearest = do
             let nearest = findNearest pos nodesSide
             changeSelection selectedNodes nearest
 
-closenestPow = 3.0
+closenestPow = 2.5
 
 axisDistanceRight :: Vector2 Double -> Double
 axisDistanceRight (Vector2 x y) =  x
