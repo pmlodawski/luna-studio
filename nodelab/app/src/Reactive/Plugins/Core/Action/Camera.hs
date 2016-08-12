@@ -36,7 +36,7 @@ toAction' (Keyboard _ (Keyboard.Event Keyboard.Press char _)) = case char of
     '0'   -> Just $ resetZoom
     _     -> Nothing
 
-toAction' (Keyboard _ (Keyboard.Event Keyboard.Down char KeyMods { _ctrl = True })) = case char of
+toAction' (Keyboard _ (Keyboard.Event Keyboard.Down char (KeyMods False True False False))) = case char of
     '\37' -> Just panLeft
     '\39' -> Just panRight
     '\38' -> Just panUp

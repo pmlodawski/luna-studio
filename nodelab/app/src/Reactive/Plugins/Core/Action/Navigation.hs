@@ -35,7 +35,7 @@ import           Reactive.Commands.Batch           (collaborativeTouch, cancelCo
 
 
 toAction :: Event -> Maybe (Command State ())
-toAction (Keyboard _ (Keyboard.Event Keyboard.Down char KeyMods { _shift = True })) = case char of
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down char (KeyMods True False False False))) = case char of
     '\t'  -> Just goPrev
     '\37' -> Just goPrev
     '\39' -> Just goNext
@@ -43,8 +43,14 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down char KeyMods { _shift = True 
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down char (KeyMods False False False False))) = case char of
     '\37' -> Just goLeft
     '\39' -> Just goRight
-    '\40' -> Just goDown
     '\38' -> Just goUp
+    '\40' -> Just goDown
+    _     -> Nothing
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down char (KeyMods True True False False))) = case char of
+    '\37' -> Just goConeLeft
+    '\39' -> Just goConeRight
+    '\38' -> Just goConeUp
+    '\40' -> Just goConeDown
     _     -> Nothing
 toAction _ = Nothing
 
@@ -99,17 +105,59 @@ goToNodeId selectedNodes nodeId = do
     withJust widgetIdMay $ \widgetId -> do
         changeSelection' selectedNodes nodeId widgetId
 
-goLeft, goRight, goDown, goUp :: Command State ()
-goRight = go findRightMost findNodesOnRight findNodesOnRightSide
-goLeft  = go findLeftMost  findNodesOnLeft  findNodesOnLeftSide
-goDown  = go findDownMost  findNodesOnDown  findNodesOnDownSide
-goUp    = go findUpMost    findNodesOnUp    findNodesOnUpSide
+goRight, goLeft, goDown, goUp :: Command State ()
+goRight = go findRightMost findNodesOnRightSide findNearestRight
+goLeft  = go findLeftMost  findNodesOnLeftSide  findNearestLeft
+goDown  = go findDownMost  findNodesOnDownSide  findNearestDown
+goUp    = go findUpMost    findNodesOnUpSide    findNearestUp
 
 go :: ([WidgetFile Model.Node] -> WidgetFile Model.Node) ->
       (Position -> [WidgetFile Model.Node] -> [WidgetFile Model.Node]) ->
-      (Position -> [WidgetFile Model.Node] -> [WidgetFile Model.Node]) ->
+      (Position -> [WidgetFile Model.Node] -> WidgetFile Model.Node) ->
       Command State ()
-go findMost findNodesInCone findNodesOnSide = do
+go findMost findNodesOnSide findNearest = do
+    nodes <- allNodes
+    let selectedNodes = findSelected nodes
+    when (not $ null selectedNodes) $ do
+        let nodeSrc = findMost selectedNodes
+            pos = nodeSrc ^. widget . Model.position
+            nodesSide = findNodesOnSide pos nodes
+        when (not $ null nodesSide) $ do
+            let nearest = findNearest pos nodesSide
+            changeSelection selectedNodes nearest
+
+closenestPow = 3.0
+
+axisDistanceRight :: Vector2 Double -> Double
+axisDistanceRight (Vector2 x y) =  x
+axisDistanceLeft  (Vector2 x y) = -x
+axisDistanceDown  (Vector2 x y) =  y
+axisDistanceUp    (Vector2 x y) = -y
+
+findNearestRight, findNearestLeft, findNearestDown, findNearestUp :: Position -> [WidgetFile Model.Node] -> WidgetFile Model.Node
+findNearestRight pos = maximumBy (compare `on` (closenest pos axisDistanceRight))
+findNearestLeft  pos = maximumBy (compare `on` (closenest pos axisDistanceLeft))
+findNearestDown  pos = maximumBy (compare `on` (closenest pos axisDistanceDown))
+findNearestUp    pos = maximumBy (compare `on` (closenest pos axisDistanceUp))
+
+closenest :: Position -> (Vector2 Double -> Double) -> WidgetFile Model.Node -> Double
+closenest pos axisDistance wf = axisDist / (dist ** closenestPow) where
+    pos' = wf ^. widget . Model.position
+    vect = pos' - pos
+    dist = magnitude vect
+    axisDist = axisDistance vect
+
+goConeRight, goConeLeft, goConeDown, goConeUp :: Command State ()
+goConeRight = goCone findRightMost findNodesOnRight findNodesOnRightSide
+goConeLeft  = goCone findLeftMost  findNodesOnLeft  findNodesOnLeftSide
+goConeDown  = goCone findDownMost  findNodesOnDown  findNodesOnDownSide
+goConeUp    = goCone findUpMost    findNodesOnUp    findNodesOnUpSide
+
+goCone :: ([WidgetFile Model.Node] -> WidgetFile Model.Node) ->
+          (Position -> [WidgetFile Model.Node] -> [WidgetFile Model.Node]) ->
+          (Position -> [WidgetFile Model.Node] -> [WidgetFile Model.Node]) ->
+          Command State ()
+goCone findMost findNodesInCone findNodesOnSide = do
     nodes <- allNodes
     let selectedNodes = findSelected nodes
     when (not $ null selectedNodes) $ do

@@ -25,6 +25,9 @@ instance Num a => Num (Vector2 a) where
 lengthSquared :: Num a => Vector2 a -> a
 lengthSquared (Vector2 x y) = x * x + y * y
 
+magnitude :: Floating a => Vector2 a -> a
+magnitude = sqrt . lengthSquared
+
 normalize :: Vector2 Double -> Vector2 Double
 normalize (Vector2 x y) = Vector2 (x / len) (y / len) where len = sqrt $ x * x + y * y
 
