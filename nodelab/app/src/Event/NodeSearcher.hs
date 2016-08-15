@@ -4,7 +4,7 @@ module Event.NodeSearcher where
 import           Data.Aeson               (FromJSON, ToJSON)
 import           Utils.PreludePlus
 import           Empire.API.Data.Node     (NodeId)
-import           Empire.API.JSONInstances
+import           Empire.API.JSONInstances ()
 
 
 data Event = Query     Text
