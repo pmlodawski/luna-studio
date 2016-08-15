@@ -1,8 +1,8 @@
 {
-  "name": "Flowbox Data GUI",
+  "name": "Nodelab",
   "version": "0.0.0",
   "authors": [
-    "Kamil Figiela <kamil.figiela@gmail.com>"
+    "Kamil Figiela <kamil.figiela@newbyteorder.com>"
   ],
   "license": "properitary",
   "ignore": [
