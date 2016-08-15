@@ -80,18 +80,18 @@ addPersistentNode :: Node -> Command Graph NodeId
 addPersistentNode n = case n ^. Node.nodeType of
   Node.ExpressionNode expr -> do
     let newNodeId = n ^. Node.nodeId
-    refNode <- zoom Graph.ast $ AST.addNode newNodeId (Text.unpack $ n ^. Node.name) (Text.unpack $ expr)
+    refNode <- zoom Graph.ast $ AST.addNode newNodeId (Text.unpack $ n ^. Node.name) (Text.unpack expr)
     zoom Graph.ast $ AST.writeMeta refNode (n ^. Node.nodeMeta)
     Graph.nodeMapping . at newNodeId ?= refNode
-    mapM (setDefault newNodeId) (Map.toList $ n ^. Node.ports)
+    mapM_ (setDefault newNodeId) (Map.toList $ n ^. Node.ports)
     return newNodeId
-  otherwise -> return $ UUID.nil
+  _ -> return UUID.nil
   where
     setDefault nodeId (portId, port) = case port ^. Port.state of
       Port.WithDefault (Constant val) -> case portId of
         (InPortId pid) -> setDefaultValue' (PortRef.toAnyPortRef nodeId (InPortId pid)) (Constant val)
-        otherwise -> return ()
-      otherwise -> return ()
+        _ -> return ()
+      _ -> return ()
 
 removeNodes :: GraphLocation -> [NodeId] -> Empire ()
 removeNodes loc nodeIds = withTC loc False $ forM_ nodeIds removeNodeNoTC
@@ -105,9 +105,13 @@ removeNodeNoTC nodeId = do
     Graph.nodeMapping %= Map.delete nodeId
 
 updateNodeExpression :: GraphLocation -> NodeId -> Text -> Empire ()
-updateNodeExpression loc nodeId expression = withGraph loc $ do
-    ref <- GraphUtils.getASTPointer nodeId
-    return () -- TODO: implement
+updateNodeExpression loc nodeId expr = do
+    metaMay <- withGraph loc $ do
+        ref <- GraphUtils.getASTPointer nodeId
+        zoom Graph.ast $ AST.readMeta ref
+    withJust metaMay $ \meta -> do
+        removeNodes loc [nodeId]
+        void $ addNode loc nodeId expr meta
 
 updateNodeMeta :: GraphLocation -> NodeId -> NodeMeta -> Empire ()
 updateNodeMeta loc nodeId meta = withGraph loc $ do
@@ -158,7 +162,7 @@ getCode loc = withGraph loc $ do
     return $ unlines lines
 
 getGraph :: GraphLocation -> Empire APIGraph.Graph
-getGraph loc = withTC loc True $ GraphBuilder.buildGraph
+getGraph loc = withTC loc True GraphBuilder.buildGraph
 
 renameNode :: GraphLocation -> NodeId -> Text -> Empire ()
 renameNode loc nid name = withTC loc False $ do
