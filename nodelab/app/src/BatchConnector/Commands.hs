@@ -66,8 +66,8 @@ getProgram workspace uuid = sendRequest uuid $ withLibrary workspace GetProgram.
 updateNodeExpression :: NodeId -> Text -> Workspace -> UUID -> IO ()
 updateNodeExpression nodeId expression workspace uuid = sendRequest uuid $ withLibrary workspace UpdateNodeExpression.Request nodeId expression
 
-updateNodeMeta :: NodeId -> NodeMeta -> Workspace -> UUID -> IO ()
-updateNodeMeta nid nm workspace uuid = sendRequest uuid $ withLibrary workspace UpdateNodeMeta.Request nid nm
+updateNodeMeta :: [(NodeId, NodeMeta)] -> Workspace -> UUID -> IO ()
+updateNodeMeta updates workspace uuid = sendRequest uuid $ withLibrary workspace UpdateNodeMeta.Request updates
 
 renameNode :: NodeId -> Text -> Workspace -> UUID -> IO ()
 renameNode nid name w uuid = sendRequest uuid $ withLibrary w RenameNode.Request nid name

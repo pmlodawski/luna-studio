@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 module Reactive.Plugins.Core.Action.Drag
     ( toAction
     ) where
@@ -93,10 +94,11 @@ stopDrag = do
             let selected = filter (^. widget . Model.isSelected) widgets
                 nodesToUpdate = (\w -> (w ^. widget . Model.nodeId, w ^. widget . widgetPosition)) <$> selected
 
-            forM nodesToUpdate $ \(id, pos) -> do
+            updates <- forM nodesToUpdate $ \(id, pos) -> do
                 Global.graph . Graph.nodesMap . ix id . Node.position .= toTuple pos
                 newMeta <- preuse $ Global.graph . Graph.nodesMap . ix id . Node.nodeMeta
-                withJust newMeta $ \newMeta -> BatchCmd.updateNodeMeta id newMeta
+                return $ (id, ) <$> newMeta
+            BatchCmd.updateNodeMeta $ catMaybes updates
             updateConnectionsForNodes $ fst <$> nodesToUpdate
 
 scaledDelta :: Vector2 Int -> Command State (Vector2 Double)

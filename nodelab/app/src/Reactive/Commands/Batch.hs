@@ -55,8 +55,8 @@ getProgram = withWorkspace BatchCmd.getProgram
 updateNodeExpression :: NodeId -> Text -> Command State ()
 updateNodeExpression = withWorkspace .: BatchCmd.updateNodeExpression
 
-updateNodeMeta :: NodeId -> NodeMeta -> Command State ()
-updateNodeMeta = withWorkspace .: BatchCmd.updateNodeMeta
+updateNodeMeta :: [(NodeId, NodeMeta)] -> Command State ()
+updateNodeMeta = withWorkspace . BatchCmd.updateNodeMeta
 
 renameNode :: NodeId -> Text -> Command State ()
 renameNode = withWorkspace .:  BatchCmd.renameNode

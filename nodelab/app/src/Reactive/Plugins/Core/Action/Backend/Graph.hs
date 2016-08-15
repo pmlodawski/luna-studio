@@ -34,7 +34,7 @@ import           Reactive.Commands.Graph.Disconnect          (localDisconnectAll
 import           Reactive.Commands.Graph.Render              (renderGraph)
 import           Reactive.Commands.Node                      (renameNode)
 import           Reactive.Commands.Node.Create               (addDummyNode)
-import           Reactive.Commands.Node.NodeMeta             (updateNodeMeta)
+import           Reactive.Commands.Node.NodeMeta             (updateNodesMeta)
 import           Reactive.Commands.Node.Remove               (localRemoveNodes)
 import           Reactive.Commands.Node.Update               (updateNode, updateNodeProfilingData, updateNodeValue)
 import           Reactive.Plugins.Core.Action.Backend.Common (doNothing, handleResponse)
@@ -83,7 +83,7 @@ toAction (Event.Batch ev) = Just $ case ev of
 
     NodeMetaUpdated update -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. UpdateNodeMeta.location')
-        when shouldProcess $ updateNodeMeta (update ^. UpdateNodeMeta.nodeId') (update ^. UpdateNodeMeta.nodeMeta')
+        when shouldProcess $ updateNodesMeta (update ^. UpdateNodeMeta.updates')
 
     NodeAdded update -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. AddNode.location')

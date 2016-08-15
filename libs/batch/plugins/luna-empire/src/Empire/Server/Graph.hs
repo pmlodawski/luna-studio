@@ -161,12 +161,13 @@ handleUpdateNodeExpression = modifyGraphOk action success where
 
 handleUpdateNodeMeta :: Request UpdateNodeMeta.Request -> StateT Env BusT ()
 handleUpdateNodeMeta = modifyGraphOk action success where
-  action (UpdateNodeMeta.Request location nodeId nodeMeta) = Graph.updateNodeMeta location nodeId nodeMeta
-  success (UpdateNodeMeta.Request location nodeId nodeMeta) result = sendToBus' $ UpdateNodeMeta.Update location nodeId nodeMeta
+  action  (UpdateNodeMeta.Request location updates) = do
+      forM_ updates $ uncurry $ Graph.updateNodeMeta location
+  success (UpdateNodeMeta.Request location updates) result = sendToBus' $ UpdateNodeMeta.Update location updates
 
 handleRenameNode :: Request RenameNode.Request -> StateT Env BusT ()
 handleRenameNode = modifyGraphOk action success where
-  action (RenameNode.Request location nodeId name) = Graph.renameNode location nodeId name
+  action  (RenameNode.Request location nodeId name) = Graph.renameNode location nodeId name
   success (RenameNode.Request location nodeId name) result = sendToBus' $ RenameNode.Update location nodeId name
 
 handleConnect :: Request Connect.Request -> StateT Env BusT ()
@@ -174,12 +175,12 @@ handleConnect = handleConnectReq True
 
 handleConnectReq :: Bool -> Request Connect.Request -> StateT Env BusT ()
 handleConnectReq doTC = modifyGraphOk action success where
-  action (Connect.Request location src dst) = Graph.connectCondTC doTC location src dst
+  action  (Connect.Request location src dst) = Graph.connectCondTC doTC location src dst
   success (Connect.Request location src dst) result = sendToBus' $ Connect.Update location src dst
 
 handleDisconnect :: Request Disconnect.Request -> StateT Env BusT ()
 handleDisconnect = modifyGraphOk action success where
-  action (Disconnect.Request location dst) = Graph.disconnect location dst
+  action  (Disconnect.Request location dst) = Graph.disconnect location dst
   success (Disconnect.Request location dst) result = sendToBus' $ Disconnect.Update location dst
 
 handleSetDefaultValue :: Request SetDefaultValue.Request -> StateT Env BusT ()

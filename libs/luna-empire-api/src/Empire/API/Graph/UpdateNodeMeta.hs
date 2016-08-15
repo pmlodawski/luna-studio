@@ -11,17 +11,17 @@ import qualified Empire.API.Graph.Request      as G
 import qualified Empire.API.Topic              as T
 import qualified Empire.API.Request            as R
 
+type SingleUpdate = (NodeId, NodeMeta)
+
 data Request = Request { _location :: GraphLocation
-                       , _nodeId   :: NodeId
-                       , _nodeMeta :: NodeMeta
+                       , _updates  :: [SingleUpdate]
                        } deriving (Generic, Show, Eq)
 
 type Response = Response.SimpleResponse Request
 instance Response.ResponseResult Request ()
 
 data Update   = Update { _location' :: GraphLocation
-                       , _nodeId'   :: NodeId
-                       , _nodeMeta' :: NodeMeta
+                       , _updates'  :: [SingleUpdate]
                        } deriving (Generic, Show, Eq)
 
 
