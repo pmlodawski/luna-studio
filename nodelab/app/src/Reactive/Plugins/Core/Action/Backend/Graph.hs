@@ -115,12 +115,13 @@ toAction (Event.Batch ev) = Just $ case ev of
         when shouldProcess $ performIO $ UI.setText $ update ^. CodeUpdate.code
 
     -- CollaborationUpdate update -> -- handled in Collaboration.hs
-    RemoveNodeResponse response -> handleResponse response doNothing
-    AddNodeResponse    response -> handleResponse response $ \_ nodeId -> collaborativeModify [nodeId]
-    ConnectResponse    response -> handleResponse response doNothing
-    DisconnectResponse response -> handleResponse response doNothing
-    NodeMetaResponse   response -> handleResponse response doNothing
-    NodeRenameResponse response -> handleResponse response doNothing
+    RemoveNodeResponse           response -> handleResponse response doNothing
+    AddNodeResponse              response -> handleResponse response $ \_ nodeId -> collaborativeModify [nodeId]
+    ConnectResponse              response -> handleResponse response doNothing
+    DisconnectResponse           response -> handleResponse response doNothing
+    NodeMetaResponse             response -> handleResponse response doNothing
+    NodeRenameResponse           response -> handleResponse response doNothing
+    UpdateNodeExpressionResponse response -> handleResponse response doNothing
 
     _ -> return ()
 toAction _ = Nothing
