@@ -21,7 +21,6 @@ module.exports = function() {
   window.Button         = require('Widget/Button');
   window.Label          = require('Widget/Label');
   window.LabeledWidget  = require('Widget/LabeledWidget');
-  window.ScatterPlot    = require('Widget/ScatterPlot');
   window.Icon           = require('Widget/Icon');
   window.PlotImage      = require('Widget/Image');
   window.LongText       = require('Widget/Text');

@@ -18,7 +18,6 @@ import qualified Object.Widget.DataFrame         as DataFrame
 import qualified Object.Widget.Graphics          as Graphics
 import qualified Object.Widget.LongText          as LongText
 import qualified Object.Widget.Plots.Image       as Image
-import qualified Object.Widget.Plots.ScatterPlot as ScatterPlot
 import qualified UI.Handlers.Node                as Node
 import qualified UI.Instances                    ()
 
@@ -135,15 +134,6 @@ visualizeNodeValue id (StringList v) = do
 --         update      = ScatterPlot.dataPoints .~ dataPoints
 --     visualize id create update
 
-visualizeNodeValue id (Histogram v) = do
-    let dataPoints = (\(a,b) -> Vector2 (fromIntegral a) (fromIntegral b)) <$> v
-    let create groupId = do
-            let widget = ScatterPlot.create Style.plotSize
-                       & ScatterPlot.dataPoints .~ dataPoints
-                       & ScatterPlot.display    .~ ScatterPlot.Bars
-            UICmd.register_ groupId widget def
-        update      = ScatterPlot.dataPoints .~ dataPoints
-    visualize id create update
 
 visualizeNodeValue id (Image url w h) = do
     let create groupId = do

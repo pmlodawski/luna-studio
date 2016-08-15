@@ -20,7 +20,6 @@ import           Object.Widget.Node               (Node, PendingNode)
 import           Object.Widget.Number.Continuous  (ContinuousNumber)
 import           Object.Widget.Number.Discrete    (DiscreteNumber)
 import           Object.Widget.Plots.Image        (Image)
-import           Object.Widget.Plots.ScatterPlot  (ScatterPlot)
 import           Object.Widget.Port               (Port)
 import           Object.Widget.Scene              (Scene)
 import           Object.Widget.Slider.Continuous  (ContinuousSlider)
@@ -41,7 +40,6 @@ import           UI.Widget.LabeledTextBox         ()
 import           UI.Widget.LongText               ()
 import           UI.Widget.Node                   ()
 import           UI.Widget.Plots.Image            ()
-import           UI.Widget.Plots.ScatterPlot      ()
 import qualified UI.Widget.Port                   as Port
 import           UI.Widget.Slider                 ()
 import           UI.Widget.TextBox                ()
@@ -82,7 +80,6 @@ buttonType            = typeOf (undefined :: Button)
 listType              = typeOf (undefined :: List)
 sceneType             = typeOf (undefined :: Scene)
 labelType             = typeOf (undefined :: Label)
-scatterPlotType       = typeOf (undefined :: ScatterPlot)
 imageType             = typeOf (undefined :: Image)
 longTextType          = typeOf (undefined :: LongText)
 dataFrameType         = typeOf (undefined :: DataFrame)
@@ -109,7 +106,6 @@ instance HasHandlers State where
         | tpe ==             listType  = def
         | tpe ==            sceneType  = def
         | tpe ==            labelType  =           Button.widgetHandlers
-        | tpe ==      scatterPlotType  = def
         | tpe ==            imageType  = def
         | tpe ==         longTextType  = def
         | tpe ==        dataFrameType  = def

@@ -20,7 +20,6 @@ import qualified Object.Widget.Number.Discrete    as DiscreteNumber
 import qualified Object.Widget.Slider.Continuous  as ContinuousSlider
 import qualified Object.Widget.Slider.Discrete    as DiscreteSlider
 import qualified Object.Widget.Toggle             as Toggle
-import qualified Object.Widget.Plots.ScatterPlot  as ScatterPlot
 import qualified Object.Widget.Graphics           as G
 
 import qualified Object.Widget.Choice             as Choice
@@ -63,10 +62,6 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     UICmd.register_ parent widget def
 
     let widget = Choice.create (Vector2 200 20) "Choice" ["Foo", "Bar", "Baz"] 0
-    UICmd.register parent widget def
-
-    let widget = ScatterPlot.create (Vector2 300 200)
-               & ScatterPlot.dataPoints .~ [Vector2 1 5, Vector2 2 7, Vector2 3 1, Vector2 4 10, Vector2 5  2]
     UICmd.register parent widget def
 
 
