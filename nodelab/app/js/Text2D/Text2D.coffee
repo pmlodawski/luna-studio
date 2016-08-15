@@ -16,7 +16,7 @@ class Text2D extends THREE.Object3D
   constructor: (text = '', options = {}) ->
     super()
 
-    @font      = options.font      || 'Roboto';
+    @font      = options.font      || 'Roboto, sans-serif';
     @fontSize  = options.fontSize  || 13;
     @fillStyle = options.fillStyle || '#ffffff';
     @zoom      = if (getTopParent this) == $$.sceneHUD then 1.0 else options.zoom || 1.0
@@ -63,7 +63,7 @@ class Text2D extends THREE.Object3D
       @updateText()
 
   getFontStyle: ->
-    (@fontSize * @zoom).toFixed(2) + 'px "' + @font + '"'
+    (@fontSize * @zoom).toFixed(2) + 'px ' + @font
 
   updateText: ->
     @cleanUp() # cleanup previous texture

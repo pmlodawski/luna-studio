@@ -59,7 +59,7 @@ class Label extends BaseWidget
         else throw 'Invalid text alignment'
 
       cf = $$.commonUniforms.camFactor.value
-      fontName = if @monospace then "dejavu_sans_monobook" else "Roboto"
+      fontName = if @monospace then "dejavu_sans_monobook, monospace" else "Roboto, sans-serif"
       @label = new Text2D(@text, { align: align, zoom: $$.commonUniforms.camFactor.value, font: fontName})
       @label.position.x = switch @alignment
         when 'Left'   then 0
