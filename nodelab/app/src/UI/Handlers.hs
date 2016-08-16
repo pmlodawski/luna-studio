@@ -46,6 +46,7 @@ import           UI.Widget.TextBox                ()
 import           UI.Widget.Toggle                 ()
 
 import qualified UI.Handlers.Button               as Button
+import qualified UI.Handlers.Label                as Label
 import           UI.Handlers.Choice               ()
 import qualified UI.Handlers.Choice.RadioButton   as RadioButton
 import qualified UI.Handlers.Connection           as Connection
@@ -105,7 +106,7 @@ instance HasHandlers State where
         | tpe ==           buttonType  =           Button.widgetHandlers
         | tpe ==             listType  = def
         | tpe ==            sceneType  = def
-        | tpe ==            labelType  =           Button.widgetHandlers
+        | tpe ==            labelType  =            Label.widgetHandlers
         | tpe ==            imageType  = def
         | tpe ==         longTextType  = def
         | tpe ==        dataFrameType  = def

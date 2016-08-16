@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ViewPatterns      #-}
 
 module UI.Handlers.Node where
 
@@ -11,15 +10,16 @@ import           Utils.Vector
 
 import           Event.Keyboard               (KeyMods (..))
 import qualified Event.Mouse                  as Mouse
-import           Object.Widget                (CompositeWidget, DblClickHandler, KeyPressedHandler, ResizableWidget, UIHandlers, WidgetFile,
-                                               WidgetId, createWidget, dblClick, keyDown, mouseOut, mouseOver, mousePressed, objectId,
-                                               updateWidget, widget)
+import           Object.Widget                (CompositeWidget, DblClickHandler, KeyPressedHandler, ResizableWidget,
+                                               UIHandlers, WidgetFile, WidgetId, createWidget, dblClick, keyDown,
+                                               mouseOut, mouseOver, mousePressed, objectId, updateWidget, widget)
 
 import qualified Object.Widget.Group          as Group
 import qualified Object.Widget.Label          as Label
 import qualified Object.Widget.LabeledTextBox as LabeledTextBox
 import qualified Object.Widget.Node           as Model
 import qualified Object.Widget.TextBox        as TextBox
+import           Reactive.Commands.Batch      (cancelCollaborativeTouch, collaborativeTouch)
 import           Reactive.Commands.Command    (Command)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import           Reactive.State.Global        (inRegistry)
@@ -27,11 +27,10 @@ import qualified Reactive.State.Global        as Global
 import qualified Reactive.State.Graph         as Graph
 import           Reactive.State.UIRegistry    (addHandler)
 import qualified Reactive.State.UIRegistry    as UIRegistry
-import           Reactive.Commands.Batch           (collaborativeTouch, cancelCollaborativeTouch)
 
 import qualified Style.Node                   as Style
 import           UI.Generic                   (whenChanged)
-import           UI.Handlers.Button           (MousePressedHandler (..))
+import           UI.Handlers.Button           (DblClickedHandler (..), MousePressedHandler (..))
 import           UI.Handlers.Generic          (ValueChangedHandler (..))
 import           UI.Handlers.LabeledTextBox   ()
 import           UI.Layout                    as Layout
@@ -82,6 +81,9 @@ enterNodeHandler = TypeKey :: TypeKey EnterNodeHandler
 newtype ExpandNodeHandler = ExpandNodeHandler (Command Global.State ())
 expandNodeHandler = TypeKey :: TypeKey ExpandNodeHandler
 
+newtype EditNodeExpressionHandler = EditNodeExpressionHandler (NodeId -> Command Global.State ())
+editNodeExpressionHandler = TypeKey :: TypeKey EditNodeExpressionHandler
+
 
 triggerRemoveHandler :: WidgetId -> Command Global.State ()
 triggerRemoveHandler id = do
@@ -113,6 +115,11 @@ triggerExpandNodeHandler :: WidgetId -> Command Global.State ()
 triggerExpandNodeHandler id = do
     maybeHandler <- inRegistry $ UICmd.handler id expandNodeHandler
     withJust maybeHandler $ \(ExpandNodeHandler handler) -> handler
+
+triggerEditNodeExpressionHandler :: WidgetId -> Model.Node -> Command Global.State ()
+triggerEditNodeExpressionHandler id model = do
+    maybeHandler <- inRegistry $ UICmd.handler id editNodeExpressionHandler
+    withJust maybeHandler $ \(EditNodeExpressionHandler handler) -> handler (model ^. Model.nodeId)
 
 keyDownHandler :: KeyPressedHandler Global.State
 keyDownHandler '\r'   _ _ id = triggerExpandNodeHandler id
@@ -214,7 +221,8 @@ instance CompositeWidget Model.Node where
         portGroup <- UICmd.register id grp def
 
         let label = Style.expressionLabel $ trimExpression $ model ^. Model.expression
-        expressionLabelId <- UICmd.register id label $ onClicked (\evt _ -> selectNode evt id)
+        expressionLabelId <- UICmd.register id label $ addHandler (DblClickedHandler $ \id -> triggerEditNodeExpressionHandler id model)
+                                                     $ onClicked (\evt _ -> selectNode evt id)
 
         let group  = Group.create & Group.position .~ Style.controlsPosition
         controlGroups <- UICmd.register id group Style.controlsLayout
