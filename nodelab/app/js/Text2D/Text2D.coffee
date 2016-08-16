@@ -19,6 +19,7 @@ class Text2D extends THREE.Object3D
     @font      = options.font      || 'Roboto, sans-serif';
     @fontSize  = options.fontSize  || 13;
     @fillStyle = options.fillStyle || '#ffffff';
+    @maxWidth  = options.maxWidth
     @zoom      = if (getTopParent this) == $$.sceneHUD then 1.0 else options.zoom || 1.0
 
     @canvas = new CanvasText()
@@ -55,6 +56,10 @@ class Text2D extends THREE.Object3D
       @fillStyle = value
       @updateText()
 
+  setMaxWidth: (value) ->
+    @maxWidth = value
+    @updateText()
+
   setZoom: (zoom) ->
     if (getTopParent this) == $$.sceneHUD
       zoom = 1
@@ -68,9 +73,12 @@ class Text2D extends THREE.Object3D
   updateText: ->
     @cleanUp() # cleanup previous texture
 
+    maxWidth = if @maxWidth then @maxWidth * @zoom else undefined
+
     @canvas.drawText @text, {
         font: @getFontStyle(),
-        fillStyle: @fillStyle
+        fillStyle: @fillStyle,
+        maxWidth: maxWidth
       }
 
     @texture = new THREE.Texture(@canvas.canvas)

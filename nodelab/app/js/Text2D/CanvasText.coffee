@@ -16,7 +16,8 @@ class CanvasText
 
     @ctx.font = ctxOptions.font
 
-    @textWidth  = Math.ceil @ctx.measureText(text).width
+    fullTextWidth = Math.ceil @ctx.measureText(text).width
+    @textWidth  = if ctxOptions.maxWidth then Math.min(ctxOptions.maxWidth, fullTextWidth) else fullTextWidth
     @textHeight = (getFontHeight @ctx.font) + 2
 
     @canvas.width  = THREE.Math.nextPowerOfTwo @textWidth
@@ -28,6 +29,7 @@ class CanvasText
     @ctx.textBaseline = 'top'
 
     @ctx.fillText text, 0, 0
+    @ctx.clearRect @textWidth, 0, @canvas.width - @textWidth, @textHeight
     @canvas
 
 getFontHeight = (fontStyle) ->
