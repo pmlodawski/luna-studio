@@ -6,7 +6,6 @@ module UI.Handlers.Node where
 import           Utils.PreludePlus            hiding (stripPrefix)
 
 import           Data.HMap.Lazy               (HTMap, TypeKey (..))
-import           Data.Text.Lazy               (stripPrefix)
 import qualified Data.Text.Lazy               as Text
 import           Utils.Vector
 
@@ -214,7 +213,7 @@ instance CompositeWidget Model.Node where
         let grp    = Group.create & Group.size .~ (Vector2 1 1)
         portGroup <- UICmd.register id grp def
 
-        let label = Style.expressionLabel $ mockupExpression $ model ^. Model.expression
+        let label = Style.expressionLabel $ trimExpression $ model ^. Model.expression
         expressionLabelId <- UICmd.register id label $ onClicked (\evt _ -> selectNode evt id)
 
         let group  = Group.create & Group.position .~ Style.controlsPosition
@@ -278,7 +277,7 @@ instance CompositeWidget Model.Node where
         whenChanged old model Model.expression $ do
             let exprId = model ^. Model.elements . Model.expressionLabel
 
-            UICmd.update_ exprId     $ Label.label   .~ (mockupExpression $ model ^. Model.expression)
+            UICmd.update_ exprId     $ Label.label   .~ (trimExpression $ model ^. Model.expression)
 
         whenChanged old model Model.name  $ do
             let nameTbId = model ^. Model.elements . Model.nameTextBox
@@ -317,8 +316,7 @@ expressionId id = UICmd.get id $ Model.elements . Model.expressionLabel
 valueGroupId :: WidgetId -> Command UIRegistry.State WidgetId
 valueGroupId id = UICmd.get id $ Model.elements . Model.visualizationGroup
 
-mockupExpression :: Text -> Text
-mockupExpression (stripPrefix "inside "                  -> Just name) = "inside"
-mockupExpression (stripPrefix "outside "                 -> Just name) = "outside"
-mockupExpression (stripPrefix "temperatureThreshold "    -> Just name) = "temperatureThreshold"
-mockupExpression name = name
+trimExpression :: Text -> Text
+trimExpression expr
+    | Text.length expr < 20 = expr
+    | otherwise             = (Text.take 20 expr) <> "…"
