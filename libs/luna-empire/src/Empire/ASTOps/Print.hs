@@ -8,6 +8,7 @@ import           Data.Layer_OLD.Cover_OLD (uncover, covered)
 import           Data.Direction           (source)
 import           Data.Map                 (Map)
 import qualified Data.Map                 as Map
+import           Data.Char                (isAlpha)
 import           Text.Printf              (printf)
 
 import           Empire.ASTOp             (ASTOp)
@@ -46,57 +47,62 @@ parenIf True  s = "(" ++ s ++ ")"
 
 
 --TODO[MK]: De-desugar lambdas
-printExpression' :: ASTOp m => Map NodeRef String -> Bool -> Bool -> NodeRef -> m String
-printExpression' argMapping suppresNodes paren nodeRef = do
-    let recur = printExpression' argMapping suppresNodes
+printExpression' :: ASTOp m => Bool -> Bool -> NodeRef -> m String
+printExpression' suppresNodes paren nodeRef = do
+    let recur = printExpression' suppresNodes
     node <- Builder.read nodeRef
     let displayFun funExpr args = do
         unpackedArgs <- ASTBuilder.unpackArguments args
         argsRep <- mapM (recur True) unpackedArgs
-        let dropTailBlanks = dropWhileEnd (== "_") argsRep
-        let shouldParen = paren && not (null args)
-        case argsRep of
-            a : as -> return $ parenIf shouldParen $ funExpr ++ " " ++ unwords dropTailBlanks
-            _ -> return funExpr
+        if all (not . isAlpha) funExpr && length argsRep == 2
+            then return $ parenIf paren $ head argsRep ++ " " ++ funExpr ++ " " ++ (argsRep !! 1)
+            else do
+                let dropTailBlanks = dropWhileEnd (== "_") argsRep
+                let shouldParen = paren && not (null args)
+                case argsRep of
+                    a : as -> return $ parenIf shouldParen $ funExpr ++ " " ++ unwords dropTailBlanks
+                    _ -> return funExpr
 
-    case Map.lookup nodeRef argMapping of
-        Just rep -> return rep
-        _ -> caseTest (uncover node) $ do
-            of' $ \(Lam as o) -> do
-                args <- ASTBuilder.unpackArguments as
-                out  <- Builder.follow source o
-                let newBinds = zip args $ ("arg" <>) . show <$> [0..]
-                repr <- printExpression' (Map.union argMapping $ Map.fromList newBinds) suppresNodes False out
-                return $ parenIf paren $ unwords (snd <$> newBinds) ++ ": " ++ repr
-            of' $ \(Match l r) -> do
-                leftRep  <- Builder.follow source l >>= recur paren
-                rightRep <- Builder.follow source r >>= recur paren
-                return $ leftRep ++ " = " ++ rightRep
-            of' $ \(Var n) -> do
-                isNode <- ASTBuilder.isGraphNode nodeRef
-                return $ if isNode && suppresNodes then "_" else unwrap n
-            of' $ \(Acc n t) -> do
-                targetRef <- Builder.follow source t
-                target    <- Builder.read targetRef
-                targetRep <- recur True targetRef
-                return $ if targetRep == "_" then unwrap n else targetRep <> "." <> unwrap n
-            of' $ \(App f args) -> do
-                funExpr <- Builder.follow source f >>= recur True
-                displayFun funExpr args
-            of' $ \(Curry f args) -> do
-                funExpr <- Builder.follow source f >>= recur True
-                displayFun ("@" <> funExpr) args
-            of' $ \Blank -> return "_"
-            of' $ \(Lit.Number _ s) -> return $ case s of
-                Lit.Rational r -> show r
-                Lit.Integer  i -> show i
-                Lit.Double   d -> printf "%f" d
-            of' $ \(Lit.String s) -> return $ show s
-            of' $ \(Cons (Lit.String n) _) -> return n
-            of' $ \ANY -> return ""
+    caseTest (uncover node) $ do
+        of' $ \(Lam as o) -> do
+            args    <- ASTBuilder.unpackArguments as
+            argReps <- mapM (recur False) args
+            out     <- Builder.follow source o
+            repr    <- recur False out
+            let bindsRep = if all (== "_") argReps then "" else "-> " ++ unwords (('$' :) <$> argReps) ++ " "
+            return $ parenIf paren $ bindsRep ++ repr
+        of' $ \(Match l r) -> do
+            leftRep  <- Builder.follow source l >>= recur paren
+            rightRep <- Builder.follow source r >>= recur paren
+            return $ leftRep ++ " = " ++ rightRep
+        of' $ \(Var n) -> do
+            isNode <- ASTBuilder.isGraphNode nodeRef
+            return $ if isNode && suppresNodes then "_" else unwrap n
+        of' $ \(Acc n t) -> do
+            targetRef <- Builder.follow source t
+            target    <- Builder.read targetRef
+            caseTest (uncover target) $ do
+                of' $ \Blank -> return $ "_." <> unwrap n
+                of' $ \ANY -> do
+                    targetRep <- recur True targetRef
+                    return $ if targetRep == "_" then unwrap n else targetRep <> "." <> unwrap n
+        of' $ \(App f args) -> do
+            funExpr <- Builder.follow source f >>= recur True
+            displayFun funExpr args
+        of' $ \(Curry f args) -> do
+            funExpr <- Builder.follow source f >>= recur True
+            displayFun ("@" <> funExpr) args
+        of' $ \Blank -> return "_"
+        of' $ \(Lit.Number _ s) -> return $ case s of
+            Lit.Rational r -> show r
+            Lit.Integer  i -> show i
+            Lit.Double   d -> printf "%f" d
+        of' $ \(Lit.String s) -> return $ show s
+        of' $ \(Cons (Lit.String n) _) -> return n
+        of' $ \ANY -> return ""
 
 printExpression :: ASTOp m => NodeRef -> m String
-printExpression = printExpression' Map.empty False False
+printExpression = printExpression' False False
 
 printNodeExpression :: ASTOp m => NodeRef -> m String
-printNodeExpression = printExpression' Map.empty True False
+printNodeExpression = printExpression' True False

@@ -42,6 +42,13 @@ accessorTarget = covered . lens getter setter where
 unpackArguments :: ASTOp m => [Arg EdgeRef] -> m [NodeRef]
 unpackArguments args = mapM (Builder.follow source . Arg.__val_) args
 
+isApp :: ASTOp m => NodeRef -> m Bool
+isApp ref = do
+    node <- Builder.read ref
+    caseTest (uncover node) $ do
+        of' $ \(App _ _) -> return True
+        of' $ \ANY   -> return False
+
 isBlank :: ASTOp m => NodeRef -> m Bool
 isBlank ref = do
     node <- Builder.read ref

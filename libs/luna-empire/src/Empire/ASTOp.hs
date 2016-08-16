@@ -20,7 +20,7 @@ import           Data.Graph.Builders                    (Connectible)
 import           Luna.Syntax.Model.Network.Builder.Term (TermBuilder_OLD, NetLayers, NetworkBuilderT, runNetworkBuilderT)
 import           Luna.Syntax.Model.Network.Builder.Node (TermNode)
 import           Luna.Syntax.Model.Network.Term         (Raw)
-import           Old.Luna.Syntax.Term.Class             (Acc, App, Blank, Match, Var, Cons, Unify, Curry)
+import           Old.Luna.Syntax.Term.Class             (Acc, App, Blank, Match, Var, Cons, Unify, Curry, Lam)
 import           Luna.Syntax.Model.Layer                ((:<:))
 import qualified Old.Luna.Syntax.Term.Expr.Lit               as Lit
 import           Type.Inference
@@ -46,6 +46,7 @@ type ASTOp m = ( MonadIO m
                , TermBuilder_OLD Unify      m NodeRef
                , TermBuilder_OLD Cons       m NodeRef
                , TermBuilder_OLD Curry      m NodeRef
+               , TermBuilder_OLD Lam        m NodeRef
                , Connectible NodeRef NodeRef m
                )
 

@@ -116,20 +116,34 @@ extractArgTypes ref = do
             return $ as ++ tailAs
         of' $ \ANY -> return []
 
-buildArgPorts :: ASTOp m => NodeRef -> m [Port]
-buildArgPorts ref = do
+extractPortInfo :: ASTOp m => NodeRef -> m ([ValueType], [PortState])
+extractPortInfo ref = do
     node  <- Builder.read ref
-    (types, states) <- caseTest (uncover node) $ do
+    caseTest (uncover node) $ do
         of' $ \(App f args) -> do
             unpacked       <- ASTBuilder.unpackArguments args
             portStates     <- mapM getPortState unpacked
             tp    <- Builder.follow source f >>= Builder.follow (prop Type) >>= Builder.follow source
             types <- extractArgTypes tp
             return (types, portStates)
+        of' $ \(Lam as o) -> do
+            args     <- ASTBuilder.unpackArguments as
+            areBlank <- mapM ASTBuilder.isBlank args
+            isApp    <- ASTBuilder.isApp =<< Builder.follow source o
+            if and areBlank && isApp
+                then extractPortInfo =<< Builder.follow source o
+                else do
+                    tpRef <- Builder.follow source $ node ^. prop Type
+                    types <- extractArgTypes tpRef
+                    return (types, [])
         of' $ \ANY -> do
             tpRef <- Builder.follow source $ node ^. prop Type
             types <- extractArgTypes tpRef
             return (types, [])
+
+buildArgPorts :: ASTOp m => NodeRef -> m [Port]
+buildArgPorts ref = do
+    (types, states) <- extractPortInfo ref
     let psCons = zipWith3 Port (InPortId . Arg <$> [0..]) (("arg " <>) . show <$> [0..]) (types ++ replicate (length states - length types) AnyType)
     return $ zipWith ($) psCons (states ++ repeat NotConnected)
 
@@ -142,11 +156,17 @@ buildSelfPort' seenAcc nodeRef = do
         return . Just $ Port (InPortId Self) "self" tpRep portState
 
     caseTest (uncover node) $ do
-        of' $ \(Acc _ t) -> Builder.follow source t >>= buildSelfPort' True
-        of' $ \(App t _) -> Builder.follow source t >>= buildSelfPort' seenAcc
-        of' $ \Blank     -> return Nothing
-        of' $ \(Var _)   -> if seenAcc then buildPort False else buildPort True
-        of' $ \ANY       -> if seenAcc then buildPort False else return Nothing
+        of' $ \(Acc _ t)  -> Builder.follow source t >>= buildSelfPort' True
+        of' $ \(App t _)  -> Builder.follow source t >>= buildSelfPort' seenAcc
+        of' $ \(Lam as o) -> do
+            args <- ASTBuilder.unpackArguments as
+            areBlank <- mapM ASTBuilder.isBlank args
+            if and areBlank
+                then Builder.follow source o >>= buildSelfPort' seenAcc
+                else if seenAcc then buildPort False else return Nothing
+        of' $ \Blank      -> return Nothing
+        of' $ \(Var _)    -> if seenAcc then buildPort False else buildPort True
+        of' $ \ANY        -> if seenAcc then buildPort False else return Nothing
 
 buildSelfPort :: ASTOp m => NodeRef -> m (Maybe Port)
 buildSelfPort = buildSelfPort' False
