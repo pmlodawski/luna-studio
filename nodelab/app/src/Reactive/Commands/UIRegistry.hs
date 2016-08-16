@@ -48,6 +48,14 @@ register parent model handlers = do
     triggerChildrenResized parent
     return (file ^. objectId)
 
+registerIx :: (CompositeWidget a, DisplayObjectClass a) => Int -> WidgetId -> a -> HTMap -> Command UIRegistry.State WidgetId
+registerIx ix parent model handlers = do
+    file <- UIRegistry.registerIxM ix parent model handlers
+    performIO $ createUI parent (file ^. objectId) model
+    createWidget (file ^. objectId) model
+    triggerChildrenResized parent
+    return (file ^. objectId)
+
 register_ :: (CompositeWidget a, DisplayObjectClass a) => WidgetId -> a -> HTMap -> Command UIRegistry.State ()
 register_ parent model handlers = void $ register parent model handlers
 

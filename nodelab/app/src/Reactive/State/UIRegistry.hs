@@ -8,6 +8,7 @@ module Reactive.State.UIRegistry
     , dragState
     , widgets
     , registerM
+    , registerIxM
     , lookupTypedM
     , updateWidgetM
     , lookupM
@@ -84,19 +85,29 @@ lookup idx state = IntMap.lookup idx (state ^. widgets)
 lookupM :: WidgetId -> Command State (Maybe (WidgetFile DisplayObject))
 lookupM id = preuse $ widgets . ix id
 
-register :: DisplayObjectClass a => WidgetId -> a -> HTMap -> State -> (WidgetFile a, State)
-register parent a handlers state = (widgetFile, state & widgets .~ newWidgets') where
+register' :: DisplayObjectClass a => ([WidgetId] -> WidgetId -> [WidgetId]) -> WidgetId -> a -> HTMap -> State -> (WidgetFile a, State)
+register' childrenInsertFn parent a handlers state = (widgetFile, state & widgets .~ newWidgets') where
     newWidgets'   = IntMap.insert parent newParent   newWidgets
     newWidgets    = IntMap.insert newId  dynamicFile oldWidgets
     newId         = generateId state
     oldWidgets    = state ^. widgets
     (Just oldParent) = IntMap.lookup parent oldWidgets
-    newParent     = oldParent & children .~ (oldParent ^. children) ++ [newId]
+    newParent     = oldParent & children .~ childrenInsertFn (oldParent ^. children) newId
     dynamicFile   = WidgetFile newId (toCtxDynamic a) (Just parent) [] handlers
     widgetFile    = WidgetFile newId a (Just parent) [] handlers
 
+register :: DisplayObjectClass a => WidgetId -> a -> HTMap -> State -> (WidgetFile a, State)
+register = register' (\l n -> l ++ [n])
+
 registerM :: DisplayObjectClass a => WidgetId -> a -> HTMap -> Command State (WidgetFile a)
 registerM = MState.state .:. register
+
+registerIx :: DisplayObjectClass a => Int -> WidgetId -> a -> HTMap -> State -> (WidgetFile a, State)
+registerIx ix = register' newChildren where
+    newChildren xs new_element = let (ys,zs) = splitAt ix xs   in ys ++ [new_element] ++ zs
+
+registerIxM :: DisplayObjectClass a => Int -> WidgetId -> a -> HTMap -> Command State (WidgetFile a)
+registerIxM = MState.state .:: registerIx
 
 updateWidgetM :: DisplayObjectClass a => WidgetId -> (a -> a) -> Command State a
 updateWidgetM id fun = do
