@@ -1,5 +1,6 @@
 $$     = require('common')
 config = require('config')
+app    = require('app')
 
 BaseWidget = require ('Widget/BaseWidget')
 
