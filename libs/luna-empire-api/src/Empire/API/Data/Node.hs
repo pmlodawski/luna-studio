@@ -26,6 +26,7 @@ data NodeType = ExpressionNode  { _expression :: Text }
 data Node = Node { _nodeId   :: NodeId
                  , _name     :: Text
                  , _nodeType :: NodeType
+                 , _canEnter :: Bool
                  , _ports    :: Map PortId Port
                  , _nodeMeta :: NodeMeta
                  } deriving (Generic, Typeable, Show, Eq)

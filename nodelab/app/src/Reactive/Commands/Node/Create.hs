@@ -72,10 +72,8 @@ nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
                   $ addHandler (UINode.FocusNodeHandler    $ focusNode)
                   $ addHandler (UINode.ExpandNodeHandler   $ expandSelectedNodes)
                   $ addEnterNodeHandler where
-                        addEnterNodeHandler = case node ^. Node.nodeType of
-                            Node.FunctionNode _ -> addHandler (UINode.EnterNodeHandler $ enterNode $ Breadcrumb.Lambda $ node ^. Node.nodeId) mempty
-                            -- Node.ModuleNode     -> addHandler (UINode.EnterNodeHandler $ enterNode $ Breadcrumb.Module   $ Text.unpack $ node ^. Node.name) mempty
-                            _                   -> mempty
+                        addEnterNodeHandler = if node ^. Node.canEnter then addHandler (UINode.EnterNodeHandler $ enterNode $ Breadcrumb.Lambda $ node ^. Node.nodeId) mempty
+                                                                       else mempty
 
 expandSelectedNodes :: Command Global.State ()
 expandSelectedNodes = do
