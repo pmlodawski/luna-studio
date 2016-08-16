@@ -126,15 +126,10 @@ buildArgPorts ref = do
             tp    <- Builder.follow source f >>= Builder.follow (prop Type) >>= Builder.follow source
             types <- extractArgTypes tp
             return (types, portStates)
-        of' $ \(Var _) -> do
+        of' $ \ANY -> do
             tpRef <- Builder.follow source $ node ^. prop Type
             types <- extractArgTypes tpRef
             return (types, [])
-        of' $ \(Acc _ _) -> do
-            tpRef <- Builder.follow source $ node ^. prop Type
-            types <- extractArgTypes tpRef
-            return (types, [])
-        of' $ \ANY -> return ([], [])
     let psCons = zipWith3 Port (InPortId . Arg <$> [0..]) (("arg " <>) . show <$> [0..]) (types ++ replicate (length states - length types) AnyType)
     return $ zipWith ($) psCons (states ++ repeat NotConnected)
 
