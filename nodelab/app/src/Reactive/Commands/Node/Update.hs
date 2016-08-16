@@ -25,7 +25,6 @@ import qualified Empire.API.Graph.NodeResultUpdate    as NodeResult
 
 import           Reactive.Commands.Node.Create        (addNode)
 import           Reactive.Commands.Node.Ports         (displayPorts)
-import           Reactive.Commands.Node.TextResult    (nodeValueToText)
 import           Reactive.Commands.Node.Visualization (removeVisualization, visualizeError, visualizeNodeValueReprs)
 import qualified Reactive.Commands.Batch              as BatchCmd
 
