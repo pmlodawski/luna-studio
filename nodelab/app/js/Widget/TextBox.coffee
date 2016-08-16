@@ -42,10 +42,7 @@ class TextBox extends BaseWidget
       when 'Right'  then textAlign.bottomRight
       else throw 'Invalid text alignment'
 
-    cf = $$.commonUniforms.camFactor.value
-    fs = (13 * cf * 0.8).toFixed(2)
-
-    @valueLabel = new Text2D(@value, { align: align, zoom: $$.commonUniforms.camFactor.value })
+    @valueLabel = new Text2D(@value, { align: align, fontSize: 10.4, zoom: $$.commonUniforms.camFactor.value, maxWidth: @width })
     @valueLabel.position.x = switch @alignment
       when 'Left'   then 0
       when 'Center' then @width / 2.0
