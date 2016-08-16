@@ -32,8 +32,8 @@ dblClickedHandler = TypeKey :: TypeKey DblClickedHandler
 
 triggerDblClicked :: WidgetId -> Command Global.State ()
 triggerDblClicked id = do
-    maybeHandler <- inRegistry $ UICmd.handler id clickedHandler
-    withJust maybeHandler $ \(ClickedHandler handler) -> handler id
+    maybeHandler <- inRegistry $ UICmd.handler id dblClickedHandler
+    withJust maybeHandler $ \(DblClickedHandler handler) -> handler id
 
 dblClickHandler :: DblClickHandler Global.State
 dblClickHandler _ _ id = triggerDblClicked id

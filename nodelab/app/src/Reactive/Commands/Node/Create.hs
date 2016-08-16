@@ -16,7 +16,7 @@ import           Object.Widget                     (objectId, widget)
 import qualified Object.Widget.Node                as Model
 import qualified UI.Handlers.Node                  as Node
 
-import           Reactive.Commands.Command         (Command)
+import           Reactive.Commands.Command         (Command, performIO)
 import           Reactive.Commands.EnterNode       (enterNode)
 import           Reactive.Commands.Graph           (focusNode)
 import           Reactive.Commands.Graph.Selection (selectedNodes)
@@ -71,6 +71,7 @@ nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
                   $ addHandler (UINode.ChangeInputNodeTypeHandler $ \_ nodeId name -> BatchCmd.setInputNodeType nodeId name)
                   $ addHandler (UINode.FocusNodeHandler    $ focusNode)
                   $ addHandler (UINode.ExpandNodeHandler   $ expandSelectedNodes)
+                  $ addHandler (UINode.EditNodeExpressionHandler $ \nodeId -> performIO $ putStrLn $ "Edit node" <> show nodeId )
                   $ addEnterNodeHandler where
                         addEnterNodeHandler = if node ^. Node.canEnter then addHandler (UINode.EnterNodeHandler $ enterNode $ Breadcrumb.Lambda $ node ^. Node.nodeId) mempty
                                                                        else mempty

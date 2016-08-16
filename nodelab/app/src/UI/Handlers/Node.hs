@@ -221,7 +221,7 @@ instance CompositeWidget Model.Node where
         portGroup <- UICmd.register id grp def
 
         let label = Style.expressionLabel $ trimExpression $ model ^. Model.expression
-        expressionLabelId <- UICmd.register id label $ addHandler (DblClickedHandler $ \id -> triggerEditNodeExpressionHandler id model)
+        expressionLabelId <- UICmd.register id label $ addHandler (DblClickedHandler $ const $ triggerEditNodeExpressionHandler id model)
                                                      $ onClicked (\evt _ -> selectNode evt id)
 
         let group  = Group.create & Group.position .~ Style.controlsPosition
