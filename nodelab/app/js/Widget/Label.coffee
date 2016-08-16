@@ -6,9 +6,6 @@ Text2D       = require('Text2D/Text2D')
 
 BaseWidget   = require('Widget/BaseWidget')
 
-
-calculateTextWidth = (txt) -> layoutText(font: font, text: txt).width
-
 class Label extends BaseWidget
   constructor: (widgetId, width, height) ->
     super widgetId, width, height
@@ -20,7 +17,7 @@ class Label extends BaseWidget
     @uniforms =
       size:      { type: 'v2', value: new THREE.Vector2(width, height) }
       objectId:  { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
-      color:     { type: 'v4', value: new THREE.Vector4(1.0, 0, 0, 0.0) }
+      color:     { type: 'v4', value: new THREE.Vector4(0.0, 0, 0, 0.0) }
       radius:    { type: 'v4', value: new THREE.Vector4(0.0, 0.0, 0.0, 0.0) }
     @uniforms[k] = v for k, v of $$.commonUniforms
 
@@ -30,7 +27,7 @@ class Label extends BaseWidget
     @bg = new THREE.Mesh bgMesh, new THREE.ShaderMaterial
         uniforms:       @uniforms
         vertexShader:   require('shaders/sdf.vert')()
-        fragmentShader: require('shaders/generic_bg.frag')()
+        fragmentShader: require('shaders/label_bg.frag')()
         transparent:    true
         blending:       THREE.NormalBlending
         side:           THREE.DoubleSide
@@ -70,7 +67,7 @@ class Label extends BaseWidget
 
       @mesh.add @label
 
-      bgWidth = Math.max(@label.width / cf, 40.0)
+      bgWidth = Math.max(@label.textWidth, 30.0)
       @bg.position.x = switch @alignment
         when 'Left'   then 0
         when 'Right'  then (@width - bgWidth)

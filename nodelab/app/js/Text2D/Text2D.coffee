@@ -122,6 +122,7 @@ class Text2D extends THREE.Object3D
     @geometry.vertices[2].y = @geometry.vertices[3].y = -@canvas.height() / 2
     @geometry.verticesNeedUpdate = true
     @visible = @canvas.width() > 0
+    @textWidth = @canvas.textWidth
 
   cleanUp: -> @texture.dispose() if @texture
 
