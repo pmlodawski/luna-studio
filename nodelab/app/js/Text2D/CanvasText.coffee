@@ -17,7 +17,7 @@ class CanvasText
     @ctx.font = ctxOptions.font
 
     @textWidth  = Math.ceil @ctx.measureText(text).width
-    @textHeight = getFontHeight @ctx.font
+    @textHeight = (getFontHeight @ctx.font) + 2
 
     @canvas.width  = THREE.Math.nextPowerOfTwo @textWidth
     @canvas.height = THREE.Math.nextPowerOfTwo @textHeight
@@ -37,7 +37,7 @@ getFontHeight = (fontStyle) ->
     body = document.getElementsByTagName('body')[0];
     dummy = document.createElement 'div'
 
-    dummyText = document.createTextNode 'MÉq'
+    dummyText = document.createTextNode 'MÉq_'
     dummy.appendChild dummyText
     dummy.setAttribute 'style', 'font:' + fontStyle + ';position:absolute;top:0;left:0'
     body.appendChild dummy
