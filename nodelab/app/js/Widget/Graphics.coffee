@@ -44,7 +44,7 @@ class Graphics extends BaseWidget
                  derivatives:    true
       # item.position.z = ix * -0.00001
       item
-    @itemGroup.children.forEach obj => @itemGroup.remove(obj)
+    @itemGroup.children.forEach (obj) => @itemGroup.remove(obj)
     newchildren.forEach (it) => @itemGroup.add it
     @relayout()
 
