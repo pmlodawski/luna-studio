@@ -45,8 +45,7 @@ displayBreadcrumbs enterBreadcrumbs = do
         forM_ (reverse $ tails currentBreadcrumb) $ \bc -> do
             let name = case bc of
                     (item:_) -> case item of
-                        Breadcrumb.Function name -> name
-                        Breadcrumb.Module   name -> name
+                        Breadcrumb.Lambda id -> show id
                     [] -> currentProjectName
                 name'  = Text.pack name
                 widget = Button.create Style.breadcrumbItemSize name'

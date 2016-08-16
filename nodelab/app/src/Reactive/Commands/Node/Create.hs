@@ -73,8 +73,8 @@ nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
                   $ addHandler (UINode.ExpandNodeHandler   $ expandSelectedNodes)
                   $ addEnterNodeHandler where
                         addEnterNodeHandler = case node ^. Node.nodeType of
-                            Node.FunctionNode _ -> addHandler (UINode.EnterNodeHandler $ enterNode $ Breadcrumb.Function $ Text.unpack $ node ^. Node.name) mempty
-                            Node.ModuleNode     -> addHandler (UINode.EnterNodeHandler $ enterNode $ Breadcrumb.Module   $ Text.unpack $ node ^. Node.name) mempty
+                            Node.FunctionNode _ -> addHandler (UINode.EnterNodeHandler $ enterNode $ Breadcrumb.Lambda $ node ^. Node.nodeId) mempty
+                            -- Node.ModuleNode     -> addHandler (UINode.EnterNodeHandler $ enterNode $ Breadcrumb.Module   $ Text.unpack $ node ^. Node.name) mempty
                             _                   -> mempty
 
 expandSelectedNodes :: Command Global.State ()

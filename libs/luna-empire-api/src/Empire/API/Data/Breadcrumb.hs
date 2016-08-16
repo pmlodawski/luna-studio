@@ -2,8 +2,9 @@ module Empire.API.Data.Breadcrumb where
 
 import Prologue
 import Data.Binary (Binary)
+import Empire.API.Data.Node (NodeId)
 
-data BreadcrumbItem = Module String | Function String deriving (Show, Eq, Generic)
+data BreadcrumbItem = Lambda NodeId deriving (Show, Eq, Generic)
 
 newtype Breadcrumb = Breadcrumb { _items :: [BreadcrumbItem] } deriving (Show, Eq, Generic)
 
