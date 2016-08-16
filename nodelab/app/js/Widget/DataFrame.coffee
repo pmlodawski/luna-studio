@@ -59,8 +59,6 @@ class DataFrame extends BaseWidget
 
 
   setData: (headers, rows) ->
-    console.log(arguments)
-
     @element.html("");
     table = $("<table/>");
     header = $("<tr/>");
@@ -88,7 +86,7 @@ class DataFrame extends BaseWidget
       textAlign: @alignment
       display: if isVisible(@mesh) then 'block' else 'none'
   widgetMoved: =>
-    setTimeout((=> @relayout()), 100)
+    app.nextFrameCallbacks.push(=> @relayout())
   destructor: ->
     @element.remove()
 
