@@ -4,6 +4,7 @@
 module Empire.Commands.AST where
 
 import           Control.Monad.Error                     (throwError)
+import           Control.Monad.Except                    (runExceptT)
 import           Control.Monad.State
 import           Data.Graph                              (Inputs (..), source)
 import           Data.HMap.Lazy                          (TypeKey (..))
@@ -89,41 +90,43 @@ getNodeValue ref = runASTOp $ do
     case (node ^. prop InterpreterData . Interpreter.value) of
         Left  err -> trace (show err) $ return Nothing
         Right val -> do
-            v <- liftIO $ toIO val
-            caseTest (uncover tpNode) $ do
-                of' $ \(Cons (Lit.String n) as) -> case n of
-                    "Int"            -> return $ Just $ IntValue       $ unsafeFromData v
-                    "String"         -> return $ Just $ StringValue    $ unsafeFromData v
-                    "Double"         -> return $ Just $ DoubleValue    $ unsafeFromData v
-                    "Bool"           -> return $ Just $ BoolValue      $ unsafeFromData v
-                    "Histogram"      -> return $ Just $ Histogram      $ unsafeFromData v
-                    "IntPairList"    -> return $ Just $ IntPairList    $ unsafeFromData v
-                    "DoublePairList" -> return $ Just $ DoublePairList $ unsafeFromData v
-                    {-"Graphics"       -> return $ Just $ Graphics       $ fromGraphics     v-}
-                    {-"Layer"          -> return $ Just $ Graphics       $ fromLayer        v-}
-                    {-"Geometry"       -> return $ Just $ Graphics       $ fromGeometry     v-}
-                    {-"GeoComponent"   -> return $ Just $ Graphics       $ fromGeoComponent v-}
-                    {-"Surface"        -> return $ Just $ Graphics       $ fromSurface      v-}
-                    {-"Shape"          -> return $ Just $ Graphics       $ fromShape        v-}
-                    {-"Primitive"      -> return $ Just $ Graphics       $ fromPrimitive    v-}
-                    {-"Figure"         -> return $ Just $ Graphics       $ fromFigure       v-}
-                    {-"Material"       -> return $ Just $ Graphics       $ fromMaterial     v-}
-                    "List"           -> do
-                        args <- ASTBuilder.unpackArguments as
-                        case args of
-                            [a] -> do
-                                arg <- Builder.read a
-                                caseTest (uncover arg) $ do
-                                    of' $ \(Cons (Lit.String n) _) -> case n of
-                                        "Int"    -> return $ Just $ IntList    $ unsafeFromData v
-                                        "Double" -> return $ Just $ DoubleList $ unsafeFromData v
-                                        "Bool"   -> return $ Just $ BoolList   $ unsafeFromData v
-                                        "String" -> return $ Just $ StringList $ unsafeFromData v
-                                        _        -> return Nothing
-                                    of' $ \ANY -> return Nothing
-                            _ -> return Nothing
-                    _ -> return Nothing
-                of' $ \ANY -> return Nothing
+            val <- liftIO . runExceptT $ toIO val
+            case val of
+                Left _  -> return Nothing
+                Right v -> caseTest (uncover tpNode) $ do
+                    of' $ \(Cons (Lit.String n) as) -> case n of
+                        "Int"            -> return $ Just $ IntValue       $ unsafeFromData v
+                        "String"         -> return $ Just $ StringValue    $ unsafeFromData v
+                        "Double"         -> return $ Just $ DoubleValue    $ unsafeFromData v
+                        "Bool"           -> return $ Just $ BoolValue      $ unsafeFromData v
+                        "Histogram"      -> return $ Just $ Histogram      $ unsafeFromData v
+                        "IntPairList"    -> return $ Just $ IntPairList    $ unsafeFromData v
+                        "DoublePairList" -> return $ Just $ DoublePairList $ unsafeFromData v
+                        {-"Graphics"       -> return $ Just $ Graphics       $ fromGraphics     v-}
+                        {-"Layer"          -> return $ Just $ Graphics       $ fromLayer        v-}
+                        {-"Geometry"       -> return $ Just $ Graphics       $ fromGeometry     v-}
+                        {-"GeoComponent"   -> return $ Just $ Graphics       $ fromGeoComponent v-}
+                        {-"Surface"        -> return $ Just $ Graphics       $ fromSurface      v-}
+                        {-"Shape"          -> return $ Just $ Graphics       $ fromShape        v-}
+                        {-"Primitive"      -> return $ Just $ Graphics       $ fromPrimitive    v-}
+                        {-"Figure"         -> return $ Just $ Graphics       $ fromFigure       v-}
+                        {-"Material"       -> return $ Just $ Graphics       $ fromMaterial     v-}
+                        "List"           -> do
+                            args <- ASTBuilder.unpackArguments as
+                            case args of
+                                [a] -> do
+                                    arg <- Builder.read a
+                                    caseTest (uncover arg) $ do
+                                        of' $ \(Cons (Lit.String n) _) -> case n of
+                                            "Int"    -> return $ Just $ IntList    $ unsafeFromData v
+                                            "Double" -> return $ Just $ DoubleList $ unsafeFromData v
+                                            "Bool"   -> return $ Just $ BoolList   $ unsafeFromData v
+                                            "String" -> return $ Just $ StringList $ unsafeFromData v
+                                            _        -> return Nothing
+                                        of' $ \ANY -> return Nothing
+                                _ -> return Nothing
+                        _ -> return Nothing
+                    of' $ \ANY -> return Nothing
 
 readMeta :: NodeRef -> Command AST (Maybe NodeMeta)
 readMeta ref = runASTOp $ HMap.lookup metaKey . view (prop Meta) <$> Builder.read ref
