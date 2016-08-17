@@ -40,7 +40,7 @@ import qualified Old.Luna.Syntax.Term.Expr.Lit           as Lit
 
 import           Luna.Compilation.Error                  as TCError
 import           Luna.Compilation.Pass.Interpreter.Layer (InterpreterData (..))
-import           Luna.Compilation.Pass.Interpreter.Value (toIO, unsafeFromData)
+import           Luna.Compilation.Pass.Interpreter.Value (toIO, unsafeFromData, Data)
 import qualified Luna.Compilation.Pass.Interpreter.Layer as Interpreter
 import           Unsafe.Coerce
 
@@ -63,45 +63,47 @@ addNode nid name expr = runASTOp $ Parser.parseExpr expr >>= ASTBuilder.makeNode
 addDefault :: PortDefault -> Command AST (NodeRef)
 addDefault val = runASTOp $ Parser.parsePortDefault val
 
-getNodeValueReprs :: NodeRef -> Command AST [Value]
+getNodeValueReprs :: NodeRef -> Command AST (Either String [Value])
 getNodeValueReprs ref = do
     nodeValue <- getNodeValue ref
     return $ case nodeValue of
-        Nothing  -> []
-        Just val -> case val of
-            IntList        list -> [val, Graphics $ autoScatterChartInt         gridMat mat figure scale shift list]
-            DoubleList     list -> [val, Graphics $ autoScatterChartDouble      gridMat mat figure scale shift list]
-            Histogram      list -> [val, Graphics $ autoScatterChartIntTuple    gridMat mat figure scale shift list]
-            IntPairList    list -> [val, Graphics $ autoScatterChartIntTuple    gridMat mat figure scale shift list]
-            DoublePairList list -> [val, Graphics $ autoScatterChartDoubleTuple gridMat mat figure scale shift list]
-            otherwise -> [val]
-            where
-                gridMat = SolidColor 0.25 0.25 0.25 1.0
-                mat     = SolidColor 0.2  0.5  0.7  1.0
-                figure  = Circle 0.016
-                scale   = 0.84
-                shift   = 0.05
+        Left err -> Left err
+        Right v  -> Right $ case v of
+            Nothing  -> []
+            Just val -> case val of
+                IntList        list -> [val, Graphics $ autoScatterChartInt         gridMat mat figure scale shift list]
+                DoubleList     list -> [val, Graphics $ autoScatterChartDouble      gridMat mat figure scale shift list]
+                Histogram      list -> [val, Graphics $ autoScatterChartIntTuple    gridMat mat figure scale shift list]
+                IntPairList    list -> [val, Graphics $ autoScatterChartIntTuple    gridMat mat figure scale shift list]
+                DoublePairList list -> [val, Graphics $ autoScatterChartDoubleTuple gridMat mat figure scale shift list]
+                _ -> [val]
+                where
+                    gridMat = SolidColor 0.25 0.25 0.25 1.0
+                    mat     = SolidColor 0.2  0.5  0.7  1.0
+                    figure  = Circle 0.016
+                    scale   = 0.84
+                    shift   = 0.05
 
-getNodeValue :: NodeRef -> Command AST (Maybe Value)
+getNodeValue :: NodeRef -> Command AST (Either String (Maybe Value))
 getNodeValue ref = runASTOp $ do
     node   <- Builder.read ref
     tp     <- Builder.follow source $ node ^. prop Type
     tpNode <- Builder.read tp
-    case (node ^. prop InterpreterData . Interpreter.value) of
-        Left  err -> trace (show err) $ return Nothing
+    case node ^. prop InterpreterData . Interpreter.value of
+        Left  err -> return $ Right Nothing
         Right val -> do
             val <- liftIO . runExceptT $ toIO val
             case val of
-                Left _  -> return Nothing
+                Left  s -> return $ Left s
                 Right v -> caseTest (uncover tpNode) $ do
                     of' $ \(Cons (Lit.String n) as) -> case n of
-                        "Int"            -> return $ Just $ IntValue       $ unsafeFromData v
-                        "String"         -> return $ Just $ StringValue    $ unsafeFromData v
-                        "Double"         -> return $ Just $ DoubleValue    $ unsafeFromData v
-                        "Bool"           -> return $ Just $ BoolValue      $ unsafeFromData v
-                        "Histogram"      -> return $ Just $ Histogram      $ unsafeFromData v
-                        "IntPairList"    -> return $ Just $ IntPairList    $ unsafeFromData v
-                        "DoublePairList" -> return $ Just $ DoublePairList $ unsafeFromData v
+                        "Int"            -> return $ Right $ Just $ IntValue       $ unsafeFromData v
+                        "String"         -> return $ Right $ Just $ StringValue    $ unsafeFromData v
+                        "Double"         -> return $ Right $ Just $ DoubleValue    $ unsafeFromData v
+                        "Bool"           -> return $ Right $ Just $ BoolValue      $ unsafeFromData v
+                        "Histogram"      -> return $ Right $ Just $ Histogram      $ unsafeFromData v
+                        "IntPairList"    -> return $ Right $ Just $ IntPairList    $ unsafeFromData v
+                        "DoublePairList" -> return $ Right $ Just $ DoublePairList $ unsafeFromData v
                         {-"Graphics"       -> return $ Just $ Graphics       $ fromGraphics     v-}
                         {-"Layer"          -> return $ Just $ Graphics       $ fromLayer        v-}
                         {-"Geometry"       -> return $ Just $ Graphics       $ fromGeometry     v-}
@@ -118,15 +120,15 @@ getNodeValue ref = runASTOp $ do
                                     arg <- Builder.read a
                                     caseTest (uncover arg) $ do
                                         of' $ \(Cons (Lit.String n) _) -> case n of
-                                            "Int"    -> return $ Just $ IntList    $ unsafeFromData v
-                                            "Double" -> return $ Just $ DoubleList $ unsafeFromData v
-                                            "Bool"   -> return $ Just $ BoolList   $ unsafeFromData v
-                                            "String" -> return $ Just $ StringList $ unsafeFromData v
-                                            _        -> return Nothing
-                                        of' $ \ANY -> return Nothing
-                                _ -> return Nothing
-                        _ -> return Nothing
-                    of' $ \ANY -> return Nothing
+                                            "Int"    -> return $ Right $ Just $ IntList    $ unsafeFromData v
+                                            "Double" -> return $ Right $ Just $ DoubleList $ unsafeFromData v
+                                            "Bool"   -> return $ Right $ Just $ BoolList   $ unsafeFromData v
+                                            "String" -> return $ Right $ Just $ StringList $ unsafeFromData v
+                                            _        -> return $ Right Nothing
+                                        of' $ \ANY -> return $ Right Nothing
+                                _ -> return $ Right Nothing
+                        _ -> return $ Right Nothing
+                    of' $ \ANY -> return $ Right Nothing
 
 readMeta :: NodeRef -> Command AST (Maybe NodeMeta)
 readMeta ref = runASTOp $ HMap.lookup metaKey . view (prop Meta) <$> Builder.read ref

@@ -3,7 +3,7 @@
 module Empire.Commands.Typecheck where
 
 import           Prologue
-import           Control.Monad.State
+import           Control.Monad.State     hiding (when)
 import           Unsafe.Coerce           (unsafeCoerce)
 import           Control.Monad.Error     (throwError)
 import           Control.Monad           (forM, forM_)
@@ -20,6 +20,8 @@ import           Empire.API.Data.Node              (NodeId)
 import           Empire.API.Data.DefaultValue      (Value (..))
 import           Empire.API.Data.GraphLocation     (GraphLocation (..))
 import qualified Empire.API.Graph.NodeResultUpdate as NodeResult
+import qualified Empire.API.Data.Error             as APIError
+import           Empire.API.Data.TypeRep           (TypeRep)
 
 import           Empire.Empire
 import qualified Empire.Commands.AST          as AST
@@ -46,7 +48,7 @@ import qualified Empire.ASTOp as ASTOp
 import           Empire.Data.AST                                 (AST, NodeRef)
 import           Empire.Utils.TextResult                         (nodeValueToText)
 
-getNodeValueReprs :: NodeId -> Command Graph [Value]
+getNodeValueReprs :: NodeId -> Command Graph (Either String [Value])
 getNodeValueReprs nid = do
     ref <- GraphUtils.getASTVar nid
     zoom Graph.ast $ AST.getNodeValueReprs ref
@@ -92,6 +94,16 @@ runInterpreter = do
     Graph.ast .= newAst
     return ()
 
+reportError :: GraphLocation -> NodeId -> Maybe (APIError.Error TypeRep) -> Command InterpreterEnv ()
+reportError loc id err = do
+    cachedErr <- uses errorsCache $ Map.lookup id
+    when (cachedErr /= err) $ do
+        errorsCache %= Map.alter (const err) id
+        valuesCache %= Map.delete id
+        case err of
+            Just e  -> Publisher.notifyResultUpdate loc id (NodeResult.Error e)     0
+            Nothing -> Publisher.notifyResultUpdate loc id (NodeResult.Value "" []) 0
+
 updateNodes :: GraphLocation -> Command InterpreterEnv ()
 updateNodes loc = do
     allNodeIds <- uses (graph . Graph.nodeMapping) Map.keys
@@ -99,41 +111,29 @@ updateNodes loc = do
         ref <- zoom graph $ GraphUtils.getASTTarget id
 
         err <- zoom (graph . Graph.ast) $ AST.getError ref
-        cachedErr <- uses errorsCache $ Map.lookup id
-        if cachedErr /= err
-            then do
-                errorsCache %= Map.alter (const err) id
-                valuesCache %= Map.delete id
-                case err of
-                    Just e  -> Publisher.notifyResultUpdate loc id (NodeResult.Error e)     0
-                    Nothing -> Publisher.notifyResultUpdate loc id (NodeResult.Value "" []) 0
-            else return ()
+        reportError loc id err
 
         rep <- zoom graph $ GraphBuilder.buildNode id
         cached <- uses nodesCache $ Map.lookup id
-        if cached /= Just rep
-            then do
-                Publisher.notifyNodeUpdate loc rep
-                nodesCache %= Map.insert id rep
-            else return ()
+        when (cached /= Just rep) $ do
+            Publisher.notifyNodeUpdate loc rep
+            nodesCache %= Map.insert id rep
 
 updateValues :: GraphLocation -> Command InterpreterEnv ()
 updateValues loc = do
     allNodeIds <- uses (graph . Graph.nodeMapping) Map.keys
     forM_ allNodeIds $ \id -> do
         noErrors <- isNothing <$> uses errorsCache (Map.lookup id)
-        if noErrors
-            then do
-                val    <- zoom graph $ getNodeValueReprs id
-                -- val :: [Value]
-                cached <- uses valuesCache $ Map.lookup id
-                if cached /= Just val
-                    then do
+        when noErrors $ do
+            v    <- zoom graph $ getNodeValueReprs id
+            case v of
+                Left err  -> reportError loc id $ Just $ APIError.RuntimeError err
+                Right val -> do
+                    cached <- uses valuesCache $ Map.lookup id
+                    when (cached /= Just val) $ do
                         let name = fromMaybe "" $ nodeValueToText <$> listToMaybe val
                         Publisher.notifyResultUpdate loc id (NodeResult.Value name val) 100
                         valuesCache %= Map.insert id val
-                    else return ()
-            else return ()
 
 flushCache :: Command InterpreterEnv ()
 flushCache = do

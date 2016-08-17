@@ -4,7 +4,7 @@ import           Data.Binary          (Binary)
 import           Data.Text.Lazy       as Text
 import           Prologue
 
-import qualified Graphics.API as G
+import qualified Graphics.API      as G
 
 
 data Value = IntValue       Int

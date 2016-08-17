@@ -45,6 +45,7 @@ visualizeError id err = do
             LunaError.ImportError   name     -> "Cannot find symbol \"" <> name        <> "\""
             LunaError.NoMethodError name tpe -> "Cannot find method \"" <> name        <> "\" for type \"" <> toString tpe <> "\""
             LunaError.TypeError     t1   t2  -> "Cannot match type  \"" <> toString t1 <> "\" with \""     <> toString t2  <> "\""
+            LunaError.RuntimeError  msg      -> "Runtime error: " <> msg
         widget = LongText.create (Vector2 200 200) (Text.pack msg) LongText.Left LongText.Code
     UICmd.register_ groupId widget def
 
