@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Reactive.Commands.NodeSearcher
     ( openFresh
+    , openEdit
     , querySearch
     , queryTree
     , openCommand
@@ -27,6 +28,7 @@ import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph
 import qualified Reactive.State.UIElements         as UIElements
 
+import           Empire.API.Data.Node              (Node, NodeId)
 import qualified Empire.API.Data.Node              as Node
 import qualified Empire.API.Data.Port              as Port
 import qualified Empire.API.Data.TypeRep           as TypeRep
@@ -48,6 +50,12 @@ openFresh = do
     (nsPos', nsPos) <- ensureNSVisible
     Global.uiElements . UIElements.nsPos .= nsPos'
     performIO $ UI.initNodeSearcher "" Nothing (nsPos + offset) False
+
+-- TODO: adjust position to fit original node
+openEdit :: Text -> NodeId -> Command Global.State ()
+openEdit expr nodeId = do
+    mousePos <- use Global.mousePos
+    performIO $ UI.initNodeSearcher expr (Just nodeId) mousePos False
 
 position :: Command Global.State (Vector2 Double, Vector2 Int)
 position = do

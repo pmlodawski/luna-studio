@@ -12,7 +12,7 @@ import           Control.Monad.State                  (modify)
 
 import qualified Object.Widget.Node                   as Model
 
-import           Reactive.Commands.Command            (Command)
+import           Reactive.Commands.Command            (Command, performIO)
 import           Reactive.Commands.Graph              (nodeIdToWidgetId, updateConnectionsForNodes)
 import qualified Reactive.Commands.UIRegistry         as UICmd
 import           Reactive.State.Global                (State, inRegistry)
@@ -78,5 +78,4 @@ updateNodeProfilingData id execTime = do
 
 updateExpression :: NodeId -> Text -> Command State ()
 updateExpression nodeId expr = do
-    -- BatchCmd.
-    return ()
+    BatchCmd.updateNodeExpression nodeId expr

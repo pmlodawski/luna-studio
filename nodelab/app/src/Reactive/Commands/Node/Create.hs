@@ -38,6 +38,7 @@ import qualified Empire.API.Data.Node              as Node
 import qualified Empire.API.Data.NodeMeta          as NodeMeta
 
 import           Reactive.Commands.Node.Ports      (displayPorts)
+import qualified Reactive.Commands.NodeSearcher    as NS
 
 
 addNode :: Node -> Command State ()
@@ -55,7 +56,6 @@ addDummyNode dummyNode = do
         Just _  -> return ()
         Nothing -> addNode dummyNode
 
-
 registerNode :: Node -> Command State WidgetId
 registerNode node = do
     let nodeModel = Model.fromNode node
@@ -66,12 +66,12 @@ registerNode node = do
     return nodeWidget
 
 nodeHandlers :: Node -> HTMap
-nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
-                  $ addHandler (UINode.RenameNodeHandler $ \_ nodeId name -> BatchCmd.renameNode nodeId name)
+nodeHandlers node = addHandler (UINode.RemoveNodeHandler          removeSelectedNodes)
+                  $ addHandler (UINode.RenameNodeHandler          $ \_ nodeId name -> BatchCmd.renameNode nodeId name)
                   $ addHandler (UINode.ChangeInputNodeTypeHandler $ \_ nodeId name -> BatchCmd.setInputNodeType nodeId name)
-                  $ addHandler (UINode.FocusNodeHandler    $ focusNode)
-                  $ addHandler (UINode.ExpandNodeHandler   $ expandSelectedNodes)
-                  $ addHandler (UINode.EditNodeExpressionHandler $ \nodeId -> performIO $ putStrLn $ "Edit node" <> show nodeId )
+                  $ addHandler (UINode.FocusNodeHandler           focusNode)
+                  $ addHandler (UINode.ExpandNodeHandler          expandSelectedNodes)
+                  $ addHandler (UINode.EditNodeExpressionHandler  editNodeExpression)
                   $ addEnterNodeHandler where
                         addEnterNodeHandler = if node ^. Node.canEnter then addHandler (UINode.EnterNodeHandler $ enterNode $ Breadcrumb.Lambda $ node ^. Node.nodeId) mempty
                                                                        else mempty
@@ -86,3 +86,8 @@ expandSelectedNodes = do
         let id = wf ^. objectId
         UICmd.update_ id update
         UICmd.moveBy  id (Vector2 0 0) -- FIXME: trigger moved handler for html widgets
+
+editNodeExpression :: NodeId -> Command Global.State ()
+editNodeExpression nodeId = do
+    -- performIO $ putStrLn $ "Edit node" <> show nodeId -- TODO: get expression from node
+    NS.openEdit "" nodeId

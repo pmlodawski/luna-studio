@@ -22,9 +22,9 @@ foreign import javascript safe "app.createNodeSearcher($1, $2, $3, $4, $5)"
     initNodeSearcher' :: JSString -> JSVal -> Int -> Int -> Bool -> IO ()
 
 initNodeSearcher :: Text -> Maybe NodeId -> Vector2 Int -> Bool -> IO ()
-initNodeSearcher expr nodeId pos cs = do
+initNodeSearcher expr nodeId pos command = do
     nodeId' <- toJSVal $ toJSON nodeId
-    initNodeSearcher' (lazyTextToJSString expr) nodeId' (pos ^. x) (pos ^. y) cs
+    initNodeSearcher' (lazyTextToJSString expr) nodeId' (pos ^. x) (pos ^. y) command
 
 -- display results
 
