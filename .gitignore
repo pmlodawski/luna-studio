@@ -54,6 +54,9 @@ gen
 #IntelliJ IDEA
 .idea
 
+#Atom
+.imdone
+
 # cabal configs - they should be generated from tcabal files
 libs/*/*.cabal
 libs/*/*/*.cabal
