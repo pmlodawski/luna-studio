@@ -34,7 +34,8 @@ class Image extends BaseWidget
       transparent:    true
       blending:       THREE.NormalBlending
       side:           THREE.DoubleSide
-      derivatives:    true
+      extensions:
+        derivatives:    true
 
     @plot.scale.x = @width
     @plot.scale.y = @height

@@ -26,7 +26,9 @@ class Toggle extends LabeledWidget
       transparent: true
       blending: THREE.NormalBlending
       side: THREE.DoubleSide
-      derivatives: true))
+      extensions:
+        derivatives:    true
+      ))
 
     @mesh.add @indicator
 

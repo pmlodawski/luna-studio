@@ -95,7 +95,8 @@ class Text2D extends THREE.Object3D
           transparent:    true
           blending:       THREE.NormalBlending
           side:           @side
-          derivatives:    true
+          extensions:
+            derivatives:    true
           depthWrite: false
           depthTest: false
     else

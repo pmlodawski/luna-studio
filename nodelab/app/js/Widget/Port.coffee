@@ -39,7 +39,8 @@ class Port
       transparent: true
       blending: THREE.NormalBlending
       side: THREE.DoubleSide
-      derivatives:    true
+      extensions:
+        derivatives: true
       ))
 
     @setAngle 0

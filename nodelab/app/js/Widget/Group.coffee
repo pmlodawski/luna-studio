@@ -34,7 +34,8 @@ class Group extends BaseWidget
       transparent:    true
       blending:       THREE.NormalBlending
       side:           THREE.DoubleSide
-      derivatives:    true
+      extensions:
+        derivatives:  true
 
     @bg.scale.x = @width
     @bg.scale.y = @height

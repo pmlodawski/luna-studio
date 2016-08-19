@@ -42,7 +42,8 @@ class LabeledWidget extends BaseWidget
       transparent:    true
       blending:       THREE.NormalBlending
       side:           THREE.DoubleSide
-      derivatives:    true
+      extensions:
+        derivatives:    true
 
     @mesh.add @bg
     @bg.position.z = 0.0005

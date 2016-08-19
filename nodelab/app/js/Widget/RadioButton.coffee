@@ -40,7 +40,9 @@ class RadioButton extends BaseWidget
       transparent: true
       blending: THREE.NormalBlending
       side: THREE.DoubleSide
-      derivatives: true))
+      extensions:
+        derivatives:    true
+      ))
 
     @mesh.add @bg
 
@@ -55,7 +57,9 @@ class RadioButton extends BaseWidget
       transparent: true
       blending: THREE.NormalBlending
       side: THREE.DoubleSide
-      derivatives: true))
+      extensions:
+        derivatives:    true
+      ))
 
     @mesh.add @icon
 

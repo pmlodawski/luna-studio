@@ -52,7 +52,7 @@ function Node(position, z, widgetId) {
       transparent:    true,
       blending:       THREE.NormalBlending,
       side:           THREE.DoubleSide,
-      derivatives:    true
+      extensions:     { derivatives: true }
     })
   );
   this.node.position.set(-nodeSize/2, -nodeSize/2, 0);
@@ -112,7 +112,7 @@ Node.prototype.setCollaboration = function (val, users) {
         transparent:    true,
         blending:       THREE.NormalBlending,
         side:           THREE.DoubleSide,
-        derivatives:    true
+        extensions:     { derivatives: true }
       })
     );
     userMesh.position.x = 13*ix;

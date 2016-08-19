@@ -26,7 +26,9 @@ class Connection
       transparent: true
       blending: THREE.NormalBlending
       side: THREE.DoubleSide
-      derivatives: true))
+      extensions:
+        derivatives: true
+      ))
 
     @mesh.position.z = -2
 

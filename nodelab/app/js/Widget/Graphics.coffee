@@ -41,7 +41,8 @@ class Graphics extends BaseWidget
                  fragmentShader: item._shader
                  transparent:    true
                  blending:       THREE.NormalBlending
-                 derivatives:    true
+                 extensions:
+                   derivatives:    true
       # item.position.z = ix * -0.00001
       item
     @itemGroup.children.forEach (obj) => @itemGroup.remove(obj)
