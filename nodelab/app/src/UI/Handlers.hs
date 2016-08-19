@@ -21,6 +21,7 @@ import           Object.Widget.Number.Continuous  (ContinuousNumber)
 import           Object.Widget.Number.Discrete    (DiscreteNumber)
 import           Object.Widget.Plots.Image        (Image)
 import           Object.Widget.Port               (Port)
+import           Object.Widget.Icon               (Icon)
 import           Object.Widget.Scene              (Scene)
 import           Object.Widget.Slider.Continuous  (ContinuousSlider)
 import           Object.Widget.Slider.Discrete    (DiscreteSlider)
@@ -85,6 +86,7 @@ imageType             = typeOf (undefined :: Image)
 longTextType          = typeOf (undefined :: LongText)
 dataFrameType         = typeOf (undefined :: DataFrame)
 graphicsType          = typeOf (undefined :: Graphics)
+iconType              = typeOf (undefined :: Icon)
 
 instance HasHandlers State where
     widgetHandlers (CtxDynamic tpe _)
@@ -110,6 +112,7 @@ instance HasHandlers State where
         | tpe ==            imageType  = def
         | tpe ==         longTextType  = def
         | tpe ==        dataFrameType  = def
-        | tpe ==        graphicsType   = def
+        | tpe ==         graphicsType  = def
+        | tpe ==             iconType  = def
 
         | otherwise                    = error $ "Unknown widget type " <> (show tpe)
