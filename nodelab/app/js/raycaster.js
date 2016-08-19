@@ -2,35 +2,28 @@
 
 var $$           = require('common');
 
+
 function renderMap() {
+  $$.renderer.setClearColor(new THREE.Color("black"), 1);
   $$.commonUniforms.objectMap.value = 1;
   $$.commonUniforms.antialias.value = 0;
-  $$.rendererMap.clear();
-  $$.rendererMap.render($$.scene, $$.camera);
-  $$.rendererMap.clearDepth();
-  $$.rendererMap.render($$.sceneHUD, $$.cameraHUD);
+  $$.renderer.render($$.scene, $$.camera, $$.rendererMap, true);
+  $$.renderer.clearTarget($$.rendererMap, false, true, false);
+  $$.renderer.render($$.sceneHUD, $$.cameraHUD, $$.rendererMap);
 }
 
-// function getMapPixelAt(x, y) {
-//   var buf = new Uint8Array(4);
-//   y = $$.rendererMap.domElement.height - y;
-//   $$.rendererMapCtx.readPixels(x, y, 1, 1, $$.rendererMapCtx.RGBA, $$.rendererMapCtx.UNSIGNED_BYTE, buf);
-//   return buf;
-// }
-
-
-
-var cachedMap = null;
-var cachedWidth = 0;
+var cachedMap    = null;
+var cachedWidth  = 0;
 var cachedHeight = 0;
 
 function cacheMap() {
-  var width  = $$.rendererMap.domElement.width,
-      height = $$.rendererMap.domElement.height;
+  var width  = $$.renderer.domElement.width,
+      height = $$.renderer.domElement.height;
+  if (cachedWidth != width || cachedHeight != height)
+      cachedMap = new Uint8Array(4 * width * height);
   cachedWidth  = width;
   cachedHeight = height;
-  cachedMap = new Uint8Array(4 * width * height);
-  $$.rendererMapCtx.readPixels(0, 0, width, height, $$.rendererMapCtx.RGBA, $$.rendererMapCtx.UNSIGNED_BYTE, cachedMap);
+  $$.renderer.readRenderTargetPixels($$.rendererMap, 0,0, width, height, cachedMap);
 }
 
 function getMapPixelAtCached(x, y) {
@@ -92,12 +85,12 @@ function widgetMatrix(id) {
 }
 
 module.exports = {
-  renderMap:     renderMap,
-  cacheMap: cacheMap,
-  getCachedMap: function() {return cachedMap; },
-  getMapPixelAt: getMapPixelAt,
+  renderMap:           renderMap,
+  cacheMap:            cacheMap,
+  getCachedMap:        function() {return cachedMap; },
+  getMapPixelAt:       getMapPixelAt,
   getMapPixelAtCached: getMapPixelAtCached,
-  getObjectsInRect: getObjectsInRect,
-  widgetMatrix:  widgetMatrix,
-  isWorkspace:   isWorkspace
+  getObjectsInRect:    getObjectsInRect,
+  widgetMatrix:        widgetMatrix,
+  isWorkspace:         isWorkspace
 };

@@ -16,7 +16,7 @@ function beginPath(x, y, _type) {
   $$.canvas2DCtx.beginPath();
   $$.canvas2DCtx.moveTo(x, y);
   $$.commonUniforms.connectionPen.value = 1;
-  raycaster.cacheMap();
+  // raycaster.cacheMap();
   iterations = -1;
   $$.canvas2DCtx.strokeStyle = (type ? "#00ff00" : "#ff0000");
   $$.canvas2DCtx.lineCap = 'round';

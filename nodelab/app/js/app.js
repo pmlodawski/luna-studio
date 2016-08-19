@@ -50,11 +50,11 @@ function initializeGl() {
     $$.cameraHUD             = new THREE.OrthographicCamera(-500, 500, -500, 500, 0, 120);
     $$.camera.position.z     = 100;
     $$.cameraHUD.position.z  = 100;
-    $$.renderer              = new THREE.WebGLRenderer({ antialias: false });
+    $$.renderer              = new THREE.WebGLRenderer({ antialias: false});
     $$.renderer.autoClear    = false;
-    $$.rendererMap           = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true });
+    $$.rendererMap           = new THREE.WebGLRenderTarget(100, 100);
     $$.rendererMap.autoClear = false;
-    $$.rendererMapCtx        = $$.rendererMap.getContext();
+    $$.rendererMapCtx        = $$.renderer.getContext();
 
 
     $('body').append('<div id="htmlcanvas-pan"><div id="htmlcanvas"></div></div>');
@@ -64,19 +64,13 @@ function initializeGl() {
     $$.htmlCanvas      = $("#htmlcanvas");
     $$.interfaceCanvas = $("#interfaceCanvas");
 
-    $$.renderer.setClearColor(config.backgroundColor, 1);
-    $$.rendererMap.setClearColor(new THREE.Color("black"), 1);
     $($$.renderer.domElement).addClass('renderer');
-    $($$.rendererMap.domElement).addClass('renderer').css({zIndex: 100});
-
 
     $$.canvas2D = $('<canvas id="canvas2d" tabindex="0">')[0];
     document.body.appendChild($$.canvas2D);
     $$.canvas2DCtx = $$.canvas2D.getContext('2d');
 
     document.body.appendChild($$.renderer.domElement);
-
-    window.displayObjectMap = function () { document.body.appendChild($$.rendererMap.domElement); $($$.rendererMap.domElement).css({opacity: 0.5, zIndex: 15}); };
 
     initCommonWidgets();
     textEditor.init();
@@ -165,7 +159,7 @@ var redrawTextures = _.throttle(function() {
   console.time('redrawTextures');
   $$.lastFactor = $$.commonUniforms.camFactor.value;
   _($$.registry).each(function(e){
-    if (e.redrawTextures !== undefined) e.redrawTextures();
+    if (e.redrawTextures !== undefined) e.redrawTextures($$.renderer);
   });
   shouldRender = true;
   console.timeEnd('redrawTextures');
@@ -176,11 +170,10 @@ function render() {
     redrawTextures();
   }
   if (shouldRender) {
-
     $$.commonUniforms.objectMap.value = 0;
     $$.commonUniforms.antialias.value = 1;
     var oldCf = $$.commonUniforms.camFactor.value;
-
+    $$.renderer.setClearColor(config.backgroundColor, 1);
     $$.renderer.clear();
 
     $$.renderer.render($$.scene, $$.camera);
