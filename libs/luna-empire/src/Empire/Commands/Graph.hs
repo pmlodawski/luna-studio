@@ -9,6 +9,7 @@ module Empire.Commands.Graph
     , connectCondTC
     , connectNoTC
     , disconnect
+    , getNodeMeta
     , getCode
     , getGraph
     , setDefaultValue
@@ -104,14 +105,15 @@ removeNodeNoTC nodeId = do
     zoom Graph.ast $ AST.removeSubtree astRef
     Graph.nodeMapping %= Map.delete nodeId
 
-updateNodeExpression :: GraphLocation -> NodeId -> Text -> Empire ()
-updateNodeExpression loc nodeId expr = do
+updateNodeExpression :: GraphLocation -> NodeId -> NodeId -> Text -> Empire ()
+updateNodeExpression loc nodeId newNodeId expr = do
     metaMay <- withGraph loc $ do
         ref <- GraphUtils.getASTPointer nodeId
         zoom Graph.ast $ AST.readMeta ref
     withJust metaMay $ \meta -> do
-        removeNodes loc [nodeId]
-        void $ addNode loc nodeId expr meta
+        void $ withTC loc False $ do
+            removeNodeNoTC nodeId
+            addNodeNoTC loc newNodeId expr meta
 
 updateNodeMeta :: GraphLocation -> NodeId -> NodeMeta -> Empire ()
 updateNodeMeta loc nodeId meta = withGraph loc $ do
@@ -151,6 +153,11 @@ setDefaultValue' portRef val = do
 
 disconnect :: GraphLocation -> InPortRef -> Empire ()
 disconnect loc port@(InPortRef dstNodeId dstPort) = withTC loc False $ disconnectPort port
+
+getNodeMeta :: GraphLocation -> NodeId -> Empire (Maybe NodeMeta)
+getNodeMeta loc nodeId = withGraph loc $ do
+    ref <- GraphUtils.getASTPointer nodeId
+    zoom Graph.ast $ AST.readMeta ref
 
 getCode :: GraphLocation -> Empire String
 getCode loc = withGraph loc $ do

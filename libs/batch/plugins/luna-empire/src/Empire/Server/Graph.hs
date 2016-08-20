@@ -26,6 +26,7 @@ import           Empire.API.Data.DefaultValue          (Value (..))
 import           Empire.API.Data.GraphLocation         (GraphLocation)
 import           Empire.API.Data.Node                  (Node (..), NodeId)
 import qualified Empire.API.Data.Node                  as Node
+import           Empire.API.Data.NodeMeta              (NodeMeta)
 import qualified Empire.API.Data.NodeSearcher          as NS
 import           Empire.API.Data.Port                  (InPort (..), OutPort (..), Port (..), PortId (..), PortState (..))
 import           Empire.API.Data.PortRef               (InPortRef (..), OutPortRef (..))
@@ -112,81 +113,105 @@ modifyGraph action success req@(Request uuid request) = do
     empireNotifEnv   <- use Env.empireNotif
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ action request
     case result of
-      Left err     -> replyFail logger err req
-      Right result -> do
-        Env.empireEnv .= newEmpireEnv
-        success req result
-        notifyCodeUpdate $ request ^. G.location
-        saveCurrentProject $ request ^. G.location
+        Left err     -> replyFail logger err req
+        Right result -> do
+            Env.empireEnv .= newEmpireEnv
+            success req result
+            notifyCodeUpdate $ request ^. G.location
+            saveCurrentProject $ request ^. G.location
 
 modifyGraphOk :: forall a b c. (Bin.Binary a, G.GraphRequest a, Response.ResponseResult a c, Response.ResponseResult a ()) => (a -> Empire.Empire b) -> (a -> b -> StateT Env BusT ()) -> Request a -> StateT Env BusT ()
 modifyGraphOk action success = modifyGraph action (\req@(Request uuid request) res -> replyOk req >> success request res)
 
+-- helpers
+
+generateNodeId :: Text -> Empire.Empire NodeId
+generateNodeId expression = case expression of
+    "inside"               -> return $ fromJust $ UUID.fromString "1a9eeda0-4627-4597-9d09-167c44cbe87e"
+    "outside"              -> return $ fromJust $ UUID.fromString "1a9eeda0-4627-4597-9d09-167c44cbe87f"
+    "temperatureThreshold" -> return $ fromJust $ UUID.fromString "77962bb1-32f1-4f4d-ae5f-4328b7c83708"
+    _  -> liftIO $ UUID.nextRandom
+
+addExpressionNode :: GraphLocation -> Text -> NodeMeta -> Maybe NodeId -> Empire.Empire Node
+addExpressionNode location expression nodeMeta connectTo = case parseExpr expression of
+    Expression expression -> do
+        nodeId <- generateNodeId expression
+        Graph.addNodeCondTC (isNothing connectTo) location nodeId expression nodeMeta
+    Function name -> throwError "Function Nodes not yet supported"
+    Module   name -> throwError "Module Nodes not yet supported"
+    Input    name -> throwError "Input Nodes not yet supported"
+    Output   name -> throwError "Output Nodes not yet supported"
+
+connectNodes :: GraphLocation -> Text -> NodeId -> NodeId -> StateT Env BusT ()
+connectNodes location expr dstNodeId srcNodeId = do
+    let exprCall = head $ splitOneOf " ." $ Text.unpack expr
+        inPort = if exprCall `elem` stdlibFunctions then Arg 0 else Self
+        connectRequest = Request UUID.nil $ Connect.Request location (OutPortRef srcNodeId All) (InPortRef dstNodeId inPort)
+    handleConnectReq False connectRequest -- TODO: refactor (we should not call handlers from handlers)
+    forceTC location
+
+-- Handlers
+
 handleAddNode :: Request AddNode.Request -> StateT Env BusT ()
 handleAddNode = modifyGraph action success where
-  action (AddNode.Request location nodeType nodeMeta connectTo) = case nodeType of
-          AddNode.ExpressionNode expression -> case parseExpr expression of
-            Expression expression -> do
-              uuid <- case expression of
-                  "inside"               -> return $ fromJust $ UUID.fromString "1a9eeda0-4627-4597-9d09-167c44cbe87e"
-                  "outside"              -> return $ fromJust $ UUID.fromString "1a9eeda0-4627-4597-9d09-167c44cbe87f"
-                  "temperatureThreshold" -> return $ fromJust $ UUID.fromString "77962bb1-32f1-4f4d-ae5f-4328b7c83708"
-                  _  -> liftIO $ UUID.nextRandom
-
-              Graph.addNodeCondTC (isNothing connectTo) location uuid expression nodeMeta
-            Function name -> throwError "Function Nodes not yet supported"
-            Module   name -> throwError "Module Nodes not yet supported"
-            Input    name -> throwError "Input Nodes not yet supported"
-            Output   name -> throwError "Output Nodes not yet supported"
-  success request@(Request _ req@(AddNode.Request location nodeType nodeMeta connectTo)) node = do
-    replyResult request (node ^. Node.nodeId)
-    sendToBus' $ AddNode.Update location node
-    case nodeType of
-        AddNode.ExpressionNode expr -> forM_ connectTo $ \srcNodeId -> do
-                let exprCall = head $ splitOneOf " ." $ Text.unpack expr
-                    inPort = if exprCall `elem` stdlibFunctions then Arg 0 else Self
-                    connectRequest = Request UUID.nil $ Connect.Request location (OutPortRef srcNodeId All) (InPortRef (node ^. Node.nodeId) inPort)
-                handleConnectReq False connectRequest
-                forceTC location
+    action (AddNode.Request location nodeType nodeMeta connectTo) = case nodeType of
+        AddNode.ExpressionNode expression -> addExpressionNode location expression nodeMeta connectTo
+    success request@(Request _ req@(AddNode.Request location nodeType nodeMeta connectTo)) node = do
+        replyResult request (node ^. Node.nodeId)
+        sendToBus' $ AddNode.Update location node
+        case nodeType of
+            AddNode.ExpressionNode expr -> withJust connectTo $ connectNodes location expr (node ^. Node.nodeId)
 
 handleRemoveNode :: Request RemoveNode.Request -> StateT Env BusT ()
 handleRemoveNode = modifyGraphOk action success where
-  action  (RemoveNode.Request location nodeIds) = Graph.removeNodes location nodeIds
-  success (RemoveNode.Request location nodeIds) result = sendToBus' $ RemoveNode.Update location nodeIds
+    action  (RemoveNode.Request location nodeIds) = Graph.removeNodes location nodeIds
+    success (RemoveNode.Request location nodeIds) result = sendToBus' $ RemoveNode.Update location nodeIds
 
 handleUpdateNodeExpression :: Request UpdateNodeExpression.Request -> StateT Env BusT ()
 handleUpdateNodeExpression = modifyGraphOk action success where
-  action (UpdateNodeExpression.Request location nodeId expression) = Graph.updateNodeExpression location nodeId expression
-  success _ _ = return ()
+    action (UpdateNodeExpression.Request location nodeId expression) = do
+        -- FIXME: not working
+        -- newNodeId <- generateNodeId expression
+        -- Graph.updateNodeExpression location nodeId newNodeId expression
+
+        -- FIXME: not working
+        nodeMetaMay <- Graph.getNodeMeta location nodeId
+        withJust nodeMetaMay $ \nodeMeta -> void $ do
+            Graph.removeNodes location [nodeId]
+            newNodeId <- generateNodeId expression
+            Graph.addNodeCondTC True location newNodeId expression nodeMeta
+            -- addExpressionNode location expression nodeMeta Nothing
+
+    success _ _ = return ()
 
 handleUpdateNodeMeta :: Request UpdateNodeMeta.Request -> StateT Env BusT ()
 handleUpdateNodeMeta = modifyGraphOk action success where
-  action  (UpdateNodeMeta.Request location updates) = do
-      forM_ updates $ uncurry $ Graph.updateNodeMeta location
-  success (UpdateNodeMeta.Request location updates) result = sendToBus' $ UpdateNodeMeta.Update location updates
+    action  (UpdateNodeMeta.Request location updates) = do
+        forM_ updates $ uncurry $ Graph.updateNodeMeta location
+    success (UpdateNodeMeta.Request location updates) result = sendToBus' $ UpdateNodeMeta.Update location updates
 
 handleRenameNode :: Request RenameNode.Request -> StateT Env BusT ()
 handleRenameNode = modifyGraphOk action success where
-  action  (RenameNode.Request location nodeId name) = Graph.renameNode location nodeId name
-  success (RenameNode.Request location nodeId name) result = sendToBus' $ RenameNode.Update location nodeId name
+    action  (RenameNode.Request location nodeId name) = Graph.renameNode location nodeId name
+    success (RenameNode.Request location nodeId name) result = sendToBus' $ RenameNode.Update location nodeId name
 
 handleConnect :: Request Connect.Request -> StateT Env BusT ()
 handleConnect = handleConnectReq True
 
 handleConnectReq :: Bool -> Request Connect.Request -> StateT Env BusT ()
 handleConnectReq doTC = modifyGraphOk action success where
-  action  (Connect.Request location src dst) = Graph.connectCondTC doTC location src dst
-  success (Connect.Request location src dst) result = sendToBus' $ Connect.Update location src dst
+    action  (Connect.Request location src dst) = Graph.connectCondTC doTC location src dst
+    success (Connect.Request location src dst) result = sendToBus' $ Connect.Update location src dst
 
 handleDisconnect :: Request Disconnect.Request -> StateT Env BusT ()
 handleDisconnect = modifyGraphOk action success where
-  action  (Disconnect.Request location dst) = Graph.disconnect location dst
-  success (Disconnect.Request location dst) result = sendToBus' $ Disconnect.Update location dst
+    action  (Disconnect.Request location dst) = Graph.disconnect location dst
+    success (Disconnect.Request location dst) result = sendToBus' $ Disconnect.Update location dst
 
 handleSetDefaultValue :: Request SetDefaultValue.Request -> StateT Env BusT ()
 handleSetDefaultValue = modifyGraphOk action success where
-  action (SetDefaultValue.Request location portRef defaultValue) = Graph.setDefaultValue location portRef defaultValue
-  success _ _ = return ()
+    action (SetDefaultValue.Request location portRef defaultValue) = Graph.setDefaultValue location portRef defaultValue
+    success _ _ = return ()
 
 stdlibFunctions :: [String]
 stdlibFunctions = filter (not . elem '.') StdLibMock.symbolsNames
@@ -238,4 +263,3 @@ mockNSData = Map.fromList $ functionsList <> modulesList where
         methodNames = methodName : (fromMaybe [] $ Map.lookup moduleName map)
     modulesList = (uncurry moduleEntry) <$> Map.toList modulesMethodsMap
     moduleEntry moduleName methodList = (Text.pack moduleName, NS.Group $ Map.fromList $ functionEntry <$> methodList)
-
