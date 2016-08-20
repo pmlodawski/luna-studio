@@ -20,6 +20,7 @@ import qualified Data.Text.Lazy                        as Text
 import           Data.Text.Lazy                        (Text, stripPrefix)
 import           Data.List                             (partition, break)
 import           Data.List.Split                       (splitOneOf)
+import           Data.Traversable                      (forM)
 import           Prologue                              hiding (Item)
 
 import           Empire.API.Data.DefaultValue          (Value (..))
@@ -171,18 +172,21 @@ handleUpdateNodeExpression :: Request UpdateNodeExpression.Request -> StateT Env
 handleUpdateNodeExpression = modifyGraphOk action success where
     action (UpdateNodeExpression.Request location nodeId expression) = do
         -- FIXME: not working
-        -- newNodeId <- generateNodeId expression
-        -- Graph.updateNodeExpression location nodeId newNodeId expression
-
+        newNodeId <- generateNodeId expression
+        Graph.updateNodeExpression location nodeId newNodeId expression
         -- FIXME: not working
-        nodeMetaMay <- Graph.getNodeMeta location nodeId
-        withJust nodeMetaMay $ \nodeMeta -> void $ do
-            Graph.removeNodes location [nodeId]
-            newNodeId <- generateNodeId expression
-            Graph.addNodeCondTC True location newNodeId expression nodeMeta
-            -- addExpressionNode location expression nodeMeta Nothing
+        -- nodeMetaMay <- Graph.getNodeMeta location nodeId
+        -- node <- forM nodeMetaMay $ \nodeMeta -> do
+        --     Graph.removeNodes location [nodeId]
+        --     newNodeId <- generateNodeId expression
+        --     Graph.addNodeCondTC True location newNodeId expression nodeMeta
+        -- return node
 
-    success _ _ = return ()
+    success (UpdateNodeExpression.Request location nodeId expression) nodeMay = do
+        withJust nodeMay $ \node -> do
+            -- replyResult request (node ^. Node.nodeId)
+            sendToBus' $ AddNode.Update location node
+            sendToBus' $ RemoveNode.Update location [nodeId]
 
 handleUpdateNodeMeta :: Request UpdateNodeMeta.Request -> StateT Env BusT ()
 handleUpdateNodeMeta = modifyGraphOk action success where

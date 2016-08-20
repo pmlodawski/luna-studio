@@ -30,6 +30,7 @@ import           Data.Text.Lazy          (Text)
 import qualified Data.Text.Lazy          as Text
 import           Data.Maybe              (catMaybes)
 import           Data.List               (sort)
+import           Data.Traversable        (forM)
 import qualified Data.UUID               as UUID
 
 import qualified Empire.Data.Library     as Library
@@ -105,13 +106,13 @@ removeNodeNoTC nodeId = do
     zoom Graph.ast $ AST.removeSubtree astRef
     Graph.nodeMapping %= Map.delete nodeId
 
-updateNodeExpression :: GraphLocation -> NodeId -> NodeId -> Text -> Empire ()
+updateNodeExpression :: GraphLocation -> NodeId -> NodeId -> Text -> Empire (Maybe Node)
 updateNodeExpression loc nodeId newNodeId expr = do
     metaMay <- withGraph loc $ do
         ref <- GraphUtils.getASTPointer nodeId
         zoom Graph.ast $ AST.readMeta ref
-    withJust metaMay $ \meta -> do
-        void $ withTC loc False $ do
+    forM metaMay $ \meta ->
+        withTC loc False $ do
             removeNodeNoTC nodeId
             addNodeNoTC loc newNodeId expr meta
 
