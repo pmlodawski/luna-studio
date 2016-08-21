@@ -171,17 +171,9 @@ handleRemoveNode = modifyGraphOk action success where
 handleUpdateNodeExpression :: Request UpdateNodeExpression.Request -> StateT Env BusT ()
 handleUpdateNodeExpression = modifyGraphOk action success where
     action (UpdateNodeExpression.Request location nodeId expression) = do
-        -- FIXME: not working
-        newNodeId <- generateNodeId expression
+        let newNodeId = nodeId
+        -- newNodeId <- generateNodeId expression
         Graph.updateNodeExpression location nodeId newNodeId expression
-        -- FIXME: not working
-        -- nodeMetaMay <- Graph.getNodeMeta location nodeId
-        -- node <- forM nodeMetaMay $ \nodeMeta -> do
-        --     Graph.removeNodes location [nodeId]
-        --     newNodeId <- generateNodeId expression
-        --     Graph.addNodeCondTC True location newNodeId expression nodeMeta
-        -- return node
-
     success (UpdateNodeExpression.Request location nodeId expression) nodeMay = do
         withJust nodeMay $ \node -> do
             -- replyResult request (node ^. Node.nodeId)
