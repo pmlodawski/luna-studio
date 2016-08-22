@@ -12,7 +12,7 @@ import           Control.Monad.State               (modify)
 import qualified Data.Text.Lazy                    as Text
 
 import           Object.UITypes                    (WidgetId)
-import           Object.Widget                     (objectId, widget)
+import           Object.Widget                     (WidgetFile, objectId, widget)
 import qualified Object.Widget.Node                as Model
 import qualified UI.Handlers.Node                  as Node
 
@@ -22,9 +22,11 @@ import           Reactive.Commands.Graph           (focusNode)
 import           Reactive.Commands.Graph.Selection (selectedNodes)
 import           Reactive.Commands.Node.Remove     (removeSelectedNodes)
 import qualified Reactive.Commands.UIRegistry      as UICmd
+import qualified Reactive.State.Camera             as Camera
 import           Reactive.State.Global             (State, inRegistry)
 import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph
+import qualified Reactive.State.UIRegistry         as UIRegistry
 import           Reactive.State.UIRegistry         (addHandler, sceneGraphId)
 
 import qualified Reactive.Commands.Batch           as BatchCmd
@@ -44,7 +46,6 @@ import qualified Reactive.Commands.NodeSearcher    as NS
 addNode :: Node -> Command State ()
 addNode node = do
     zoom Global.graph $ modify (Graph.addNode node)
-
     widgetId <- registerNode node
     focusNode widgetId
     Node.selectNode' Node.performSelect widgetId
@@ -52,9 +53,7 @@ addNode node = do
 addDummyNode :: Node -> Command State ()
 addDummyNode dummyNode = do
     mayNode <- preuse $ Global.graph . Graph.nodesMap . ix (dummyNode ^. Node.nodeId)
-    case mayNode of
-        Just _  -> return ()
-        Nothing -> addNode dummyNode
+    maybe (addNode dummyNode) (const $ return ()) mayNode
 
 registerNode :: Node -> Command State WidgetId
 registerNode node = do
@@ -89,5 +88,16 @@ expandSelectedNodes = do
 
 editNodeExpression :: NodeId -> Command Global.State ()
 editNodeExpression nodeId = do
-    -- performIO $ putStrLn $ "Edit node" <> show nodeId -- TODO: get expression from node
-    NS.openEdit "" nodeId
+    exprMay     <- preuse $ Global.graph . Graph.nodesMap . ix nodeId . Node.nodeType . Node.expression
+    widgetIdMay <- preuse $ Global.graph . Graph.nodeWidgetsMap . ix nodeId
+    withJust exprMay $ \expr -> withJust widgetIdMay $ \widgetId -> do
+        wfMay <- inRegistry $ lookupNode widgetId
+        withJust wfMay $ \wf -> do
+            pos <- zoom Global.camera $ Camera.workspaceToScreen $ wf ^. widget . Model.position
+            let halfCharWidth = 4
+                offset = Vector2 (-10 - halfCharWidth * fromIntegral (Text.length expr)) (-59)
+            NS.openEdit expr nodeId $ pos + offset
+
+-- TODO: merge with MultiSelection.hs and Navigation.hs
+lookupNode :: WidgetId -> Command UIRegistry.State (Maybe (WidgetFile Model.Node))
+lookupNode = UIRegistry.lookupTypedM
