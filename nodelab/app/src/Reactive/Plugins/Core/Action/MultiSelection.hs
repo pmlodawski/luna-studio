@@ -28,8 +28,8 @@ import           Reactive.Commands.Graph           (widgetIdToNodeWidget)
 import           Reactive.Commands.Graph.Selection (focusSelectedNode, selectAll, selectedNodes, unselectAll)
 import qualified Reactive.Commands.UIRegistry      as UICmd
 
-
 import           UI.Raycaster                      (getObjectsInRect)
+
 
 toAction :: Event -> Maybe (Command State ())
 toAction (Mouse _ event@(Mouse.Event Mouse.Pressed  pos Mouse.LeftButton (KeyMods False False False False) Nothing)) = Just $ startDrag pos
@@ -52,7 +52,7 @@ tryUnselectAll = do
 
 startDrag :: Vector2 Int -> Command State ()
 startDrag coord = do
-    Global.multiSelection . MultiSelection.history ?= (DragHistory coord coord)
+    Global.multiSelection . MultiSelection.history ?= DragHistory coord coord
     unselectAll
 
 handleMove :: JSState -> Vector2 Int -> Command State ()
@@ -79,16 +79,13 @@ updateSelection jsstate start end = do
     inRegistry $ do
         forM_ toSelect   $ flip UICmd.update_ $ NodeModel.isSelected .~ True
         forM_ toUnselect $ flip UICmd.update_ $ NodeModel.isSelected .~ False
-
     do
         let oldSet     = Set.fromList $ view (widget . NodeModel.nodeId) <$> oldSelected
             newSet     = Set.fromList $ view (widget . NodeModel.nodeId) <$> catMaybes newSelectedFiles
             toSelect   = Set.difference newSet oldSet
             toUnselect = Set.difference oldSet newSet
-
         collaborativeTouch $ Set.toList toSelect
         cancelCollaborativeTouch $ Set.toList toUnselect
-
 
 drawSelectionBox :: Vector2 Int -> Vector2 Int -> Command State ()
 drawSelectionBox start end = do

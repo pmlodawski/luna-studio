@@ -13,21 +13,20 @@ import           Data.List               (sort)
 import qualified Data.Map                as Map
 import           Data.Maybe              (isNothing, fromMaybe, maybeToList, listToMaybe)
 
-import qualified Empire.Data.Graph       as Graph
-import           Empire.Data.Graph       (Graph)
-
+import qualified Empire.Data.Graph                 as Graph
+import           Empire.Data.Graph                 (Graph)
 import           Empire.API.Data.Node              (NodeId)
+import qualified Empire.API.Data.NodeMeta          as NodeMeta
 import           Empire.API.Data.DefaultValue      (Value (..))
 import           Empire.API.Data.GraphLocation     (GraphLocation (..))
 import qualified Empire.API.Graph.NodeResultUpdate as NodeResult
 import qualified Empire.API.Data.Error             as APIError
 import           Empire.API.Data.TypeRep           (TypeRep)
-
 import           Empire.Empire
-import qualified Empire.Commands.AST          as AST
-import qualified Empire.Commands.GraphUtils   as GraphUtils
-import qualified Empire.Commands.GraphBuilder as GraphBuilder
-import qualified Empire.Commands.Publisher    as Publisher
+import qualified Empire.Commands.AST               as AST
+import qualified Empire.Commands.GraphUtils        as GraphUtils
+import qualified Empire.Commands.GraphBuilder      as GraphBuilder
+import qualified Empire.Commands.Publisher         as Publisher
 
 import qualified StdLibMock                                      as StdLib
 import qualified Luna.Library.Symbol                             as Symbol
@@ -44,14 +43,19 @@ import           Luna.Syntax.Model.Network.Builder               (Sign (..))
 
 import qualified Luna.Compilation.Pass.Interpreter.Interpreter   as Interpreter
 
-import qualified Empire.ASTOp as ASTOp
+import qualified Empire.ASTOp                                    as ASTOp
 import           Empire.Data.AST                                 (AST, NodeRef)
 import           Empire.Utils.TextResult                         (nodeValueToText)
 
 getNodeValueReprs :: NodeId -> Command Graph (Either String [Value])
 getNodeValueReprs nid = do
     ref <- GraphUtils.getASTVar nid
-    zoom Graph.ast $ AST.getNodeValueReprs ref
+    metaMay <- zoom Graph.ast $ AST.readMeta ref
+    case metaMay of
+        Just meta -> if meta ^. NodeMeta.displayResult
+                then zoom Graph.ast $ AST.getNodeValueReprs ref
+                else return $ Right []
+        Nothing   -> return $ Right []
 
 collect pass = return ()
     {-putStrLn $ "After pass: " <> pass-}

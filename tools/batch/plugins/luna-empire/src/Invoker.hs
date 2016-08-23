@@ -61,71 +61,71 @@ main :: IO ()
 main = do
     args <- parseArgsOrExit patterns =<< getArgs
     endPoints <- EP.clientFromConfig <$> Config.load
-    when (args `isPresent` (command "addNode")) $ do
-        pid       <- args `getArgOrExit` (argument "pid")
-        lid       <- args `getArgOrExit` (argument "lid")
-        expr      <- args `getArgOrExit` (argument "expression")
-        x         <- args `getArgOrExit` (argument "x")
-        y         <- args `getArgOrExit` (argument "y")
+    when (args `isPresent` command "addNode") $ do
+        pid       <- args `getArgOrExit` argument "pid"
+        lid       <- args `getArgOrExit` argument "lid"
+        expr      <- args `getArgOrExit` argument "expression"
+        x         <- args `getArgOrExit` argument "x"
+        y         <- args `getArgOrExit` argument "y"
         addNode endPoints (toGraphLocation pid lid) expr (read x) (read y)
-    when (args `isPresent` (command "removeNode")) $ do
-        pid       <- args `getArgOrExit` (argument "pid")
-        lid       <- args `getArgOrExit` (argument "lid")
-        nodeId    <- args `getArgOrExit` (argument "nodeId")
+    when (args `isPresent` command "removeNode") $ do
+        pid       <- args `getArgOrExit` argument "pid"
+        lid       <- args `getArgOrExit` argument "lid"
+        nodeId    <- args `getArgOrExit` argument "nodeId"
         removeNode endPoints (toGraphLocation pid lid) (read nodeId)
-    when (args `isPresent` (command "updateNodeMeta")) $ do
-        pid       <- args `getArgOrExit` (argument "pid")
-        lid       <- args `getArgOrExit` (argument "lid")
-        nodeId    <- args `getArgOrExit` (argument "nodeId")
-        x         <- args `getArgOrExit` (argument "x")
-        y         <- args `getArgOrExit` (argument "y")
-        req       <- args `getArgOrExit` (argument "req")
+    when (args `isPresent` command "updateNodeMeta") $ do
+        pid       <- args `getArgOrExit` argument "pid"
+        lid       <- args `getArgOrExit` argument "lid"
+        nodeId    <- args `getArgOrExit` argument "nodeId"
+        x         <- args `getArgOrExit` argument "x"
+        y         <- args `getArgOrExit` argument "y"
+        req       <- args `getArgOrExit` argument "req"
         updateNodeMeta endPoints (toGraphLocation pid lid) (read nodeId) (read x) (read y) (read req)
-    when (args `isPresent` (command "connect")) $ do
-        pid       <- args `getArgOrExit` (argument "pid")
-        lid       <- args `getArgOrExit` (argument "lid")
-        srcNodeId <- args `getArgOrExit` (argument "srcNodeId")
-        outPort   <- args `getArgOrExit` (argument "outPort")
-        dstNodeId <- args `getArgOrExit` (argument "dstNodeId")
-        inPort    <- args `getArgOrExit` (argument "inPort")
+    when (args `isPresent` command "connect") $ do
+        pid       <- args `getArgOrExit` argument "pid"
+        lid       <- args `getArgOrExit` argument "lid"
+        srcNodeId <- args `getArgOrExit` argument "srcNodeId"
+        outPort   <- args `getArgOrExit` argument "outPort"
+        dstNodeId <- args `getArgOrExit` argument "dstNodeId"
+        inPort    <- args `getArgOrExit` argument "inPort"
         connect endPoints (toGraphLocation pid lid) (read srcNodeId) (read outPort) (read dstNodeId) (read inPort)
-    when (args `isPresent` (command "disconnect")) $ do
-        pid       <- args `getArgOrExit` (argument "pid")
-        lid       <- args `getArgOrExit` (argument "lid")
-        dstNodeId <- args `getArgOrExit` (argument "dstNodeId")
-        inPort    <- args `getArgOrExit` (argument "inPort")
+    when (args `isPresent` command "disconnect") $ do
+        pid       <- args `getArgOrExit` argument "pid"
+        lid       <- args `getArgOrExit` argument "lid"
+        dstNodeId <- args `getArgOrExit` argument "dstNodeId"
+        inPort    <- args `getArgOrExit` argument "inPort"
         disconnect endPoints (toGraphLocation pid lid) (read dstNodeId) (read inPort)
-    when (args `isPresent` (command "setValue")) $ do
-        pid       <- args `getArgOrExit` (argument "pid")
-        lid       <- args `getArgOrExit` (argument "lid")
-        nodeId    <- args `getArgOrExit` (argument "nodeId")
-        portId    <- args `getArgOrExit` (argument "portId")
-        value     <- args `getArgOrExit` (argument "value")
+    when (args `isPresent` command "setValue") $ do
+        pid       <- args `getArgOrExit` argument "pid"
+        lid       <- args `getArgOrExit` argument "lid"
+        nodeId    <- args `getArgOrExit` argument "nodeId"
+        portId    <- args `getArgOrExit` argument "portId"
+        value     <- args `getArgOrExit` argument "value"
         setPortValue endPoints (toGraphLocation pid lid) (read nodeId) (read portId) (read value)
-    when (args `isPresent` (command "getProgram")) $ do
-        pid       <- args `getArgOrExit` (argument "pid")
-        lid       <- args `getArgOrExit` (argument "lid")
+    when (args `isPresent` command "getProgram") $ do
+        pid       <- args `getArgOrExit` argument "pid"
+        lid       <- args `getArgOrExit` argument "lid"
         getProgram endPoints (toGraphLocation pid lid)
-    when (args `isPresent` (command "createProject")) $ do
-        name      <- args `getArgOrExit` (argument "name")
+    when (args `isPresent` command "createProject") $ do
+        name      <- args `getArgOrExit` argument "name"
         createProject endPoints name
-    when (args `isPresent` (command "createLibrary")) $ do
-        pid       <- args `getArgOrExit` (argument "pid")
-        path      <- args `getArgOrExit` (argument "path")
-        let name   = args `getArg`       (argument "name")
+    when (args `isPresent` command "createLibrary") $ do
+        pid       <- args `getArgOrExit` argument "pid"
+        path      <- args `getArgOrExit` argument "path"
+        let name   = args `getArg`       argument "name"
         createLibrary endPoints (read pid) name path
-    when (args `isPresent` (command "projects")) $ do
+    when (args `isPresent` command "projects") $
         listProjects endPoints
-    when (args `isPresent` (command "libraries")) $ do
-        pid       <- args `getArgOrExit` (argument "pid")
+    when (args `isPresent` command "libraries") $ do
+        pid       <- args `getArgOrExit` argument "pid"
         listLibraries endPoints $ read pid
-    when (args `isPresent` (command "graphviz")) $ do
-        pid       <- args `getArgOrExit` (argument "pid")
-        lid       <- args `getArgOrExit` (argument "lid")
+    when (args `isPresent` command "graphviz") $ do
+        pid       <- args `getArgOrExit` argument "pid"
+        lid       <- args `getArgOrExit` argument "lid"
         environmentDumpGraphviz endPoints $ toGraphLocation pid lid
-    when (args `isPresent` (command "typecheck")) $ do
-        pid       <- args `getArgOrExit` (argument "pid")
-        lid       <- args `getArgOrExit` (argument "lid")
+    when (args `isPresent` command "typecheck") $ do
+        pid       <- args `getArgOrExit` argument "pid"
+        lid       <- args `getArgOrExit` argument "lid"
         typecheck endPoints $ toGraphLocation pid lid
 
 sendToBus :: (Topic.MessageTopic (Request a), Bin.Binary a) => EP.BusEndPoints -> a -> IO ()
@@ -135,13 +135,13 @@ sendToBus endPoints msg = do
   void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message (Topic.topic msg') $ toStrict . Bin.encode $ msg'
 
 addNode :: EP.BusEndPoints -> GraphLocation -> String -> Double -> Double -> IO ()
-addNode endPoints graphLocation expression x y = sendToBus endPoints $ AddNode.Request graphLocation (AddNode.ExpressionNode $ Text.pack expression) (NodeMeta.NodeMeta (x, y) True) Nothing
+addNode endPoints graphLocation expression x y = sendToBus endPoints $ AddNode.Request graphLocation (AddNode.ExpressionNode $ Text.pack expression) (NodeMeta.NodeMeta (x, y) True True) Nothing
 
 removeNode :: EP.BusEndPoints -> GraphLocation -> NodeId -> IO ()
 removeNode endPoints graphLocation nodeId = sendToBus endPoints $ RemoveNode.Request graphLocation [nodeId]
 
 updateNodeMeta :: EP.BusEndPoints -> GraphLocation -> NodeId -> Double -> Double -> Bool -> IO ()
-updateNodeMeta endPoints graphLocation nodeId x y req = sendToBus endPoints $ UpdateNodeMeta.Request graphLocation [(nodeId, (NodeMeta.NodeMeta (x, y) req))]
+updateNodeMeta endPoints graphLocation nodeId x y req = sendToBus endPoints $ UpdateNodeMeta.Request graphLocation [(nodeId, NodeMeta.NodeMeta (x, y) req True)]
 
 connect :: EP.BusEndPoints -> GraphLocation -> NodeId -> OutPort -> NodeId -> InPort -> IO ()
 connect endPoints graphLocation srcNodeId outPort dstNodeId inPort = sendToBus endPoints $ Connect.Request graphLocation (OutPortRef srcNodeId outPort) (InPortRef dstNodeId inPort)
@@ -159,7 +159,7 @@ createProject :: EP.BusEndPoints -> String -> IO ()
 createProject endPoints name = sendToBus endPoints $ CreateProject.Request name
 
 listProjects :: EP.BusEndPoints -> IO ()
-listProjects endPoints = sendToBus endPoints $ ListProjects.Request
+listProjects endPoints = sendToBus endPoints ListProjects.Request
 
 createLibrary :: EP.BusEndPoints -> ProjectId -> Maybe String -> String -> IO ()
 createLibrary endPoints pid name path = sendToBus endPoints $ CreateLibrary.Request pid name path
