@@ -53,7 +53,6 @@ function initializeGl() {
     $$.renderer              = new THREE.WebGLRenderer({ antialias: false});
     $$.renderer.autoClear    = false;
     $$.rendererMap           = new THREE.WebGLRenderTarget(100, 100);
-    $$.rendererMap.autoClear = false;
     $$.rendererMapCtx        = $$.renderer.getContext();
 
 
@@ -169,11 +168,15 @@ function render() {
   if(Math.abs($$.commonUniforms.camFactor.value/$$.lastFactor - 1.0) > 0.005) {
     redrawTextures();
   }
+
   if (shouldRender) {
     $$.commonUniforms.objectMap.value = 0;
     $$.commonUniforms.antialias.value = 1;
     var oldCf = $$.commonUniforms.camFactor.value;
+    module.exports.redrawTextureCallbacks.forEach(function(cb){cb($$.renderer);});
+    module.exports.redrawTextureCallbacks = [];
     $$.renderer.setClearColor(config.backgroundColor, 1);
+    $$.renderer.setRenderTarget();
     $$.renderer.clear();
 
     $$.renderer.render($$.scene, $$.camera);
@@ -367,7 +370,8 @@ module.exports = {
   getJSState:               function() { return $$; },
   downloadFile:             downloadFile,
   customEvent:              function() { },
-  nextFrameCallbacks: []
+  nextFrameCallbacks: [],
+  redrawTextureCallbacks: []
 
 };
 
