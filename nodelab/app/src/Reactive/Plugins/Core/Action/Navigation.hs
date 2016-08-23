@@ -27,7 +27,7 @@ import qualified Empire.API.Data.Port              as P
 import qualified Empire.API.Data.Connection        as C
 
 import           Reactive.Commands.Command         (Command, performIO)
-import           Reactive.Commands.Graph           (allNodes)
+import           Reactive.Commands.Graph           (allNodes, widgetIdToNodeWidget)
 import           Reactive.Commands.Graph.Selection (focusSelectedNode, selectAll, selectedNodes, unselectAll)
 import qualified Reactive.Commands.UIRegistry      as UICmd
 import           Reactive.Commands.Batch           (collaborativeTouch, cancelCollaborativeTouch)
@@ -92,12 +92,8 @@ getDstNodeIds nodeId = do
 toWidgetFile :: N.NodeId -> Command State (Maybe (WidgetFile Model.Node))
 toWidgetFile nodeId = do
     widgetIdMay <- preuse $ Global.graph . Graph.nodeWidgetsMap . ix nodeId
-    nodeMayMay <- inRegistry $ mapM lookupNode widgetIdMay
+    nodeMayMay <- inRegistry $ mapM widgetIdToNodeWidget widgetIdMay
     return $ join nodeMayMay
-
--- TODO: merge with MultiSelection.hs
-lookupNode :: WidgetId -> Command UIRegistry.State (Maybe (WidgetFile Model.Node))
-lookupNode = UIRegistry.lookupTypedM
 
 goToNodeId :: [WidgetFile Model.Node] -> N.NodeId -> Command State ()
 goToNodeId selectedNodes nodeId = do

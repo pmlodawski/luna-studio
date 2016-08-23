@@ -5,6 +5,7 @@ module Reactive.Commands.Graph
     , updateConnectionsForNodes
     , connectionIdToWidgetId
     , allNodes
+    , widgetIdToNodeWidget
     , nodeIdToWidgetId
     , focusNode
     , updateNodeZOrder
@@ -66,6 +67,9 @@ getNode :: NodeId -> Command Global.State (Maybe Model.Node)
 getNode nodeId = runMaybeT $ do
     (Just widgetId)   <- preuse $ Global.graph . Graph.nodeWidgetsMap . ix nodeId
     lift $ inRegistry $ UICmd.lookup widgetId
+
+widgetIdToNodeWidget :: WidgetId -> Command UIRegistry.State (Maybe (WidgetFile Model.Node))
+widgetIdToNodeWidget = UIRegistry.lookupTypedM
 
 nodeIdToWidgetId :: NodeId -> Command Global.State (Maybe WidgetId)
 nodeIdToWidgetId nodeId = preuse $ Global.graph . Graph.nodeWidgetsMap . ix nodeId

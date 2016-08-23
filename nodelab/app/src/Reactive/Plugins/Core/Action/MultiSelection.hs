@@ -24,6 +24,7 @@ import qualified Reactive.State.UIRegistry         as UIRegistry
 
 import           Reactive.Commands.Command         (Command, performIO)
 import           Reactive.Commands.Batch           (collaborativeTouch, cancelCollaborativeTouch)
+import           Reactive.Commands.Graph           (widgetIdToNodeWidget)
 import           Reactive.Commands.Graph.Selection (focusSelectedNode, selectAll, selectedNodes, unselectAll)
 import qualified Reactive.Commands.UIRegistry      as UICmd
 
@@ -64,19 +65,15 @@ handleMove jsstate coord = do
             updateSelection jsstate start coord
             drawSelectionBox start coord
 
-
-lookupNode :: WidgetId -> Command UIRegistry.State (Maybe (WidgetFile NodeModel.Node))
-lookupNode = UIRegistry.lookupTypedM
-
 updateSelection :: JSState -> Vector2 Int -> Vector2 Int -> Command State ()
 updateSelection jsstate start end = do
     let leftTop     = Vector2 (min (start ^. x) (end ^. x)) (min (start ^. y) (end ^. y))
         rightBottom = Vector2 (max (start ^. x) (end ^. x)) (max (start ^. y) (end ^. y))
         ids         = getObjectsInRect jsstate leftTop (rightBottom - leftTop)
     oldSelected <- selectedNodes
-    newSelectedFiles <-  inRegistry $ mapM lookupNode ids
-    let oldSet     = Set.fromList $ (view objectId) <$> oldSelected
-        newSet     = Set.fromList $ (view objectId) <$> catMaybes newSelectedFiles
+    newSelectedFiles <-  inRegistry $ mapM widgetIdToNodeWidget ids
+    let oldSet     = Set.fromList $ view objectId <$> oldSelected
+        newSet     = Set.fromList $ view objectId <$> catMaybes newSelectedFiles
         toSelect   = Set.difference newSet oldSet
         toUnselect = Set.difference oldSet newSet
     inRegistry $ do
@@ -84,8 +81,8 @@ updateSelection jsstate start end = do
         forM_ toUnselect $ flip UICmd.update_ $ NodeModel.isSelected .~ False
 
     do
-        let oldSet     = Set.fromList $ (view $ widget . NodeModel.nodeId) <$> oldSelected
-            newSet     = Set.fromList $ (view $ widget . NodeModel.nodeId) <$> catMaybes newSelectedFiles
+        let oldSet     = Set.fromList $ view (widget . NodeModel.nodeId) <$> oldSelected
+            newSet     = Set.fromList $ view (widget . NodeModel.nodeId) <$> catMaybes newSelectedFiles
             toSelect   = Set.difference newSet oldSet
             toUnselect = Set.difference oldSet newSet
 

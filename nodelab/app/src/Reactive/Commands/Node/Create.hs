@@ -18,7 +18,7 @@ import qualified UI.Handlers.Node                  as Node
 
 import           Reactive.Commands.Command         (Command, performIO)
 import           Reactive.Commands.EnterNode       (enterNode)
-import           Reactive.Commands.Graph           (focusNode)
+import           Reactive.Commands.Graph           (focusNode, widgetIdToNodeWidget)
 import           Reactive.Commands.Graph.Selection (selectedNodes)
 import           Reactive.Commands.Node.Remove     (removeSelectedNodes)
 import qualified Reactive.Commands.UIRegistry      as UICmd
@@ -91,13 +91,9 @@ editNodeExpression nodeId = do
     exprMay     <- preuse $ Global.graph . Graph.nodesMap . ix nodeId . Node.nodeType . Node.expression
     widgetIdMay <- preuse $ Global.graph . Graph.nodeWidgetsMap . ix nodeId
     withJust exprMay $ \expr -> withJust widgetIdMay $ \widgetId -> do
-        wfMay <- inRegistry $ lookupNode widgetId
+        wfMay <- inRegistry $ widgetIdToNodeWidget widgetId
         withJust wfMay $ \wf -> do
             pos <- zoom Global.camera $ Camera.workspaceToScreen $ wf ^. widget . Model.position
             let halfCharWidth = 4
                 offset = Vector2 (-10 - halfCharWidth * fromIntegral (Text.length expr)) (-59)
             NS.openEdit expr nodeId $ pos + offset
-
--- TODO: merge with MultiSelection.hs and Navigation.hs
-lookupNode :: WidgetId -> Command UIRegistry.State (Maybe (WidgetFile Model.Node))
-lookupNode = UIRegistry.lookupTypedM
