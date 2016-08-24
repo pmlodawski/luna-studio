@@ -5,11 +5,11 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
-COPY env/config /etc/nodelab/config
+COPY docker/env/backend/config /etc/nodelab/config
 
 RUN    apk update \
     && apk add zeromq s6 gmp \
-    && ln -s /userdata/projects /etc/nodelab/projects
+    && mkdir -p /var/lib/app/nodelab/projects
 
 COPY docker/s6/backend /etc/s6/backend
 COPY docker/s6/common  /etc/s6/common
