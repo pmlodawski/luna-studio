@@ -59,6 +59,14 @@ import qualified Empire.Commands.GraphBuilder as GraphBuilder
 import qualified Empire.Commands.Publisher    as Publisher
 import Debug.Trace (trace)
 
+
+generateNodeName :: Command Graph String
+generateNodeName = do
+    lastNameId <- use Graph.lastNameId
+    let newNameId = lastNameId + 1
+    Graph.lastNameId .= newNameId
+    return $ "node" <> show newNameId
+
 addNodeCondTC :: Bool -> GraphLocation -> NodeId -> Text -> NodeMeta -> Empire Node
 addNodeCondTC doTC loc uuid expr meta = withGraph loc $ do
     node <- addNodeNoTC loc uuid expr meta
@@ -70,8 +78,8 @@ addNode loc uuid expr meta = withTC loc False $ addNodeNoTC loc uuid expr meta
 
 addNodeNoTC :: GraphLocation -> NodeId -> Text -> NodeMeta -> Command Graph Node
 addNodeNoTC loc uuid expr meta = do
-    newNodeId <- uses Graph.nodeMapping Map.size
-    refNode <- zoom Graph.ast $ AST.addNode uuid ("node" ++ show newNodeId) (Text.unpack expr)
+    newNodeName <- generateNodeName
+    refNode <- zoom Graph.ast $ AST.addNode uuid newNodeName (Text.unpack expr)
     zoom Graph.ast $ AST.writeMeta refNode meta
     Graph.nodeMapping . at uuid ?= refNode
     node <- GraphBuilder.buildNode uuid

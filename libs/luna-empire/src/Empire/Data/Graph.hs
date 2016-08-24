@@ -12,15 +12,16 @@ import           Luna.Syntax.Model.Network.Builder (star, runNetworkBuilderT)
 
 data Graph = Graph { _ast         :: AST
                    , _nodeMapping :: Map NodeId NodeRef
+                   , _lastNameId  :: Integer
                    } deriving (Show)
 
 makeLenses ''Graph
 
 instance Default Graph where
-    def = Graph defaultAST def
+    def = Graph defaultAST def 0
 
 -- nextNodeId :: Graph -> Int
 -- nextNodeId graph = IdGen.nextId $ graph ^. nodeMapping
 
 defaultAST :: AST
-defaultAST = snd $ (runIdentity $ runNetworkBuilderT def $ star :: (NodeRef, AST))
+defaultAST = snd (runIdentity $ runNetworkBuilderT def star :: (NodeRef, AST))
