@@ -55,7 +55,7 @@ getNodeValueReprs nid = do
         Just meta -> if meta ^. NodeMeta.displayResult
                 then zoom Graph.ast $ AST.getNodeValueReprs ref
                 else return $ Right []
-        Nothing   -> return $ Right []
+        Nothing   -> zoom Graph.ast $ AST.getNodeValueReprs ref
 
 collect pass = return ()
     {-putStrLn $ "After pass: " <> pass-}
