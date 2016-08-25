@@ -135,7 +135,7 @@ sendToBus endPoints msg = do
   void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message (Topic.topic msg') $ toStrict . Bin.encode $ msg'
 
 addNode :: EP.BusEndPoints -> GraphLocation -> String -> Double -> Double -> IO ()
-addNode endPoints graphLocation expression x y = sendToBus endPoints $ AddNode.Request graphLocation (AddNode.ExpressionNode $ Text.pack expression) (NodeMeta.NodeMeta (x, y) True True) Nothing
+addNode endPoints graphLocation expression x y = sendToBus endPoints $ AddNode.Request graphLocation (AddNode.ExpressionNode $ Text.pack expression) (NodeMeta.NodeMeta (x, y) True) Nothing
 
 removeNode :: EP.BusEndPoints -> GraphLocation -> NodeId -> IO ()
 removeNode endPoints graphLocation nodeId = sendToBus endPoints $ RemoveNode.Request graphLocation [nodeId]

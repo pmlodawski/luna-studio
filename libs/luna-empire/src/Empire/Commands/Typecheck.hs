@@ -49,13 +49,15 @@ import           Empire.Utils.TextResult                         (nodeValueToTex
 
 getNodeValueReprs :: NodeId -> Command Graph (Either String [Value])
 getNodeValueReprs nid = do
-    ref <- GraphUtils.getASTVar nid
-    metaMay <- zoom Graph.ast $ AST.readMeta ref
+    nodeRef <- GraphUtils.getASTPointer nid
+    metaMay <- zoom Graph.ast $ AST.readMeta nodeRef
     case metaMay of
         Just meta -> if meta ^. NodeMeta.displayResult
-                then zoom Graph.ast $ AST.getNodeValueReprs ref
-                else return $ Right []
-        Nothing   -> zoom Graph.ast $ AST.getNodeValueReprs ref
+            then do
+                valRef <- GraphUtils.getASTVar nid
+                zoom Graph.ast $ AST.getNodeValueReprs valRef
+            else   return $ Right []
+        Nothing -> return $ Right []
 
 collect pass = return ()
     {-putStrLn $ "After pass: " <> pass-}
@@ -70,8 +72,8 @@ runTC = do
     (_, g) <- TypeCheck.runT $ flip ASTOp.runGraph ast $ do
         Symbol.loadFunctions StdLib.symbols
         TypeCheckState.modify_ $ TypeCheckState.freshRoots .~ roots
-        let seq3 a b c = Sequence a $ Sequence b c
-            seq4 a b c d = Sequence a $ seq3 b c d
+        let seq3 a b c     = Sequence a $ Sequence b c
+            seq4 a b c d   = Sequence a $ seq3 b c d
             seq5 a b c d e = Sequence a $ seq4 b c d e
         let tc = seq4
                      ScanPass
