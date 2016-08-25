@@ -19,6 +19,7 @@ import qualified Object.Widget.Label          as Label
 import qualified Object.Widget.LabeledTextBox as LabeledTextBox
 import qualified Object.Widget.Node           as Model
 import qualified Object.Widget.TextBox        as TextBox
+import qualified Object.Widget.Toggle         as Toggle
 import           Reactive.Commands.Batch      (cancelCollaborativeTouch, collaborativeTouch)
 import           Reactive.Commands.Command    (Command)
 import qualified Reactive.Commands.UIRegistry as UICmd
@@ -39,6 +40,7 @@ import           UI.Widget.Label              ()
 import           UI.Widget.LabeledTextBox     ()
 import           UI.Widget.Node               ()
 import           UI.Widget.TextBox            ()
+import           UI.Widget.Toggle             ()
 
 import           Empire.API.Data.Node         (NodeId)
 
@@ -48,10 +50,19 @@ nameHandlers id = addHandler (ValueChangedHandler $ nameValueChangedHandler id)
                 $ addHandler (UICmd.LostFocus $ inRegistry . flip UICmd.update_ (TextBox.isEditing .~ False))
                 $ mempty
 
+visualizationToggleHandlers :: WidgetId -> HTMap
+visualizationToggleHandlers id = addHandler (ValueChangedHandler $ visualizationToggledHandler id)
+                                 $ mempty
+
 nameValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
-nameValueChangedHandler parent val tbId = do
+nameValueChangedHandler parent val _ = do
     model <- inRegistry $ UICmd.update parent $ Model.name .~ val
     triggerRenameNodeHandler parent model
+
+visualizationToggledHandler :: WidgetId -> Bool -> WidgetId -> Command Global.State ()
+visualizationToggledHandler parent val _ = do
+    model <- inRegistry $ UICmd.update parent $ Model.visualizationsEnabled .~ val
+    triggerVisualizationsToggledHandler parent model
 
 typeHandlers :: WidgetId -> HTMap
 typeHandlers id = addHandler (ValueChangedHandler $ typeValueChangedHandler id)
@@ -71,6 +82,9 @@ focusNodeHandler = TypeKey :: TypeKey FocusNodeHandler
 
 newtype RenameNodeHandler = RenameNodeHandler (WidgetId -> NodeId -> Text -> Command Global.State ())
 renameNodeHandler = TypeKey :: TypeKey RenameNodeHandler
+
+newtype VisualizationsToggledHandler = VisualizationsToggledHandler (WidgetId -> NodeId -> Bool -> Command Global.State ())
+visualizationsToggledHandler = TypeKey :: TypeKey VisualizationsToggledHandler
 
 newtype ChangeInputNodeTypeHandler = ChangeInputNodeTypeHandler (WidgetId -> NodeId -> Text -> Command Global.State ())
 changeInputNodeTypeHandler = TypeKey :: TypeKey ChangeInputNodeTypeHandler
@@ -99,6 +113,11 @@ triggerRenameNodeHandler :: WidgetId -> Model.Node -> Command Global.State ()
 triggerRenameNodeHandler id model = do
     maybeHandler <- inRegistry $ UICmd.handler id renameNodeHandler
     withJust maybeHandler $ \(RenameNodeHandler handler) -> handler id (model ^. Model.nodeId) (model ^. Model.name)
+
+triggerVisualizationsToggledHandler :: WidgetId -> Model.Node -> Command Global.State ()
+triggerVisualizationsToggledHandler id model = do
+    maybeHandler <- inRegistry $ UICmd.handler id visualizationsToggledHandler
+    withJust maybeHandler $ \(VisualizationsToggledHandler handler) -> handler id (model ^. Model.nodeId) (model ^. Model.visualizationsEnabled)
 
 triggerChangeInputNodeTypeHandler :: WidgetId -> Model.Node -> Command Global.State ()
 triggerChangeInputNodeTypeHandler id model = do
@@ -247,6 +266,9 @@ instance CompositeWidget Model.Node where
         let widget = LabeledTextBox.create Style.portControlSize "Name" $ model ^. Model.name
         nameTextBoxId <- UICmd.register nodeGroupId widget $ nameHandlers id
 
+        let widget = Toggle.create Style.portControlSize "Display result" $ model ^. Model.visualizationsEnabled
+        visualizationToggleId <- UICmd.register nodeGroupId widget $ visualizationToggleHandlers id
+
         withJust (model ^. Model.tpe) $ \tpe -> do
             let widget = LabeledTextBox.create Style.portControlSize "Type" (fromMaybe "" $ model ^. Model.tpe)
             nodeTpeId <- UICmd.register nodeGroupId widget $ typeHandlers id
@@ -263,16 +285,17 @@ instance CompositeWidget Model.Node where
                                   & Group.size    . y .~ 0
         visualizationGroupId <- UICmd.register controlGroups group (Layout.verticalLayoutHandler 0.0)
 
-        void $ UIRegistry.updateWidgetM id $ Model.elements %~ ( (Model.expressionLabel    .~ expressionLabelId    )
-                                                               . (Model.expandedGroup      .~ expandedGroup        )
-                                                               . (Model.portGroup          .~ portGroup            )
-                                                               . (Model.portControls       .~ portControlsGroupId  )
-                                                               . (Model.inLabelsGroup      .~ inLabelsGroupId      )
-                                                               . (Model.outLabelsGroup     .~ outLabelsGroupId     )
-                                                               . (Model.nameTextBox        .~ nameTextBoxId        )
-                                                               . (Model.valueLabel         .~ valueLabelId         )
-                                                               . (Model.visualizationGroup .~ visualizationGroupId )
-                                                               . (Model.execTimeLabel      .~ execTimeLabelId      )
+        void $ UIRegistry.updateWidgetM id $ Model.elements %~ ( (Model.expressionLabel     .~ expressionLabelId     )
+                                                               . (Model.expandedGroup       .~ expandedGroup         )
+                                                               . (Model.portGroup           .~ portGroup             )
+                                                               . (Model.portControls        .~ portControlsGroupId   )
+                                                               . (Model.inLabelsGroup       .~ inLabelsGroupId       )
+                                                               . (Model.outLabelsGroup      .~ outLabelsGroupId      )
+                                                               . (Model.nameTextBox         .~ nameTextBoxId         )
+                                                               . (Model.valueLabel          .~ valueLabelId          )
+                                                               . (Model.visualizationGroup  .~ visualizationGroupId  )
+                                                               . (Model.execTimeLabel       .~ execTimeLabelId       )
+                                                               . (Model.visualizationToggle .~ Just visualizationToggleId )
                                                                )
 
     updateWidget id old model = do
@@ -290,6 +313,10 @@ instance CompositeWidget Model.Node where
         whenChanged old model Model.name  $ do
             let nameTbId = model ^. Model.elements . Model.nameTextBox
             UICmd.update_ nameTbId   $ LabeledTextBox.value .~ (model ^. Model.name)
+
+        whenChanged old model Model.visualizationsEnabled  $ do
+            let visTgId = model ^. Model.elements . Model.visualizationToggle
+            withJust visTgId $ \visTgId -> UICmd.update_ visTgId $ Toggle.value .~ (model ^. Model.visualizationsEnabled)
 
         whenChanged old model Model.value $ do
             let valueId = model ^. Model.elements . Model.valueLabel

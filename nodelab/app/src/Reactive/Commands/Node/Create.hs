@@ -21,6 +21,7 @@ import           Reactive.Commands.EnterNode       (enterNode)
 import           Reactive.Commands.Graph           (focusNode, widgetIdToNodeWidget)
 import           Reactive.Commands.Graph.Selection (selectedNodes)
 import           Reactive.Commands.Node.Remove     (removeSelectedNodes)
+import           Reactive.Commands.Node.NodeMeta        (modifyNodeMeta)
 import qualified Reactive.Commands.UIRegistry      as UICmd
 import qualified Reactive.State.Camera             as Camera
 import           Reactive.State.Global             (State, inRegistry)
@@ -65,15 +66,21 @@ registerNode node = do
     return nodeWidget
 
 nodeHandlers :: Node -> HTMap
-nodeHandlers node = addHandler (UINode.RemoveNodeHandler          removeSelectedNodes)
-                  $ addHandler (UINode.RenameNodeHandler          $ \_ nodeId name -> BatchCmd.renameNode nodeId name)
-                  $ addHandler (UINode.ChangeInputNodeTypeHandler $ \_ nodeId name -> BatchCmd.setInputNodeType nodeId name)
-                  $ addHandler (UINode.FocusNodeHandler           focusNode)
-                  $ addHandler (UINode.ExpandNodeHandler          expandSelectedNodes)
-                  $ addHandler (UINode.EditNodeExpressionHandler  editNodeExpression)
+nodeHandlers node = addHandler (UINode.RemoveNodeHandler            removeSelectedNodes)
+                  $ addHandler (UINode.RenameNodeHandler            $ \_ nodeId name -> BatchCmd.renameNode nodeId name)
+                  $ addHandler (UINode.ChangeInputNodeTypeHandler   $ \_ nodeId name -> BatchCmd.setInputNodeType nodeId name)
+                  $ addHandler (UINode.FocusNodeHandler             focusNode)
+                  $ addHandler (UINode.ExpandNodeHandler            expandSelectedNodes)
+                  $ addHandler (UINode.EditNodeExpressionHandler    editNodeExpression)
+                  $ addHandler (UINode.VisualizationsToggledHandler visualizationsToggled)
                   $ addEnterNodeHandler where
                         addEnterNodeHandler = if node ^. Node.canEnter then addHandler (UINode.EnterNodeHandler $ enterNode $ Breadcrumb.Lambda $ node ^. Node.nodeId) mempty
                                                                        else mempty
+
+visualizationsToggled :: WidgetId -> NodeId -> Bool -> Command Global.State ()
+visualizationsToggled _ nid val = modifyNodeMeta nid (NodeMeta.displayResult .~ val)
+
+
 
 expandSelectedNodes :: Command Global.State ()
 expandSelectedNodes = do
