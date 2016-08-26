@@ -89,20 +89,20 @@ addNodeNoTC loc uuid expr meta = do
 
 addPersistentNode :: Node -> Command Graph NodeId
 addPersistentNode n = case n ^. Node.nodeType of
-  Node.ExpressionNode expr -> do
-    let newNodeId = n ^. Node.nodeId
-    refNode <- zoom Graph.ast $ AST.addNode newNodeId (Text.unpack $ n ^. Node.name) (Text.unpack expr)
-    zoom Graph.ast $ AST.writeMeta refNode (n ^. Node.nodeMeta)
-    Graph.nodeMapping . at newNodeId ?= refNode
-    mapM_ (setDefault newNodeId) (Map.toList $ n ^. Node.ports)
-    return newNodeId
-  _ -> return UUID.nil
-  where
-    setDefault nodeId (portId, port) = case port ^. Port.state of
-      Port.WithDefault (Constant val) -> case portId of
-        (InPortId pid) -> setDefaultValue' (PortRef.toAnyPortRef nodeId (InPortId pid)) (Constant val)
-        _ -> return ()
-      _ -> return ()
+    Node.ExpressionNode expr -> do
+        let newNodeId = n ^. Node.nodeId
+        refNode <- zoom Graph.ast $ AST.addNode newNodeId (Text.unpack $ n ^. Node.name) (Text.unpack expr)
+        zoom Graph.ast $ AST.writeMeta refNode (n ^. Node.nodeMeta)
+        Graph.nodeMapping . at newNodeId ?= refNode
+        mapM_ (setDefault newNodeId) (Map.toList $ n ^. Node.ports)
+        return newNodeId
+    _ -> return UUID.nil
+    where
+        setDefault nodeId (portId, port) = case port ^. Port.state of
+            Port.WithDefault (Constant val) -> case portId of
+                (InPortId pid) -> setDefaultValue' (PortRef.toAnyPortRef nodeId (InPortId pid)) (Constant val)
+                _ -> return ()
+            _ -> return ()
 
 removeNodes :: GraphLocation -> [NodeId] -> Empire ()
 removeNodes loc nodeIds = withTC loc False $ forM_ nodeIds removeNodeNoTC
@@ -147,7 +147,7 @@ connect :: GraphLocation -> OutPortRef -> InPortRef -> Empire ()
 connect loc outPort inPort = withTC loc False $ connectNoTC outPort inPort
 
 connectNoTC :: OutPortRef -> InPortRef -> Command Graph ()
-connectNoTC (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) = do
+connectNoTC (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) =
     case dstPort of
         Self    -> makeAcc srcNodeId dstNodeId
         Arg num -> makeApp srcNodeId dstNodeId num
@@ -229,7 +229,7 @@ getOutEdges nodeId = do
     return $ view _2 <$> filtered
 
 disconnectPort :: InPortRef -> Command Graph ()
-disconnectPort (InPortRef dstNodeId dstPort) = do
+disconnectPort (InPortRef dstNodeId dstPort) =
     case dstPort of
         Self    -> unAcc dstNodeId
         Arg num -> unApp dstNodeId num
