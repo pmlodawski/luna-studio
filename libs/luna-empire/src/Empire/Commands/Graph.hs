@@ -46,6 +46,7 @@ import qualified Empire.API.Data.PortRef       as PortRef
 import           Empire.API.Data.Node          (NodeId, Node(..))
 import qualified Empire.API.Data.Node          as Node
 import           Empire.API.Data.NodeMeta      (NodeMeta)
+import qualified Empire.API.Data.NodeMeta      as NodeMeta
 import qualified Empire.API.Data.Graph         as APIGraph
 import           Empire.API.Data.DefaultValue  (PortDefault(Constant), Value(..))
 import           Empire.API.Data.GraphLocation (GraphLocation (..))
@@ -125,9 +126,17 @@ updateNodeExpression loc nodeId newNodeId expr = do
             addNodeNoTC loc newNodeId expr meta
 
 updateNodeMeta :: GraphLocation -> NodeId -> NodeMeta -> Empire ()
-updateNodeMeta loc nodeId meta = withGraph loc $ do
+updateNodeMeta loc nodeId newMeta = withGraph loc $ do
     ref <- GraphUtils.getASTPointer nodeId
-    zoom Graph.ast $ AST.writeMeta ref meta
+    oldMetaMay <- zoom Graph.ast $ AST.readMeta ref
+    doTCMay <- forM oldMetaMay $ \oldMeta ->
+        return $ triggerTC oldMeta newMeta
+    zoom Graph.ast $ AST.writeMeta ref newMeta
+    withJust doTCMay $ \doTC ->
+        when doTC $ runTC loc False
+    where
+        triggerTC :: NodeMeta -> NodeMeta -> Bool
+        triggerTC oldMeta newMeta = oldMeta ^. NodeMeta.displayResult /= newMeta ^. NodeMeta.displayResult
 
 connectCondTC :: Bool -> GraphLocation -> OutPortRef -> InPortRef -> Empire ()
 connectCondTC doTC loc outPort inPort = withGraph loc $ do

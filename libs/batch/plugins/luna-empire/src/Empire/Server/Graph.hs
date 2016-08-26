@@ -182,8 +182,7 @@ handleUpdateNodeExpression = modifyGraphOk action success where
 
 handleUpdateNodeMeta :: Request UpdateNodeMeta.Request -> StateT Env BusT ()
 handleUpdateNodeMeta = modifyGraphOk action success where
-    action  (UpdateNodeMeta.Request location updates) = do
-        forM_ updates $ uncurry $ Graph.updateNodeMeta location
+    action  (UpdateNodeMeta.Request location updates) = forM_ updates $ uncurry $ Graph.updateNodeMeta location
     success (UpdateNodeMeta.Request location updates) result = sendToBus' $ UpdateNodeMeta.Update location updates
 
 handleRenameNode :: Request RenameNode.Request -> StateT Env BusT ()
