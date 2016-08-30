@@ -10,7 +10,7 @@ import           Data.Graph                              (Inputs (..), source)
 import           Data.HMap.Lazy                          (TypeKey (..))
 import qualified Data.HMap.Lazy                          as HMap
 import           Data.Layer_OLD.Cover_OLD                (covered, uncover)
-import           Data.Maybe                              (maybeToList)
+import           Data.Maybe                              (maybeToList, catMaybes)
 import           Data.Prop                               (prop, ( # ))
 import           Data.Record                             (ANY (..), caseTest, of')
 import           GHC.Prim                                (Any)
@@ -57,11 +57,17 @@ import           Graphics.API                             (Material(SolidColor),
 metaKey :: TypeKey NodeMeta
 metaKey = TypeKey
 
-addNode :: NodeId -> String -> String -> Command AST (NodeRef)
+addNode :: NodeId -> String -> String -> Command AST NodeRef
 addNode nid name expr = runASTOp $ Parser.parseExpr expr >>= ASTBuilder.makeNodeRep (NodeMarker nid) name
 
-addDefault :: PortDefault -> Command AST (NodeRef)
+addDefault :: PortDefault -> Command AST NodeRef
 addDefault val = runASTOp $ Parser.parsePortDefault val
+
+limit :: [a] -> [a]
+limit = limitHead where
+    limitCount = 1000
+    limitHead  = take limitCount
+    limitTail  = reverse . take limitCount . reverse
 
 getNodeValueReprs :: NodeRef -> Command AST (Either String [Value])
 getNodeValueReprs ref = do
@@ -71,18 +77,18 @@ getNodeValueReprs ref = do
         Right v  -> Right $ case v of
             Nothing  -> []
             Just val -> case val of
-                IntList        list -> [val, Graphics $ autoScatterChartInt         gridMat mat figure scale shift list]
-                DoubleList     list -> [val, Graphics $ autoScatterChartDouble      gridMat mat figure scale shift list]
-                Histogram      list -> [val, Graphics $ autoScatterChartIntTuple    gridMat mat figure scale shift list]
-                IntPairList    list -> [val, Graphics $ autoScatterChartIntTuple    gridMat mat figure scale shift list]
-                DoublePairList list -> [val, Graphics $ autoScatterChartDoubleTuple gridMat mat figure scale shift list]
-                _ -> [val]
+                IntList        list -> let list' = limit list in [IntList        list', Graphics $ autoScatterChartInt         gridMat mat figure scale shift list']
+                DoubleList     list -> let list' = limit list in [DoubleList     list', Graphics $ autoScatterChartDouble      gridMat mat figure scale shift list']
+                Histogram      list -> let list' = limit list in [Histogram      list', Graphics $ autoScatterChartIntTuple    gridMat mat figure scale shift list']
+                IntPairList    list -> let list' = limit list in [IntPairList    list', Graphics $ autoScatterChartIntTuple    gridMat mat figure scale shift list']
+                DoublePairList list -> let list' = limit list in [DoublePairList list', Graphics $ autoScatterChartDoubleTuple gridMat mat figure scale shift list']
+                _                   -> [val]
                 where
-                    gridMat = SolidColor 0.25 0.25 0.25 1.0
-                    mat     = SolidColor 0.2  0.5  0.7  1.0
-                    figure  = Circle 0.016
-                    scale   = 0.84
-                    shift   = 0.05
+                    gridMat    = SolidColor 0.25 0.25 0.25 1.0
+                    mat        = SolidColor 0.2  0.5  0.7  1.0
+                    figure     = Circle 0.016
+                    scale      = 0.84
+                    shift      = 0.05
 
 getNodeValue :: NodeRef -> Command AST (Either String (Maybe Value))
 getNodeValue ref = runASTOp $ do
@@ -141,7 +147,7 @@ getError' ref = do
     n :: ASTNode <- Builder.read ref
     err <- mapM reprError $ n ^. prop TCData . tcErrors
     inps <- mapM (Builder.follow source) $ uncover n # Inputs
-    inpErrs <- concat . fmap maybeToList <$> mapM getError' inps
+    inpErrs <- catMaybes <$> mapM getError' inps
     return $ tryHead err <|> tryHead inpErrs
 
 reprError :: ASTOp m => TCError NodeRef -> m (APIError.Error TypeRep)
