@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Empire.Commands.AST where
 
@@ -10,7 +11,7 @@ import           Data.Graph                              (Inputs (..), source)
 import           Data.HMap.Lazy                          (TypeKey (..))
 import qualified Data.HMap.Lazy                          as HMap
 import           Data.Layer_OLD.Cover_OLD                (covered, uncover)
-import           Data.Maybe                              (maybeToList, catMaybes)
+import           Data.Maybe                              (maybeToList, catMaybes, fromMaybe)
 import           Data.Prop                               (prop, ( # ))
 import           Data.Record                             (ANY (..), caseTest, of')
 import           GHC.Prim                                (Any)
@@ -30,6 +31,8 @@ import qualified Empire.ASTOps.Builder                   as ASTBuilder
 import qualified Empire.ASTOps.Parse                     as Parser
 import qualified Empire.ASTOps.Print                     as Printer
 import           Empire.ASTOps.Remove                    (safeRemove)
+
+import           Empire.Utils.TextResult                 (nodeValueToText)
 
 import           Luna.Pretty.GraphViz                    (renderAndOpen)
 
@@ -69,26 +72,28 @@ limit = limitHead where
     limitHead  = take limitCount
     limitTail  = reverse . take limitCount . reverse
 
-getNodeValueReprs :: NodeRef -> Command AST (Either String [Value])
+getNodeValueReprs :: NodeRef -> Command AST (Text, Either String [Value])
 getNodeValueReprs ref = do
     nodeValue <- getNodeValue ref
     return $ case nodeValue of
-        Left err -> Left err
-        Right v  -> Right $ case v of
-            Nothing  -> []
-            Just val -> case val of
-                IntList        list -> let list' = limit list in [IntList        list', Graphics $ autoScatterChartInt         gridMat mat figure scale shift list']
-                DoubleList     list -> let list' = limit list in [DoubleList     list', Graphics $ autoScatterChartDouble      gridMat mat figure scale shift list']
-                Histogram      list -> let list' = limit list in [Histogram      list', Graphics $ autoScatterChartIntTuple    gridMat mat figure scale shift list']
-                IntPairList    list -> let list' = limit list in [IntPairList    list', Graphics $ autoScatterChartIntTuple    gridMat mat figure scale shift list']
-                DoublePairList list -> let list' = limit list in [DoublePairList list', Graphics $ autoScatterChartDoubleTuple gridMat mat figure scale shift list']
-                _                   -> [val]
-                where
-                    gridMat    = SolidColor 0.25 0.25 0.25 1.0
-                    mat        = SolidColor 0.2  0.5  0.7  1.0
-                    figure     = Circle 0.016
-                    scale      = 0.84
-                    shift      = 0.05
+        Left err -> ("",   Left err)
+        Right v  -> (name, Right values) where
+            name = fromMaybe "" $ nodeValueToText <$> v
+            values = case v of
+                Nothing  -> []
+                Just val -> case val of
+                    IntList        list -> let list' = limit list in [IntList        list', Graphics $ autoScatterChartInt         gridMat mat figure scale shift list']
+                    DoubleList     list -> let list' = limit list in [DoubleList     list', Graphics $ autoScatterChartDouble      gridMat mat figure scale shift list']
+                    Histogram      list -> let list' = limit list in [Histogram      list', Graphics $ autoScatterChartIntTuple    gridMat mat figure scale shift list']
+                    IntPairList    list -> let list' = limit list in [IntPairList    list', Graphics $ autoScatterChartIntTuple    gridMat mat figure scale shift list']
+                    DoublePairList list -> let list' = limit list in [DoublePairList list', Graphics $ autoScatterChartDoubleTuple gridMat mat figure scale shift list']
+                    _                   -> [val]
+                    where
+                        gridMat    = SolidColor 0.25 0.25 0.25 1.0
+                        mat        = SolidColor 0.2  0.5  0.7  1.0
+                        figure     = Circle 0.016
+                        scale      = 0.84
+                        shift      = 0.05
 
 getNodeValue :: NodeRef -> Command AST (Either String (Maybe Value))
 getNodeValue ref = runASTOp $ do

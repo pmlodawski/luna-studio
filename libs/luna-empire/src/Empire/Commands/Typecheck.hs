@@ -11,7 +11,7 @@ import           Data.IntMap             (IntMap)
 import qualified Data.IntMap             as IntMap
 import           Data.List               (sort)
 import qualified Data.Map                as Map
-import           Data.Maybe              (isNothing, fromMaybe, maybeToList, listToMaybe)
+import           Data.Maybe              (isNothing)
 
 import qualified Empire.Data.Graph                 as Graph
 import           Empire.Data.Graph                 (Graph)
@@ -45,9 +45,8 @@ import qualified Luna.Compilation.Pass.Interpreter.Interpreter   as Interpreter
 
 import qualified Empire.ASTOp                                    as ASTOp
 import           Empire.Data.AST                                 (AST, NodeRef)
-import           Empire.Utils.TextResult                         (nodeValueToText)
 
-getNodeValueReprs :: NodeId -> Command Graph (Either String [Value])
+getNodeValueReprs :: NodeId -> Command Graph (Text, Either String [Value])
 getNodeValueReprs nid = do
     nodeRef <- GraphUtils.getASTPointer nid
     metaMay <- zoom Graph.ast $ AST.readMeta nodeRef
@@ -56,8 +55,8 @@ getNodeValueReprs nid = do
             then do
                 valRef <- GraphUtils.getASTVar nid
                 zoom Graph.ast $ AST.getNodeValueReprs valRef
-            else   return $ Right []
-        Nothing -> return $ Right []
+            else   return ("", Right [])
+        Nothing -> return ("", Right [])
 
 collect pass = return ()
     {-putStrLn $ "After pass: " <> pass-}
@@ -131,13 +130,12 @@ updateValues loc = do
     forM_ allNodeIds $ \id -> do
         noErrors <- isNothing <$> uses errorsCache (Map.lookup id)
         when noErrors $ do
-            v    <- zoom graph $ getNodeValueReprs id
+            (name, v) <- zoom graph $ getNodeValueReprs id
             case v of
                 Left err  -> reportError loc id $ Just $ APIError.RuntimeError err
                 Right val -> do
                     cached <- uses valuesCache $ Map.lookup id
                     when (cached /= Just val) $ do
-                        let name = fromMaybe "" $ nodeValueToText <$> listToMaybe val
                         Publisher.notifyResultUpdate loc id (NodeResult.Value name val) 100
                         valuesCache %= Map.insert id val
 
