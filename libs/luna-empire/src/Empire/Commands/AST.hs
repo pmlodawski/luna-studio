@@ -43,7 +43,7 @@ import qualified Old.Luna.Syntax.Term.Expr.Lit           as Lit
 
 import           Luna.Compilation.Error                  as TCError
 import           Luna.Compilation.Pass.Interpreter.Layer (InterpreterData (..))
-import           Luna.Compilation.Pass.Interpreter.Value (toIO, unsafeFromData, Data)
+import           Luna.Compilation.Pass.Interpreter.Value (toExceptIO, unsafeFromData, Data, attachListener)
 import qualified Luna.Compilation.Pass.Interpreter.Layer as Interpreter
 import           Unsafe.Coerce
 
@@ -103,7 +103,7 @@ getNodeValue ref = runASTOp $ do
     case node ^. prop InterpreterData . Interpreter.value of
         Left  err -> return $ Right Nothing
         Right val -> do
-            val <- liftIO . runExceptT $ toIO val
+            val <- liftIO . runExceptT $ toExceptIO val
             case val of
                 Left  s -> return $ Left s
                 Right v -> caseTest (uncover tpNode) $ do
@@ -124,6 +124,7 @@ getNodeValue ref = runASTOp $ do
                         {-"Primitive"      -> return $ Just $ Graphics       $ fromPrimitive    v-}
                         {-"Figure"         -> return $ Just $ Graphics       $ fromFigure       v-}
                         {-"Material"       -> return $ Just $ Graphics       $ fromMaterial     v-}
+                        "Stream"         -> liftIO (attachListener (unsafeFromData v) (const $ print "got val")) >> return (Right Nothing)
                         "List"           -> do
                             args <- ASTBuilder.unpackArguments as
                             case args of
