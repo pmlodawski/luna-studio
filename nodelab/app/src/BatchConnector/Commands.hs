@@ -51,7 +51,7 @@ createProject :: Text -> UUID -> IO ()
 createProject name uuid = sendRequest uuid $ CreateProject.Request $ Text.unpack name
 
 listProjects :: UUID -> IO ()
-listProjects uuid = sendRequest uuid $ ListProjects.Request
+listProjects uuid = sendRequest uuid ListProjects.Request
 
 createLibrary :: Text -> Text -> Workspace -> UUID -> IO ()
 createLibrary name path workspace uuid = sendRequest uuid $ CreateLibrary.Request (workspace ^. Workspace.currentLocation . GraphLocation.projectId)

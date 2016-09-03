@@ -72,75 +72,92 @@ limit = limitHead where
     limitHead  = take limitCount
     limitTail  = reverse . take limitCount . reverse
 
-getNodeValueReprs :: NodeRef -> Command AST (Text, Either String [Value])
-getNodeValueReprs ref = do
-    nodeValue <- getNodeValue ref
-    return $ case nodeValue of
-        Left err -> ("",   Left err)
-        Right v  -> (name, Right values) where
-            name = fromMaybe "" $ nodeValueToText <$> v
-            values = case v of
-                Nothing  -> []
-                Just val -> case val of
-                    IntList        list -> let list' = limit list in [IntList        list', Graphics $ autoScatterChartInt         gridMat mat figure scale shift list']
-                    DoubleList     list -> let list' = limit list in [DoubleList     list', Graphics $ autoScatterChartDouble      gridMat mat figure scale shift list']
-                    Histogram      list -> let list' = limit list in [Histogram      list', Graphics $ autoScatterChartIntTuple    gridMat mat figure scale shift list']
-                    IntPairList    list -> let list' = limit list in [IntPairList    list', Graphics $ autoScatterChartIntTuple    gridMat mat figure scale shift list']
-                    DoublePairList list -> let list' = limit list in [DoublePairList list', Graphics $ autoScatterChartDoubleTuple gridMat mat figure scale shift list']
-                    _                   -> [val]
-                    where
-                        gridMat    = SolidColor 0.25 0.25 0.25 1.0
-                        mat        = SolidColor 0.2  0.5  0.7  1.0
-                        figure     = Circle 0.016
-                        scale      = 0.84
-                        shift      = 0.05
-
-getNodeValue :: NodeRef -> Command AST (Either String (Maybe Value))
-getNodeValue ref = runASTOp $ do
-    node   <- Builder.read ref
-    tp     <- Builder.follow source $ node ^. prop Type
+valueDecoderForType :: ASTOp m => NodeRef -> m (Maybe (Data -> Value))
+valueDecoderForType tp = do
     tpNode <- Builder.read tp
+    caseTest (uncover tpNode) $ do
+        of' $ \(Cons (Lit.String n) as) -> case n of
+            "Int"            -> return $ Just $ IntValue       . unsafeFromData
+            "String"         -> return $ Just $ StringValue    . unsafeFromData
+            "Double"         -> return $ Just $ DoubleValue    . unsafeFromData
+            "Bool"           -> return $ Just $ BoolValue      . unsafeFromData
+            "Histogram"      -> return $ Just $ Histogram      . unsafeFromData
+            "IntPairList"    -> return $ Just $ IntPairList    . unsafeFromData
+            "DoublePairList" -> return $ Just $ DoublePairList . unsafeFromData
+            {-"Graphics"       -> return $ Just $ Graphics       $ fromGraphics     v-}
+            {-"Layer"          -> return $ Just $ Graphics       $ fromLayer        v-}
+            {-"Geometry"       -> return $ Just $ Graphics       $ fromGeometry     v-}
+            {-"GeoComponent"   -> return $ Just $ Graphics       $ fromGeoComponent v-}
+            {-"Surface"        -> return $ Just $ Graphics       $ fromSurface      v-}
+            {-"Shape"          -> return $ Just $ Graphics       $ fromShape        v-}
+            {-"Primitive"      -> return $ Just $ Graphics       $ fromPrimitive    v-}
+            {-"Figure"         -> return $ Just $ Graphics       $ fromFigure       v-}
+            {-"Material"       -> return $ Just $ Graphics       $ fromMaterial     v-}
+            "Stream"         -> do
+                args <- ASTBuilder.unpackArguments as
+                case args of
+                    [a] -> valueDecoderForType a
+                    _   -> return Nothing
+            "List"           -> do
+                args <- ASTBuilder.unpackArguments as
+                case args of
+                    [a] -> do
+                        arg <- Builder.read a
+                        caseTest (uncover arg) $ do
+                            of' $ \(Cons (Lit.String n) _) -> case n of
+                                "Int"    -> return $ Just $ IntList    . unsafeFromData
+                                "Double" -> return $ Just $ DoubleList . unsafeFromData
+                                "Bool"   -> return $ Just $ BoolList   . unsafeFromData
+                                "String" -> return $ Just $ StringList . unsafeFromData
+                                _        -> return Nothing
+                            of' $ \ANY -> return Nothing
+                    _ -> return Nothing
+            _ -> return Nothing
+        of' $ \ANY -> return Nothing
+
+decoderForType :: ASTOp m => NodeRef -> m (Data -> (Text, [Value]))
+decoderForType tpRef = do
+    valueDecoder <- valueDecoderForType tpRef
+    return $ case valueDecoder of
+        Just f -> decorateValue . f
+        _      -> const ("", [])
+
+decorateValue :: Value -> (Text, [Value])
+decorateValue val = (name, values) where
+    name   = nodeValueToText val
+    values = case val of
+        IntList        list -> let list' = limit list in [IntList        list', Graphics $ autoScatterChartInt         gridMat mat figure scale shift list']
+        DoubleList     list -> let list' = limit list in [DoubleList     list', Graphics $ autoScatterChartDouble      gridMat mat figure scale shift list']
+        Histogram      list -> let list' = limit list in [Histogram      list', Graphics $ autoScatterChartIntTuple    gridMat mat figure scale shift list']
+        IntPairList    list -> let list' = limit list in [IntPairList    list', Graphics $ autoScatterChartIntTuple    gridMat mat figure scale shift list']
+        DoublePairList list -> let list' = limit list in [DoublePairList list', Graphics $ autoScatterChartDoubleTuple gridMat mat figure scale shift list']
+        _                   -> [val]
+        where
+            gridMat    = SolidColor 0.25 0.25 0.25 1.0
+            mat        = SolidColor 0.2  0.5  0.7  1.0
+            figure     = Circle 0.016
+            scale      = 0.84
+            shift      = 0.05
+
+data ValueRep = PlainVal (Text, [Value]) | Listener (((Text, [Value]) -> IO ()) -> IO ())
+
+getNodeValue :: NodeRef -> Command AST (Either String ValueRep)
+getNodeValue ref = runASTOp $ do
+    node    <- Builder.read ref
+    tp      <- Builder.follow source $ node ^. prop Type
+    tpNode  <- Builder.read tp
+    decoder <- decoderForType tp
     case node ^. prop InterpreterData . Interpreter.value of
-        Left  err -> return $ Right Nothing
+        Left  err -> return $ Right $ PlainVal ("", [])
         Right val -> do
             val <- liftIO . runExceptT $ toExceptIO val
             case val of
                 Left  s -> return $ Left s
                 Right v -> caseTest (uncover tpNode) $ do
                     of' $ \(Cons (Lit.String n) as) -> case n of
-                        "Int"            -> return $ Right $ Just $ IntValue       $ unsafeFromData v
-                        "String"         -> return $ Right $ Just $ StringValue    $ unsafeFromData v
-                        "Double"         -> return $ Right $ Just $ DoubleValue    $ unsafeFromData v
-                        "Bool"           -> return $ Right $ Just $ BoolValue      $ unsafeFromData v
-                        "Histogram"      -> return $ Right $ Just $ Histogram      $ unsafeFromData v
-                        "IntPairList"    -> return $ Right $ Just $ IntPairList    $ unsafeFromData v
-                        "DoublePairList" -> return $ Right $ Just $ DoublePairList $ unsafeFromData v
-                        {-"Graphics"       -> return $ Just $ Graphics       $ fromGraphics     v-}
-                        {-"Layer"          -> return $ Just $ Graphics       $ fromLayer        v-}
-                        {-"Geometry"       -> return $ Just $ Graphics       $ fromGeometry     v-}
-                        {-"GeoComponent"   -> return $ Just $ Graphics       $ fromGeoComponent v-}
-                        {-"Surface"        -> return $ Just $ Graphics       $ fromSurface      v-}
-                        {-"Shape"          -> return $ Just $ Graphics       $ fromShape        v-}
-                        {-"Primitive"      -> return $ Just $ Graphics       $ fromPrimitive    v-}
-                        {-"Figure"         -> return $ Just $ Graphics       $ fromFigure       v-}
-                        {-"Material"       -> return $ Just $ Graphics       $ fromMaterial     v-}
-                        "Stream"         -> liftIO (attachListener (unsafeFromData v) (const $ print "got val")) >> return (Right Nothing)
-                        "List"           -> do
-                            args <- ASTBuilder.unpackArguments as
-                            case args of
-                                [a] -> do
-                                    arg <- Builder.read a
-                                    caseTest (uncover arg) $ do
-                                        of' $ \(Cons (Lit.String n) _) -> case n of
-                                            "Int"    -> return $ Right $ Just $ IntList    $ unsafeFromData v
-                                            "Double" -> return $ Right $ Just $ DoubleList $ unsafeFromData v
-                                            "Bool"   -> return $ Right $ Just $ BoolList   $ unsafeFromData v
-                                            "String" -> return $ Right $ Just $ StringList $ unsafeFromData v
-                                            _        -> return $ Right Nothing
-                                        of' $ \ANY -> return $ Right Nothing
-                                _ -> return $ Right Nothing
-                        _ -> return $ Right Nothing
-                    of' $ \ANY -> return $ Right Nothing
+                        "Stream" -> return $ Right $ Listener $ \f -> attachListener (unsafeFromData v) (f . decoder)
+                        _        -> return $ Right $ PlainVal $ decoder v
+                    of' $ \ANY -> return $ Right $ PlainVal ("", [])
 
 readMeta :: NodeRef -> Command AST (Maybe NodeMeta)
 readMeta ref = runASTOp $ HMap.lookup metaKey . view (prop Meta) <$> Builder.read ref

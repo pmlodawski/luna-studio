@@ -7,6 +7,7 @@ import           Control.Monad.State     hiding (when)
 import           Unsafe.Coerce           (unsafeCoerce)
 import           Control.Monad.Error     (throwError)
 import           Control.Monad           (forM, forM_)
+import           Control.Monad.Reader    (ask)
 import           Data.IntMap             (IntMap)
 import qualified Data.IntMap             as IntMap
 import           Data.List               (sort)
@@ -47,7 +48,7 @@ import qualified Empire.ASTOp                                    as ASTOp
 import           Empire.Data.AST                                 (AST, NodeRef)
 
 
-getNodeValueReprs :: NodeId -> Command Graph (Text, Either String [Value])
+getNodeValueReprs :: NodeId -> Command Graph (Either String AST.ValueRep)
 getNodeValueReprs nid = do
     nodeRef <- GraphUtils.getASTPointer nid
     metaMay <- zoom Graph.ast $ AST.readMeta nodeRef
@@ -55,9 +56,9 @@ getNodeValueReprs nid = do
         Just meta -> if meta ^. NodeMeta.displayResult
             then do
                 valRef <- GraphUtils.getASTVar nid
-                zoom Graph.ast $ AST.getNodeValueReprs valRef
-            else   return ("", Right [])
-        Nothing -> return ("", Right [])
+                zoom Graph.ast $ AST.getNodeValue valRef
+            else   return $ Right $ AST.PlainVal ("", [])
+        Nothing -> return $ Right $ AST.PlainVal ("", [])
 
 collect pass = return ()
     {-putStrLn $ "After pass: " <> pass-}
@@ -131,14 +132,19 @@ updateValues loc = do
     forM_ allNodeIds $ \id -> do
         noErrors <- isNothing <$> uses errorsCache (Map.lookup id)
         when noErrors $ do
-            (name, v) <- zoom graph $ getNodeValueReprs id
-            case v of
-                Left err  -> reportError loc id $ Just $ APIError.RuntimeError err
-                Right val -> do
-                    cached <- uses valuesCache $ Map.lookup id
-                    when (cached /= Just val) $ do
-                        Publisher.notifyResultUpdate loc id (NodeResult.Value name val) 100
-                        valuesCache %= Map.insert id val
+            val <- zoom graph $ getNodeValueReprs id
+            case val of
+                Left err -> reportError loc id $ Just $ APIError.RuntimeError err
+                Right v  -> case v of
+                        AST.PlainVal (name, val) -> do
+                            cached <- uses valuesCache $ Map.lookup id
+                            when (cached /= Just val) $ do
+                                Publisher.notifyResultUpdate loc id (NodeResult.Value name val) 100
+                                valuesCache %= Map.insert id val
+                        AST.Listener lst -> do
+                            commEnv <- ask
+                            liftIO $ lst $ \(name, val) -> void $ runEmpire commEnv () $ Publisher.notifyResultUpdate loc id (NodeResult.Value name val) 100
+
 
 flushCache :: Command InterpreterEnv ()
 flushCache = do

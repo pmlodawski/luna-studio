@@ -46,7 +46,6 @@ parenIf False s = s
 parenIf True  s = "(" ++ s ++ ")"
 
 
---TODO[MK]: De-desugar lambdas
 printExpression' :: ASTOp m => Bool -> Bool -> NodeRef -> m String
 printExpression' suppresNodes paren nodeRef = do
     let recur = printExpression' suppresNodes
@@ -68,9 +67,10 @@ printExpression' suppresNodes paren nodeRef = do
             args    <- ASTBuilder.unpackArguments as
             argReps <- mapM (recur False) args
             out     <- Builder.follow source o
-            repr    <- recur False out
-            let bindsRep = if all (== "_") argReps then "" else "-> " ++ unwords (('$' :) <$> argReps) ++ " "
-            return $ parenIf paren $ bindsRep ++ repr
+            let sugared = all (== "_") argReps
+            repr    <- recur sugared out
+            let bindsRep = if sugared then "" else "-> " ++ unwords (('$' :) <$> argReps) ++ " "
+            return $ parenIf (not sugared && paren) $ bindsRep ++ repr
         of' $ \(Match l r) -> do
             leftRep  <- Builder.follow source l >>= recur paren
             rightRep <- Builder.follow source r >>= recur paren
