@@ -128,6 +128,9 @@ updateNodes loc = do
 
 updateValues :: GraphLocation -> Command InterpreterEnv ()
 updateValues loc = do
+    dests <- use destructors
+    liftIO $ sequence_ dests
+    destructors .= []
     allNodeIds <- uses (graph . Graph.nodeMapping) Map.keys
     forM_ allNodeIds $ \id -> do
         noErrors <- isNothing <$> uses errorsCache (Map.lookup id)
@@ -143,7 +146,8 @@ updateValues loc = do
                                 valuesCache %= Map.insert id val
                         AST.Listener lst -> do
                             commEnv <- ask
-                            liftIO $ lst $ \(name, val) -> void $ runEmpire commEnv () $ Publisher.notifyResultUpdate loc id (NodeResult.Value name val) 100
+                            destructor <- liftIO $ lst $ \(name, val) -> void $ runEmpire commEnv () $ Publisher.notifyResultUpdate loc id (NodeResult.Value name val) 100
+                            destructors %= (destructor :)
 
 
 flushCache :: Command InterpreterEnv ()

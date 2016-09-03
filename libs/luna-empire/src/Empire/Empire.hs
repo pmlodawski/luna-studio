@@ -44,11 +44,12 @@ data InterpreterEnv = InterpreterEnv { _valuesCache :: Map NodeId [Value]
                                      , _nodesCache  :: Map NodeId Node
                                      , _errorsCache :: Map NodeId (APIError.Error TypeRep)
                                      , _graph       :: Graph
-                                     } deriving (Show)
+                                     , _destructors :: [IO ()]
+                                     }
 makeLenses ''InterpreterEnv
 
 instance Default InterpreterEnv where
-    def = InterpreterEnv def def def def
+    def = InterpreterEnv def def def def def
 
 type Command s a = ErrorT Error (ReaderT CommunicationEnv (StateT s IO)) a
 

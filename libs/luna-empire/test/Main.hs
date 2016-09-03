@@ -130,6 +130,7 @@ main = do
     case g of
         Left err -> putStrLn err
         Right g  -> do
-            res <- runEmpire (CommunicationEnv dummyNotif dummyTC) (InterpreterEnv def def def g) $ Typecheck.run $ GraphLocation nil 0 $ Breadcrumb []
-            print res
+            res <- runEmpire (CommunicationEnv dummyNotif dummyTC) (InterpreterEnv def def def g def) $ Typecheck.run $ GraphLocation nil 0 $ Breadcrumb []
+            return ()
+            {-print res-}
 {-main = return ()-}

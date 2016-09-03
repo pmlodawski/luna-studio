@@ -139,7 +139,7 @@ decorateValue val = (name, values) where
             scale      = 0.84
             shift      = 0.05
 
-data ValueRep = PlainVal (Text, [Value]) | Listener (((Text, [Value]) -> IO ()) -> IO ())
+data ValueRep = PlainVal (Text, [Value]) | Listener (((Text, [Value]) -> IO ()) -> IO (IO ()))
 
 getNodeValue :: NodeRef -> Command AST (Either String ValueRep)
 getNodeValue ref = runASTOp $ do
