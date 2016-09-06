@@ -20,19 +20,38 @@ limitedLen = limitedLen' 0 where
                                 then limitedLen' (acc + 1) xs
                                 else (acc, True)
 
+showStr :: String -> String
+showStr v = "\"" <> (if length v > 10 then take 10 v <> "..." else v) <> "\""
+
+showMaybeStr :: Maybe String -> String
+showMaybeStr Nothing  = show (Nothing :: Maybe String)
+showMaybeStr (Just s) = show (Just $ showStr s)
+
 nodeValueToText :: Value -> Text
 nodeValueToText w = Text.pack $ case w of
-    IntValue       v -> show v
-    DoubleValue    v -> show v
-    BoolValue      v -> show v
-    StringValue    v -> "\"" <> (if length v > 10 then take 10 v <> "..." else v) <> "\""
-    IntList        v -> "Vector ["  <> showLength v <> "]"
-    DoubleList     v -> "Vector ["  <> showLength v <> "]"
-    BoolList       v -> "Vector ["  <> showLength v <> "]"
-    StringList     v -> "Vector ["  <> showLength v <> "]"
-    DoublePairList v -> "Vector2 [" <> showLength v <> "]"
-    IntPairList    v -> "Vector2 [" <> showLength v <> "]"
-    Histogram      v -> "Hist ["    <> showLength v <> "]"
-    Image         {} -> "Image"
-    Graphics       _ -> "Graphics"
-    _                -> "(unknow type)"
+    IntValue        v -> show v
+    DoubleValue     v -> show v
+    BoolValue       v -> show v
+    StringValue     v -> showStr v
+
+    IntMaybe        v -> show v
+    DoubleMaybe     v -> show v
+    BoolMaybe       v -> show v
+    StringMaybe     v -> showMaybeStr v
+
+    IntList         v -> "Vector ["  <> showLength v <> "]"
+    DoubleList      v -> "Vector ["  <> showLength v <> "]"
+    BoolList        v -> "Vector ["  <> showLength v <> "]"
+    StringList      v -> "Vector ["  <> showLength v <> "]"
+
+    DoublePairList  v -> "Vector2 [" <> showLength v <> "]"
+    IntPairList     v -> "Vector2 [" <> showLength v <> "]"
+
+    Histogram       v -> "Hist ["    <> showLength v <> "]"
+    Image          {} -> "Image"
+
+    StringStringMap v -> "Map [" <> showLength v <> "]"
+    StringMaybeList v -> "Vector [" <> showLength v <> "]"
+
+    Graphics        _ -> "Graphics"
+    _                 -> "(unknow type)"

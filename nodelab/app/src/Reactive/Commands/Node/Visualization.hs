@@ -106,6 +106,18 @@ visualizeNodeValue id visIx (DoubleList v) = do
         update         = DataFrame.rows .~ (widget ^. DataFrame.rows)
     visualize visIx id create update
 
+visualizeNodeValue id visIx (StringMaybeList v) = do
+    let widget = listTable $ Text.pack . show <$> v
+        create groupId = UICmd.register_ groupId widget def
+        update         = DataFrame.rows .~ (widget ^. DataFrame.rows)
+    visualize visIx id create update
+
+visualizeNodeValue id visIx (StringStringMap v) = do
+    let widget = listTablePairs $ (mapTuple Text.pack) <$> v
+        create groupId = UICmd.register_ groupId widget def
+        update         = DataFrame.rows .~ (widget ^. DataFrame.rows)
+    visualize visIx id create update
+
 visualizeNodeValue id visIx (IntPairList v) = do
     let widget = listTablePairs $ (mapTuple $ Text.pack . show) <$> v
         create groupId = UICmd.register_ groupId widget def

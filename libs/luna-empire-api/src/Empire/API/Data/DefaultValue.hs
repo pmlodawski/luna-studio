@@ -7,22 +7,34 @@ import           Prologue
 import qualified Graphics.API      as G
 
 
-data Value = IntValue       Int
-           | DoubleValue    Double
-           | RationalValue  Rational
-           | BoolValue      Bool
-           | StringValue    String
-           | IntList        [Int]
-           | DoubleList     [Double]
-           | BoolList       [Bool]
-           | StringList     [String]
-           | DoublePairList [(Double, Double)]
-           | IntPairList    [(Int, Int)]
-           | Histogram      [(Int, Int)]
-           | Image          String Double Double
-           | DataFrame      [(String, [Value])]
-           | Graphics       G.Graphics
-           | Lambda         String
+data Value = IntValue        Int
+           | DoubleValue     Double
+           | RationalValue   Rational
+           | BoolValue       Bool
+           | StringValue     String
+
+           | IntList         [Int]
+           | DoubleList      [Double]
+           | BoolList        [Bool]
+           | StringList      [String]
+
+           | IntMaybe        (Maybe Int)
+           | DoubleMaybe     (Maybe Double)
+           | BoolMaybe       (Maybe Bool)
+           | StringMaybe     (Maybe String)
+
+           | DoublePairList  [(Double, Double)]  -- TODO: obsolete, remove
+           | IntPairList     [(Int, Int)]        -- TODO: obsolete, remove
+           | Histogram       [(Int, Int)]        -- TODO: obsolete, remove (after changing histogram)
+           | DataFrame       [(String, [Value])] -- TODO: obsolete, remove
+
+           | Image           String Double Double
+
+           | StringMaybeList [Maybe String]
+           | StringStringMap [(String, String)]
+
+           | Graphics        G.Graphics
+           | Lambda          String
            deriving (Generic, Show, Eq)
 
 data PortDefault = Expression String | Constant Value deriving (Generic, Show, Eq)

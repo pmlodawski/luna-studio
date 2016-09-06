@@ -7,6 +7,7 @@ module Empire.Commands.AST where
 import           Control.Monad.Error                     (throwError)
 import           Control.Monad.Except                    (runExceptT)
 import           Control.Monad.State
+import           Control.Arrow                           (second)
 import           Data.Graph                              (Inputs (..), source)
 import           Data.HMap.Lazy                          (TypeKey (..))
 import qualified Data.HMap.Lazy                          as HMap
@@ -104,16 +105,79 @@ valueDecoderForType tp = do
                     [a] -> do
                         arg <- Builder.read a
                         caseTest (uncover arg) $ do
-                            of' $ \(Cons (Lit.String n) _) -> case n of
+                            of' $ \(Cons (Lit.String n) as) -> case n of
                                 "Int"    -> return $ Just $ IntList    . unsafeFromData
                                 "Double" -> return $ Just $ DoubleList . unsafeFromData
                                 "Bool"   -> return $ Just $ BoolList   . unsafeFromData
                                 "String" -> return $ Just $ StringList . unsafeFromData
+                                "Maybe"  -> do
+                                    args <- ASTBuilder.unpackArguments as
+                                    case args of
+                                        [a] -> do
+                                            arg <- Builder.read a
+                                            caseTest (uncover arg) $ do
+                                                of' $ \(Cons (Lit.String n) _) -> case n of
+                                                    "Int"    -> return $ Just $ StringMaybeList . intMaybeListToStringMaybeList    . unsafeFromData
+                                                    "Double" -> return $ Just $ StringMaybeList . doubleMaybeListToStringMaybeList . unsafeFromData
+                                                    "Bool"   -> return $ Just $ StringMaybeList . boolMaybeListToStringMaybeList   . unsafeFromData
+                                                    "String" -> return $ Just $ StringMaybeList . unsafeFromData
+                                                    _        -> return Nothing
+                                _        -> return Nothing
+                            of' $ \ANY -> return Nothing
+                    _ -> return Nothing
+            "Maybe"           -> do
+                args <- ASTBuilder.unpackArguments as
+                case args of
+                    [a] -> do
+                        arg <- Builder.read a
+                        caseTest (uncover arg) $ do
+                            of' $ \(Cons (Lit.String n) _) -> case n of
+                                "Int"    -> return $ Just $ IntMaybe    . unsafeFromData
+                                "Double" -> return $ Just $ DoubleMaybe . unsafeFromData
+                                "Bool"   -> return $ Just $ BoolMaybe   . unsafeFromData
+                                "String" -> return $ Just $ StringMaybe . unsafeFromData
+                                _        -> return Nothing
+                            of' $ \ANY -> return Nothing
+                    _ -> return Nothing
+            "Map"           -> do
+                args <- ASTBuilder.unpackArguments as
+                case args of
+                    [k, v] -> do
+                        argKey <- Builder.read k
+                        argVal <- Builder.read v
+                        caseTest (uncover argKey) $ do
+                            of' $ \(Cons (Lit.String n) _) -> case n of
+                                "String" -> caseTest (uncover argVal) $ do
+                                    of' $ \(Cons (Lit.String n) _) -> case n of
+                                        "Int"    -> return $ Just $ StringStringMap . stringIntMapToStringStringMap    . unsafeFromData
+                                        "Double" -> return $ Just $ StringStringMap . stringDoubleMapToStringStringMap . unsafeFromData
+                                        "Bool"   -> return $ Just $ StringStringMap . stringBoolMapToStringStringMap   . unsafeFromData
+                                        "String" -> return $ Just $ StringStringMap . unsafeFromData
+                                        _        -> return Nothing
+                                    of' $ \ANY -> return Nothing
                                 _        -> return Nothing
                             of' $ \ANY -> return Nothing
                     _ -> return Nothing
             _ -> return Nothing
         of' $ \ANY -> return Nothing
+
+intMaybeListToStringMaybeList :: [Maybe Int] -> [Maybe String]
+intMaybeListToStringMaybeList = fmap (fmap show)
+
+doubleMaybeListToStringMaybeList :: [Maybe Double] -> [Maybe String]
+doubleMaybeListToStringMaybeList = fmap (fmap show)
+
+boolMaybeListToStringMaybeList :: [Maybe Bool] -> [Maybe String]
+boolMaybeListToStringMaybeList = fmap (fmap show)
+
+stringIntMapToStringStringMap :: [(String, Int)] -> [(String, String)]
+stringIntMapToStringStringMap = fmap (second show)
+
+stringDoubleMapToStringStringMap :: [(String, Double)] -> [(String, String)]
+stringDoubleMapToStringStringMap = fmap (second show)
+
+stringBoolMapToStringStringMap :: [(String, Bool)] -> [(String, String)]
+stringBoolMapToStringStringMap = fmap (second show)
 
 decoderForType :: ASTOp m => NodeRef -> m (Data -> (Text, [Value]))
 decoderForType tpRef = do
