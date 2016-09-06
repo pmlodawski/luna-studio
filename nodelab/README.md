@@ -54,6 +54,17 @@ Follow instructions:
 ```
 brunch build               # development build
 brunch build -e production # production build
+brunch watch --server      # build and watch changes
+```
+
+## Supervisor - handling backend
+
+```
+cd new_byte_order/supervisor
+supervisord
+supervisorctl status all
+supervisorctl restart all
+supervisorctl tail -f luna-empire
 ```
 
 ## Protocol buffers
