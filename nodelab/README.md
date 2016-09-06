@@ -12,6 +12,15 @@ To use GHCI mode with incremental linker (aka very fast rebuild) please run `bru
 
 In interactive mode, the page is reloaded upon file save, however new code is injected a couple of seconds later. In the meantime you'll see console of GHCJSi containing build log redirected to the browser.
 
+### Setup and usage of incremental linker
+
+1. `cd ~/.ghcjs/x86_64-*-0.2.0.20160517-7.10.3/ghcjs`
+2. `curl -O https://raw.githubusercontent.com/kfigiela/ghcjs-brunch/stack/irunner.js`
+3. `cd ~/nbo/new_byte_order/nodelab`
+4. `brunch watch -e interactive --server`
+5. `curl -s http://localhost:9886/reload` - typechecking (it's also done automatically after saving any file)
+6. `curl -s http://localhost:9886/link` - update js files (if you don't like seeing errors add `2>/dev/null`)
+7. `curl -s http://localhost:9886/restart` - restart ghci (if you have troubles)
 
 ## Dev-env setup
 
