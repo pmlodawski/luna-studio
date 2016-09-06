@@ -25,11 +25,17 @@ In interactive mode, the page is reloaded upon file save, however new code is in
 ## Dev-env setup
 
 ```
-# install protobuf
-stack install alex happy hprotoc
+# Use system specific tool in place of brew
+brew install protobuf
+brew install pkg-config
+brew install zeromq
+brew install supervisor
+# export PATH="$HOME/.local/bin:$PATH" # put to .zshrc or equivalent
+stack install alex happy hprotoc hpack
 git clone git@bitbucket.org:NewByteOrder/new_byte_order.git
 cd new_byte_order/
 git submodule update --init --recursive
+mkdir dist/gen # missing this step produces invalid flowbox-rpc.tcabal, flowbox-bus.tcabal files after genproto
 scripts/genproto
 scripts/gencabal
 cd nodelab/
@@ -38,6 +44,9 @@ sudo npm install -g brunch bower
 bower install
 npm install
 ```
+
+Be aware that the newest `node.js` version may not work in this setup (downgrade to 5.9.1).
+Program hsc2hs must be in PATH.
 
 ## Building
 
