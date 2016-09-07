@@ -44,6 +44,7 @@ import qualified Old.Luna.Syntax.Term.Expr.Lit           as Lit
 
 import           Luna.Compilation.Error                  as TCError
 import           Luna.Compilation.Pass.Interpreter.Layer (InterpreterData (..))
+import qualified Luna.Compilation.Pass.Interpreter.Value as Value
 import           Luna.Compilation.Pass.Interpreter.Value (toExceptIO, unsafeFromData, Data, attachListener)
 import qualified Luna.Compilation.Pass.Interpreter.Layer as Interpreter
 import           Unsafe.Coerce
@@ -56,7 +57,7 @@ import           Debug.Trace                             (trace)
 
 -- TODO: This might deserve rewriting to some more general solution
 import           Luna.Compilation.Pass.Interpreter.Charts (autoScatterChartInt, autoScatterChartDouble, autoScatterChartIntTuple, autoScatterChartDoubleTuple)
-import           Graphics.API                             (Material(SolidColor), Figure(..))
+import qualified Graphics.API                             as G
 
 metaKey :: TypeKey NodeMeta
 metaKey = TypeKey
@@ -94,6 +95,7 @@ valueDecoderForType tp = do
             {-"Primitive"      -> return $ Just $ Graphics       $ fromPrimitive    v-}
             {-"Figure"         -> return $ Just $ Graphics       $ fromFigure       v-}
             {-"Material"       -> return $ Just $ Graphics       $ fromMaterial     v-}
+            "RGBColor"       -> return $ Just $ Graphics . fromMaterial . colorRGBToMaterial . unsafeFromData
             "Stream"         -> do
                 args <- ASTBuilder.unpackArguments as
                 case args of
@@ -122,6 +124,7 @@ valueDecoderForType tp = do
                                                     "Bool"   -> return $ Just $ StringMaybeList . boolMaybeListToStringMaybeList   . unsafeFromData
                                                     "String" -> return $ Just $ StringMaybeList . unsafeFromData
                                                     _        -> return Nothing
+                                                of' $ \ANY -> return Nothing
                                 _        -> return Nothing
                             of' $ \ANY -> return Nothing
                     _ -> return Nothing
@@ -179,6 +182,9 @@ stringDoubleMapToStringStringMap = fmap (second show)
 stringBoolMapToStringStringMap :: [(String, Bool)] -> [(String, String)]
 stringBoolMapToStringStringMap = fmap (second show)
 
+colorRGBToMaterial :: Value.Color -> G.Material
+colorRGBToMaterial (Value.Color r g b) =  G.SolidColor r g b 1.0
+
 decoderForType :: ASTOp m => NodeRef -> m (Data -> (Text, [Value]))
 decoderForType tpRef = do
     valueDecoder <- valueDecoderForType tpRef
@@ -197,9 +203,9 @@ decorateValue val = (name, values) where
         DoublePairList list -> let list' = limit list in [DoublePairList list', Graphics $ autoScatterChartDoubleTuple gridMat mat figure scale shift list']
         _                   -> [val]
         where
-            gridMat    = SolidColor 0.25 0.25 0.25 1.0
-            mat        = SolidColor 0.2  0.5  0.7  1.0
-            figure     = Circle 0.016
+            gridMat    = G.SolidColor 0.25 0.25 0.25 1.0
+            mat        = G.SolidColor 0.2  0.5  0.7  1.0
+            figure     = G.Circle 0.016
             scale      = 0.84
             shift      = 0.05
 

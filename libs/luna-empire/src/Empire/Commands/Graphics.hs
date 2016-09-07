@@ -11,27 +11,37 @@ module Empire.Commands.Graphics
     ) where
 
 import           Prologue
-import           GHC.Prim      (Any)
-import           Unsafe.Coerce
 
 import           Graphics.API
 
-fromGraphics, fromLayer, fromGeometry, fromGeoComponent, fromSurface,
-    fromShape, fromPrimitive, fromFigure, fromMaterial :: Any -> Graphics
+fromGraphics :: Graphics -> Graphics
+fromGraphics = id
 
-fromGraphics       =                                             unsafeCoerce
-fromLayer        v = convert                                    (unsafeCoerce v :: Layer)
-fromGeometry     v = convert . geometryToLayer'               $ (unsafeCoerce v :: Geometry)
-fromGeoComponent v = convert . geoComponentToLayer'           $ (unsafeCoerce v :: GeoComponent)
-fromSurface      v = convert . geoComponentToLayer' . convert $ (unsafeCoerce v :: Surface)
-fromShape        v = convert . geoComponentToLayer' . convert $ (unsafeCoerce v :: Shape)
-fromPrimitive    v = convert . geoComponentToLayer' . convert $ (unsafeCoerce v :: Primitive)
-fromFigure       v = convert . geoComponentToLayer' . convert $ (unsafeCoerce v :: Figure)
-fromMaterial     v = convert . geometryToLayer'               $ geometry where
-    mat      = unsafeCoerce v :: Material
+fromLayer :: Layer -> Graphics
+fromLayer = convert
+
+fromGeometry :: Geometry -> Graphics
+fromGeometry = convert . geometryToLayer'
+
+fromGeoComponent :: GeoComponent -> Graphics
+fromGeoComponent = convert . geoComponentToLayer'
+
+fromSurface :: Surface -> Graphics
+fromSurface = convert . geoComponentToLayer' . convert
+
+fromShape :: Shape -> Graphics
+fromShape = convert . geoComponentToLayer' . convert
+
+fromPrimitive :: Primitive -> Graphics
+fromPrimitive = convert . geoComponentToLayer' . convert
+
+fromFigure :: Figure -> Graphics
+fromFigure = convert . geoComponentToLayer' . convert
+
+fromMaterial :: Material -> Graphics
+fromMaterial mat = convert . geometryToLayer' $ geometry where
     geometry = Geometry geoComp def (Just mat)
     geoComp  = GeoElem [ShapeSurface $ Shape $ Primitive (Square 1.0) def def]
-
 
 -- internal
 
