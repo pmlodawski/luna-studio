@@ -1,0 +1,44 @@
+name:               batch-lib-request-monitor
+version:            0.1.0.0
+author:             Nodelab <contact@nodelab.io>
+maintainer:         Nodelab <contact@nodelab.io>
+
+dependencies:
+  - base
+  - prologue
+  - binary
+  - bytestring
+  - text
+  - split
+  - pretty-show
+  - containers
+  - either
+  - errors
+  - flowbox-bus-binary
+  - flowbox-config
+  - flowbox-utils
+  - mtl
+  - optparse-applicative
+  - stm
+  - time
+  - transformers
+  - luna-empire
+  - luna-empire-api
+  - luna-empire-api-json
+  - lunac
+  - zeromq4-haskell >= 0.4
+  - filemanip
+  - filepath
+  - uuid-types
+  - uuid
+  - groom
+
+default-extensions:
+  - NoImplicitPrelude
+  - TemplateHaskell
+
+library:
+    source-dirs: src
+    ghc-options: -Wall -O2 -threaded
+    # other-modules:
+    #   - Paths_batch_lib_request_monitor

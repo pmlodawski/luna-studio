@@ -14,11 +14,13 @@ packages:
 - {extra-dep: true, location: ../../libs/utils}
 - {extra-dep: true, location: ../../libs/ws-connector}
 - {extra-dep: true, location: ../../libs/batch/plugins/luna-empire}
+- {extra-dep: true, location: ../../libs/batch/plugins/request-monitor}
 - {extra-dep: true, location: ../../libs/scope-searcher}
 - {location: ../../tools/batch/plugins/ws-connector}
 - {location: ../../tools/batch/plugins/broker}
 - {location: ../../tools/batch/plugins/bus-logger}
 - {location: ../../tools/batch/plugins/luna-empire}
+- {location: ../../tools/batch/plugins/request-monitor}
 - extra-dep: true
   location: {commit: 87d4959bc80b172c2060ecf54d9296184eb03459, git: 'https://bitbucket.org/NewByteOrder/luna.git'}
   subdirs: [compiler, core, parser]
