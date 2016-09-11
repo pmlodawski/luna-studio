@@ -35,10 +35,9 @@ main = do
         script     <- args `getArgOrExit` argument "script"
         runOnIdle endPoints projectRoot (read time) script
 
-runOnIdle :: EP.BusEndPoints -> FilePath -> Int -> String -> IO ()
+runOnIdle :: EP.BusEndPoints -> FilePath -> Integer -> FilePath -> IO ()
 runOnIdle endPoints projectRoot time script = do
     rootLogger setIntLevel 3
-    putStrLn $ "Script " <> script <> " scheduled to run after " <> show time <> " seconds of requests inactivity."
     r <- Monitor.run endPoints projectRoot time script
     case r of
         Left err -> logger criticalFail err

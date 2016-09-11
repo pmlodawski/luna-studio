@@ -14,27 +14,11 @@ import           Data.ByteString.Lazy              (fromStrict, toStrict)
 import           Data.Map.Strict                   (Map)
 import qualified Data.Map.Strict                   as Map
 import           Prologue
+import           System.Directory                  (getCurrentDirectory)
+import           System.Cmd                        (system)
+import           System.Exit                       (exitFailure)
 
 import qualified Empire.API.Control.EmpireStarted  as EmpireStarted
-import qualified Empire.API.Graph.AddNode          as AddNode
-import qualified Empire.API.Graph.CodeUpdate       as CodeUpdate
-import qualified Empire.API.Graph.Connect          as Connect
-import qualified Empire.API.Graph.Disconnect       as Disconnect
-import qualified Empire.API.Graph.GetProgram       as GetProgram
-import qualified Empire.API.Graph.NodeResultUpdate as NodeResultUpdate
-import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
-import qualified Empire.API.Graph.RemoveNode       as RemoveNode
-import qualified Empire.API.Graph.RenameNode       as RenameNode
-import qualified Empire.API.Graph.SetDefaultValue  as SetDefaultValue
-import qualified Empire.API.Graph.UpdateNodeMeta   as UpdateNodeMeta
-import qualified Empire.API.Graph.TypeCheck        as TypeCheck
-import qualified Empire.API.Graph.DumpGraphViz     as DumpGraphViz
-import qualified Empire.API.Library.CreateLibrary  as CreateLibrary
-import qualified Empire.API.Library.ListLibraries  as ListLibraries
-import qualified Empire.API.Project.CreateProject  as CreateProject
-import qualified Empire.API.Project.ListProjects   as ListProjects
-import qualified Empire.API.Project.ImportProject  as ImportProject
-import qualified Empire.API.Project.ExportProject  as ExportProject
 import qualified Empire.API.Topic                  as Topic
 import           Empire.API.Request                (Request)
 import qualified Empire.Commands.Library           as Library
@@ -53,6 +37,7 @@ import           Flowbox.Bus.Data.Topic            (Topic)
 import           Flowbox.Bus.EndPoint              (BusEndPoints)
 import qualified Flowbox.System.Log.Logger         as Logger
 
+import           Data.Time.Clock.POSIX
 
 defaultTopic :: String
 defaultTopic = "empire."
@@ -60,42 +45,69 @@ defaultTopic = "empire."
 logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)
 
-run :: BusEndPoints -> FilePath -> Int -> String -> IO (Either Bus.Error ())
-run endPoints projectRoot time script = do
-    logger Logger.info $ "Monitor: Script " <> script <> " scheduled to run after " <> show time <> " seconds of requests inactivity."
-    -- run' endPoints [".request"]
-    run' endPoints ["empire."]
+run :: BusEndPoints -> FilePath -> Integer -> FilePath -> IO (Either Bus.Error ())
+run endPoints projectRoot timeout script = do
+    logger Logger.info $ "Script " <> script <> " scheduled to run after " <> show timeout <> " seconds of requests inactivity."
+    dir <- getCurrentDirectory
+    logger Logger.info $ "Working directory: " <> dir
+    Bus.runBus endPoints $ do
+        let formatted = True
+            topics = [defaultTopic]
+        logger Logger.info $ "Subscribing to topics: " <> show topics
+        logger Logger.info $ (Utils.display formatted) endPoints
+        mapM_ Bus.subscribe topics
+        Bus.runBusT $ evalStateT (runBus timeout script) def
 
-run' :: BusEndPoints -> [Topic] -> IO (Either Bus.Error ())
-run' endPoints topics = Bus.runBus endPoints $ do
-    let formatted = True
-    logger Logger.info $ "Subscribing to topics: " <> show topics
-    logger Logger.info $ (Utils.display formatted) endPoints
-    mapM_ Bus.subscribe topics
-    Bus.runBusT $ evalStateT (runBus formatted) def
+runBus :: Integer -> FilePath -> StateT MonitorEnv BusT ()
+runBus timeout script = do
+    Env.script  .= script
+    Env.timeout .= timeout
+    updateLastActivityTime
+    env <- use Env.lastActivityTime
+    logger Logger.info  $ "Start request monitor time: " <> show env
+    handleMessage
 
-runBus :: Bool -> StateT MonitorEnv BusT ()
-runBus formatted = do
-    Env.formatLog .= formatted
-    forever handleMessage
+checkIntervalUs = 10 * 1000000
 
 handleMessage :: StateT MonitorEnv BusT ()
 handleMessage = do
-    msgFrame <- lift $ BusT Bus.receive'
-    case msgFrame of
-        Left err -> logger Logger.error $ "Unparseable message: " <> err
-        Right (MessageFrame msg crlID senderID lastFrame) -> do
-            let topic = msg ^. Message.topic
-                logMsg = show (crlID ^. Message.messageID) <> ": " <> show senderID
-                         <> " -> (last = " <> show lastFrame
-                         <> ")\t:: " <> topic
-                content = msg ^. Message.message
-                errorMsg = show content
-            case Utils.lastPart '.' topic of
-                "request"  -> logMessage logMsg topic content
-                _          -> return ()
-                
-logMessage :: String -> String -> ByteString -> StateT MonitorEnv BusT ()
-logMessage logMsg topic content = do
-    putStrLn $ "Monitor " <> logMsg <> " topic " <> topic
-    return ()
+    msgFrameE <- lift $ BusT $ Bus.withTimeout Bus.receive' checkIntervalUs
+    case msgFrameE of
+        Left err -> logger Logger.info  $ "Error. Retry."
+        Right msgFrame ->
+            case msgFrame of
+                Left err -> logger Logger.error $ "Unparseable message: " <> err
+                Right (MessageFrame msg crlID senderID lastFrame) -> do
+                    let topic = msg ^. Message.topic
+                    case Utils.lastPart '.' topic of
+                        "request"  -> logMessage topic
+                        _          -> return ()
+    stop <- idleTimeCheck
+    when stop $ do
+        logger Logger.info  $ "Exiting"
+        liftIO exitFailure
+    handleMessage
+
+logMessage :: String ->  StateT MonitorEnv BusT ()
+logMessage topic = do
+    time <- updateLastActivityTime
+    logger Logger.info  $ "Request: " <> topic <> ", last activity time: " <> show time
+
+updateLastActivityTime :: StateT MonitorEnv BusT Integer
+updateLastActivityTime = do
+    time <- round <$> liftIO getPOSIXTime
+    Env.lastActivityTime .= time
+    return time
+
+idleTimeCheck :: StateT MonitorEnv BusT Bool
+idleTimeCheck = do
+    currentTime      <- round <$> liftIO getPOSIXTime
+    lastActivityTime <- use Env.lastActivityTime
+    timeout          <- use Env.timeout
+    if currentTime - lastActivityTime > timeout
+        then do
+            script <- use Env.script
+            logger Logger.info  $ "Timeout reached. Running script: " <> script
+            liftIO $ system script
+            return True
+        else return False

@@ -21,8 +21,12 @@ import           Empire.Data.Graph                 (Graph)
 import qualified Empire.Empire                     as Empire
 import           Flowbox.Bus.Data.Message          (Message)
 
-newtype MonitorEnv = MonitorEnv { _formatLog :: Bool }
+data MonitorEnv = MonitorEnv { _script           :: FilePath
+                             , _lastActivityTime :: Integer
+                             , _timeout          :: Integer
+                             }
+
 makeLenses ''MonitorEnv
 
 instance Default MonitorEnv where
-    def = MonitorEnv True
+    def = MonitorEnv "" 0 0

@@ -32,6 +32,8 @@ dependencies:
   - uuid-types
   - uuid
   - groom
+  - directory
+  - process
 
 default-extensions:
   - NoImplicitPrelude
