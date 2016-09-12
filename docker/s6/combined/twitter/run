@@ -1,2 +1,2 @@
 #!/bin/sh
-exec python /usr/sbin/twitter_lurker.py  2>&1
+exec python /usr/bin/twitter_lurker.py  2>&1
