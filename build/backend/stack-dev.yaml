@@ -1,7 +1,7 @@
 # extra-deps: [ghc-session-0.1.2.0, graphviz-2999.18.0.2, string-qq-0.0.2, error-util-0.0.1.1,
 #   cond-0.4.1.1, tuple-0.3.0.2, OneTuple-0.2.1, docopt-0.7.0.4, saltine-0.0.0.4]
 extra-deps: [ghc-mtl-1.2.1.0, placeholders-0.1, graphviz-2999.18.1.2, string-qq-0.0.2,
-  cond-0.4.1.1, tuple-0.3.0.2, OneTuple-0.2.1, trifecta-1.6]
+  cond-0.4.1.1, tuple-0.3.0.2, OneTuple-0.2.1, trifecta-1.6, serialport-0.4.7]
 ghc-options: {'*': -DFastCompilation -threaded -O}
 local-bin-path: ../../dist/bin
 packages:
