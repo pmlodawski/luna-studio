@@ -62,6 +62,7 @@ class Graphics extends BaseWidget
     @requestRedraw()
 
   setItems: (items) ->
+    # return
     @items = items
     newchildren = @items.map (item, ix) =>
       uniforms =
@@ -70,10 +71,13 @@ class Graphics extends BaseWidget
            boxOffset: { type: 'v2', value: new THREE.Vector2(item._boxOffset._x, item._boxOffset._y)}
       uniforms[k] = v for k, v of $$.commonUniforms
       geom = new THREE.GraphicsBufferGeometry(item._boxes, item._boxSize, item._boxOffset)
+      shader = switch item._shader
+        when "s1", "s2", "s3" then require('shaders/' + item._shader + '.frag')()
+        else item._shader
       item = new THREE.Mesh geom, new THREE.ShaderMaterial
                  uniforms:       uniforms
                  vertexShader:   vs
-                 fragmentShader: item._shader
+                 fragmentShader: shader
                  transparent:    true
                  blending:       THREE.NormalBlending
                  extensions:
@@ -86,6 +90,7 @@ class Graphics extends BaseWidget
     @requestRedraw()
 
   setLabels: (labels) ->
+    # return
     @labels = labels
     @labelGroup.remove @labelGroup.children
     @labels.forEach (label) =>
@@ -120,4 +125,3 @@ class Graphics extends BaseWidget
     renderer.render(@scene, @camera, @bufferTexture, true)
 
 module.exports = Graphics;
-

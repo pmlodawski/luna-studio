@@ -168,7 +168,9 @@ visualizeNodeValue id visIx (DataFrame cols) = do
     visualize visIx id create update
 
 visualizeNodeValue id visIx (Graphics (GR.Graphics layers)) = do
-    let items  = createItem <$> layers
+    -- timer <- use
+    let items  = fromLayers layers
+    -- let items  = createItem <$> layers
         labels = createLabels =<< layers
         create groupId = do
             let widget = Graphics.create (Vector2 200 200) items labels
@@ -177,10 +179,6 @@ visualizeNodeValue id visIx (Graphics (GR.Graphics layers)) = do
                . (Graphics.labels .~ labels)
     visualize visIx id create update
     where
-        createItem (GR.Layer geometry trans _) = Graphics.Item (Text.pack shaderTxt) boxes size offset where
-            Shader.ShaderBox shaderTxt (Shader.Location size offset) = Shader.createShaderBox geometry
-            boxes = createBox <$> trans
-            createBox (GR.Transformation sx sy dx dy rot refl) = Graphics.Box (Vector2 dx dy)
         createLabels (GR.Layer _ _ labels) = createLabel <$> labels
         createLabel  (GR.Label (GR.Point x y) fontSize align text) = Graphics.Label (Vector2 x y) fontSize (labelAlign align) $ Text.pack text
         labelAlign GR.Left   = Label.Left
@@ -188,3 +186,30 @@ visualizeNodeValue id visIx (Graphics (GR.Graphics layers)) = do
         labelAlign GR.Right  = Label.Right
 
 visualizeNodeValue _ _ _ = return ()
+
+
+fromLayers :: [GR.Layer] -> [Graphics.Item]
+fromLayers [l1, l2, l3] = [fromLayer1 l1, fromLayer2 l2, fromLayer3 l3]
+fromLayers layers = createItem <$> layers where
+    createItem (GR.Layer geometry trans _) = Graphics.Item (Text.pack shaderTxt) boxes size offset where
+        Shader.ShaderBox shaderTxt (Shader.Location size offset) = Shader.createShaderBox geometry
+        boxes = createBox <$> trans
+        createBox (GR.Transformation sx sy dx dy rot refl) = Graphics.Box (Vector2 dx dy)
+
+fromLayer1 :: GR.Layer -> Graphics.Item
+fromLayer1 (GR.Layer geometry trans _) = Graphics.Item (Text.pack shaderTxt) boxes size offset where
+    Shader.ShaderBox shaderTxt (Shader.Location size offset) = Shader.ShaderBox "s1" (Shader.Location (Vector2 0.848 0.008) (Vector2 0.0 0.0))
+    boxes = createBox <$> trans
+    createBox (GR.Transformation sx sy dx dy rot refl) = Graphics.Box (Vector2 dx dy)
+
+fromLayer2 :: GR.Layer -> Graphics.Item
+fromLayer2 (GR.Layer geometry trans _) = Graphics.Item (Text.pack shaderTxt) boxes size offset where
+    Shader.ShaderBox shaderTxt (Shader.Location size offset) = Shader.ShaderBox "s2" (Shader.Location (Vector2 0.008 0.848) (Vector2 0.0 0.0))
+    boxes = createBox <$> trans
+    createBox (GR.Transformation sx sy dx dy rot refl) = Graphics.Box (Vector2 dx dy)
+
+fromLayer3 :: GR.Layer -> Graphics.Item
+fromLayer3 (GR.Layer geometry trans _) = Graphics.Item (Text.pack shaderTxt) boxes size offset where
+    Shader.ShaderBox shaderTxt (Shader.Location size offset) = Shader.ShaderBox "s3" (Shader.Location (Vector2 0.032 0.032) (Vector2 0.0 0.0))
+    boxes = createBox <$> trans
+    createBox (GR.Transformation sx sy dx dy rot refl) = Graphics.Box (Vector2 dx dy)

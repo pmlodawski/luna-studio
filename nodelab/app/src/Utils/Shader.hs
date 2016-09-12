@@ -219,6 +219,15 @@ calcGeometryLocation = toLocation . calcGeometryBound
 
 -- -- --
 
+-- createShaderBox = createShaderBoxTest
+
+createShaderBoxTest :: G.Geometry -> ShaderBox
+createShaderBoxTest geometry = ShaderBox (createShader (location ^. size) objMay) location where
+    -- location = calcGeometryLocation geometry
+    location = toLocation $ Bound (Vector2 0.0 0.0) (Vector2 1.0 1.0)
+    objMay   = fromGeometry geometry
+    geo      = testGeo
+
 createShaderBox :: G.Geometry -> ShaderBox
 createShaderBox geometry = ShaderBox (createShader (location ^. size) objMay) location where
     location = calcGeometryLocation geometry
@@ -226,16 +235,19 @@ createShaderBox geometry = ShaderBox (createShader (location ^. size) objMay) lo
 
 -- tests
 
+testGeo :: G.Geometry
+testGeo = G.Geometry geoComp trans justMat where
+    trans     = def
+    justMat   = Just $ G.SolidColor 1.0 0.0 0.0 1.0
+    geoComp   = G.GeoElem [surface]
+    surface   = G.ShapeSurface shape
+    shape     = G.Shape primitive
+    primitive = G.Primitive figure def def
+    figure    = G.Square 0.25
+
 test :: IO ()
 test = do
-    let geometry  = G.Geometry geoComp trans justMat
-        trans     = def
-        justMat   = Just $ G.SolidColor 1.0 0.0 0.0 1.0
-        geoComp   = G.GeoElem [surface]
-        surface   = G.ShapeSurface shape
-        shape     = G.Shape primitive
-        primitive = G.Primitive figure def def
-        figure    = G.Square 0.25
+    let geometry = testGeo
         ShaderBox shaderTxt (Location (Vector2 w h) (Vector2 0.0 0.0)) = createShaderBox geometry
     return ()
 
@@ -274,5 +286,3 @@ testRaw = do
     putStrLn str
 
     putStrLn "HSProcessing test finished."
-
-

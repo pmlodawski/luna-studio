@@ -199,4 +199,3 @@ instance ToJSON (WidgetFile DisplayObject) where
                          , "_children" .= (toJSON $ file ^. children)
                          , "_type"     .= (toJSON $ widgetType $ file ^. widget)
                          ]
-
