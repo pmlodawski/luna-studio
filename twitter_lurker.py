@@ -25,4 +25,4 @@ class MyStreamer(TwythonStreamer):
 
 sock.sendto("Nodelab is green", (HOST, PORT))
 stream = MyStreamer(APP_KEY, APP_SECRET, ACCESS_TOKEN, ACCESS_SECRET)
-stream.statuses.filter(track="#testingNodelabApp,@realDonaldTrump,@HillaryClinton,#Nodelab,#Luna,#nodelab,#luna,#TCD,#tcd,#TechCrunch,#disrupt,#Disrupt")
+stream.statuses.filter(track="realDonaldTrump,HillaryClinton,nodelab,luna,tcd,TechCrunch,disrupt,techcrunchdisrupt")
