@@ -57,7 +57,7 @@ updateNodeValue id val = do
     widgetId <- nodeIdToWidgetId id
     inRegistry $ do
         withJust widgetId $ \widgetId -> do
-            removeVisualization widgetId
+            -- removeVisualization widgetId
             case val of
                 NodeResult.Value name [] -> do
                     UICmd.update_ widgetId $ Model.value   .~ name

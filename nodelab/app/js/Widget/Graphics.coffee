@@ -64,6 +64,10 @@ class Graphics extends BaseWidget
   setItems: (items) ->
     # return
     @items = items
+    @scene.remove @itemGroup
+    @itemGroup = new THREE.Group()
+    @scene.add @itemGroup
+    # @itemGroup.children.forEach (obj) => @itemGroup.remove(obj)
     newchildren = @items.map (item, ix) =>
       uniforms =
            objectId:  @uniforms.objectId
@@ -84,7 +88,6 @@ class Graphics extends BaseWidget
                    derivatives:    true
       item
 
-    @itemGroup.children.forEach (obj) => @itemGroup.remove(obj)
     newchildren.forEach (it) => @itemGroup.add it
     @relayout()
     @requestRedraw()
@@ -92,7 +95,11 @@ class Graphics extends BaseWidget
   setLabels: (labels) ->
     # return
     @labels = labels
-    @labelGroup.remove @labelGroup.children
+    @scene.remove @labelGroup
+    @labelGroup = new THREE.Group()
+    @scene.add @labelGroup
+
+    # @labelGroup.children.forEach (obj) => @labelGroup.remove(obj)
     @labels.forEach (label) =>
       align = switch label._textAlignment
         when 'Left'   then textAlign.left
@@ -106,6 +113,7 @@ class Graphics extends BaseWidget
 
       @labelGroup.add textLabel
     @requestRedraw()
+
   relayout: ->
     @itemGroup.scale.x = @width
     @itemGroup.scale.y = @height

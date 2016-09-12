@@ -20,6 +20,8 @@ module Reactive.Commands.UIRegistry
     , resizeNoCB
     , register
     , register_
+    , registerIx
+    , registerIx_
     , takeFocus
     , triggerChildrenResized
     , tryUpdate
@@ -56,8 +58,11 @@ registerIx ix parent model handlers = do
     triggerChildrenResized parent
     return (file ^. objectId)
 
+registerIx_ :: (CompositeWidget a, DisplayObjectClass a) => Int -> WidgetId -> a -> HTMap -> Command UIRegistry.State ()
+registerIx_ = void .:: registerIx
+
 register_ :: (CompositeWidget a, DisplayObjectClass a) => WidgetId -> a -> HTMap -> Command UIRegistry.State ()
-register_ parent model handlers = void $ register parent model handlers
+register_ = void .:. register
 
 update :: (Eq a, CompositeWidget a, DisplayObjectClass a) => WidgetId -> (a -> a) -> Command UIRegistry.State a
 update id fun = do

@@ -24,7 +24,7 @@ import qualified Object.Widget.Plots.Image       as Image
 import qualified UI.Handlers.Node                as Node
 import qualified UI.Instances                    ()
 
-import           Reactive.Commands.Command       (Command)
+import           Reactive.Commands.Command       (Command, performIO)
 import qualified Reactive.Commands.UIRegistry    as UICmd
 import qualified Reactive.State.UIRegistry       as UIRegistry
 
@@ -79,61 +79,65 @@ visualize visIx id create update = do
     case currentVisualization of
         Nothing -> do
             -- cleanup
+            -- performIO $ putStrLn "Not found"
             create groupId
         Just currentVis -> do
-            status <- UICmd.tryUpdate id update
-            when (status == False) $ create groupId
+            status <- UICmd.tryUpdate currentVis update
+            -- performIO $ putStrLn $ "update " <> (show status) <> " " <> (show visIx) <> " " <> (show currentVisualization) <> " " <> (show currentVisualizations)
+            when (status == False) $ do
+                UICmd.removeWidget currentVis
+                create groupId
 
 visualizeNodeValueReprs :: WidgetId -> [Value] -> Command UIRegistry.State ()
-visualizeNodeValueReprs id values = mapM_ (uncurry $ visualizeNodeValue id) (zip [1..] values)
+visualizeNodeValueReprs id values = mapM_ (uncurry $ visualizeNodeValue id) (zip [0..] values)
 
 visualizeNodeValue :: WidgetId -> Int -> Value -> Command UIRegistry.State ()
 visualizeNodeValue id visIx (StringList v) = do
     let widget = listTable $ Text.pack <$> v
-        create groupId = UICmd.register_ groupId widget def
+        create groupId = UICmd.registerIx_ visIx groupId widget def
         update         = DataFrame.rows .~ (widget ^. DataFrame.rows)
     visualize visIx id create update
 
 visualizeNodeValue id visIx (IntList v) = do
     let widget = listTable $ Text.pack . show <$> v
-        create groupId = UICmd.register_ groupId widget def
+        create groupId = UICmd.registerIx_ visIx groupId widget def
         update         = DataFrame.rows .~ (widget ^. DataFrame.rows)
     visualize visIx id create update
 
 visualizeNodeValue id visIx (DoubleList v) = do
     let widget = listTable $ Text.pack . show <$> v
-        create groupId = UICmd.register_ groupId widget def
+        create groupId = UICmd.registerIx_ visIx groupId widget def
         update         = DataFrame.rows .~ (widget ^. DataFrame.rows)
     visualize visIx id create update
 
 visualizeNodeValue id visIx (StringMaybeList v) = do
     let widget = listTable $ Text.pack . show <$> v
-        create groupId = UICmd.register_ groupId widget def
+        create groupId = UICmd.registerIx_ visIx groupId widget def
         update         = DataFrame.rows .~ (widget ^. DataFrame.rows)
     visualize visIx id create update
 
 visualizeNodeValue id visIx (StringStringMap v) = do
     let widget = listTablePairs $ (mapTuple Text.pack) <$> v
-        create groupId = UICmd.register_ groupId widget def
+        create groupId = UICmd.registerIx_ visIx groupId widget def
         update         = DataFrame.rows .~ (widget ^. DataFrame.rows)
     visualize visIx id create update
 
 visualizeNodeValue id visIx (IntPairList v) = do
     let widget = listTablePairs $ (mapTuple $ Text.pack . show) <$> v
-        create groupId = UICmd.register_ groupId widget def
+        create groupId = UICmd.registerIx_ visIx groupId widget def
         update         = DataFrame.rows .~ (widget ^. DataFrame.rows)
     visualize visIx id create update
 
 visualizeNodeValue id visIx (DoublePairList v) = do
     let widget = listTablePairs $ (mapTuple $ Text.pack . show) <$> v
-        create groupId = UICmd.register_ groupId widget def
+        create groupId = UICmd.registerIx_ visIx groupId widget def
         update         = DataFrame.rows .~ (widget ^. DataFrame.rows)
     visualize visIx id create update
 
 visualizeNodeValue id visIx (Image url w h) = do
     let create groupId = do
             let widget = Image.create (Vector2 w h) $ Text.pack url
-            UICmd.register_ groupId widget def
+            UICmd.registerIx_ visIx groupId widget def
         update = (Image.size . x .~ w)
                . (Image.size . y .~ h)
                . (Image.image  .~ (Text.pack url))
@@ -143,7 +147,7 @@ visualizeNodeValue id visIx (StringValue str) = do
     let normalize = intercalate "<br />" . wordsBy (== '\n')
         create groupId = do
             let widget = LongText.create (Vector2 200 200) (Text.pack $ normalize str) LongText.Left LongText.Text
-            UICmd.register_ groupId widget def
+            UICmd.registerIx_ visIx groupId widget def
         update = LongText.value .~ (Text.pack $ normalize str)
     visualize visIx id create update
 
@@ -151,7 +155,7 @@ visualizeNodeValue id visIx (Lambda str) = do
     let normalize = intercalate "<br />" . wordsBy (== '\n')
         create groupId = do
             let widget = LongText.create (Vector2 200 200) (Text.pack $ normalize str) LongText.Left LongText.Code
-            UICmd.register_ groupId widget def
+            UICmd.registerIx_ visIx groupId widget def
         update = LongText.value .~ (Text.pack $ normalize str)
     visualize visIx id create update
 
@@ -161,8 +165,8 @@ visualizeNodeValue id visIx (DataFrame cols) = do
         rows = transpose cols'
 
     let create groupId = do
-            let df = DataFrame.create (Vector2 400 200) heads rows
-            UICmd.register_ groupId df def
+            let widget = DataFrame.create (Vector2 400 200) heads rows
+            UICmd.registerIx_ visIx groupId widget def
         update      = (DataFrame.headers .~ heads)
                     . (DataFrame.rows    .~ rows )
     visualize visIx id create update
@@ -174,7 +178,7 @@ visualizeNodeValue id visIx (Graphics (GR.Graphics layers)) = do
         labels = createLabels =<< layers
         create groupId = do
             let widget = Graphics.create (Vector2 200 200) items labels
-            UICmd.register_ groupId widget def
+            UICmd.registerIx_ visIx groupId widget def
         update = (Graphics.items  .~ items )
                . (Graphics.labels .~ labels)
     visualize visIx id create update
