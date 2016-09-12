@@ -24,6 +24,15 @@ ENV HOME /root
 
 EXPOSE 80 8088
 
+
+COPY twitter_lurker.py /usr/bin/twitter_lurker.py
+RUN     cd /tmp \
+     && apk update \
+     && apk add python \
+     && wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py \
+     && python get-pip.py \
+     && pip install twython
+
 COPY nodelab/www /usr/share/nodelab/gui
 
 COPY dist/bin /usr/local/bin/nodelab
