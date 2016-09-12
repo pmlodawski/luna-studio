@@ -225,8 +225,9 @@ getNodeValue ref = runASTOp $ do
                 Left  s -> return $ Left s
                 Right v -> caseTest (uncover tpNode) $ do
                     of' $ \(Cons (Lit.String n) as) -> case n of
-                        "Stream" -> return $ Right $ Listener $ \f -> attachListener (unsafeFromData v) (f . decoder)
-                        _        -> return $ Right $ PlainVal $ decoder v
+                        "Stream"  -> return $ Right $ Listener $ \f -> attachListener (unsafeFromData v) (f . decoder)
+                        "Twitter" -> return $ Right $ Listener $ \_ -> attachListener (unsafeFromData v) (const $ return ())
+                        _         -> return $ Right $ PlainVal $ decoder v
                     of' $ \ANY -> return $ Right $ PlainVal ("", [])
 
 readMeta :: NodeRef -> Command AST (Maybe NodeMeta)
