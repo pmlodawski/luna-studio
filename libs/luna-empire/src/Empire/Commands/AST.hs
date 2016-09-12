@@ -70,7 +70,7 @@ addDefault val = runASTOp $ Parser.parsePortDefault val
 
 limit :: [a] -> [a]
 limit = limitHead where
-    limitCount = 1000
+    limitCount = 100
     limitHead  = take limitCount
     limitTail  = reverse . take limitCount . reverse
 
