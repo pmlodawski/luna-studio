@@ -14,7 +14,7 @@ ACCESS_TOKEN = "2921511033-0vRXpe8LO4MvlddeAqUzRoVhzQkT96ICPhH90du"
 ACCESS_SECRET = "Tu8DZNwzt5QcUZPkPo3j1VnyClxzZb7MRf9ofPxsagQzq"
 
 # modulo = 1 # original behaviour
-modulo = 3
+modulo = 1
 
 class MyStreamer(TwythonStreamer):
     counter = 0
