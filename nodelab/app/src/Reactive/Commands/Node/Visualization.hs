@@ -40,6 +40,7 @@ import qualified Utils.Shader                    as Shader
 
 visualizeError :: WidgetId -> LunaError.Error TypeRep -> Command UIRegistry.State ()
 visualizeError id err = do
+    removeVisualization id
     groupId <- Node.valueGroupId id
     let msg  = case err of
             LunaError.ImportError   name     -> "Cannot find symbol \"" <> name        <> "\""
