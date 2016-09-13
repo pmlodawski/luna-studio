@@ -61,3 +61,4 @@ name = to $ \n -> case n of
     TextEditor    _   -> "TextEditor"
     Debug         _   -> "Debug"
     CustomEvent   _   -> "CustomEvent"
+    Tick              -> "Tick"
