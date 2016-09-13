@@ -90,7 +90,12 @@ visualize visIx id create update = do
                 create groupId
 
 visualizeNodeValueReprs :: WidgetId -> [Value] -> Command UIRegistry.State ()
-visualizeNodeValueReprs id values = mapM_ (uncurry $ visualizeNodeValue id) (zip [0..] values)
+visualizeNodeValueReprs id values = do
+    groupId <- Node.valueGroupId id
+    currentVisualizations <- UICmd.children groupId
+    let visualizationsToRemove = drop (length values) currentVisualizations
+    mapM_ UICmd.removeWidget visualizationsToRemove
+    mapM_ (uncurry $ visualizeNodeValue id) (zip [0..] values)
 
 visualizeNodeValue :: WidgetId -> Int -> Value -> Command UIRegistry.State ()
 visualizeNodeValue id visIx (StringList v) = do
@@ -173,7 +178,6 @@ visualizeNodeValue id visIx (DataFrame cols) = do
     visualize visIx id create update
 
 visualizeNodeValue id visIx (Graphics (GR.Graphics layers)) = do
-    -- timer <- use
     let items  = fromLayers layers
     -- let items  = createItem <$> layers
         labels = createLabels =<< layers
