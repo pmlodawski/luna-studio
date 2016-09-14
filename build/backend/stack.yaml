@@ -22,7 +22,7 @@ packages:
 - {location: ../../tools/batch/plugins/luna-empire}
 - {location: ../../tools/batch/plugins/request-monitor}
 - extra-dep: true
-  location: {commit: 018a3658b5c2df47abceaee9f3c3cc532435af14, git: 'https://bitbucket.org/NewByteOrder/luna.git'}
+  location: {commit: a39d44f0d2a91870a23167a0895bf67fbd7a006a, git: 'https://bitbucket.org/NewByteOrder/luna.git'}
   subdirs: [compiler, core, parser]
 - extra-dep: true
   location: {commit: 1b2f65d6cc55e51e8d222819cd828fdf8af6e25c, git: 'https://github.com/wdanilo/container.git'}
