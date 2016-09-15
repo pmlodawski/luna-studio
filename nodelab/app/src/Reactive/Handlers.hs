@@ -171,8 +171,10 @@ webSocketHandler conn = AddHandler $ \h -> do
     WebSocket.onOpen conn $ do
         h $ Connection Connection.Opened
     WebSocket.onMessage conn $ \event -> do
-        payload <- WebSocket.getData event
-        let frame = Connection.deserialize $ fromJSString payload
+        payloadJS <- WebSocket.getData event
+        let payload = fromJSString payloadJS
+        -- liftIO $ putStrLn $ "payload len " <> show (length payload)
+        let frame = Connection.deserialize payload
         mapM_ (h . Connection . Connection.Message) $ frame ^. Connection.messages
     WebSocket.onClose conn $ \event -> do
         code <- WebSocket.getCode event
