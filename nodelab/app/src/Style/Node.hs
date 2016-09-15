@@ -55,3 +55,5 @@ labeledPadding = xyPadding setLabelOffsetX 0.0
 execTimeLabel = Label.Label (Vector2 setLabelOffsetX 0) size align def where
     size     = Vector2 0 0 -- (portControlSize & x -~ setLabelOffsetX)
     align    = Label.Left
+
+codeEditorSize = Vector2 300.0 150.0

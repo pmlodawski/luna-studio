@@ -21,6 +21,7 @@ import qualified Object.Widget.Slider.Continuous  as ContinuousSlider
 import qualified Object.Widget.Slider.Discrete    as DiscreteSlider
 import qualified Object.Widget.Toggle             as Toggle
 import qualified Object.Widget.Graphics           as G
+import qualified Object.Widget.CodeEditor         as CodeEditor
 
 import qualified Object.Widget.Choice             as Choice
 import qualified Reactive.Commands.Batch              as BatchCmd
@@ -53,6 +54,9 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     UICmd.register parent widget def
 
     let widget = DiscreteSlider.create (Vector2 200 20) "DiscreteSlider" 3 8 4
+    UICmd.register parent widget def
+
+    let widget = CodeEditor.create (Vector2 300 150) "class Point:\n    x y z :: Int\n  origin      = Point 0 0 0\n  Point x y _ = origin\n  print 'Origin XY coords are ($x,$y)'"
     UICmd.register parent widget def
 
     let widget = Toggle.create (Vector2 200 20) "Toggle" True
