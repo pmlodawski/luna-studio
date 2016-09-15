@@ -48,11 +48,14 @@ fromMaterial mat = convert . geometryToLayer' $ geometry where
 defaultMat :: Maybe Material
 defaultMat = Just $ SolidColor 0.6 0.6 0.6 1.0
 
-defaultTrans :: Transformation
-defaultTrans = translate def 0.5 0.5
+defaultTransf :: Transformation
+defaultTransf = translate def 0.5 0.5
+
+defaultTransl :: Point
+defaultTransl = Point 0.5 0.5
 
 geometryToLayer' :: Geometry -> Layer
-geometryToLayer' geometry = Layer geometry [defaultTrans] []
+geometryToLayer' geometry = Layer geometry (Translations [defaultTransl]) def
 
 geoComponentToGeometry' :: GeoComponent -> Geometry
 geoComponentToGeometry' geoComponent = Geometry geoComponent def defaultMat
