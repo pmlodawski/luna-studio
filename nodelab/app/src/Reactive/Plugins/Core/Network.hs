@@ -3,6 +3,8 @@ module Reactive.Plugins.Core.Network where
 import           Utils.PreludePlus
 
 import           Control.Concurrent.MVar
+
+import qualified Data.Text.Lazy as Text
 import           Control.Exception                                   (catch)
 import           Data.Monoid                                         (Last (..))
 import           GHCJS.Prim                                          (JSException)
@@ -37,8 +39,12 @@ import qualified Reactive.State.Global                               as Global
 
 import qualified JS.UI                                               as UI
 import           JS.WebSocket                                        (WebSocket)
+import qualified JS.Debug
 
 import qualified Data.JSString     as JSString
+
+displayProcessingTime :: Bool
+displayProcessingTime = False
 
 foreign import javascript unsafe "console.time($1);"    consoleTimeStart' :: JSString.JSString -> IO ()
 foreign import javascript unsafe "console.timeEnd($1);" consoleTimeEnd'   :: JSString.JSString -> IO ()
@@ -81,14 +87,20 @@ processEvent :: MVar State -> Event.Event -> IO ()
 processEvent var ev = do
     state     <- takeMVar var
     realEvent <- preprocessEvent ev
-    -- consoleTimeStart $ (realEvent ^. Event.name)
+    when displayProcessingTime $ do
+        consoleTimeStart $ (realEvent ^. Event.name) <>" show and force"
+        --putStrLn . show . length $ show realEvent
+        JS.Debug.error (Text.pack $ realEvent ^. Event.name) realEvent
+        consoleTimeEnd $ (realEvent ^. Event.name) <> " show and force"
+        consoleTimeStart $ (realEvent ^. Event.name)
     jsState   <- Handlers.getJSState
     timestamp <- getCurrentTime
     let state' = state & Global.jsState .~ jsState
                        & Global.lastEventTimestamp .~ timestamp
     let (ioActions, newState) = execCommand (runCommands actions realEvent) state'
     catch (ioActions >> UI.shouldRender) (handleExcept newState realEvent)
-    -- consoleTimeEnd $ (realEvent ^. Event.name)
+    when displayProcessingTime $ do
+        consoleTimeEnd $ (realEvent ^. Event.name)
     putMVar var newState
 
 makeNetworkDescription :: WebSocket -> MVar State -> IO ()
