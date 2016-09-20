@@ -24,6 +24,7 @@ data Elements = Elements { _expressionLabel     :: WidgetId
                          , _inLabelsGroup       :: WidgetId
                          , _outLabelsGroup      :: WidgetId
                          , _expandedGroup       :: WidgetId
+                         , _nodeGroup           :: WidgetId
                          , _nameTextBox         :: WidgetId
                          , _valueLabel          :: WidgetId
                          , _visualizationGroup  :: WidgetId
@@ -34,7 +35,7 @@ data Elements = Elements { _expressionLabel     :: WidgetId
                          } deriving (Eq, Show, Generic)
 
 instance Default Elements where
-    def = Elements def def def def def def def def def def def def def
+    def = Elements def def def def def def def def def def def def def def
 
 type CollaborationMap = Map ClientId UTCTime
 data Collaboration = Collaboration { _touch  :: Map ClientId (UTCTime, ColorId)
@@ -53,6 +54,7 @@ data Node = Node { _nodeId                :: N.NodeId
                  , _position              :: Position
                  , _zPos                  :: Double
                  , _expression            :: Text
+                 , _code                  :: Maybe Text
                  , _name                  :: Text
                  , _value                 :: Text
                  , _tpe                   :: Maybe Text
@@ -73,22 +75,23 @@ instance ToJSON Node
 makeLenses ''Elements
 instance ToJSON Elements
 
-makeNode :: N.NodeId -> Position -> Text -> Text -> Maybe Text -> Bool -> Node
-makeNode id pos expr name tpe vis = Node id [] [] pos 0.0 expr name "" tpe False False False vis def Nothing False def
+makeNode :: N.NodeId -> Position -> Text -> Maybe Text -> Text -> Maybe Text -> Bool -> Node
+makeNode id pos expr code name tpe vis = Node id [] [] pos 0.0 expr code name "" tpe False False False vis def Nothing False def
 
 fromNode :: N.Node -> Node
 fromNode n = let position' = uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position
                  nodeId'   = n ^. N.nodeId
                  name'     = n ^. N.name
                  vis       = n ^. N.nodeMeta . NM.displayResult
+                 code      = n ^. N.code
     in
     case n ^. N.nodeType of
-        N.ExpressionNode expression ->  makeNode nodeId' position' expression name' Nothing vis
-        N.InputNode inputIx         ->  makeNode nodeId' position' (Text.pack $ "Input " <> show inputIx) name' (Just tpe) vis where
+        N.ExpressionNode expression ->  makeNode nodeId' position' expression code name' Nothing vis
+        N.InputNode inputIx         ->  makeNode nodeId' position' (Text.pack $ "Input " <> show inputIx) code name' (Just tpe) vis where
             tpe = Text.pack $ fromMaybe "?" $ show <$> n ^? N.ports . ix (P.OutPortId P.All) . P.valueType
-        N.OutputNode outputIx       ->  makeNode nodeId' position' (Text.pack $ "Output " <> show outputIx) name' Nothing vis
-        N.ModuleNode                ->  makeNode nodeId' position' "Module"    name' Nothing vis
-        N.FunctionNode tpeSig       -> (makeNode nodeId' position' "Function"  name' Nothing vis) & value .~ (Text.pack $ intercalate " -> " tpeSig)
+        N.OutputNode outputIx       ->  makeNode nodeId' position' (Text.pack $ "Output " <> show outputIx) code name' Nothing vis
+        N.ModuleNode                ->  makeNode nodeId' position' "Module"    code name' Nothing vis
+        N.FunctionNode tpeSig       -> (makeNode nodeId' position' "Function"  code name' Nothing vis) & value .~ (Text.pack $ intercalate " -> " tpeSig)
 
 
 instance IsDisplayObject Node where

@@ -63,8 +63,9 @@ buildNode nid = do
     meta  <- zoom Graph.ast $ AST.readMeta uref
     name  <- getNodeName nid
     ports <- buildPorts ref
-    let portMap = Map.fromList $ flip fmap ports $ \p@(Port id _ _ _) -> (id, p)
-    return $ API.Node nid (Text.pack name) (API.ExpressionNode $ Text.pack expr) False portMap $ fromMaybe def meta
+    let code    = Just $ Text.pack expr
+        portMap = Map.fromList $ flip fmap ports $ \p@(Port id _ _ _) -> (id, p)
+    return $ API.Node nid (Text.pack name) (API.ExpressionNode $ Text.pack expr) False portMap (fromMaybe def meta) code
 
 getNodeName :: NodeId -> Command Graph String
 getNodeName nid = do

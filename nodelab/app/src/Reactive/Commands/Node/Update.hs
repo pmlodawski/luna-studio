@@ -49,6 +49,7 @@ updateExistingNode node = do
             Node.ExpressionNode expression -> do
                 inRegistry $ UICmd.update_ widgetId $ Model.expression .~ expression
             _ -> return ()
+        inRegistry $ UICmd.update_ widgetId $ Model.code .~ (node ^. Node.code)
         -- TODO: obsluzyc to ze moga zniknac polaczenia
     updateConnectionsForNodes [nodeId]
 

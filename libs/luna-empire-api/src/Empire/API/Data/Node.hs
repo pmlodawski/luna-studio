@@ -29,6 +29,7 @@ data Node = Node { _nodeId   :: NodeId
                  , _canEnter :: Bool
                  , _ports    :: Map PortId Port
                  , _nodeMeta :: NodeMeta
+                 , _code     :: Maybe Text
                  } deriving (Generic, Typeable, Show, Eq)
 
 makeLenses ''Node

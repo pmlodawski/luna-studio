@@ -65,7 +65,7 @@ fromWeb clientId currentClient conn chan wsChan = do
     flip catch handleDisconnect $ fromWebLoop clientId currentClient conn chan wsChan
     let takeoverMessage = serializeFrame $ WSFrame [ControlMessage ConnectionTakeover]
     WS.sendTextData conn takeoverMessage
-    WS.sendClose conn takeoverMessage
+    WS.sendClose    conn takeoverMessage
 
 toWeb :: WS.Connection -> TChan WSMessage -> IO ()
 toWeb conn chan = flip catch handleDisconnect $ forever $ do

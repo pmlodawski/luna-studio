@@ -237,6 +237,10 @@ unselectNode = flip UICmd.update_ (Model.isSelected .~ False)
 onClicked h = addHandler (MousePressedHandler $ h) mempty
 
 
+displayCodeEditor :: WidgetId -> WidgetId -> Text -> Command UIRegistry.State WidgetId
+displayCodeEditor nodeWidgetId nodeGroupId code = do
+    let widget = CodeEditor.create Style.codeEditorSize code
+    UICmd.register nodeGroupId widget $ codeHandlers nodeWidgetId
 
 instance ResizableWidget Model.Node
 instance CompositeWidget Model.Node where
@@ -271,8 +275,7 @@ instance CompositeWidget Model.Node where
         let widget = LabeledTextBox.create Style.portControlSize "Name" $ model ^. Model.name
         nameTextBoxId <- UICmd.register nodeGroupId widget $ nameHandlers id
 
-        let widget = CodeEditor.create Style.codeEditorSize $ model ^. Model.expression
-        codeEditorId <- UICmd.register nodeGroupId widget $ codeHandlers id
+        codeEditorId <- mapM (displayCodeEditor id nodeGroupId) $ model ^. Model.code
 
         let widget = Toggle.create Style.portControlSize "Display result" $ model ^. Model.visualizationsEnabled
         visualizationToggleId <- UICmd.register nodeGroupId widget $ visualizationToggleHandlers id
@@ -295,6 +298,7 @@ instance CompositeWidget Model.Node where
 
         void $ UIRegistry.updateWidgetM id $ Model.elements %~ ( (Model.expressionLabel     .~ expressionLabelId          )
                                                                . (Model.expandedGroup       .~ expandedGroup              )
+                                                               . (Model.nodeGroup           .~ nodeGroupId                )
                                                                . (Model.portGroup           .~ portGroup                  )
                                                                . (Model.portControls        .~ portControlsGroupId        )
                                                                . (Model.inLabelsGroup       .~ inLabelsGroupId            )
@@ -304,7 +308,7 @@ instance CompositeWidget Model.Node where
                                                                . (Model.visualizationGroup  .~ visualizationGroupId       )
                                                                . (Model.execTimeLabel       .~ execTimeLabelId            )
                                                                . (Model.visualizationToggle .~ Just visualizationToggleId )
-                                                               . (Model.codeEditor          .~ Just codeEditorId          )
+                                                               . (Model.codeEditor          .~ codeEditorId               )
                                                                )
 
     updateWidget id old model = do
@@ -316,11 +320,7 @@ instance CompositeWidget Model.Node where
 
         whenChanged old model Model.expression $ do
             let exprId = model ^. Model.elements . Model.expressionLabel
-
             UICmd.update_ exprId     $ Label.label   .~ (trimExpression $ model ^. Model.expression)
-            withJust (model ^. Model.elements . Model.codeEditor) $ \codeEditorId -> do
-                UICmd.update_ codeEditorId $ CodeEditor.value .~ (model ^. Model.expression)
-
 
         whenChanged old model Model.name  $ do
             let nameTbId = model ^. Model.elements . Model.nameTextBox
@@ -346,6 +346,21 @@ instance CompositeWidget Model.Node where
             let valueId = model ^. Model.elements . Model.valueLabel
             UICmd.update_ valueId  $ Label.alignment .~ (if model ^. Model.isExpanded then Label.Left else Label.Center)
             UICmd.moveX   valueId  $ if model ^. Model.isExpanded then 0.0 else -25.0
+
+        withJust (model ^. Model.code) $ \codeBody -> do
+            let nodeGroupId = model ^. Model.elements . Model.nodeGroup
+
+            when (isNothing $ model ^. Model.elements . Model.codeEditor) $ do
+                codeEditorId <- displayCodeEditor id nodeGroupId codeBody
+                void $ UIRegistry.updateWidgetM id $ Model.elements . Model.codeEditor .~ Just codeEditorId
+
+            withJust (model ^. Model.elements . Model.codeEditor) $ \codeEditorId -> do
+                UICmd.update_ codeEditorId $ CodeEditor.value .~ codeBody
+
+        when (isNothing $ model ^. Model.code) $
+            withJust (model ^. Model.elements . Model.codeEditor) $ \codeEditorId -> do
+                UICmd.removeWidget codeEditorId
+                void $ UIRegistry.updateWidgetM id $ Model.elements . Model.codeEditor .~ Nothing
 
 
 portControlsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
