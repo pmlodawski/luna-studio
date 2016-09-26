@@ -17,6 +17,7 @@ import           Object.UITypes
 import qualified Event.Keyboard as Keyboard
 import qualified Event.Mouse as Mouse
 import           Event.Keyboard (KeyMods)
+import           Event.Widget   (Payload)
 import           Reactive.State.Camera     (Camera)
 import qualified Reactive.State.Camera     as Camera
 import           Reactive.Commands.Command (Command)
@@ -155,6 +156,7 @@ type KeyDownHandler       s = Char -> KeyMods     -> JSState -> WidgetId -> Comm
 type KeyPressedHandler    s = Char -> KeyMods     -> JSState -> WidgetId -> Command s ()
 type DragMoveHandler      s =         DragState   -> JSState -> WidgetId -> Command s ()
 type DragEndHandler       s =         DragState   -> JSState -> WidgetId -> Command s ()
+type WidgetCustomHandler  s =                        Payload -> WidgetId -> Command s ()
 
 data UIHandlers a  = UIHandlers { _mouseMove     :: MouseMoveHandler      a
                                 , _mousePressed  :: MousePressedHandler   a
@@ -168,6 +170,7 @@ data UIHandlers a  = UIHandlers { _mouseMove     :: MouseMoveHandler      a
                                 , _keyPressed    :: KeyPressedHandler     a
                                 , _dragMove      :: DragMoveHandler       a
                                 , _dragEnd       :: DragEndHandler        a
+                                , _widgetCustom  :: WidgetCustomHandler   a
                                 }
 
 instance Default (UIHandlers a) where
@@ -183,6 +186,7 @@ instance Default (UIHandlers a) where
                      (\ _   _ _ _ -> return ())
                      (\     _ _ _ -> return ())
                      (\     _ _ _ -> return ())
+                     (\       _ _ -> return ())
 
 
 makeLenses ''DragState

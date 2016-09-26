@@ -15,6 +15,7 @@ import qualified Event.Batch         as Batch
 import qualified Event.TextEditor    as TextEditor
 import qualified Event.Debug         as Debug
 import qualified Event.CustomEvent   as CustomEvent
+import qualified Event.Widget        as Widget
 
 newtype JSState = JSState JSVal deriving (PFromJSVal, PToJSVal)
 
@@ -35,6 +36,7 @@ data Event = Init
            | TextEditor               TextEditor.Event
            | Debug                         Debug.Event
            | CustomEvent             CustomEvent.Event
+           | Widget                       Widget.Event
            | Tick
            deriving (Generic, Show)
 
@@ -61,4 +63,5 @@ name = to $ \n -> case n of
     TextEditor    _   -> "TextEditor"
     Debug         _   -> "Debug"
     CustomEvent   _   -> "CustomEvent"
+    Widget        _   -> "Widget"
     Tick              -> "Tick"

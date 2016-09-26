@@ -27,6 +27,7 @@ import           Object.Widget.Slider.Continuous  (ContinuousSlider)
 import           Object.Widget.Slider.Discrete    (DiscreteSlider)
 import           Object.Widget.TextBox            (TextBox)
 import           Object.Widget.Toggle             (Toggle)
+import           Object.Widget.CodeEditor         (CodeEditor)
 import           Reactive.State.Global            (State)
 
 import           UI.Widget                        ()
@@ -45,6 +46,7 @@ import qualified UI.Widget.Port                   as Port
 import           UI.Widget.Slider                 ()
 import           UI.Widget.TextBox                ()
 import           UI.Widget.Toggle                 ()
+import           UI.Widget.CodeEditor             ()
 
 import qualified UI.Handlers.Button               as Button
 import qualified UI.Handlers.Label                as Label
@@ -59,6 +61,7 @@ import qualified UI.Handlers.Slider.Continuous    as ContinuousSlider
 import qualified UI.Handlers.Slider.Discrete      as DiscreteSlider
 import qualified UI.Handlers.TextBox              as TextBox
 import qualified UI.Handlers.Toggle               as Toggle
+import qualified UI.Handlers.CodeEditor           as CodeEditor
 
 class HasHandlers a where
     widgetHandlers :: DisplayObject -> UIHandlers a
@@ -87,6 +90,7 @@ longTextType          = typeOf (undefined :: LongText)
 dataFrameType         = typeOf (undefined :: DataFrame)
 graphicsType          = typeOf (undefined :: Graphics)
 iconType              = typeOf (undefined :: Icon)
+codeEditorType        = typeOf (undefined :: CodeEditor)
 
 instance HasHandlers State where
     widgetHandlers (CtxDynamic tpe _)
@@ -114,5 +118,6 @@ instance HasHandlers State where
         | tpe ==        dataFrameType  = def
         | tpe ==         graphicsType  = def
         | tpe ==             iconType  = def
+        | tpe ==       codeEditorType  =       CodeEditor.widgetHandlers
 
         | otherwise                    = error $ "Unknown widget type " <> (show tpe)

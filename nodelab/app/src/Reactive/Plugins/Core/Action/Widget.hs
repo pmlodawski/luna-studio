@@ -13,6 +13,7 @@ import           Event.Event
 import           Event.Mouse    (EventWidget(..))
 import qualified Event.Mouse    as Mouse
 import qualified Event.Keyboard as Keyboard
+import qualified Event.Widget   as WE
 import qualified Reactive.State.Global       as Global
 import qualified Reactive.State.UIRegistry   as UIRegistry
 import qualified Reactive.State.Camera       as Camera
@@ -27,6 +28,7 @@ toAction (Mouse jsState event) = Just $ do
     handleMouseGeneric jsState event
     handleMouseClick   jsState event
 toAction (Keyboard jsState event) = Just $ handleKeyboardGeneric jsState event
+toAction (Widget (WE.WidgetEvent widgetId payload)) = Just $ handleWidgetCustom widgetId payload
 toAction _ = Nothing
 
 handleMouseGeneric :: JSState -> Mouse.RawEvent -> Command Global.State ()
@@ -140,3 +142,11 @@ handleMouseClick jsState event@(Mouse.Event Mouse.Released _ Mouse.LeftButton _ 
     Global.uiRegistry . UIRegistry.mouseDownWidget .= Nothing
 
 handleMouseClick _ _ = return ()
+
+handleWidgetCustom :: WidgetId -> WE.Payload -> Command Global.State ()
+handleWidgetCustom widgetId payload = do
+    file <- zoom Global.uiRegistry $ UIRegistry.lookupM widgetId
+    withJust file $ \file -> do
+        let handlers = widgetHandlers (file ^. widget)
+        (handlers ^. widgetCustom) payload widgetId
+

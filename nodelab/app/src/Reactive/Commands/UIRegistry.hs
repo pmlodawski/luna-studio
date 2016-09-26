@@ -26,6 +26,7 @@ module Reactive.Commands.UIRegistry
     , triggerChildrenResized
     , tryUpdate
     , update
+    , update'
     , update_
     ) where
 
@@ -75,6 +76,9 @@ update id fun = do
                 performIO $ updateUI id (oldWidget ^. widget) newWidget
                 updateWidget id (oldWidget ^. widget) newWidget
             return newWidget
+
+update' :: DisplayObjectClass a => WidgetId -> (a -> a) -> Command UIRegistry.State a
+update' = UIRegistry.updateWidgetM
 
 tryUpdate :: (Eq a, CompositeWidget a, DisplayObjectClass a) => WidgetId -> (a -> a) -> Command UIRegistry.State Bool
 tryUpdate id fun = do
