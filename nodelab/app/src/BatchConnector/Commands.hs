@@ -15,9 +15,7 @@ import           Empire.API.Data.GraphLocation         (GraphLocation)
 import qualified Empire.API.Data.GraphLocation         as GraphLocation
 import           Empire.API.Data.Node                  (NodeId)
 import           Empire.API.Data.NodeMeta              (NodeMeta)
-import           Empire.API.Data.PortRef               (AnyPortRef (..),
-                                                        InPortRef (..),
-                                                        OutPortRef (..))
+import           Empire.API.Data.PortRef               (AnyPortRef (..), InPortRef (..), OutPortRef (..))
 import           Empire.API.Data.Project               (ProjectId)
 
 import qualified Empire.API.Graph.AddNode              as AddNode
@@ -28,6 +26,7 @@ import qualified Empire.API.Graph.DumpGraphViz         as DumpGraphViz
 import qualified Empire.API.Graph.GetProgram           as GetProgram
 import qualified Empire.API.Graph.RemoveNode           as RemoveNode
 import qualified Empire.API.Graph.RenameNode           as RenameNode
+import qualified Empire.API.Graph.SetCode              as SetCode
 import qualified Empire.API.Graph.SetDefaultValue      as SetDefaultValue
 import qualified Empire.API.Graph.SetInputNodeType     as SetInputNodeType
 import qualified Empire.API.Graph.UpdateNodeExpression as UpdateNodeExpression
@@ -71,6 +70,9 @@ updateNodeMeta updates workspace uuid = sendRequest uuid $ withLibrary workspace
 
 renameNode :: NodeId -> Text -> Workspace -> UUID -> IO ()
 renameNode nid name w uuid = sendRequest uuid $ withLibrary w RenameNode.Request nid name
+
+setCode :: NodeId -> Text -> Workspace -> UUID -> IO ()
+setCode nid newCode w uuid = sendRequest uuid $ withLibrary w SetCode.Request nid newCode
 
 removeNode :: [NodeId] -> Workspace -> UUID ->  IO ()
 removeNode nodeIds workspace uuid = sendRequest uuid $ withLibrary workspace RemoveNode.Request nodeIds

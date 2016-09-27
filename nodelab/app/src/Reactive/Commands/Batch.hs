@@ -61,6 +61,9 @@ updateNodeMeta = withWorkspace . BatchCmd.updateNodeMeta
 renameNode :: NodeId -> Text -> Command State ()
 renameNode = withWorkspace .:  BatchCmd.renameNode
 
+setCode :: NodeId -> Text -> Command State ()
+setCode = withWorkspace .:  BatchCmd.setCode
+
 removeNode :: [NodeId] -> Command State ()
 removeNode = withWorkspace . BatchCmd.removeNode
 

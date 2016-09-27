@@ -73,6 +73,7 @@ nodeHandlers node = addHandler (UINode.RemoveNodeHandler            removeSelect
                   $ addHandler (UINode.ExpandNodeHandler            expandSelectedNodes)
                   $ addHandler (UINode.EditNodeExpressionHandler    editNodeExpression)
                   $ addHandler (UINode.VisualizationsToggledHandler visualizationsToggled)
+                  $ addHandler (UINode.CodeChangedHandler           codeChanged)
                   $ addEnterNodeHandler where
                         addEnterNodeHandler = if node ^. Node.canEnter then addHandler (UINode.EnterNodeHandler $ enterNode $ Breadcrumb.Lambda $ node ^. Node.nodeId) mempty
                                                                        else mempty
@@ -80,8 +81,10 @@ nodeHandlers node = addHandler (UINode.RemoveNodeHandler            removeSelect
 visualizationsToggled :: WidgetId -> NodeId -> Bool -> Command Global.State ()
 visualizationsToggled _ nid val = modifyNodeMeta nid (NodeMeta.displayResult .~ val)
 
-
-
+codeChanged :: NodeId -> Text -> Command Global.State ()
+codeChanged nodeId newCode = do
+    BatchCmd.setCode nodeId newCode
+    
 expandSelectedNodes :: Command Global.State ()
 expandSelectedNodes = do
     sn <- selectedNodes

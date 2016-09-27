@@ -76,8 +76,12 @@ typeValueChangedHandler parent val tbId = do
     model <- inRegistry $ UICmd.update parent $ Model.tpe ?~ val
     triggerChangeInputNodeTypeHandler parent model
 
+codeEditorChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
+codeEditorChangedHandler nodeWidgetId newCode _ = triggerCodeChangedHandler nodeWidgetId newCode
+
 codeHandlers :: WidgetId -> HTMap
-codeHandlers _ = mempty
+codeHandlers id = addHandler (ValueChangedHandler $ codeEditorChangedHandler id)
+                $ mempty
 
 newtype RemoveNodeHandler = RemoveNodeHandler (Command Global.State ())
 removeNodeHandler = TypeKey :: TypeKey RemoveNodeHandler
@@ -103,6 +107,8 @@ expandNodeHandler = TypeKey :: TypeKey ExpandNodeHandler
 newtype EditNodeExpressionHandler = EditNodeExpressionHandler (NodeId -> Command Global.State ())
 editNodeExpressionHandler = TypeKey :: TypeKey EditNodeExpressionHandler
 
+newtype CodeChangedHandler = CodeChangedHandler (NodeId -> Text -> Command Global.State ())
+codeChangedHandler = TypeKey :: TypeKey CodeChangedHandler
 
 triggerRemoveHandler :: WidgetId -> Command Global.State ()
 triggerRemoveHandler id = do
@@ -144,6 +150,12 @@ triggerEditNodeExpressionHandler :: WidgetId -> Model.Node -> Command Global.Sta
 triggerEditNodeExpressionHandler id model = do
     maybeHandler <- inRegistry $ UICmd.handler id editNodeExpressionHandler
     withJust maybeHandler $ \(EditNodeExpressionHandler handler) -> handler (model ^. Model.nodeId)
+
+triggerCodeChangedHandler :: WidgetId -> Text -> Command Global.State ()
+triggerCodeChangedHandler id newCode = do
+    nodeId       <- inRegistry $ UICmd.get id Model.nodeId
+    maybeHandler <- inRegistry $ UICmd.handler id codeChangedHandler
+    withJust maybeHandler $ \(CodeChangedHandler handler) -> handler nodeId newCode
 
 keyDownHandler :: KeyPressedHandler Global.State
 keyDownHandler '\r'   _ _ id = triggerExpandNodeHandler id
