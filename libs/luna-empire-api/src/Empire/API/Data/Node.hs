@@ -34,6 +34,7 @@ data Node = Node { _nodeId   :: NodeId
 
 makeLenses ''Node
 makeLenses ''NodeType
+makePrisms ''NodeType
 
 position :: Lens' Node (Double, Double)
 position = nodeMeta . NodeMeta.position

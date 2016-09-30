@@ -35,6 +35,7 @@ import           Control.Concurrent.MVar
 import qualified JS.GraphLocation                  as GraphLocation
 import           JS.UI                             (initializeGl, render, triggerWindowResize)
 import           JS.UUID                           (generateUUID)
+import           JS.Tutorial                       (shouldRunTutorial)
 import           JS.WebSocket                      (WebSocket)
 import           Reactive.Commands.Command         (execCommand)
 import qualified Reactive.Plugins.Core.Action.Init as Init
@@ -55,8 +56,11 @@ runMainNetwork socket = do
     projectListRequestId <- generateUUID
     clientId             <- generateUUID
     initTime             <- getCurrentTime
-    let initState = initialState initTime clientId random & Global.workspace . Workspace.lastUILocation .~ lastLocation
-                                                          & Global.pendingRequests %~ Set.insert projectListRequestId
+    tutorial'            <- shouldRunTutorial
+    let tutorial = if tutorial' then Just 0 else Nothing
+
+    let initState = initialState initTime clientId random tutorial & Global.workspace . Workspace.lastUILocation .~ lastLocation
+                                                                   & Global.pendingRequests %~ Set.insert projectListRequestId
     let (initActions, initState') = execCommand Init.initialize initState
     initActions
 

@@ -32,6 +32,7 @@ import qualified Reactive.Plugins.Core.Action.Sandbox                as Sandbox
 import qualified Reactive.Plugins.Core.Action.Widget                 as Widget
 import qualified Reactive.Plugins.Core.Action.Collaboration          as Collaboration
 import qualified Reactive.Plugins.Core.Action.Navigation             as Navigation
+import qualified Reactive.Plugins.Core.Action.Tutorial               as Tutorial
 
 import           Reactive.Commands.Command                           (Command, execCommand)
 import           Reactive.State.Global                               (State)
@@ -69,6 +70,7 @@ actions =  [ Debug.toActionEv
            , NodeSearcher.toAction
            , ProjectManager.toAction
            , ConnectionPen.toAction
+           , Tutorial.toAction
            , Sandbox.toAction
            , Debug.toAction
            ]

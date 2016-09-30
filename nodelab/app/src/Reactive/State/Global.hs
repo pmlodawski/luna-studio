@@ -45,6 +45,7 @@ data State = State { _mousePos           :: Vector2 Int
                    , _lastEventTimestamp :: DateTime
                    , _clientId           :: Collaboration.ClientId
                    , _random             :: StdGen
+                   , _tutorial           :: Maybe Int
                    } deriving (Show, Generic)
 
 instance ToJSON State
@@ -53,7 +54,7 @@ instance ToJSON StdGen where
 
 makeLenses ''State
 
-initialState :: DateTime -> Collaboration.ClientId -> StdGen -> State
+initialState :: DateTime -> Collaboration.ClientId -> StdGen -> Maybe Int -> State
 initialState = State (Vector2 200 200) def def def def def def def def def def def defJsState def def
 
 inRegistry :: Command UIRegistry.State a -> Command State a
