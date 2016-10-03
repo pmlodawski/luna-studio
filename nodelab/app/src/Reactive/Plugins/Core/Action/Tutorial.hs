@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ViewPatterns      #-}
 module Reactive.Plugins.Core.Action.Tutorial where
 
 import           Control.Monad.Trans.Maybe         (runMaybeT)
@@ -6,10 +7,11 @@ import qualified Data.Text.Lazy                    as Text
 import           Utils.PreludePlus                 hiding (Choice)
 import           Utils.Vector
 
+import qualified Empire.API.Data.DefaultValue      as DefaultValue
+import           Empire.API.Data.GraphLocation     (GraphLocation)
 import qualified Empire.API.Data.Node              as Node
 import qualified Empire.API.Data.Port              as Port
 import qualified Empire.API.Data.PortRef           as PortRef
-import qualified Empire.API.Data.DefaultValue      as DefaultValue
 import qualified Empire.API.Graph.Connect          as Connect
 import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
 import qualified Event.Batch                       as Batch
@@ -17,7 +19,6 @@ import           Event.Event                       (Event (..))
 import           Event.Keyboard                    (KeyMods (..), shift)
 import qualified Event.Keyboard                    as Keyboard
 import qualified Event.NodeSearcher                as NodeSearcher
-import           Empire.API.Data.GraphLocation               (GraphLocation)
 
 import qualified Batch.Workspace                   as Workspace
 import           Object.Widget                     (widget)
@@ -28,6 +29,22 @@ import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph
 
 import           JS.Tutorial                       (showStep)
+
+
+--  0. TAB
+--  1. enter expression: readFile "/userdata/why_fp_matters.txt"
+--  2. expand node to inspect details and results
+--  3. press tab while first node is selected and add "length node"
+--  4. select readFile node && tab: words  -- tu warto dodac wczesniej, ze przesun node length wyzej?
+--  5. tab -> map _.length
+--  6. tab -> sort
+--  7. tab -> histogram
+--  8. unselect node, add "switch False" -- docelowo bedzie samo switch
+--  9. unselect node, add "/userdata/why_fp_matters.txt" node
+-- 10. connect why_fp_matters to second port of switch node
+-- 11. connect cakeipsum to third port of switch
+-- 12. connect switch to first port of readFile
+-- 13. expand switch node and change first argument
 
 
 toAction :: Event -> Maybe (Command Global.State ())
@@ -50,7 +67,7 @@ toAction (NodeSearcher (NodeSearcher.Create "sort" Nothing))                    
 -- tab > histogram
 toAction (NodeSearcher (NodeSearcher.Create "histogram" Nothing))                                 = Just $ whenStep 7  $ andIsSelected "sort"     $ nextStep
 -- tab > switch
-toAction (NodeSearcher (NodeSearcher.Create "switch" Nothing))                                    = Just $ whenStep 8  $ andNothingIsSelected     $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create (Text.stripPrefix "switch" -> Just _) Nothing))                                    = Just $ whenStep 8  $ andNothingIsSelected     $ nextStep
 -- tab > switch
 toAction (NodeSearcher (NodeSearcher.Create "\"/userdata/why_fp_matters.txt\"" Nothing))          = Just $ whenStep 9  $ andNothingIsSelected     $ nextStep
 toAction (NodeSearcher (NodeSearcher.Create "\"/userdata/cakeipsum.txt\"" Nothing))               = Just $ whenStep 10 $ andNothingIsSelected     $ nextStep
