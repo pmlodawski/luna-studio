@@ -108,13 +108,20 @@ function initUserInfo() {
     e.preventDefault();
     $(".tutorial-box").show().focus();
   });
+  $('body').append('<div id="onboarding"></div>');
+  $('#onboarding').hide();
 }
 
 
-function showTutorial(step) {
-  $('body').append('<div id="onboarding"></div>');
+function showOnboarding(step) {
+  console.log('onboarding',step)
   $('#onboarding').html(require('templates/onboarding/' + step));
   $('#onboarding').show();
+}
+
+function closeOnboarding() {
+  $('#onboarding').hide();
+  $('#onboarding').html("");
 }
 
 function initTerminal() {
@@ -380,7 +387,8 @@ module.exports = {
   customEvent:              function() { },
   nextFrameCallbacks: [],
   redrawTextureCallbacks: [],
-  showTutorial: showTutorial
+  showOnboarding: showOnboarding,
+  closeOnboarding: closeOnboarding
 
 };
 

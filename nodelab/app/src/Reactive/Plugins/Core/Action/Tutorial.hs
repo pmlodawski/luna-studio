@@ -15,6 +15,7 @@ import qualified Empire.API.Data.PortRef           as PortRef
 import qualified Empire.API.Graph.Connect          as Connect
 import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
 import qualified Event.Batch                       as Batch
+import qualified Event.CustomEvent                 as CustomEvent
 import           Event.Event                       (Event (..))
 import           Event.Keyboard                    (KeyMods (..), shift)
 import qualified Event.Keyboard                    as Keyboard
@@ -28,7 +29,7 @@ import           Reactive.Commands.Graph.Selection (selectedNodes)
 import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph
 
-import           JS.Tutorial                       (showStep)
+import           JS.Tutorial                       (showStep, closeOnboarding)
 
 
 --  0. TAB
@@ -83,7 +84,9 @@ toAction (Batch        (Batch.NodeUpdated update))                              
     shouldProcess <- isCurrentLocation (update ^. NodeUpdate.location)
     when shouldProcess $ do
         whenStep 15 $ andPortDefaultChanged update "switch" (Port.Arg 0) (DefaultValue.BoolValue True) $ nextStep
-
+toAction (CustomEvent (CustomEvent.RawEvent "closeOnboarding" _)) = Just $ do
+    Global.tutorial .= Nothing
+    performIO closeOnboarding
 toAction _  = Nothing
 
 
