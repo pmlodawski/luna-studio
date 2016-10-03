@@ -11,6 +11,7 @@
 ```shell
 $ git clone git@bitbucket.org:NewByteOrder/new_byte_order.git
 $ cd new_byte_order
+$ git submodule update --init
 $ REPO_DIR=`pwd`
 $ cd $REPO_DIR/build/backend
 $ stack setup # installs ghc
