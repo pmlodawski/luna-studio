@@ -35,17 +35,20 @@ import           JS.Tutorial                       (showStep, closeOnboarding)
 --  0. TAB
 --  1. enter expression: readFile "/userdata/why_fp_matters.txt"
 --  2. expand node to inspect details and results
---  3. press tab while first node is selected and add "length node"
---  4. select readFile node && tab: words  -- tu warto dodac wczesniej, ze przesun node length wyzej?
---  5. tab -> map _.length
---  6. tab -> sort
---  7. tab -> histogram
---  8. unselect node, add "switch False" -- docelowo bedzie samo switch
---  9. unselect node, add "/userdata/why_fp_matters.txt" node
--- 10. connect why_fp_matters to second port of switch node
--- 11. connect cakeipsum to third port of switch
--- 12. connect switch to first port of readFile
--- 13. expand switch node and change first argument
+--  3. unselect readFile node and add "length"
+--  4. connect output of readFile to input of length
+--  5. select readFile node && tab: words  -- tu warto dodac wczesniej, ze przesun node length wyzej?
+--  6. tab -> map _.length
+--  7. tab -> sort
+--  8. tab -> histogram
+--  9. create switch node
+-- 10. unselect node, add "switch False" -- docelowo bedzie samo switch
+-- 11. unselect node, add "/userdata/why_fp_matters.txt" node
+-- 12. connect why_fp_matters to second port of switch node
+-- 13. connect cakeipsum to third port of switch
+-- 14. expand switch node
+-- 15. connect switch to first port of readFile
+-- 16. change first argument of switch node
 
 
 toAction :: Event -> Maybe (Command Global.State ())
@@ -56,34 +59,35 @@ toAction (NodeSearcher (NodeSearcher.Create "readFile \"/userdata/why_fp_matters
 -- expand switch node
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\r'  _))                                      = Just $ do
     whenStep 2  $ andIsSelected "readFile" $ nextStep
-    whenStep 13 $ andIsSelected "switch"   $ nextStep
+    whenStep 14 $ andIsSelected "switch"   $ nextStep
 -- tab > "length"
-toAction (NodeSearcher (NodeSearcher.Create "length" Nothing))                                    = Just $ whenStep 3  $ andIsSelected "readFile" $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "length" Nothing))                                    = Just $ whenStep 3  $ andNothingIsSelected     $ nextStep
 -- select "readFile" node and tab > "words"
-toAction (NodeSearcher (NodeSearcher.Create "words" Nothing))                                     = Just $ whenStep 4  $ andIsSelected "readFile" $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "words" Nothing))                                     = Just $ whenStep 5  $ andIsSelected "readFile" $ nextStep
 -- tab > "map _.length"
-toAction (NodeSearcher (NodeSearcher.Create "map _.length" Nothing))                              = Just $ whenStep 5  $ andIsSelected "words"    $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "map _.length" Nothing))                              = Just $ whenStep 6  $ andIsSelected "words"    $ nextStep
 -- tab > sort
-toAction (NodeSearcher (NodeSearcher.Create "sort" Nothing))                                      = Just $ whenStep 6  $ andIsSelected "map"      $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "sort" Nothing))                                      = Just $ whenStep 7  $ andIsSelected "map"      $ nextStep
 -- tab > histogram
-toAction (NodeSearcher (NodeSearcher.Create "histogram" Nothing))                                 = Just $ whenStep 7  $ andIsSelected "sort"     $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "histogram" Nothing))                                 = Just $ whenStep 8  $ andIsSelected "sort"     $ nextStep
 -- tab > switch
-toAction (NodeSearcher (NodeSearcher.Create (Text.stripPrefix "switch" -> Just _) Nothing))                                    = Just $ whenStep 8  $ andNothingIsSelected     $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create (Text.stripPrefix "switch" -> Just _) Nothing))       = Just $ whenStep 9  $ andNothingIsSelected     $ nextStep
 -- tab > switch
-toAction (NodeSearcher (NodeSearcher.Create "\"/userdata/why_fp_matters.txt\"" Nothing))          = Just $ whenStep 9  $ andNothingIsSelected     $ nextStep
-toAction (NodeSearcher (NodeSearcher.Create "\"/userdata/cakeipsum.txt\"" Nothing))               = Just $ whenStep 10 $ andNothingIsSelected     $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "\"/userdata/why_fp_matters.txt\"" Nothing))          = Just $ whenStep 10 $ andNothingIsSelected     $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "\"/userdata/cakeipsum.txt\"" Nothing))               = Just $ whenStep 11 $ andNothingIsSelected     $ nextStep
 -- connect switch to readFile
 toAction (Batch        (Batch.NodesConnected update))                                             = Just $ do
     shouldProcess <- isCurrentLocation (update ^. Connect.location')
     when shouldProcess $ do
-        whenStep 11 $ andConnected update "\"/userdata/why_fp_matters.txt\"" "switch"   (Port.Arg 1) $ nextStep
-        whenStep 12 $ andConnected update "\"/userdata/cakeipsum.txt\""      "switch"   (Port.Arg 2) $ nextStep
-        whenStep 14 $ andConnected update "switch"                           "readFile" (Port.Arg 0) $ nextStep
+        whenStep  4 $ andConnected update "readFile"                         "length"   (Port.Self ) $ nextStep
+        whenStep 12 $ andConnected update "\"/userdata/why_fp_matters.txt\"" "switch"   (Port.Arg 1) $ nextStep
+        whenStep 13 $ andConnected update "\"/userdata/cakeipsum.txt\""      "switch"   (Port.Arg 2) $ nextStep
+        whenStep 15 $ andConnected update "switch"                           "readFile" (Port.Arg 0) $ nextStep
 
 toAction (Batch        (Batch.NodeUpdated update))                                                = Just $ do
     shouldProcess <- isCurrentLocation (update ^. NodeUpdate.location)
     when shouldProcess $ do
-        whenStep 15 $ andPortDefaultChanged update "switch" (Port.Arg 0) (DefaultValue.BoolValue True) $ nextStep
+        whenStep 16 $ andPortDefaultChanged update "switch" (Port.Arg 0) (DefaultValue.BoolValue True) $ nextStep
 toAction (CustomEvent (CustomEvent.RawEvent "closeOnboarding" _)) = Just $ do
     Global.tutorial .= Nothing
     performIO closeOnboarding
