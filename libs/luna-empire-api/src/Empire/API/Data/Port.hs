@@ -41,6 +41,7 @@ data Port = Port { _portId     :: PortId
                  } deriving (Show, Eq, Generic)
 
 makeLenses ''Port
+makePrisms ''PortState
 instance Binary PortId
 instance Binary Port
 instance Binary PortState

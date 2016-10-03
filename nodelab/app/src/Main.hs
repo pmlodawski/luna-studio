@@ -43,7 +43,7 @@ import qualified Reactive.Plugins.Core.Network     as CoreNetwork
 import qualified Reactive.Plugins.Loader.Loader    as Loader
 import           Reactive.State.Global             (initialState)
 import qualified Reactive.State.Global             as Global
-
+import           JS.Tutorial                       (showStep)
 
 runMainNetwork :: WebSocket -> IO ()
 runMainNetwork socket = do
@@ -58,6 +58,9 @@ runMainNetwork socket = do
     initTime             <- getCurrentTime
     tutorial'            <- shouldRunTutorial
     let tutorial = if tutorial' then Just 0 else Nothing
+
+    withJust tutorial $ \step -> showStep step
+
 
     let initState = initialState initTime clientId random tutorial & Global.workspace . Workspace.lastUILocation .~ lastLocation
                                                                    & Global.pendingRequests %~ Set.insert projectListRequestId

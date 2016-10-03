@@ -109,6 +109,14 @@ function initUserInfo() {
     $(".tutorial-box").show().focus();
   });
 }
+
+
+function showTutorial(step) {
+  $('body').append('<div id="onboarding"></div>');
+  $('#onboarding').html(require('templates/onboarding/' + step));
+  $('#onboarding').show();
+}
+
 function initTerminal() {
   $('body').append('<div id="termContainer"><button id="termClose">Close</button><div id="term"></div></div>');
   $$.term = new Terminal({
@@ -371,7 +379,8 @@ module.exports = {
   downloadFile:             downloadFile,
   customEvent:              function() { },
   nextFrameCallbacks: [],
-  redrawTextureCallbacks: []
+  redrawTextureCallbacks: [],
+  showTutorial: showTutorial
 
 };
 
