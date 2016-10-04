@@ -26,7 +26,7 @@ foreign import javascript safe "$1.setData($2)"        setData' :: Image -> JSSt
 
 create :: WidgetId -> Model.Image -> IO Image
 create oid model = do
-    plot <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
+    plot <- create' (fromWidgetId oid) (model ^. Model.size . x) (model ^. Model.size . y)
     setData' plot $ lazyTextToJSString $ model ^. Model.image
     UI.setWidgetPosition (model ^. widgetPosition) plot
     return plot
@@ -44,5 +44,3 @@ instance UIDisplayObject Model.Image where
 
 instance CompositeWidget Model.Image
 instance ResizableWidget Model.Image
-
-

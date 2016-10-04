@@ -34,7 +34,7 @@ foreign import javascript safe "$1.relayout()"           realayout'    :: LongTe
 
 create :: WidgetId -> Model.LongText -> IO LongText
 create oid model = do
-    textBox      <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
+    textBox      <- create' (fromWidgetId oid) (model ^. Model.size . x) (model ^. Model.size . y)
     setAlignment   model textBox
     setText        model textBox
     setMonospace   model textBox

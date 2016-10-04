@@ -34,7 +34,7 @@ foreign import javascript safe "$1.setAlignment($2)"           setAlignment' :: 
 
 create :: WidgetId -> Model.Button -> IO Button
 create oid model = do
-    widget      <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
+    widget      <- create' (fromWidgetId oid) (model ^. Model.size . x) (model ^. Model.size . y)
     setEnabled     model widget
     setIcon        model widget
     setRounded     model widget

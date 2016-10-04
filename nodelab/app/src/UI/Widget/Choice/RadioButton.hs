@@ -27,7 +27,7 @@ foreign import javascript safe "$1.setLabel($2)"             setLabel' :: RadioB
 
 create :: WidgetId -> Model.RadioButton -> IO RadioButton
 create oid model = do
-    widget      <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
+    widget      <- create' (fromWidgetId oid) (model ^. Model.size . x) (model ^. Model.size . y)
     setLabel       model widget
     setValue       model widget
     UI.setWidgetPosition (model ^. widgetPosition) widget

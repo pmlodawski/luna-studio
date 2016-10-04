@@ -4,7 +4,6 @@ import           Utils.PreludePlus
 
 import qualified Data.Text.Lazy                        as Text
 import           Data.UUID.Types                       (UUID)
-import qualified Data.UUID.Types                       as UUID
 
 import           Batch.Workspace                       (Workspace)
 import qualified Batch.Workspace                       as Workspace
@@ -87,7 +86,7 @@ setDefaultValue :: AnyPortRef -> DefaultValue.PortDefault -> Workspace -> UUID -
 setDefaultValue portRef val workspace uuid = sendRequest uuid $ (withLibrary workspace SetDefaultValue.Request) portRef val
 
 setInputNodeType :: NodeId -> Text -> Workspace -> UUID -> IO ()
-setInputNodeType id tpe workspace uuid = sendRequest uuid $ (withLibrary workspace SetInputNodeType.Request) id (Text.unpack tpe)
+setInputNodeType nodeId tpe workspace uuid = sendRequest uuid $ (withLibrary workspace SetInputNodeType.Request) nodeId (Text.unpack tpe)
 
 requestCollaborationRefresh :: Collaboration.ClientId -> Workspace -> IO ()
 requestCollaborationRefresh clientId workspace = sendUpdate $ (withLibrary workspace Collaboration.Update) clientId  $ Collaboration.Refresh

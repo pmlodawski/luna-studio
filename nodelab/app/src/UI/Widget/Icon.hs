@@ -3,19 +3,19 @@ module UI.Widget.Icon where
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           Data.JSString.Text        (lazyTextToJSString)
-import           GHCJS.Marshal.Pure        (PFromJSVal (..), PToJSVal (..))
-import           GHCJS.Types               (JSString, JSVal)
+import           Data.JSString.Text (lazyTextToJSString)
+import           GHCJS.Marshal.Pure (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Types        (JSString, JSVal)
 
 import           Object.UITypes
 import           Object.Widget
-import qualified Object.Widget.Icon        as Model
+import qualified Object.Widget.Icon as Model
 
-import           UI.Generic                (whenChanged)
-import qualified UI.Generic                as UI
-import qualified UI.Registry               as UI
-import           UI.Widget                 (UIWidget (..))
-import qualified UI.Widget                 as Widget
+import           UI.Generic         (whenChanged)
+import qualified UI.Generic         as UI
+import qualified UI.Registry        as UI
+import           UI.Widget          (UIWidget (..))
+import qualified UI.Widget          as Widget
 
 newtype Icon = Icon JSVal deriving (PToJSVal, PFromJSVal)
 
@@ -26,7 +26,7 @@ foreign import javascript safe "$1.setIcon($2)"       setIcon' :: Icon -> JSStri
 
 create :: WidgetId -> Model.Icon -> IO Icon
 create oid model = do
-    widget      <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
+    widget      <- create' (fromWidgetId oid) (model ^. Model.size . x) (model ^. Model.size . y)
     setIcon model widget
     UI.setWidgetPosition (model ^. widgetPosition) widget
     return widget

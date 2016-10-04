@@ -64,7 +64,7 @@ startDrag :: Vector2 Int -> Command State ()
 startDrag coord = do
     shouldDrag  <- zoom Global.uiRegistry isNodeUnderCursor
     shouldDrag' <- zoom Global.uiRegistry isNodeLabelUnderCursor
-    when (shouldDrag || shouldDrag') $ do
+    when (shouldDrag || shouldDrag') $
         Global.drag . Drag.history ?= (DragHistory coord coord coord)
 
 handleMove :: Vector2 Int -> Command State ()

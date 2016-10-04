@@ -17,7 +17,7 @@ import           UI.Widget.Number              (Number, create', setLabel')
 
 createNumber :: WidgetId -> Model.DiscreteNumber -> IO Number
 createNumber oid model = do
-    slider   <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
+    slider   <- create' (fromWidgetId oid) (model ^. Model.size . x) (model ^. Model.size . y)
     UI.setWidgetPosition (model ^. Model.position) slider
     return slider
 
