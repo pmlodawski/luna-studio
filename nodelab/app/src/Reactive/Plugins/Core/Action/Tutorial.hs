@@ -71,23 +71,23 @@ toAction (NodeSearcher (NodeSearcher.Create "sort" Nothing))                    
 -- tab > histogram
 toAction (NodeSearcher (NodeSearcher.Create "histogram" Nothing))                                 = Just $ whenStep 8  $ andIsSelected "sort"     $ nextStep
 -- tab > switch
-toAction (NodeSearcher (NodeSearcher.Create (Text.stripPrefix "switch" -> Just _) Nothing))       = Just $ whenStep 9  $ andNothingIsSelected     $ nextStep
--- tab > switch
-toAction (NodeSearcher (NodeSearcher.Create "\"/lorem.txt\"" Nothing))                            = Just $ whenStep 10 $ andNothingIsSelected     $ nextStep
-toAction (NodeSearcher (NodeSearcher.Create "\"/ipsum.txt\"" Nothing))                            = Just $ whenStep 11 $ andNothingIsSelected     $ nextStep
--- connect switch to readFile
+-- toAction (NodeSearcher (NodeSearcher.Create (Text.stripPrefix "switch" -> Just _) Nothing))       = Just $ whenStep 9  $ andNothingIsSelected     $ nextStep
+-- -- tab > switch
+-- toAction (NodeSearcher (NodeSearcher.Create "\"/lorem.txt\"" Nothing))                            = Just $ whenStep 10 $ andNothingIsSelected     $ nextStep
+-- toAction (NodeSearcher (NodeSearcher.Create "\"/ipsum.txt\"" Nothing))                            = Just $ whenStep 11 $ andNothingIsSelected     $ nextStep
+-- -- connect switch to readFile
 toAction (Batch        (Batch.NodesConnected update))                                             = Just $ do
     shouldProcess <- isCurrentLocation (update ^. Connect.location')
     when shouldProcess $ do
         whenStep  4 $ andConnected update "readFile"       "length"   (Port.Self ) $ nextStep
-        whenStep 12 $ andConnected update "\"/lorem.txt\"" "switch"   (Port.Arg 1) $ nextStep
-        whenStep 13 $ andConnected update "\"/ipsum.txt\"" "switch"   (Port.Arg 2) $ nextStep
-        whenStep 15 $ andConnected update "switch"         "readFile" (Port.Arg 0) $ nextStep
-
-toAction (Batch        (Batch.NodeUpdated update))                                                = Just $ do
-    shouldProcess <- isCurrentLocation (update ^. NodeUpdate.location)
-    when shouldProcess $ do
-        whenStep 16 $ andPortDefaultChanged update "switch" (Port.Arg 0) (DefaultValue.BoolValue True) $ nextStep
+--         whenStep 12 $ andConnected update "\"/lorem.txt\"" "switch"   (Port.Arg 1) $ nextStep
+--         whenStep 13 $ andConnected update "\"/ipsum.txt\"" "switch"   (Port.Arg 2) $ nextStep
+--         whenStep 15 $ andConnected update "switch"         "readFile" (Port.Arg 0) $ nextStep
+--
+-- toAction (Batch        (Batch.NodeUpdated update))                                                = Just $ do
+--     shouldProcess <- isCurrentLocation (update ^. NodeUpdate.location)
+--     when shouldProcess $ do
+--         whenStep 16 $ andPortDefaultChanged update "switch" (Port.Arg 0) (DefaultValue.BoolValue True) $ nextStep
 toAction (CustomEvent (CustomEvent.RawEvent "closeOnboarding" _)) = Just $ do
     Global.tutorial .= Nothing
     performIO closeOnboarding
