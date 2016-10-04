@@ -59,7 +59,6 @@ toAction (NodeSearcher (NodeSearcher.Create "readFile \"/lorem.txt\"" Nothing)) 
 -- expand switch node
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\r'  _))                                      = Just $ do
     whenStep 2  $ andIsSelected "readFile" $ nextStep
-    -- whenStep 14 $ andIsSelected "switch"   $ nextStep
 -- tab > "length"
 toAction (NodeSearcher (NodeSearcher.Create "words" Nothing))                                     = Just $ whenStep 3  $ andIsSelected "readFile" $ nextStep
 -- tab > "map _.length"
@@ -84,10 +83,10 @@ toAction (Batch        (Batch.NodesConnected update))                           
 --         whenStep 13 $ andConnected update "\"/ipsum.txt\"" "switch"   (Port.Arg 2) $ nextStep
 --         whenStep 15 $ andConnected update "switch"         "readFile" (Port.Arg 0) $ nextStep
 --
--- toAction (Batch        (Batch.NodeUpdated update))                                                = Just $ do
---     shouldProcess <- isCurrentLocation (update ^. NodeUpdate.location)
---     when shouldProcess $ do
---         whenStep 16 $ andPortDefaultChanged update "switch" (Port.Arg 0) (DefaultValue.BoolValue True) $ nextStep
+toAction (Batch        (Batch.NodeUpdated update))                                                = Just $ do
+    shouldProcess <- isCurrentLocation (update ^. NodeUpdate.location)
+    when shouldProcess $ do
+        whenStep 9 $ andPortDefaultChanged update "readFile" (Port.Arg 0) (DefaultValue.StringValue "/ipsum.txt") $ nextStep
 toAction (CustomEvent (CustomEvent.RawEvent "closeOnboarding" _)) = Just $ do
     Global.tutorial .= Nothing
     performIO closeOnboarding
