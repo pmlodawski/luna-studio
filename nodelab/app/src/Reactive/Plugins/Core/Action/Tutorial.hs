@@ -58,17 +58,21 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\t'   mods@(KeyMods { _shift
 toAction (NodeSearcher (NodeSearcher.Create "readFile \"/lorem.txt\"" Nothing)) = Just $ whenStep 1  $ andNothingIsSelected     $ nextStep
 -- expand switch node
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\r'  _))                                      = Just $ do
-    whenStep 2  $ andIsSelected "readFile" $ nextStep
+    whenStep  2  $ andIsSelected "readFile" $ nextStep
+    whenStep  4  $ andIsSelected "words" $ nextStep
+    whenStep  6  $ andIsSelected "map" $ nextStep
+    whenStep  8  $ andIsSelected "sort" $ nextStep
+    whenStep 10  $ andIsSelected "histogram" $ nextStep
 -- tab > "length"
 toAction (NodeSearcher (NodeSearcher.Create "words" Nothing))                                     = Just $ whenStep 3  $ andIsSelected "readFile" $ nextStep
 -- tab > "map _.length"
-toAction (NodeSearcher (NodeSearcher.Create "map _.length" Nothing))                              = Just $ whenStep 4  $ andIsSelected "words"    $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "map _.length" Nothing))                              = Just $ whenStep 5  $ andIsSelected "words"    $ nextStep
 -- tab > sort
-toAction (NodeSearcher (NodeSearcher.Create "sort" Nothing))                                      = Just $ whenStep 5  $ andIsSelected "map"      $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "sort" Nothing))                                      = Just $ whenStep 7  $ andIsSelected "map"      $ nextStep
 -- tab > histogram
-toAction (NodeSearcher (NodeSearcher.Create "histogram" Nothing))                                 = Just $ whenStep 6  $ andIsSelected "sort"     $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "histogram" Nothing))                                 = Just $ whenStep 9  $ andIsSelected "sort"     $ nextStep
 -- tab > switch
-toAction (NodeSearcher (NodeSearcher.Create "length" Nothing))                                    = Just $ whenStep 7  $ andNothingIsSelected     $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "length" Nothing))                                    = Just $ whenStep 11  $ andNothingIsSelected     $ nextStep
 -- select "readFile" node and tab > "words"
 -- toAction (NodeSearcher (NodeSearcher.Create (Text.stripPrefix "switch" -> Just _) Nothing))       = Just $ whenStep 9  $ andNothingIsSelected     $ nextStep
 -- -- tab > switch
@@ -78,7 +82,7 @@ toAction (NodeSearcher (NodeSearcher.Create "length" Nothing))                  
 toAction (Batch        (Batch.NodesConnected update))                                             = Just $ do
     shouldProcess <- isCurrentLocation (update ^. Connect.location')
     when shouldProcess $ do
-        whenStep  8 $ andConnected update "readFile"       "length"   (Port.Self ) $ nextStep
+        whenStep  12 $ andConnected update "readFile"       "length"   (Port.Self ) $ nextStep
 --         whenStep 12 $ andConnected update "\"/lorem.txt\"" "switch"   (Port.Arg 1) $ nextStep
 --         whenStep 13 $ andConnected update "\"/ipsum.txt\"" "switch"   (Port.Arg 2) $ nextStep
 --         whenStep 15 $ andConnected update "switch"         "readFile" (Port.Arg 0) $ nextStep
@@ -86,7 +90,7 @@ toAction (Batch        (Batch.NodesConnected update))                           
 toAction (Batch        (Batch.NodeUpdated update))                                                = Just $ do
     shouldProcess <- isCurrentLocation (update ^. NodeUpdate.location)
     when shouldProcess $ do
-        whenStep 9 $ andPortDefaultChanged update "readFile" (Port.Arg 0) (DefaultValue.StringValue "/ipsum.txt") $ nextStep
+        whenStep 13 $ andPortDefaultChanged update "readFile" (Port.Arg 0) (DefaultValue.StringValue "/ipsum.txt") $ nextStep
 toAction (CustomEvent (CustomEvent.RawEvent "closeOnboarding" _)) = Just $ do
     Global.tutorial .= Nothing
     performIO closeOnboarding
