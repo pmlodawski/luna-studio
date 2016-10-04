@@ -4,10 +4,12 @@ module Reactive.State.Drag where
 import           Data.Aeson        (ToJSON)
 import           Utils.PreludePlus
 import           Utils.Vector
+import           Object.Widget     (WidgetId)                     
 
 data DragHistory = DragHistory { _dragStartPos    :: Vector2 Int
                                , _dragPreviousPos :: Vector2 Int
                                , _dragCurrentPos  :: Vector2 Int
+                               , _dragFirstNode   :: WidgetId
                                } deriving (Eq, Show, Generic)
 
 data State = State { _history :: Maybe DragHistory

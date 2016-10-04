@@ -45,20 +45,85 @@
     border-radius: 5px;
     cursor: pointer;
     color: #ddd;
+    text-decoration: none;
     &:hover {
       color: white;
     }
-    text-decoration: none;
 
   }
 }
 
-
+/* onboarding */
 
 #onboarding {
-  z-index: 1000;
-  color: red;
-  font-size: 40px;
-  position:absolute;
-  bottom: 0;
+    flex: none;
+    position: fixed;
+    z-index: 1000;
+    bottom: 10px;
+    left: 10px;
+    code {
+        &.k {
+            padding: 4px 6px 3px;
+            background: #000;
+            color: #fff;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+    }
+}
+
+.tour__modal {
+    background: #282828;
+    border-radius: 3px;
+    position: relative;
+    width: 380px;
+    font-size: 14px;
+    code {
+        color: green;
+    }
+    .stc {
+        color: #fff;
+    }
+}
+
+.tour__step__img {
+    padding: 10px 10px 0;
+}
+.tour__step__img img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+.tour__step__info {
+    padding: 10px;
+    color: #aaa;
+}
+
+.tour__footer {
+    display: flex;
+    padding: 10px;
+    font-size: 12px;
+    a {
+        text-decoration: none;
+    }
+}
+
+.tour__step-counter,
+.tour__exit {
+    color: #fff;
+    flex-basis: 50%;
+}
+
+.tour__step-counter__snd {
+    opacity: .5;
+}
+
+.tour__exit {
+    text-align: right;
+    opacity: .15;
+}
+
+.tour__exit:hover {
+    opacity: 1;
 }
