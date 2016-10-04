@@ -61,18 +61,25 @@
     z-index: 1000;
     bottom: 20px;
     left: 20px;
+    font-size: 14px;
     code {
+        background: rgba(0,0,0,.1);
+        padding: 4px 6px 3px;
+        border-radius: 3px;
+        color: #fff;
+        font-size: 11px;
+        margin: 0 2px;
         &.k {
             padding: 4px 6px 3px;
-            background: #000;
+            background: rgba(0,0,0,.6);
             color: #fff;
             border-radius: 3px;
-            font-size: 11px;
         }
     }
 }
 
 .tour {
+  color: rgba(255,255,255,.85);
   position: absolute;
   bottom: 0;
   left: -500px;
@@ -85,17 +92,10 @@
 }
 
 .tour__modal {
-    background: #282828;
+    background: #096;
     border-radius: 3px;
     position: relative;
     width: 380px;
-    font-size: 14px;
-    code {
-        color: #fff;
-        font-size: 12px;
-    }
-    .stc {
-    }
 }
 
 .tour__step__img {
@@ -109,7 +109,6 @@
 
 .tour__step__info {
     padding: 10px;
-    color: #aaa;
 }
 
 .tour__footer {
@@ -133,7 +132,7 @@
 
 .tour__exit {
     text-align: right;
-    opacity: .15;
+    opacity: .5;
 }
 
 .tour__exit:hover {
