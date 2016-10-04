@@ -55,7 +55,7 @@ toAction :: Event -> Maybe (Command Global.State ())
 -- press tab to open node searcher
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\t'   mods@(KeyMods { _shift  = False })))    = Just $ whenStep 0  $ nextStep
 -- enter expression readFile "/userdata/why_fp_matters.txt"
-toAction (NodeSearcher (NodeSearcher.Create "readFile \"/userdata/why_fp_matters.txt\"" Nothing)) = Just $ whenStep 1  $ andNothingIsSelected     $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "readFile \"/lorem.txt\"" Nothing)) = Just $ whenStep 1  $ andNothingIsSelected     $ nextStep
 -- expand switch node
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\r'  _))                                      = Just $ do
     whenStep 2  $ andIsSelected "readFile" $ nextStep
@@ -73,16 +73,16 @@ toAction (NodeSearcher (NodeSearcher.Create "histogram" Nothing))               
 -- tab > switch
 toAction (NodeSearcher (NodeSearcher.Create (Text.stripPrefix "switch" -> Just _) Nothing))       = Just $ whenStep 9  $ andNothingIsSelected     $ nextStep
 -- tab > switch
-toAction (NodeSearcher (NodeSearcher.Create "\"/userdata/why_fp_matters.txt\"" Nothing))          = Just $ whenStep 10 $ andNothingIsSelected     $ nextStep
-toAction (NodeSearcher (NodeSearcher.Create "\"/userdata/cakeipsum.txt\"" Nothing))               = Just $ whenStep 11 $ andNothingIsSelected     $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "\"/lorem.txt\"" Nothing))                            = Just $ whenStep 10 $ andNothingIsSelected     $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "\"/ipsum.txt\"" Nothing))                            = Just $ whenStep 11 $ andNothingIsSelected     $ nextStep
 -- connect switch to readFile
 toAction (Batch        (Batch.NodesConnected update))                                             = Just $ do
     shouldProcess <- isCurrentLocation (update ^. Connect.location')
     when shouldProcess $ do
-        whenStep  4 $ andConnected update "readFile"                         "length"   (Port.Self ) $ nextStep
-        whenStep 12 $ andConnected update "\"/userdata/why_fp_matters.txt\"" "switch"   (Port.Arg 1) $ nextStep
-        whenStep 13 $ andConnected update "\"/userdata/cakeipsum.txt\""      "switch"   (Port.Arg 2) $ nextStep
-        whenStep 15 $ andConnected update "switch"                           "readFile" (Port.Arg 0) $ nextStep
+        whenStep  4 $ andConnected update "readFile"       "length"   (Port.Self ) $ nextStep
+        whenStep 12 $ andConnected update "\"/lorem.txt\"" "switch"   (Port.Arg 1) $ nextStep
+        whenStep 13 $ andConnected update "\"/ipsum.txt\"" "switch"   (Port.Arg 2) $ nextStep
+        whenStep 15 $ andConnected update "switch"         "readFile" (Port.Arg 0) $ nextStep
 
 toAction (Batch        (Batch.NodeUpdated update))                                                = Just $ do
     shouldProcess <- isCurrentLocation (update ^. NodeUpdate.location)
