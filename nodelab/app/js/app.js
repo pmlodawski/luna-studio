@@ -85,7 +85,7 @@ function initializeGl() {
 function initUserInfo() {
   $('body').append(require('templates/logo')());
   $('body').append(require('templates/tutorial')());
-  $('#startOnboarding').click(function(){
+  $('.startOnboarding').click(function(){
     module.exports.customEvent('startOnboarding', null);;
   })
 
