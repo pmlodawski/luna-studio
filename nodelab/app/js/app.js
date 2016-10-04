@@ -109,14 +109,22 @@ function initUserInfo() {
     $(".tutorial-box").show().focus();
   });
   $('body').append('<div id="onboarding"></div>');
-  $('#onboarding').hide();
+  for(var i = 0; i <= 17; ++i) {
+    $("#onboarding").append(require('templates/onboarding/' + i))
+  }
+  $('#onboarding .tour__exit a').click(function() {
+    module.exports.customEvent('closeOnboarding', null);
+  })
+  $("#onboarding").hide();
+  $('#onboarding .tour').css({opacity:0});
 }
 
 
 function showOnboarding(step) {
+  $("#onboarding").show();
   console.log('onboarding',step)
-  $('#onboarding').html(require('templates/onboarding/' + step));
-  $('#onboarding').show();
+  $('#onboarding .tour').css({opacity:0});
+  $("#onboarding .tour:nth-child(" + (step + 1) + ")").css({opacity: 1});
 }
 
 function closeOnboarding() {
