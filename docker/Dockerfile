@@ -30,9 +30,6 @@ COPY dist/bin /usr/local/bin/nodelab
 
 COPY userdata /userdata
 
-COPY userdata/why_fp_matters.txt /lorem.txt
-COPY userdata/cakeipsum.txt      /ipsum.txt
-
 COPY userdata /data
 
 VOLUME ["/userdata"]
