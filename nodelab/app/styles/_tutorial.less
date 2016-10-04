@@ -59,8 +59,8 @@
     flex: none;
     position: fixed;
     z-index: 1000;
-    bottom: 10px;
-    left: 10px;
+    bottom: 20px;
+    left: 20px;
     code {
         &.k {
             padding: 4px 6px 3px;
@@ -74,8 +74,14 @@
 
 .tour {
   position: absolute;
-  bottom: 10px;
-  transition: opacity .5s ease;
+  bottom: 0;
+  left: -500px;
+  transition: left .3s ease;
+  opacity: 0;
+  &.active {
+      opacity: 1;
+      left: 0px;
+  }
 }
 
 .tour__modal {
@@ -85,10 +91,10 @@
     width: 380px;
     font-size: 14px;
     code {
-        color: green;
+        color: #fff;
+        font-size: 12px;
     }
     .stc {
-        color: #fff;
     }
 }
 
@@ -133,4 +139,3 @@
 .tour__exit:hover {
     opacity: 1;
 }
-

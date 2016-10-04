@@ -42,8 +42,8 @@ import           JS.Tutorial                       (showStep, closeOnboarding)
 --  7. tab -> sort
 --  8. tab -> histogram
 --  9. create switch node
--- 10. unselect node, add "switch False" -- docelowo bedzie samo switch
--- 11. unselect node, add "/userdata/why_fp_matters.txt" node
+-- 10. unselect node, add "/lorem.txt" node
+-- 11. unselect node, add "/ipsum.txt" node
 -- 12. connect why_fp_matters to second port of switch node
 -- 13. connect cakeipsum to third port of switch
 -- 14. expand switch node
