@@ -12,8 +12,8 @@ import qualified Object.Widget.Group          as Model
 import qualified Reactive.Commands.UIRegistry as UICmd
 
 import           Style.Types                  (Color (..), Padding (..))
-import qualified UI.Generic                   as UI
 import           UI.Generic                   (whenChanged)
+import qualified UI.Generic                   as UI
 import qualified UI.Registry                  as UI
 import           UI.Widget                    (UIWidget)
 import qualified UI.Widget                    as Widget
@@ -48,7 +48,7 @@ setBorderRadius group model = do
 
 create :: WidgetId -> Model.Group -> IO Group
 create oid model = do
-    group      <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
+    group      <- create' (fromWidgetId oid) (model ^. Model.size . x) (model ^. Model.size . y)
     setBgColor group model
     setPadding group model
     setBorderRadius group model

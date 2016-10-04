@@ -31,7 +31,7 @@ foreign import javascript safe "$1.relayout()"           realayout' :: DataFrame
 
 create :: WidgetId -> Model.DataFrame -> IO DataFrame
 create oid model = do
-    textBox      <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
+    textBox      <- create' (fromWidgetId oid) (model ^. Model.size . x) (model ^. Model.size . y)
     setData      model textBox
     UI.setWidgetPosition (model ^. widgetPosition) textBox
     return textBox

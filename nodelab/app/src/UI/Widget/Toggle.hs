@@ -28,7 +28,7 @@ foreign import javascript safe "$1.setFocus($2)"        setFocus' :: Toggle -> B
 
 create :: WidgetId -> Model.Toggle -> IO Toggle
 create oid model = do
-    toggle      <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
+    toggle      <- create' (fromWidgetId oid) (model ^. Model.size . x) (model ^. Model.size . y)
     setLabel       model toggle
     setValue       model toggle
     UI.setWidgetPosition (model ^. widgetPosition) toggle

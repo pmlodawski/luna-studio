@@ -4,14 +4,14 @@ import           Utils.PreludePlus
 
 import           Utils.Vector
 
-import           GHCJS.Marshal     (fromJSVal)
+import           GHCJS.Marshal      (fromJSVal)
 import           GHCJS.Marshal.Pure (pFromJSVal)
-import           GHCJS.Types       (JSVal)
-import           JavaScript.Array  (JSArray)
-import qualified JavaScript.Array  as JSArray
+import           GHCJS.Types        (JSVal)
+import           JavaScript.Array   (JSArray)
+import qualified JavaScript.Array   as JSArray
 
-import           Object.Widget (WidgetId, SceneType(..))
-import           Event.Event (JSState)
+import           Event.Event        (JSState)
+import           Object.Widget      (SceneType (..), WidgetId (WidgetId), fromWidgetId)
 
 foreign import javascript safe "raycaster.getMapPixelAt($1, $2)" getMapPixelAtJS :: Int -> Int -> IO JSArray
 
@@ -20,8 +20,8 @@ getMapPixelAt pos = getMapPixelAtJS (pos ^. x) (pos ^. y)
 
 foreign import javascript safe "raycaster.getObjectsInRect($2, $3, $4, $5)" getObjectsInRect' :: JSState -> Int -> Int -> Int -> Int -> JSArray
 
-getObjectsInRect :: JSState -> Vector2 Int -> Vector2 Int -> [Int]
-getObjectsInRect jsstate pos size = list where
+getObjectsInRect :: JSState -> Vector2 Int -> Vector2 Int -> [WidgetId]
+getObjectsInRect jsstate pos size = map WidgetId list where
     idsJS = getObjectsInRect' jsstate (pos ^. x) (pos ^. y) (size ^. x) (size ^. y)
     list  = (pFromJSVal :: JSVal -> Int) <$> JSArray.toList idsJS
 
@@ -39,13 +39,14 @@ readObjectId pos = do
         r <- maybeR
         g <- maybeG
         b <- maybeB
-        let oid = r + 256 * g + 256 * 256 * b
-        if oid == 0 then Nothing
-                    else Just oid
+        let oid = WidgetId $ r + 256 * g + 256 * 256 * b
+        if oid == WidgetId 0
+            then Nothing
+            else Just oid
 
 readWidgetMatrix :: Maybe WidgetId -> IO (Maybe [Double])
 readWidgetMatrix (Just oid) = do
-    worldMatrix <- widgetMatrix oid
+    worldMatrix <- widgetMatrix $ fromWidgetId oid
     let read i = fromJSVal $ JSArray.index i worldMatrix :: IO (Maybe Double)
     elems <- mapM read [0..15]
     return $ Just $ catMaybes elems
@@ -55,8 +56,6 @@ foreign import javascript safe "raycaster.isWorkspace($1)" whichSceneJS :: Int -
 
 whichScene :: Maybe WidgetId -> IO (Maybe SceneType)
 whichScene (Just oid) = do
-    sceneType <- whichSceneJS oid
+    sceneType <- whichSceneJS $ fromWidgetId oid
     return $ Just $ if sceneType then Workspace else HUD
 whichScene Nothing = return Nothing
-
-

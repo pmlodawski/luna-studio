@@ -5,6 +5,7 @@ import           Data.Aeson        (ToJSON)
 import           Utils.PreludePlus
 import           Utils.Vector
 
+
 data DragHistory = DragHistory { _dragStartPos    :: Vector2 Int
                                , _dragPreviousPos :: Vector2 Int
                                , _dragCurrentPos  :: Vector2 Int

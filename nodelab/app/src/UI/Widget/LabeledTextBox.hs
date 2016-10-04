@@ -29,7 +29,7 @@ foreign import javascript safe "$1.setLabel($2)"                     setLabel' :
 
 create :: WidgetId -> Model.LabeledTextBox -> IO LabeledTextBox
 create oid model = do
-    textBox      <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
+    textBox      <- create' (fromWidgetId oid) (model ^. Model.size . x) (model ^. Model.size . y)
     UI.setWidgetPosition (model ^. widgetPosition) textBox
     return textBox
 
@@ -47,4 +47,3 @@ instance UIDisplayObject Model.LabeledTextBox where
     updateUI id old model = do
         textBox <- UI.lookup id :: IO LabeledTextBox
         whenChanged old model Model.label $ setLabel   model textBox
-

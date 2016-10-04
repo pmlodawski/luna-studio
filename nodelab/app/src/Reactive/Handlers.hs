@@ -22,8 +22,7 @@ import           Utils.Vector
 
 import           GHCJS.DOM                 (currentDocument, currentWindow)
 import qualified GHCJS.DOM.Document        as Document
-import           GHCJS.DOM.Element         (Element, dblClick, keyDown, keyPress, keyUp, mouseDown, mouseMove, mouseUp,
-                                            wheel)
+import           GHCJS.DOM.Element         (Element, dblClick, keyDown, keyPress, keyUp, mouseDown, mouseMove, mouseUp, wheel)
 import           GHCJS.DOM.EventM
 import qualified GHCJS.DOM.KeyboardEvent   as KeyboardEvent
 import qualified GHCJS.DOM.MouseEvent      as MouseEvent
@@ -186,8 +185,8 @@ connectionPenHandler :: AddHandler Event
 connectionPenHandler  = AddHandler $ \h -> do
     ConnectionPen.registerCallback $ \widgets -> do
         arr       <- return $ JSArray.toList (ConnectionPen.toJSArray widgets)
-        widgetIds <- mapM fromJSValUnchecked arr :: IO [WidgetId]
-        liftIO $ h $ ConnectionPen $ ConnectionPen.Segment widgetIds
+        widgetIds <- mapM fromJSValUnchecked arr :: IO [Int]
+        liftIO $ h $ ConnectionPen $ ConnectionPen.Segment $ map WidgetId widgetIds
 
 textEditorHandler :: AddHandler Event
 textEditorHandler  = AddHandler $ \h -> do

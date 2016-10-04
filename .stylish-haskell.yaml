@@ -73,6 +73,7 @@ columns: 140
 #
 # No language extensions are enabled by default.
 language_extensions:
+  - DefaultSignatures
   - FlexibleContexts
   - MultiParamTypeClasses
   - TemplateHaskell

@@ -30,7 +30,7 @@ foreign import javascript safe "$1.setLabels($2)"         setLabels' :: Graphics
 
 create :: WidgetId -> Model.Graphics -> IO Graphics
 create oid model = do
-    widget   <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
+    widget   <- create' (fromWidgetId oid) (model ^. Model.size . x) (model ^. Model.size . y)
     setItems  model widget
     UI.setWidgetPosition (model ^. widgetPosition) widget
     return widget

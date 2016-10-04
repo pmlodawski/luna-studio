@@ -34,7 +34,7 @@ foreign import javascript safe "$1.doneEditing()"        doneEditing'   :: TextB
 
 create :: WidgetId -> Model.TextBox -> IO TextBox
 create oid model = do
-    textBox      <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
+    textBox      <- create' (fromWidgetId oid) (model ^. Model.size . x) (model ^. Model.size . y)
     setAlignment   model textBox
     UI.setWidgetPosition (model ^. widgetPosition) textBox
     return textBox

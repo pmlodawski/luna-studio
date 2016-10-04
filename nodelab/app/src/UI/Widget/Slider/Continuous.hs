@@ -17,7 +17,7 @@ import           UI.Widget.Slider                (Slider, create', setFocus', se
 
 createSlider :: WidgetId -> Model.ContinuousSlider -> IO Slider
 createSlider oid model = do
-    slider      <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
+    slider      <- create' (fromWidgetId oid) (model ^. Model.size . x) (model ^. Model.size . y)
     setLabel       model slider
     setValue       model slider
     UI.setWidgetPosition (model ^. widgetPosition) slider

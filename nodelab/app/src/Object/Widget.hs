@@ -1,29 +1,29 @@
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Object.Widget (
     module Object.Widget,
     module Object.UITypes
 ) where
 
-import           Utils.PreludePlus hiding ((.=), children)
-import           Utils.Vector
-import           Utils.CtxDynamic
-import           Event.Event    (JSState)
-import           Event.Mouse    (MouseButton)
+import           Data.Aeson                (ToJSON, object, toJSON, (.=))
+import           Data.HMap.Lazy            (HTMap)
+import           Data.IntMap.Lazy          (IntMap)
+import           Event.Event               (JSState)
+import           Event.Keyboard            (KeyMods)
+import qualified Event.Keyboard            as Keyboard
+import           Event.Mouse               (MouseButton)
+import qualified Event.Mouse               as Mouse
+import           Event.Widget              (Payload)
 import           Object.UITypes
-import qualified Event.Keyboard as Keyboard
-import qualified Event.Mouse as Mouse
-import           Event.Keyboard (KeyMods)
-import           Event.Widget   (Payload)
+import           Reactive.Commands.Command (Command)
 import           Reactive.State.Camera     (Camera)
 import qualified Reactive.State.Camera     as Camera
-import           Reactive.Commands.Command (Command)
-import           Data.Aeson (ToJSON, toJSON, object, (.=))
-import           Data.HMap.Lazy (HTMap)
-import           Data.IntMap.Lazy (IntMap)
+import           Utils.CtxDynamic
+import           Utils.PreludePlus         hiding (children, (.=))
+import           Utils.Vector              (Vector2 (Vector2))
 
 
 type DisplayObject = CtxDynamic DisplayObjectClass
@@ -109,14 +109,14 @@ class ResizableWidget a where
 instance ResizableWidget DisplayObject where
     resizeWidget id size obj = withCtxDynamic (resizeWidget id size) obj
 
-data DragState = DragState { _widgetId       :: WidgetId
-                           , _widgetMatrix   :: [Double]
-                           , _scene          :: SceneType
-                           , _button         :: MouseButton
-                           , _keyMods        :: Keyboard.KeyMods
-                           , _startPos       :: Vector2 Double
-                           , _previousPos    :: Vector2 Double
-                           , _currentPos     :: Vector2 Double
+data DragState = DragState { _widgetId     :: WidgetId
+                           , _widgetMatrix :: [Double]
+                           , _scene        :: SceneType
+                           , _button       :: MouseButton
+                           , _keyMods      :: Keyboard.KeyMods
+                           , _startPos     :: Vector2 Double
+                           , _previousPos  :: Vector2 Double
+                           , _currentPos   :: Vector2 Double
                            } deriving (Show, Eq, Generic)
 
 type WidgetMap = IntMap (WidgetFile DisplayObject)

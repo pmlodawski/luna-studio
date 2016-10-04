@@ -1,9 +1,10 @@
 module Object.UITypes where
 
-import Utils.PreludePlus
-import Data.Aeson (ToJSON)
+import           Data.Aeson        (FromJSON, ToJSON)
+import           Utils.PreludePlus
 
-type WidgetId    = Int
+
+newtype WidgetId = WidgetId { fromWidgetId :: Int } deriving (Show, Eq, ToJSON, Default, FromJSON, Ord)
 
 data SceneType   = HUD
                  | Workspace

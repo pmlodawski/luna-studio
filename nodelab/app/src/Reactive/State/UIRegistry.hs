@@ -26,6 +26,7 @@ module Reactive.State.UIRegistry
     , LookupFor
     ) where
 
+import           Control.Arrow             (first)
 import qualified Control.Monad.State       as MState
 import           Control.Monad.Trans.RWS   (RWS)
 import qualified Control.Monad.Trans.RWS   as RWS
@@ -49,10 +50,10 @@ instance CompositeWidget Scene where
 
 instance ResizableWidget Scene
 
-sceneInterfaceId, sceneGraphId, currentConnectionId :: Int
-sceneInterfaceId    = 1
-sceneGraphId        = 2
-currentConnectionId = 3
+sceneInterfaceId, sceneGraphId, currentConnectionId :: WidgetId
+sceneInterfaceId    = WidgetId 1
+sceneGraphId        = WidgetId 2
+currentConnectionId = WidgetId 3
 
 makeLenses ''State
 
@@ -77,21 +78,21 @@ defaultWidgets = [ (sceneInterfaceId,     sceneInterface)
     currentConnection = WidgetFile currentConnectionId (toCtxDynamic $ CurrentConnection False def def True def) Nothing [] def
 
 instance Default State where
-    def = State (fromList defaultWidgets) def def def def
+    def = State (fromList $ map (first fromWidgetId) defaultWidgets) def def def def
 
 lookup :: WidgetId -> State -> Maybe (WidgetFile DisplayObject)
-lookup idx state = IntMap.lookup idx (state ^. widgets)
+lookup widgetId state = IntMap.lookup (fromWidgetId widgetId) (state ^. widgets)
 
 lookupM :: WidgetId -> Command State (Maybe (WidgetFile DisplayObject))
-lookupM id = preuse $ widgets . ix id
+lookupM widgetId = preuse $ widgets . ix (fromWidgetId widgetId)
 
 register' :: DisplayObjectClass a => ([WidgetId] -> WidgetId -> [WidgetId]) -> WidgetId -> a -> HTMap -> State -> (WidgetFile a, State)
 register' childrenInsertFn parent a handlers state = (widgetFile, state & widgets .~ newWidgets') where
-    newWidgets'   = IntMap.insert parent newParent   newWidgets
-    newWidgets    = IntMap.insert newId  dynamicFile oldWidgets
+    newWidgets'   = IntMap.insert (fromWidgetId parent) newParent   newWidgets
+    newWidgets    = IntMap.insert (fromWidgetId newId)  dynamicFile oldWidgets
     newId         = generateId state
     oldWidgets    = state ^. widgets
-    (Just oldParent) = IntMap.lookup parent oldWidgets
+    (Just oldParent) = IntMap.lookup (fromWidgetId parent) oldWidgets
     newParent     = oldParent & children .~ childrenInsertFn (oldParent ^. children) newId
     dynamicFile   = WidgetFile newId (toCtxDynamic a) (Just parent) [] handlers
     widgetFile    = WidgetFile newId a (Just parent) [] handlers
@@ -110,12 +111,12 @@ registerIxM :: DisplayObjectClass a => Int -> WidgetId -> a -> HTMap -> Command 
 registerIxM = MState.state .:: registerIx
 
 updateWidgetM :: DisplayObjectClass a => WidgetId -> (a -> a) -> Command State a
-updateWidgetM id fun = do
-    maybeFile   <- lookupTypedM id
+updateWidgetM widgetId fun = do
+    maybeFile   <- lookupTypedM widgetId
     let file     = fromMaybe (error "updateWidgetM: invalidType") maybeFile
         newWidget  = fun $ file ^. widget
 
-    widgets . ix id . widget .= toCtxDynamic newWidget
+    widgets . ix (fromWidgetId widgetId) . widget .= toCtxDynamic newWidget
 
     return newWidget
 
@@ -125,17 +126,17 @@ unregisterRWS oid = do
     case widget of
         Just file -> sequence_ $ unregisterRWS <$> (file ^. children)
         Nothing   -> return ()
-    RWS.modify (widgets %~ IntMap.delete oid)
+    RWS.modify (widgets %~ IntMap.delete (fromWidgetId oid))
     RWS.tell [oid]
 
 unregister :: WidgetId -> State -> ([WidgetId], State)
 unregister oid oldState = (outWidgets, state) where
-    widgetParent        = oldState ^? widgets . (ix oid) . parent
+    widgetParent        = oldState ^? widgets . (ix $ fromWidgetId oid) . parent
     (outWidgets, state) = case widgetParent of
         Just widgetParent -> (outWidgets, state') where
             (state, outWidgets) = RWS.execRWS (unregisterRWS oid) () oldState
             state' = case widgetParent of
-                Just widgetParent -> state & widgets . ix widgetParent . children %~ delete oid
+                Just widgetParent -> state & widgets . ix (fromWidgetId widgetParent) . children %~ delete oid
                 Nothing           -> state
         Nothing     -> ([], state)
 
@@ -143,8 +144,9 @@ unregisterM :: WidgetId -> Command State [WidgetId]
 unregisterM = MState.state . unregister
 
 generateId :: State -> WidgetId
-generateId state = if IntMap.size (state ^. widgets) == 0 then 1
-                                                          else maxId + 1 where (maxId, _) = IntMap.findMax (state ^. widgets)
+generateId state = WidgetId $ if IntMap.size (state ^. widgets) == 0
+    then 1
+    else maxId + 1 where (maxId, _) = IntMap.findMax (state ^. widgets)
 
 lookupAll :: DisplayObjectClass a => State -> [WidgetFile a]
 lookupAll state = foldl process mempty objects where

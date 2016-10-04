@@ -6,10 +6,12 @@ import           Data.Map.Lazy                  (Map)
 import           Utils.PreludePlus
 
 import           Empire.API.Graph.Collaboration (ClientId)
-import           Empire.API.JSONInstances ()
+import           Empire.API.JSONInstances       ()
 
 newtype ColorId = ColorId { unColorId :: Int } deriving (Eq, Show, Generic)
-numColors     = 8
+
+numColors :: Int
+numColors = 8
 
 data Client = Client { _lastSeen :: DateTime
                      , _colorId  :: ColorId

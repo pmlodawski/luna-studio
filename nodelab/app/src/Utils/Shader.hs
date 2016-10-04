@@ -6,30 +6,22 @@ module Utils.Shader (
   , createShaderBox
   ) where
 
-import           Prologue                            hiding (Bounded)
 import           Development.Placeholders
-import           Utils.Vector
-
-import           Control.Lens
-import           Data.Maybe                          (catMaybes, fromMaybe)
+import           Prologue                            hiding (Bounded, s)
+import           Utils.Vector                        (Vector2 (Vector2))
 
 import qualified Data.Array.Linear                   as A
 import           Data.Array.Linear.Color.Class
-import           Graphics.Rendering.GLSL.SDF         (Object, diff, merge, intersect, object, translate)
+import           Data.Maybe                          (catMaybes, fromMaybe)
+import qualified Graphics.API                        as G
+import           Graphics.Rendering.GLSL.SDF         (Object, diff, intersect, merge, translate)
 import           Graphics.Rendering.GLSL.SDF.Figures
 import           Graphics.Shading.Flat
 import           Graphics.Shading.Material
 import           Graphics.Shading.Pattern
-
-import           Math.Space.Metric.Bounded
-
 import qualified Language.GLSL                       as GLSL
 import qualified Language.GLSL.Builder               as GLSL
-
-import qualified Graphics.API                        as G
-
-
-import           Debug.Trace
+import           Math.Space.Metric.Bounded
 
 
 type Vector = Vector2 Double
@@ -133,7 +125,10 @@ createShader size objectMay = fromMaybe "" $ compileObject <$> objectMay where
 
 -- size calculation
 
+defSize :: Vector2 Double
 defSize  = Vector2 2.0 2.0
+
+defBound :: Bound
 defBound = Bound (Vector2 (-1.0) (-1.0)) (Vector2 1.0 1.0)
 
 toLocation :: Bound -> Location
@@ -257,14 +252,17 @@ test = do
 
 -- ====== old test (TODO: remove) ====== --
 
+mtl1 :: Material (Layer GLSL.Expr)
 mtl1     = Material $ [ Fill            . Solid $ color4 0.7 0.2 0.2 1.0
                       , Border 10.0     . Solid $ color4 0.0 1.0 0.0 1.0
                       , Shadow 10.0 2.0 . Solid $ color4 0.0 0.0 0.0 0.2
                       ] :: Material (Layer GLSL.Expr)
 
+mtl2 :: Material (Layer GLSL.Expr)
 mtl2     = Material $ [ Fill            . Solid $ color4 0.6 0.6 0.6 1.0
                       ] :: Material (Layer GLSL.Expr)
 
+mtl3 :: Material (Layer GLSL.Expr)
 mtl3     = Material $ [ Fill            . Solid $ color4 0.3 0.3 0.3 1.0
                       ] :: Material (Layer GLSL.Expr)
 

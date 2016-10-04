@@ -8,10 +8,11 @@ import           Data.JSString.Text           (lazyTextFromJSString)
 import           GHCJS.Types                  (JSString)
 
 import           Event.Event                  (JSState)
-import           Object.Widget                (WidgetId, ClickHandler, KeyDownHandler, UIHandlers, keyDown, dblClick, widgetSize, IsDisplayObject)
+import           Object.Widget                (ClickHandler, IsDisplayObject, KeyDownHandler, UIHandlers, WidgetId, dblClick, fromWidgetId,
+                                               keyDown, widgetSize)
 import qualified Object.Widget.TextBox        as Model
-import qualified Reactive.Commands.UIRegistry as UICmd
 import           Reactive.Commands.Command    (Command)
+import qualified Reactive.Commands.UIRegistry as UICmd
 import           Reactive.State.Global        (inRegistry)
 import qualified Reactive.State.Global        as Global
 import qualified Reactive.State.UIRegistry    as UIRegistry
@@ -22,11 +23,11 @@ import           UI.Widget.TextBox            ()
 
 
 dblClickHandler :: ClickHandler Global.State
-dblClickHandler _ _ id = do
-    UICmd.takeFocus id
-    inRegistry $ UICmd.update_ id $ Model.isEditing .~ True
+dblClickHandler _ _ widgetId = do
+    UICmd.takeFocus widgetId
+    inRegistry $ UICmd.update_ widgetId $ Model.isEditing .~ True
 
-foreign import javascript safe "$1.registry[$2].input.val()" getValue' :: JSState -> WidgetId -> JSString
+foreign import javascript safe "$1.registry[$2].input.val()" getValue' :: JSState -> Int -> JSString
 
 keyDownHandler :: KeyDownHandler Global.State
 keyDownHandler '\r'  _ _ = applyChanges
@@ -34,17 +35,17 @@ keyDownHandler '\27' _ _ = abortChanges
 keyDownHandler _     _ _ = const $ return ()
 
 applyChanges :: WidgetId -> Command Global.State ()
-applyChanges id = do
+applyChanges widgetId = do
     jsState <- use $ Global.jsState
-    wasEditing <- inRegistry $ UICmd.get id Model.isEditing
+    wasEditing <- inRegistry $ UICmd.get widgetId Model.isEditing
     when (wasEditing) $ do
-        let value = lazyTextFromJSString $ getValue' jsState id
-        inRegistry $ UICmd.update_ id $ (Model.isEditing .~ False)
+        let value = lazyTextFromJSString $ getValue' jsState $ fromWidgetId widgetId
+        inRegistry $ UICmd.update_ widgetId $ (Model.isEditing .~ False)
                                       . (Model.value     .~ value)
-        triggerValueChanged value id
+        triggerValueChanged value widgetId
 
 abortChanges :: WidgetId -> Command Global.State ()
-abortChanges id = inRegistry $ UICmd.update_ id $ Model.isEditing .~ False
+abortChanges widgetId = inRegistry $ UICmd.update_ widgetId $ Model.isEditing .~ False
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyDown   .~ keyDownHandler
@@ -53,10 +54,10 @@ widgetHandlers = def & keyDown   .~ keyDownHandler
 -------------------------------------------------------------
 
 labeledEditableResize :: IsDisplayObject a => WidgetId -> Vector2 Double -> a -> Command UIRegistry.State ()
-labeledEditableResize id size model = do
-    defaultResize id size model
+labeledEditableResize widgetId size model = do
+    defaultResize widgetId size model
 
-    (tbId:_) <- UICmd.children id
+    (tbId:_) <- UICmd.children widgetId
     let tx      = (model ^. widgetSize . x) / 2.0
         ty      = (model ^. widgetSize . y)
         sx      = tx - (model ^. widgetSize . y / 2.0)

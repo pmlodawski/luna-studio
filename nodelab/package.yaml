@@ -31,46 +31,44 @@ default-extensions:
 #
 dependencies:
   - "base >= 4.8 && < 4.9"
-  - prologue
-  - bytestring
+  - aeson
   - base64-bytestring
   - binary
+  - bytestring
+  - constraints
+  - containers
+  - convert
   - data-default
+  - datetime
+  - errors
+  - fgl
   - ghcjs-base
   - ghcjs-dom
   - ghcjs-prim
-  - text
-  - transformers
-  - fgl
-  - mtl
-  - MissingH
-  - split
-  - lens
-  - containers
-  - random
-  - pretty-show
-  - convert
-  - process
-  - constraints
-  - errors
-  - vector
-  - aeson
-  - unordered-containers
-  - luna-empire-api
-  - luna-empire-api-json
   - hashable
-  - scope-searcher
   - hsprocessing
   - language-glsl
-  - visualization-api
-  - uuid-types
+  - lens
+  - luna-empire-api
+  - luna-empire-api-json
+  - MissingH
+  - mtl
   - placeholders
-  - datetime
+  - pretty-show
+  - process
+  - prologue
+  - random
+  - scope-searcher
+  - split
+  - text
   - time
+  - transformers
+  - unordered-containers
+  - uuid-types
+  - vector
+  - visualization-api
 
 executables:
   nodelab:
     main:             Main.hs
     source-dirs:      app/src
-
-

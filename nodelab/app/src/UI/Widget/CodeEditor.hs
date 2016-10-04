@@ -6,20 +6,20 @@ module UI.Widget.CodeEditor where
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import qualified Data.JSString         as JSString
-import           Data.JSString.Text    (lazyTextToJSString)
-import           GHCJS.Marshal.Pure    (PFromJSVal (..), PToJSVal (..))
-import           GHCJS.Types           (JSString, JSVal)
+import qualified Data.JSString            as JSString
+import           Data.JSString.Text       (lazyTextToJSString)
+import           GHCJS.Marshal.Pure       (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Types              (JSString, JSVal)
 
 import           Object.UITypes
 import           Object.Widget
 import qualified Object.Widget.CodeEditor as Model
 
-import           UI.Generic            (whenChanged)
-import qualified UI.Generic            as UI
-import qualified UI.Registry           as UI
-import           UI.Widget             (UIWidget)
-import qualified UI.Widget             as Widget
+import           UI.Generic               (whenChanged)
+import qualified UI.Generic               as UI
+import qualified UI.Registry              as UI
+import           UI.Widget                (UIWidget)
+import qualified UI.Widget                as Widget
 
 
 newtype CodeEditor = CodeEditor JSVal deriving (PToJSVal, PFromJSVal)
@@ -31,7 +31,7 @@ foreign import javascript unsafe "$1.setCode($2)"             setCode'       :: 
 
 create :: WidgetId -> Model.CodeEditor -> IO CodeEditor
 create oid model = do
-    codeEditor <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
+    codeEditor <- create' (fromWidgetId oid) (model ^. Model.size . x) (model ^. Model.size . y)
     UI.setWidgetPosition (model ^. widgetPosition) codeEditor
     setCode model codeEditor
     return codeEditor

@@ -19,7 +19,7 @@ var cachedHeight = 0;
 function cacheMap() {
   var width  = $$.renderer.domElement.width,
       height = $$.renderer.domElement.height;
-  if (cachedWidth != width || cachedHeight != height)
+  if (cachedWidth !== width || cachedHeight !== height)
       cachedMap = new Uint8Array(4 * width * height);
   cachedWidth  = width;
   cachedHeight = height;
