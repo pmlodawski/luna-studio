@@ -89,8 +89,8 @@ function initUserInfo() {
     module.exports.customEvent('startOnboarding', null);;
   })
 
-  if (localStorage.getItem('tutorial') === "1")
-    $(".tutorial-box").hide();
+  // if (localStorage.getItem('tutorial') === "1")
+  $(".tutorial-box").hide();
 
 
   var hideTutorial = function () {
