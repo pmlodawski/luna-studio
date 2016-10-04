@@ -112,7 +112,7 @@ function initUserInfo() {
     $(".tutorial-box").show().focus();
   });
   $('body').append('<div id="onboarding"></div>');
-  for(var i = 0; i <= 17; ++i) {
+  for(var i = 0; i <= 14; ++i) {
     $("#onboarding").append(require('templates/onboarding/' + i))
   }
   $('#onboarding .tour__exit a').click(function() {
