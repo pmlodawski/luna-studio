@@ -91,6 +91,7 @@ toAction (Batch        (Batch.NodesConnected update))                           
 toAction (CustomEvent (CustomEvent.RawEvent "closeOnboarding" _)) = Just $ do
     Global.tutorial .= Nothing
     performIO closeOnboarding
+toAction (CustomEvent (CustomEvent.RawEvent "startOnboarding" _)) = Just $ goToStep 0
 toAction _  = Nothing
 
 

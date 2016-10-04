@@ -85,6 +85,9 @@ function initializeGl() {
 function initUserInfo() {
   $('body').append(require('templates/logo')());
   $('body').append(require('templates/tutorial')());
+  $('#startOnboarding').click(function(){
+    module.exports.customEvent('startOnboarding', null);;
+  })
 
   if (localStorage.getItem('tutorial') === "1")
     $(".tutorial-box").hide();
@@ -129,7 +132,7 @@ function showOnboarding(step) {
 
 function closeOnboarding() {
   $('#onboarding').hide();
-  $('#onboarding').html("");
+  localStorage.setItem('onboarding', "1");
 }
 
 function initTerminal() {
