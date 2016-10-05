@@ -6,11 +6,13 @@
 * [NodeJS](http://nodejs.org/)
 * [Supervisord](http://supervisord.org/)
 * [Bower](https://bower.io)
-* [Brunch](http://brunch.io)
+* [Brunch](http://brunch.io) v.1.8.5 (```npm install -g brunch@1.8.5```)
 * ```brew install protobuf```
-* ```stack install hprotoc```
 * ```brew install pkg-config```
 * ```brew install zmq```
+* ```stack install hprotoc```
+* ```stack install happy```
+* ```stack install hsc2hs```
 
 ## Setup
 
