@@ -5,6 +5,9 @@
 * [Stack](http://haskellstack.org/)
 * [NodeJS](http://nodejs.org/)
 * [Supervisord](http://supervisord.org/)
+* [Bower](https://bower.io)
+* ```shell brew install protobuf```
+* ```shell stack install hprotoc```
 
 ## Setup
 
