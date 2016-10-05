@@ -9,6 +9,7 @@
 * ```brew install protobuf```
 * ```stack install hprotoc```
 * ```brew install pkg-config```
+* ```brew install zmq```
 
 ## Setup
 
