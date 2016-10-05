@@ -86,8 +86,8 @@ function initUserInfo() {
   $('body').append(require('templates/logo')());
   $('body').append(require('templates/tutorial')());
   $('.startOnboarding').click(function(){
-    module.exports.customEvent('startOnboarding', null);;
-  })
+    module.exports.customEvent('startOnboarding', null);
+  });
 
   // if (localStorage.getItem('tutorial') === "1")
   $(".tutorial-box").hide();
@@ -113,11 +113,11 @@ function initUserInfo() {
   });
   $('body').append('<div id="onboarding"></div>');
   for(var i = 0; i <= 14; ++i) {
-    $("#onboarding").append(require('templates/onboarding/' + i))
+    $("#onboarding").append(require('templates/onboarding/' + i));
   }
   $('#onboarding .tour__exit a').click(function() {
     module.exports.customEvent('closeOnboarding', null);
-  })
+  });
   $("#onboarding").hide();
   $('#onboarding .tour').removeClass("active");
 }
@@ -125,7 +125,7 @@ function initUserInfo() {
 
 function showOnboarding(step) {
   $("#onboarding").show();
-  console.log('onboarding',step)
+  console.log('onboarding',step);
   $('#onboarding .tour').removeClass("active");
   $("#onboarding .tour:nth-child(" + (step + 1) + ")").addClass("active");
 }
@@ -346,7 +346,7 @@ var startGA = function (){
   var enabled = $$.isGAEnabled();
   if(enabled) {
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    (i[r].q=i[r].q||[]).push(arguments);},i[r].l=1*new Date();a=s.createElement(o),
     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m);
     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
