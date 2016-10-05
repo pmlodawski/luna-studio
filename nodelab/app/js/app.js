@@ -21,6 +21,7 @@ $$.selectionBox      = null;
 $$.websocket         = websocket();
 
 var shouldRender = true;
+var forceRedrawTextures = false;
 
 function start() {
   $(document).ready(function (){
@@ -80,6 +81,19 @@ function initializeGl() {
     initTerminal();
     initUserInfo();
     initDragDrop();
+    try {
+      document.fonts.ready.then(function () {
+        forceRedrawTextures = true;
+        console.log("Fonts loaded")
+      });
+
+      document.fonts.onloadingdone = function (fontFaceSetEvent) {
+        forceRedrawTextures = true;
+        console.log("Fonts loaded2", fontFaceSetEvent)
+      };
+    } catch (e) {
+      console("failed to check for fonts", e);
+    }
 }
 
 function initUserInfo() {
@@ -191,8 +205,9 @@ var redrawTextures = _.throttle(function() {
 }, 120);
 
 function render() {
-  if(Math.abs($$.commonUniforms.camFactor.value/$$.lastFactor - 1.0) > 0.005) {
+  if(Math.abs($$.commonUniforms.camFactor.value/$$.lastFactor - 1.0) > 0.005 || forceRedrawTextures) {
     redrawTextures();
+    forceRedrawTextures = false;
   }
 
   if (shouldRender) {
