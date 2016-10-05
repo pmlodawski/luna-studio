@@ -6,8 +6,8 @@
 * [NodeJS](http://nodejs.org/)
 * [Supervisord](http://supervisord.org/)
 * [Bower](https://bower.io)
-* ```shell brew install protobuf```
-* ```shell stack install hprotoc```
+* ```brew install protobuf```
+* ```stack install hprotoc```
 
 ## Setup
 
