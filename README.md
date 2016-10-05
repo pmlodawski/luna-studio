@@ -6,6 +6,7 @@
 * [NodeJS](http://nodejs.org/)
 * [Supervisord](http://supervisord.org/)
 * [Bower](https://bower.io)
+* [Brunch](http://brunch.io)
 * ```brew install protobuf```
 * ```stack install hprotoc```
 * ```brew install pkg-config```
