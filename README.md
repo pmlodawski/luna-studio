@@ -8,7 +8,7 @@
 * [Bower](https://bower.io)
 * ```brew install protobuf```
 * ```stack install hprotoc```
-* ```brew install pig-config```
+* ```brew install pkg-config```
 
 ## Setup
 
