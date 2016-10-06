@@ -1,3 +1,27 @@
+// fonts
+@fontDefault:                   roboto, sans-serif;
+@fontMonospace:                 menlo, dejavu_sans_monobook, monospace;
+@fontWeight:                    normal;
+@fontSize:                      9pt;
+
+// colors
+@backgroundColor:               #333;
+@inputBackground:               transparent;
+@dividerColor:                  #555;
+@itemColor:                     white;
+@nsColor:                       #777;
+@selectedBackground:            #444;
+@focusColor:                    #FED546;
+@matchColor:                    @focusColor;
+@tutorialBackgroundColor:       #00885d;
+
+@commandBackground:             rgb(20%, 20%, 50%);
+@commandSelectedBackground:     lighten(@commandBackground, 30%, relative);
+
+// other variables
+@radiusNormal:                  3px;
+
+
 html, body {
   height: 100%; padding: 0px; margin: 0px;
   overflow: hidden;
@@ -5,7 +29,7 @@ html, body {
   color: white;
 }
 html, body, input {
-  font-family: 'Roboto', sans-serif;
+  font-family: @fontDefault;
 }
 
 a {
