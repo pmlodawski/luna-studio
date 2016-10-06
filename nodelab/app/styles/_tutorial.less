@@ -12,7 +12,7 @@
   position: fixed;
   z-index: 2000;
   background: #666;
-  border-radius: 20px;
+  border-radius: @radiusNormal;
   opacity: 0.9;
   top: 10%;
   bottom: 10%;
@@ -104,7 +104,13 @@ a.startOnboarding {
 }
 
 .tour__step__img {
-    padding: 10px 10px 0;
+    margin: 0 10px;
+    border-top: 10px solid @tutorialBackgroundColor;
+    background: #000;
+    img {
+        display: block;
+        margin: 0 auto;
+    }
 }
 .tour__step__img img {
     display: block;
