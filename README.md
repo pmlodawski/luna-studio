@@ -52,7 +52,7 @@ $ scripts/gencabal
 
 ```shell
 $ cd $REPO_DIR/build/backend
-$ stack build --copy-bins # add --fast if ExitFailure (-9)
+$ stack build --copy-bins --fast
 $ cd $REPO_DIR/nodelab
 $ brunch build # -e production -- for production build
 ```
