@@ -8,11 +8,22 @@ class CanvasText
     @canvas = document.createElement('canvas')
     @ctx    = @canvas.getContext('2d')
 
-  width:  -> @canvas.width
-  height: -> @canvas.height
+  width:  -> @canvas.width / @dpr
+  height: -> @canvas.height / @dpr
+
+  updateDPR: ->
+    rawDPR = getDevicePixelRatio()
+    bsr = @ctx.webkitBackingStorePixelRatio ||
+          @ctx.mozBackingStorePixelRatio    ||
+          @ctx.msBackingStorePixelRatio     ||
+          @ctx.oBackingStorePixelRatio      ||
+          @ctx.backingStorePixelRatio       || 1;
+    @dpr = rawDPR / bsr
+    @dpr
 
   drawText: (text, ctxOptions) ->
     @ctx.clearRect 0, 0, @canvas.width, @canvas.height
+    @updateDPR()
 
     @ctx.font = ctxOptions.font
 
@@ -20,8 +31,8 @@ class CanvasText
     @textWidth  = if ctxOptions.maxWidth then Math.min(ctxOptions.maxWidth, fullTextWidth) else fullTextWidth
     @textHeight = (getFontHeight @ctx.font) + 2
 
-    @canvas.width  = THREE.Math.nextPowerOfTwo @textWidth
-    @canvas.height = THREE.Math.nextPowerOfTwo @textHeight
+    @canvas.width  = THREE.Math.nextPowerOfTwo  @textWidth
+    @canvas.height = THREE.Math.nextPowerOfTwo  @textHeight
 
     @ctx.font         = ctxOptions.font
     @ctx.fillStyle    = ctxOptions.fillStyle

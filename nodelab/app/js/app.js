@@ -245,8 +245,10 @@ function updateHtmCanvasPanPos(x, y, factor) {
 }
 
 function updateScreenSize(width, height) {
+  forceRedrawTextures = true;
+  $$.renderer.setPixelRatio(getDevicePixelRatio())
   $$.renderer.setSize(width, height);
-  $$.rendererMap.setSize(width, height);
+  $$.rendererMap.setSize(width * getDevicePixelRatio(), height * getDevicePixelRatio());
   $$.canvas2D.width  = width;
   $$.canvas2D.height = height;
 
