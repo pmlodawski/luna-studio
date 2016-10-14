@@ -7,17 +7,17 @@ var $$             = require('common'),
     GraphNode      = require('Widget/Node'),
     NodeSearcher   = require('node_searcher'),
     Connection     = require('Widget/Connection'),
-    SelectionBox   = require('Widget/SelectionBox'),
+    Selection      = require('Selection'),
     websocket      = require('websocket'),
     textEditor     = require('text_editor'),
     connectionPen  = require('connection_pen'),
-    Terminal       = window.Terminal;
+    GoogleAnalytics = require('GoogleAnalytics'),
+Terminal       = window.Terminal;
 
 console.info("Current version " + brunch.env + " " + brunch.git_commit + " build  " + brunch.build_number);
 console.info("Build at " + brunch.date);
 
 $$.currentConnection = null;
-$$.selectionBox      = null;
 $$.websocket         = websocket();
 
 var shouldRender = true;
@@ -30,9 +30,8 @@ function start() {
       return;
     }
     window.already_initialized = true;
-    startGA();
+    GoogleAnalytics.startGA();
     require('env')();
-    window.h$errorMsg = displayAppCrashed;
     setInterval(function(){module.exports.customEvent("tick", null);}, 1000);
   });
 }
@@ -78,7 +77,6 @@ function initializeGl() {
     $('#log').remove();
     $('#spinner').remove();
 
-    initTerminal();
     initUserInfo();
     initDragDrop();
     try {
@@ -97,7 +95,6 @@ function initializeGl() {
 }
 
 function initUserInfo() {
-  $('body').append(require('templates/logo')());
   $('body').append(require('templates/tutorial')());
   $('.startOnboarding').click(function(){
     module.exports.customEvent('startOnboarding', null);
@@ -149,21 +146,6 @@ function closeOnboarding() {
   localStorage.setItem('onboarding', "1");
 }
 
-function initTerminal() {
-  $('body').append('<div id="termContainer"><button id="termClose">Close</button><div id="term"></div></div>');
-  $$.term = new Terminal({
-    useStyle: true,
-    rows: 20,
-    cols: 40
-  });
-
-  $$.term.open($("#term")[0]);
-  $$.term.write('\x1b[31mWelcome to Nodelab!\x1b[m\r\n');
-  $("#termClose").click(function (){
-    $('#termContainer').css({height: "0px"});
-  });
-}
-
 function initDragDrop() {
   $($$.canvas2D).on('dragover', function(ev){ ev.preventDefault(); });
   $($$.canvas2D).on('dragenter', function(ev){ ev.preventDefault(); });
@@ -188,10 +170,9 @@ function initCommonWidgets() {
   $$.currentConnection = new Connection(3, -1, colorId);
   $$.currentConnection.setVisible(false);
   $$.registry[3] = $$.currentConnection;
-  $$.selectionBox      = new SelectionBox();
 
   $$.scene.add($$.currentConnection.mesh);
-  $$.scene.add($$.selectionBox.mesh);
+  Selection.init()
 }
 
 var redrawTextures = _.throttle(function() {
@@ -281,33 +262,7 @@ function createPendingNode(widgetId, expr, x, y) {
   $$.registry[widgetId] = node;
 }
 
-function createNodeSearcher(expression, nodeId, left, top, command) {
-  var ns;
-  destroyNodeSearcher();
-  ns = new NodeSearcher();
-  $$.node_searcher = ns;
-  $('body').append(ns.el);
-  ns.init(nodeId, command);
-  ns.el.css({left: left, top: top});
-  if (expression)
-    ns.setExpression(expression);
-  return ns;
-}
 
-function destroyNodeSearcher() {
-  if ($$.node_searcher !== undefined) {
-    $$.node_searcher.destroy();
-  }
-}
-
-function displaySelectionBox(x0, y0, x1, y1) {
-  $$.selectionBox.setPos(x0, y0, x1, y1);
-  $$.selectionBox.show();
-}
-
-function hideSelectionBox() {
-  $$.selectionBox.hide();
-}
 
 function removeWidget(widgetId) {
   var widget = $$.registry[widgetId];
@@ -324,70 +279,6 @@ function removeWidget(widgetId) {
   delete $$.registry[widgetId];
 }
 
-function writeToTerminal(str) {
-  $('#termContainer').css({height: "300px"});
-  $$.term.write(str);
-}
-
-var cleanupApp = function () {
-  $("body > div, body > canvas").remove();
-};
-
-var displayRejectedMessage = function () {
-  cleanupApp();
-  $('body').append(require('templates/rejected')());
-};
-
-var displayConnectionClosedMessage = function () {
-  if($('#rejected').length === 0) {
-    cleanupApp();
-    $('body').append(require('templates/connection_closed')());
-    ga('send', 'event', 'Diagnostic', 'ConnectionLost');
-  }
-};
-
-var displayAppCrashed = function (pat) {
-  // poor man's vprintf
-  var str = pat;
-  for(var i=1;i<arguments.length;i++) {
-    str = str.replace(/%s/, arguments[i]);
-  }
-
-  console.error('Haskell crashed', str);
-
-  $('body').append(require('templates/bsod')({message: str}));
-  ga('send', 'event', 'Diagnostic', 'BSOD', str);
-};
-
-var startGA = function (){
-  var enabled = $$.isGAEnabled();
-  if(enabled) {
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments);},i[r].l=1*new Date();a=s.createElement(o),
-    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m);
-    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-    ga('create', config.gaTrackingId, 'auto');
-    ga('send', 'pageview', '/b' + brunch.build_number);
-  } else {
-    window.ga = function() {};
-  }
-};
-
-var downloadFile = (function () {
-    var a = document.createElement("a");
-    document.body.appendChild(a);
-    a.style = "display: none";
-    return function (data, fileName) {
-        var blob = new Blob([data], {type: "octet/stream"}),
-            url = window.URL.createObjectURL(blob);
-        a.href = url;
-        a.download = fileName;
-        a.click();
-        window.URL.revokeObjectURL(url);
-    };
-}());
-
 
 module.exports = {
   start:                    start,
@@ -397,21 +288,18 @@ module.exports = {
   updateScreenSize:         updateScreenSize,
   updateCamera:             updateCamera,
   updateCameraHUD:          updateCameraHUD,
-  createNodeSearcher:       createNodeSearcher,
-  destroyNodeSearcher:      destroyNodeSearcher,
-  displaySelectionBox:      displaySelectionBox,
-  hideSelectionBox:         hideSelectionBox,
+  createNodeSearcher:       require('node_searcher').create,
+  destroyNodeSearcher:      require('node_searcher').destroy,
+  displaySelectionBox:      Selection.show,
+  hideSelectionBox:         Selection.hide,
   removeWidget:             removeWidget,
   websocket:                $$.websocket,
-  displayRejectedMessage:   displayRejectedMessage,
-  displayConnectionClosedMessage:   displayConnectionClosedMessage,
+  displayConnectionClosedMessage:   require("BSOD").connectionClosed,
   createPendingNode:        createPendingNode,
   nodeSearcher:             function ()      { return $$.node_searcher;   },
   shouldRender:             function ()      { shouldRender = true;       },
-  writeToTerminal:          writeToTerminal,
-  displayAppCrashed:        displayAppCrashed,
   getJSState:               function() { return $$; },
-  downloadFile:             downloadFile,
+  downloadFile:             require('DownloadFile').downloadFile,
   customEvent:              function() { },
   nextFrameCallbacks: [],
   redrawTextureCallbacks: [],

@@ -586,4 +586,33 @@ NodeSearcher.prototype.destroy = function () {
   $$.node_searcher = undefined;
 };
 
-module.exports = NodeSearcher;
+////////////////
+
+var $$ = require('common');
+
+function create(expression, nodeId, left, top, command) {
+  var ns;
+  destroyNodeSearcher();
+  ns = new NodeSearcher();
+  $$.node_searcher = ns;
+  $('body').append(ns.el);
+  ns.init(nodeId, command);
+  ns.el.css({left: left, top: top});
+  if (expression)
+    ns.setExpression(expression);
+  return ns;
+}
+
+function destroy() {
+  if ($$.node_searcher !== undefined) {
+    $$.node_searcher.destroy();
+  }
+}
+
+
+module.exports = {
+  NodeSearcher: NodeSearcher,
+  create:  create,
+  destroy: destroy
+
+}

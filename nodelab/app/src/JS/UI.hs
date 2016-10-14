@@ -3,7 +3,6 @@
 
 module JS.UI
     ( displayConnectionClosedMessage
-    , displayRejectedMessage
     , calculateTextWidth
     , shouldRender
     , initializeGl
@@ -26,10 +25,6 @@ foreign import javascript safe "window.dispatchEvent(new Event('resize'))"
 
 foreign import javascript safe "app.shouldRender()"
     shouldRender :: IO ()
-
-
-foreign import javascript safe "app.displayRejectedMessage()"
-    displayRejectedMessage :: IO ()
 
 foreign import javascript safe "app.displayConnectionClosedMessage()"
     displayConnectionClosedMessage :: IO ()
