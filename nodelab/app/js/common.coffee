@@ -11,12 +11,13 @@ commonUniforms =
 module.exports =
   commonUniforms: commonUniforms
   camFactor: commonUniforms.camFactor
+  currentConnection: null
   scene: undefined
   camera: undefined
   renderer: undefined
   htmlCanvasPan: undefined
   htmlCanvas: undefined
-  node_searcher: undefined
+  nodeSearcher: undefined
   websocket: undefined
   lastFactor: 1.0
   registry: {}

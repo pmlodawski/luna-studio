@@ -10,4 +10,5 @@ downloadFile = do ->
     a.click()
     window.URL.revokeObjectURL url
 
-module.exports.downloadFile = downloadFile
+module.exports =
+  downloadFile: downloadFile

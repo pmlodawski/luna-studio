@@ -47,8 +47,8 @@ import qualified Data.JSString     as JSString
 displayProcessingTime :: Bool
 displayProcessingTime = False
 
-foreign import javascript unsafe "console.time($1);"    consoleTimeStart' :: JSString.JSString -> IO ()
-foreign import javascript unsafe "console.timeEnd($1);" consoleTimeEnd'   :: JSString.JSString -> IO ()
+foreign import javascript safe "console.time($1);"    consoleTimeStart' :: JSString.JSString -> IO ()
+foreign import javascript safe "console.timeEnd($1);" consoleTimeEnd'   :: JSString.JSString -> IO ()
 
 consoleTimeStart = consoleTimeStart' . JSString.pack
 consoleTimeEnd   = consoleTimeEnd'   . JSString.pack

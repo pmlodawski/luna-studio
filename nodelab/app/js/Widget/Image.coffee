@@ -4,7 +4,7 @@ DOMURL       = window.URL || window.webkitURL || window;
 
 loader = new THREE.TextureLoader();
 
-shouldRender = require('app').shouldRender
+shouldRender = require('Rendering').shouldRender
 
 class Image extends BaseWidget
   constructor: (widgetId, width, height) ->

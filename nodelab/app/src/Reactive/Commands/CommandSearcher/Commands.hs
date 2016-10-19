@@ -79,9 +79,9 @@ toggleText = do
     size <- use $ Global.camera . Camera.camera . Camera.windowSize
     Camera.updateWindowSize size
 
-foreign import javascript unsafe "$('.tutorial-box').show().focus()"    openHelp'  :: IO ()
-foreign import javascript unsafe "common.enableGA($1)"    enableGA' :: Bool -> IO ()
-foreign import javascript unsafe "$1.isGAEnabled()"       gaEnabled :: JSState -> Bool
+foreign import javascript safe "$('.tutorial-box').show().focus()"    openHelp'  :: IO ()
+foreign import javascript safe "common.enableGA($1)"    enableGA' :: Bool -> IO ()
+foreign import javascript safe "$1.isGAEnabled()"       gaEnabled :: JSState -> Bool
 
 enableGA :: Bool -> Command a ()
 enableGA val = do

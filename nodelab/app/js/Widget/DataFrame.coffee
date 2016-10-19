@@ -3,6 +3,7 @@ config = require('config')
 app    = require('app')
 
 BaseWidget = require ('Widget/BaseWidget')
+Rendering = require ('Rendering')
 
 htmlCanvas = (mesh) ->
   getTopParent = (w) ->
@@ -87,7 +88,7 @@ class DataFrame extends BaseWidget
       textAlign: @alignment
       display: if isVisible(@mesh) then 'block' else 'none'
   widgetMoved: =>
-    app.nextFrameCallbacks.push(=> @relayout())
+    Rendering.nextFrameCallbacks.push(=> @relayout())
   destructor: ->
     @element.remove()
 

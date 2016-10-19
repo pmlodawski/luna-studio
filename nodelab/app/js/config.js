@@ -3,6 +3,7 @@
 var release = require('config.release');
 var brunch = require('brunch');
 var config;
+var customEvent = require('CustomEvent').customEvent;
 
 function defaultBackend() {
     var l = window.location;
@@ -52,7 +53,7 @@ if (brunch.env !== "production") {
 
   window.showState = function() {
     var app = require('app');
-    app.customEvent("debug.getState", null);
+    customEvent("debug.getState", null);
   };
 
 } else {
