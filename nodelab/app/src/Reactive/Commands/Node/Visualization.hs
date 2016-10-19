@@ -198,7 +198,7 @@ visualizeNodeValue _ _ _ = return ()
 
 
 fromLayers :: [GR.Layer] -> [Graphics.Item]
-fromLayers [l1, l2, l3] = [fromLayer1 l1, fromLayer2 l2, fromLayer3 l3]
+-- fromLayers [l1, l2, l3] = [fromLayer1 l1, fromLayer2 l2, fromLayer3 l3] -- fixes the sizes of axis and makes charts scaling improper
 fromLayers layers = createItem <$> layers where
     createItem (GR.Layer geometry trans _) = Graphics.Item (Text.pack shaderTxt) boxes size offset where
         Shader.ShaderBox shaderTxt (Shader.Location size offset) = Shader.createShaderBox geometry
