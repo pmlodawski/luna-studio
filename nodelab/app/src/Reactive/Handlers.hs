@@ -15,6 +15,8 @@ module Reactive.Handlers
     , connectionPenHandler
     , textEditorHandler
     , customEventHandler
+    , copyClipboardHandler
+    , pasteClipboardHandler
     ) where
 
 import           Utils.PreludePlus         hiding (on)
@@ -22,7 +24,7 @@ import           Utils.Vector
 
 import           GHCJS.DOM                 (currentDocument, currentWindow)
 import qualified GHCJS.DOM.Document        as Document
-import           GHCJS.DOM.Element         (Element, dblClick, keyDown, keyPress, keyUp, mouseDown, mouseMove, mouseUp, wheel)
+import           GHCJS.DOM.Element         (Element, dblClick, keyDown, keyPress, keyUp, mouseDown, mouseMove, mouseUp, wheel, copy, paste, cut)
 import           GHCJS.DOM.EventM
 import qualified GHCJS.DOM.KeyboardEvent   as KeyboardEvent
 import qualified GHCJS.DOM.MouseEvent      as MouseEvent
@@ -37,6 +39,7 @@ import qualified JavaScript.Array          as JSArray
 import qualified BatchConnector.Connection as Connection
 import qualified Data.JSString             as JSString
 import           Data.JSString.Text        (lazyTextFromJSString)
+import qualified Event.Clipboard           as Clipboard
 import qualified Event.Connection          as Connection
 import qualified Event.ConnectionPen       as ConnectionPen
 import qualified Event.CustomEvent         as CustomEvent
@@ -45,6 +48,7 @@ import qualified Event.Keyboard            as Keyboard
 import qualified Event.Mouse               as Mouse
 import qualified Event.TextEditor          as TextEditor
 import qualified Event.Window              as Window
+import qualified JS.Clipboard              as Clipboard
 import qualified JS.ConnectionPen          as ConnectionPen
 import qualified JS.CustomEvent            as CustomEvent
 import qualified JS.TextEditor             as TextEditor
@@ -198,3 +202,35 @@ customEventHandler :: AddHandler Event
 customEventHandler  = AddHandler $ \h -> do
     CustomEvent.registerCallback $ \topic payload -> do
         liftIO $ h $ CustomEvent $ CustomEvent.RawEvent (JSString.unpack $ pFromJSVal topic) payload
+
+copyClipboardHandler :: AddHandler Event
+copyClipboardHandler =
+  AddHandler $ \h -> do
+    Clipboard.registerCopyCallback $ \jsval -> do
+      liftIO . h $ Clipboard $ Clipboard.Copy
+
+pasteClipboardHandler :: AddHandler Event
+pasteClipboardHandler =
+  AddHandler $ \h -> do
+    Clipboard.registerPasteCallback $ \jsval -> do
+      liftIO . h $ Clipboard $ Clipboard.Paste (lazyTextFromJSString $ pFromJSVal jsval)
+
+-- copyClipboardHandler :: AddHandler Event
+-- copyClipboardHandler =
+--     AddHandler $ \h -> do
+--       Clipboard.registerCallback $ \jsval -> do
+--             -- getData => "$1.clipboardData" :: JSval -> JSString
+--             -- lazyTextFromJSString
+--             trolololDane <- liftIO $ getData jsval
+--             liftIO . h $ Clipboard $ Clipboard.Paste $ lazyTextFromJSString trololoDane
+
+
+-- copyClipboardHandler :: AddHandler Event
+-- copyClipboardHandler =
+--     AddHandler $ \h -> do
+--         window <- fromJust <$> eventObject
+--         window `on` copy $ do
+--             preventDefault
+--             -- przy paste
+--             -- data <- ClipboardEvent.getData czy cos takiego
+--             liftIO . h $ Clipboard Clipboard.Copy
