@@ -5,10 +5,13 @@ module Reactive.State.Graph
     , addConnection
     , addNode
     , connectionIdsContainingNode
-    , connectionsContainingNode
-    , connectionsMap
+    , connectionIdsContainingNodes
     , connectionWidgets
     , connectionWidgetsMap
+    , connectionsContainingNode
+    , connectionsContainingNodes
+    , connectionsMap
+    , connections
     , getConnectionNodeIds
     , getConnections
     , getConnectionsMap
@@ -28,6 +31,7 @@ module Reactive.State.Graph
     , portWidgetsMap
     , removeConnections
     , removeNode
+    , separateSubgraph
     , updateNodes
     ) where
 
@@ -39,6 +43,7 @@ import qualified Data.HashMap.Strict        as HashMap
 import           Data.IntMap                (IntMap)
 import qualified Data.IntMap                as IntMap
 import qualified Data.Map.Strict            as Map
+import qualified Data.Set                   as Set
 import           Data.UUID.Types            (UUID)
 
 import           Data.Aeson
@@ -97,6 +102,13 @@ instance ToJSON State
 instance Default State where
     def = State def def def def def def def def def
 
+data Skeleton = Skeleton { _nodesList       :: [Node]
+                         , _connectionsList :: [Connection]
+                         } deriving (Show, Eq, Generic)
+
+makeLenses ''Skeleton
+instance ToJSON Skeleton
+
 connectionToNodeIds :: Connection -> (NodeId, NodeId)
 connectionToNodeIds conn = ( conn ^. Connection.src . PortRef.srcNodeId
                            , conn ^. Connection.dst . PortRef.dstNodeId)
@@ -106,6 +118,9 @@ nodes = to getNodes
 
 nodeWidgets :: Getter State [WidgetId]
 nodeWidgets = to $ HashMap.elems . view nodeWidgetsMap
+
+connections :: Getter State [Connection]
+connections = to getConnections
 
 connectionWidgets :: Getter State [WidgetId]
 connectionWidgets = to $ HashMap.elems . view connectionWidgetsMap
@@ -168,8 +183,22 @@ endsWithNode nid conn = conn ^. Connection.dst . PortRef.dstNodeId == nid
 connectionsContainingNode :: NodeId -> State -> [Connection]
 connectionsContainingNode nid state = filter (containsNode nid) $ getConnections state
 
+connectionsContainingNodes :: Set.Set NodeId -> State -> [Connection]
+connectionsContainingNodes nodeIds state = do
+  let connections' = filter ((flip Set.member nodeIds) . (^. PortRef.srcNodeId) . (^. Connection.src)) (getConnections state)
+  filter ((flip Set.member nodeIds) . (^. PortRef.srcNodeId) . (^. Connection.src)) connections'
+
 connectionIdsContainingNode :: NodeId -> State -> [ConnectionId]
 connectionIdsContainingNode nid state = (view Connection.connectionId) <$> connectionsContainingNode nid state
 
+connectionIdsContainingNodes :: Set.Set NodeId -> State -> [ConnectionId]
+connectionIdsContainingNodes nodeIds state = (^. Connection.connectionId) <$> connectionsContainingNodes nodeIds state
+
 hasConnections :: NodeId -> State -> Bool
 hasConnections nodeId state = not . null $ connectionsContainingNode nodeId state
+
+separateSubgraph :: [NodeId] -> State -> Skeleton
+separateSubgraph nodeIds' state = do
+  let nodeIds = Set.fromList nodeIds'
+  let nodes = filter ((flip Set.member nodeIds) . (^. Node.nodeId)) (getNodes state)
+  Skeleton nodes (connectionsContainingNodes nodeIds state)
