@@ -13,7 +13,7 @@ dependencies:
   - prologue
   - batch-lib-luna-empire
   - binary
-  - flowbox-bus-binary
+  - zmq-bus
   - flowbox-config
   - optparse-applicative
   - flowbox-utils

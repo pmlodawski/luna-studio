@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Empire.Handlers where
 
 import           Prelude               (undefined)
@@ -16,7 +16,7 @@ import           Empire.Env            (Env)
 import qualified Empire.Server.Graph   as Graph
 import qualified Empire.Server.Library as Library
 import qualified Empire.Server.Project as Project
-import           Flowbox.Bus.BusT      (BusT (..))
+import           ZMQ.Bus.Trans         (BusT (..))
 
 
 type Handler = ByteString -> StateT Env BusT ()

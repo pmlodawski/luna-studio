@@ -5,37 +5,37 @@
 
 module Empire.Monitor where
 
-import           Control.Monad                     (forever)
-import           Control.Monad.State               (StateT, evalStateT)
-import qualified Data.Binary                       as Bin
-import           Data.ByteString                   (ByteString)
-import           Data.ByteString.Char8             (unpack)
-import           Data.ByteString.Lazy              (fromStrict, toStrict)
-import           Data.Map.Strict                   (Map)
-import qualified Data.Map.Strict                   as Map
+import           Control.Monad                    (forever)
+import           Control.Monad.State              (StateT, evalStateT)
+import qualified Data.Binary                      as Bin
+import           Data.ByteString                  (ByteString)
+import           Data.ByteString.Char8            (unpack)
+import           Data.ByteString.Lazy             (fromStrict, toStrict)
+import           Data.Map.Strict                  (Map)
+import qualified Data.Map.Strict                  as Map
 import           Prologue
-import           System.Directory                  (getCurrentDirectory)
-import           System.Cmd                        (system)
-import           System.Exit                       (exitFailure)
+import           System.Cmd                       (system)
+import           System.Directory                 (getCurrentDirectory)
+import           System.Exit                      (exitFailure)
 
-import qualified Empire.API.Control.EmpireStarted  as EmpireStarted
-import qualified Empire.API.Topic                  as Topic
-import           Empire.API.Request                (Request)
-import qualified Empire.Commands.Library           as Library
-import qualified Empire.Commands.Project           as Project
-import qualified Empire.Empire                     as Empire
-import           Empire.Env                        (MonitorEnv)
-import qualified Empire.Env                        as Env
-import qualified Empire.Utils                      as Utils
+import qualified Empire.API.Control.EmpireStarted as EmpireStarted
+import           Empire.API.Request               (Request)
+import qualified Empire.API.Topic                 as Topic
+import qualified Empire.Commands.Library          as Library
+import qualified Empire.Commands.Project          as Project
+import qualified Empire.Empire                    as Empire
+import           Empire.Env                       (MonitorEnv)
+import qualified Empire.Env                       as Env
+import qualified Empire.Utils                     as Utils
 
-import qualified Flowbox.Bus.Bus                   as Bus
-import           Flowbox.Bus.BusT                  (BusT (..))
-import qualified Flowbox.Bus.BusT                  as Bus
-import qualified Flowbox.Bus.Data.Message          as Message
-import           Flowbox.Bus.Data.MessageFrame     (MessageFrame (MessageFrame))
-import           Flowbox.Bus.Data.Topic            (Topic)
-import           Flowbox.Bus.EndPoint              (BusEndPoints)
-import qualified Flowbox.System.Log.Logger         as Logger
+import qualified Flowbox.System.Log.Logger        as Logger
+import qualified ZMQ.Bus.Bus                      as Bus
+import qualified ZMQ.Bus.Data.Message             as Message
+import           ZMQ.Bus.Data.MessageFrame        (MessageFrame (MessageFrame))
+import           ZMQ.Bus.Data.Topic               (Topic)
+import           ZMQ.Bus.EndPoint                 (BusEndPoints)
+import           ZMQ.Bus.Trans                    (BusT (..))
+import qualified ZMQ.Bus.Trans                    as Bus
 
 import           Data.Time.Clock.POSIX
 

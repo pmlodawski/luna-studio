@@ -4,55 +4,55 @@
 
 module Empire.Server where
 
-import           Control.Concurrent.STM            (STM)
-import           Control.Concurrent.STM.TChan      (TChan, newTChan, readTChan, tryPeekTChan)
-import           Control.Concurrent                (forkIO)
-import           Control.Monad                     (forever)
-import           Control.Monad.State               (StateT, evalStateT)
-import           Control.Monad.STM                 (atomically)
-import           Data.ByteString                   (ByteString)
-import           Data.ByteString.Char8             (unpack)
-import qualified Data.Map.Strict                   as Map
-import qualified Data.Binary                       as Bin
-import           Data.ByteString.Lazy              (toStrict)
+import           Control.Concurrent               (forkIO)
+import           Control.Concurrent.STM           (STM)
+import           Control.Concurrent.STM.TChan     (TChan, newTChan, readTChan, tryPeekTChan)
+import           Control.Monad                    (forever)
+import           Control.Monad.State              (StateT, evalStateT)
+import           Control.Monad.STM                (atomically)
+import qualified Data.Binary                      as Bin
+import           Data.ByteString                  (ByteString)
+import           Data.ByteString.Char8            (unpack)
+import           Data.ByteString.Lazy             (toStrict)
+import qualified Data.Map.Strict                  as Map
 
-import           System.FilePath ()
-import           System.FilePath.Find (find, (==?), always, extension)
-import           System.FilePath.Glob ()
-import           System.FilePath.Manip ()
+import           System.FilePath                  ()
+import           System.FilePath.Find             (always, extension, find, (==?))
+import           System.FilePath.Glob             ()
+import           System.FilePath.Manip            ()
 
 
-import           Empire.API.Data.AsyncUpdate       (AsyncUpdate (..))
-import qualified Empire.API.Topic                  as Topic
-import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
-import qualified Empire.API.Control.EmpireStarted  as EmpireStarted
-import           Empire.API.Data.GraphLocation     (GraphLocation)
-import           Empire.Data.Graph                 (Graph, ast)
+import qualified Empire.API.Control.EmpireStarted as EmpireStarted
+import           Empire.API.Data.AsyncUpdate      (AsyncUpdate (..))
+import           Empire.API.Data.GraphLocation    (GraphLocation)
+import qualified Empire.API.Graph.NodeUpdate      as NodeUpdate
+import qualified Empire.API.Topic                 as Topic
+import           Empire.Data.Graph                (Graph, ast)
 
-import qualified Empire.Commands.Library           as Library
-import qualified Empire.Commands.Project           as Project
-import qualified Empire.Commands.Typecheck         as Typecheck
-import qualified Empire.Commands.Persistence       as Persistence
-import qualified Empire.Commands.AST               as AST
-import qualified Empire.Empire                     as Empire
-import           Empire.Env                        (Env)
-import qualified Empire.Env                        as Env
-import qualified Empire.Handlers                   as Handlers
-import qualified Empire.Server.Server              as Server
-import qualified Empire.Utils                      as Utils
-import           Flowbox.Bus.Bus                   (Bus)
-import qualified Flowbox.Bus.Bus                   as Bus
-import           Flowbox.Bus.BusT                  (BusT (..))
-import qualified Flowbox.Bus.BusT                  as BusT
-import qualified Flowbox.Bus.Data.Flag             as Flag
-import           Flowbox.Bus.Data.Message          (Message)
-import qualified Flowbox.Bus.Data.Message          as Message
-import           Flowbox.Bus.Data.MessageFrame     (MessageFrame (MessageFrame))
-import           Flowbox.Bus.Data.Topic            (Topic)
-import           Flowbox.Bus.EndPoint              (BusEndPoints)
+import qualified Empire.Commands.AST              as AST
+import qualified Empire.Commands.Library          as Library
+import qualified Empire.Commands.Persistence      as Persistence
+import qualified Empire.Commands.Project          as Project
+import qualified Empire.Commands.Typecheck        as Typecheck
+import qualified Empire.Empire                    as Empire
+import           Empire.Env                       (Env)
+import qualified Empire.Env                       as Env
+import qualified Empire.Handlers                  as Handlers
+import qualified Empire.Server.Server             as Server
+import qualified Empire.Utils                     as Utils
+import qualified Flowbox.Config.Config            as Config
 import           Flowbox.Prelude
-import qualified Flowbox.System.Log.Logger         as Logger
-import qualified Flowbox.Config.Config       as Config
+import qualified Flowbox.System.Log.Logger        as Logger
+import           ZMQ.Bus.Bus                      (Bus)
+import qualified ZMQ.Bus.Bus                      as Bus
+import qualified ZMQ.Bus.Data.Flag                as Flag
+import           ZMQ.Bus.Data.Message             (Message)
+import qualified ZMQ.Bus.Data.Message             as Message
+import           ZMQ.Bus.Data.MessageFrame        (MessageFrame (MessageFrame))
+import           ZMQ.Bus.Data.Topic               (Topic)
+import           ZMQ.Bus.EndPoint                 (BusEndPoints)
+import           ZMQ.Bus.Trans                    (BusT (..))
+import qualified ZMQ.Bus.Trans                    as BusT
 
 logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)

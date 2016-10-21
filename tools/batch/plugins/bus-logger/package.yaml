@@ -12,7 +12,7 @@ dependencies:
   - containers
   - either
   - errors
-  - flowbox-bus-binary
+  - zmq-bus
   - flowbox-config
   - flowbox-utils
   - mtl

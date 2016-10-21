@@ -57,9 +57,9 @@ import           Empire.Env                            (Env)
 import qualified Empire.Env                            as Env
 import           Empire.Server.Server                  (errorMessage, replyFail, replyOk, replyResult, sendToBus')
 import           Empire.Utils.TextResult               (nodeValueToText)
-import           Flowbox.Bus.BusT                      (BusT (..))
 import qualified Flowbox.System.Log.Logger             as Logger
 import qualified StdLibMock
+import           ZMQ.Bus.Trans                         (BusT (..))
 
 
 logger :: Logger.LoggerIO

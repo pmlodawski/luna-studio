@@ -28,21 +28,23 @@ Library
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
+                  aeson-pretty,
+                  aeson,
                   bytestring,
                   container,
-                  data-member,
                   data-construction,
                   data-layer,
+                  data-member,
                   directory,
                   either,
                   fgl,
-                  flowbox-bus-binary,
+                  filepath,
                   flowbox-config,
                   flowbox-utils,
                   ghc-prim,
-                  luna-empire-api,
-                  luna-empire-api-json,
                   luna-core,
+                  luna-empire-api-json,
+                  luna-empire-api,
                   luna-parser,
                   lunac,
                   mtl,
@@ -50,13 +52,11 @@ Library
                   split,
                   stm,
                   text,
-                  typelevel,
                   transformers,
-                  aeson,
-                  aeson-pretty,
+                  typelevel,
                   uuid,
-                  filepath,
-                  visualization-api
+                  visualization-api,
+                  zmq-bus
 
 Executable luna-empire-lib-test
   Main-Is:        Main.hs

@@ -10,7 +10,6 @@ module Main where
 
 import qualified Data.List                   as List
 
-import qualified Flowbox.Bus.EndPoint        as EP
 import           Flowbox.Bus.Logger.Cmd      (Cmd)
 import qualified Flowbox.Bus.Logger.Cmd      as Cmd
 import qualified Flowbox.Bus.Logger.Logger   as Logger
@@ -20,6 +19,7 @@ import           Flowbox.Options.Applicative hiding (info)
 import qualified Flowbox.Options.Applicative as Opt
 import           Flowbox.Prelude             hiding (switch)
 import           Flowbox.System.Log.Logger
+import qualified ZMQ.Bus.EndPoint            as EP
 
 
 

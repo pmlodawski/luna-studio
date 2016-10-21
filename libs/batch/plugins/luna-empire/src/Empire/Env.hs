@@ -11,7 +11,7 @@ import           Empire.API.Data.AsyncUpdate   (AsyncUpdate)
 import           Empire.API.Data.GraphLocation (GraphLocation (..))
 import           Empire.Data.Graph             (Graph)
 import qualified Empire.Empire                 as Empire
-import           Flowbox.Bus.Data.Message      (Message)
+import           ZMQ.Bus.Data.Message          (Message)
 
 instance Show (TChan Message) where
     show _ = "(TChan)"

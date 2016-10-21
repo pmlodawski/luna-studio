@@ -1,5 +1,5 @@
-{-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE Rank2Types       #-}
 module Empire.Server.Server where
 
 import           Control.Concurrent.STM.TChan (writeTChan)
@@ -10,16 +10,16 @@ import qualified Data.Binary                  as Bin
 import           Data.ByteString.Lazy         (toStrict)
 import           Prologue
 
-import qualified Empire.API.Response          as Response
 import           Empire.API.Request           (Request)
+import qualified Empire.API.Response          as Response
 import           Empire.API.Topic             (MessageTopic)
 import qualified Empire.API.Topic             as Topic
 import           Empire.Env                   (Env)
 import qualified Empire.Env                   as Env
-import qualified Flowbox.Bus.Bus              as Bus
-import           Flowbox.Bus.BusT             (BusT (..))
-import qualified Flowbox.Bus.Data.Message     as Message
 import qualified Flowbox.System.Log.Logger    as Logger
+import qualified ZMQ.Bus.Bus                  as Bus
+import qualified ZMQ.Bus.Data.Message         as Message
+import           ZMQ.Bus.Trans                (BusT (..))
 
 sendToBus :: Binary a => String -> a -> StateT Env BusT ()
 sendToBus topic bin = do

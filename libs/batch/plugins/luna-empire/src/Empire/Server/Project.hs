@@ -18,8 +18,8 @@ import qualified Empire.Empire                    as Empire
 import           Empire.Env                       (Env)
 import qualified Empire.Env                       as Env
 import           Empire.Server.Server             (replyFail, replyResult, sendToBus')
-import           Flowbox.Bus.BusT                 (BusT (..))
 import qualified Flowbox.System.Log.Logger        as Logger
+import           ZMQ.Bus.Trans                    (BusT (..))
 
 logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)

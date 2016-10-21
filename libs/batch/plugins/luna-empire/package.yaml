@@ -14,7 +14,6 @@ dependencies:
   - containers
   - either
   - errors
-  - flowbox-bus-binary
   - flowbox-config
   - flowbox-utils
   - mtl
@@ -32,6 +31,7 @@ dependencies:
   - uuid-types
   - uuid
   - groom
+  - zmq-bus
 
 default-extensions:
   - NoImplicitPrelude

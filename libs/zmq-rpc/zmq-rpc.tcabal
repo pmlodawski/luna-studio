@@ -1,0 +1,27 @@
+Name:           zmq-rpc
+Version:        0.1
+Cabal-Version:  >= 1.8
+--License-file:   LICENSE
+Author:         New Byte Order <contact@newbyteorder.com>
+Maintainer:     New Byte Order <contact@newbyteorder.com>
+Build-Type:     Simple
+
+
+Library
+    Hs-Source-Dirs: src
+    Other-Modules:  Paths_zmq_rpc
+    GHC-Options:    -Wall -O2
+    Extensions:     NoImplicitPrelude
+
+    Exposed-modules: `findmodules('src', '.*\.hs')`
+
+    Build-Depends:  base,
+                    binary,
+                    bytestring,
+                    containers,
+                    either,
+                    errors,
+                    flowbox-utils-old,
+                    mtl,
+                    transformers,
+                    zeromq4-haskell >= 0.6

@@ -2,18 +2,18 @@
 
 module Main where
 
-import           Prologue
 import qualified Data.List                   as List
+import           Prologue
 
-import qualified Flowbox.Bus.EndPoint        as EP
 import           Empire.Cmd                  (Cmd)
 import qualified Empire.Cmd                  as Cmd
 import qualified Empire.Logger               as Logger
 import qualified Empire.Version              as Version
 import qualified Flowbox.Config.Config       as Config
-import           Flowbox.Options.Applicative (short, long, help, metavar)
+import           Flowbox.Options.Applicative (help, long, metavar, short)
 import qualified Flowbox.Options.Applicative as Opt
 import           Flowbox.System.Log.Logger
+import qualified ZMQ.Bus.EndPoint            as EP
 
 defaultTopic :: String
 defaultTopic = "empire."

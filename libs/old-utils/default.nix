@@ -11,7 +11,7 @@ haskellPackages.cabal.mkDerivation (self: {
         aeson ansiTerminal
         dataDefault dlist either errors fgl genericDeriving
         hslogger lens MissingH mmorph monadLoops mtl optparseApplicative pretty
-        prettyShow process protocolBuffers split text transformers
+        prettyShow process split text transformers
     ];
     buildTools = [ cabalInstall_1_20_0_3 ];
     enableSplitObjs = false;

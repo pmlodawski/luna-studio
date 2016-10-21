@@ -6,15 +6,15 @@ module WSConnector.WSConnector where
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
-import           Control.Concurrent                    (forkIO)
-import           Control.Concurrent.STM                (STM, atomically)
+import           Control.Concurrent            (forkIO)
+import           Control.Concurrent.STM        (STM, atomically)
 import           Control.Concurrent.STM.TChan
 import           Control.Concurrent.STM.TVar
-import           Control.Monad                         (forever)
-import qualified Data.ByteString                       as ByteString
-import qualified Network.WebSockets                    as WS
+import           Control.Monad                 (forever)
+import qualified Data.ByteString               as ByteString
+import qualified Network.WebSockets            as WS
 
-import           Flowbox.Bus.EndPoint                  (BusEndPoints)
+import           ZMQ.Bus.EndPoint              (BusEndPoints)
 
 import           WSConnector.Data.WSFrame      (WSFrame (..), deserializeFrame, messages, serializeFrame)
 import           WSConnector.Data.WSMessage    (ControlCode (..), WSMessage (..))
