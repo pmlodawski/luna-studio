@@ -1,7 +1,6 @@
 module Empire.Commands.Publisher where
 
 import Prologue
-import Data.Maybe
 import Empire.Empire
 import Control.Monad.Reader
 import Control.Monad.STM             (atomically)
@@ -10,7 +9,6 @@ import Empire.Data.Graph             (Graph)
 import Empire.API.Data.AsyncUpdate   (AsyncUpdate (..))
 import Empire.API.Data.GraphLocation (GraphLocation)
 import Empire.API.Data.Node          (Node, NodeId)
-import Empire.API.Data.DefaultValue  (Value)
 
 import qualified Empire.API.Graph.NodeUpdate       as Node
 import qualified Empire.API.Graph.NodeResultUpdate as NodeResult
