@@ -1,0 +1,10 @@
+precision mediump float;
+
+uniform vec2 size;
+uniform vec4 color;
+
+<%= require('shaders/stdlib')() %>
+
+void main(void) {
+    gl_fragColor(color.x, color.y. color.z, color.a);
+}

@@ -8,10 +8,13 @@ import           Utils.CtxDynamic
 import           Object.Widget                    (DisplayObject, UIHandlers)
 import           Object.Widget.Button             (Button)
 import           Object.Widget.Choice.RadioButton (RadioButton)
+import           Object.Widget.CodeEditor         (CodeEditor)
 import           Object.Widget.Connection         (Connection, CurrentConnection)
 import           Object.Widget.DataFrame          (DataFrame)
+import           Object.Widget.DefinitionPort     (DefinitionPort)
 import           Object.Widget.Graphics           (Graphics)
 import           Object.Widget.Group              (Group)
+import           Object.Widget.Icon               (Icon)
 import           Object.Widget.Label              (Label)
 import           Object.Widget.LabeledTextBox     (LabeledTextBox)
 import           Object.Widget.List               (List)
@@ -21,21 +24,21 @@ import           Object.Widget.Number.Continuous  (ContinuousNumber)
 import           Object.Widget.Number.Discrete    (DiscreteNumber)
 import           Object.Widget.Plots.Image        (Image)
 import           Object.Widget.Port               (Port)
-import           Object.Widget.Icon               (Icon)
 import           Object.Widget.Scene              (Scene)
 import           Object.Widget.Slider.Continuous  (ContinuousSlider)
 import           Object.Widget.Slider.Discrete    (DiscreteSlider)
 import           Object.Widget.TextBox            (TextBox)
 import           Object.Widget.Toggle             (Toggle)
-import           Object.Widget.CodeEditor         (CodeEditor)
 import           Reactive.State.Global            (State)
 
 import           UI.Widget                        ()
 import           UI.Widget.Button                 ()
 import           UI.Widget.Choice                 ()
 import           UI.Widget.Choice.RadioButton     ()
+import           UI.Widget.CodeEditor             ()
 import           UI.Widget.Connection             ()
 import           UI.Widget.DataFrame              ()
+import           UI.Widget.DefinitionPort         ()
 import           UI.Widget.Graphics               ()
 import           UI.Widget.Group                  ()
 import           UI.Widget.LabeledTextBox         ()
@@ -46,13 +49,14 @@ import qualified UI.Widget.Port                   as Port
 import           UI.Widget.Slider                 ()
 import           UI.Widget.TextBox                ()
 import           UI.Widget.Toggle                 ()
-import           UI.Widget.CodeEditor             ()
 
 import qualified UI.Handlers.Button               as Button
-import qualified UI.Handlers.Label                as Label
 import           UI.Handlers.Choice               ()
 import qualified UI.Handlers.Choice.RadioButton   as RadioButton
+import qualified UI.Handlers.CodeEditor           as CodeEditor
 import qualified UI.Handlers.Connection           as Connection
+import qualified UI.Handlers.DefinitionPort       as DefinitionPort
+import qualified UI.Handlers.Label                as Label
 import qualified UI.Handlers.LabeledTextBox       as LabeledTextBox
 import qualified UI.Handlers.Node                 as Node
 import qualified UI.Handlers.Number.Continuous    as ContinuousNumber
@@ -61,7 +65,6 @@ import qualified UI.Handlers.Slider.Continuous    as ContinuousSlider
 import qualified UI.Handlers.Slider.Discrete      as DiscreteSlider
 import qualified UI.Handlers.TextBox              as TextBox
 import qualified UI.Handlers.Toggle               as Toggle
-import qualified UI.Handlers.CodeEditor           as CodeEditor
 
 class HasHandlers a where
     widgetHandlers :: DisplayObject -> UIHandlers a
@@ -80,6 +83,7 @@ toggleType            = typeOf (undefined :: Toggle)
 textBoxType           = typeOf (undefined :: TextBox)
 labeledTextBoxType    = typeOf (undefined :: LabeledTextBox)
 radioButtonType       = typeOf (undefined :: RadioButton)
+definitionPortType    = typeOf (undefined :: DefinitionPort)
 groupType             = typeOf (undefined :: Group)
 buttonType            = typeOf (undefined :: Button)
 listType              = typeOf (undefined :: List)
@@ -108,6 +112,7 @@ instance HasHandlers State where
         | tpe ==          textBoxType  =          TextBox.widgetHandlers
         | tpe ==   labeledTextBoxType  =   LabeledTextBox.widgetHandlers
         | tpe ==      radioButtonType  =      RadioButton.widgetHandlers
+        | tpe ==   definitionPortType  =   DefinitionPort.widgetHandlers
         | tpe ==            groupType  = def
         | tpe ==           buttonType  =           Button.widgetHandlers
         | tpe ==             listType  = def
