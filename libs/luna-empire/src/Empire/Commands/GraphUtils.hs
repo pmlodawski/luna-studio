@@ -2,8 +2,6 @@ module Empire.Commands.GraphUtils where
 
 import           Prologue
 
-import           Control.Monad.Error     (throwError)
-import           Control.Monad.State
 import           Empire.Empire
 
 import           Empire.Data.AST         (NodeRef)
@@ -11,8 +9,8 @@ import           Empire.Data.Graph       (Graph)
 import qualified Empire.Data.Graph       as Graph
 import           Empire.API.Data.Node    (NodeId)
 import qualified Empire.Commands.AST     as AST
-import qualified Empire.ASTOp            as AST
-import           Empire.ASTOps.Remove    (safeRemove)
+
+
 
 getASTPointer :: NodeId -> Command Graph NodeRef
 getASTPointer nodeId = use (Graph.nodeMapping . at nodeId) <?!> "Node does not exist"
