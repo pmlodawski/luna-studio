@@ -1,7 +1,8 @@
 "use strict";
 
-var $$     = require('common')
-  , config = require('config')
+var $$          = require('common')
+  , config      = require('config')
+  , customEvent = require('CustomEvent').customEvent
 ;
 
 
@@ -181,12 +182,12 @@ NodeSearcher.prototype.performSearch = function () {
   if (this.prefix === "" && this.searchbox.val() === "") {
     this.firstColumn.removeClass('types');
     this.clearResults();
-    app.customEvent("nodesearcher", { "tag": this.actionTree
+    customEvent("nodesearcher", { "tag": this.actionTree
                                     , "contents": ""
                                     });
   } else {
     this.firstColumn.addClass('types');
-    app.customEvent("nodesearcher", { "tag": this.actionQuery
+    customEvent("nodesearcher", { "tag": this.actionQuery
                                     , "contents": this.expression()
                                     });
   }
@@ -244,7 +245,7 @@ NodeSearcher.prototype.isSearchboxActive = function () {
 NodeSearcher.prototype.createNode = function () {
   var app = require('app');
   this.destroy();
-  app.customEvent("nodesearcher", { "tag":         this.actionCreate
+  customEvent("nodesearcher", { "tag":         this.actionCreate
                                   , "_expression": this.expression()
                                   , "_nodeId":     this.nodeId
                                   });
@@ -273,7 +274,7 @@ NodeSearcher.prototype.openColumn = function () {
   column.data('items', column.items);
 
   var app = require('app');
-  app.customEvent("nodesearcher", { "tag": this.actionTree
+  customEvent("nodesearcher", { "tag": this.actionTree
                                   , "contents": this.currentSelection().data('match').fullname
                                   });
 };
@@ -586,4 +587,33 @@ NodeSearcher.prototype.destroy = function () {
   $$.node_searcher = undefined;
 };
 
-module.exports = NodeSearcher;
+////////////////
+
+var $$ = require('common');
+
+function create(expression, nodeId, left, top, command) {
+  var ns;
+  destroy();
+  ns = new NodeSearcher();
+  $$.nodeSearcher = ns;
+  $('body').append(ns.el);
+  ns.init(nodeId, command);
+  ns.el.css({left: left, top: top});
+  if (expression)
+    ns.setExpression(expression);
+  return ns;
+}
+
+function destroy() {
+  if ($$.nodeSearcher !== undefined) {
+    $$.nodeSearcher.destroy();
+  }
+}
+
+
+module.exports = {
+  NodeSearcher: NodeSearcher,
+  create:  create,
+  destroy: destroy
+
+}

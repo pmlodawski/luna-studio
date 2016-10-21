@@ -3,10 +3,10 @@
 
 module JS.UI
     ( displayConnectionClosedMessage
-    , displayRejectedMessage
     , calculateTextWidth
     , shouldRender
     , initializeGl
+    , initializeHelp
     , render
     , triggerWindowResize
     ) where
@@ -15,24 +15,17 @@ import           Utils.PreludePlus
 import           GHCJS.Types (JSString)
 import           Data.JSString.Text  (lazyTextToJSString)
 
-foreign import javascript safe "app.initializeGl()"
-    initializeGl :: IO ()
+foreign import javascript safe "require('Rendering').initialize()" initializeGl :: IO ()
 
-foreign import javascript safe "app.render()"
-    render :: IO ()
+foreign import javascript safe "require('Help').initialize()" initializeHelp :: IO ()
 
-foreign import javascript safe "window.dispatchEvent(new Event('resize'))"
-    triggerWindowResize :: IO ()
+foreign import javascript safe "require('Rendering').render()" render :: IO ()
 
-foreign import javascript safe "app.shouldRender()"
-    shouldRender :: IO ()
+foreign import javascript safe "window.dispatchEvent(new Event('resize'))" triggerWindowResize :: IO ()
 
+foreign import javascript safe "require('Rendering').shouldRender()" shouldRender :: IO ()
 
-foreign import javascript safe "app.displayRejectedMessage()"
-    displayRejectedMessage :: IO ()
-
-foreign import javascript safe "app.displayConnectionClosedMessage()"
-    displayConnectionClosedMessage :: IO ()
+foreign import javascript safe "require('BSOD').connectionClosed()" displayConnectionClosedMessage :: IO ()
 
 foreign import javascript safe "breadcrumb.calculateTextWidth($1)" calculateTextWidth' :: JSString -> Int
 

@@ -4,7 +4,6 @@ module.exports = function() {
   // required for interactive
   window.app            = require('app');
   window.common         = require('common');
-  window.features       = require('features');
   window.config         = require('config');
   window.breadcrumb     = require('breadcrumb');
   window.raycaster      = require('raycaster');
@@ -12,7 +11,7 @@ module.exports = function() {
   window.Slider         = require('Widget/Slider');
   window.Toggle         = require('Widget/Toggle');
   window.TextBox        = require('Widget/TextBox');
-  window.RadioButton    = require('Widget/RadioButton');
+  // window.RadioButton    = require('Widget/RadioButton');
   window.Connection     = require('Widget/Connection');
   window.textEditor     = require('text_editor');
   window.GraphNode      = require('Widget/Node');
@@ -27,4 +26,5 @@ module.exports = function() {
   window.DataFrame      = require('Widget/DataFrame');
   window.CodeEditor     = require('Widget/CodeEditor');
   window.Graphics       = require('Widget/Graphics');
+  window.h$errorMsg     = require("BSOD").appCrashed;
 };

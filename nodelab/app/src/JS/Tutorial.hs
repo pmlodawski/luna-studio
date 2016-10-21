@@ -1,6 +1,3 @@
-{-# LANGUAGE JavaScriptFFI #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module JS.Tutorial
     ( shouldRunTutorial
     , showStep
@@ -8,9 +5,7 @@ module JS.Tutorial
     ) where
 
 import           Utils.PreludePlus
-import           GHCJS.Types (JSString)
-import           Data.JSString.Text  (lazyTextToJSString)
 
 foreign import javascript safe "localStorage.getItem('onboarding') != '1'" shouldRunTutorial :: IO Bool
-foreign import javascript safe "app.showOnboarding($1)" showStep :: Int -> IO ()
-foreign import javascript safe "app.closeOnboarding()" closeOnboarding :: IO ()
+foreign import javascript safe "require('Onboarding').show($1)" showStep :: Int -> IO ()
+foreign import javascript safe "require('Onboarding').close()"  closeOnboarding :: IO ()

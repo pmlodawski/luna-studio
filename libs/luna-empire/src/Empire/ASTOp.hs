@@ -11,20 +11,15 @@ import           Control.Monad.Error                    (ErrorT, MonadError, run
 import           Data.Proxy
 import           Data.Graph                             (Node)
 import           Data.Graph.Model.Events                (ELEMENT (..))
-import           Empire.Data.AST                        (AST, ASTEdge, ASTNode, NodeRef, EdgeRef)
-import           Empire.API.Data.NodeMeta               (NodeMeta)
+import           Empire.Data.AST                        (AST, NodeRef, EdgeRef)
 import           Empire.Empire                          (Command, Error, empire)
 import           Data.Construction                      (Destructor, Unregister)
 import           Data.Graph.Builder                     (MonadBuilder)
 import           Data.Graph.Builders                    (Connectible)
-import           Luna.Syntax.Model.Network.Builder.Term (TermBuilder_OLD, NetLayers, NetworkBuilderT, runNetworkBuilderT)
-import           Luna.Syntax.Model.Network.Builder.Node (TermNode)
-import           Luna.Syntax.Model.Network.Term         (Raw)
+import           Luna.Syntax.Model.Network.Builder.Term (TermBuilder_OLD, NetworkBuilderT, runNetworkBuilderT)
 import           Old.Luna.Syntax.Term.Class             (Acc, App, Blank, Match, Var, Cons, Unify, Curry, Lam)
-import           Luna.Syntax.Model.Layer                ((:<:))
 import qualified Old.Luna.Syntax.Term.Expr.Lit               as Lit
 import           Type.Inference
-import           Luna.Syntax.Model.Network.Builder       (Reconnectible)
 import qualified Luna.Syntax.Model.Network.Builder.Class as Builder
 import           Luna.Syntax.Model.Text.Location         (MonadLocation, LocationT)
 import qualified Luna.Syntax.Model.Text.Location         as Location

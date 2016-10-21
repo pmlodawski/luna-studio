@@ -6,10 +6,8 @@ import           Prologue
 import           Control.Monad.State     hiding (when)
 import           Unsafe.Coerce           (unsafeCoerce)
 import           Control.Monad.Error     (throwError)
-import           Control.Monad           (forM, forM_)
+import           Control.Monad           (forM_)
 import           Control.Monad.Reader    (ask)
-import           Data.IntMap             (IntMap)
-import qualified Data.IntMap             as IntMap
 import           Data.List               (sort)
 import qualified Data.Map                as Map
 import           Data.Maybe              (isNothing)
@@ -18,7 +16,6 @@ import qualified Empire.Data.Graph                 as Graph
 import           Empire.Data.Graph                 (Graph)
 import           Empire.API.Data.Node              (NodeId)
 import qualified Empire.API.Data.NodeMeta          as NodeMeta
-import           Empire.API.Data.DefaultValue      (Value (..))
 import           Empire.API.Data.GraphLocation     (GraphLocation (..))
 import qualified Empire.API.Graph.NodeResultUpdate as NodeResult
 import qualified Empire.API.Data.Error             as APIError
@@ -37,15 +34,13 @@ import           Luna.Compilation.Stage.TypeCheck                (Loop (..), Seq
 import           Luna.Compilation.Pass.Inference.Literals        (LiteralsPass (..))
 import           Luna.Compilation.Pass.Inference.Struct          (StructuralInferencePass (..))
 import           Luna.Compilation.Pass.Inference.Unification     (StrictUnificationPass (..))
-import           Luna.Compilation.Pass.Inference.Calling         (FunctionCallingPass (..))
 import           Luna.Compilation.Pass.Inference.Importing       (SymbolImportingPass (..))
 import           Luna.Compilation.Pass.Inference.Scan            (ScanPass (..))
 import           Luna.Syntax.Model.Network.Builder               (Sign (..))
 
-import qualified Luna.Compilation.Pass.Interpreter.Interpreter   as Interpreter
+import qualified Luna.Interpreter.Interpreter                    as Interpreter
 
 import qualified Empire.ASTOp                                    as ASTOp
-import           Empire.Data.AST                                 (AST, NodeRef)
 
 
 getNodeValueReprs :: NodeId -> Command Graph (Either String AST.ValueRep)

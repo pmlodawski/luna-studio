@@ -27,7 +27,7 @@ foreign import javascript safe "$1.widgetMoved()"
 foreign import javascript safe "$1.setSize($2, $3)"
     setSize'                :: GenericWidget -> Double -> Double -> IO ()
 
-foreign import javascript safe "app.removeWidget($1)"
+foreign import javascript safe "require('Rendering').removeWidget($1)"
     removeWidget :: Int -> IO ()
 
 setWidgetPosition :: UIWidget a => Vector2 Double -> a -> IO ()

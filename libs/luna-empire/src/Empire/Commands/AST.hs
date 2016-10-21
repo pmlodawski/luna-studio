@@ -4,18 +4,16 @@
 
 module Empire.Commands.AST where
 
-import           Control.Monad.Error                     (throwError)
 import           Control.Monad.Except                    (runExceptT)
 import           Control.Monad.State
 import           Control.Arrow                           (second)
 import           Data.Graph                              (Inputs (..), source)
 import           Data.HMap.Lazy                          (TypeKey (..))
 import qualified Data.HMap.Lazy                          as HMap
-import           Data.Layer_OLD.Cover_OLD                (covered, uncover)
-import           Data.Maybe                              (maybeToList, catMaybes, fromMaybe)
+import           Data.Layer_OLD.Cover_OLD                (uncover)
+import           Data.Maybe                              (catMaybes)
 import           Data.Prop                               (prop, ( # ))
 import           Data.Record                             (ANY (..), caseTest, of')
-import           GHC.Prim                                (Any)
 import           Prologue                                hiding (( # ))
 
 import           Empire.API.Data.DefaultValue            (PortDefault, Value (..))
@@ -39,25 +37,22 @@ import           Luna.Pretty.GraphViz                    (renderAndOpen)
 
 import           Luna.Syntax.Model.Network.Builder       (Meta (..), TCData (..), Type (..), tcErrors)
 import qualified Luna.Syntax.Model.Network.Builder       as Builder
-import           Old.Luna.Syntax.Term.Class              (Acc (..), App (..), Cons (..), Unify (..), Var (..))
+import           Old.Luna.Syntax.Term.Class              (Cons (..), Unify (..))
 import qualified Old.Luna.Syntax.Term.Expr.Lit           as Lit
 
 import           Luna.Compilation.Error                  as TCError
-import           Luna.Compilation.Pass.Interpreter.Layer (InterpreterData (..))
-import qualified Luna.Compilation.Pass.Interpreter.Value as Value
-import           Luna.Compilation.Pass.Interpreter.Value (toExceptIO, unsafeFromData, Data, attachListener)
-import qualified Luna.Compilation.Pass.Interpreter.Layer as Interpreter
-import           Unsafe.Coerce
+import           Luna.Interpreter.Layer                  (InterpreterData (..))
+import qualified Luna.Interpreter.Value                  as Value
+import           Luna.Interpreter.Value                  (toExceptIO, unsafeFromData, Data, attachListener)
+import qualified Luna.Interpreter.Layer                  as Interpreter
 
 import           Empire.Commands.Graphics                (fromFigure, fromGeoComponent, fromGeometry, fromGraphics, fromLayer, fromMaterial,
                                                           fromPrimitive, fromShape, fromSurface)
 
-import           Debug.Trace                             (trace)
-
 
 -- TODO: This might deserve rewriting to some more general solution
-import           Luna.Compilation.Pass.Interpreter.Charts (autoScatterChartInt, autoScatterChartDouble, autoScatterChartIntTuple, autoScatterChartDoubleTuple)
-import qualified Graphics.API                             as G
+import           Luna.Interpreter.Charts                 (autoScatterChartInt, autoScatterChartDouble, autoScatterChartIntTuple, autoScatterChartDoubleTuple)
+import qualified Graphics.API                            as G
 
 metaKey :: TypeKey NodeMeta
 metaKey = TypeKey

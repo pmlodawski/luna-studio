@@ -33,7 +33,7 @@ import qualified Batch.Workspace                   as Workspace
 import qualified BatchConnector.Commands           as BatchCmd
 import           Control.Concurrent.MVar
 import qualified JS.GraphLocation                  as GraphLocation
-import           JS.UI                             (initializeGl, render, triggerWindowResize)
+import           JS.UI                             (initializeGl, initializeHelp, render, triggerWindowResize)
 import           JS.UUID                           (generateUUID)
 import           JS.Tutorial                       (shouldRunTutorial)
 import           JS.WebSocket                      (WebSocket)
@@ -48,6 +48,7 @@ import           JS.Tutorial                       (showStep)
 runMainNetwork :: WebSocket -> IO ()
 runMainNetwork socket = do
     initializeGl
+    initializeHelp
     render
 
     lastLocation <- GraphLocation.loadLocation

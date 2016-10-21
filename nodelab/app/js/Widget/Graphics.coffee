@@ -6,7 +6,8 @@ app          = require('app')
 textAlign    = require('Text2D/textAlign')
 Text2D       = require('Text2D/Text2D')
 
-BaseWidget   = require ('Widget/BaseWidget')
+BaseWidget   = require 'Widget/BaseWidget'
+Rendering    = require 'Rendering'
 require('Widget/GraphicsBufferGeometry')
 
 class Graphics extends BaseWidget
@@ -119,7 +120,7 @@ class Graphics extends BaseWidget
     @itemGroup.scale.y = @height
 
   requestRedraw: ->
-    app.redrawTextureCallbacks.push (renderer) => @redrawTextures renderer
+    Rendering.redrawTextureCallbacks.push (renderer) => @redrawTextures renderer
 
   redrawTextures: (renderer) ->
     @labelGroup.children.forEach (item) => item.setZoom $$.commonUniforms.camFactor.value

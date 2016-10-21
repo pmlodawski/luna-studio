@@ -59,7 +59,7 @@ import           UI.Raycaster
 
 data AddHandler a = AddHandler ((a -> IO ()) -> IO (IO ()))
 
-foreign import javascript safe "app.getJSState()" getJSState :: IO JSState
+foreign import javascript safe "require('common')" getJSState :: IO JSState
 
 backspace = 8
 
@@ -200,6 +200,7 @@ textEditorHandler  = AddHandler $ \h -> do
 
 customEventHandler :: AddHandler Event
 customEventHandler  = AddHandler $ \h -> do
+    CustomEvent.initializeEvents
     CustomEvent.registerCallback $ \topic payload -> do
         liftIO $ h $ CustomEvent $ CustomEvent.RawEvent (JSString.unpack $ pFromJSVal topic) payload
 

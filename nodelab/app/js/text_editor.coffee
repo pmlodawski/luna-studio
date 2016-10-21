@@ -1,8 +1,6 @@
-'use strict'
-$$ = require('common')
-ace = window.ace
+$$     = require('common')
+ace    = window.ace
 editor = undefined
-
 
 init = ->
   $$.editorContainer = $('<div id="editorContainer"/>')
