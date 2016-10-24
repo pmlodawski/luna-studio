@@ -18,7 +18,7 @@ class DefinitionPort extends BaseWidget
     @bg = new THREE.Mesh bgMesh, new THREE.ShaderMaterial
         uniforms:       @uniforms
         vertexShader:   require('shaders/sdf.vert')()
-        fragmentShader: require('shaders/label_bg.frag')()
+        fragmentShader: require('shaders/definition_port.frag')()
         transparent:    true
         blending:       THREE.NormalBlending
         side:           THREE.DoubleSide
@@ -28,6 +28,7 @@ class DefinitionPort extends BaseWidget
     @mesh.add @bg
 
     @bg.scale.set(width, height, 1.0);
-
+    setValue: (value) -> null
+    setVText: (text)  -> null
 
 module.exports = DefinitionPort
