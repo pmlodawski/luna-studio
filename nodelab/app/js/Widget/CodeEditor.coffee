@@ -1,5 +1,6 @@
-HTMLWidget = require 'Widget/HTMLWidget'
-app        = require 'app'
+HTMLWidget  = require 'Widget/HTMLWidget'
+app         = require 'app'
+customEvent = require('CustomEvent').customEvent
 
 class CodeEditor extends HTMLWidget
   constructor: (widgetId, width, height) ->
@@ -22,8 +23,8 @@ class CodeEditor extends HTMLWidget
     @editor.setValue text, -1
     @relayout()
 
-  onChange: (delta) -> app.customEvent("widget", { "_widgetId": @widgetId, "_payload": "CodeEditorChange"})
-  onBlur:   (ev)    -> app.customEvent("widget", { "_widgetId": @widgetId, "_payload": "CodeEditorBlur"})
+  onChange: (delta) -> customEvent("widget", { "_widgetId": @widgetId, "_payload": "CodeEditorChange"})
+  onBlur:   (ev)    -> customEvent("widget", { "_widgetId": @widgetId, "_payload": "CodeEditorBlur"})
 
   getCode: -> @editor.getValue()
 

@@ -38,7 +38,7 @@ import           Luna.Compilation.Pass.Inference.Importing       (SymbolImportin
 import           Luna.Compilation.Pass.Inference.Scan            (ScanPass (..))
 import           Luna.Syntax.Model.Network.Builder               (Sign (..))
 
-import qualified Luna.Compilation.Pass.Interpreter.Interpreter   as Interpreter
+import qualified Luna.Interpreter.Interpreter                    as Interpreter
 
 import qualified Empire.ASTOp                                    as ASTOp
 

@@ -17,8 +17,8 @@ var cachedWidth  = 0;
 var cachedHeight = 0;
 
 function cacheMap() {
-  var width  = $$.renderer.domElement.width,
-      height = $$.renderer.domElement.height;
+  var width  = $$.renderer.getSize().width  * $$.renderer.getPixelRatio(),
+      height = $$.renderer.getSize().height * $$.renderer.getPixelRatio();
   if (cachedWidth !== width || cachedHeight !== height)
       cachedMap = new Uint8Array(4 * width * height);
   cachedWidth  = width;
@@ -27,6 +27,8 @@ function cacheMap() {
 }
 
 function getMapPixelAtCached(x, y) {
+  x = x * $$.renderer.getPixelRatio();
+  y = y * $$.renderer.getPixelRatio();
   var offset = 4 * (cachedWidth * (cachedHeight - y - 1) + x);
   return [ cachedMap[offset + 0]
          , cachedMap[offset + 1]
@@ -40,6 +42,11 @@ var getMapPixelAt = getMapPixelAtCached;
 var getObjectsInRect = function(x, y, w, h) {
   var last = -1;
   var out = [];
+
+  x = x * $$.renderer.getPixelRatio();
+  y = y * $$.renderer.getPixelRatio();
+  w = w * $$.renderer.getPixelRatio();
+  h = h * $$.renderer.getPixelRatio();
 
   for(var j = y; j < y + h; j++) {
     for(var i = x; i < x + w; i++) {

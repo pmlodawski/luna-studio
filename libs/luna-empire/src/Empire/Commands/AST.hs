@@ -41,18 +41,19 @@ import           Old.Luna.Syntax.Term.Class              (Cons (..), Unify (..))
 import qualified Old.Luna.Syntax.Term.Expr.Lit           as Lit
 
 import           Luna.Compilation.Error                  as TCError
-import           Luna.Compilation.Pass.Interpreter.Layer (InterpreterData (..))
-import qualified Luna.Compilation.Pass.Interpreter.Value as Value
-import           Luna.Compilation.Pass.Interpreter.Value (toExceptIO, unsafeFromData, Data, attachListener)
-import qualified Luna.Compilation.Pass.Interpreter.Layer as Interpreter
+
+import           Luna.Interpreter.Layer                  (InterpreterData (..))
+import qualified Luna.Interpreter.Value                  as Value
+import           Luna.Interpreter.Value                  (toExceptIO, unsafeFromData, Data, attachListener)
+import qualified Luna.Interpreter.Layer                  as Interpreter
 
 import           Empire.Commands.Graphics                (fromFigure, fromGeoComponent, fromGeometry, fromGraphics, fromLayer, fromMaterial,
                                                           fromPrimitive, fromShape, fromSurface)
 
 
 -- TODO: This might deserve rewriting to some more general solution
-import           Luna.Compilation.Pass.Interpreter.Charts (autoScatterChartInt, autoScatterChartDouble, autoScatterChartIntTuple, autoScatterChartDoubleTuple)
-import qualified Graphics.API                             as G
+import           Luna.Interpreter.Charts                 (autoScatterChartInt, autoScatterChartDouble, autoScatterChartIntTuple, autoScatterChartDoubleTuple)
+import qualified Graphics.API                            as G
 
 metaKey :: TypeKey NodeMeta
 metaKey = TypeKey

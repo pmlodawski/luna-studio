@@ -26,8 +26,8 @@ newtype CodeEditor = CodeEditor JSVal deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget CodeEditor
 
-foreign import javascript unsafe "new CodeEditor($1, $2, $3)" create'        :: Int        -> Double -> Double -> IO CodeEditor
-foreign import javascript unsafe "$1.setCode($2)"             setCode'       :: CodeEditor -> JSString         -> IO ()
+foreign import javascript safe "new CodeEditor($1, $2, $3)" create'        :: Int        -> Double -> Double -> IO CodeEditor
+foreign import javascript safe "$1.setCode($2)"             setCode'       :: CodeEditor -> JSString         -> IO ()
 
 create :: WidgetId -> Model.CodeEditor -> IO CodeEditor
 create oid model = do

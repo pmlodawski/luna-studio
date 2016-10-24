@@ -3,6 +3,7 @@
 var release = require('config.release');
 var brunch = require('brunch');
 var config;
+var customEvent = require('CustomEvent').customEvent;
 
 function defaultBackend() {
     var l = window.location;
@@ -34,16 +35,6 @@ if (brunch.env !== "production") {
 
   console.info("Backend address is " + browser.backendAddress);
 
-  console.info("Backend connection is " + (config.backend ? "enabled" : "disabled"));
-
-  window.enableBackend = function () {
-    console.info("Backend connection enabled! Please reload the page.");
-    localStorage.setItem('backend', "true");
-  };
-  window.disableBackend = function () {
-    console.info("Backend connection disabled! Please reload the page.");
-    localStorage.setItem('backend', "false");
-  };
   window.setBackendAddress = function (addr) {
     console.log("Backend address set to: " + addr + ". Refresh the page to use your new backend.");
     localStorage.setItem('backendAddress', addr);
@@ -62,7 +53,7 @@ if (brunch.env !== "production") {
 
   window.showState = function() {
     var app = require('app');
-    app.customEvent("debug.getState", null);
+    customEvent("debug.getState", null);
   };
 
 } else {

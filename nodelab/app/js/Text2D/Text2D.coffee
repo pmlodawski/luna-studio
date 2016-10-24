@@ -67,16 +67,17 @@ class Text2D extends THREE.Object3D
       @zoom = zoom
       @updateText()
 
-  getFontStyle: ->
-    (@fontSize * @zoom).toFixed(2) + 'px ' + @font
+  getFontStyle: (dpr) ->
+    (@fontSize * @zoom * dpr).toFixed(2) + 'px ' + @font
 
   updateText: ->
     @cleanUp() # cleanup previous texture
 
     maxWidth = if @maxWidth then @maxWidth * @zoom else undefined
+    dpr = @canvas.updateDPR()
 
     @canvas.drawText @text, {
-        font: @getFontStyle(),
+        font: @getFontStyle(dpr),
         fillStyle: @fillStyle,
         maxWidth: maxWidth
       }
@@ -107,9 +108,11 @@ class Text2D extends THREE.Object3D
       @geometry = @mesh.geometry
       @add @mesh
 
+    textWidth  = @canvas.textWidth  / dpr
+    textHeight = @canvas.textHeight / dpr
 
-    @mesh.position.x = ( (@canvas.width()  / 2) -  (@canvas.textWidth  / 2)) + ((@canvas.textWidth / 2) * @align.x)
-    @mesh.position.y = (- @canvas.height() / 2) + ((@canvas.textHeight / 2)  * @align.y)
+    @mesh.position.x = ( (@canvas.width()  / 2) -  (textWidth  / 2)) + ((textWidth/ 2) * @align.x)
+    @mesh.position.y = (- @canvas.height() / 2) + ((textHeight / 2)  * @align.y)
 
     @rotation.x = Math.PI
     @scale.x = 1.0 / @zoom

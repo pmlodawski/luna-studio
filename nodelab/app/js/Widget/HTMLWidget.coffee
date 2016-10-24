@@ -3,6 +3,7 @@ config = require('config')
 app    = require('app')
 
 BaseWidget = require ('Widget/BaseWidget')
+Rendering = require ('Rendering')
 
 cloneMouseEvent      = (e) -> new MouseEvent(e.type, e)
 cloneKeyboardEvent   = (e) -> new KeyboardEvent(e.type, e)
@@ -68,7 +69,7 @@ class HTMLWidget extends BaseWidget
       display: if isVisible(@mesh) then 'block' else 'none'
 
   widgetMoved: =>
-    app.nextFrameCallbacks.push(=> @relayout())
+    Rendering.nextFrameCallbacks.push(=> @relayout())
 
   destructor: ->
     @element.remove()

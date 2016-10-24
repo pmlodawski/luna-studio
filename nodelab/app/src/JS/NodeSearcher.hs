@@ -18,7 +18,7 @@ import           Empire.API.JSONInstances       ()
 import           Text.ScopeSearcher.QueryResult (Highlight (..), QueryResult (..))
 
 
-foreign import javascript safe "app.createNodeSearcher($1, $2, $3, $4, $5)"
+foreign import javascript safe "require('node_searcher').create($1, $2, $3, $4, $5)"
     initNodeSearcher' :: JSString -> JSVal -> Int -> Int -> Bool -> IO ()
 
 initNodeSearcher :: Text -> Maybe NodeId -> Vector2 Int -> Bool -> IO ()
@@ -32,16 +32,16 @@ data TargetSearcher = NodeSearcher | CommandSearcher
 
 newtype JSHighlight = JSHighlight JSVal
 
-foreign import javascript safe "if(app.nodeSearcher()) app.nodeSearcher().clearResults()"
+foreign import javascript safe "if(require('common').nodeSearcher) require('common').nodeSearcher.clearResults()"
     nodesearcher_clear_results :: IO ()
 
-foreign import javascript safe "if(app.nodeSearcher()) app.nodeSearcher().addResult($1, $2, $3, $4, $5)"
+foreign import javascript safe "if(require('common').nodeSearcher) require('common').nodeSearcher.addResult($1, $2, $3, $4, $5)"
     nodesearcher_add_result :: JSString -> JSString -> JSString -> JSHighlight -> JSString -> IO ()
 
-foreign import javascript safe "if(app.nodeSearcher()) app.nodeSearcher().finishResult()"
+foreign import javascript safe "if(require('common').nodeSearcher) require('common').nodeSearcher.finishResult()"
     nodesearcher_finish_result :: IO ()
 
-foreign import javascript safe "app.nodeSearcher().addTreeResult($1, $2, $3, $4)"
+foreign import javascript safe "require('common').nodeSearcher.addTreeResult($1, $2, $3, $4)"
     nodesearcher_add_tree_result :: JSString -> JSString -> JSString -> JSString -> IO ()
 
 searcherResultName :: TargetSearcher -> QueryResult -> Text
