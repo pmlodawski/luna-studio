@@ -1,7 +1,9 @@
+config        = require('config')
 $$            = require 'common'
 raycaster     = require 'raycaster'
 connectionPen = require 'connection_pen'
 Selection     = require 'Selection'
+Connection    = require('Widget/Connection')
 textEditor    = require 'text_editor'
 
 shouldRender = true
