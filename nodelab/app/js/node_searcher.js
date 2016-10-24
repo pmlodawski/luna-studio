@@ -178,7 +178,6 @@ NodeSearcher.prototype.appendExpression = function (expr) {
 
 
 NodeSearcher.prototype.performSearch = function () {
-  var app = require('app');
   if (this.prefix === "" && this.searchbox.val() === "") {
     this.firstColumn.removeClass('types');
     this.clearResults();
@@ -243,7 +242,6 @@ NodeSearcher.prototype.isSearchboxActive = function () {
 };
 
 NodeSearcher.prototype.createNode = function () {
-  var app = require('app');
   this.destroy();
   customEvent("nodesearcher", { "tag":         this.actionCreate
                                   , "_expression": this.expression()
@@ -273,7 +271,6 @@ NodeSearcher.prototype.openColumn = function () {
 
   column.data('items', column.items);
 
-  var app = require('app');
   customEvent("nodesearcher", { "tag": this.actionTree
                                   , "contents": this.currentSelection().data('match').fullname
                                   });
@@ -616,4 +613,4 @@ module.exports = {
   create:  create,
   destroy: destroy
 
-}
+};

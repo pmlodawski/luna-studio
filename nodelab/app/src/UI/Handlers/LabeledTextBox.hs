@@ -5,8 +5,8 @@ import           Utils.PreludePlus
 import           Data.HMap.Lazy               (HTMap)
 import           Utils.Vector
 
-import           Object.Widget                (CompositeWidget, DblClickHandler, ResizableWidget, UIHandlers, WidgetId,
-                                               createWidget, dblClick, resizeWidget, updateWidget)
+import           Object.Widget                (CompositeWidget, DblClickHandler, ResizableWidget, UIHandlers, WidgetId, createWidget,
+                                               dblClick, resizeWidget, updateWidget)
 import qualified Object.Widget.LabeledTextBox as Model
 import qualified Object.Widget.TextBox        as TextBox
 import           Reactive.Commands.Command    (Command)
@@ -21,9 +21,11 @@ import           UI.Widget.LabeledTextBox     ()
 import           UI.Handlers.Generic          (ValueChangedHandler (..), triggerValueChanged)
 import qualified UI.Handlers.TextBox          as TextBox
 
+
+
 dblClickHandler :: DblClickHandler Global.State
-dblClickHandler _ _ id = do
-    (tbId:_) <- inRegistry $ UICmd.children id
+dblClickHandler _ _ wid = do
+    (tbId:_) <- inRegistry $ UICmd.children wid
     UICmd.takeFocus tbId
     inRegistry $ UICmd.update_ tbId $ TextBox.isEditing .~ True
 
@@ -34,8 +36,8 @@ widgetHandlers = def & dblClick     .~ dblClickHandler
 
 
 textHandlers :: WidgetId -> HTMap
-textHandlers id = addHandler (ValueChangedHandler $ textValueChangedHandler id)
-                $ addHandler (UICmd.LostFocus $ lostFocusHandler id)
+textHandlers wid = addHandler (ValueChangedHandler $ textValueChangedHandler wid)
+                $ addHandler (UICmd.LostFocus $ lostFocusHandler wid)
                 $ mempty where
 
 textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
@@ -44,28 +46,28 @@ textValueChangedHandler parent val tbId = do
     triggerValueChanged val parent
 
 lostFocusHandler :: WidgetId -> WidgetId -> Command Global.State ()
-lostFocusHandler _ id = TextBox.applyChanges id
+lostFocusHandler _ wid = TextBox.applyChanges wid
 
 instance CompositeWidget Model.LabeledTextBox where
-    createWidget id model = do
+    createWidget wid model = do
         let tx      = (model ^. Model.size . x) / 2.0
             ty      = (model ^. Model.size . y)
             sx      = tx - (model ^. Model.size . y / 2.0)
             textVal = model ^. Model.value
             textBox = TextBox.create (Vector2 sx ty) textVal TextBox.Right
 
-        tbId <- UICmd.register id textBox $ textHandlers id
+        tbId <- UICmd.register wid textBox $ textHandlers wid
         UICmd.moveX tbId tx
 
-    updateWidget id old model = do
-        (tbId:_) <- UICmd.children id
+    updateWidget wid old model = do
+        (tbId:_) <- UICmd.children wid
         UICmd.update_ tbId $ TextBox.value .~ (model ^. Model.value)
 
 instance ResizableWidget Model.LabeledTextBox where
-    resizeWidget id size model = do
-        defaultResize id size model
+    resizeWidget wid size model = do
+        defaultResize wid size model
 
-        (tbId:_) <- UICmd.children id
+        (tbId:_) <- UICmd.children wid
         let tx      = (model ^. Model.size . x) / 2.0
             ty      = (model ^. Model.size . y)
             sx      = tx - (model ^. Model.size . y / 2.0)

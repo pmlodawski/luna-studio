@@ -28,7 +28,7 @@ class DefinitionPort extends BaseWidget
     @mesh.add @bg
 
     @bg.scale.set(width, height, 1.0);
-    setValue: (value) -> null
-    setVText: (text)  -> null
+    @container = new THREE.Group()
+    @mesh.add @container
 
 module.exports = DefinitionPort

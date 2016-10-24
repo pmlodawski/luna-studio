@@ -52,7 +52,6 @@ if (brunch.env !== "production") {
   };
 
   window.showState = function() {
-    var app = require('app');
     customEvent("debug.getState", null);
   };
 
