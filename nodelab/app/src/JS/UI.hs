@@ -27,7 +27,8 @@ foreign import javascript safe "require('Rendering').shouldRender()" shouldRende
 
 foreign import javascript safe "require('BSOD').connectionClosed()" displayConnectionClosedMessage :: IO ()
 
-foreign import javascript safe "breadcrumb.calculateTextWidth($1)" calculateTextWidth' :: JSString -> Int
+foreign import javascript safe "breadcrumb.calculateTextWidth($1)"
+    calculateTextWidth' :: JSString -> Int
 
 calculateTextWidth :: Text -> Int
 calculateTextWidth = calculateTextWidth' . lazyTextToJSString
