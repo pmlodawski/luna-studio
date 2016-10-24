@@ -19,12 +19,20 @@ import           Utils.Vector                 (Vector2 (Vector2), x, y)
 
 instance CompositeWidget Model.DefinitionPort where
     createWidget wid model = do
-        let tx = Definition.portLabelGap + Definition.portHoverWidth
+        let inOut = model ^. Model.inputOutput
+            tx = Definition.portLabelGap + Definition.portHoverWidth
             lx = model ^. Model.size . x - tx
             ly = model ^. Model.size . y
-            label = Label.create (Vector2 lx ly) (model ^. Model.labelValue)
+            unalignedLabel = Label.create (Vector2 lx ly) (model ^. Model.labelValue)
+            label = case inOut of
+                Model.Input -> unalignedLabel
+                Model.Output -> unalignedLabel & Label.alignment .~ Label.Right
         labelId <- UICmd.register wid label def
-        UICmd.moveX labelId tx
+        case model ^. Model.inputOutput of
+            Model.Input  -> UICmd.moveX labelId tx
+            Model.Output -> do
+                UICmd.moveX wid lx
+                UICmd.moveX labelId $ -lx - Definition.portLabelGap
 
     updateWidget wid old model = do
         (labelId:_) <- UICmd.children wid

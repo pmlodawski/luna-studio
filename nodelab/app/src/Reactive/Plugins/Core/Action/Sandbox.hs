@@ -43,7 +43,10 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     let widget = Group.create
     parent <- UICmd.register sceneGraphId widget (Layout.verticalLayoutHandler 5.0)
 
-    let widget = DefinitionPort.create (Vector2 50 100) "Ala ma kota"
+    let widget = DefinitionPort.create (Vector2 100 100) False "x :: X" DefinitionPort.Input
+    UICmd.register parent widget def
+
+    let widget = DefinitionPort.create (Vector2 100 100) False "output" DefinitionPort.Output
     UICmd.register parent widget def
 
     let widget = DiscreteNumber.create (Vector2 200 20) "Discrete" 42
