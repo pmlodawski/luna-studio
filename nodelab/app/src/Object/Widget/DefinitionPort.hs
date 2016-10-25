@@ -13,7 +13,7 @@ data InputOutput = Input | Output
 data DefinitionPort = DefinitionPort
                     { _position    :: Vector2 Double
                     , _size        :: Vector2 Double
-                    , _focused     :: Bool
+                    , _hovered     :: Bool
                     , _labelValue  :: Text
                     , _inputOutput :: InputOutput
                     } deriving (Eq, Show, Typeable, Generic)

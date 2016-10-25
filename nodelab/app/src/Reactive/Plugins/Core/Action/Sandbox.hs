@@ -23,7 +23,7 @@ import qualified Object.Widget.Number.Discrete   as DiscreteNumber
 import qualified Object.Widget.Slider.Continuous as ContinuousSlider
 import qualified Object.Widget.Slider.Discrete   as DiscreteSlider
 import qualified Object.Widget.Toggle            as Toggle
-import           UI.Handlers.DefinitionPort      ()
+import qualified UI.Handlers.DefinitionPort      as DefinitionPort
 
 import qualified Object.Widget.Choice            as Choice
 import qualified Reactive.Commands.Batch         as BatchCmd

@@ -1,6 +1,5 @@
 module UI.Handlers.DefinitionPort where
 
-import           Object.Widget                (UIHandlers)
 import           Object.Widget
 import qualified Object.Widget.DefinitionPort as Model
 import qualified Object.Widget.Label          as Label
@@ -43,4 +42,14 @@ instance ResizableWidget Model.DefinitionPort where resizeWidget = UI.defaultRes
 
 
 widgetHandlers :: UIHandlers Global.State
-widgetHandlers = def
+widgetHandlers = def & mouseOver .~ mouseOverHandler
+                     & mouseOut  .~ mouseOutHandler
+
+
+mouseOverHandler :: MouseOverHandler Global.State
+mouseOverHandler _ wid =
+    Global.inRegistry $ UICmd.update_ wid $ Model.hovered .~ True
+
+mouseOutHandler :: MouseOutHandler Global.State
+mouseOutHandler _ wid =
+    Global.inRegistry $ UICmd.update_ wid $ Model.hovered .~ False
