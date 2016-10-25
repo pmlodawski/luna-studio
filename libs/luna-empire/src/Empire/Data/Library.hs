@@ -1,12 +1,12 @@
 module Empire.Data.Library where
 
-import Prologue
-import System.Path        (Path, native)
-import Empire.Data.Graph  (Graph)
-import qualified Data.Text.Lazy as Text
-import qualified Empire.API.Data.Library as API
-import qualified Empire.API.Data.Graph   as API (Graph)
+import qualified Data.Text.Lazy                 as Text
+import qualified Empire.API.Data.Graph          as API (Graph)
+import qualified Empire.API.Data.Library        as API
 import qualified Empire.API.Persistence.Library as Persistence
+import           Empire.Data.Graph              (Graph)
+import           Prologue                       hiding (p)
+import           System.Path                    (Path, native)
 
 data Library = Library { _name    :: Maybe String
                        , _path    :: Path

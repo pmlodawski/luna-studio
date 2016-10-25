@@ -1,54 +1,58 @@
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Empire.Commands.GraphBuilder where
 
 import           Prologue
 
+import           Control.Monad.Error               (throwError)
 import           Control.Monad.State
-import           Control.Monad.Error          (throwError)
-import           Control.Monad.Trans.Maybe    (MaybeT (..), runMaybeT)
+import           Control.Monad.Trans.Maybe         (MaybeT (..), runMaybeT)
 
-import qualified Data.IntMap                  as IntMap
-import           Data.Map                     (Map)
-import qualified Data.Map                     as Map
-import           Data.Maybe                   (catMaybes, fromMaybe, maybeToList)
-import qualified Data.List                    as List
-import qualified Data.Text.Lazy               as Text
-import           Data.Record                  (ANY (..), caseTest, of')
-import           Data.Layer_OLD.Cover_OLD     (uncover, covered)
-import           Data.Graph                   (source)
-import           Data.Prop                    (prop)
+import           Data.Graph                        (source)
+import qualified Data.IntMap                       as IntMap
+import           Data.Layer_OLD.Cover_OLD          (covered, uncover)
+import qualified Data.List                         as List
+import           Data.Map                          (Map)
+import qualified Data.Map                          as Map
+import           Data.Maybe                        (catMaybes, fromMaybe, maybeToList)
+import           Data.Prop                         (prop)
+import           Data.Record                       (ANY (..), caseTest, of')
+import qualified Data.Text.Lazy                    as Text
 
-import           Empire.Data.Graph            (Graph)
-import qualified Empire.Data.Graph            as Graph
+import           Empire.API.Data.Input             (Input (Input))
+import           Empire.API.Data.Output            (Output (Output))
+import           Empire.Data.Graph                 (Graph)
+import qualified Empire.Data.Graph                 as Graph
 
-import           Empire.API.Data.DefaultValue (PortDefault (..), Value (..))
-import qualified Empire.API.Data.Graph        as API
-import           Empire.API.Data.Node         (NodeId)
-import qualified Empire.API.Data.Node         as API
-import           Empire.API.Data.NodeMeta     (NodeMeta (..))
-import           Empire.API.Data.Port         (InPort (..), OutPort (..), Port (..), PortId (..), PortState (..))
-import           Empire.API.Data.PortRef      (InPortRef (..), OutPortRef (..))
-import           Empire.API.Data.ValueType    (ValueType (..))
+import           Empire.API.Data.DefaultValue      (PortDefault (..), Value (..))
+import qualified Empire.API.Data.Graph             as API
+import           Empire.API.Data.Node              (NodeId)
+import qualified Empire.API.Data.Node              as API
+import           Empire.API.Data.NodeMeta          (NodeMeta (..))
+import           Empire.API.Data.Port              (InPort (..), OutPort (..), Port (..), PortId (..), PortState (..))
+import           Empire.API.Data.PortRef           (InPortRef (..), OutPortRef (..))
+import           Empire.API.Data.ValueType         (ValueType (..))
+import qualified Empire.API.Data.ValueType         as ValueType
 
-import           Empire.Data.AST              (NodeRef, EdgeRef, ClusRef)
-import           Empire.ASTOp                 (ASTOp, runASTOp)
-import qualified Empire.ASTOps.Builder        as ASTBuilder
-import qualified Empire.ASTOps.Print          as Print
-import qualified Empire.Commands.AST          as AST
-import qualified Empire.Commands.GraphUtils   as GraphUtils
+import           Empire.ASTOp                      (ASTOp, runASTOp)
+import qualified Empire.ASTOps.Builder             as ASTBuilder
+import qualified Empire.ASTOps.Print               as Print
+import qualified Empire.Commands.AST               as AST
+import qualified Empire.Commands.GraphUtils        as GraphUtils
+import           Empire.Data.AST                   (ClusRef, EdgeRef, NodeRef)
 import           Empire.Empire
 
-import           Old.Luna.Syntax.Term.Class         (Acc (..), App (..), Blank (..), Match (..), Var (..), Cons (..), Lam (..))
-import qualified Old.Luna.Syntax.Term.Expr.Lit      as Lit
-import qualified Luna.Syntax.Term.Function          as Function
+import qualified Luna.Syntax.Term.Function         as Function
+import           Old.Luna.Syntax.Term.Class        (Acc (..), App (..), Blank (..), Cons (..), Lam (..), Match (..), Var (..))
+import qualified Old.Luna.Syntax.Term.Expr.Lit     as Lit
 
-import qualified Luna.Syntax.Model.Network.Builder  as Builder
-import           Luna.Syntax.Model.Network.Builder  (Type (..), TCData (..), replacement)
+import           Luna.Syntax.Model.Network.Builder (TCData (..), Type (..), replacement)
+import qualified Luna.Syntax.Model.Network.Builder as Builder
 
 
 buildGraph :: Command Graph API.Graph
-buildGraph = API.Graph <$> buildNodes <*> buildConnections
+buildGraph = API.Graph <$> buildNodes <*> buildConnections <*> buildInputs <*> buildOutputs
 
 buildNodes :: Command Graph [API.Node]
 buildNodes = do
@@ -152,9 +156,9 @@ buildSelfPort' :: ASTOp m => Bool -> NodeRef -> m (Maybe Port)
 buildSelfPort' seenAcc nodeRef = do
     node <- Builder.read nodeRef
     let buildPort noType = do
-        tpRep     <- if noType then return AnyType else followTypeRep nodeRef
-        portState <- getPortState nodeRef
-        return . Just $ Port (InPortId Self) "self" tpRep portState
+            tpRep     <- if noType then return AnyType else followTypeRep nodeRef
+            portState <- getPortState nodeRef
+            return . Just $ Port (InPortId Self) "self" tpRep portState
 
     caseTest (uncover node) $ do
         of' $ \(Acc _ t)  -> Builder.follow source t >>= buildSelfPort' True
@@ -195,6 +199,15 @@ buildConnections = do
     allNodes <- uses Graph.nodeMapping Map.keys
     edges <- mapM getNodeInputs allNodes
     return $ concat edges
+
+buildInputs :: Command Graph [Input]
+buildInputs =
+    return [Input "input1" ValueType.AnyType, Input "input2" ValueType.AnyType] --TODO [MM] Provide proper values
+
+buildOutputs :: Command Graph Output
+buildOutputs =
+    return $ Output ValueType.AnyType
+
 
 getSelfNodeRef' :: ASTOp m => Bool -> NodeRef -> m (Maybe NodeRef)
 getSelfNodeRef' seenAcc nodeRef = do

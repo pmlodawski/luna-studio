@@ -6,8 +6,10 @@ import           Utils.PreludePlus
 
 import qualified Data.HashMap.Lazy               as HashMap
 
+import           Empire.API.Data.Input           (Input)
 import           Empire.API.Data.Node            (Node)
 import qualified Empire.API.Data.Node            as Node
+import           Empire.API.Data.Output          (Output)
 import           Empire.API.Data.PortRef         (InPortRef, OutPortRef)
 
 import           Reactive.Commands.Command       (Command)
@@ -24,9 +26,11 @@ fastAddNodes nodes = do
     Global.graph . Graph.nodesMap .= (HashMap.fromList $ nodeIds `zip` nodes)
     mapM_ registerNode nodes
 
-renderGraph :: [Node] -> [(OutPortRef, InPortRef)] -> Command State ()
-renderGraph nodes edges = do
+renderGraph :: [Node] -> [(OutPortRef, InPortRef)] -> [Input] -> Output -> Command State ()
+renderGraph nodes edges inputs outputs = do
     fastAddNodes nodes
     mapM_ (uncurry localConnectNodes) edges
+    --TODO add to State Graph inputs outputs
+    -- add inputs and outputs widgets
     updateConnections
     updateNodeZOrder

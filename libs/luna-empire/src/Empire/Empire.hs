@@ -1,25 +1,22 @@
 module Empire.Empire where
 
-import           Prologue
-import           Empire.Data.Project           (Project)
-import           Empire.Data.AST               (AST)
-import           Empire.Data.Graph             (Graph)
-import           Empire.API.Data.Project       (ProjectId)
-import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.AsyncUpdate   (AsyncUpdate)
 import           Empire.API.Data.DefaultValue  (Value)
-import           Empire.API.Data.Node          (Node, NodeId)
-import           Empire.API.Data.TypeRep       (TypeRep)
 import qualified Empire.API.Data.Error         as APIError
+import           Empire.API.Data.GraphLocation (GraphLocation)
+import           Empire.API.Data.Node          (Node, NodeId)
+import           Empire.API.Data.Project       (ProjectId)
+import           Empire.API.Data.TypeRep       (TypeRep)
+import           Empire.Data.Graph             (Graph)
+import           Empire.Data.Project           (Project)
+import           Prologue
 
-import           Control.Monad.State
+import           Control.Concurrent.STM.TChan  (TChan)
+import           Control.Monad.Error           (ErrorT (..), MonadError, runErrorT, throwError)
 import           Control.Monad.Reader
-import           Control.Monad.Error          (ErrorT(..), runErrorT, throwError, MonadError)
-import           Data.IntMap                  (IntMap)
-import qualified Data.IntMap                  as IntMap
-import           Data.Map.Lazy                (Map)
-import qualified Data.Map.Lazy                as Map
-import           Control.Concurrent.STM.TChan (TChan)
+import           Control.Monad.State
+import           Data.Map.Lazy                 (Map)
+import qualified Data.Map.Lazy                 as Map
 
 type Error = String
 

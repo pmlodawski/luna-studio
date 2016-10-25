@@ -25,8 +25,8 @@ import qualified Empire.API.Response                         as Response
 import           Event.Batch                                 (Event (..))
 import qualified Event.Event                                 as Event
 
-import           Reactive.Commands.Camera                    (autoZoom)
 import           Reactive.Commands.Batch                     (collaborativeModify, requestCollaborationRefresh)
+import           Reactive.Commands.Camera                    (autoZoom)
 import           Reactive.Commands.Command                   (Command, performIO)
 import           Reactive.Commands.Graph                     (updateConnection)
 import           Reactive.Commands.Graph.Connect             (localConnectNodes)
@@ -62,11 +62,13 @@ toAction (Event.Batch ev) = Just $ case ev of
             when (isGoodLocation && not isGraphLoaded) $ do
                 let nodes       = result ^. GetProgram.graph . Graph.nodes
                     connections = result ^. GetProgram.graph . Graph.connections
+                    inputs      = result ^. GetProgram.graph . Graph.inputs
+                    outputs     = result ^. GetProgram.graph . Graph.outputs
                     code        = result ^. GetProgram.code
                     nsData      = result ^. GetProgram.nodeSearcherData
 
                 Global.workspace . Workspace.nodeSearcherData .= nsData
-                renderGraph nodes connections
+                renderGraph nodes connections inputs outputs
                 autoZoom
                 performIO $ UI.setText code
                 Global.workspace . Workspace.isGraphLoaded .= True

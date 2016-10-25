@@ -14,22 +14,19 @@ import           Empire.Data.Project     (Project)
 import qualified Empire.Data.Project     as Project
 import           Empire.Empire           (Command, Empire, ProjectManager)
 import qualified Empire.Empire           as Empire
-import qualified Empire.Utils.IdGen      as IdGen
 
 import qualified Data.Map                as Map
-import           Data.Map.Lazy           (Map)
-import qualified Data.Map.Lazy           as Map
 import qualified Data.UUID.V4            as UUID
 
 createProject :: Maybe ProjectId -> String -> Empire (ProjectId, Project)
 createProject maybePid name = do
     let project = Project.make name
-    id <- case maybePid of
+    pid <- case maybePid of
       Just pid -> do
         Empire.projectManager . at pid ?= project
         return pid
       Nothing -> zoom Empire.projectManager $ insertAtNewId project
-    return (id, project)
+    return (pid, project)
 
 listProjects :: Empire [(ProjectId, Project)]
 listProjects = uses Empire.projectManager Map.toList
