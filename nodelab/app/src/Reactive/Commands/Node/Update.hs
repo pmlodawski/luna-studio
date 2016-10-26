@@ -9,6 +9,7 @@ module Reactive.Commands.Node.Update
 import           Utils.PreludePlus
 
 import           Control.Monad.State                  (modify)
+import qualified Data.Text.Lazy                       as Text
 
 import qualified Object.Widget.Node                   as Model
 
@@ -70,7 +71,7 @@ updateNodeValue nid val = do
                     UICmd.update_ widgetId $ Model.isError .~ False
                     visualizeNodeValueReprs widgetId valueReprs
                 NodeResult.Error msg -> do
-                    UICmd.update_ widgetId $ Model.value   .~ limitString errorLen (showError msg)
+                    UICmd.update_ widgetId $ Model.value   .~ limitString errorLen (Text.pack $ showError msg)
                     UICmd.update_ widgetId $ Model.isError .~ True
                     visualizeError widgetId msg
 

@@ -45,11 +45,15 @@ limitString limit str | Text.length str > limit64 = Text.take limit64 str <> "..
                       | otherwise                 = str
                       where limit64 = fromIntegral limit
 
-showError :: LunaError.Error TypeRep -> Text
+wrapLines :: Int -> String -> String
+wrapLines limit str = tail . unlines . reverse $ foldl f [""] $ words str where
+    f (a:as) e = let t = a ++ " " ++ e in if length t <= limit then t:as else e:a:as
+
+showError :: LunaError.Error TypeRep -> String
 showError = showErrorSep ""
 
-showErrorSep :: String -> LunaError.Error TypeRep -> Text
-showErrorSep sep err = Text.pack $ case err of
+showErrorSep :: String -> LunaError.Error TypeRep -> String
+showErrorSep sep err = case err of
     LunaError.ImportError   name     -> "Cannot find symbol \"" <> name        <> "\""
     LunaError.NoMethodError name tpe -> "Cannot find method \"" <> name        <> "\" for type \"" <> toString tpe <> "\""
     LunaError.TypeError     t1   t2  -> "Cannot match type  \"" <> toString t1 <> "\" with \""     <> toString t2  <> "\""
@@ -59,7 +63,9 @@ visualizeError :: WidgetId -> LunaError.Error TypeRep -> Command UIRegistry.Stat
 visualizeError id err = do
     removeVisualization id
     groupId <- Node.valueGroupId id
-    let widget = LongText.create (Vector2 200 200) (showErrorSep "\n" err) LongText.Left LongText.Code
+    let limit = 30
+        message = Text.pack $ wrapLines limit $ showErrorSep "\n" err
+        widget = LongText.create (Vector2 200 200) message LongText.Left LongText.Code
     UICmd.register_ groupId widget def
 
 removeVisualization :: WidgetId -> Command UIRegistry.State ()
