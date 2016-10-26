@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 module UI.Handlers where
 
 import           Utils.PreludePlus
@@ -11,7 +12,7 @@ import           Object.Widget.Choice.RadioButton (RadioButton)
 import           Object.Widget.CodeEditor         (CodeEditor)
 import           Object.Widget.Connection         (Connection, CurrentConnection)
 import           Object.Widget.DataFrame          (DataFrame)
-import           Object.Widget.DefinitionPort     (DefinitionPort)
+import           Object.Widget.FunctionPort       (FunctionPort)
 import           Object.Widget.Graphics           (Graphics)
 import           Object.Widget.Group              (Group)
 import           Object.Widget.Icon               (Icon)
@@ -38,7 +39,7 @@ import           UI.Widget.Choice.RadioButton     ()
 import           UI.Widget.CodeEditor             ()
 import           UI.Widget.Connection             ()
 import           UI.Widget.DataFrame              ()
-import           UI.Widget.DefinitionPort         ()
+import           UI.Widget.FunctionPort           ()
 import           UI.Widget.Graphics               ()
 import           UI.Widget.Group                  ()
 import           UI.Widget.LabeledTextBox         ()
@@ -55,7 +56,7 @@ import           UI.Handlers.Choice               ()
 import qualified UI.Handlers.Choice.RadioButton   as RadioButton
 import qualified UI.Handlers.CodeEditor           as CodeEditor
 import qualified UI.Handlers.Connection           as Connection
-import qualified UI.Handlers.DefinitionPort       as DefinitionPort
+import qualified UI.Handlers.FunctionPort         as FunctionPort
 import qualified UI.Handlers.Label                as Label
 import qualified UI.Handlers.LabeledTextBox       as LabeledTextBox
 import qualified UI.Handlers.Node                 as Node
@@ -83,7 +84,7 @@ toggleType            = typeOf (undefined :: Toggle)
 textBoxType           = typeOf (undefined :: TextBox)
 labeledTextBoxType    = typeOf (undefined :: LabeledTextBox)
 radioButtonType       = typeOf (undefined :: RadioButton)
-definitionPortType    = typeOf (undefined :: DefinitionPort)
+functionPortType      = typeOf (undefined :: FunctionPort)
 groupType             = typeOf (undefined :: Group)
 buttonType            = typeOf (undefined :: Button)
 listType              = typeOf (undefined :: List)
@@ -112,7 +113,7 @@ instance HasHandlers State where
         | tpe ==          textBoxType  =          TextBox.widgetHandlers
         | tpe ==   labeledTextBoxType  =   LabeledTextBox.widgetHandlers
         | tpe ==      radioButtonType  =      RadioButton.widgetHandlers
-        | tpe ==   definitionPortType  =   DefinitionPort.widgetHandlers
+        | tpe ==   functionPortType  =   FunctionPort.widgetHandlers
         | tpe ==            groupType  = def
         | tpe ==           buttonType  =           Button.widgetHandlers
         | tpe ==             listType  = def

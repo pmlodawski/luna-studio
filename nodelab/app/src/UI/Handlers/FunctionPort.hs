@@ -1,14 +1,14 @@
-module UI.Handlers.DefinitionPort where
+module UI.Handlers.FunctionPort where
 
 import           Object.Widget
-import qualified Object.Widget.DefinitionPort as Model
+import qualified Object.Widget.FunctionPort   as Model
 import qualified Object.Widget.Label          as Label
 import qualified Reactive.Commands.UIRegistry as UICmd
 import qualified Reactive.State.Global        as Global
-import qualified Style.Definition             as Definition
+import qualified Style.Function               as Function
 import qualified UI.Generic                   as UI
 import qualified UI.Registry                  as UI
-import           UI.Widget.DefinitionPort     ()
+import           UI.Widget.FunctionPort       ()
 import           UI.Widget.Label              ()
 import           UI.Widget.Toggle             ()
 import           Utils.PreludePlus
@@ -16,10 +16,10 @@ import           Utils.Vector                 (Vector2 (Vector2), x, y)
 
 
 
-instance CompositeWidget Model.DefinitionPort where
+instance CompositeWidget Model.FunctionPort where
     createWidget wid model = do
         let inOut = model ^. Model.inputOutput
-            tx = Definition.portLabelGap + Definition.portHoverWidth
+            tx = Function.portLabelGap + Function.portHoverWidth
             lx = model ^. Model.size . x - tx
             ly = model ^. Model.size . y
             unalignedLabel = Label.create (Vector2 lx ly) (model ^. Model.labelValue)
@@ -31,14 +31,14 @@ instance CompositeWidget Model.DefinitionPort where
             Model.Input  -> UICmd.moveX labelId tx
             Model.Output -> do
                 UICmd.moveX wid lx
-                UICmd.moveX labelId $ -lx - Definition.portLabelGap
+                UICmd.moveX labelId $ -lx - Function.portLabelGap
 
     updateWidget wid old model = do
         (labelId:_) <- UICmd.children wid
         UICmd.update_ labelId $ Label.label .~ (model ^. Model.labelValue)
 
 
-instance ResizableWidget Model.DefinitionPort where resizeWidget = UI.defaultResize
+instance ResizableWidget Model.FunctionPort where resizeWidget = UI.defaultResize
 
 
 widgetHandlers :: UIHandlers Global.State

@@ -4,7 +4,7 @@ colors       = require('colors')
 
 BaseWidget   = require('Widget/BaseWidget')
 
-class DefinitionPort extends BaseWidget
+class FunctionPort extends BaseWidget
   constructor: (widgetId, width, height, isInput) ->
     super widgetId, width, height
 
@@ -23,7 +23,7 @@ class DefinitionPort extends BaseWidget
     @bg = new THREE.Mesh bgMesh, new THREE.ShaderMaterial
         uniforms:       @uniforms
         vertexShader:   require('shaders/sdf.vert')()
-        fragmentShader: require('shaders/definition_port.frag')()
+        fragmentShader: require('shaders/function_port.frag')()
         transparent:    true
         blending:       THREE.NormalBlending
         side:           THREE.DoubleSide
@@ -40,4 +40,4 @@ class DefinitionPort extends BaseWidget
   setColor: (color) -> @uniforms.color.value = colors[color]
 
 
-module.exports = DefinitionPort
+module.exports = FunctionPort

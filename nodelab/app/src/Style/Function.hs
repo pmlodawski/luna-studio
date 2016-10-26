@@ -1,4 +1,4 @@
-module Style.Definition where
+module Style.Function where
 
 import           Utils.PreludePlus
 

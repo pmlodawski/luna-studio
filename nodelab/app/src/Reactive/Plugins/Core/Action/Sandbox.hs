@@ -13,7 +13,7 @@ import qualified Reactive.Commands.UIRegistry    as UICmd
 import           Reactive.State.UIRegistry       (addHandler, sceneGraphId)
 
 import qualified Object.Widget.CodeEditor        as CodeEditor
-import qualified Object.Widget.DefinitionPort    as DefinitionPort
+import qualified Object.Widget.FunctionPort      as FunctionPort
 import qualified Object.Widget.Graphics          as G
 import qualified Object.Widget.Group             as Group
 import qualified Object.Widget.LabeledTextBox    as LabeledTextBox
@@ -23,7 +23,7 @@ import qualified Object.Widget.Number.Discrete   as DiscreteNumber
 import qualified Object.Widget.Slider.Continuous as ContinuousSlider
 import qualified Object.Widget.Slider.Discrete   as DiscreteSlider
 import qualified Object.Widget.Toggle            as Toggle
-import           UI.Handlers.DefinitionPort      ()
+import           UI.Handlers.FunctionPort        ()
 
 import qualified Reactive.Commands.Batch         as BatchCmd
 
@@ -44,10 +44,10 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     let widget = Group.create
     parent <- UICmd.register sceneGraphId widget (Layout.verticalLayoutHandler 5.0)
 
-    let widget = DefinitionPort.create (Vector2 100 100) False "x :: X" DefinitionPort.Input
+    let widget = FunctionPort.create (Vector2 100 100) False "x :: X" FunctionPort.Input
     UICmd.register_ parent widget def
 
-    let widget = DefinitionPort.create (Vector2 100 100) False "output" DefinitionPort.Output
+    let widget = FunctionPort.create (Vector2 100 100) False "output" FunctionPort.Output
     UICmd.register_ parent widget def
 
     let widget = DiscreteNumber.create (Vector2 200 20) "Discrete" 42

@@ -103,7 +103,7 @@ handleMouseDrag jsState (Mouse.Event Mouse.Moved absPos button keymods _) = do
 handleMouseDrag jsState (Mouse.Event Mouse.Released _ _ _ _) = stopDrag jsState
 handleMouseDrag _ _ = return ()
 
--- stopDrag :: _
+dragInProgress :: Integral a => JSState -> DragState -> Vector2 a -> Keyboard.KeyMods -> Command Global.State ()
 dragInProgress jsState dragState absPos keymods = do
     file <- zoom Global.uiRegistry $ UIRegistry.lookupM $ dragState ^. Widget.widgetId
     camera <- use $ Global.camera . Camera.camera
@@ -149,4 +149,3 @@ handleWidgetCustom widgetId payload = do
     withJust file $ \file -> do
         let handlers = widgetHandlers (file ^. widget)
         (handlers ^. widgetCustom) payload widgetId
-
