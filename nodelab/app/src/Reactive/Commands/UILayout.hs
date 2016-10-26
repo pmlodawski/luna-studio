@@ -17,6 +17,7 @@ import qualified Reactive.State.UIElements    as UIElements
 import qualified Style.Layout                 as Style
 
 
+relayout :: Command State ()
 relayout = resizeSidebar >> resizeTextEditorToggle
 
 resizeSidebar :: Command State ()

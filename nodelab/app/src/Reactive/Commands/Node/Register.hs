@@ -13,11 +13,12 @@ import           Object.Widget                     (widget)
 import qualified Object.Widget.Node                as UINode
 import qualified Reactive.Commands.Batch           as BatchCmd
 import           Reactive.Commands.Graph.Selection (selectedNodes)
-import           Reactive.State.Global             (inRegistry)
 import qualified Reactive.State.UIElements         as UIElements
 
 import qualified Empire.API.Data.NodeMeta          as NodeMeta
 import qualified JS.GoogleAnalytics                as GA
+
+
 
 registerNode :: Text -> Command State ()
 registerNode expr = do

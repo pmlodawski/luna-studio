@@ -23,12 +23,11 @@ import           Reactive.Commands.Camera          (syncCamera)
 import           Reactive.Commands.Command         (Command, performIO)
 import           Reactive.Commands.Graph.Selection (selectedNodes)
 import qualified Reactive.State.Camera             as Camera
-import           Reactive.State.Global             (inRegistry)
 import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph
 import qualified Reactive.State.UIElements         as UIElements
 
-import           Empire.API.Data.Node              (Node, NodeId)
+import           Empire.API.Data.Node              (NodeId)
 import qualified Empire.API.Data.Node              as Node
 import qualified Empire.API.Data.Port              as Port
 import qualified Empire.API.Data.TypeRep           as TypeRep
@@ -59,7 +58,7 @@ position :: Command Global.State (Vector2 Double, Vector2 Int)
 position = do
     mousePos <- use Global.mousePos
     mousePos' <- zoom Global.camera $ Camera.screenToWorkspaceM mousePos
-    factor <- use $ Global.camera . Camera.camera . Camera.factor
+    -- factor <- use $ Global.camera . Camera.camera . Camera.factor
     selected <- selectedNodes
     nsPos <- zoom Global.camera $ Camera.workspaceToScreen $ case selected of
             [wf]   -> (wf ^. Widget.widget . NodeModel.position) + Vector2 230.0 0
@@ -75,13 +74,13 @@ ensureNSVisible = do
         then do
             Global.camera . Camera.camera . Camera.pan . x .= workspacePos ^. x
             zoom Global.camera syncCamera
-            return . floor $ fromIntegral (screenSize ^. x) / 2.0
+            return . floor $ fromIntegral (screenSize ^. x) / (2.0 :: Double)
         else return $ screenPos ^. x
     y' <- if screenPos ^. y > (screenSize ^. y - 250)
         then do
             Global.camera . Camera.camera . Camera.pan . y .= workspacePos ^. y
             zoom Global.camera syncCamera
-            return . floor $ fromIntegral (screenSize ^. y) / 2.0
+            return . floor $ fromIntegral (screenSize ^. y) / (2.0 :: Double)
         else return $ screenPos ^. y
 
     return (workspacePos, Vector2 x' y')
@@ -93,18 +92,18 @@ scopedData :: Command Global.State Items
 scopedData = do
     completeData <- searcherData
     selected   <- selectedNodes
-    scope <- case selected of
+    mscope <- case selected of
             []     -> return Nothing
             [wf]   -> do
                 let nodeId = wf ^. Widget.widget . NodeModel.nodeId
-                vt <- preuse $ Global.graph . Graph.nodesMap . ix nodeId . Node.ports . ix (Port.OutPortId Port.All) . Port.valueType
-                return $ case vt of
+                mvt <- preuse $ Global.graph . Graph.nodesMap . ix nodeId . Node.ports . ix (Port.OutPortId Port.All) . Port.valueType
+                return $ case mvt of
                     Nothing -> Nothing
                     Just vt -> case vt of
                         ValueType.TypeIdent (TypeRep.TCons ti _) -> Just $ Text.pack ti
                         _ -> Nothing
             (_:_) -> return Nothing
-    case scope of
+    case mscope of
         Nothing -> return completeData
         Just tn -> do
             let gf = globalFunctions completeData

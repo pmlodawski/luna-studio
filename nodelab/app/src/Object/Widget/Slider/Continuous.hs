@@ -20,7 +20,7 @@ makeLenses    ''ContinuousSlider
 instance ToJSON ContinuousSlider
 
 create :: Size -> Text -> Double -> Double -> Double -> ContinuousSlider
-create s l min max v = ContinuousSlider def s l True min max v def
+create s l minVal maxVal v = ContinuousSlider def s l True minVal maxVal v def
 
 instance IsDisplayObject ContinuousSlider where
     widgetPosition = position

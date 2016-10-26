@@ -38,9 +38,9 @@ instance Default Workspace where
 makeLenses ''Workspace
 
 currentProject' :: Workspace -> Project
-currentProject' w = fromMaybe err $ w ^? projects . ix id where
-    id = w ^. currentLocation . GraphLocation.projectId
-    err = error $ "Invalid project id: " <> (show id)
+currentProject' w = fromMaybe err $ w ^? projects . ix pid where
+    pid = w ^. currentLocation . GraphLocation.projectId
+    err = error $ "Invalid project id: " <> show pid
 
 currentProject :: Getter Workspace Project
 currentProject = to currentProject'
@@ -49,8 +49,8 @@ currentProjectId :: Getter Workspace ProjectId
 currentProjectId = currentLocation . GraphLocation.projectId
 
 currentLibrary' :: Workspace -> Library
-currentLibrary' w = fromMaybe err $ project ^? Project.libs . ix id where
-    id = w ^. currentLocation . GraphLocation.libraryId
+currentLibrary' w = fromMaybe err $ project ^? Project.libs . ix lid where
+    lid = w ^. currentLocation . GraphLocation.libraryId
     project = w ^. currentProject
     err = error "Invalid library id"
 
@@ -63,10 +63,10 @@ instance ToJSON UIGraphLocation
 instance FromJSON UIGraphLocation
 
 uiGraphLocation' :: Workspace -> UIGraphLocation
-uiGraphLocation' w = UIGraphLocation project library breadcrumb where
-    breadcrumb = w ^. currentLocation . GraphLocation.breadcrumb
-    project    = w ^. currentProjectId
-    library    = w ^. currentLibrary  . Library.path
+uiGraphLocation' w = UIGraphLocation project library breadcrumb' where
+    breadcrumb' = w ^. currentLocation . GraphLocation.breadcrumb
+    project     = w ^. currentProjectId
+    library     = w ^. currentLibrary  . Library.path
 
 uiGraphLocation :: Getter Workspace UIGraphLocation
 uiGraphLocation = to uiGraphLocation'

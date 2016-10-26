@@ -107,7 +107,7 @@ class ResizableWidget a where
     resizeWidget _ _ _ = return ()
 
 instance ResizableWidget DisplayObject where
-    resizeWidget id size obj = withCtxDynamic (resizeWidget id size) obj
+    resizeWidget wid size obj = withCtxDynamic (resizeWidget wid size) obj
 
 data DragState = DragState { _widgetId     :: WidgetId
                            , _widgetMatrix :: [Double]

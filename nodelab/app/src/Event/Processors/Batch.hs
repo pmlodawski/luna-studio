@@ -4,10 +4,10 @@ module Event.Processors.Batch (process) where
 import           Data.Binary                (Binary, decode)
 import           Data.ByteString.Lazy.Char8 (ByteString)
 import qualified Data.Map.Lazy              as Map
-import           Utils.PreludePlus
+import           Utils.PreludePlus          hiding (cons)
 
-import           BatchConnector.Connection  (ControlCode (..), WebMessage (..))
-import           Empire.API.Topic           as Topic
+import           BatchConnector.Connection  (ControlCode (ConnectionTakeover, Welcome), WebMessage (ControlMessage, WebMessage))
+import qualified Empire.API.Topic           as Topic
 import           Event.Batch                as Batch
 import           Event.Connection           as Connection
 import qualified Event.Event                as Event
@@ -17,9 +17,10 @@ process :: Event.Event -> Maybe Event.Event
 process (Event.Connection (Message msg)) = Just $ Event.Batch $ processMessage msg
 process _                                = Nothing
 
-handle :: forall a. (Binary a, MessageTopic a) => (a -> Batch.Event) -> (String, (ByteString -> Batch.Event))
+handle :: forall a. (Binary a, Topic.MessageTopic a) => (a -> Batch.Event) -> (String, (ByteString -> Batch.Event))
 handle cons = (Topic.topic (undefined :: a), cons . decode)
 
+handlers :: Map.Map String (ByteString -> Batch.Event)
 handlers = Map.fromList [ handle NodeAdded
                         , handle AddNodeResponse
                         , handle NodeRemoved

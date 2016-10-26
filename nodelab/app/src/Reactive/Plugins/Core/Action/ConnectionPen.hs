@@ -111,8 +111,10 @@ remdups               :: (Eq a) => [a] -> [a]
 remdups (x : xx : xs) =  if x == xx then remdups (x : xs) else x : remdups (xx : xs)
 remdups xs            = xs
 
+zipAdj :: [b] -> [(b, b)]
 zipAdj x = zip x $ tail x
 
+maybeLast :: [r] -> Maybe r
 maybeLast [] = Nothing
 maybeLast xs = Just $ last xs
 

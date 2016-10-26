@@ -5,7 +5,7 @@ module Reactive.Plugins.Core.Action.NodeSearcher where
 import           Utils.PreludePlus                          hiding (stripPrefix)
 
 import           Event.Event                                (Event (..))
-import           Event.Keyboard                             (KeyMods (..), shift)
+import           Event.Keyboard                             (KeyMods (..))
 import qualified Event.Keyboard                             as Keyboard
 import qualified Event.NodeSearcher                         as NodeSearcher
 
@@ -32,4 +32,3 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\t'   mods@(KeyMods { _shift
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\191' (KeyMods False False False False))) = Just $ NS.openCommand -- 191 = /
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\191' (KeyMods True False False False))) = Just $ CS.help
 toAction _ = Nothing
-

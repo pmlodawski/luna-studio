@@ -7,4 +7,4 @@ import qualified Data.Text         as Text
 import           Utils.PreludePlus hiding ((.=))
 
 intMapToJSON :: ToJSON a => IntMap a -> Value
-intMapToJSON map = object $ (\(k, v) -> (Text.pack $ show k) .= (toJSON v)) <$> IntMap.toList map
+intMapToJSON intmap = object $ (\(k, v) -> (Text.pack $ show k) .= (toJSON v)) <$> IntMap.toList intmap

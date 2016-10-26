@@ -1,15 +1,15 @@
 module Event.Processors.CustomEvent (process) where
 
-import           Data.Aeson                (fromJSON)
-import qualified Data.Aeson                as AE
-import           GHCJS.Types               (JSVal)
-import           GHCJS.Marshal             (fromJSVal)
+import           Control.Monad     (liftM)
+import           Data.Aeson        (fromJSON)
+import qualified Data.Aeson        as AE
+import           GHCJS.Marshal     (fromJSVal)
+import           GHCJS.Types       (JSVal)
 import           Utils.PreludePlus
-import           Control.Monad (liftM)
 
-import           Event.CustomEvent         as CustomEvent
-import           Event.Debug               (Event (..))
-import qualified Event.Event               as Event
+import           Event.CustomEvent as CustomEvent
+import           Event.Debug       (Event (..))
+import qualified Event.Event       as Event
 
 payloadToData :: (AE.FromJSON a) => String -> JSVal -> IO (Maybe a)
 payloadToData topic payload = do
@@ -28,5 +28,5 @@ process (Event.CustomEvent (CustomEvent.RawEvent topic payload)) = case topic of
     "nodesearcher"   -> (liftM Event.NodeSearcher) <$> payloadToData topic payload
     "tick"           -> return $ Just $ Event.Tick
     "widget"         -> (liftM Event.Widget) <$> payloadToData topic payload
-    otherwise        -> return Nothing
+    _               -> return Nothing
 process _ = return Nothing

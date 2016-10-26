@@ -31,6 +31,8 @@ import qualified Reactive.State.Camera      as Camera
 import qualified Reactive.State.Global      as Global
 import qualified Reactive.State.Graph       as Graph
 
+
+minCamFactor, maxCamFactor, dragZoomSpeed, wheelZoomSpeed, panStep, zoomFactorStep :: Double
 minCamFactor   =   0.2
 maxCamFactor   =   8.0
 dragZoomSpeed  = 512.0
@@ -38,6 +40,7 @@ wheelZoomSpeed =  64.0
 panStep        =  50.0
 zoomFactorStep =   1.1
 
+restrictCamFactor :: Double -> Double
 restrictCamFactor = min maxCamFactor . max minCamFactor
 
 panCamera :: Vector2 Double -> Command Camera.State ()
@@ -45,6 +48,7 @@ panCamera delta = do
     camFactor <- use $ Camera.camera . Camera.factor
     Camera.camera . Camera.pan += ((/ camFactor) <$> delta)
 
+panLeft, panRight, panUp, panDown :: Command Camera.State ()
 panLeft  = panCamera $ Vector2 (-panStep)         0
 panRight = panCamera $ Vector2   panStep          0
 panUp    = panCamera $ Vector2        0   (-panStep)

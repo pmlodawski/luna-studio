@@ -26,6 +26,8 @@ default-extensions:
   - StandaloneDeriving
   - TemplateHaskell
 
+ghc-options:
+    -Wall
 #
 # ACHTUNG! Zmieniasz tu - zmien w interactive
 #

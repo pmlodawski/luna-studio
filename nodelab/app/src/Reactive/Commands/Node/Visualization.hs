@@ -10,35 +10,35 @@ module Reactive.Commands.Node.Visualization
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           Data.List.Split                 (wordsBy)
-import qualified Data.Text.Lazy                  as Text
+import           Data.List.Split              (wordsBy)
+import qualified Data.Text.Lazy               as Text
 
-import Control.Arrow ((***))
+import           Control.Arrow                ((***))
 
-import           Object.UITypes                  (WidgetId)
-import           Object.Widget                   (DisplayObjectClass, CompositeWidget)
-import qualified Object.Widget.Label             as Label
-import           Object.Widget.DataFrame         (DataFrame)
-import qualified Object.Widget.DataFrame         as DataFrame
-import qualified Object.Widget.Graphics          as Graphics
-import qualified Object.Widget.LongText          as LongText
-import qualified Object.Widget.Plots.Image       as Image
-import qualified UI.Handlers.Node                as Node
-import qualified UI.Instances                    ()
+import           Object.UITypes               (WidgetId)
+import           Object.Widget                (CompositeWidget, DisplayObjectClass)
+import           Object.Widget.DataFrame      (DataFrame)
+import qualified Object.Widget.DataFrame      as DataFrame
+import qualified Object.Widget.Graphics       as Graphics
+import qualified Object.Widget.Label          as Label
+import qualified Object.Widget.LongText       as LongText
+import qualified Object.Widget.Plots.Image    as Image
+import qualified UI.Handlers.Node             as Node
+import qualified UI.Instances                 ()
 
-import           Reactive.Commands.Command       (Command, performIO)
-import qualified Reactive.Commands.UIRegistry    as UICmd
-import qualified Reactive.State.UIRegistry       as UIRegistry
+import           Reactive.Commands.Command    (Command)
+import qualified Reactive.Commands.UIRegistry as UICmd
+import qualified Reactive.State.UIRegistry    as UIRegistry
 
-import qualified Style.Node                      as Style
+import qualified Style.Node                   as Style
 
-import           Empire.API.Data.DefaultValue    (Value (..))
-import qualified Empire.API.Data.DefaultValue    as DefaultValue
-import qualified Empire.API.Data.Error           as LunaError
-import           Empire.API.Data.TypeRep         (TypeRep)
+import           Empire.API.Data.DefaultValue (Value (..))
+import qualified Empire.API.Data.DefaultValue as DefaultValue
+import qualified Empire.API.Data.Error        as LunaError
+import           Empire.API.Data.TypeRep      (TypeRep)
 
-import qualified Graphics.API                    as GR
-import qualified Utils.Shader                    as Shader
+import qualified Graphics.API                 as GR
+import qualified Utils.Shader                 as Shader
 
 limitString :: Int -> Text -> Text
 limitString limit str | Text.length str > limit64 = Text.take limit64 str <> "..."

@@ -7,10 +7,10 @@ import           JS.MultiSelection                 (displaySelectionBox, hideSel
 import           Utils.PreludePlus
 import           Utils.Vector                      (Vector2 (..), x, y)
 
-import           Object.Widget                     (WidgetFile, WidgetId, objectId, widget)
+import           Object.Widget                     (objectId, widget)
 import qualified Object.Widget.Node                as NodeModel
 
-import           Event.Event                       (Event (Mouse, Keyboard), JSState)
+import           Event.Event                       (Event (Keyboard, Mouse), JSState)
 import           Event.Keyboard                    (KeyMods (..))
 import qualified Event.Keyboard                    as Keyboard
 import qualified Event.Mouse                       as Mouse
@@ -22,8 +22,8 @@ import           Reactive.State.MultiSelection     (DragHistory (..))
 import qualified Reactive.State.MultiSelection     as MultiSelection
 import qualified Reactive.State.UIRegistry         as UIRegistry
 
+import           Reactive.Commands.Batch           (cancelCollaborativeTouch, collaborativeTouch)
 import           Reactive.Commands.Command         (Command, performIO)
-import           Reactive.Commands.Batch           (collaborativeTouch, cancelCollaborativeTouch)
 import           Reactive.Commands.Graph           (widgetIdToNodeWidget)
 import           Reactive.Commands.Graph.Selection (focusSelectedNode, selectAll, selectedNodes, unselectAll)
 import qualified Reactive.Commands.UIRegistry      as UICmd

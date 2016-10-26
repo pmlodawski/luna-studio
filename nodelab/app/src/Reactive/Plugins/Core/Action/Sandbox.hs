@@ -23,9 +23,8 @@ import qualified Object.Widget.Number.Discrete   as DiscreteNumber
 import qualified Object.Widget.Slider.Continuous as ContinuousSlider
 import qualified Object.Widget.Slider.Discrete   as DiscreteSlider
 import qualified Object.Widget.Toggle            as Toggle
-import qualified UI.Handlers.DefinitionPort      as DefinitionPort
+import           UI.Handlers.DefinitionPort      ()
 
-import qualified Object.Widget.Choice            as Choice
 import qualified Reactive.Commands.Batch         as BatchCmd
 
 import           Object.LunaValue
@@ -34,6 +33,8 @@ import           Reactive.State.Global           (inRegistry)
 import           UI.Handlers.Generic             (ValueChangedHandler (..))
 import           UI.Layout                       as Layout
 
+
+f1, f2 :: Char
 f1 = '\112'
 f2 = '\113'
 
@@ -44,28 +45,28 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     parent <- UICmd.register sceneGraphId widget (Layout.verticalLayoutHandler 5.0)
 
     let widget = DefinitionPort.create (Vector2 100 100) False "x :: X" DefinitionPort.Input
-    UICmd.register parent widget def
+    UICmd.register_ parent widget def
 
     let widget = DefinitionPort.create (Vector2 100 100) False "output" DefinitionPort.Output
-    UICmd.register parent widget def
+    UICmd.register_ parent widget def
 
     let widget = DiscreteNumber.create (Vector2 200 20) "Discrete" 42
-    UICmd.register parent widget def
+    UICmd.register_ parent widget def
 
     let widget = ContinuousNumber.create (Vector2 200 20) "Continuous" 42.42
-    UICmd.register parent widget def
+    UICmd.register_ parent widget def
 
     let widget = ContinuousSlider.create (Vector2 200 20) "ContinuousSlider" (-2.0) 5.0 3.0
-    UICmd.register parent widget def
+    UICmd.register_ parent widget def
 
     let widget = DiscreteSlider.create (Vector2 200 20) "DiscreteSlider" (-15) 80 30
-    UICmd.register parent widget def
+    UICmd.register_ parent widget def
 
     let widget = DiscreteSlider.create (Vector2 200 20) "DiscreteSlider" 3 8 4
-    UICmd.register parent widget def
+    UICmd.register_ parent widget def
 
     let widget = CodeEditor.create (Vector2 300 150) "class Point:\n    x y z :: Int\n  origin      = Point 0 0 0\n  Point x y _ = origin\n  print 'Origin XY coords are ($x,$y)'"
-    UICmd.register parent widget def
+    UICmd.register_ parent widget def
 
     let widget = Toggle.create (Vector2 200 20) "Toggle" True
     UICmd.register_ parent widget def
@@ -93,28 +94,28 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\113' _)) = Just $ Global.in
     resizableWidget  <- UICmd.register resizedParent widget def
     resizableWidget2 <- UICmd.register resizedParent widget def
     resizableWidget3 <- UICmd.register resizedParent widget def
-    UICmd.register flexParent widget def
-    UICmd.register flexParent widget def
-    UICmd.register flexParent widget def
-    UICmd.register flexParent widget def
-    UICmd.register flexParent widget def
-    UICmd.register flexParent widget def
+    UICmd.register_ flexParent widget def
+    UICmd.register_ flexParent widget def
+    UICmd.register_ flexParent widget def
+    UICmd.register_ flexParent widget def
+    UICmd.register_ flexParent widget def
+    UICmd.register_ flexParent widget def
     -- UICmd.moveX resizedParent 200
 
     let widget = ContinuousNumber.create (Vector2 200 20) "Width" 200
-    UICmd.register parent widget $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ do
+    UICmd.register_ parent widget $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ do
         UICmd.resize' resizableWidget  (x .~ val)
         UICmd.resize' resizableWidget3 (x .~ val)
         ) mempty
 
     let widget = ContinuousNumber.create (Vector2 200 20) "Height" 20
-    UICmd.register parent widget $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ do
+    UICmd.register_ parent widget $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ do
         UICmd.resize' resizableWidget  (y .~ val)
         UICmd.resize' resizableWidget3 (y .~ val)
         ) mempty
 
     let widget = ContinuousNumber.create (Vector2 200 20) "FlexHeight" 100
-    UICmd.register parent widget $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ do
+    UICmd.register_ parent widget $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ do
         UICmd.resize' flexParent (y .~ val)
         ) mempty
 
@@ -134,7 +135,7 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\115' _)) = Just $ Global.in
                   ]
         labels  = []
         widget = G.create (Vector2 400 400) items labels
-    UICmd.register parent widget def
+    UICmd.register_ parent widget def
 
     return ()
 

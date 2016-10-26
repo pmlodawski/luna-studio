@@ -4,11 +4,11 @@ import           Utils.PreludePlus
 
 import           Control.Concurrent.MVar
 
-import qualified Data.Text.Lazy as Text
 import           Control.Exception                                   (catch)
-import           Data.Monoid                                         (Last (..))
-import           GHCJS.Prim                                          (JSException)
 import           Data.DateTime                                       (getCurrentTime)
+import           Data.Monoid                                         (Last (..))
+import qualified Data.Text.Lazy                                      as Text
+import           GHCJS.Prim                                          (JSException)
 
 import           Reactive.Handlers                                   (AddHandler (..))
 import qualified Reactive.Handlers                                   as Handlers
@@ -21,28 +21,28 @@ import qualified Reactive.Plugins.Core.Action.Backend.Control        as Control
 import qualified Reactive.Plugins.Core.Action.Backend.Graph          as Graph
 import qualified Reactive.Plugins.Core.Action.Backend.ProjectManager as ProjectManager
 import qualified Reactive.Plugins.Core.Action.Camera                 as Camera
+import qualified Reactive.Plugins.Core.Action.Collaboration          as Collaboration
 import qualified Reactive.Plugins.Core.Action.Connect                as Connect
 import qualified Reactive.Plugins.Core.Action.ConnectionPen          as ConnectionPen
 import qualified Reactive.Plugins.Core.Action.Debug                  as Debug
 import qualified Reactive.Plugins.Core.Action.Drag                   as Drag
 import qualified Reactive.Plugins.Core.Action.General                as General
 import qualified Reactive.Plugins.Core.Action.MultiSelection         as MultiSelection
+import qualified Reactive.Plugins.Core.Action.Navigation             as Navigation
 import qualified Reactive.Plugins.Core.Action.NodeSearcher           as NodeSearcher
 import qualified Reactive.Plugins.Core.Action.Sandbox                as Sandbox
-import qualified Reactive.Plugins.Core.Action.Widget                 as Widget
-import qualified Reactive.Plugins.Core.Action.Collaboration          as Collaboration
-import qualified Reactive.Plugins.Core.Action.Navigation             as Navigation
 import qualified Reactive.Plugins.Core.Action.Tutorial               as Tutorial
+import qualified Reactive.Plugins.Core.Action.Widget                 as Widget
 
 import           Reactive.Commands.Command                           (Command, execCommand)
 import           Reactive.State.Global                               (State)
 import qualified Reactive.State.Global                               as Global
 
+import qualified JS.Debug
 import qualified JS.UI                                               as UI
 import           JS.WebSocket                                        (WebSocket)
-import qualified JS.Debug
 
-import qualified Data.JSString     as JSString
+import qualified Data.JSString                                       as JSString
 
 displayProcessingTime :: Bool
 displayProcessingTime = False
@@ -50,12 +50,15 @@ displayProcessingTime = False
 foreign import javascript safe "console.time($1);"    consoleTimeStart' :: JSString.JSString -> IO ()
 foreign import javascript safe "console.timeEnd($1);" consoleTimeEnd'   :: JSString.JSString -> IO ()
 
+
+consoleTimeStart, consoleTimeEnd :: String -> IO ()
 consoleTimeStart = consoleTimeStart' . JSString.pack
 consoleTimeEnd   = consoleTimeEnd'   . JSString.pack
 
 toTransformer :: Command a () -> (IO (), a) -> (IO (), a)
 toTransformer cmd (_, a) = execCommand cmd a
 
+actions :: [Event.Event -> Maybe (Command State ())]
 actions =  [ Debug.toActionEv
            , Control.toAction
            , Widget.toAction
