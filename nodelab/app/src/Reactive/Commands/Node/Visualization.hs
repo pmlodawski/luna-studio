@@ -31,6 +31,7 @@ import qualified Reactive.Commands.UIRegistry as UICmd
 import qualified Reactive.State.UIRegistry    as UIRegistry
 
 import qualified Style.Node                   as Style
+import qualified Style.Layout                 as Style
 
 import           Empire.API.Data.DefaultValue (Value (..))
 import qualified Empire.API.Data.DefaultValue as DefaultValue
@@ -63,9 +64,8 @@ visualizeError :: WidgetId -> LunaError.Error TypeRep -> Command UIRegistry.Stat
 visualizeError id err = do
     removeVisualization id
     groupId <- Node.valueGroupId id
-    let limit = 30
-        message = Text.pack $ wrapLines limit $ showErrorSep "\n" err
-        widget = LongText.create (Vector2 200 200) message LongText.Left LongText.Code
+    let message = Text.pack $ wrapLines Style.errorMessageWrapMargin $ showErrorSep "\n" err
+        widget = LongText.create Style.errorMessageWidgetSize message LongText.Left LongText.Code
     UICmd.register_ groupId widget def
 
 removeVisualization :: WidgetId -> Command UIRegistry.State ()
@@ -102,7 +102,7 @@ visualize visIx id create update = do
         Just currentVis -> do
             status <- UICmd.tryUpdate currentVis update
             -- performIO $ putStrLn $ "update " <> (show status) <> " " <> (show visIx) <> " " <> (show currentVisualization) <> " " <> (show currentVisualizations)
-            when (status == False) $ do
+            when (not status) $ do
                 UICmd.removeWidget currentVis
                 create groupId
 
@@ -146,13 +146,13 @@ visualizeNodeValue id visIx (StringStringMap v) = do
     visualize visIx id create update
 
 visualizeNodeValue id visIx (IntPairList v) = do
-    let widget = listTablePairs $ (mapTuple $ Text.pack . show) <$> v
+    let widget = listTablePairs $ mapTuple (Text.pack . show) <$> v
         create groupId = UICmd.registerIx_ visIx groupId widget def
         update         = DataFrame.rows .~ (widget ^. DataFrame.rows)
     visualize visIx id create update
 
 visualizeNodeValue id visIx (DoublePairList v) = do
-    let widget = listTablePairs $ (mapTuple $ Text.pack . show) <$> v
+    let widget = listTablePairs $ mapTuple (Text.pack . show) <$> v
         create groupId = UICmd.registerIx_ visIx groupId widget def
         update         = DataFrame.rows .~ (widget ^. DataFrame.rows)
     visualize visIx id create update
@@ -163,32 +163,32 @@ visualizeNodeValue id visIx (Image url w h) = do
             UICmd.registerIx_ visIx groupId widget def
         update = (Image.size . x .~ w)
                . (Image.size . y .~ h)
-               . (Image.image  .~ (Text.pack url))
+               . (Image.image  .~ Text.pack url)
     visualize visIx id create update
 
 visualizeNodeValue id visIx (StringValue str) = do
     let normalize = intercalate "<br />" . wordsBy (== '\n')
         create groupId = do
-            let widget = LongText.create (Vector2 200 200) (Text.pack $ normalize str) LongText.Left LongText.Text
+            let widget = LongText.create Style.visualizationWidgetSize (Text.pack $ normalize str) LongText.Left LongText.Text
             UICmd.registerIx_ visIx groupId widget def
-        update = LongText.value .~ (Text.pack $ normalize str)
+        update = LongText.value .~ Text.pack (normalize str)
     visualize visIx id create update
 
 visualizeNodeValue id visIx (Lambda str) = do
     let normalize = intercalate "<br />" . wordsBy (== '\n')
         create groupId = do
-            let widget = LongText.create (Vector2 200 200) (Text.pack $ normalize str) LongText.Left LongText.Code
+            let widget = LongText.create Style.visualizationWidgetSize (Text.pack $ normalize str) LongText.Left LongText.Code
             UICmd.registerIx_ visIx groupId widget def
-        update = LongText.value .~ (Text.pack $ normalize str)
+        update = LongText.value .~ Text.pack (normalize str)
     visualize visIx id create update
 
 visualizeNodeValue id visIx (DataFrame cols) = do
     let heads = Text.pack <$> fst <$> cols
-        cols' = (fmap DefaultValue.stringify) <$> snd <$> cols
+        cols' = fmap DefaultValue.stringify <$> snd <$> cols
         rows = transpose cols'
 
     let create groupId = do
-            let widget = DataFrame.create (Vector2 400 200) heads rows
+            let widget = DataFrame.create Style.dataFrameWidgetSize heads rows
             UICmd.registerIx_ visIx groupId widget def
         update      = (DataFrame.headers .~ heads)
                     . (DataFrame.rows    .~ rows )
@@ -199,7 +199,7 @@ visualizeNodeValue id visIx (Graphics (GR.Graphics layers)) = do
     -- let items  = createItem <$> layers
         labels = createLabels =<< layers
         create groupId = do
-            let widget = Graphics.create (Vector2 200 200) items labels
+            let widget = Graphics.create Style.visualizationWidgetSize items labels
             UICmd.registerIx_ visIx groupId widget def
         update = (Graphics.items  .~ items )
                . (Graphics.labels .~ labels)

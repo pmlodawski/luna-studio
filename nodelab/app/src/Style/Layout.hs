@@ -67,3 +67,9 @@ outputsEdgeStyle = def & Group.background   ?~ Color 0.55 0.55 0.55 1.0
 --TODO[PM] : style it
 inputsEdgeStyle = def & Group.background   ?~ Color 0.55 0.55 0.55 1.0
                       & Group.padding      .~ uniformPadding 5.0
+
+
+errorMessageWrapMargin = 30 :: Int
+errorMessageWidgetSize  = Vector2 200 200 :: Vector2 Double
+visualizationWidgetSize = Vector2 200 200 :: Vector2 Double
+dataFrameWidgetSize     = Vector2 400 200 :: Vector2 Double
