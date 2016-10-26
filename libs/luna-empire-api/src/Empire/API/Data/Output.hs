@@ -2,6 +2,7 @@ module Empire.API.Data.Output where
 
 import           Data.Binary               (Binary)
 import           Empire.API.Data.ValueType (ValueType)
+import qualified Empire.API.Data.ValueType as ValueType
 import           Prologue
 
 

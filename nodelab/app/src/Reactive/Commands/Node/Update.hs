@@ -12,7 +12,7 @@ import           Control.Monad.State                  (modify)
 
 import qualified Object.Widget.Node                   as Model
 
-import           Reactive.Commands.Command            (Command, performIO)
+import           Reactive.Commands.Command            (Command)
 import           Reactive.Commands.Graph              (nodeIdToWidgetId, updateConnectionsForNodes)
 import qualified Reactive.Commands.UIRegistry         as UICmd
 import           Reactive.State.Global                (State, inRegistry)
@@ -23,11 +23,12 @@ import           Empire.API.Data.Node                 (Node, NodeId)
 import qualified Empire.API.Data.Node                 as Node
 import qualified Empire.API.Graph.NodeResultUpdate    as NodeResult
 
+import qualified Reactive.Commands.Batch              as BatchCmd
 import           Reactive.Commands.Node.Create        (addNode)
 import           Reactive.Commands.Node.Ports         (displayPorts)
-import           Reactive.Commands.Node.Visualization (removeVisualization, visualizeError, visualizeNodeValueReprs, showError, limitString)
-import qualified Reactive.Commands.Batch              as BatchCmd
+import           Reactive.Commands.Node.Visualization (limitString, showError, visualizeError, visualizeNodeValueReprs)
 
+errorLen :: Int
 errorLen = 40
 
 updateNode :: Node -> Command State ()
@@ -55,10 +56,10 @@ updateExistingNode node = do
     updateConnectionsForNodes [nodeId]
 
 updateNodeValue :: NodeId -> NodeResult.NodeValue -> Command State ()
-updateNodeValue id val = do
-    widgetId <- nodeIdToWidgetId id
+updateNodeValue nid val = do
+    mayWidgetId <- nodeIdToWidgetId nid
     inRegistry $ do
-        withJust widgetId $ \widgetId -> do
+        withJust mayWidgetId $ \widgetId -> do
             -- removeVisualization widgetId
             case val of
                 NodeResult.Value name [] -> do

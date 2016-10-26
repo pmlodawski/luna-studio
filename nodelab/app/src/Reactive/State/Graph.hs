@@ -5,20 +5,25 @@ module Reactive.State.Graph
     , addConnection
     , addNode
     , connectionIdsContainingNode
-    , connectionWidgets
-    , connectionWidgetsMap
     , connectionsContainingNode
     , connectionsMap
+    , connectionWidgets
+    , connectionWidgetsMap
     , getConnectionNodeIds
     , getConnections
     , getConnectionsMap
     , getNodesMap
     , hasConnections
+    , inputsMap
+    , inputWidgets
+    , inputWidgetsMap
     , lookUpConnection
-    , nodeWidgets
-    , nodeWidgetsMap
     , nodes
     , nodesMap
+    , nodeWidgets
+    , nodeWidgetsMap
+    , outputs
+    , outputWidget
     , portWidgets
     , portWidgetsMap
     , removeConnections
@@ -31,20 +36,26 @@ import           Utils.PreludePlus          hiding ((.=))
 import           Data.Hashable              (Hashable)
 import           Data.HashMap.Strict        (HashMap)
 import qualified Data.HashMap.Strict        as HashMap
+import           Data.IntMap                (IntMap)
+import qualified Data.IntMap                as IntMap
 import qualified Data.Map.Strict            as Map
 import           Data.UUID.Types            (UUID)
 
 import           Data.Aeson
 import           Empire.API.Data.Connection (Connection (..), ConnectionId)
 import qualified Empire.API.Data.Connection as Connection
+import           Empire.API.Data.Input      (Input)
 import           Empire.API.Data.Node       (Node, NodeId)
 import qualified Empire.API.Data.Node       as Node
+import           Empire.API.Data.Output     (Output)
 import           Empire.API.Data.Port       (InPort, OutPort)
 import           Empire.API.Data.PortRef    (AnyPortRef, InPortRef, OutPortRef)
 import qualified Empire.API.Data.PortRef    as PortRef
 import qualified Empire.API.JSONInstances   ()
 import           Object.UITypes             (WidgetId)
 import           Reactive.Commands.Command  (Command)
+
+
 
 type NodesMap       = HashMap NodeId Node
 type ConnectionsMap = HashMap InPortRef Connection
@@ -71,15 +82,20 @@ instance Hashable AnyPortRef
 
 data State = State { _nodesMap             :: NodesMap
                    , _connectionsMap       :: ConnectionsMap
+                   , _inputsMap            :: IntMap Input
+                   , _outputs              :: Maybe Output
                    , _nodeWidgetsMap       :: HashMap NodeId     WidgetId
                    , _connectionWidgetsMap :: HashMap InPortRef  WidgetId
                    , _portWidgetsMap       :: HashMap AnyPortRef WidgetId
+                   , _inputWidgetsMap      :: IntMap WidgetId
+                   , _outputWidget         :: Maybe WidgetId
                    } deriving (Show, Eq, Generic)
 
 makeLenses ''State
+
 instance ToJSON State
 instance Default State where
-    def = State def def def def def
+    def = State def def def def def def def def def
 
 connectionToNodeIds :: Connection -> (NodeId, NodeId)
 connectionToNodeIds conn = ( conn ^. Connection.src . PortRef.srcNodeId
@@ -89,25 +105,28 @@ nodes :: Getter State [Node]
 nodes = to getNodes
 
 nodeWidgets :: Getter State [WidgetId]
-nodeWidgets = to $ HashMap.elems . (view nodeWidgetsMap)
+nodeWidgets = to $ HashMap.elems . view nodeWidgetsMap
 
 connectionWidgets :: Getter State [WidgetId]
-connectionWidgets = to $ HashMap.elems . (view connectionWidgetsMap)
+connectionWidgets = to $ HashMap.elems . view connectionWidgetsMap
+
+inputWidgets :: Getter State [WidgetId]
+inputWidgets = to $ IntMap.elems . view inputWidgetsMap
 
 portWidgets :: Getter State [WidgetId]
-portWidgets = to $ HashMap.elems . (view portWidgetsMap)
+portWidgets = to $ HashMap.elems . view portWidgetsMap
 
 getNodes :: State -> [Node]
 getNodes = HashMap.elems . getNodesMap
 
 getNodesMap :: State -> NodesMap
-getNodesMap = (^. nodesMap)
+getNodesMap = view nodesMap
 
 getConnections :: State -> [Connection]
 getConnections = HashMap.elems . getConnectionsMap
 
 getConnectionsMap :: State -> ConnectionsMap
-getConnectionsMap = (^. connectionsMap)
+getConnectionsMap = view connectionsMap
 
 getConnectionNodeIds :: ConnectionId -> State -> Maybe (NodeId, NodeId)
 getConnectionNodeIds connId state = connectionToNodeIds <$> conn
@@ -137,20 +156,20 @@ lookUpConnection :: State -> ConnectionId -> Maybe Connection
 lookUpConnection state connId = HashMap.lookup connId $ getConnectionsMap state
 
 containsNode :: NodeId -> Connection -> Bool
-containsNode id conn = (startsWithNode id conn)
-                    || (endsWithNode   id conn)
+containsNode nid conn = startsWithNode nid conn
+                    || endsWithNode   nid conn
 
 startsWithNode :: NodeId -> Connection -> Bool
-startsWithNode id conn = conn ^. Connection.src . PortRef.srcNodeId == id
+startsWithNode nid conn = conn ^. Connection.src . PortRef.srcNodeId == nid
 
 endsWithNode :: NodeId -> Connection -> Bool
-endsWithNode id conn = conn ^. Connection.dst . PortRef.dstNodeId == id
+endsWithNode nid conn = conn ^. Connection.dst . PortRef.dstNodeId == nid
 
 connectionsContainingNode :: NodeId -> State -> [Connection]
-connectionsContainingNode id state = filter (containsNode id) $ getConnections state
+connectionsContainingNode nid state = filter (containsNode nid) $ getConnections state
 
 connectionIdsContainingNode :: NodeId -> State -> [ConnectionId]
-connectionIdsContainingNode id state = (^. Connection.connectionId) <$> connectionsContainingNode id state
+connectionIdsContainingNode nid state = (view Connection.connectionId) <$> connectionsContainingNode nid state
 
 hasConnections :: NodeId -> State -> Bool
 hasConnections nodeId state = not . null $ connectionsContainingNode nodeId state

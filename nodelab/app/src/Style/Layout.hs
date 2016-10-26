@@ -55,3 +55,15 @@ textEditorToggle = Button.create (Vector2 10 1000) ":" & Button.style .~ style w
      style = def & Button.rounded    .~ False
                  & Button.background .~ Color 0.1 0.1 0.1 1.0
                  & Button.alignment  .~ Label.Center
+
+--TODO[PM] : move it to proper place
+inputsEdgePosition = Vector2 sidebarWidth 100.0
+--TODO[PM] : move it to proper place
+outputsEdgePosition = Vector2 200.0 100.0
+
+--TODO[PM] : style it
+outputsEdgeStyle = def & Group.background   ?~ Color 0.55 0.55 0.55 1.0
+                       & Group.padding      .~ uniformPadding 5.0
+--TODO[PM] : style it
+inputsEdgeStyle = def & Group.background   ?~ Color 0.55 0.55 0.55 1.0
+                      & Group.padding      .~ uniformPadding 5.0

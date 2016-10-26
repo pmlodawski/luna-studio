@@ -3,6 +3,7 @@ module Reactive.Commands.Graph.Unrender
     ( unrender
     ) where
 
+import           Data.Maybe                   (maybeToList)
 import           Utils.PreludePlus
 
 import           Reactive.Commands.Command    (Command, performIO)
@@ -20,15 +21,18 @@ import           UI.Instances                 ()
 
 unrender :: Command State ()
 unrender = do
-    uiRegistry <- use Global.uiRegistry
-    nodeWidgets <- use $ Global.graph . Graph.nodeWidgets
-    connWidgets <- use $ Global.graph . Graph.connectionWidgets
+    nodeWidgets   <- use $ Global.graph . Graph.nodeWidgets
+    connWidgets   <- use $ Global.graph . Graph.connectionWidgets
+    inputWidgets  <- use $ Global.graph . Graph.inputWidgets
+    outputWidget  <- use $ Global.graph . Graph.outputWidget
 
-    let allWidgetIds = nodeWidgets ++ connWidgets
+    let allWidgetIds = nodeWidgets ++ connWidgets ++ inputWidgets ++ maybeToList outputWidget
     inRegistry $ mapM_ removeWidget allWidgetIds
 
     Global.graph     . Graph.nodeWidgetsMap       .= def
     Global.graph     . Graph.connectionWidgetsMap .= def
+    Global.graph     . Graph.inputWidgetsMap      .= def
+    Global.graph     . Graph.outputWidget         .= def
     Global.workspace . Workspace.isGraphLoaded    .= False
 
     performIO $ UI.setText ""

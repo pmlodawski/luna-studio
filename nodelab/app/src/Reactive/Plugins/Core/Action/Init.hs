@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Reactive.Plugins.Core.Action.Init where
 
-import           Utils.PreludePlus
+import           Utils.PreludePlus                          hiding (group)
 import           Utils.Vector                               (Vector2 (..))
 
 import           Object.UITypes                             (WidgetId)
@@ -17,6 +17,8 @@ import qualified Style.Layout                               as Style
 import qualified UI.Handlers.Button                         as Button
 import qualified UI.Layout                                  as Layout
 
+
+
 initSidebar :: Command State WidgetId
 initSidebar = do
     let group = Group.create & Group.style .~ Style.sidebar
@@ -29,17 +31,35 @@ initBreadcrumb :: Command State ()
 initBreadcrumb = do
     let group = Group.create & Group.position  .~ Style.breadcrumbPosition
                              & Group.style     .~ Style.breadcrumbStyle
-    groupId <- inRegistry $ UICmd.register sceneInterfaceId group (Layout.horizontalLayoutHandlerNoResize 5.0)
+    groupId <- inRegistry $ UICmd.register sceneInterfaceId group $ Layout.horizontalLayoutHandlerNoResize 5.0
     Global.uiElements . UIElements.breadcrumbs .= groupId
 
+initTextEditor :: Command State ()
 initTextEditor = do
     let toggle = Style.textEditorToggle
     toggleId <- inRegistry $ UICmd.register sceneInterfaceId toggle $ addHandler (Button.ClickedHandler $ const $ toggleText) mempty
 
     Global.uiElements . UIElements.textEditorToggle .= toggleId
 
+initInputsEdge :: Command State ()
+initInputsEdge = do
+    let group = Group.create & Group.position  .~ Style.inputsEdgePosition
+                             & Group.style     .~ Style.inputsEdgeStyle
+    groupId <- inRegistry $ UICmd.register sceneInterfaceId group $ Layout.verticalLayoutHandler 5.0
+    Global.uiElements . UIElements.inputsEdge .= groupId
+
+initOutputsEdge :: Command State ()
+initOutputsEdge = do
+    let group = Group.create & Group.position .~ Style.outputsEdgePosition
+                             & Group.style    .~ Style.outputsEdgeStyle
+    groupId <- inRegistry $ UICmd.register sceneInterfaceId group $ Layout.verticalLayoutHandler 5.0
+    Global.uiElements . UIElements.outputsEdge .= groupId
+
+
 initialize :: Command State ()
 initialize = do
-    sidebarId <- initSidebar
+    void $ initSidebar
     initBreadcrumb
     initTextEditor
+    initInputsEdge
+    initOutputsEdge
