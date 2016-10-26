@@ -3,6 +3,8 @@ module Reactive.Commands.Node.Visualization
     ( removeVisualization
     , visualizeNodeValueReprs
     , visualizeError
+    , showError
+    , limitString
     ) where
 
 import           Utils.PreludePlus
@@ -38,24 +40,33 @@ import           Empire.API.Data.TypeRep         (TypeRep)
 import qualified Graphics.API                    as GR
 import qualified Utils.Shader                    as Shader
 
+limitString :: Int -> Text -> Text
+limitString limit str | Text.length str > limit64 = Text.take limit64 str <> "..."
+                      | otherwise                 = str
+                      where limit64 = fromIntegral limit
+
+showError :: LunaError.Error TypeRep -> Text
+showError = showErrorSep ""
+
+showErrorSep :: String -> LunaError.Error TypeRep -> Text
+showErrorSep sep err = Text.pack $ case err of
+    LunaError.ImportError   name     -> "Cannot find symbol \"" <> name        <> "\""
+    LunaError.NoMethodError name tpe -> "Cannot find method \"" <> name        <> "\" for type \"" <> toString tpe <> "\""
+    LunaError.TypeError     t1   t2  -> "Cannot match type  \"" <> toString t1 <> "\" with \""     <> toString t2  <> "\""
+    LunaError.RuntimeError  msg      -> "Runtime error: " <> sep <> msg
+
 visualizeError :: WidgetId -> LunaError.Error TypeRep -> Command UIRegistry.State ()
 visualizeError id err = do
     removeVisualization id
     groupId <- Node.valueGroupId id
-    let msg  = case err of
-            LunaError.ImportError   name     -> "Cannot find symbol \"" <> name        <> "\""
-            LunaError.NoMethodError name tpe -> "Cannot find method \"" <> name        <> "\" for type \"" <> toString tpe <> "\""
-            LunaError.TypeError     t1   t2  -> "Cannot match type  \"" <> toString t1 <> "\" with \""     <> toString t2  <> "\""
-            LunaError.RuntimeError  msg      -> "Runtime error: " <> msg
-        widget = LongText.create (Vector2 200 200) (Text.pack msg) LongText.Left LongText.Code
+    let widget = LongText.create (Vector2 200 200) (showErrorSep "\n" err) LongText.Left LongText.Code
     UICmd.register_ groupId widget def
 
 removeVisualization :: WidgetId -> Command UIRegistry.State ()
 removeVisualization id = do
     groupId <- Node.valueGroupId id
     widgets <- UICmd.children groupId
-    void $ mapM UICmd.removeWidget widgets
-
+    mapM_ UICmd.removeWidget widgets
 
 listTable :: [Text] -> DataFrame
 listTable col = DataFrame.create Style.plotSize ["Index", "Value"] rows where
@@ -75,7 +86,7 @@ visualize visIx id create update = do
     let currentVisualization = currentVisualizations ^? ix visIx
         cleanup = do
             widgets <- UICmd.children groupId
-            void $ mapM UICmd.removeWidget widgets
+            mapM_ UICmd.removeWidget widgets
 
     case currentVisualization of
         Nothing -> do

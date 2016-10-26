@@ -25,9 +25,10 @@ import qualified Empire.API.Graph.NodeResultUpdate    as NodeResult
 
 import           Reactive.Commands.Node.Create        (addNode)
 import           Reactive.Commands.Node.Ports         (displayPorts)
-import           Reactive.Commands.Node.Visualization (removeVisualization, visualizeError, visualizeNodeValueReprs)
+import           Reactive.Commands.Node.Visualization (removeVisualization, visualizeError, visualizeNodeValueReprs, showError, limitString)
 import qualified Reactive.Commands.Batch              as BatchCmd
 
+errorLen = 40
 
 updateNode :: Node -> Command State ()
 updateNode node = do
@@ -68,7 +69,7 @@ updateNodeValue id val = do
                     UICmd.update_ widgetId $ Model.isError .~ False
                     visualizeNodeValueReprs widgetId valueReprs
                 NodeResult.Error msg -> do
-                    UICmd.update_ widgetId $ Model.value   .~ "Error!"
+                    UICmd.update_ widgetId $ Model.value   .~ limitString errorLen (showError msg)
                     UICmd.update_ widgetId $ Model.isError .~ True
                     visualizeError widgetId msg
 
