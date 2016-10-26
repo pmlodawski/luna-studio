@@ -21,14 +21,16 @@ import           Reactive.State.Global        (inRegistry)
 import qualified Reactive.State.Global        as Global
 import qualified Reactive.State.Graph         as Graph
 
+
+
 updateNodeMeta' :: NodeId -> NodeMeta -> Command Global.State ()
 updateNodeMeta' nodeId meta = do
     Global.graph . Graph.nodesMap . ix nodeId . Node.nodeMeta .= meta
     widgetId' <- nodeIdToWidgetId nodeId
     inRegistry $ do
         withJust widgetId' $ \widgetId -> do
-            UICmd.update widgetId $ NodeModel.visualizationsEnabled .~ meta ^. NodeMeta.displayResult
-            UICmd.move   widgetId $ fromTuple $  meta ^. NodeMeta.position
+            UICmd.update_ widgetId $ NodeModel.visualizationsEnabled .~ meta ^. NodeMeta.displayResult
+            UICmd.move    widgetId $ fromTuple $  meta ^. NodeMeta.position
 
 
 updateNodeMeta :: NodeId -> NodeMeta -> Command Global.State ()
@@ -38,12 +40,12 @@ updateNodeMeta nodeId meta = do
 
 updateNodesMeta :: [(NodeId, NodeMeta)] -> Command Global.State ()
 updateNodesMeta updates = do
-    mapM (uncurry updateNodeMeta') updates
+    mapM_ (uncurry updateNodeMeta') updates
     updateConnectionsForNodes $ fst <$> updates
 
 modifyNodeMeta :: NodeId -> (NodeMeta -> NodeMeta) -> Command Global.State ()
 modifyNodeMeta nid setter = do
-    oldMeta <- preuse $ Global.graph . Graph.nodesMap . ix nid . Node.nodeMeta
-    withJust oldMeta $ \oldMeta -> do
+    mayOldMeta <- preuse $ Global.graph . Graph.nodesMap . ix nid . Node.nodeMeta
+    withJust mayOldMeta $ \oldMeta -> do
         let newMeta = setter oldMeta
         BatchCmd.updateNodeMeta [(nid, newMeta)]

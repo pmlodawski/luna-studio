@@ -1,11 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ViewPatterns      #-}
 module Reactive.Plugins.Core.Action.Tutorial where
 
 import           Control.Monad.Trans.Maybe         (runMaybeT)
 import qualified Data.Text.Lazy                    as Text
 import           Utils.PreludePlus                 hiding (Choice)
-import           Utils.Vector
 
 import qualified Empire.API.Data.DefaultValue      as DefaultValue
 import           Empire.API.Data.GraphLocation     (GraphLocation)
@@ -17,7 +15,7 @@ import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
 import qualified Event.Batch                       as Batch
 import qualified Event.CustomEvent                 as CustomEvent
 import           Event.Event                       (Event (..))
-import           Event.Keyboard                    (KeyMods (..), shift)
+import           Event.Keyboard                    (KeyMods (..))
 import qualified Event.Keyboard                    as Keyboard
 import qualified Event.NodeSearcher                as NodeSearcher
 
@@ -29,7 +27,7 @@ import           Reactive.Commands.Graph.Selection (selectedNodes)
 import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph
 
-import           JS.Tutorial                       (showStep, closeOnboarding)
+import           JS.Tutorial                       (closeOnboarding, showStep)
 
 
 --  0. TAB

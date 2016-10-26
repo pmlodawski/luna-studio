@@ -9,27 +9,27 @@ module Reactive.Commands.CommandSearcher.Commands
     , help
     ) where
 
-import qualified Data.Map                             as Map
-import           Data.Text.Lazy                       (stripPrefix)
-import qualified Data.Text.Lazy                       as Text
-import           Utils.PreludePlus                    hiding (Item, stripPrefix)
+import qualified Data.Map                         as Map
+import           Data.Text.Lazy                   (stripPrefix)
+import qualified Data.Text.Lazy                   as Text
+import           Utils.PreludePlus                hiding (Item, stripPrefix)
 import           Utils.Vector
 
-import qualified Batch.Workspace                      as Workspace
-import qualified Reactive.Commands.Batch              as BatchCmd
-import qualified Empire.API.Data.Project              as Project
-import           Event.Event                          (JSState)
-import qualified JS.GoogleAnalytics                   as GA
-import qualified JS.NodeSearcher                      as UI
-import           Reactive.Commands.Command            (Command, performIO)
-import qualified Reactive.Commands.Camera             as Camera
-import           Reactive.Commands.NodeSearcher       as NS
-import           Reactive.Commands.ProjectManager     (loadProject)
-import qualified Reactive.State.Camera                as Camera
-import qualified Reactive.State.Global                as Global
-import qualified Reactive.State.UIElements            as UIElements
-import           Text.ScopeSearcher.Item              (Item (..))
-import qualified Text.ScopeSearcher.Scope             as Scope
+import qualified Batch.Workspace                  as Workspace
+import qualified Empire.API.Data.Project          as Project
+import           Event.Event                      (JSState)
+import qualified JS.GoogleAnalytics               as GA
+import qualified JS.NodeSearcher                  as UI
+import qualified Reactive.Commands.Batch          as BatchCmd
+import qualified Reactive.Commands.Camera         as Camera
+import           Reactive.Commands.Command        (Command, performIO)
+import           Reactive.Commands.NodeSearcher   as NS
+import           Reactive.Commands.ProjectManager (loadProject)
+import qualified Reactive.State.Camera            as Camera
+import qualified Reactive.State.Global            as Global
+import qualified Reactive.State.UIElements        as UIElements
+import           Text.ScopeSearcher.Item          (Item (..))
+import qualified Text.ScopeSearcher.Scope         as Scope
 
 
 commands :: Command Global.State ([(Text, Item)])
@@ -62,8 +62,8 @@ openProject name = do
     projs <- use $ Global.workspace . Workspace.projects
     let mayProject = find (\(_,p) -> p ^. Project.name == (Text.unpack name)) (Map.toList projs)
     case mayProject of
-        Just (projectId, project) -> loadProject projectId
-        Nothing                   -> performIO $ putStrLn "Project not found"
+        Just (projectId, _) -> loadProject projectId
+        Nothing             -> performIO $ putStrLn "Project not found"
 
 
 

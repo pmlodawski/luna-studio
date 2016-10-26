@@ -12,22 +12,21 @@ import           Control.Monad.State               (modify)
 import qualified Data.Text.Lazy                    as Text
 
 import           Object.UITypes                    (WidgetId)
-import           Object.Widget                     (WidgetFile, objectId, widget)
+import           Object.Widget                     (objectId, widget)
 import qualified Object.Widget.Node                as Model
 import qualified UI.Handlers.Node                  as Node
 
-import           Reactive.Commands.Command         (Command, performIO)
+import           Reactive.Commands.Command         (Command)
 import           Reactive.Commands.EnterNode       (enterNode)
 import           Reactive.Commands.Graph           (focusNode, widgetIdToNodeWidget)
 import           Reactive.Commands.Graph.Selection (selectedNodes)
+import           Reactive.Commands.Node.NodeMeta   (modifyNodeMeta)
 import           Reactive.Commands.Node.Remove     (removeSelectedNodes)
-import           Reactive.Commands.Node.NodeMeta        (modifyNodeMeta)
 import qualified Reactive.Commands.UIRegistry      as UICmd
 import qualified Reactive.State.Camera             as Camera
 import           Reactive.State.Global             (State, inRegistry)
 import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph
-import qualified Reactive.State.UIRegistry         as UIRegistry
 import           Reactive.State.UIRegistry         (addHandler, sceneGraphId)
 
 import qualified Reactive.Commands.Batch           as BatchCmd
@@ -84,7 +83,7 @@ visualizationsToggled _ nid val = modifyNodeMeta nid (NodeMeta.displayResult .~ 
 codeChanged :: NodeId -> Text -> Command Global.State ()
 codeChanged nodeId newCode = do
     BatchCmd.setCode nodeId newCode
-    
+
 expandSelectedNodes :: Command Global.State ()
 expandSelectedNodes = do
     sn <- selectedNodes
@@ -92,9 +91,9 @@ expandSelectedNodes = do
         update      = if allSelected then Model.isExpanded %~ not
                                      else Model.isExpanded .~ True
     inRegistry $ forM_ sn $ \wf -> do
-        let id = wf ^. objectId
-        UICmd.update_ id update
-        UICmd.moveBy  id (Vector2 0 0) -- FIXME: trigger moved handler for html widgets
+        let objId = wf ^. objectId
+        UICmd.update_ objId update
+        UICmd.moveBy  objId (Vector2 0 0) -- FIXME: trigger moved handler for html widgets
 
 editNodeExpression :: NodeId -> Command Global.State ()
 editNodeExpression nodeId = do

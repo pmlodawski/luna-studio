@@ -2,11 +2,11 @@ module Object.Widget.Port where
 
 import           Data.Aeson               (ToJSON)
 import           Utils.Angle              (toAngle)
-import           Utils.PreludePlus
+import           Utils.PreludePlus        hiding (set)
 import           Utils.Vector
 
+import           Empire.API.Data.Port     (InPort (..), PortId (..))
 import           Empire.API.Data.PortRef  (AnyPortRef)
-import           Empire.API.Data.Port     (PortId(..), InPort(..))
 import qualified Empire.API.JSONInstances ()
 
 import           Object.Widget
@@ -33,11 +33,11 @@ instance IsDisplayObject Port where
     widgetVisible  = to $ const True
 
 angleToDimVec :: Double -> Vector2 Double
-angleToDimVec angle = (/ 10.0) <$> Vector2 (cos angle) (-sin angle)
+angleToDimVec angle' = (/ 10.0) <$> Vector2 (cos angle') (-sin angle')
 
 defaultAngle :: Int -> PortId -> Vector2 Double
-defaultAngle numPorts (OutPortId _) = angleToDimVec $ 0.0
-defaultAngle numPorts (InPortId (Arg portNum)) = angleToDimVec angle where
-    angle = delta * (fromIntegral portNum) + delta / 2.0 + pi / 2.0
-    delta = pi / (fromIntegral numPorts)
-defaultAngle numPorts (InPortId (Self)) = angleToDimVec 0.0
+defaultAngle _        (OutPortId _           ) = angleToDimVec 0.0
+defaultAngle _        (InPortId (Self)       ) = angleToDimVec 0.0
+defaultAngle numPorts (InPortId (Arg portNum)) = angleToDimVec angle' where
+    angle' = delta * (fromIntegral portNum) + delta / 2.0 + pi / 2.0
+    delta  = pi / (fromIntegral numPorts)

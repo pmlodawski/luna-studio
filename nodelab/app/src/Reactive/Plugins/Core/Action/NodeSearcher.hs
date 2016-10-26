@@ -28,7 +28,7 @@ toAction (NodeSearcher (NodeSearcher.QueryCmd  expr)) = Just $ CS.querySearchCmd
 toAction (NodeSearcher (NodeSearcher.TreeCmd   expr)) = Just $ CS.queryTreeCmd expr
 toAction (NodeSearcher (NodeSearcher.CreateCmd expr _)) = Just $ CS.runCommand expr
 
-toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\t'   mods@(KeyMods { _shift = False }))) = Just $ NS.openFresh
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\t'   (KeyMods { _shift = False }))) = Just $ NS.openFresh
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\191' (KeyMods False False False False))) = Just $ NS.openCommand -- 191 = /
-toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\191' (KeyMods True False False False))) = Just $ CS.help
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\191' (KeyMods True  False False False))) = Just $ CS.help
 toAction _ = Nothing

@@ -32,7 +32,6 @@ loadProject projId = do
 
 loadGraph :: GraphLocation -> Command State ()
 loadGraph location = do
-    currentLocation <- use $ Global.workspace . Workspace.currentLocation
     unrender
     Global.workspace . Workspace.currentLocation .= location
     saveCurrentLocation
