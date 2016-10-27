@@ -83,10 +83,6 @@ displayPorts id node = do
             InPortId  _    -> makePortLabel inLabelsGroupId  p
             OutPortId _    -> makePortLabel outLabelsGroupId p
 
-vtToText :: Getter ValueType Text
-vtToText = to $ \v -> case v of
-    ValueType.AnyType     -> "*"
-    ValueType.TypeIdent a -> Text.pack $ toString a
 
 makePortLabel :: WidgetId -> Port -> Command UIRegistry.State ()
 makePortLabel parent port = do
@@ -95,5 +91,5 @@ makePortLabel parent port = do
             OutPortId _ -> Label.Left
         label = Label.create (Vector2 360 15) text & Label.alignment .~ align
         text  = (Text.pack $ port ^. Port.name) <> " :: " <> portType
-        portType = port ^. Port.valueType . vtToText
+        portType = port ^. Port.valueType . ValueType.toText
     UICmd.register_ parent label def

@@ -1,11 +1,16 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Empire.API.Data.ValueType where
 
-import           Data.Binary (Binary)
+import           Data.Binary             (Binary)
+import           Data.Hashable           (Hashable)
+import qualified Data.Text.Lazy          as Text
 import           Prologue
-import           Data.Hashable (Hashable)
+
 import           Empire.API.Data.TypeRep (TypeRep (..))
+
+
 
 data ValueType = AnyType | TypeIdent TypeRep deriving (Show, Eq, Generic)
 
@@ -33,3 +38,8 @@ toEnum' _ = Other
 
 toEnum :: Getter ValueType ValueTypeEnum
 toEnum = to toEnum'
+
+toText :: Getter ValueType Text
+toText = to $ \v -> case v of
+    AnyType     -> "*"
+    TypeIdent a -> Text.pack $ toString a
