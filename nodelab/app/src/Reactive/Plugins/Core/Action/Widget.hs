@@ -7,19 +7,20 @@ module Reactive.Plugins.Core.Action.Widget
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           Object.Widget
-import qualified Object.Widget  as Widget
 import           Event.Event
-import           Event.Mouse    (EventWidget(..))
-import qualified Event.Mouse    as Mouse
-import qualified Event.Keyboard as Keyboard
-import qualified Event.Widget   as WE
-import qualified Reactive.State.Global       as Global
-import qualified Reactive.State.UIRegistry   as UIRegistry
-import qualified Reactive.State.Camera       as Camera
-import           Reactive.Commands.Command   (Command)
-import           Object.Widget.Port   ()
-import           UI.Handlers   (widgetHandlers)
+import qualified Event.Keyboard            as Keyboard
+import           Event.Mouse               (EventWidget (..))
+import qualified Event.Mouse               as Mouse
+import qualified Event.Widget              as WE
+import           Object.Widget
+import qualified Object.Widget             as Widget
+import           Object.Widget.Port        ()
+import           Reactive.Commands.Command (Command)
+import qualified Reactive.State.Camera     as Camera
+import qualified Reactive.State.Global     as Global
+import qualified Reactive.State.UIRegistry as UIRegistry
+import           UI.Handlers               (widgetHandlers)
+
 
 toAction :: Event -> Maybe (Command Global.State ())
 toAction (Mouse jsState event) = Just $ do
@@ -45,7 +46,7 @@ handleMouseGeneric jsState event@(Mouse.Event eventType absPos button keymods (J
             Mouse.Released    -> (handlers ^. mouseReleased) updatedEvent jsState widgetId
             Mouse.Clicked     -> (handlers ^. click)         updatedEvent jsState widgetId
             Mouse.DblClicked  -> (handlers ^. dblClick)      updatedEvent jsState widgetId
-            otherwise         -> return ()
+            _                 -> return ()
 handleMouseGeneric _ _ = return ()
 
 runOverHandler :: JSState -> (UIHandlers Global.State -> (JSState -> WidgetId -> Command Global.State ())) -> Command Global.State ()
@@ -65,7 +66,7 @@ handleMouseOut jsState = do
 
 handleMouseOverOut ::  JSState -> Mouse.RawEvent -> Command Global.State ()
 handleMouseOverOut jsState (Mouse.Event Mouse.Moved absPos button keymods Nothing) = handleMouseOut jsState
-handleMouseOverOut jsState (Mouse.Event Mouse.Moved absPos button keymods (Just (EventWidget widgetId mat scene))) = do
+handleMouseOverOut jsState (Mouse.Event Mouse.Moved absPos button keymods (Just (EventWidget widgetId mat _))) = do
     widgetOver <- use $ Global.uiRegistry . UIRegistry.widgetOver
     when (widgetOver /= Just widgetId) $ do
         handleMouseOut jsState
@@ -132,7 +133,7 @@ stopDrag jsState = do
         Global.uiRegistry . UIRegistry.dragState .= Nothing
 
 handleMouseClick :: JSState -> Mouse.RawEvent -> Command Global.State ()
-handleMouseClick jsState (Mouse.Event Mouse.Pressed _ Mouse.LeftButton _ (Just (EventWidget widgetId _ _))) = do
+handleMouseClick _ (Mouse.Event Mouse.Pressed _ Mouse.LeftButton _ (Just (EventWidget widgetId _ _))) = do
     Global.uiRegistry . UIRegistry.mouseDownWidget .= Just widgetId
 handleMouseClick jsState event@(Mouse.Event Mouse.Released _ Mouse.LeftButton _ (Just (EventWidget widgetId _ _))) = do
     previousWidget <- use $ Global.uiRegistry . UIRegistry.mouseDownWidget

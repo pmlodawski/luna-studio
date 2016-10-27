@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Object.Widget.FunctionPort where
 
-import           Data.Aeson            (ToJSON)
-import           Empire.API.Data.Input (Input)
-import qualified Empire.API.Data.Input as Input
+import           Data.Aeson             (ToJSON)
+import           Empire.API.Data.Input  (Input)
+import qualified Empire.API.Data.Input  as Input
 import           Empire.API.Data.Output (Output)
 import qualified Empire.API.Data.Output as Output
 import           Object.Widget
@@ -17,10 +17,10 @@ data InputOutput = Input | Output
 
 data FunctionPort = FunctionPort
                     { _position    :: Vector2 Double
-                    , _size        :: Vector2 Double
                     , _hovered     :: Bool
-                    , _labelValue  :: Text
+                    , _size        :: Vector2 Double
                     , _inputOutput :: InputOutput
+                    , _labelValue  :: Text
                     } deriving (Eq, Show, Typeable, Generic)
 
 makeLenses ''FunctionPort
@@ -33,13 +33,13 @@ instance IsDisplayObject FunctionPort where
     widgetVisible  = to $ const True
 
 
-create :: Vector2 Double -> Bool -> Text -> InputOutput -> FunctionPort
-create = FunctionPort def
+create :: InputOutput -> Text -> FunctionPort
+create = FunctionPort def False (Vector2 50 50)
 
 --TODO prooer initialisation
 fromInput :: Input -> FunctionPort
-fromInput input = create def False (input ^. Input.name) Input
+fromInput input = create Input (input ^. Input.name)
 
 --TODO prooer initialisation
 fromOutput :: Output -> FunctionPort
-fromOutput output = create def False "" Output
+fromOutput output = create Output "-> Result"

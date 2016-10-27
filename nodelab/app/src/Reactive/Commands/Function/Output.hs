@@ -1,10 +1,10 @@
-module Reactive.Commands.Function.Input
-    (registerInput
+module Reactive.Commands.Function.Output
+    (registerOutput
     ) where
 
 import           Prologue
 
-import           Empire.API.Data.Input        (Input)
+import           Empire.API.Data.Output       (Output)
 import qualified Object.Widget.FunctionPort   as Model
 import           Reactive.Commands.Command    (Command)
 import qualified Reactive.Commands.UIRegistry as UICmd
@@ -17,9 +17,9 @@ import           UI.Handlers.FunctionPort     ()
 
 
 
-registerInput :: Int -> Input -> Command State ()
-registerInput inputNo input = do
-    let inputModel = Model.fromInput input
-    inputsEdgeId <- use $ Global.uiElements . UIElements.inputsEdge
-    inputWidget <- inRegistry $ UICmd.register inputsEdgeId inputModel def
-    Global.graph . Graph.inputWidgetsMap . at inputNo ?= inputWidget
+registerOutput :: Output -> Command State ()
+registerOutput output = do
+    let outputModel = Model.fromOutput output
+    outputsEdgeId <- use $ Global.uiElements . UIElements.outputsEdge
+    outputWidget <- inRegistry $ UICmd.register outputsEdgeId outputModel def
+    Global.graph . Graph.outputWidget .= Just outputWidget
