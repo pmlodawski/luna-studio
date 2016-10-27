@@ -43,15 +43,13 @@ initTextEditor = do
 
 initInputsEdge :: Command State ()
 initInputsEdge = do
-    let group = Group.create & Group.position  .~ Style.inputsEdgePosition
-                             & Group.style     .~ Style.inputsEdgeStyle
+    let group = Group.create & Group.style     .~ Style.inputsEdgeStyle
     groupId <- inRegistry $ UICmd.register sceneInterfaceId group $ Layout.verticalLayoutHandler 5.0
     Global.uiElements . UIElements.inputsEdge .= groupId
 
 initOutputsEdge :: Command State ()
 initOutputsEdge = do
-    let group = Group.create & Group.position .~ Style.outputsEdgePosition
-                             & Group.style    .~ Style.outputsEdgeStyle
+    let group = Group.create & Group.style    .~ Style.outputsEdgeStyle
     groupId <- inRegistry $ UICmd.register sceneInterfaceId group $ Layout.verticalLayoutHandler 5.0
     Global.uiElements . UIElements.outputsEdge .= groupId
 

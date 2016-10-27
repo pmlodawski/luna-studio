@@ -4,8 +4,8 @@ module Reactive.Commands.Breadcrumbs (
 ) where
 
 import qualified Data.Text.Lazy                as Text
-import           Utils.PreludePlus
-import           Utils.Vector                  (Vector2 (..), x, y)
+import           Utils.PreludePlus             hiding (group)
+import           Utils.Vector                  (Vector2 (..), x)
 
 import qualified Batch.Workspace               as Workspace
 import qualified JS.UI                         as JS
@@ -45,7 +45,7 @@ displayBreadcrumbs enterBreadcrumbs = do
         forM_ (reverse $ tails currentBreadcrumb) $ \bc -> do
             let name = case bc of
                     (item:_) -> case item of
-                        Breadcrumb.Lambda id -> show id
+                        Breadcrumb.Lambda idx -> show idx
                     [] -> currentProjectName
                 name'  = Text.pack name
                 widget = Button.create Style.breadcrumbItemSize name'
@@ -60,5 +60,3 @@ update :: (Breadcrumb -> Command State ()) -> Command State ()
 update enterBreadcrumbs = do
     destroyBreadcrumbs
     displayBreadcrumbs enterBreadcrumbs
-
-
