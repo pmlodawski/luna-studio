@@ -5,13 +5,13 @@ colors       = require('colors')
 BaseWidget   = require('Widget/BaseWidget')
 
 class FunctionPort extends BaseWidget
-  constructor: (widgetId, width, height, isInput) ->
+  constructor: (widgetId, width, height, isInput, color) ->
     super widgetId, width, height
 
     @uniforms =
       objectId:  { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
       size:      { type: 'v2', value: new THREE.Vector2(width, height) }
-      color:     { type: 'v4', value: new THREE.Vector4(50.0, 50, 10, 50.0) }
+      color:     { type: 'v4', value: colors[color] }
       isInput:    { type: 'i', value: if isInput then 1 else 0 }
       hovered:   { type: 'i', value: 0 }
 

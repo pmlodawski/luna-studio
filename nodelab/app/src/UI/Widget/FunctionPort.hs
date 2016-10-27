@@ -22,7 +22,7 @@ newtype FunctionPort = FunctionPort JSVal deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget FunctionPort
 
-foreign import javascript safe "new FunctionPort($1, $2, $3, $4)" create' :: Int -> Double -> Double -> Bool-> IO FunctionPort
+foreign import javascript safe "new FunctionPort($1, $2, $3, $4, $5)" create' :: Int -> Double -> Double -> Bool-> Int -> IO FunctionPort
 foreign import javascript safe "$1.setHovered($2)"             setHovered :: FunctionPort -> Bool -> IO ()
 foreign import javascript safe "$1.setColor($2)"                 setColor :: FunctionPort -> Int -> IO ()
 
@@ -33,6 +33,7 @@ create oid model = do
                            Function.portWidth
                            (model ^. Model.size . y)
                            (model ^. Model.inputOutput == Model.Input)
+                           (model ^. Model.color)
     UI.setWidgetPosition (model ^. widgetPosition) widget
     return widget
 
@@ -48,3 +49,5 @@ instance UIDisplayObject Model.FunctionPort where
         widget <- UI.lookup wid :: IO FunctionPort
         whenChanged old model Model.hovered $
             setHovered widget $ model ^. Model.hovered
+        whenChanged old model Model.color $
+            setColor widget $ model ^. Model.color
