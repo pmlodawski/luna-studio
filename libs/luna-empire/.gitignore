@@ -74,9 +74,6 @@ cabal.sandbox.config
 # aws credentials
 aws.config
 
-# generated Std.luna
-stdlib/FlowboxM/Libs/Flowbox/Std.luna
-
 ### DEPRECATED ###
 # cabal-dev
 
