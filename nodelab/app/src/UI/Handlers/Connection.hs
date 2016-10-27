@@ -5,17 +5,17 @@ import           Utils.PreludePlus
 import           Data.HMap.Lazy                     (TypeKey (..))
 import           Utils.Vector
 
-import           Empire.API.Data.Connection         (Connection (..))
 import qualified Empire.API.Data.Connection         as Connection
 import qualified Empire.API.Data.PortRef            as PortRef
 
 import           Event.Event                        (JSState)
 import qualified Event.Mouse                        as Mouse
-import           Object.Widget                      (ResizableWidget, DragMoveHandler, UIHandlers, WidgetId, mousePressed, mouseMove, mouseOut, dragMove, startPos)
+import           Object.Widget                      (DragMoveHandler, UIHandlers, WidgetId, dragMove, mouseMove, mouseOut, mousePressed,
+                                                     startPos)
 import qualified Object.Widget.Connection           as Model
 import qualified Object.Widget.Node                 as NodeModel
 import qualified Object.Widget.Port                 as PortModel
-import           Reactive.Commands.Command          (Command, performIO)
+import           Reactive.Commands.Command          (Command)
 import           Reactive.Commands.Graph.Disconnect (disconnectAll)
 import qualified Reactive.Commands.UIRegistry       as UICmd
 import qualified Reactive.State.Connect             as Connect
@@ -23,9 +23,10 @@ import           Reactive.State.Global              (inRegistry)
 import qualified Reactive.State.Global              as Global
 import qualified Reactive.State.Graph               as Graph
 import qualified Reactive.State.UIRegistry          as UIRegistry
-import           Reactive.Plugins.Core.Action.Connect (handleMove)
 
-import           UI.Generic                         (defaultResize, startDrag, abortDrag)
+import           UI.Generic                         (abortDrag, startDrag)
+
+
 
 data ConnectionEnd = Source | Destination
 newtype DragConnectionEndHandler = DragConnectionEndHandler (WidgetId -> ConnectionEnd -> Command UIRegistry.State ())
@@ -96,4 +97,3 @@ widgetHandlers = def & mouseMove .~ onMouseMove
                      & mouseOut  .~ const onMouseOut
                      & mousePressed  .~ mousePressedHandler
                      & dragMove  .~ dragHandler
-

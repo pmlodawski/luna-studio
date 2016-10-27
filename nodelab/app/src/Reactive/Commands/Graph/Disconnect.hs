@@ -12,19 +12,17 @@ import           Reactive.State.Global        (State)
 import qualified Reactive.State.Global        as Global
 import qualified Reactive.State.Graph         as Graph
 
-import qualified Reactive.Commands.Batch      as BatchCmd
 import           Empire.API.Data.Connection   (Connection, ConnectionId)
 import qualified Empire.API.Data.Connection   as Connection
 import           Empire.API.Data.PortRef      (InPortRef, OutPortRef)
+import qualified Reactive.Commands.Batch      as BatchCmd
+
+
 
 localDisconnectAll :: [ConnectionId] -> Command State ()
 localDisconnectAll connectionIds = do
-    uiRegistry             <- use Global.uiRegistry
-    graph                  <- use Global.graph
-
     widgetIds <- mapM connectionIdToWidgetId connectionIds
-
-    zoom Global.uiRegistry $ mapM removeWidget $ catMaybes widgetIds
+    zoom Global.uiRegistry $ mapM_ removeWidget $ catMaybes widgetIds
     Global.graph           %= Graph.removeConnections connectionIds
     forM_ connectionIds $ \connId -> Global.graph . Graph.connectionWidgetsMap . at connId .= Nothing
 

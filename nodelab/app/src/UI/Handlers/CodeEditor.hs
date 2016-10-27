@@ -2,24 +2,18 @@ module UI.Handlers.CodeEditor where
 
 import           Utils.PreludePlus
 
-import           Utils.Vector
-
 import           Data.JSString.Text           (lazyTextFromJSString)
-import qualified Data.Text.Lazy               as Text
 import           GHCJS.Types                  (JSString)
 
 import           Event.Event                  (JSState)
 import           Event.Widget                 (Payload (..))
-import           Object.Widget                (ClickHandler, IsDisplayObject, KeyDownHandler, UIHandlers, WidgetId, dblClick, fromWidgetId,
-                                               keyDown, widgetCustom)
+import           Object.Widget                (UIHandlers, WidgetId, fromWidgetId, widgetCustom)
 import qualified Object.Widget.CodeEditor     as Model
-import           Reactive.Commands.Command    (Command, performIO)
+import           Reactive.Commands.Command    (Command)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import           Reactive.State.Global        (inRegistry)
 import qualified Reactive.State.Global        as Global
-import qualified Reactive.State.UIRegistry    as UIRegistry
 
-import           UI.Generic                   (defaultResize)
 import           UI.Handlers.Generic          (triggerValueChanged)
 import           UI.Widget.CodeEditor         ()
 

@@ -1,36 +1,30 @@
 module Reactive.Plugins.Core.Action.Navigation where
 
-
-import           Data.List (maximumBy)
-import           Data.Function (on)
-import qualified Data.HashMap.Strict               as HashMap
+import qualified Data.HashMap.Strict          as HashMap
 
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           Object.Widget                     (WidgetFile, WidgetId, objectId, widget, Position)
-import qualified Object.Widget.Node                as Model
+import           Object.Widget                (Position, WidgetFile, WidgetId, objectId, widget)
+import qualified Object.Widget.Node           as Model
 
-import           Event.Event                       (Event (Mouse, Keyboard), JSState)
-import           Event.Keyboard                    (KeyMods (..), shift)
-import qualified Event.Keyboard                    as Keyboard
-import qualified Event.Mouse                       as Mouse
+import           Event.Event                  (Event (Keyboard))
+import           Event.Keyboard               (KeyMods (..))
+import qualified Event.Keyboard               as Keyboard
 
-import           Reactive.State.Global             (State, inRegistry)
-import qualified Reactive.State.Global             as Global
-import qualified Reactive.State.UIRegistry         as UIRegistry
-import qualified Reactive.State.Graph              as Graph
+import           Reactive.State.Global        (State, inRegistry)
+import qualified Reactive.State.Global        as Global
+import qualified Reactive.State.Graph         as Graph
 
-import qualified Empire.API.Data.Node              as N
-import qualified Empire.API.Data.PortRef           as R
-import qualified Empire.API.Data.Port              as P
-import qualified Empire.API.Data.Connection        as C
+import qualified Empire.API.Data.Connection   as C
+import qualified Empire.API.Data.Node         as N
+import qualified Empire.API.Data.Port         as P
+import qualified Empire.API.Data.PortRef      as R
 
-import           Reactive.Commands.Command         (Command, performIO)
-import           Reactive.Commands.Graph           (allNodes, widgetIdToNodeWidget)
-import           Reactive.Commands.Graph.Selection (focusSelectedNode, selectAll, selectedNodes, unselectAll)
-import qualified Reactive.Commands.UIRegistry      as UICmd
-import           Reactive.Commands.Batch           (collaborativeTouch, cancelCollaborativeTouch)
+import           Reactive.Commands.Batch      (cancelCollaborativeTouch, collaborativeTouch)
+import           Reactive.Commands.Command    (Command)
+import           Reactive.Commands.Graph      (allNodes, widgetIdToNodeWidget)
+import qualified Reactive.Commands.UIRegistry as UICmd
 
 
 
@@ -220,7 +214,7 @@ changeSelection' selectedNodes nodeId widgetId = do
 
 unselectNodes :: [WidgetFile Model.Node] -> Command State ()
 unselectNodes selectedNodes = do
-    inRegistry $ forM selectedNodes $ \node -> UICmd.update_ (node ^. objectId) $ Model.isSelected .~ False
+    inRegistry $ forM_ selectedNodes $ \node -> UICmd.update_ (node ^. objectId) $ Model.isSelected .~ False
     cancelCollaborativeTouch $ (^. widget . Model.nodeId) <$> selectedNodes
 
 selectNode :: WidgetFile Model.Node -> Command State ()
