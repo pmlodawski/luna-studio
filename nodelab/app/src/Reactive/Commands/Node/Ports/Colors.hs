@@ -16,7 +16,8 @@ import           Empire.API.Data.ValueType (ValueType (..))
 
 hashMany :: [TypeRep] -> Int
 hashMany as = sum $ zipWith (*) powers (tpRepToColor <$> as) where
-    powers = (37 ^) <$> [0..]
+    nums   = [0..] :: [Integer]
+    powers = (37 ^) <$> nums
 
 ensureRange :: Integral a => a -> a
 ensureRange n = (n `mod` 8) + 1
@@ -30,7 +31,7 @@ tpRepToColor (TCons tn as) = ensureRange $ case tn of
      "List"       -> 5 + hashMany as
      _            -> hash tn + hashMany as
 tpRepToColor (TLam as out) = ensureRange . hashMany $ out : as
-tpRepToColor (TVar n) = 9
+tpRepToColor (TVar _n) = 9
 tpRepToColor _ = 0
 
 vtToColor :: ValueType -> Int

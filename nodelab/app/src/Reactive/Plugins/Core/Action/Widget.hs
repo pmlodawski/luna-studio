@@ -33,7 +33,7 @@ toAction (Widget (WE.WidgetEvent widgetId payload)) = Just $ handleWidgetCustom 
 toAction _ = Nothing
 
 handleMouseGeneric :: JSState -> Mouse.RawEvent -> Command Global.State ()
-handleMouseGeneric jsState event@(Mouse.Event eventType absPos button keymods (Just (EventWidget widgetId mat scene))) = do
+handleMouseGeneric jsState event@(Mouse.Event eventType absPos button _ (Just (EventWidget widgetId mat scene))) = do
     file <- zoom Global.uiRegistry $ UIRegistry.lookupM widgetId
     withJust file $ \file -> do
         camera <- use $ Global.camera . Camera.camera
@@ -57,7 +57,7 @@ runOverHandler jsState handler = do
         file <- zoom Global.uiRegistry $ UIRegistry.lookupM widgetOver
         withJust file $ \file -> do
             let handlers = widgetHandlers (file ^. widget)
-            (handler handlers) jsState widgetOver
+            handler handlers jsState widgetOver
 
 handleMouseOut :: JSState -> Command Global.State ()
 handleMouseOut jsState = do
@@ -65,8 +65,8 @@ handleMouseOut jsState = do
     Global.uiRegistry . UIRegistry.widgetOver .= Nothing
 
 handleMouseOverOut ::  JSState -> Mouse.RawEvent -> Command Global.State ()
-handleMouseOverOut jsState (Mouse.Event Mouse.Moved absPos button keymods Nothing) = handleMouseOut jsState
-handleMouseOverOut jsState (Mouse.Event Mouse.Moved absPos button keymods (Just (EventWidget widgetId mat _))) = do
+handleMouseOverOut jsState (Mouse.Event Mouse.Moved absPos button _ Nothing) = handleMouseOut jsState
+handleMouseOverOut jsState (Mouse.Event Mouse.Moved absPos button _ (Just (EventWidget widgetId mat _))) = do
     widgetOver <- use $ Global.uiRegistry . UIRegistry.widgetOver
     when (widgetOver /= Just widgetId) $ do
         handleMouseOut jsState

@@ -28,7 +28,6 @@ import           UI.Widget.Toggle                 ()
 import qualified Object.Widget.Choice             as Choice
 import qualified Object.Widget.Choice.RadioButton as RadioButton
 import qualified Object.Widget.Group              as Group
-import qualified Object.Widget.Label              as Label
 import qualified Reactive.Commands.UIRegistry     as UICmd
 import qualified Reactive.State.Global            as Global
 import qualified UI.Handlers.Choice.RadioButton   as RadioButton
@@ -50,7 +49,7 @@ selectRadioButton id val = inRegistry $ UICmd.update_ id $ Choice.value .~ val
 instance CompositeWidget Choice where
     createWidget id model = do
         groupId <- UICmd.register id Group.create (Layout.verticalLayoutHandler 0.0)
-        labelId <- UICmd.register id (Label.create (Vector2 100.0 20.0)(model ^. Choice.label)) def
+        -- labelId <- UICmd.register id (Label.create (Vector2 100.0 20.0)(model ^. Choice.label)) def
 
         UICmd.moveX groupId 90
 

@@ -14,7 +14,7 @@ import qualified Object.Widget.Icon as Model
 import           UI.Generic         (whenChanged)
 import qualified UI.Generic         as UI
 import qualified UI.Registry        as UI
-import           UI.Widget          (UIWidget (..))
+import           UI.Widget          (UIWidget)
 import qualified UI.Widget          as Widget
 
 newtype Icon = Icon JSVal deriving (PToJSVal, PFromJSVal)

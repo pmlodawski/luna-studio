@@ -7,7 +7,7 @@ import qualified Reactive.Commands.UIRegistry as UICmd
 import qualified Reactive.State.Global        as Global
 import qualified Style.Function               as Function
 import qualified UI.Generic                   as UI
-import qualified UI.Registry                  as UI
+import           UI.Registry                  ()
 import           UI.Widget.FunctionPort       ()
 import           UI.Widget.Label              ()
 import           UI.Widget.Toggle             ()

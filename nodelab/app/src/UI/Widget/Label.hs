@@ -54,7 +54,7 @@ instance UIDisplayObject Model.Label where
         Widget.add widget parent
         setLabel       model widget
 
-    updateUI id old model = do
+    updateUI id _old model = do
         widget <- UI.lookup id :: IO Label
         setLabel     model widget
         setAlignment model widget
