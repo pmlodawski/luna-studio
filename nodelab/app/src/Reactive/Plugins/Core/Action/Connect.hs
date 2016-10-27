@@ -37,10 +37,10 @@ import qualified JS.GoogleAnalytics              as GA
 
 
 toAction :: Event -> Maybe (Command State ())
-toAction (Mouse _ event@(Mouse.Event Mouse.Pressed  _   Mouse.LeftButton (KeyMods False False False False) (Just _))) = Just $ startDrag event
-toAction (Mouse _ event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ whileConnecting $ handleMove pos
-toAction (Mouse _ event@(Mouse.Event Mouse.Moved    _   _                _ _)) = Just $ whileConnecting $ stopDrag'
-toAction (Mouse _ event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just $ whileConnecting $ stopDrag event
+toAction (Mouse _ (Mouse.Event Mouse.Pressed  _   Mouse.LeftButton (KeyMods False False False False) (Just evWd))) = Just $ startDrag evWd
+toAction (Mouse _ (Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _      )) = Just $ whileConnecting $ handleMove pos
+toAction (Mouse _ (Mouse.Event Mouse.Moved    _   _                _ _      )) = Just $ whileConnecting $ stopDrag'
+toAction (Mouse _ (Mouse.Event Mouse.Released _   Mouse.LeftButton _ mayEvWd)) = Just $ whileConnecting $ stopDrag mayEvWd
 toAction _                                                                     = Nothing
 
 showCurrentConnection :: Vector2 Double -> Vector2 Double -> Bool -> Command UIRegistry.State ()
@@ -58,13 +58,12 @@ hideCurrentConnection = UICmd.update_ UIRegistry.currentConnectionId $ UIConnect
 getPortWidgetUnderCursor :: EventWidget -> Command UIRegistry.State (Maybe (WidgetFile PortModel.Port))
 getPortWidgetUnderCursor (EventWidget widgetId _ _) = UIRegistry.lookupTypedM widgetId
 
-startDrag :: Mouse.RawEvent -> Command State ()
-startDrag event@(Mouse.Event _ coord _ _ (Just evWd)) = do
+startDrag :: Mouse.EventWidget -> Command State ()
+startDrag evWd = do
     sourcePortWd <- zoom Global.uiRegistry $ getPortWidgetUnderCursor evWd
     withJust sourcePortWd $ \file -> do
         let model = file ^. widget
         let sourceRef = model ^. PortModel.portRef
-        graph  <- use Global.graph
         camera <- use $ Global.camera . Camera.camera
         nodeWidget <- inRegistry $ UICmd.parent (fromJust $ file ^. parent)
         sourceNodePos <- inRegistry $ UICmd.get nodeWidget NodeModel.position
@@ -78,7 +77,6 @@ whileConnecting run = do
 
 handleMove :: Vector2 Int -> Connect.Connecting -> Command State ()
 handleMove coord (Connecting sourceRef sourceVector nodePos _) = do
-    graph  <- use Global.graph
     camera <- use $ Global.camera . Camera.camera
     current' <- zoom Global.camera $ Camera.screenToWorkspaceM coord
     startLine <- case sourceRef of
@@ -116,8 +114,8 @@ toValidConnection a b = (normalize a b) >>= toOtherNode where
         | a ^. PortRef.srcNodeId /= b ^. PortRef.dstNodeId = Just (a, b)
         | otherwise                                        = Nothing
 
-stopDrag :: Mouse.RawEvent -> Connect.Connecting -> Command State ()
-stopDrag event@(Mouse.Event _ coord _ _ mayEvWd) (Connecting sourceRef _ _ _) = do
+stopDrag :: Maybe Mouse.EventWidget -> Connect.Connecting -> Command State ()
+stopDrag mayEvWd (Connecting sourceRef _ _ _) = do
     Global.connect . Connect.connecting .= Nothing
     zoom Global.uiRegistry hideCurrentConnection
 

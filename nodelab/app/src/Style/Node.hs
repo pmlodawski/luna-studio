@@ -9,7 +9,7 @@ import qualified Object.Widget.Group as Group
 import qualified Object.Widget.Label as Label
 import qualified UI.Layout           as Layout
 
-nodeRadius = 25.0
+nodeRadius = 25.0 :: Double
 
 expressionLabel = Label.Label position size align Label.Monospace where
     position = Vector2 (-150.0) (-50.0)
@@ -41,14 +41,14 @@ valueLabel = Label.Label position size align def where
 
 
 visualizationGroupStyle = expandedGroupStyle
-plotSize = Vector2 200.0 150.0
+plotSize = Vector2 200.0 150.0 :: Vector2 Double
 
-portControlSize = Vector2 200.0 20.0
+portControlSize = Vector2 200.0 20.0 :: Vector2 Double
 
 setLabelSize  = Vector2 (0.7 * (portControlSize ^. x) - setLabelOffsetX) (portControlSize ^. y)
 setButtonSize = Vector2 (0.3 * (portControlSize ^. x)) (portControlSize ^. y)
 
-setLabelOffsetX = 10.0
+setLabelOffsetX = 10.0 :: Double
 labeledPadding = xyPadding setLabelOffsetX 0.0
 
 
@@ -56,4 +56,4 @@ execTimeLabel = Label.Label (Vector2 setLabelOffsetX 0) size align def where
     size     = Vector2 0 0 -- (portControlSize & x -~ setLabelOffsetX)
     align    = Label.Left
 
-codeEditorSize = Vector2 300.0 150.0
+codeEditorSize = Vector2 300.0 150.0 :: Vector2 Double

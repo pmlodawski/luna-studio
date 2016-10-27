@@ -43,6 +43,7 @@ import qualified Reactive.State.Global     as Global
 import qualified Reactive.State.UIRegistry as UIRegistry
 import qualified UI.Generic                as UI
 
+-- TODO: extract duplicated code in two functions beneath
 register :: (CompositeWidget a, DisplayObjectClass a) => WidgetId -> a -> HTMap -> Command UIRegistry.State WidgetId
 register parent model handlers = do
     file <- UIRegistry.registerM parent model handlers
@@ -69,7 +70,7 @@ update :: (Eq a, CompositeWidget a, DisplayObjectClass a) => WidgetId -> (a -> a
 update widgetId fun = do
     oldWidget <- UIRegistry.lookupTypedM  widgetId
     case oldWidget of
-        Nothing        -> error $ "update: Widget " <> (show widgetId) <> " not found or wrong type!"
+        Nothing        -> error $ "update: Widget " <> show widgetId <> " not found or wrong type!"
         Just oldWidget -> do
             newWidget  <- UIRegistry.updateWidgetM widgetId fun
             when ((oldWidget ^. widget) /= newWidget) $ do
@@ -120,8 +121,7 @@ moveBy :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
 moveBy widgetId vec = do
     UIRegistry.widgets . ix (fromWidgetId widgetId) . widget . widgetPosition += vec
     pos <- preuse $ UIRegistry.widgets . ix (fromWidgetId widgetId) . widget . widgetPosition
-    withJust pos $ (UI.updatePosition' widgetId)
-
+    withJust pos $ UI.updatePosition' widgetId
 
 newtype ChildrenResizedHandler = ChildrenResizedHandler (WidgetId -> Command UIRegistry.State ())
 triggerChildrenResized :: WidgetId -> Command UIRegistry.State ()
@@ -130,9 +130,8 @@ triggerChildrenResized widgetId = do
     maybeHandler <- handler widgetId key
     withJust maybeHandler $ \(ChildrenResizedHandler handler) -> handler widgetId
 
-
 resize :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
-resize widgetId vec = resize' widgetId (\_ -> vec)
+resize widgetId vec = resize' widgetId (const vec)
 
 resize' :: WidgetId -> (Vector2 Double -> Vector2 Double) -> Command UIRegistry.State ()
 resize' = resize'CB True
@@ -153,37 +152,36 @@ resize'CB cb widgetId f = do
 get :: DisplayObjectClass a => WidgetId -> Getter a b -> Command UIRegistry.State b
 get widgetId f = do
     maybeFile <- UIRegistry.lookupTypedM widgetId
-    let file     = fromMaybe (error $ "get: invalid type or widget " <> (show widgetId) <> "  not exists") maybeFile
+    let file     = fromMaybe (error $ "get: invalid type or widget " <> show widgetId <> "  not exists") maybeFile
     return $ file ^. widget . f
 
 maybeGet :: DisplayObjectClass a => WidgetId -> Getter a b -> Command UIRegistry.State (Maybe b)
 maybeGet widgetId f = do
     maybeFile <- UIRegistry.lookupTypedM widgetId
-    return $ (view $ widget . f) <$> maybeFile
-
+    return $ view (widget . f) <$> maybeFile
 
 get' :: WidgetId -> Getter DisplayObject b -> Command UIRegistry.State b
 get' widgetId f = do
     maybeFile <- UIRegistry.lookupM widgetId
-    let file     = fromMaybe (error $ "get': " <> (show widgetId) <> " widget not exists") maybeFile
+    let file     = fromMaybe (error $ "get': " <> show widgetId <> " widget not exists") maybeFile
     return $ file ^. widget . f
 
 lookup :: DisplayObjectClass a => WidgetId -> Command UIRegistry.State a
 lookup widgetId = do
     maybeFile <- UIRegistry.lookupTypedM widgetId
-    let file   = fromMaybe (error $ "lookup: " <> (show widgetId) <> "  invalidType") maybeFile
+    let file   = fromMaybe (error $ "lookup: " <> show widgetId <> "  invalidType") maybeFile
     return $ file ^. widget
 
 children :: WidgetId -> Command UIRegistry.State [WidgetId]
 children widgetId = do
     maybeFile <- UIRegistry.lookupM widgetId
-    let file   = fromMaybe (error $ "children: " <> (show widgetId) <> " widget not exists") maybeFile
+    let file   = fromMaybe (error $ "children: " <> show widgetId <> " widget not exists") maybeFile
     return $ file ^. Object.Widget.children
 
 parent :: WidgetId -> Command UIRegistry.State WidgetId
 parent widgetId = do
     maybeFile <- UIRegistry.lookupM widgetId
-    let file   = fromMaybe (error $ "parent: widget " <> (show widgetId) <> " not exists") maybeFile
+    let file   = fromMaybe (error $ "parent: widget " <> show widgetId <> " not exists") maybeFile
     return $ fromMaybe (error "parent: called on scene") $ file ^. Object.Widget.parent
 
 handler :: Typeable k => WidgetId -> TypeKey k -> Command UIRegistry.State (Maybe k)
@@ -196,12 +194,11 @@ handler widgetId k = do
 removeWidget :: WidgetId -> Command UIRegistry.State ()
 removeWidget widgetId = do
     parent <- parent widgetId
-    widgetOver <- use $ UIRegistry.widgetOver
+    -- widgetOver <- use $ UIRegistry.widgetOver
     widgets <- UIRegistry.unregisterM widgetId
     when (elem widgetId widgets) $ performIO $ Cursor.setCursor Cursor.Normal
     forM_ widgets $ performIO . UI.removeWidget . fromWidgetId
     triggerChildrenResized parent
-
 
 newtype LostFocus = LostFocus (WidgetId -> Command Global.State ())
 triggerLostFocus :: WidgetId -> Command Global.State ()
@@ -209,7 +206,6 @@ triggerLostFocus id = do
     let key = TypeKey :: (TypeKey LostFocus)
     maybeHandler <- Global.inRegistry $ handler id key
     withJust maybeHandler $ \(LostFocus handler) -> handler id
-
 
 takeFocus :: WidgetId -> Command Global.State ()
 takeFocus id = do

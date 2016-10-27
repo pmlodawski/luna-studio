@@ -24,9 +24,9 @@ instance Zoom (Command s) (Command t) s t where
 
 command :: (a -> (IO (), a)) -> Command a ()
 command f = do
-    (action, state) <- gets f
+    (action, st) <- gets f
     performIO action
-    put state
+    put st
 
 pureCommand :: (a -> a) -> Command a ()
 pureCommand = modify
@@ -35,12 +35,12 @@ ioCommand :: (a -> IO ()) -> Command a ()
 ioCommand f = gets f >>= performIO
 
 runCommand :: Command a b -> a -> (b, IO (), a)
-runCommand cmd state = case runWriter (runStateT (unCommand cmd) state) of
-    ((res, state), IOAction act) -> (res, act, state)
+runCommand cmd st = case runWriter (runStateT (unCommand cmd) st) of
+    ((res, st), IOAction act) -> (res, act, st)
 
 execCommand :: Command a b -> a -> (IO (), a)
-execCommand cmd state = case runCommand cmd state of
-    (_, act, state) -> (act, state)
+execCommand cmd st = case runCommand cmd st of
+    (_, act, st) -> (act, st)
 
 performIO :: IO () -> Command a ()
 performIO action = tell $ IOAction action

@@ -55,7 +55,7 @@ instance UIDisplayObject Model.Port where
         UIR.register id widget
         Widget.add widget  parent
 
-    updateUI id old model = do
+    updateUI id _old model = do
         port <- UIR.lookup id :: IO Port
         setAngle     port  (model ^. Model.angle) (model ^. Model.portCount) (model ^. Model.isOnly)
         setColor     port $ model ^. Model.color

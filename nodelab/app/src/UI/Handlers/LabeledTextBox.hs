@@ -41,7 +41,7 @@ textHandlers wid = addHandler (ValueChangedHandler $ textValueChangedHandler wid
                 $ mempty where
 
 textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
-textValueChangedHandler parent val tbId = do
+textValueChangedHandler parent val _tbId = do
     inRegistry $ UICmd.update_ parent $ Model.value .~ val
     triggerValueChanged val parent
 
@@ -59,7 +59,7 @@ instance CompositeWidget Model.LabeledTextBox where
         tbId <- UICmd.register wid textBox $ textHandlers wid
         UICmd.moveX tbId tx
 
-    updateWidget wid old model = do
+    updateWidget wid _old model = do
         (tbId:_) <- UICmd.children wid
         UICmd.update_ tbId $ TextBox.value .~ (model ^. Model.value)
 

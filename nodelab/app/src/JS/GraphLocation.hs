@@ -23,9 +23,7 @@ saveLocation location = do
     let payload = JSString.pack . ByteString.unpack $ encode location
     setItem key payload localStorage
 
-loadLocation :: IO (Maybe (Workspace.UIGraphLocation))
+loadLocation :: IO (Maybe Workspace.UIGraphLocation)
 loadLocation = do
     payload <- getItem key localStorage
-    return $ case payload of
-        Just payload -> decode $ ByteString.pack $ JSString.unpack payload
-        Nothing      -> Nothing
+    return $ decode . ByteString.pack . JSString.unpack =<< payload

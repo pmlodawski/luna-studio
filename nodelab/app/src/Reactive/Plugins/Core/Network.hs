@@ -79,7 +79,7 @@ actions =  [ Debug.toActionEv
            ]
 
 runCommands :: [Event.Event -> Maybe (Command State ())] -> Event.Event -> Command State ()
-runCommands cmds event = sequence_ . catMaybes $ fmap ($ event) actions
+runCommands cmds event = sequence_ . catMaybes $ fmap ($ event) cmds
 
 preprocessEvent :: Event.Event -> IO Event.Event
 preprocessEvent ev = do
@@ -97,15 +97,15 @@ processEvent var ev = do
         --putStrLn . show . length $ show realEvent
         JS.Debug.error (Text.pack $ realEvent ^. Event.name) realEvent
         consoleTimeEnd $ (realEvent ^. Event.name) <> " show and force"
-        consoleTimeStart $ (realEvent ^. Event.name)
+        consoleTimeStart (realEvent ^. Event.name)
     jsState   <- Handlers.getJSState
     timestamp <- getCurrentTime
     let state' = state & Global.jsState .~ jsState
                        & Global.lastEventTimestamp .~ timestamp
     let (ioActions, newState) = execCommand (runCommands actions realEvent) state'
     catch (ioActions >> UI.shouldRender) (handleExcept newState realEvent)
-    when displayProcessingTime $ do
-        consoleTimeEnd $ (realEvent ^. Event.name)
+    when displayProcessingTime $
+        consoleTimeEnd (realEvent ^. Event.name)
     putMVar var newState
 
 makeNetworkDescription :: WebSocket -> MVar State -> IO ()
@@ -130,5 +130,5 @@ makeNetworkDescription conn state = do
     sequence_ $ registerHandler <$> handlers
 
 handleExcept :: State -> Event.Event -> JSException  -> IO ()
-handleExcept _ event except = do
-    putStrLn $ "JavaScriptException: " <> (show except) <> "\n\nwhile processing: " <> (show event)
+handleExcept _ event except =
+    putStrLn $ "JavaScriptException: " <> show except <> "\n\nwhile processing: " <> show event

@@ -116,7 +116,7 @@ textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State 
 textValueChangedHandler parent val tbId = do
     let val' = signed decimal val
     case val' of
-        Left err        -> inRegistry $ do
+        Left _err       -> inRegistry $ do
             val <- UICmd.get parent Model.displayValue
             UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ val)
         Right (val', _) -> do
@@ -135,7 +135,7 @@ instance CompositeWidget Model.DiscreteSlider where
         tbId <- UICmd.register id textBox $ textHandlers id
         UICmd.moveX tbId tx
 
-    updateWidget id old model = do
+    updateWidget id _old model = do
         (tbId:_) <- UICmd.children id
         UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ model ^. Model.displayValue)
 
@@ -145,5 +145,3 @@ instance ResizableWidget Model.DiscreteSlider where
             slider <- UI.lookup id :: IO Slider
             setTicks model slider
         TextBox.labeledEditableResize id size model
-
-

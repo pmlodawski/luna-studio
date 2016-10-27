@@ -18,9 +18,9 @@ import GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
 import GHCJS.Foreign.Callback
 import Data.JSString
 
-newtype WebSocket      = WebSocket      { unWebSocket      :: JSVal } deriving (PFromJSVal, PToJSVal)
-newtype WSMessageEvent = WSMessageEvent { unWSMessageEvent :: JSVal } deriving (PFromJSVal, PToJSVal)
-newtype WSClosedEvent  = WSClosedEvent  { unWSClosedEvent  :: JSVal } deriving (PFromJSVal, PToJSVal)
+newtype WebSocket      = WebSocket      JSVal deriving (PFromJSVal, PToJSVal)
+newtype WSMessageEvent = WSMessageEvent JSVal deriving (PFromJSVal, PToJSVal)
+newtype WSClosedEvent  = WSClosedEvent  JSVal deriving (PFromJSVal, PToJSVal)
 
 instance IsJSVal WebSocket
 instance IsJSVal WSMessageEvent
@@ -90,4 +90,3 @@ onError ws callback = do
     wrappedCallback <- asyncCallback callback
     onError' ws wrappedCallback
     return $ unOnError' ws wrappedCallback >> releaseCallback wrappedCallback
-

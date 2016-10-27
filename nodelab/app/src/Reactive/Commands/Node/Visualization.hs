@@ -47,8 +47,9 @@ limitString limit str | Text.length str > limit64 = Text.take limit64 str <> "..
                       where limit64 = fromIntegral limit
 
 wrapLines :: Int -> String -> String
-wrapLines limit str = tail . unlines . reverse $ foldl f [""] $ words str where
+wrapLines limit str = unlines . reverse $ foldl f [] $ words str where
     f (a:as) e = let t = a ++ " " ++ e in if length t <= limit then t:as else e:a:as
+    f []     e = [e]
 
 showError :: LunaError.Error TypeRep -> String
 showError = showErrorSep ""
@@ -76,7 +77,8 @@ removeVisualization id = do
 
 listTable :: [Text] -> DataFrame
 listTable col = DataFrame.create Style.plotSize ["Index", "Value"] rows where
-    idxs = Text.pack . show <$> take (length col) [1..]
+    nats = [1..] :: [Integer]
+    idxs = Text.pack . show <$> take (length col) nats
     cols = [idxs, col]
     rows = transpose cols
 
@@ -90,7 +92,7 @@ visualize visIx id create update = do
     groupId <- Node.valueGroupId id
     currentVisualizations <- UICmd.children groupId
     let currentVisualization = currentVisualizations ^? ix visIx
-        cleanup = do
+        _cleanup = do
             widgets <- UICmd.children groupId
             mapM_ UICmd.removeWidget widgets
 
@@ -102,7 +104,7 @@ visualize visIx id create update = do
         Just currentVis -> do
             status <- UICmd.tryUpdate currentVis update
             -- performIO $ putStrLn $ "update " <> (show status) <> " " <> (show visIx) <> " " <> (show currentVisualization) <> " " <> (show currentVisualizations)
-            when (not status) $ do
+            unless status $ do
                 UICmd.removeWidget currentVis
                 create groupId
 
@@ -226,22 +228,22 @@ createBoxes (GR.Transformations transf) = createBoxFromTransf <$> transf
 createBoxes (GR.Translations    transl) = createBoxFromTransl <$> transl
 
 createBoxFromTransf :: GR.Transformation -> Graphics.Box
-createBoxFromTransf (GR.Transformation sx sy dx dy rot refl) = Graphics.Box (Vector2 dx dy)
+createBoxFromTransf (GR.Transformation _ _ dx dy _ _) = Graphics.Box (Vector2 dx dy)
 
 createBoxFromTransl :: GR.Point -> Graphics.Box
 createBoxFromTransl (GR.Point dx dy) = Graphics.Box (Vector2 dx dy)
 
-fromLayer1 :: GR.Layer -> Graphics.Item
-fromLayer1 (GR.Layer geometry trans _) = Graphics.Item (Text.pack shaderTxt) boxes size offset where
-    Shader.ShaderBox shaderTxt (Shader.Location size offset) = Shader.ShaderBox "s1" (Shader.Location (Vector2 0.848 0.008) (Vector2 0.0 0.0))
-    boxes = createBoxes trans
-
-fromLayer2 :: GR.Layer -> Graphics.Item
-fromLayer2 (GR.Layer geometry trans _) = Graphics.Item (Text.pack shaderTxt) boxes size offset where
-    Shader.ShaderBox shaderTxt (Shader.Location size offset) = Shader.ShaderBox "s2" (Shader.Location (Vector2 0.008 0.848) (Vector2 0.0 0.0))
-    boxes = createBoxes trans
-
-fromLayer3 :: GR.Layer -> Graphics.Item
-fromLayer3 (GR.Layer geometry trans _) = Graphics.Item (Text.pack shaderTxt) boxes size offset where
-    Shader.ShaderBox shaderTxt (Shader.Location size offset) = Shader.ShaderBox "s3" (Shader.Location (Vector2 0.032 0.032) (Vector2 0.0 0.0))
-    boxes = createBoxes trans
+-- fromLayer1 :: GR.Layer -> Graphics.Item
+-- fromLayer1 (GR.Layer _ trans _) = Graphics.Item (Text.pack shaderTxt) boxes size offset where
+--     Shader.ShaderBox shaderTxt (Shader.Location size offset) = Shader.ShaderBox "s1" (Shader.Location (Vector2 0.848 0.008) (Vector2 0.0 0.0))
+--     boxes = createBoxes trans
+--
+-- fromLayer2 :: GR.Layer -> Graphics.Item
+-- fromLayer2 (GR.Layer _ trans _) = Graphics.Item (Text.pack shaderTxt) boxes size offset where
+--     Shader.ShaderBox shaderTxt (Shader.Location size offset) = Shader.ShaderBox "s2" (Shader.Location (Vector2 0.008 0.848) (Vector2 0.0 0.0))
+--     boxes = createBoxes trans
+--
+-- fromLayer3 :: GR.Layer -> Graphics.Item
+-- fromLayer3 (GR.Layer _ trans _) = Graphics.Item (Text.pack shaderTxt) boxes size offset where
+--     Shader.ShaderBox shaderTxt (Shader.Location size offset) = Shader.ShaderBox "s3" (Shader.Location (Vector2 0.032 0.032) (Vector2 0.0 0.0))
+--     boxes = createBoxes trans

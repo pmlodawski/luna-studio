@@ -11,7 +11,6 @@ import qualified Event.Mouse               as Mouse
 import           Object.Widget             (DragState (..), IsDisplayObject, WidgetFile, WidgetId, objectId, widget,
                                             widgetPosition, children)
 import           Reactive.Commands.Command (Command, performIO)
-import qualified Reactive.State.Camera     as Camera
 import qualified Reactive.State.Global     as Global
 import qualified Reactive.State.UIRegistry as UIRegistry
 import qualified UI.Registry               as UIR
@@ -38,43 +37,42 @@ updatePosition file = do
     let position = file ^. widget . widgetPosition
         widgetId = file ^. objectId
     performIO $ do
-        w <- UIR.lookup $ widgetId :: IO (GenericWidget)
+        w <- UIR.lookup widgetId :: IO GenericWidget
         setWidgetPosition position w
     recursiveWidgetMoved widgetId
 
 recursiveWidgetMoved :: WidgetId -> Command UIRegistry.State ()
 recursiveWidgetMoved widgetId = do
     wf <- UIRegistry.lookupM widgetId
-    withJust wf $ \wf -> do
+    withJust wf $ \wf ->
         forM_ (wf ^. children) $ \widgetId -> do
             performIO $ do
-                w <- UIR.lookup $ widgetId :: IO (GenericWidget)
+                w <- UIR.lookup widgetId :: IO GenericWidget
                 widgetMoved (pToJSVal w)
             recursiveWidgetMoved widgetId
 
 updatePosition' :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
 updatePosition' widgetId position = do
     performIO $ do
-        w <- UIR.lookup $ widgetId :: IO (GenericWidget)
+        w <- UIR.lookup widgetId :: IO GenericWidget
         setWidgetPosition position w
     recursiveWidgetMoved widgetId
 
 setSize :: WidgetId -> Vector2 Double -> IO ()
 setSize id (Vector2 x y) = do
-    w <- UIR.lookup $ id :: IO (GenericWidget)
+    w <- UIR.lookup id :: IO GenericWidget
     setSize' w x y
 
 defaultResize :: WidgetId -> Vector2 Double -> a -> Command UIRegistry.State ()
 defaultResize id size _ = performIO $ setSize id size
 
 startDrag :: Mouse.Event' -> WidgetId -> Command Global.State ()
-startDrag (Mouse.Event _ pos button keymods (Just (Mouse.EventWidget widgetId mat scene))) id = do
-    camera <- use $ Global.camera . Camera.camera
+startDrag (Mouse.Event _ pos button keymods (Just (Mouse.EventWidget widgetId mat scene))) _ =
     Global.uiRegistry . UIRegistry.dragState ?= DragState widgetId mat scene button keymods pos pos pos
+startDrag _ _ = return ()
 
 abortDrag :: Command Global.State ()
 abortDrag = Global.uiRegistry . UIRegistry.dragState .= Nothing
 
 whenChanged :: (Eq b, Monad m) => a -> a -> Getter a b -> m () -> m ()
-whenChanged old new get action = if (old ^. get) /= (new ^. get) then action
-                                                                 else return ()
+whenChanged old new get = when ((old ^. get) /= (new ^. get))

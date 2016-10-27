@@ -80,13 +80,15 @@ connectionIdToWidgetId connectionId = preuse $ Global.graph . Graph.connectionWi
 portRefToWidgetId :: AnyPortRef -> Command Global.State (Maybe WidgetId)
 portRefToWidgetId portRef = preuse $ Global.graph . Graph.portWidgetsMap . ix portRef
 
+nats = [1..] :: [Integer]
+
 focusNode :: WidgetId -> Command Global.State ()
 focusNode id = do
     nodes <- allNodes
     let sortedNodes = sortBy (comparing $ negate . (view $ widget . Model.zPos)) nodes
         sortedIds   = (view objectId) <$> sortedNodes
         newOrder    = id : (delete id sortedIds)
-    inRegistry $ forM_ (zip newOrder [1..]) $ \(id, ix) -> do
+    inRegistry $ forM_ (zip newOrder nats) $ \(id, ix) -> do
         let newZPos = negate $ (fromIntegral ix) / 100.0
         UICmd.update id $ Model.zPos .~ newZPos
 
@@ -95,7 +97,7 @@ updateNodeZOrder = do
     nodes <- allNodes
     let sortedNodes = sortBy (comparing $ negate . (view $ widget . Model.zPos)) nodes
         sortedIds   = (view objectId) <$> sortedNodes
-    inRegistry $ forM_ (zip sortedIds [1..]) $ \(id, ix) -> do
+    inRegistry $ forM_ (zip sortedIds nats) $ \(id, ix) -> do
         let newZPos = negate $ (fromIntegral ix) / 100.0
         UICmd.update id $ Model.zPos .~ newZPos
 

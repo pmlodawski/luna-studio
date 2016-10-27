@@ -147,7 +147,7 @@ keyHandler event getter tag = AddHandler $ \h -> do
     window <- fromJust <$> eventObject
     window `on` event $ do
         key     <- getter
-        when (key == backspace) $ preventDefault
+        when (key == backspace) preventDefault
         keyMods <- readKeyMods'
         jsState <- liftIO getJSState
         liftIO . h $ Keyboard jsState $ Keyboard.Event tag (chr key) keyMods
@@ -167,35 +167,35 @@ resizeHandler = AddHandler $ \h -> do
 
 webSocketHandler :: WebSocket.WebSocket -> AddHandler Event
 webSocketHandler conn = AddHandler $ \h -> do
-    WebSocket.onOpen conn $ do
+    void $ WebSocket.onOpen conn $
         h $ Connection Connection.Opened
-    WebSocket.onMessage conn $ \event -> do
+    void $ WebSocket.onMessage conn $ \event -> do
         payloadJS <- WebSocket.getData event
         let payload = fromJSString payloadJS
         -- liftIO $ putStrLn $ "payload len " <> show (length payload)
         let frame = Connection.deserialize payload
         mapM_ (h . Connection . Connection.Message) $ frame ^. Connection.messages
-    WebSocket.onClose conn $ \event -> do
+    void $ WebSocket.onClose conn $ \event -> do
         code <- WebSocket.getCode event
         h $ Connection $ Connection.Closed code
-    WebSocket.onError conn $ do
+    WebSocket.onError conn $
         h $ Connection Connection.Error
 
 connectionPenHandler :: AddHandler Event
-connectionPenHandler  = AddHandler $ \h -> do
+connectionPenHandler  = AddHandler $ \h ->
     ConnectionPen.registerCallback $ \widgets -> do
-        arr       <- return $ JSArray.toList (ConnectionPen.toJSArray widgets)
+        let arr   =  JSArray.toList (ConnectionPen.toJSArray widgets)
         widgetIds <- mapM fromJSValUnchecked arr :: IO [Int]
         liftIO $ h $ ConnectionPen $ ConnectionPen.Segment $ map WidgetId widgetIds
 
 textEditorHandler :: AddHandler Event
-textEditorHandler  = AddHandler $ \h -> do
+textEditorHandler  = AddHandler $ \h ->
     TextEditor.registerCallback $ \code -> do
-        codeStr <- return $ TextEditor.toJSString code
+        let codeStr = TextEditor.toJSString code
         liftIO $ h $ TextEditor $ TextEditor.CodeModified $ lazyTextFromJSString codeStr
 
 customEventHandler :: AddHandler Event
 customEventHandler  = AddHandler $ \h -> do
     CustomEvent.initializeEvents
-    CustomEvent.registerCallback $ \topic payload -> do
+    CustomEvent.registerCallback $ \topic payload ->
         liftIO $ h $ CustomEvent $ CustomEvent.RawEvent (JSString.unpack $ pFromJSVal topic) payload

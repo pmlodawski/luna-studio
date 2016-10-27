@@ -112,13 +112,12 @@ textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State 
 textValueChangedHandler parent val tbId = do
     let val' = rational val
     case val' of
-        Left err        -> inRegistry $ do
+        Left _err       -> inRegistry $ do
             val <- UICmd.get parent Model.displayValue
             UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ val)
         Right (val', _) -> do
             inRegistry $ UICmd.update_ parent $ Model.value .~ val'
             triggerValueChanged val' parent
-
 
 instance CompositeWidget Model.ContinuousSlider where
     createWidget id model = do
@@ -131,7 +130,7 @@ instance CompositeWidget Model.ContinuousSlider where
         tbId <- UICmd.register id textBox $ textHandlers id
         UICmd.moveX tbId tx
 
-    updateWidget id old model = do
+    updateWidget id _old model = do
         (tbId:_) <- UICmd.children id
         UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ model ^. Model.displayValue)
 

@@ -21,11 +21,10 @@ import qualified Reactive.State.Global           as Global
 import           Reactive.State.UIRegistry       (addHandler)
 
 import           UI.Generic                      (startDrag)
-import           UI.Handlers.Generic             (triggerValueChanged)
 import           UI.Widget.Number                (keyModMult)
 import           UI.Widget.Number.Continuous     ()
 
-import           UI.Handlers.Generic             (ValueChangedHandler (..))
+import           UI.Handlers.Generic             (triggerValueChanged, ValueChangedHandler (..))
 import qualified UI.Handlers.TextBox             as TextBox
 
 isEnabled :: WidgetId -> Command Global.State Bool
@@ -38,7 +37,7 @@ bumpValue amount id = do
 
 keyUpHandler :: KeyUpHandler Global.State
 keyUpHandler 'Q' _ _ id = bumpValue (-1.0) id
-keyUpHandler 'W' _ _ id = bumpValue ( 1.0) id
+keyUpHandler 'W' _ _ id = bumpValue   1.0  id
 keyUpHandler _   _ _ _  = return ()
 
 startSliderDrag :: MousePressedHandler Global.State
@@ -46,7 +45,7 @@ startSliderDrag evt _ id = do
     enabled <- isEnabled id
     when (enabled && (evt ^. Mouse.button == Mouse.LeftButton)) $ do
         value <- inRegistry $ UICmd.get id Model.value
-        inRegistry $ UICmd.update_ id $ Model.dragStartValue .~ (Just value)
+        inRegistry $ UICmd.update_ id $ Model.dragStartValue .~ Just value
         startDrag evt id
 
 dragHandler :: DragMoveHandler Global.State
@@ -55,10 +54,10 @@ dragHandler ds _ id = do
     when enabled $ do
         startValue <- inRegistry $ UICmd.get id Model.dragStartValue
         withJust startValue $ \startValue -> do
-            width <- inRegistry $ UICmd.get id $ Model.size . x
+            -- width <- inRegistry $ UICmd.get id $ Model.size . x
             let diff    = ds ^. currentPos - ds ^. startPos
-                delta   = if (abs $ diff ^. x) > (abs $ diff ^. y) then  diff ^. x /  divider
-                                                                   else -diff ^. y / (divider * 10.0)
+                delta   = if abs (diff ^. x) > abs (diff ^. y) then  diff ^. x /  divider
+                                                               else -diff ^. y / (divider * 10.0)
                 divider = keyModMult $ ds ^. keyMods
             inRegistry $ UICmd.update_ id $ Model.value .~ (startValue + delta)
 
@@ -90,16 +89,15 @@ widgetHandlers = def & keyUp        .~ keyUpHandler
 
 
 textHandlers :: WidgetId -> HTMap
-textHandlers id = addHandler (ValueChangedHandler $ textValueChangedHandler id)
-                $ mempty where
+textHandlers id = addHandler (ValueChangedHandler $ textValueChangedHandler id) mempty
 
 textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
 textValueChangedHandler parent val tbId = do
     let val' = rational val
     case val' of
-        Left err        -> inRegistry $ do
+        Left _err       -> inRegistry $ do
             val <- UICmd.get parent Model.displayValue
-            UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ val)
+            UICmd.update_ tbId $ TextBox.value .~ Text.pack val
         Right (val', _) -> do
             oldValue <- inRegistry $ UICmd.get parent Model.value
             when (oldValue /= val') $ do
@@ -110,7 +108,7 @@ textValueChangedHandler parent val tbId = do
 instance CompositeWidget Model.ContinuousNumber where
     createWidget id model = do
         let tx      = (model ^. Model.size . x) / 2.0
-            ty      = (model ^. Model.size . y)
+            ty      =  model ^. Model.size . y
             sx      = tx - (model ^. Model.size . y / 2.0)
             textVal = Text.pack $ show $ model ^. Model.value
             textBox = TextBox.create (Vector2 sx ty) textVal TextBox.Right
@@ -118,8 +116,8 @@ instance CompositeWidget Model.ContinuousNumber where
         tbId <- UICmd.register id textBox $ textHandlers id
         UICmd.moveX tbId tx
 
-    updateWidget id old model = do
+    updateWidget id _old model = do
         (tbId:_) <- UICmd.children id
-        UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ model ^. Model.displayValue)
+        UICmd.update_ tbId $ TextBox.value .~ Text.pack (model ^. Model.displayValue)
 
 instance ResizableWidget Model.ContinuousNumber where resizeWidget = TextBox.labeledEditableResize

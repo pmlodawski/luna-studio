@@ -37,8 +37,8 @@ updateNode node = do
     let nodeId  = node ^. Node.nodeId
     inGraph <- preuse $ Global.graph . Graph.nodesMap . ix nodeId
     case inGraph of
-        Just existingNode -> updateExistingNode node
-        Nothing           -> addNode            node
+        Just _existingNode -> updateExistingNode node
+        Nothing            -> addNode            node
 
 updateExistingNode :: Node -> Command State ()
 updateExistingNode node = do

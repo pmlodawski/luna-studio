@@ -131,6 +131,7 @@ data State = State { _widgets         :: WidgetMap
 
 instance ToJSON DragState
 
+-- TODO: fix non-exhaustive pattern
 sceneToLocal :: Vector2 Double -> [Double] -> Vector2 Double
 sceneToLocal (Vector2 x y) [ aa, ab, _ , _
                            , ba, bb, _ , _

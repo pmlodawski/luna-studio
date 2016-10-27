@@ -33,7 +33,7 @@ instance CompositeWidget Model.FunctionPort where
                 UICmd.moveX wid lx
                 UICmd.moveX labelId $ -lx - Function.portLabelGap
 
-    updateWidget wid old model = do
+    updateWidget wid _old model = do
         (labelId:_) <- UICmd.children wid
         UICmd.update_ labelId $ Label.label .~ (model ^. Model.labelValue)
 

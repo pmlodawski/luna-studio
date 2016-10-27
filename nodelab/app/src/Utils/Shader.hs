@@ -28,20 +28,20 @@ type Vector = Vector2 Double
 type Size   = Vector
 type Shader = String
 
-data Bound = Bound { _leftTop     :: Vector
-                   , _rightBottom :: Vector
+data Bound = Bound { __leftTop     :: Vector
+                   , __rightBottom :: Vector
                    } deriving (Show, Eq)
 
 makeLenses ''Bound
 
 data Location = Location { _size   :: Size
-                         , _offset :: Vector
+                         , __offset :: Vector
                          } deriving (Show, Eq)
 
 makeLenses ''Location
 
-data ShaderBox = ShaderBox { _shader   :: Shader
-                           , _location :: Location
+data ShaderBox = ShaderBox { __shader   :: Shader
+                           , __location :: Location
                            } deriving (Show, Eq)
 
 makeLenses ''ShaderBox
@@ -50,9 +50,6 @@ makeLenses ''ShaderBox
 
 toFloat :: Double -> Float
 toFloat = realToFrac
-
-toDouble :: Float -> Double
-toDouble = realToFrac
 
 toExpr :: Double -> GLSL.Expr
 toExpr = GLSL.FloatConstant . toFloat
@@ -65,7 +62,7 @@ toTranslation (G.Transformation _ _ dx dy _ _) = Vector2 dx dy
 -- TODO: change pattern to object : []; object : objects ?
 mergeObjects :: [Object 2] -> Maybe (Object 2)
 mergeObjects []               = Nothing
-mergeObjects (object:[])      = Just object
+mergeObjects [object]         = Just object
 mergeObjects (object:objects) = Just $ foldl merge object objects
 
 -- TODO: check behaviour
@@ -77,7 +74,7 @@ transObject dx  dy  object = translate tr object where
 -- calc object
 
 fromMaterial :: G.Material -> Material (Layer GLSL.Expr)
-fromMaterial (G.SolidColor r g b a) = Material $ [ Fill . Solid $ color4 (toExpr r) (toExpr g) (toExpr b) (toExpr a) ]
+fromMaterial (G.SolidColor r g b a) = Material [ Fill . Solid $ color4 (toExpr r) (toExpr g) (toExpr b) (toExpr a) ]
 
 fromFigure :: G.Figure -> Object 2
 fromFigure (G.Square s)      = hyperrectangle (A.vec2 (toExpr s) (toExpr s) :: A.BVec 2 GLSL.Expr)
@@ -85,13 +82,13 @@ fromFigure (G.Rectangle w h) = hyperrectangle (A.vec2 (toExpr w) (toExpr h) :: A
 fromFigure (G.Circle d)      = ball (toExpr d)
 
 fromPrimitive :: G.Primitive -> Object 2
-fromPrimitive (G.Primitive figure (G.Point dx dy) attr) = transObject dx dy $ fromFigure figure
+fromPrimitive (G.Primitive figure (G.Point dx dy) _) = transObject dx dy $ fromFigure figure
 
 fromShape :: G.Shape -> Object 2
 fromShape (G.Shape     primitive)     = fromPrimitive primitive
-fromShape (G.Merge     shape1 shape2) = merge     (fromShape shape1) (fromShape shape2)
-fromShape (G.Subtract  shape1 shape2) = diff      (fromShape shape1) (fromShape shape2)
-fromShape (G.Intersect shape1 shape2) = intersect (fromShape shape1) (fromShape shape2)
+fromShape (G.Merge     shape1 shape2) = fromShape shape1 `merge`     fromShape shape2
+fromShape (G.Subtract  shape1 shape2) = fromShape shape1 `diff`      fromShape shape2
+fromShape (G.Intersect shape1 shape2) = fromShape shape1 `intersect` fromShape shape2
 
 fromSurface :: G.Surface -> Object 2
 fromSurface (G.ShapeSurface shape) = fromShape shape
@@ -112,7 +109,7 @@ fromGeometry (G.Geometry geoComp trans matMay) = go <$> fromGeoComponent geoComp
     go = appMat . transObject dx dy
     appMat :: Object 2 -> Object 2
     appMat object = case matMay of
-        Just mat -> object & material .~ (fromMaterial mat)
+        Just mat -> object & material .~ fromMaterial mat
         Nothing  -> object
 
 fromGeometries :: [G.Geometry] -> Maybe (Object 2)
@@ -125,9 +122,6 @@ createShader size objectMay = fromMaybe "" $ compileObject <$> objectMay where
 
 -- size calculation
 
-defSize :: Vector2 Double
-defSize  = Vector2 2.0 2.0
-
 defBound :: Bound
 defBound = Bound (Vector2 (-1.0) (-1.0)) (Vector2 1.0 1.0)
 
@@ -138,13 +132,13 @@ toLocation (Bound (Vector2 x1 y1) (Vector2 x2 y2)) = Location (Vector2 w h) (Vec
     sx = (x1 + x2) / 2.0
     sy = (y1 + y2) / 2.0
 
-expandBound :: Double -> Double -> Bound -> Bound
-expandBound 0.0 0.0 bound = bound
-expandBound dx  dy (Bound (Vector2 x1 y1) (Vector2 x2 y2)) = Bound (Vector2 x1' y1') (Vector2 x2' y2') where
-    x1' = min x1 $ x1 + dx
-    y1' = min y1 $ y1 + dy
-    x2' = max x2 $ x2 + dx
-    y2' = max y2 $ y2 + dy
+-- expandBound :: Double -> Double -> Bound -> Bound
+-- expandBound 0.0 0.0 bound = bound
+-- expandBound dx  dy (Bound (Vector2 x1 y1) (Vector2 x2 y2)) = Bound (Vector2 x1' y1') (Vector2 x2' y2') where
+--     x1' = min x1 $ x1 + dx
+--     y1' = min y1 $ y1 + dy
+--     x2' = max x2 $ x2 + dx
+--     y2' = max y2 $ y2 + dy
 
 moveBound :: Double -> Double -> Bound -> Bound
 moveBound 0.0 0.0 bound = bound
@@ -168,7 +162,7 @@ minBounds (Bound lt1 rb1) (Bound lt2 rb2) = Bound (maxCorner lt1 lt2) (minCorner
 
 maxBoundsList :: [Bound] -> Bound
 maxBoundsList []             = defBound
-maxBoundsList (bound:[])     = bound
+maxBoundsList [bound]        = bound
 maxBoundsList (bound:bounds) = foldl maxBounds bound bounds
 
 toShaderBound :: Size -> A.BVec 2 Float
@@ -180,7 +174,7 @@ calcFigureBound (G.Rectangle w h) = Bound (Vector2 (-w2) (-h2)) (Vector2 w2 h2) 
 calcFigureBound (G.Circle d)      = Bound (Vector2 (-d)  (-d))  (Vector2 d  d)
 
 calcPrimitiveBound :: G.Primitive -> Bound
-calcPrimitiveBound (G.Primitive figure (G.Point dx dy) attr) = moveBound dx dy $ calcFigureBound figure
+calcPrimitiveBound (G.Primitive figure (G.Point dx dy) _) = moveBound dx dy $ calcFigureBound figure
 -- calcPrimitiveBound (G.Primitive figure (G.Point dx dy) attr) = trace ("pri " <> "dx " <> show dx <> " dy " <> show dy <> " " <> show bound <> " " <> show figure) $ bound where
 --     bound = moveBound dx dy $ calcFigureBound figure
 
@@ -203,7 +197,7 @@ calcGeoCompBound (G.GeoElem  surfaces)   = calcSurfacesBound surfaces
 calcGeoCompBound (G.GeoGroup geometries) = maxBoundsList $ calcGeometryBound <$> geometries
 
 calcGeometryBound :: G.Geometry -> Bound
-calcGeometryBound (G.Geometry geoComp trans matMay) = moveBound dx dy $ calcGeoCompBound geoComp where
+calcGeometryBound (G.Geometry geoComp trans _) = moveBound dx dy $ calcGeoCompBound geoComp where
     Vector2 dx dy = toTranslation trans
 -- calcGeometryBound (G.Geometry geoComp trans matMay) = trace ("geo " <> "dx " <> show dx <> " dy " <> show dy <> " " <> show bound) $ bound where
 --     bound = moveBound dx dy $ calcGeoCompBound geoComp
@@ -214,15 +208,6 @@ calcGeometryLocation = toLocation . calcGeometryBound
 
 -- -- --
 
--- createShaderBox = createShaderBoxTest
-
-createShaderBoxTest :: G.Geometry -> ShaderBox
-createShaderBoxTest geometry = ShaderBox (createShader (location ^. size) objMay) location where
-    -- location = calcGeometryLocation geometry
-    location = toLocation $ Bound (Vector2 0.0 0.0) (Vector2 1.0 1.0)
-    objMay   = fromGeometry geometry
-    geo      = testGeo
-
 createShaderBox :: G.Geometry -> ShaderBox
 createShaderBox geometry = ShaderBox (createShader (location ^. size) objMay) location where
     location = calcGeometryLocation geometry
@@ -230,8 +215,14 @@ createShaderBox geometry = ShaderBox (createShader (location ^. size) objMay) lo
 
 -- tests
 
-testGeo :: G.Geometry
-testGeo = G.Geometry geoComp trans justMat where
+_createShaderBoxTest :: G.Geometry -> ShaderBox
+_createShaderBoxTest geometry = ShaderBox (createShader (location ^. size) objMay) location where
+    -- location = calcGeometryLocation geometry
+    location = toLocation $ Bound (Vector2 0.0 0.0) (Vector2 1.0 1.0)
+    objMay   = fromGeometry geometry
+
+_testGeo :: G.Geometry
+_testGeo = G.Geometry geoComp trans justMat where
     trans     = def
     justMat   = Just $ G.SolidColor 1.0 0.0 0.0 1.0
     geoComp   = G.GeoElem [surface]
@@ -240,10 +231,10 @@ testGeo = G.Geometry geoComp trans justMat where
     primitive = G.Primitive figure def def
     figure    = G.Square 0.25
 
-test :: IO ()
-test = do
-    let geometry = testGeo
-        ShaderBox shaderTxt (Location (Vector2 w h) (Vector2 0.0 0.0)) = createShaderBox geometry
+_test :: IO ()
+_test = do
+    let _geometry = _testGeo
+        ShaderBox _shaderTxt (Location (Vector2 _ _) (Vector2 _ _)) = createShaderBox _geometry
     return ()
 
 
@@ -252,35 +243,35 @@ test = do
 
 -- ====== old test (TODO: remove) ====== --
 
-mtl1 :: Material (Layer GLSL.Expr)
-mtl1     = Material $ [ Fill            . Solid $ color4 0.7 0.2 0.2 1.0
-                      , Border 10.0     . Solid $ color4 0.0 1.0 0.0 1.0
-                      , Shadow 10.0 2.0 . Solid $ color4 0.0 0.0 0.0 0.2
-                      ] :: Material (Layer GLSL.Expr)
-
-mtl2 :: Material (Layer GLSL.Expr)
-mtl2     = Material $ [ Fill            . Solid $ color4 0.6 0.6 0.6 1.0
-                      ] :: Material (Layer GLSL.Expr)
-
-mtl3 :: Material (Layer GLSL.Expr)
-mtl3     = Material $ [ Fill            . Solid $ color4 0.3 0.3 0.3 1.0
-                      ] :: Material (Layer GLSL.Expr)
-
-
-myBall :: Bounded Float (Object 2)
-myBall = Bounded (A.vec2 400 400) (ball 100.0)
-       & material .~ mtl1
-
-testRaw :: IO ()
-testRaw = do
-    putStrLn "HSProcessing test started."
-
-    let objBall = myBall
-        [gw', gh'] = toList $ objBall ^. bounds
-        gw = gw'/2;
-        gh = gh'/2;
-
-    let (str, u) = GLSL.compileGLSL objBall
-    putStrLn str
-
-    putStrLn "HSProcessing test finished."
+-- mtl1 :: Material (Layer GLSL.Expr)
+-- mtl1     = Material $ [ Fill            . Solid $ color4 0.7 0.2 0.2 1.0
+--                       , Border 10.0     . Solid $ color4 0.0 1.0 0.0 1.0
+--                       , Shadow 10.0 2.0 . Solid $ color4 0.0 0.0 0.0 0.2
+--                       ] :: Material (Layer GLSL.Expr)
+--
+-- mtl2 :: Material (Layer GLSL.Expr)
+-- mtl2     = Material $ [ Fill            . Solid $ color4 0.6 0.6 0.6 1.0
+--                       ] :: Material (Layer GLSL.Expr)
+--
+-- mtl3 :: Material (Layer GLSL.Expr)
+-- mtl3     = Material $ [ Fill            . Solid $ color4 0.3 0.3 0.3 1.0
+--                       ] :: Material (Layer GLSL.Expr)
+--
+--
+-- myBall :: Bounded Float (Object 2)
+-- myBall = Bounded (A.vec2 400 400) (ball 100.0)
+--        & material .~ mtl1
+--
+-- testRaw :: IO ()
+-- testRaw = do
+--     putStrLn "HSProcessing test started."
+--
+--     let objBall = myBall
+--         [gw', gh'] = toList $ objBall ^. bounds
+--         gw = gw'/2;
+--         gh = gh'/2;
+--
+--     let (str, u) = GLSL.compileGLSL objBall
+--     putStrLn str
+--
+--     putStrLn "HSProcessing test finished."

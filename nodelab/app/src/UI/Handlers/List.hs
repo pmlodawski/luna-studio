@@ -47,8 +47,9 @@ removeItemHandlers listId groupId rowId = addHandler (Button.ClickedHandler $ re
                                         $ mempty where
     removeItemHandler _ = inRegistry $ removeElementByWidgetId listId groupId rowId
 
+-- TODO: to sth with id param
 listItemHandler :: WidgetId -> WidgetId -> WidgetId -> AnyLunaValue -> WidgetId -> Command Global.State ()
-listItemHandler listWidget groupId rowId val id = do
+listItemHandler listWidget groupId rowId val _id = do
     inRegistry $ do
         items <- UICmd.children groupId
         let idx = elemIndex rowId items
@@ -60,7 +61,7 @@ makeItem :: Bool -> WidgetId -> WidgetId -> Double -> AnyLunaValue -> Int -> Com
 makeItem isTuple listId listGroupId width elem ix = do
     let removeButton = Button.createIcon (Vector2 20 20) "shaders/icon.minus.frag"
     groupId <- UICmd.register listGroupId Group.create def
-    createValueWidget groupId elem (Text.pack $ show ix) width (addHandler (ValueChangedHandler $ listItemHandler listId listGroupId groupId) mempty)
+    void $ createValueWidget groupId elem (Text.pack $ show ix) width (addHandler (ValueChangedHandler $ listItemHandler listId listGroupId groupId) mempty)
     when (not isTuple) $ UICmd.register_ groupId removeButton (removeItemHandlers listId listGroupId groupId)
     Layout.horizontalLayout 0.0 groupId
 
@@ -90,7 +91,7 @@ addNewElement listId groupId width = do
     list   <- UICmd.get listId $ List.value
     let ix = length list
     elem <- UICmd.get listId $ List.empty
-    UICmd.update listId $ List.value <>~ [elem]
+    UICmd.update_ listId $ List.value <>~ [elem]
     makeListItem listId groupId width elem ix
 
     relayout listId groupId
@@ -103,7 +104,7 @@ removeElementByWidgetId listId groupId id = do
 
 removeElement :: WidgetId -> WidgetId -> Int -> Command UIRegistry.State ()
 removeElement listId groupId idx = do
-    UICmd.update listId $ List.value %~ deleteNth idx
+    UICmd.update_ listId $ List.value %~ deleteNth idx
     items <- UICmd.children groupId
     UICmd.removeWidget $ fromJust $ items ^? ix idx
 
@@ -131,10 +132,9 @@ instance CompositeWidget List where
 
         relayout id groupId
 
-    updateWidget id old model = return ()
+    updateWidget _id _old _model = return ()
 
 instance ResizableWidget List where
     resizeWidget id vec model = do
         defaultResize id vec model
         triggerWidgetResized id vec
-

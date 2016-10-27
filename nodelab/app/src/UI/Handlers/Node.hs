@@ -72,7 +72,7 @@ typeHandlers id = addHandler (ValueChangedHandler $ typeValueChangedHandler id)
                 $ mempty where
 
 typeValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
-typeValueChangedHandler parent val tbId = do
+typeValueChangedHandler parent val _tbId = do
     model <- inRegistry $ UICmd.update parent $ Model.tpe ?~ val
     triggerChangeInputNodeTypeHandler parent model
 
@@ -178,7 +178,7 @@ handleSelection :: Mouse.Event' -> (WidgetId -> Command Global.State ())
 handleSelection evt = case evt ^. Mouse.keyMods of
     KeyMods False False False False -> performSelect
     KeyMods False False True  False -> toggleSelect
-    otherwise                       -> const $ return ()
+    _                               -> const $ return ()
 
 performSelect :: WidgetId -> Command Global.State ()
 performSelect id = do
@@ -202,9 +202,9 @@ toggleSelect id = do
 unselectAll :: Command Global.State ()
 unselectAll = do
     widgets <- allNodes
-    nodesToCancelTouch <- inRegistry $ flip mapM widgets $ \wf -> do
+    nodesToCancelTouch <- inRegistry $ forM widgets $ \wf -> do
         let widgetId = wf ^. objectId
-        if (wf ^. widget . Model.isSelected) then do
+        if wf ^. widget . Model.isSelected then do
                 UICmd.update_ widgetId $ Model.isSelected .~ False
                 return $ Just $ wf ^. widget . Model.nodeId
         else return Nothing
@@ -212,7 +212,7 @@ unselectAll = do
     cancelCollaborativeTouch $ catMaybes nodesToCancelTouch
 
 dblClickHandler :: DblClickHandler Global.State
-dblClickHandler _ _ id = triggerEnterNodeHandler id
+dblClickHandler _ _ = triggerEnterNodeHandler
 
 showHidePortLabels :: Bool -> WidgetId -> Command UIRegistry.State ()
 showHidePortLabels show id = do
@@ -239,15 +239,13 @@ widgetHandlers = def & keyDown      .~ keyDownHandler
 allNodes :: Command Global.State [WidgetFile Model.Node]
 allNodes = do
     widgetIds <- use $ Global.graph . Graph.nodeWidgets
-    mayWidgets <- mapM (\id -> inRegistry $ UIRegistry.lookupTypedM id) widgetIds
+    mayWidgets <- mapM (inRegistry . UIRegistry.lookupTypedM) widgetIds
     return $ catMaybes mayWidgets
 
 unselectNode :: WidgetId -> Command UIRegistry.State ()
 unselectNode = flip UICmd.update_ (Model.isSelected .~ False)
 
-
-onClicked h = addHandler (MousePressedHandler $ h) mempty
-
+onClicked h = addHandler (MousePressedHandler h) mempty
 
 displayCodeEditor :: WidgetId -> WidgetId -> Text -> Command UIRegistry.State WidgetId
 displayCodeEditor nodeWidgetId nodeGroupId code = do

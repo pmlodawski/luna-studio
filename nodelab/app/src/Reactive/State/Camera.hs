@@ -43,8 +43,8 @@ glToWorkspace (Camera _ _ pan factor) (Vector2 xGl yGl) = Vector2
 
 screenToGl :: Vector2 Int -> Vector2 Int -> Vector2 Double
 screenToGl (Vector2 screenSizeX screenSizeY) (Vector2 x y) = Vector2
-    ( fromIntegral x - (fromIntegral screenSizeX) / 2.0 )
-    ( fromIntegral y - (fromIntegral screenSizeY) / 2.0 )
+    (fromIntegral x - (fromIntegral screenSizeX) / 2.0)
+    (fromIntegral y - (fromIntegral screenSizeY) / 2.0)
 
 screenToWorkspace :: Camera -> Vector2 Int -> Vector2 Double
 screenToWorkspace camera pos =

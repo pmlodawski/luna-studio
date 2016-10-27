@@ -39,11 +39,11 @@ setValue :: WidgetId -> Int -> Command UIRegistry.State ()
 setValue id val = do
     UICmd.update_ id $ Model.value .~ val
     (tbId:_) <- UICmd.children id
-    UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ show $ val)
+    UICmd.update_ tbId $ TextBox.value .~ Text.pack (show val)
 
 keyUpHandler :: KeyUpHandler Global.State
 keyUpHandler 'Q' _ _ id = bumpValue (-1) id
-keyUpHandler 'W' _ _ id = bumpValue ( 1) id
+keyUpHandler 'W' _ _ id = bumpValue   1  id
 keyUpHandler _   _ _ _  = return ()
 
 startSliderDrag :: MousePressedHandler Global.State
@@ -51,7 +51,7 @@ startSliderDrag evt _ id = do
     enabled <- isEnabled id
     when (enabled && (evt ^. Mouse.button == Mouse.LeftButton)) $ do
         value <- inRegistry $ UICmd.get id Model.value
-        inRegistry $ UICmd.update_ id $ Model.dragStartValue .~ (Just value)
+        inRegistry $ UICmd.update_ id $ Model.dragStartValue .~ Just value
         startDrag evt id
 
 dragHandler :: DragMoveHandler Global.State
@@ -61,12 +61,12 @@ dragHandler ds _ id = do
         startValue <- inRegistry $ UICmd.get id Model.dragStartValue
         withJust startValue $ \startValue -> do
             widget <- inRegistry $ UICmd.lookup id
-            let width     = widget ^. Model.size . x
+            let _width    = widget ^. Model.size . x -- TODO: remove not used variable (set type for lookup above)
                 diff      = ds ^. currentPos - ds ^. startPos
-                deltaNorm = if (abs $ diff ^. x) > (abs $ diff ^. y) then  diff ^. x /  divider
-                                                                     else -diff ^. y / (divider * 10.0)
+                deltaNorm = if abs (diff ^. x) > abs (diff ^. y) then  diff ^. x /  divider
+                                                                 else -diff ^. y / (divider * 10.0)
                 divider   = keyModMult $ ds ^. keyMods
-                delta     = round $ deltaNorm
+                delta     = round deltaNorm
             inRegistry $ setValue id (startValue + delta)
 
 dragEndHandler :: DragEndHandler Global.State
@@ -94,16 +94,15 @@ widgetHandlers = def & keyUp        .~ keyUpHandler
 --
 
 textHandlers :: WidgetId -> HTMap
-textHandlers id = addHandler (ValueChangedHandler $ textValueChangedHandler id)
-                $ mempty where
+textHandlers id = addHandler (ValueChangedHandler $ textValueChangedHandler id) mempty
 
 textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
 textValueChangedHandler parent val tbId = do
     let val' = signed decimal val
     case val' of
-        Left err        -> inRegistry $ do
-            val <- UICmd.get parent $ Model.displayValue
-            UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ val)
+        Left _err       -> inRegistry $ do
+            val <- UICmd.get parent Model.displayValue
+            UICmd.update_ tbId $ TextBox.value .~ Text.pack val
         Right (val', _) -> do
             oldValue <- inRegistry $ UICmd.get parent Model.value
             when (oldValue /= val') $ do
@@ -113,7 +112,7 @@ textValueChangedHandler parent val tbId = do
 instance CompositeWidget Model.DiscreteNumber where
     createWidget id model = do
         let tx      = (model ^. Model.size . x) / 2.0
-            ty      = (model ^. Model.size . y)
+            ty      =  model ^. Model.size . y
             sx      = tx - (model ^. Model.size . y / 2.0)
             textVal = Text.pack $ show $ model ^. Model.value
             textBox = TextBox.create (Vector2 sx ty) textVal TextBox.Right
@@ -121,9 +120,9 @@ instance CompositeWidget Model.DiscreteNumber where
         tbId <- UICmd.register id textBox $ textHandlers id
         UICmd.moveX tbId tx
 
-    updateWidget id old model = do
+    updateWidget id _old model = do
         (tbId:_) <- UICmd.children id
-        UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ model ^. Model.displayValue)
+        UICmd.update_ tbId $ TextBox.value .~ Text.pack (model ^. Model.displayValue)
 
 
 instance ResizableWidget Model.DiscreteNumber where resizeWidget = TextBox.labeledEditableResize
