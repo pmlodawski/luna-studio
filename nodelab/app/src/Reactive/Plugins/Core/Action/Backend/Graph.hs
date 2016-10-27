@@ -55,7 +55,7 @@ isCurrentLocationAndGraphLoaded location = do
 
 toAction :: Event.Event -> Maybe (Command State ())
 toAction (Event.Batch ev) = Just $ case ev of
-    ProgramFetched response -> handleResponse response $ \req result -> do
+    ProgramFetched response -> handleResponse response $ \_ result -> do
             let location = response ^. Response.request . GetProgram.location
             isGraphLoaded  <- use $ Global.workspace . Workspace.isGraphLoaded
             isGoodLocation <- isCurrentLocation location

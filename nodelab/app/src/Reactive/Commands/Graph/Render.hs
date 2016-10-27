@@ -4,22 +4,23 @@ module Reactive.Commands.Graph.Render
 
 import           Utils.PreludePlus
 
-import qualified Data.HashMap.Lazy               as HashMap
-import qualified Data.IntMap.Lazy                as IntMap
+import qualified Data.HashMap.Lazy                as HashMap
+import qualified Data.IntMap.Lazy                 as IntMap
 
-import           Empire.API.Data.Input           (Input)
-import           Empire.API.Data.Node            (Node)
-import qualified Empire.API.Data.Node            as Node
-import           Empire.API.Data.Output          (Output)
-import           Empire.API.Data.PortRef         (InPortRef, OutPortRef)
+import           Empire.API.Data.Input            (Input)
+import           Empire.API.Data.Node             (Node)
+import qualified Empire.API.Data.Node             as Node
+import           Empire.API.Data.Output           (Output)
+import           Empire.API.Data.PortRef          (InPortRef, OutPortRef)
 
-import           Reactive.Commands.Command       (Command)
-import           Reactive.Commands.Graph         (updateConnections, updateNodeZOrder)
-import           Reactive.Commands.Graph.Connect (localConnectNodes)
-import           Reactive.Commands.Node.Create   (registerNode)
-import           Reactive.State.Global           (State)
-import qualified Reactive.State.Global           as Global
-import qualified Reactive.State.Graph            as Graph
+import           Reactive.Commands.Command        (Command)
+import qualified Reactive.Commands.Function.Input as Input
+import           Reactive.Commands.Graph          (updateConnections, updateNodeZOrder)
+import           Reactive.Commands.Graph.Connect  (localConnectNodes)
+import           Reactive.Commands.Node.Create    (registerNode)
+import           Reactive.State.Global            (State)
+import qualified Reactive.State.Global            as Global
+import qualified Reactive.State.Graph             as Graph
 
 
 
@@ -41,8 +42,9 @@ renderGraph nodes edges inputs outputs = do
 
 addInputs  :: [Input] -> Command State ()
 addInputs inputs = do
-    Global.graph . Graph.inputsMap .= (IntMap.fromList $ [0..] `zip` inputs)
-    --TODO mapM_ registerNode nodes
+    let numberedInputs = [0..] `zip` inputs
+    Global.graph . Graph.inputsMap .= IntMap.fromList numberedInputs
+    mapM_ (uncurry Input.registerInput) numberedInputs
 
 addOutputs :: Output -> Command State ()
 addOutputs outputs = do
