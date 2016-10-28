@@ -43,15 +43,15 @@ setCurrentConnectionColor color = UICmd.update_ UIRegistry.currentConnectionId $
 endCoeff :: Double
 endCoeff = 0.2
 
+shiftVec :: Vector2 Double
+shiftVec = Vector2 10 10
 
 mousePressedHandler :: Mouse.Event' -> JSState -> WidgetId -> Command Global.State ()
-mousePressedHandler evt _ id = startDrag evt id
-
+mousePressedHandler evt _ = startDrag evt
 
 dragHandler :: DragMoveHandler Global.State
 dragHandler ds _ id = do
     let mouseX = ds ^. startPos . x
-
     when (mouseX > endCoeff) $ do
         connId <- inRegistry $ UICmd.get id Model.connectionId
         connectionColor <- inRegistry $ UICmd.get id Model.color
@@ -61,9 +61,9 @@ dragHandler ds _ id = do
         disconnectAll [connId]
         sourceNodePos   <- inRegistry $ UICmd.get nodeWidgetId NodeModel.position
         sourcePortAngle <- inRegistry $ UICmd.get portWidgetId PortModel.angleVector
-        let coord = floor <$> sourceNodePos + Vector2 10 10
-        Global.connect . Connect.connecting ?= (Connect.Connecting (PortRef.OutPortRef' srcPortRef) sourcePortAngle sourceNodePos Nothing)
-        zoom Global.uiRegistry $ setCurrentConnectionColor $ connectionColor
+        -- let coord = floor <$> sourceNodePos + shiftVec
+        Global.connect . Connect.connecting ?= Connect.Connecting (PortRef.OutPortRef' srcPortRef) sourcePortAngle sourceNodePos Nothing
+        zoom Global.uiRegistry $ setCurrentConnectionColor connectionColor
         return ()
     when (mouseX < (-endCoeff)) $ do
         connId <- inRegistry $ UICmd.get id Model.connectionId
@@ -74,22 +74,22 @@ dragHandler ds _ id = do
         disconnectAll [connId]
         dstNodePos   <- inRegistry $ UICmd.get nodeWidgetId NodeModel.position
         dstPortAngle <- inRegistry $ UICmd.get portWidgetId PortModel.angleVector
-        let coord = floor <$> dstNodePos + Vector2 10 10
-        Global.connect . Connect.connecting ?= (Connect.Connecting (PortRef.InPortRef' dstPortRef) dstPortAngle dstNodePos Nothing)
-        zoom Global.uiRegistry $ setCurrentConnectionColor $ connectionColor
+        -- let coord = floor <$> dstNodePos + shiftVec
+        Global.connect . Connect.connecting ?= Connect.Connecting (PortRef.InPortRef' dstPortRef) dstPortAngle dstNodePos Nothing
+        zoom Global.uiRegistry $ setCurrentConnectionColor connectionColor
         return ()
     abortDrag
 
 onMouseMove :: Mouse.Event' -> JSState -> WidgetId -> Command Global.State()
 onMouseMove evt _ id  = inRegistry $ do
     let mouseX = evt ^. Mouse.position . x
-    when (mouseX > endCoeff) $ do
+    when (mouseX > endCoeff) $
         UICmd.update_ id $ Model.highlight .~ Model.SrcHighlight
-    when (mouseX < (-endCoeff)) $ do
+    when (mouseX < (-endCoeff)) $
         UICmd.update_ id $ Model.highlight .~ Model.DstHighlight
 
 onMouseOut :: WidgetId -> Command Global.State ()
-onMouseOut  id = inRegistry $ do
+onMouseOut  id = inRegistry $
     UICmd.update_ id $ Model.highlight .~ Model.None
 
 widgetHandlers :: UIHandlers Global.State

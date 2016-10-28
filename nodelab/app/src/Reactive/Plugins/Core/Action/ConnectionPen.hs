@@ -37,24 +37,24 @@ import qualified JS.GoogleAnalytics                 as GA
 
 
 toAction :: Event -> Maybe (Command State ())
-toAction (Mouse _ event@(Mouse.Event Mouse.Pressed  _   Mouse.LeftButton  (KeyMods False True False False) _)) = Just $ startConnecting event
-toAction (Mouse _ event@(Mouse.Event Mouse.Pressed  _   Mouse.LeftButton  (KeyMods True  True False False) _)) = Just $ startDisconnecting event
-toAction (Mouse _ event@(Mouse.Event Mouse.Pressed  _   Mouse.RightButton (KeyMods False True False False) _)) = Just $ startDisconnecting event
-toAction (Mouse _ event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton  _ _)) = Just $ whileDrawing $ handleMove pos
-toAction (Mouse _ event@(Mouse.Event Mouse.Moved    pos Mouse.RightButton _ _)) = Just $ whileDrawing $ handleMove pos
-toAction (Mouse _ event@(Mouse.Event Mouse.Moved    _   Mouse.NoButton    _ _)) = Just $ whileDrawing stopDrag
-toAction (Mouse _ event@(Mouse.Event Mouse.Released _   Mouse.LeftButton  _ _)) = Just $ whileDrawing stopDrag
-toAction (Mouse _ event@(Mouse.Event Mouse.Released _   Mouse.RightButton _ _)) = Just $ whileDrawing stopDrag
-toAction (ConnectionPen (ConnectionPen.Segment widgets))                     = Just $ whileDrawing $ handleAction widgets
-toAction _                                                                   = Nothing
+toAction (Mouse _ (Mouse.Event Mouse.Pressed  pos Mouse.LeftButton  (KeyMods False True False False) _)) = Just $ startConnecting pos
+toAction (Mouse _ (Mouse.Event Mouse.Pressed  pos Mouse.LeftButton  (KeyMods True  True False False) _)) = Just $ startDisconnecting pos
+toAction (Mouse _ (Mouse.Event Mouse.Pressed  pos Mouse.RightButton (KeyMods False True False False) _)) = Just $ startDisconnecting pos
+toAction (Mouse _ (Mouse.Event Mouse.Moved    pos Mouse.LeftButton  _ _)) = Just $ whileDrawing $ handleMove pos
+toAction (Mouse _ (Mouse.Event Mouse.Moved    pos Mouse.RightButton _ _)) = Just $ whileDrawing $ handleMove pos
+toAction (Mouse _ (Mouse.Event Mouse.Moved    _   Mouse.NoButton    _ _)) = Just stopDrag
+toAction (Mouse _ (Mouse.Event Mouse.Released _   Mouse.LeftButton  _ _)) = Just stopDrag
+toAction (Mouse _ (Mouse.Event Mouse.Released _   Mouse.RightButton _ _)) = Just stopDrag
+toAction (ConnectionPen (ConnectionPen.Segment widgets)) = Just $ whileDrawing $ handleAction widgets
+toAction _                                               = Nothing
 
-startConnecting :: Mouse.RawEvent -> Command State ()
-startConnecting event@(Mouse.Event _ coord _ _ _) = do
+startConnecting :: Vector2 Int -> Command State ()
+startConnecting coord = do
     performIO $ UI.beginPath coord True
     Global.connectionPen . ConnectionPen.drawing .= Just (ConnectionPen.Drawing coord ConnectionPen.Connecting Nothing [])
 
-startDisconnecting :: Mouse.RawEvent -> Command State ()
-startDisconnecting event@(Mouse.Event _ coord _ _ _) = do
+startDisconnecting :: Vector2 Int -> Command State ()
+startDisconnecting coord = do
     performIO $ UI.beginPath coord False
     Global.connectionPen . ConnectionPen.drawing .= Just (ConnectionPen.Drawing coord ConnectionPen.Disconnecting Nothing [])
 
@@ -72,8 +72,8 @@ handleMove coord drawing = do
         UI.drawSegment coord
         UI.requestWidgetsBetween previousPos coord
 
-stopDrag :: ConnectionPen.Drawing -> Command State ()
-stopDrag drawing = do
+stopDrag :: Command State ()
+stopDrag = do
     Global.connectionPen . ConnectionPen.drawing .= Nothing
     performIO UI.endPath
 
@@ -91,9 +91,9 @@ handleAction widgets drawing = case drawing ^. ConnectionPen.drawingType of
 handleConnectAction :: [WidgetId] -> ConnectionPen.Drawing -> Command State ()
 handleConnectAction widgets drawing = do
     nodesMay <- sequence $ lookupNode <$> widgets
-    let nodes = (view $ widget . UINode.nodeId) <$> catMaybes nodesMay
-    when (not . null $ nodes) $ do
-        let path              = remdups $ (maybeToList $ drawing ^. ConnectionPen.lastNode) ++ nodes
+    let nodes = view (widget . UINode.nodeId) <$> catMaybes nodesMay
+    unless (null nodes) $ do
+        let path              = remdups $ maybeToList (drawing ^. ConnectionPen.lastNode) ++ nodes
         Global.connectionPen . ConnectionPen.drawing . _Just . ConnectionPen.visitedNodes %= (++ nodes)
         Global.connectionPen . ConnectionPen.drawing . _Just . ConnectionPen.lastNode .= maybeLast path
         let nodesToConnect    = zipAdj path
@@ -102,10 +102,10 @@ handleConnectAction widgets drawing = do
 handleDisconnectAction :: [WidgetId] -> Command State ()
 handleDisconnectAction widgets = do
     connectionsMay <- sequence $ lookupConnection <$> widgets
-    let connections = (view $ widget . UIConnection.connectionId) <$> catMaybes connectionsMay
-    when (not . null $ connections) $ do
+    let connections = view (widget . UIConnection.connectionId) <$> catMaybes connectionsMay
+    unless (null connections) $ do
         disconnectAll connections
-        GA.sendEvent $ GA.Disconnect
+        GA.sendEvent GA.Disconnect
 
 remdups               :: (Eq a) => [a] -> [a]
 remdups (x : xx : xs) =  if x == xx then remdups (x : xs) else x : remdups (xx : xs)
@@ -127,6 +127,5 @@ autoConnectForward (srcNodeId, dstNodeId) = autoConnect (srcNodeId, dstNodeId)
 
 autoConnect :: (NodeId, NodeId) -> Command State ()
 autoConnect (srcNodeId, dstNodeId) = do
-    graph     <- use Global.graph
     BatchCmd.connectNodes (OutPortRef srcNodeId Port.All) (InPortRef dstNodeId Port.Self)
     GA.sendEvent $ GA.Connect GA.Pen

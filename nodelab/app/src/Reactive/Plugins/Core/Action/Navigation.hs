@@ -52,7 +52,7 @@ goPrev, goNext :: Command State ()
 goPrev = do
     nodes <- allNodes
     let selectedNodes = findSelected nodes
-    when (not $ null selectedNodes) $ do
+    unless (null selectedNodes) $ do
         let nodeSrc = findLeftMost selectedNodes
             nodeId = nodeSrc ^. widget . Model.nodeId
             inPortRefSelf      = R.InPortRef nodeId P.Self
@@ -66,12 +66,12 @@ goPrev = do
 goNext = do
     nodes <- allNodes
     let selectedNodes = findSelected nodes
-    when (not $ null selectedNodes) $ do
+    unless (null selectedNodes) $ do
         let nodeSrc = findRightMost selectedNodes
             nodeId = nodeSrc ^. widget . Model.nodeId
         nextNodeIds <- getDstNodeIds nodeId
         nextNodes <- catMaybes <$> mapM toWidgetFile nextNodeIds
-        when (not $ null nextNodes) $ do
+        unless (null nextNodes) $ do
             let nextNode = findUpMost nextNodes
             changeSelection selectedNodes nextNode
 
@@ -92,7 +92,7 @@ toWidgetFile nodeId = do
 goToNodeId :: [WidgetFile Model.Node] -> N.NodeId -> Command State ()
 goToNodeId selectedNodes nodeId = do
     widgetIdMay <- preuse $ Global.graph . Graph.nodeWidgetsMap . ix nodeId
-    withJust widgetIdMay $ \widgetId -> do
+    withJust widgetIdMay $ \widgetId ->
         changeSelection' selectedNodes nodeId widgetId
 
 goRight, goLeft, goDown, goUp :: Command State ()
@@ -108,27 +108,27 @@ go :: ([WidgetFile Model.Node] -> WidgetFile Model.Node) ->
 go findMost findNodesOnSide findNearest = do
     nodes <- allNodes
     let selectedNodes = findSelected nodes
-    when (not $ null selectedNodes) $ do
+    unless (null selectedNodes) $ do
         let nodeSrc = findMost selectedNodes
             pos = nodeSrc ^. widget . Model.position
             nodesSide = findNodesOnSide pos nodes
-        when (not $ null nodesSide) $ do
+        unless (null nodesSide) $ do
             let nearest = findNearest pos nodesSide
             changeSelection selectedNodes nearest
 
 closenestPow = 2.5
 
 axisDistanceRight :: Vector2 Double -> Double
-axisDistanceRight (Vector2 x y) =  x
-axisDistanceLeft  (Vector2 x y) = -x
-axisDistanceDown  (Vector2 x y) =  y
-axisDistanceUp    (Vector2 x y) = -y
+axisDistanceRight (Vector2 x _) =  x
+axisDistanceLeft  (Vector2 x _) = -x
+axisDistanceDown  (Vector2 _ y) =  y
+axisDistanceUp    (Vector2 _ y) = -y
 
 findNearestRight, findNearestLeft, findNearestDown, findNearestUp :: Position -> [WidgetFile Model.Node] -> WidgetFile Model.Node
-findNearestRight pos = maximumBy (compare `on` (closenest pos axisDistanceRight))
-findNearestLeft  pos = maximumBy (compare `on` (closenest pos axisDistanceLeft))
-findNearestDown  pos = maximumBy (compare `on` (closenest pos axisDistanceDown))
-findNearestUp    pos = maximumBy (compare `on` (closenest pos axisDistanceUp))
+findNearestRight pos = maximumBy (compare `on` closenest pos axisDistanceRight)
+findNearestLeft  pos = maximumBy (compare `on` closenest pos axisDistanceLeft)
+findNearestDown  pos = maximumBy (compare `on` closenest pos axisDistanceDown)
+findNearestUp    pos = maximumBy (compare `on` closenest pos axisDistanceUp)
 
 closenest :: Position -> (Vector2 Double -> Double) -> WidgetFile Model.Node -> Double
 closenest pos axisDistance wf = axisDist / (dist ** closenestPow) where
@@ -150,14 +150,14 @@ goCone :: ([WidgetFile Model.Node] -> WidgetFile Model.Node) ->
 goCone findMost findNodesInCone findNodesOnSide = do
     nodes <- allNodes
     let selectedNodes = findSelected nodes
-    when (not $ null selectedNodes) $ do
+    unless (null selectedNodes) $ do
         let nodeSrc = findMost selectedNodes
             pos = nodeSrc ^. widget . Model.position
             nodesCone = findNodesInCone pos nodes
             nodesSide = findNodesOnSide pos nodes
         if not $ null nodesCone
             then                               changeSelection selectedNodes $ findNearestNode pos nodesCone
-            else when (not $ null nodesSide) $ changeSelection selectedNodes $ findNearestNode pos nodesSide
+            else unless (null nodesSide) $ changeSelection selectedNodes $ findNearestNode pos nodesSide
 
 findRightMost, findLeftMost, findDownMost, findUpMost :: [WidgetFile Model.Node] -> WidgetFile Model.Node
 findRightMost = maximumBy (compare `on` (^. widget . Model.position . x))
@@ -196,7 +196,7 @@ findSelected :: [WidgetFile Model.Node] -> [WidgetFile Model.Node]
 findSelected = filter $ \wf -> wf ^. widget . Model.isSelected
 
 findNearestNode :: Position -> [WidgetFile Model.Node] -> WidgetFile Model.Node
-findNearestNode pos = minimumBy (compare `on` (distance pos))
+findNearestNode pos = minimumBy (compare `on` distance pos)
 
 distance :: Position -> WidgetFile Model.Node -> Double
 distance pos wf = lengthSquared (wpos - pos) where
