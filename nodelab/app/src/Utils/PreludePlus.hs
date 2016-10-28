@@ -96,26 +96,21 @@ True  ? (x :? _) = x
 False ? (_ :? y) = y
 -- / trenary operator
 
-
 ($>) :: (Functor f) => a -> f b -> f b
 ($>) =  fmap . flip const
 
-
 withJust :: Monad m => Maybe a -> (a -> m ()) -> m ()
 withJust = forM_
-
 
 lift2 :: (Monad (t1 m), Monad m,
           MonadTrans t, MonadTrans t1)
       => m a -> t (t1 m) a
 lift2 = lift . lift
 
-
 lift3 :: (Monad (t1 (t2 m)), Monad (t2 m), Monad m,
           MonadTrans t, MonadTrans t1, MonadTrans t2)
       => m a -> t (t1 (t2 m)) a
 lift3 = lift . lift2
-
 
 ifM :: Monad m => m Bool -> m a -> m a -> m a
 ifM predicate a b = do bool <- predicate
