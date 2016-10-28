@@ -51,7 +51,7 @@ isNodeUnderCursor = isJust <$> runMaybeT act where
         return w
 
 isNodeLabelUnderCursor :: Command UIRegistry.State Bool
-isNodeLabelUnderCursor = runMaybeT act >>= return . fromMaybe False where
+isNodeLabelUnderCursor = fromMaybe False <$> runMaybeT act where
     act = do
         (Just id) <- lift $ use UIRegistry.widgetOver
         (Just w)  <- lift (UIRegistry.lookupTypedM id :: Command UIRegistry.State (Maybe (WidgetFile Label)))
