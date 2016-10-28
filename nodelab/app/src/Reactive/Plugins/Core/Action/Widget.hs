@@ -33,7 +33,7 @@ toAction (Widget (WE.WidgetEvent widgetId payload)) = Just $ handleWidgetCustom 
 toAction _ = Nothing
 
 handleMouseGeneric :: JSState -> Mouse.RawEvent -> Command Global.State ()
-handleMouseGeneric jsState event@(Mouse.Event eventType absPos button _ (Just (EventWidget widgetId mat scene))) = do
+handleMouseGeneric jsState event@(Mouse.Event eventType absPos _ _ (Just (EventWidget widgetId mat scene))) = do
     file <- zoom Global.uiRegistry $ UIRegistry.lookupM widgetId
     withJust file $ \file -> do
         camera <- use $ Global.camera . Camera.camera
@@ -65,8 +65,8 @@ handleMouseOut jsState = do
     Global.uiRegistry . UIRegistry.widgetOver .= Nothing
 
 handleMouseOverOut ::  JSState -> Mouse.RawEvent -> Command Global.State ()
-handleMouseOverOut jsState (Mouse.Event Mouse.Moved absPos button _ Nothing) = handleMouseOut jsState
-handleMouseOverOut jsState (Mouse.Event Mouse.Moved absPos button _ (Just (EventWidget widgetId mat _))) = do
+handleMouseOverOut jsState (Mouse.Event Mouse.Moved _ _ _ Nothing) = handleMouseOut jsState
+handleMouseOverOut jsState (Mouse.Event Mouse.Moved _ _ _ (Just (EventWidget widgetId _ _))) = do
     widgetOver <- use $ Global.uiRegistry . UIRegistry.widgetOver
     when (widgetOver /= Just widgetId) $ do
         handleMouseOut jsState
@@ -133,11 +133,11 @@ stopDrag jsState = do
         Global.uiRegistry . UIRegistry.dragState .= Nothing
 
 handleMouseClick :: JSState -> Mouse.RawEvent -> Command Global.State ()
-handleMouseClick _ (Mouse.Event Mouse.Pressed _ Mouse.LeftButton _ (Just (EventWidget widgetId _ _))) = do
+handleMouseClick _ (Mouse.Event Mouse.Pressed _ Mouse.LeftButton _ (Just (EventWidget widgetId _ _))) =
     Global.uiRegistry . UIRegistry.mouseDownWidget .= Just widgetId
 handleMouseClick jsState event@(Mouse.Event Mouse.Released _ Mouse.LeftButton _ (Just (EventWidget widgetId _ _))) = do
     previousWidget <- use $ Global.uiRegistry . UIRegistry.mouseDownWidget
-    when (previousWidget == (Just widgetId)) $ do
+    when (previousWidget == Just widgetId) $ do
         let modEvent = event & Mouse.tpe .~ Mouse.Clicked
         handleMouseGeneric jsState modEvent
     Global.uiRegistry . UIRegistry.mouseDownWidget .= Nothing

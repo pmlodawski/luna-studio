@@ -51,26 +51,26 @@ import           JS.Tutorial                       (closeOnboarding, showStep)
 
 toAction :: Event -> Maybe (Command Global.State ())
 -- press tab to open node searcher
-toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\t'   mods@(KeyMods { _shift  = False })))    = Just $ whenStep 0  $ nextStep
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\t' KeyMods { _shift  = False })) = Just $ whenStep 0 nextStep
 -- enter expression readFile "/userdata/why_fp_matters.txt"
-toAction (NodeSearcher (NodeSearcher.Create "readFile \"/lorem.txt\"" Nothing)) = Just $ whenStep 1  $ andNothingIsSelected     $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "readFile \"/lorem.txt\"" Nothing)) = Just $ whenStep 1 $ andNothingIsSelected nextStep
 -- expand switch node
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\r'  _))                                      = Just $ do
-    whenStep  2  $ andIsSelected "readFile" $ nextStep
-    whenStep  4  $ andIsSelected "words" $ nextStep
-    whenStep  6  $ andIsSelected "map" $ nextStep
-    whenStep  8  $ andIsSelected "sort" $ nextStep
-    whenStep 10  $ andIsSelected "histogram" $ nextStep
+    whenStep  2  $ andIsSelected "readFile"  nextStep
+    whenStep  4  $ andIsSelected "words"     nextStep
+    whenStep  6  $ andIsSelected "map"       nextStep
+    whenStep  8  $ andIsSelected "sort"      nextStep
+    whenStep 10  $ andIsSelected "histogram" nextStep
 -- tab > "length"
-toAction (NodeSearcher (NodeSearcher.Create "words" Nothing))                                     = Just $ whenStep 3  $ andIsSelected "readFile" $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "words" Nothing))                                     = Just $ whenStep 3  $ andIsSelected "readFile" nextStep
 -- tab > "map _.length"
-toAction (NodeSearcher (NodeSearcher.Create "map _.length" Nothing))                              = Just $ whenStep 5  $ andIsSelected "words"    $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "map _.length" Nothing))                              = Just $ whenStep 5  $ andIsSelected "words"    nextStep
 -- tab > sort
-toAction (NodeSearcher (NodeSearcher.Create "sort" Nothing))                                      = Just $ whenStep 7  $ andIsSelected "map"      $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "sort" Nothing))                                      = Just $ whenStep 7  $ andIsSelected "map"      nextStep
 -- tab > histogram
-toAction (NodeSearcher (NodeSearcher.Create "histogram" Nothing))                                 = Just $ whenStep 9  $ andIsSelected "sort"     $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "histogram" Nothing))                                 = Just $ whenStep 9  $ andIsSelected "sort"     nextStep
 -- tab > switch
-toAction (NodeSearcher (NodeSearcher.Create "length" Nothing))                                    = Just $ whenStep 11  $ andNothingIsSelected     $ nextStep
+toAction (NodeSearcher (NodeSearcher.Create "length" Nothing))                                    = Just $ whenStep 11  $ andNothingIsSelected    nextStep
 -- select "readFile" node and tab > "words"
 -- toAction (NodeSearcher (NodeSearcher.Create (Text.stripPrefix "switch" -> Just _) Nothing))       = Just $ whenStep 9  $ andNothingIsSelected     $ nextStep
 -- -- tab > switch
@@ -79,16 +79,16 @@ toAction (NodeSearcher (NodeSearcher.Create "length" Nothing))                  
 -- -- connect switch to readFile
 toAction (Batch        (Batch.NodesConnected update))                                             = Just $ do
     shouldProcess <- isCurrentLocation (update ^. Connect.location')
-    when shouldProcess $ do
-        whenStep  12 $ andConnected update "readFile"       "length"   (Port.Self ) $ nextStep
+    when shouldProcess $ 
+        whenStep  12 $ andConnected update "readFile"       "length"   Port.Self nextStep
 --         whenStep 12 $ andConnected update "\"/lorem.txt\"" "switch"   (Port.Arg 1) $ nextStep
 --         whenStep 13 $ andConnected update "\"/ipsum.txt\"" "switch"   (Port.Arg 2) $ nextStep
 --         whenStep 15 $ andConnected update "switch"         "readFile" (Port.Arg 0) $ nextStep
 --
 toAction (Batch        (Batch.NodeUpdated update))                                                = Just $ do
     shouldProcess <- isCurrentLocation (update ^. NodeUpdate.location)
-    when shouldProcess $ do
-        whenStep 13 $ andPortDefaultChanged update "readFile" (Port.Arg 0) (DefaultValue.StringValue "/ipsum.txt") $ nextStep
+    when shouldProcess $
+        whenStep 13 $ andPortDefaultChanged update "readFile" (Port.Arg 0) (DefaultValue.StringValue "/ipsum.txt") nextStep
 toAction (CustomEvent (CustomEvent.RawEvent "closeOnboarding" _)) = Just $ do
     Global.tutorial .= Nothing
     performIO closeOnboarding
@@ -100,7 +100,7 @@ toAction _  = Nothing
 whenStep :: Int -> Command Global.State () -> Command Global.State ()
 whenStep ix action = do
     currentStep <- use Global.tutorial
-    when (currentStep == (Just ix)) action
+    when (currentStep == Just ix) action
 
 goToStep :: Int -> Command Global.State ()
 goToStep ix = do
@@ -126,7 +126,7 @@ andIsSelected prefix action = do
 andNothingIsSelected :: Command Global.State () -> Command Global.State ()
 andNothingIsSelected action = do
     selected   <- selectedNodes
-    when (length selected == 0) action
+    when (null selected) action
 
 andConnected :: Connect.Update -> Text -> Text -> Port.InPort -> Command Global.State () -> Command Global.State ()
 andConnected update expr1 expr2 portId action = void $ runMaybeT $ do
@@ -137,7 +137,7 @@ andConnected update expr1 expr2 portId action = void $ runMaybeT $ do
         (Just srcExpr) <- preuse $ Global.graph . Graph.nodesMap . ix src . Node.nodeType . Node._ExpressionNode
         (Just dstExpr) <- preuse $ Global.graph . Graph.nodesMap . ix dst . Node.nodeType . Node._ExpressionNode
 
-        when ((Text.isInfixOf expr1 srcExpr) && (Text.isInfixOf expr2 dstExpr)) $ lift action
+        when (Text.isInfixOf expr1 srcExpr && Text.isInfixOf expr2 dstExpr) $ lift action
 
 andPortDefaultChanged :: NodeUpdate.Update -> Text -> Port.InPort -> DefaultValue.Value -> Command Global.State () -> Command Global.State ()
 andPortDefaultChanged update expr portId value action = do
@@ -149,7 +149,7 @@ andPortDefaultChanged update expr portId value action = do
 
         when isExprOk $ do
             let portDefault = node ^? Node.ports . ix (Port.InPortId portId) . Port.state . Port._WithDefault . DefaultValue._Constant
-            when (portDefault == (Just value)) nextStep
+            when (portDefault == Just value) nextStep
 
 isCurrentLocation :: GraphLocation -> Command Global.State Bool
 isCurrentLocation location = uses (Global.workspace . Workspace.currentLocation) (== location)

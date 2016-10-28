@@ -126,16 +126,13 @@ whenM predicate a = do
     bool <- predicate
     when bool a
 
-
 unlessM :: Monad m => m Bool -> m () -> m ()
 unlessM predicate a = do
     bool <- predicate
     unless bool a
 
-
 mjoin :: Monoid a => a -> [a] -> a
 mjoin delim l = mconcat (intersperse delim l)
-
 
 show' :: (Show a, IsString s) => a -> s
 show' = fromString . Prelude.show

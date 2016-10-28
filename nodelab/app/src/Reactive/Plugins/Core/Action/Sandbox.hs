@@ -92,7 +92,7 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\113' _)) = Just $ Global.in
 
     let widget = ContinuousSlider.create (Vector2 200 20) "ContinuousSlider" (-2.0) 5.0 3.0
     resizableWidget  <- UICmd.register resizedParent widget def
-    resizableWidget2 <- UICmd.register resizedParent widget def
+    _resizableWidget2 <- UICmd.register resizedParent widget def
     resizableWidget3 <- UICmd.register resizedParent widget def
     UICmd.register_ flexParent widget def
     UICmd.register_ flexParent widget def
