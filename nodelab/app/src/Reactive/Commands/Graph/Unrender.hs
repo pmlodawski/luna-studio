@@ -3,7 +3,6 @@ module Reactive.Commands.Graph.Unrender
     ( unrender
     ) where
 
-import           Data.Maybe                   (maybeToList)
 import           Utils.PreludePlus
 
 import           Reactive.Commands.Command    (Command, performIO)

@@ -11,7 +11,7 @@ import           Object.Widget                (UIHandlers, WidgetId, fromWidgetI
 import qualified Object.Widget.CodeEditor     as Model
 import           Reactive.Commands.Command    (Command)
 import qualified Reactive.Commands.UIRegistry as UICmd
-import           Reactive.State.Global        (inRegistry)
+import           Reactive.State.Global        (inRegistry_)
 import qualified Reactive.State.Global        as Global
 
 import           UI.Handlers.Generic          (triggerValueChanged)
@@ -25,7 +25,7 @@ customHandler :: Payload -> WidgetId -> Command Global.State ()
 customHandler CodeEditorBlur widgetId = do
     jsState <- use $ Global.jsState
     let value = lazyTextFromJSString $ getCode' jsState $ fromWidgetId widgetId
-    inRegistry $ UICmd.update' widgetId $ Model.value .~ value
+    inRegistry_ $ UICmd.update' widgetId $ Model.value .~ value
     triggerValueChanged value widgetId
 
 customHandler _ _ = return ()

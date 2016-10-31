@@ -26,7 +26,6 @@ import           Reactive.State.Connect          (Connecting (..))
 import qualified Reactive.State.Connect          as Connect
 import           Reactive.State.Global           (State, inRegistry)
 import qualified Reactive.State.Global           as Global
-import qualified Reactive.State.Graph            as Graph
 import qualified Reactive.State.UIRegistry       as UIRegistry
 
 import           Empire.API.Data.Port            (InPort (Self))
@@ -64,10 +63,9 @@ startDrag evWd = do
     withJust sourcePortWd $ \file -> do
         let model = file ^. widget
         let sourceRef = model ^. PortModel.portRef
-        camera <- use $ Global.camera . Camera.camera
         nodeWidget <- inRegistry $ UICmd.parent (fromJust $ file ^. parent)
         sourceNodePos <- inRegistry $ UICmd.get nodeWidget NodeModel.position
-        Global.connect . Connect.connecting ?= (Connecting sourceRef (model ^. PortModel.angleVector) sourceNodePos Nothing)
+        Global.connect . Connect.connecting ?= (Connecting sourceRef (model ^. PortModel.angleVector) sourceNodePos)
         zoom Global.uiRegistry $ setCurrentConnectionColor $ model ^. PortModel.color
 
 whileConnecting :: (Connect.Connecting -> Command State ()) -> Command State ()
@@ -76,8 +74,7 @@ whileConnecting run = do
     withJust connectingMay $ \connecting -> run connecting
 
 handleMove :: Vector2 Int -> Connect.Connecting -> Command State ()
-handleMove coord (Connecting sourceRef sourceVector nodePos _) = do
-    camera <- use $ Global.camera . Camera.camera
+handleMove coord (Connecting sourceRef _ nodePos) = do
     current' <- zoom Global.camera $ Camera.screenToWorkspaceM coord
     startLine <- case sourceRef of
             (InPortRef' (InPortRef _ Self)) -> return nodePos
@@ -115,12 +112,9 @@ toValidConnection a b = (normalize a b) >>= toOtherNode where
         | otherwise                                        = Nothing
 
 stopDrag :: Maybe Mouse.EventWidget -> Connect.Connecting -> Command State ()
-stopDrag mayEvWd (Connecting sourceRef _ _ _) = do
+stopDrag mayEvWd (Connecting sourceRef _ _) = do
     Global.connect . Connect.connecting .= Nothing
     zoom Global.uiRegistry hideCurrentConnection
-
-    graph <- use Global.graph
-    nodesMap <- use $ Global.graph . Graph.nodesMap
     withJust mayEvWd $ \evWd -> do
         destinationFile <- zoom Global.uiRegistry $ getPortWidgetUnderCursor evWd
         withJust destinationFile $ \destinationFile -> do

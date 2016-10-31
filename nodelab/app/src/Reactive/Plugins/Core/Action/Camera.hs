@@ -6,15 +6,15 @@ module Reactive.Plugins.Core.Action.Camera
 import           Utils.PreludePlus
 
 import           Event.Event               (Event (Keyboard, Mouse))
-import           Event.Keyboard            (KeyMods (..), ctrl)
+import           Event.Keyboard            (KeyMods (..))
 import qualified Event.Keyboard            as Keyboard
 import           Event.Mouse               (MouseButton (..))
 import qualified Event.Mouse               as Mouse
 import qualified Reactive.State.Camera     as Camera
 import qualified Reactive.State.Global     as Global
 
-import           Reactive.Commands.Camera  (autoZoom, panCamera, panDown, panDrag, panLeft, panRight, panUp, resetZoom,
-                                            syncCamera, wheelZoom, zoomDrag, zoomIn, zoomOut)
+import           Reactive.Commands.Camera  (autoZoom, panCamera, panDown, panDrag, panLeft, panRight, panUp, resetZoom, syncCamera,
+                                            wheelZoom, zoomDrag, zoomIn, zoomOut)
 import           Reactive.Commands.Command (Command)
 
 

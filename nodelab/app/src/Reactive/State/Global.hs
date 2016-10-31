@@ -60,6 +60,9 @@ initialState = State (Vector2 200 200) def def def def def def def def def def d
 inRegistry :: Command UIRegistry.State a -> Command State a
 inRegistry = zoom uiRegistry
 
+inRegistry_ :: Command UIRegistry.State a -> Command State ()
+inRegistry_ = void . zoom uiRegistry
+
 nextRandom :: Command State Word8
 nextRandom = do
     (val, rnd) <- uses random Random.random

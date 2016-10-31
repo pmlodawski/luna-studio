@@ -62,7 +62,7 @@ dragHandler ds _ id = do
         sourceNodePos   <- inRegistry $ UICmd.get nodeWidgetId NodeModel.position
         sourcePortAngle <- inRegistry $ UICmd.get portWidgetId PortModel.angleVector
         -- let coord = floor <$> sourceNodePos + shiftVec
-        Global.connect . Connect.connecting ?= Connect.Connecting (PortRef.OutPortRef' srcPortRef) sourcePortAngle sourceNodePos Nothing
+        Global.connect . Connect.connecting ?= Connect.Connecting (PortRef.OutPortRef' srcPortRef) sourcePortAngle sourceNodePos
         zoom Global.uiRegistry $ setCurrentConnectionColor connectionColor
         return ()
     when (mouseX < (-endCoeff)) $ do
@@ -75,7 +75,7 @@ dragHandler ds _ id = do
         dstNodePos   <- inRegistry $ UICmd.get nodeWidgetId NodeModel.position
         dstPortAngle <- inRegistry $ UICmd.get portWidgetId PortModel.angleVector
         -- let coord = floor <$> dstNodePos + shiftVec
-        Global.connect . Connect.connecting ?= Connect.Connecting (PortRef.InPortRef' dstPortRef) dstPortAngle dstNodePos Nothing
+        Global.connect . Connect.connecting ?= Connect.Connecting (PortRef.InPortRef' dstPortRef) dstPortAngle dstNodePos
         zoom Global.uiRegistry $ setCurrentConnectionColor connectionColor
         return ()
     abortDrag
