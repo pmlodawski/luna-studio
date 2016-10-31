@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-} -- TODO: fix
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
 module UI.Widget.Button where

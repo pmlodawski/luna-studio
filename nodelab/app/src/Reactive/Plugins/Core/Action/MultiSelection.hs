@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-} -- TODO: fix
-
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Reactive.Plugins.Core.Action.MultiSelection where
