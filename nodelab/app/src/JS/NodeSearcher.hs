@@ -49,7 +49,7 @@ searcherResultName NodeSearcher    (QueryResult _ name     _ _ _ _) = name
 searcherResultName CommandSearcher (QueryResult _ _ fullname _ _ _) = fullname
 
 displayQueryResult :: TargetSearcher -> QueryResult -> IO ()
-displayQueryResult target qr@(QueryResult prefix name fullname highlight tpe _) = do
+displayQueryResult target qr@(QueryResult prefix name _fullname highlight tpe _) = do
     ary <- createJSArray
     mapM_ (pushHighlight ary) highlight
     let targetName = searcherResultName target qr
@@ -62,7 +62,7 @@ displayQueryResults target results = do
     forM_ results $ displayQueryResult target
 
 displayTreeResult :: TargetSearcher -> QueryResult -> IO ()
-displayTreeResult target qr@(QueryResult prefix name fullname _ tpe _) = do
+displayTreeResult target qr@(QueryResult prefix name _fullname _ tpe _) = do
     let targetName = searcherResultName target qr
     nodesearcher_add_tree_result (lazyTextToJSString prefix) (lazyTextToJSString name) (lazyTextToJSString targetName) (lazyTextToJSString tpe)
 

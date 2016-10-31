@@ -32,9 +32,9 @@ import           UI.Raycaster                      (getObjectsInRect)
 
 
 toAction :: Event -> Maybe (Command State ())
-toAction (Mouse _       event@(Mouse.Event Mouse.Pressed  pos Mouse.LeftButton (KeyMods False False False False) Nothing)) = Just $ startDrag pos
-toAction (Mouse jsstate event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ handleMove jsstate pos
-toAction (Mouse _       event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just stopDrag
+toAction (Mouse _       (Mouse.Event Mouse.Pressed  pos Mouse.LeftButton (KeyMods False False False False) Nothing)) = Just $ startDrag pos
+toAction (Mouse jsstate (Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ handleMove jsstate pos
+toAction (Mouse _       (Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just stopDrag
 
 toAction (Keyboard _ (Keyboard.Event Keyboard.Press 'A'   _)) = Just trySelectAll
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down  '\27' _)) = Just tryUnselectAll

@@ -23,9 +23,7 @@ log10 = logBase 10
 limitTicks :: Int -> Int -> Double -> (Double, Double)
 limitTicks minv maxv width = (offset, span) where
     range  = fromIntegral $ maxv - minv
-    step   = 10 ** (fromIntegral $ floor $ log10 (range - 1))
+    step   = 10.0 ** fromIntegral (floor $ log10 (range - 1.0) :: Integer)
     steps  = range / step
     span   = width / steps
-    offset = (fromIntegral $ 0 - minv) / range * width
-
-
+    offset = fromIntegral (-minv) / range * width

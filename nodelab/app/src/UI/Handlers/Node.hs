@@ -255,7 +255,7 @@ displayCodeEditor nodeWidgetId nodeGroupId code = do
 instance ResizableWidget Model.Node
 instance CompositeWidget Model.Node where
     createWidget id model = do
-        let grp    = Group.create & Group.size .~ (Vector2 1 1)
+        let grp    = Group.create & Group.size .~ Vector2 1 1
         portGroup <- UICmd.register id grp def
 
         let label = Style.expressionLabel $ trimExpression $ model ^. Model.expression
@@ -265,11 +265,11 @@ instance CompositeWidget Model.Node where
         let group  = Group.create & Group.position .~ Style.controlsPosition
         controlGroups <- UICmd.register id group Style.controlsLayout
 
-        let inLabelsGroup  = Group.create & Group.position .~ (Vector2 (-400) (-30))
+        let inLabelsGroup  = Group.create & Group.position .~ Vector2 (-400) (-30)
                                           & Group.visible .~ False
         inLabelsGroupId <- UICmd.register id inLabelsGroup Style.inLabelsLayout
 
-        let outLabelsGroup  = Group.create & Group.position .~ (Vector2 (40) (-30))
+        let outLabelsGroup  = Group.create & Group.position .~ Vector2 40 (-30)
                                            & Group.visible .~ False
         outLabelsGroupId <- UICmd.register id outLabelsGroup Style.inLabelsLayout
 
@@ -280,7 +280,7 @@ instance CompositeWidget Model.Node where
         let label  = Style.execTimeLabel "Execution time: --"
         execTimeLabelId <- UICmd.register expandedGroup label def
 
-        nodeGroupId <- UICmd.register expandedGroup (Group.create) Style.expandedGroupLayout
+        nodeGroupId <- UICmd.register expandedGroup Group.create Style.expandedGroupLayout
 
         let widget = LabeledTextBox.create Style.portControlSize "Name" $ model ^. Model.name
         nameTextBoxId <- UICmd.register nodeGroupId widget $ nameHandlers id
@@ -290,7 +290,7 @@ instance CompositeWidget Model.Node where
         let widget = Toggle.create Style.portControlSize "Display result" $ model ^. Model.visualizationsEnabled
         visualizationToggleId <- UICmd.register nodeGroupId widget $ visualizationToggleHandlers id
 
-        withJust (model ^. Model.tpe) $ \tpe -> do
+        withJust (model ^. Model.tpe) $ \_tpe -> do
             let widget = LabeledTextBox.create Style.portControlSize "Type" (fromMaybe "" $ model ^. Model.tpe)
             nodeTpeId <- UICmd.register nodeGroupId widget $ typeHandlers id
             void $ UIRegistry.updateWidgetM id $ Model.elements . Model.nodeType     ?~ nodeTpeId
@@ -330,7 +330,7 @@ instance CompositeWidget Model.Node where
 
         whenChanged old model Model.expression $ do
             let exprId = model ^. Model.elements . Model.expressionLabel
-            UICmd.update_ exprId     $ Label.label   .~ (trimExpression $ model ^. Model.expression)
+            UICmd.update_ exprId     $ Label.label   .~ trimExpression (model ^. Model.expression)
 
         whenChanged old model Model.name  $ do
             let nameTbId = model ^. Model.elements . Model.nameTextBox
@@ -364,7 +364,7 @@ instance CompositeWidget Model.Node where
                 codeEditorId <- displayCodeEditor id nodeGroupId codeBody
                 void $ UIRegistry.updateWidgetM id $ Model.elements . Model.codeEditor .~ Just codeEditorId
 
-            withJust (model ^. Model.elements . Model.codeEditor) $ \codeEditorId -> do
+            withJust (model ^. Model.elements . Model.codeEditor) $ \codeEditorId ->
                 UICmd.update_ codeEditorId $ CodeEditor.value .~ codeBody
 
         when (isNothing $ model ^. Model.code) $
@@ -391,4 +391,4 @@ valueGroupId id = UICmd.get id $ Model.elements . Model.visualizationGroup
 trimExpression :: Text -> Text
 trimExpression expr
     | Text.length expr < 20 = expr
-    | otherwise             = (Text.take 20 expr) <> "…"
+    | otherwise             = Text.take 20 expr <> "…"

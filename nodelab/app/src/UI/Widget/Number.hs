@@ -6,7 +6,7 @@ import           GHCJS.Marshal.Pure (PFromJSVal (..), PToJSVal (..))
 import           GHCJS.Types        (JSString, JSVal)
 
 import           Event.Keyboard     (KeyMods (..))
-import           UI.Widget          (UIWidget (..))
+import           UI.Widget          (UIWidget)
 
 newtype Number = Number { unSlider :: JSVal } deriving (PToJSVal, PFromJSVal)
 
@@ -25,5 +25,4 @@ keyModMult mods = case mods of
     KeyMods True  True  _ _ -> 1000.0
     KeyMods False True  _ _ ->  100.0
     KeyMods True  False _ _ ->   10.0
-    otherwise               ->    1.0
-
+    _                       ->    1.0

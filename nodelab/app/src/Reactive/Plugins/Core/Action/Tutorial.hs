@@ -79,7 +79,7 @@ toAction (NodeSearcher (NodeSearcher.Create "length" Nothing))                  
 -- -- connect switch to readFile
 toAction (Batch        (Batch.NodesConnected update))                                             = Just $ do
     shouldProcess <- isCurrentLocation (update ^. Connect.location')
-    when shouldProcess $ 
+    when shouldProcess $
         whenStep  12 $ andConnected update "readFile"       "length"   Port.Self nextStep
 --         whenStep 12 $ andConnected update "\"/lorem.txt\"" "switch"   (Port.Arg 1) $ nextStep
 --         whenStep 13 $ andConnected update "\"/ipsum.txt\"" "switch"   (Port.Arg 2) $ nextStep
@@ -140,7 +140,7 @@ andConnected update expr1 expr2 portId action = void $ runMaybeT $ do
         when (Text.isInfixOf expr1 srcExpr && Text.isInfixOf expr2 dstExpr) $ lift action
 
 andPortDefaultChanged :: NodeUpdate.Update -> Text -> Port.InPort -> DefaultValue.Value -> Command Global.State () -> Command Global.State ()
-andPortDefaultChanged update expr portId value action = do
+andPortDefaultChanged update expr portId value _action = do
     let node     = update ^. NodeUpdate.node
         nodeExpr = node ^? Node.nodeType . Node._ExpressionNode
 
