@@ -1,4 +1,7 @@
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+
 {-# LANGUAGE OverloadedStrings #-}
+
 module Reactive.Handlers
     ( mouseDownHandler
     , mouseUpHandler

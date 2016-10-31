@@ -9,17 +9,17 @@ module Reactive.Plugins.Core.Action.Debug
 
 
 import           Utils.PreludePlus
-import           JS.Debug (clog, cinfo, saveState, lastEv, shouldExportState, processedEvent)
+import           JS.Debug                    (clog, cinfo, saveState, lastEv, shouldExportState, processedEvent)
 
-import qualified Event.Debug        as Debug
-import           Event.Event        (Event(..))
+import qualified Event.Debug                 as Debug
+import           Event.Event                 (Event(..))
 
-import qualified Reactive.State.Global          as Global
-import           Reactive.Commands.Command      (Command, performIO)
-import           Control.Monad.State
+import qualified Reactive.State.Global       as Global
+import           Reactive.Commands.Command   (Command, performIO)
+import           Control.Monad.State         hiding (state)
 
-import           Data.Aeson (toJSON)
-import           GHCJS.Marshal (toJSVal)
+import           Data.Aeson                  (toJSON)
+import           GHCJS.Marshal               (toJSVal)
 
 toAction :: Event -> Maybe (Command Global.State ())
 toAction (Debug Debug.GetState) = Just $ do

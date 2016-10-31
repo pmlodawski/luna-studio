@@ -1,5 +1,8 @@
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+
 module Reactive.Commands.UIRegistry
     ( LostFocus(..)
     , ChildrenResizedHandler(..)

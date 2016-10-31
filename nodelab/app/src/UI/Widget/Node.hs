@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-} -- TODO: fix
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+
 {-# LANGUAGE Rank2Types #-}
 
 module UI.Widget.Node where

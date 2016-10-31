@@ -36,11 +36,11 @@ ioCommand f = gets f >>= performIO
 
 runCommand :: Command a b -> a -> (b, IO (), a)
 runCommand cmd st = case runWriter (runStateT (unCommand cmd) st) of
-    ((res, st), IOAction act) -> (res, act, st)
+    ((res, st'), IOAction act) -> (res, act, st')
 
 execCommand :: Command a b -> a -> (IO (), a)
 execCommand cmd st = case runCommand cmd st of
-    (_, act, st) -> (act, st)
+    (_, act, st') -> (act, st')
 
 performIO :: IO () -> Command a ()
 performIO action = tell $ IOAction action

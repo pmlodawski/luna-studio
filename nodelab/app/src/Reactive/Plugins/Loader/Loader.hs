@@ -10,7 +10,7 @@ withActiveConnection :: (WebSocket -> IO ()) -> IO ()
 withActiveConnection action = do
     addr   <- getBackendAddress
     socket <- WS.getWebSocket
-    WS.onOpen  socket $ action socket
-    WS.onClose socket $ const displayConnectionClosedMessage
-    WS.onError socket displayConnectionClosedMessage
-    WS.connect socket addr
+    void $ WS.onOpen  socket $ action socket
+    void $ WS.onClose socket $ const displayConnectionClosedMessage
+    void $ WS.onError socket displayConnectionClosedMessage
+    void $ WS.connect socket addr
