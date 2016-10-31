@@ -1,6 +1,6 @@
 module UI.Widget.Slider where
 
-import           Utils.PreludePlus
+import           Utils.PreludePlus  hiding (span)
 
 import           GHCJS.Types        (JSVal, JSString)
 import           GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
@@ -18,6 +18,7 @@ foreign import javascript safe "$1.setValueLabel($2)"    setValueLabel' :: Slide
 foreign import javascript safe "$1.setFocus($2)"         setFocus'      :: Slider -> Bool                          -> IO ()
 foreign import javascript safe "$1.setTicks($2, $3, $4)" setTicks'      :: Slider -> Bool      -> Double -> Double -> IO ()
 
+log10 :: Double -> Double
 log10 = logBase 10
 
 limitTicks :: Int -> Int -> Double -> (Double, Double)

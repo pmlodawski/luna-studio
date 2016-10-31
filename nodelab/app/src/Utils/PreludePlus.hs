@@ -65,22 +65,18 @@ fromJustM :: Monad m => Maybe a -> m a
 fromJustM Nothing  = fail "Prelude.fromJustM: Nothing"
 fromJustM (Just x) = return x
 
-
 whenLeft :: (Monad m) => Either a b -> (a -> m ()) -> m ()
 whenLeft e f = case e of
     Left  v -> f v
     Right _ -> return ()
 
-
 whenLeft' :: (Monad m) => Either a b -> m () -> m ()
 whenLeft' e f = whenLeft e (const f)
-
 
 whenRight :: (Monad m) => Either a b -> (b -> m ()) -> m ()
 whenRight e f = case e of
     Left  _ -> return ()
     Right v -> f v
-
 
 whenRight' :: (Monad m) => Either a b -> m () -> m ()
 whenRight' e f = whenRight e $ const f

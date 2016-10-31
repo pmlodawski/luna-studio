@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-} -- TODO: fix
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+
 {-# LANGUAGE OverloadedStrings #-}
 
 module UI.Handlers.List where
@@ -35,6 +38,7 @@ import           UI.Widget.List                ()
 import           UI.Widget.Toggle              ()
 
 
+deleteNth :: Int -> [a] -> [a]
 deleteNth n xs = take n xs ++ drop (n+1) xs
 
 addItemHandlers :: WidgetId -> WidgetId -> Double -> HTMap
@@ -65,6 +69,7 @@ makeItem isTuple listId listGroupId width elem ix = do
     when (not isTuple) $ UICmd.register_ groupId removeButton (removeItemHandlers listId listGroupId groupId)
     Layout.horizontalLayout 0.0 groupId
 
+makeListItem, makeTupleItem :: WidgetId -> WidgetId -> Double -> AnyLunaValue -> Int -> Command UIRegistry.State ()
 makeListItem  = makeItem False
 makeTupleItem = makeItem True
 

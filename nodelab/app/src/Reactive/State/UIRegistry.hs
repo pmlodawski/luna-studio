@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-} -- TODO: fix
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE UndecidableInstances #-}

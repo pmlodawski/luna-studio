@@ -1,4 +1,7 @@
+{-# OPTIONS_GHC -fno-warn-unused-binds #-}
+
 {-# LANGUAGE OverloadedStrings #-}
+
 module Reactive.Plugins.Core.Action.Debug
     ( toAction
     , toActionEv

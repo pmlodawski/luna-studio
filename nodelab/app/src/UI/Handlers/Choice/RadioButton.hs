@@ -14,7 +14,9 @@ import qualified Reactive.State.Global            as Global
 import           UI.Widget.Toggle                 ()
 
 newtype SelectedHandler = SelectedHandler (Command Global.State ())
-selectedHandler = TypeKey :: TypeKey SelectedHandler
+
+selectedHandler :: TypeKey SelectedHandler
+selectedHandler = TypeKey
 
 triggerSelected :: WidgetId -> Command Global.State ()
 triggerSelected id = do

@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+
 module Reactive.Commands.Graph
     ( portRefToWidgetId
     , updateConnections
@@ -80,7 +82,8 @@ connectionIdToWidgetId connectionId = preuse $ Global.graph . Graph.connectionWi
 portRefToWidgetId :: AnyPortRef -> Command Global.State (Maybe WidgetId)
 portRefToWidgetId portRef = preuse $ Global.graph . Graph.portWidgetsMap . ix portRef
 
-nats = [1..] :: [Integer]
+nats :: [Integer]
+nats = [1..]
 
 focusNode :: WidgetId -> Command Global.State ()
 focusNode id = do
@@ -153,7 +156,9 @@ updateConnection connectionId = do
 moveByAngle :: Vector2 Double -> Double -> Angle -> Vector2 Double
 moveByAngle (Vector2 x y) radius angle = Vector2 (x + radius * cos angle) (y + radius * sin angle)
 
+normalPortRadius :: Double
 normalPortRadius = 22.0
 
+portRadius :: InPortRef -> Double
 portRadius (InPortRef _ Port.Self) = 0.0
 portRadius _ = normalPortRadius

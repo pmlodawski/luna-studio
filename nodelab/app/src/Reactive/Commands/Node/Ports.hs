@@ -1,4 +1,7 @@
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+
 {-# LANGUAGE OverloadedStrings #-}
+
 module Reactive.Commands.Node.Ports
     ( displayPorts
     ) where
@@ -6,7 +9,7 @@ module Reactive.Commands.Node.Ports
 import           Control.Monad.State                 hiding (State)
 import qualified Data.Map.Lazy                       as Map
 import qualified Data.Text.Lazy                      as Text
-import           Utils.PreludePlus
+import           Utils.PreludePlus                   hiding (id)
 import           Utils.Vector
 
 import           Object.Widget                       (WidgetId)

@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+
 module Reactive.Commands.Node.Update
     ( updateNode
     , updateNodeValue
@@ -6,7 +7,7 @@ module Reactive.Commands.Node.Update
     , updateExpression
     ) where
 
-import           Utils.PreludePlus
+import           Utils.PreludePlus                    hiding (id)
 
 import           Control.Monad.State                  (modify)
 import qualified Data.Text.Lazy                       as Text

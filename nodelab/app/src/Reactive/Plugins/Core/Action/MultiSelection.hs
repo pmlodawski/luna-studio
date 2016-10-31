@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-} -- TODO: fix
+
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Reactive.Plugins.Core.Action.MultiSelection where
@@ -60,7 +62,7 @@ handleMove jsstate coord = do
     dragHistory <- use $ Global.multiSelection . MultiSelection.history
     case dragHistory of
         Nothing                          -> return ()
-        Just (DragHistory start current) -> do
+        Just (DragHistory start _current) -> do
             Global.multiSelection . MultiSelection.history ?= DragHistory start coord
             updateSelection jsstate start coord
             drawSelectionBox start coord

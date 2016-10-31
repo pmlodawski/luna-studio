@@ -1,4 +1,7 @@
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+
 {-# LANGUAGE OverloadedStrings #-}
+
 module Reactive.Plugins.Core.Action.Sandbox where
 
 import           Utils.PreludePlus

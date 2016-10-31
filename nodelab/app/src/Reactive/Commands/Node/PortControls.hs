@@ -3,7 +3,7 @@ module Reactive.Commands.Node.PortControls
     ( makePortControl
     ) where
 
-import           Utils.PreludePlus
+import           Utils.PreludePlus               hiding (group)
 import           Utils.Vector
 
 import qualified Data.Map.Lazy                   as Map
@@ -86,28 +86,28 @@ makeInPortControl parent portRef port = case port ^. Port.state of
         let widget = Label.create (Style.portControlSize & x -~ Style.setLabelOffsetX) (Text.pack $ (port ^. Port.name) <> " (connected)")
                    & Label.position . x .~ Style.setLabelOffsetX
         void $ UICmd.register parent widget def
-    Port.WithDefault def -> void $ case port ^. Port.valueType . ValueType.toEnum of
+    Port.WithDefault defVal -> void $ case port ^. Port.valueType . ValueType.toEnum of
         ValueType.DiscreteNumber -> do
             let label = port ^. Port.name
-                value = fromMaybe 0 $ def ^? DefaultValue._Constant . DefaultValue._IntValue
+                value = fromMaybe 0 $ defVal ^? DefaultValue._Constant . DefaultValue._IntValue
                 widget = DiscreteNumber.create Style.portControlSize (Text.pack $ label) value
                 handlers = onValueChanged $ \val _ -> BatchCmd.setDefaultValue portRef (DefaultValue.Constant $ DefaultValue.IntValue val)
             UICmd.register parent widget handlers
         ValueType.ContinuousNumber -> do
             let label = port ^. Port.name
-                value = fromMaybe 0.0 $ def ^? DefaultValue._Constant . DefaultValue._DoubleValue
+                value = fromMaybe 0.0 $ defVal ^? DefaultValue._Constant . DefaultValue._DoubleValue
                 widget = ContinuousNumber.create Style.portControlSize (Text.pack $ label) value
                 handlers = onValueChanged $ \val _ -> BatchCmd.setDefaultValue portRef (DefaultValue.Constant $ DefaultValue.DoubleValue val)
             UICmd.register parent widget handlers
         ValueType.String -> do
             let label = port ^. Port.name
-                value = fromMaybe "" $ def ^? DefaultValue._Constant . DefaultValue._StringValue
+                value = fromMaybe "" $ defVal ^? DefaultValue._Constant . DefaultValue._StringValue
                 widget = LabeledTextBox.create Style.portControlSize (Text.pack $ label) (Text.pack $ value)
                 handlers = onValueChanged $ \val _ -> BatchCmd.setDefaultValue portRef (DefaultValue.Constant $ DefaultValue.StringValue $ Text.unpack val)
             UICmd.register parent widget handlers
         ValueType.Bool -> do
             let label = port ^. Port.name
-                value = fromMaybe True $ def ^? DefaultValue._Constant . DefaultValue._BoolValue
+                value = fromMaybe True $ defVal ^? DefaultValue._Constant . DefaultValue._BoolValue
                 widget = Toggle.create Style.portControlSize (Text.pack $ label) value
                 handlers = onValueChanged $ \val _ -> BatchCmd.setDefaultValue portRef (DefaultValue.Constant $ DefaultValue.BoolValue val)
             UICmd.register parent widget handlers

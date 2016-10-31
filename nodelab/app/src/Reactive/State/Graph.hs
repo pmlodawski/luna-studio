@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-} -- TODO: fix
+
 {-# LANGUAGE OverloadedStrings #-}
 
 module Reactive.State.Graph

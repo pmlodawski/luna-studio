@@ -32,11 +32,10 @@ updateNodeMeta' nodeId meta = do
             UICmd.update_ widgetId $ NodeModel.visualizationsEnabled .~ meta ^. NodeMeta.displayResult
             UICmd.move    widgetId $ fromTuple $  meta ^. NodeMeta.position
 
-
-updateNodeMeta :: NodeId -> NodeMeta -> Command Global.State ()
-updateNodeMeta nodeId meta = do
-    updateNodeMeta' nodeId meta
-    updateConnectionsForNodes [nodeId]
+-- updateNodeMeta :: NodeId -> NodeMeta -> Command Global.State ()
+-- updateNodeMeta nodeId meta = do
+--     updateNodeMeta' nodeId meta
+--     updateConnectionsForNodes [nodeId]
 
 updateNodesMeta :: [(NodeId, NodeMeta)] -> Command Global.State ()
 updateNodesMeta updates = do

@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+
 module UI.Handlers.Button where
 
 import           Utils.PreludePlus
@@ -16,8 +18,11 @@ import qualified Reactive.State.Global        as Global
 import           JS.Cursor                    (Cursor (Normal, Pointer), setCursor)
 import           UI.Widget.Toggle             ()
 
+
 newtype ClickedHandler = ClickedHandler (WidgetId -> Command Global.State ())
-clickedHandler = TypeKey :: TypeKey ClickedHandler
+
+clickedHandler :: TypeKey ClickedHandler
+clickedHandler = TypeKey
 
 triggerClicked :: WidgetId -> Command Global.State ()
 triggerClicked id = do
@@ -27,8 +32,11 @@ triggerClicked id = do
 clickHandler :: ClickHandler Global.State
 clickHandler _ _ id = triggerClicked id
 
+
 newtype DblClickedHandler = DblClickedHandler (WidgetId -> Command Global.State ())
-dblClickedHandler = TypeKey :: TypeKey DblClickedHandler
+
+dblClickedHandler :: TypeKey DblClickedHandler
+dblClickedHandler = TypeKey
 
 triggerDblClicked :: WidgetId -> Command Global.State ()
 triggerDblClicked id = do
@@ -40,13 +48,14 @@ dblClickHandler _ _ id = triggerDblClicked id
 
 
 newtype MousePressedHandler = MousePressedHandler (Mouse.Event' -> WidgetId  -> Command Global.State ())
-mousePressedHandler = TypeKey :: TypeKey MousePressedHandler
+
+mousePressedHandler :: TypeKey MousePressedHandler
+mousePressedHandler = TypeKey
 
 triggerMousePressed :: Mouse.Event' -> JSState -> WidgetId -> Command Global.State ()
 triggerMousePressed evt _ id = do
     maybeHandler <- inRegistry $ UICmd.handler id mousePressedHandler
     withJust maybeHandler $ \(MousePressedHandler handler) -> handler evt id
-
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & click        .~ clickHandler
@@ -54,4 +63,3 @@ widgetHandlers = def & click        .~ clickHandler
                      & mouseOver    .~ (\_ _ -> performIO $ setCursor Pointer)
                      & mouseOut     .~ (\_ _ -> performIO $ setCursor Normal)
                      & mousePressed .~ triggerMousePressed
-

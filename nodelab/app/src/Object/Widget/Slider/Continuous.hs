@@ -54,8 +54,8 @@ getNormValue slider = ((slider ^. value) - (slider ^. minValue)) / (slider ^. ra
 
 setNormValue :: ContinuousSlider -> Double -> ContinuousSlider
 setNormValue slider val = slider & value .~ newValue where
-    boundedValue = max 0.0 $ min 1.0 val
-    newValue     = boundedValue * (slider ^. range) + (slider ^. minValue)
+    boundedVal = max 0.0 $ min 1.0 val
+    newValue     = boundedVal * (slider ^. range) + (slider ^. minValue)
 
 boundedNormValue :: Lens' ContinuousSlider Double
 boundedNormValue = lens getNormValue setNormValue
@@ -64,8 +64,8 @@ getValue :: ContinuousSlider -> Double
 getValue slider = slider ^. value
 
 setValue :: ContinuousSlider -> Double -> ContinuousSlider
-setValue slider val = slider & value .~ boundedValue where
-    boundedValue = max (slider ^. minValue) $ min (slider ^. maxValue) val
+setValue slider val = slider & value .~ boundedVal where
+    boundedVal = max (slider ^. minValue) $ min (slider ^. maxValue) val
 
 boundedValue :: Lens' ContinuousSlider Double
 boundedValue = lens getValue setValue

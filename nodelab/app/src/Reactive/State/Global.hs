@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Reactive.State.Global where
 
 import           Data.Word                      (Word8)

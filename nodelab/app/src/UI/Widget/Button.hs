@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-} -- TODO: fix
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+
 module UI.Widget.Button where
 
 import           Utils.PreludePlus
@@ -68,7 +71,6 @@ instance UIDisplayObject Model.Button where
         UI.register id widget
         Widget.add widget parent
         setLabel       model widget
-
 
     updateUI id old model = do
         widget <- UI.lookup id :: IO Button

@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+
 module Utils.Vector where
 
 import           Data.Aeson        (ToJSON)

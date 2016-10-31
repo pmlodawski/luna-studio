@@ -1,10 +1,12 @@
-module Reactive.State.Camera where
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
+module Reactive.State.Camera where
 
 import           Data.Aeson                (ToJSON)
 import           Reactive.Commands.Command (Command)
 import           Utils.PreludePlus
 import           Utils.Vector
+
 
 data DragHistory =  PanDragHistory  { _panPreviousPos :: Vector2 Int }
                  | ZoomDragHistory  { _zoomPreviousPos :: Vector2 Int

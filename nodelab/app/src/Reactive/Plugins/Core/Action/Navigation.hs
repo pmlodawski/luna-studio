@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+
 module Reactive.Plugins.Core.Action.Navigation where
 
 import qualified Data.HashMap.Strict          as HashMap
@@ -116,9 +118,10 @@ go findMost findNodesOnSide findNearest = do
             let nearest = findNearest pos nodesSide
             changeSelection selectedNodes nearest
 
+closenestPow :: Double
 closenestPow = 2.5
 
-axisDistanceRight :: Vector2 Double -> Double
+axisDistanceRight, axisDistanceLeft, axisDistanceDown, axisDistanceUp :: Vector2 Double -> Double
 axisDistanceRight (Vector2 x _) =  x
 axisDistanceLeft  (Vector2 x _) = -x
 axisDistanceDown  (Vector2 _ y) =  y

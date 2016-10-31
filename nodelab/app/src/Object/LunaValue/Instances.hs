@@ -1,4 +1,8 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-} -- TODO: fix
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+
 {-# LANGUAGE OverloadedStrings #-}
+
 module Object.LunaValue.Instances where
 
 import           Object.UITypes                  (WidgetId)
@@ -18,25 +22,25 @@ import           UI.Handlers.Generic             (ValueChangedHandler (..), trig
 import           UI.Instances                    ()
 
 controlHandler :: LunaValue a => a -> WidgetId -> Command Global.State ()
-controlHandler val id = triggerValueChanged (AnyLunaValue val) id
+controlHandler val = triggerValueChanged (AnyLunaValue val)
 
 instance LunaValue Int    where
     asLunaExpr = LunaExpression . show
     createValueWidget' parent val label width handlers = do
         let widget    = DiscreteNumber.create (Vector2 width 20) label val
-            handlers' = addHandler (ValueChangedHandler $ (controlHandler :: Int -> WidgetId -> Command Global.State () )) $ handlers
+            handlers' = addHandler (ValueChangedHandler (controlHandler :: Int -> WidgetId -> Command Global.State ())) $ handlers
         UICmd.register parent widget handlers'
 
 instance LunaValue Double where
     asLunaExpr = LunaExpression . show
     createValueWidget' parent val label width handlers = do
         let widget    = ContinuousNumber.create (Vector2 width 20) label val
-            handlers' = addHandler (ValueChangedHandler $ (controlHandler :: Double -> WidgetId -> Command Global.State () )) $ handlers
+            handlers' = addHandler (ValueChangedHandler (controlHandler :: Double -> WidgetId -> Command Global.State ())) $ handlers
         UICmd.register parent widget handlers'
 
 instance LunaValue Bool   where
     asLunaExpr = LunaExpression . show
     createValueWidget' parent val label width handlers = do
         let widget    = Toggle.create (Vector2 width 20) label val
-            handlers' = addHandler (ValueChangedHandler $ (controlHandler :: Bool -> WidgetId -> Command Global.State () )) $ handlers
+            handlers' = addHandler (ValueChangedHandler (controlHandler :: Bool -> WidgetId -> Command Global.State ())) $ handlers
         UICmd.register parent widget handlers'

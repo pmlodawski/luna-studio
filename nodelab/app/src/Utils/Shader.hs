@@ -116,9 +116,9 @@ fromGeometries :: [G.Geometry] -> Maybe (Object 2)
 fromGeometries geometries = mergeObjects . catMaybes $ fromGeometry <$> geometries
 
 createShader :: Size -> Maybe (Object 2) -> Shader
-createShader size objectMay = fromMaybe "" $ compileObject <$> objectMay where
+createShader objSize objectMay = fromMaybe "" $ compileObject <$> objectMay where
     compileObject :: Object 2 -> Shader
-    compileObject object = fst $ GLSL.compileGLSL $ Bounded (toShaderBound size) object
+    compileObject object = fst $ GLSL.compileGLSL $ Bounded (toShaderBound objSize) object
 
 -- size calculation
 
@@ -161,9 +161,9 @@ minBounds :: Bound -> Bound -> Bound
 minBounds (Bound lt1 rb1) (Bound lt2 rb2) = Bound (maxCorner lt1 lt2) (minCorner rb1 rb2)
 
 maxBoundsList :: [Bound] -> Bound
-maxBoundsList []             = defBound
-maxBoundsList [bound]        = bound
-maxBoundsList (bound:bounds) = foldl maxBounds bound bounds
+maxBoundsList []                = defBound
+maxBoundsList [bound]           = bound
+maxBoundsList (bound:boundList) = foldl maxBounds bound boundList
 
 toShaderBound :: Size -> A.BVec 2 Float
 toShaderBound (Vector2 x y) = A.vec2 (toFloat x) (toFloat y)
