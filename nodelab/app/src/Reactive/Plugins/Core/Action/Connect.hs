@@ -22,7 +22,7 @@ import           Reactive.Commands.Graph         (portRefToWidgetId)
 import           Reactive.Commands.Graph.Connect (batchConnectNodes)
 import qualified Reactive.Commands.UIRegistry    as UICmd
 import qualified Reactive.State.Camera           as Camera
-import           Reactive.State.Connect          (Connecting (..))
+import           Reactive.State.Connect          (connectingFromEdge, connectingFromPort)
 import qualified Reactive.State.Connect          as Connect
 import           Reactive.State.Global           (State, inRegistry)
 import qualified Reactive.State.Global           as Global
@@ -36,7 +36,7 @@ import qualified JS.GoogleAnalytics              as GA
 
 
 toAction :: Event -> Maybe (Command State ())
-toAction (Mouse _ (Mouse.Event Mouse.Pressed  _   Mouse.LeftButton (KeyMods False False False False) (Just evWd))) = Just $ startDrag evWd
+toAction (Mouse _ (Mouse.Event Mouse.Pressed  _   Mouse.LeftButton (KeyMods False False False False) (Just evWd))) = Just $ startDragFromPort evWd >> startDragFromEdge evWd
 toAction (Mouse _ (Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _      )) = Just $ whileConnecting $ handleMove pos
 toAction (Mouse _ (Mouse.Event Mouse.Moved    _   _                _ _      )) = Just $ whileConnecting $ stopDrag'
 toAction (Mouse _ (Mouse.Event Mouse.Released _   Mouse.LeftButton _ mayEvWd)) = Just $ whileConnecting $ stopDrag mayEvWd
@@ -57,15 +57,26 @@ hideCurrentConnection = UICmd.update_ UIRegistry.currentConnectionId $ UIConnect
 getPortWidgetUnderCursor :: EventWidget -> Command UIRegistry.State (Maybe (WidgetFile PortModel.Port))
 getPortWidgetUnderCursor (EventWidget widgetId _ _) = UIRegistry.lookupTypedM widgetId
 
-startDrag :: Mouse.EventWidget -> Command State ()
-startDrag evWd = do
+startDragFromPort :: Mouse.EventWidget -> Command State ()
+startDragFromPort evWd = do
     sourcePortWd <- zoom Global.uiRegistry $ getPortWidgetUnderCursor evWd
     withJust sourcePortWd $ \file -> do
         let model = file ^. widget
         let sourceRef = model ^. PortModel.portRef
         nodeWidget <- inRegistry $ UICmd.parent (fromJust $ file ^. parent)
         sourceNodePos <- inRegistry $ UICmd.get nodeWidget NodeModel.position
-        Global.connect . Connect.connecting ?= (Connecting sourceRef (model ^. PortModel.angleVector) sourceNodePos)
+        Global.connect . Connect.connecting ?= connectingFromPort sourceRef (model ^. PortModel.angleVector) sourceNodePos
+        zoom Global.uiRegistry $ setCurrentConnectionColor $ model ^. PortModel.color
+
+startDragFromEdge :: Mouse.EventWidget -> Command State ()
+startDragFromEdge evWd = do
+    sourcePortWd <- zoom Global.uiRegistry $ getPortWidgetUnderCursor evWd
+    withJust sourcePortWd $ \file -> do
+        let model = file ^. widget
+        -- let sourceRef = model ^. PortModel.portRef
+        -- nodeWidget <- inRegistry $ UICmd.parent (fromJust $ file ^. parent)
+        -- sourceNodePos <- inRegistry $ UICmd.get nodeWidget NodeModel.position
+        Global.connect . Connect.connecting ?= connectingFromEdge -- sourceRef (model ^. PortModel.angleVector) sourceNodePos
         zoom Global.uiRegistry $ setCurrentConnectionColor $ model ^. PortModel.color
 
 whileConnecting :: (Connect.Connecting -> Command State ()) -> Command State ()
@@ -74,7 +85,11 @@ whileConnecting run = do
     withJust connectingMay $ \connecting -> run connecting
 
 handleMove :: Vector2 Int -> Connect.Connecting -> Command State ()
-handleMove coord (Connecting sourceRef _ nodePos) = do
+handleMove coord (Connect.ConnectingFromPort fp) = handleMoveConnectingFromPort coord fp
+-- handleMove coord (Connect.ConnectingFromEdge fp) = handleMoveConnectingFromPort coord fp
+
+handleMoveConnectingFromPort :: Vector2 Int -> Connect.FromPort -> Command State ()
+handleMoveConnectingFromPort coord (Connect.FromPort sourceRef _ nodePos) = do
     current' <- zoom Global.camera $ Camera.screenToWorkspaceM coord
     startLine <- case sourceRef of
             (InPortRef' (InPortRef _ Self)) -> return nodePos
@@ -112,7 +127,7 @@ toValidConnection a b = (normalize a b) >>= toOtherNode where
         | otherwise                                        = Nothing
 
 stopDrag :: Maybe Mouse.EventWidget -> Connect.Connecting -> Command State ()
-stopDrag mayEvWd (Connecting sourceRef _ _) = do
+stopDrag mayEvWd (Connect.ConnectingFromPort (Connect.FromPort sourceRef _ _)) = do
     Global.connect . Connect.connecting .= Nothing
     zoom Global.uiRegistry hideCurrentConnection
     withJust mayEvWd $ \evWd -> do

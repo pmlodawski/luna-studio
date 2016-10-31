@@ -32,10 +32,10 @@ data ConnectionEnd = Source | Destination
 newtype DragConnectionEndHandler = DragConnectionEndHandler (WidgetId -> ConnectionEnd -> Command UIRegistry.State ())
 
 triggerDragConnectionEndHandler :: WidgetId -> ConnectionEnd -> Command UIRegistry.State ()
-triggerDragConnectionEndHandler id end = do
+triggerDragConnectionEndHandler wid end = do
     let key = TypeKey :: TypeKey DragConnectionEndHandler
-    maybeHandler <- UICmd.handler id key
-    withJust maybeHandler $ \(DragConnectionEndHandler handler) -> handler id end
+    maybeHandler <- UICmd.handler wid key
+    withJust maybeHandler $ \(DragConnectionEndHandler handler) -> handler wid end
 
 setCurrentConnectionColor :: Int -> Command UIRegistry.State ()
 setCurrentConnectionColor color = UICmd.update_ UIRegistry.currentConnectionId $ Model.currentColor .~ color
@@ -62,7 +62,7 @@ dragHandler ds _ wid = do
         sourceNodePos   <- inRegistry $ UICmd.get nodeWidgetId NodeModel.position
         sourcePortAngle <- inRegistry $ UICmd.get portWidgetId PortModel.angleVector
         -- let coord = floor <$> sourceNodePos + shiftVec
-        Global.connect . Connect.connecting ?= Connect.Connecting (PortRef.OutPortRef' srcPortRef) sourcePortAngle sourceNodePos
+        Global.connect . Connect.connecting ?= Connect.connectingFromPort (PortRef.OutPortRef' srcPortRef) sourcePortAngle sourceNodePos
         void $ zoom Global.uiRegistry $ setCurrentConnectionColor connectionColor
     when (mouseX < (-endCoeff)) $ do
         connId <- inRegistry $ UICmd.get wid Model.connectionId
@@ -74,7 +74,7 @@ dragHandler ds _ wid = do
         dstNodePos   <- inRegistry $ UICmd.get nodeWidgetId NodeModel.position
         dstPortAngle <- inRegistry $ UICmd.get portWidgetId PortModel.angleVector
         -- let coord = floor <$> dstNodePos + shiftVec
-        Global.connect . Connect.connecting ?= Connect.Connecting (PortRef.InPortRef' dstPortRef) dstPortAngle dstNodePos
+        Global.connect . Connect.connecting ?= Connect.connectingFromPort (PortRef.InPortRef' dstPortRef) dstPortAngle dstNodePos
         void $ zoom Global.uiRegistry $ setCurrentConnectionColor connectionColor
     abortDrag
 
