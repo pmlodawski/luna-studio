@@ -30,8 +30,8 @@ import           Reactive.Commands.Command    (Command)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import qualified Reactive.State.UIRegistry    as UIRegistry
 
-import qualified Style.Node                   as Style
 import qualified Style.Layout                 as Style
+import qualified Style.Node                   as Style
 
 import           Empire.API.Data.DefaultValue (Value (..))
 import qualified Empire.API.Data.DefaultValue as DefaultValue
@@ -82,6 +82,7 @@ listTable col = DataFrame.create Style.plotSize ["Index", "Value"] rows where
     cols = [idxs, col]
     rows = transpose cols
 
+mapTuple :: (b -> c) -> (b, b) -> (c, c)
 mapTuple = join (***)
 
 listTablePairs :: [(Text, Text)] -> DataFrame

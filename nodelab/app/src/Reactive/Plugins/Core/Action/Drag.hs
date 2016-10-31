@@ -46,19 +46,19 @@ toAction _ = Nothing
 isNodeUnderCursor :: Command UIRegistry.State Bool
 isNodeUnderCursor = isJust <$> runMaybeT act where
     act = do
-        (Just id) <- lift $ use UIRegistry.widgetOver
-        (Just w ) <- lift (UIRegistry.lookupTypedM id :: Command UIRegistry.State (Maybe (WidgetFile Model.Node)))
+        Just wid <- lift $ use UIRegistry.widgetOver
+        Just w   <- lift (UIRegistry.lookupTypedM wid :: Command UIRegistry.State (Maybe (WidgetFile Model.Node)))
         return w
 
 isNodeLabelUnderCursor :: Command UIRegistry.State Bool
 isNodeLabelUnderCursor = fromMaybe False <$> runMaybeT act where
     act = do
-        (Just id) <- lift $ use UIRegistry.widgetOver
-        (Just w)  <- lift (UIRegistry.lookupTypedM id :: Command UIRegistry.State (Maybe (WidgetFile Label)))
-        (Just p)  <- return $ w ^. parent
-        (Just _)  <- lift (UIRegistry.lookupTypedM p :: Command UIRegistry.State (Maybe (WidgetFile Model.Node)))
+        Just wid <- lift $ use UIRegistry.widgetOver
+        Just w   <- lift (UIRegistry.lookupTypedM wid :: Command UIRegistry.State (Maybe (WidgetFile Label)))
+        Just p   <- return $ w ^. parent
+        Just _   <- lift (UIRegistry.lookupTypedM p :: Command UIRegistry.State (Maybe (WidgetFile Model.Node)))
         exId <- lift $ Node.expressionId p
-        return $ id == exId
+        return $ wid == exId
 
 startDrag :: Vector2 Int -> Command State ()
 startDrag coord = do
@@ -79,7 +79,7 @@ moveNodes delta = do
     widgets <- selectedNodes
     delta'  <- scaledDelta delta
     let selectedIds = (^. objectId) <$> widgets
-    forM_ selectedIds $ \id -> zoom Global.uiRegistry $ UICmd.moveBy id delta'
+    forM_ selectedIds $ \wid -> zoom Global.uiRegistry $ UICmd.moveBy wid delta'
     updateConnectionsForNodes $ view (widget . Model.nodeId) <$> widgets
 
 stopDrag :: Command State ()
@@ -94,10 +94,10 @@ stopDrag = do
             let selected = filter (^. widget . Model.isSelected) widgets
                 nodesToUpdate = (\w -> (w ^. widget . Model.nodeId, w ^. widget . widgetPosition)) <$> selected
 
-            updates <- forM nodesToUpdate $ \(id, pos) -> do
-                Global.graph . Graph.nodesMap . ix id . Node.position .= toTuple pos
-                newMeta <- preuse $ Global.graph . Graph.nodesMap . ix id . Node.nodeMeta
-                return $ (id, ) <$> newMeta
+            updates <- forM nodesToUpdate $ \(wid, pos) -> do
+                Global.graph . Graph.nodesMap . ix wid . Node.position .= toTuple pos
+                newMeta <- preuse $ Global.graph . Graph.nodesMap . ix wid . Node.nodeMeta
+                return $ (wid, ) <$> newMeta
             BatchCmd.updateNodeMeta $ catMaybes updates
             updateConnectionsForNodes $ fst <$> nodesToUpdate
 

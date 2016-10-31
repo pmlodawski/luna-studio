@@ -43,11 +43,11 @@ import qualified Empire.API.Data.ValueType       as ValueType
 
 isLiteral :: Getter Node Bool
 isLiteral = to $ isLiteral' where
-    isLiteral' node = (0 == (sum $ fmap isIn' portIds)) where
+    isLiteral' node = not $ any isIn' portIds where
         portIds = Map.keys $ node ^. Node.ports
-        isIn' :: PortId -> Int
-        isIn' (OutPortId _) = 0
-        isIn' (InPortId  _) = 1
+        isIn' :: PortId -> Bool
+        isIn' (OutPortId _) = False
+        isIn' (InPortId  _) = True
 
 
 makePortControl :: WidgetId -> Node  -> Port -> Command UIRegistry.State ()
@@ -57,7 +57,7 @@ makePortControl groupParent node port =
     in
     case port ^. Port.portId of
         InPortId  (Arg _) -> makeInPortControl groupParent portRef port
-        OutPortId All      -> when (node ^. isLiteral) $ makeInPortControl groupParent portRef port
+        OutPortId All     -> when (node ^. isLiteral) $ makeInPortControl groupParent portRef port
         _ -> return ()
 
 makeInPortControl :: WidgetId -> AnyPortRef -> Port -> Command UIRegistry.State ()
