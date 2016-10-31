@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-
 {-# LANGUAGE OverloadedStrings #-}
 
 module Reactive.Commands.Node.Ports

@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-
 module Reactive.Plugins.Core.Action.Connect
     ( toAction
     , handleMove

@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-
 module Reactive.State.Camera where
 
 import           Data.Aeson                (ToJSON)

@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-
 module Reactive.Plugins.Core.Action.Navigation where
 
 import qualified Data.HashMap.Strict          as HashMap

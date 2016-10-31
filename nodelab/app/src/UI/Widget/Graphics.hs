@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-
 module UI.Widget.Graphics where
 
 import           Utils.PreludePlus      hiding (Item)

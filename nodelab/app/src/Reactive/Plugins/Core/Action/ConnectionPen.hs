@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-
 {-# LANGUAGE TupleSections #-}
 
 module Reactive.Plugins.Core.Action.ConnectionPen

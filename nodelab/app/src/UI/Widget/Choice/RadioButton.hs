@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-
 module UI.Widget.Choice.RadioButton where
 
 import           Utils.PreludePlus
