@@ -51,12 +51,12 @@ toAction _                                               = Nothing
 startConnecting :: Vector2 Int -> Command State ()
 startConnecting coord = do
     performIO $ UI.beginPath coord True
-    Global.connectionPen . ConnectionPen.drawing .= Just (ConnectionPen.Drawing coord ConnectionPen.Connecting Nothing [])
+    Global.connectionPen . ConnectionPen.drawing ?= ConnectionPen.Drawing coord ConnectionPen.Connecting Nothing []
 
 startDisconnecting :: Vector2 Int -> Command State ()
 startDisconnecting coord = do
     performIO $ UI.beginPath coord False
-    Global.connectionPen . ConnectionPen.drawing .= Just (ConnectionPen.Drawing coord ConnectionPen.Disconnecting Nothing [])
+    Global.connectionPen . ConnectionPen.drawing ?= ConnectionPen.Drawing coord ConnectionPen.Disconnecting Nothing []
 
 whileDrawing :: (ConnectionPen.Drawing -> Command State ()) -> Command State ()
 whileDrawing run = do

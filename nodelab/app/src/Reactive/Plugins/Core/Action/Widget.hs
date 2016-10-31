@@ -134,7 +134,7 @@ stopDrag jsState = do
 
 handleMouseClick :: JSState -> Mouse.RawEvent -> Command Global.State ()
 handleMouseClick _ (Mouse.Event Mouse.Pressed _ Mouse.LeftButton _ (Just (EventWidget widgetId _ _))) =
-    Global.uiRegistry . UIRegistry.mouseDownWidget .= Just widgetId
+    Global.uiRegistry . UIRegistry.mouseDownWidget ?= widgetId
 handleMouseClick jsState event@(Mouse.Event Mouse.Released _ Mouse.LeftButton _ (Just (EventWidget widgetId _ _))) = do
     previousWidget <- use $ Global.uiRegistry . UIRegistry.mouseDownWidget
     when (previousWidget == Just widgetId) $ do

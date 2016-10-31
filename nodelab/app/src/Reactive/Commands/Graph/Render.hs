@@ -49,5 +49,5 @@ addInputs inputs = do
 
 addOutputs :: Output -> Command State ()
 addOutputs outputs = do
-    Global.graph . Graph.outputs .= Just outputs
+    Global.graph . Graph.outputs ?= outputs
     Output.registerOutput outputs

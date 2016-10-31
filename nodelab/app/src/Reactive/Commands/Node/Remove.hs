@@ -29,13 +29,12 @@ removeSelectedNodes = do
 
 performRemoval :: [NodeId] -> Command State ()
 performRemoval nodeIds = do
-    workspace  <- use Global.workspace
     BatchCmd.removeNode nodeIds
-    GA.sendEvent $ GA.RemoveNode (length nodeIds)
+    GA.sendEvent $ GA.RemoveNode $ length nodeIds
 
 localRemoveNodes :: [NodeId] -> Command State ()
 localRemoveNodes nodeIds = forM_ nodeIds $ \nodeId -> do
-    danglingConns <- uses Global.graph (Graph.connectionIdsContainingNode $ nodeId)
+    danglingConns <- uses Global.graph $ Graph.connectionIdsContainingNode nodeId
     localDisconnectAll danglingConns
 
     nodeWidgetId <- nodeIdToWidgetId nodeId
@@ -43,5 +42,3 @@ localRemoveNodes nodeIds = forM_ nodeIds $ \nodeId -> do
 
     Global.graph %= Graph.removeNode nodeId
     Global.graph . Graph.nodeWidgetsMap . at nodeId .= Nothing
-
-

@@ -50,47 +50,45 @@ mousePressedHandler :: Mouse.Event' -> JSState -> WidgetId -> Command Global.Sta
 mousePressedHandler evt _ = startDrag evt
 
 dragHandler :: DragMoveHandler Global.State
-dragHandler ds _ id = do
+dragHandler ds _ wid = do
     let mouseX = ds ^. startPos . x
     when (mouseX > endCoeff) $ do
-        connId <- inRegistry $ UICmd.get id Model.connectionId
-        connectionColor <- inRegistry $ UICmd.get id Model.color
-        (Just srcPortRef)   <- preuse $ Global.graph . Graph.connectionsMap . ix connId . Connection.src
-        (Just portWidgetId) <- use $ Global.graph . Graph.portWidgetsMap . at (PortRef.OutPortRef' srcPortRef)
-        (Just nodeWidgetId) <- use $ Global.graph . Graph.nodeWidgetsMap . at (srcPortRef ^. PortRef.srcNodeId)
+        connId <- inRegistry $ UICmd.get wid Model.connectionId
+        connectionColor <- inRegistry $ UICmd.get wid Model.color
+        Just srcPortRef   <- preuse $ Global.graph . Graph.connectionsMap . ix connId . Connection.src
+        Just portWidgetId <- use $ Global.graph . Graph.portWidgetsMap . at (PortRef.OutPortRef' srcPortRef)
+        Just nodeWidgetId <- use $ Global.graph . Graph.nodeWidgetsMap . at (srcPortRef ^. PortRef.srcNodeId)
         disconnectAll [connId]
         sourceNodePos   <- inRegistry $ UICmd.get nodeWidgetId NodeModel.position
         sourcePortAngle <- inRegistry $ UICmd.get portWidgetId PortModel.angleVector
         -- let coord = floor <$> sourceNodePos + shiftVec
         Global.connect . Connect.connecting ?= Connect.Connecting (PortRef.OutPortRef' srcPortRef) sourcePortAngle sourceNodePos
-        zoom Global.uiRegistry $ setCurrentConnectionColor connectionColor
-        return ()
+        void $ zoom Global.uiRegistry $ setCurrentConnectionColor connectionColor
     when (mouseX < (-endCoeff)) $ do
-        connId <- inRegistry $ UICmd.get id Model.connectionId
-        connectionColor <- inRegistry $ UICmd.get id Model.color
-        (Just dstPortRef) <- preuse $ Global.graph . Graph.connectionsMap . ix connId . Connection.dst
-        (Just portWidgetId) <- use $ Global.graph . Graph.portWidgetsMap . at (PortRef.InPortRef' dstPortRef)
-        (Just nodeWidgetId) <- use $ Global.graph . Graph.nodeWidgetsMap . at (dstPortRef ^. PortRef.dstNodeId)
+        connId <- inRegistry $ UICmd.get wid Model.connectionId
+        connectionColor <- inRegistry $ UICmd.get wid Model.color
+        Just dstPortRef <- preuse $ Global.graph . Graph.connectionsMap . ix connId . Connection.dst
+        Just portWidgetId <- use $ Global.graph . Graph.portWidgetsMap . at (PortRef.InPortRef' dstPortRef)
+        Just nodeWidgetId <- use $ Global.graph . Graph.nodeWidgetsMap . at (dstPortRef ^. PortRef.dstNodeId)
         disconnectAll [connId]
         dstNodePos   <- inRegistry $ UICmd.get nodeWidgetId NodeModel.position
         dstPortAngle <- inRegistry $ UICmd.get portWidgetId PortModel.angleVector
         -- let coord = floor <$> dstNodePos + shiftVec
         Global.connect . Connect.connecting ?= Connect.Connecting (PortRef.InPortRef' dstPortRef) dstPortAngle dstNodePos
-        zoom Global.uiRegistry $ setCurrentConnectionColor connectionColor
-        return ()
+        void $ zoom Global.uiRegistry $ setCurrentConnectionColor connectionColor
     abortDrag
 
 onMouseMove :: Mouse.Event' -> JSState -> WidgetId -> Command Global.State()
-onMouseMove evt _ id  = inRegistry $ do
+onMouseMove evt _ wid  = inRegistry $ do
     let mouseX = evt ^. Mouse.position . x
     when (mouseX > endCoeff) $
-        UICmd.update_ id $ Model.highlight .~ Model.SrcHighlight
+        UICmd.update_ wid $ Model.highlight .~ Model.SrcHighlight
     when (mouseX < (-endCoeff)) $
-        UICmd.update_ id $ Model.highlight .~ Model.DstHighlight
+        UICmd.update_ wid $ Model.highlight .~ Model.DstHighlight
 
 onMouseOut :: WidgetId -> Command Global.State ()
-onMouseOut  id = inRegistry $
-    UICmd.update_ id $ Model.highlight .~ Model.None
+onMouseOut wid = inRegistry $
+    UICmd.update_ wid $ Model.highlight .~ Model.None
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & mouseMove .~ onMouseMove

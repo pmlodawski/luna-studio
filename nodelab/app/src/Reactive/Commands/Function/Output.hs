@@ -22,4 +22,4 @@ registerOutput output = do
     let outputModel = Model.fromOutput output
     outputsEdgeId <- use $ Global.uiElements . UIElements.outputsEdge
     outputWidget <- inRegistry $ UICmd.register outputsEdgeId outputModel def
-    Global.graph . Graph.outputWidget .= Just outputWidget
+    Global.graph . Graph.outputWidget ?= outputWidget

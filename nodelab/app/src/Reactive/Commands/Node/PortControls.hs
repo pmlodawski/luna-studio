@@ -56,7 +56,7 @@ makePortControl groupParent node port =
         nodeId  = node ^. Node.nodeId
     in
     case port ^. Port.portId of
-        InPortId  (Arg ix) -> makeInPortControl groupParent portRef port
+        InPortId  (Arg _) -> makeInPortControl groupParent portRef port
         OutPortId All      -> when (node ^. isLiteral) $ makeInPortControl groupParent portRef port
         _ -> return ()
 
@@ -65,7 +65,7 @@ makeInPortControl parent portRef port = case port ^. Port.state of
     Port.NotConnected    -> do
         case port ^. Port.valueType . ValueType.toEnum of
             ValueType.Other -> return ()
-            otherwise -> do
+            _               -> do
                 let group = Group.create & Group.style . Group.padding .~ Style.Padding 0.0 0.0 0.0 Style.setLabelOffsetX
                 groupId <- UICmd.register parent group (Layout.horizontalLayoutHandler 0.0)
                 let label  = Label.create Style.setLabelSize (Text.pack $ port ^. Port.name)
@@ -116,7 +116,3 @@ makeInPortControl parent portRef port = case port ^. Port.state of
                        & Label.position . x .~ Style.setLabelOffsetX
 
             UICmd.register parent widget mempty
-
-
-
-
