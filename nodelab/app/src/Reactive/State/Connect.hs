@@ -20,16 +20,15 @@ data FromPort = FromPort
               } deriving (Eq, Show, Generic)
 
 data FromEdge = FromEdge
-              deriving (Eq, Show, Generic)
+              { _portPos :: Vector2 Double
+              } deriving (Eq, Show, Generic)
 
 data State = State { _connecting  :: Maybe Connecting
                    } deriving (Eq, Show, Generic)
 
-
 makeLenses ''State
 makeLenses ''FromPort
 makeLenses ''FromEdge
-
 
 instance ToJSON State
 instance ToJSON Connecting
@@ -42,5 +41,5 @@ instance Default State where
 connectingFromPort :: AnyPortRef -> Vector2 Double -> Vector2 Double -> Connecting
 connectingFromPort = ConnectingFromPort .:. FromPort
 
-connectingFromEdge :: Connecting
-connectingFromEdge = ConnectingFromEdge FromEdge
+connectingFromEdge :: Vector2 Double -> Connecting
+connectingFromEdge = ConnectingFromEdge . FromEdge

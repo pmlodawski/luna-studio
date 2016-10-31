@@ -65,10 +65,10 @@ textEditorToggle = Button.create (Vector2 10 1000) ":" & Button.style .~ style w
                  & Button.alignment  .~ Label.Center
 
 --TODO[PM] : style it
-outputsEdgeStyle = def & Group.background   ?~ Color 0.10 0.10 0.10 1.0
+outputsEdgeStyle = def & Group.background   ?~ Color 0.0 0.0 0.0 0.0
                        & Group.padding      .~ uniformPadding 5.0
 --TODO[PM] : style it
-inputsEdgeStyle = def & Group.background   ?~ Color 0.10 0.10 0.10 1.0
+inputsEdgeStyle = def & Group.background   ?~ Color 0.0 0.0 0.0 0.0
                       & Group.padding      .~ uniformPadding 5.0
 
 
