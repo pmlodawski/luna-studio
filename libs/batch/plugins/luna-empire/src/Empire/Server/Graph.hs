@@ -1,26 +1,26 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ViewPatterns      #-}
 {-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE RankNTypes  #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes        #-}
+{-# LANGUAGE ViewPatterns      #-}
 
 module Empire.Server.Graph where
 
-import           Control.Monad.State                   (StateT)
 import           Control.Monad.Error                   (throwError)
+import           Control.Monad.State                   (StateT)
 import qualified Data.Binary                           as Bin
-import           Data.UUID.Types                       (UUID)
-import qualified Data.UUID.Types                       as UUID
-import qualified Data.UUID.V4                          as UUID
 import           Data.ByteString                       (ByteString)
 import           Data.ByteString.Lazy                  (fromStrict)
 import qualified Data.IntMap                           as IntMap
+import           Data.List                             (break, partition)
+import           Data.List.Split                       (splitOneOf)
 import qualified Data.Map                              as Map
 import           Data.Maybe                            (fromMaybe, isJust, isNothing)
-import qualified Data.Text.Lazy                        as Text
 import           Data.Text.Lazy                        (Text, stripPrefix)
-import           Data.List                             (partition, break)
-import           Data.List.Split                       (splitOneOf)
+import qualified Data.Text.Lazy                        as Text
 import           Data.Traversable                      (forM)
+import           Data.UUID.Types                       (UUID)
+import qualified Data.UUID.Types                       as UUID
+import qualified Data.UUID.V4                          as UUID
 import           Prologue                              hiding (Item)
 
 import           Empire.API.Data.DefaultValue          (Value (..))
@@ -38,28 +38,28 @@ import qualified Empire.API.Graph.Connect              as Connect
 import qualified Empire.API.Graph.Disconnect           as Disconnect
 import qualified Empire.API.Graph.DumpGraphViz         as DumpGraphViz
 import qualified Empire.API.Graph.GetProgram           as GetProgram
-import qualified Empire.API.Graph.TypeCheck            as TypeCheck
 import qualified Empire.API.Graph.NodeResultUpdate     as NodeResultUpdate
 import qualified Empire.API.Graph.NodeUpdate           as NodeUpdate
 import qualified Empire.API.Graph.RemoveNode           as RemoveNode
 import qualified Empire.API.Graph.RenameNode           as RenameNode
+import qualified Empire.API.Graph.Request              as G
 import qualified Empire.API.Graph.SetDefaultValue      as SetDefaultValue
+import qualified Empire.API.Graph.TypeCheck            as TypeCheck
 import qualified Empire.API.Graph.UpdateNodeExpression as UpdateNodeExpression
 import qualified Empire.API.Graph.UpdateNodeMeta       as UpdateNodeMeta
-import qualified Empire.API.Topic                      as Topic
+import           Empire.API.Request                    (Request (..))
 import qualified Empire.API.Response                   as Response
-import           Empire.API.Request                    (Request(..))
+import qualified Empire.API.Topic                      as Topic
 import qualified Empire.Commands.Graph                 as Graph
 import qualified Empire.Commands.Persistence           as Persistence
 import qualified Empire.Empire                         as Empire
 import           Empire.Env                            (Env)
 import qualified Empire.Env                            as Env
-import           Empire.Server.Server                  (errorMessage, sendToBus', replyFail, replyResult, replyOk)
+import           Empire.Server.Server                  (errorMessage, replyFail, replyOk, replyResult, sendToBus')
+import           Empire.Utils.TextResult               (nodeValueToText)
 import           Flowbox.Bus.BusT                      (BusT (..))
 import qualified Flowbox.System.Log.Logger             as Logger
 import qualified StdLibMock
-import qualified Empire.API.Graph.Request              as G
-import           Empire.Utils.TextResult               (nodeValueToText)
 
 
 logger :: Logger.LoggerIO

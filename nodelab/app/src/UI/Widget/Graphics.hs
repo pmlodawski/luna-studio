@@ -46,15 +46,15 @@ setLabels model widget = do
     setLabels' widget labels'
 
 instance UIDisplayObject Model.Graphics where
-    createUI parentId id model = do
-        widget   <- create id model
+    createUI parentId wid model = do
+        widget   <- create wid model
         parent   <- UI.lookup parentId :: IO Widget.GenericWidget
-        UI.register id widget
+        UI.register wid widget
         Widget.add widget parent
         setLabels model widget
 
-    updateUI id old model = do
-        widget <- UI.lookup id :: IO Graphics
+    updateUI wid old model = do
+        widget <- UI.lookup wid :: IO Graphics
 
         whenChanged old model Model.items  $ setItems  model widget
         whenChanged old model Model.labels $ setLabels model widget

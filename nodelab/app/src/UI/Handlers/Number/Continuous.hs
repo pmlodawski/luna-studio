@@ -28,52 +28,52 @@ import           UI.Handlers.Generic             (triggerValueChanged, ValueChan
 import qualified UI.Handlers.TextBox             as TextBox
 
 isEnabled :: WidgetId -> Command Global.State Bool
-isEnabled id = inRegistry $ UICmd.get id Model.enabled
+isEnabled wid = inRegistry $ UICmd.get wid Model.enabled
 
 bumpValue :: Double -> WidgetId -> Command Global.State ()
-bumpValue amount id = do
-    widget <- zoom Global.uiRegistry $ UICmd.update id (Model.value +~ amount)
-    triggerValueChanged (widget ^. Model.value) id
+bumpValue amount wid = do
+    widget <- zoom Global.uiRegistry $ UICmd.update wid (Model.value +~ amount)
+    triggerValueChanged (widget ^. Model.value) wid
 
 keyUpHandler :: KeyUpHandler Global.State
-keyUpHandler 'Q' _ _ id = bumpValue (-1.0) id
-keyUpHandler 'W' _ _ id = bumpValue   1.0  id
+keyUpHandler 'Q' _ _ wid = bumpValue (-1.0) wid
+keyUpHandler 'W' _ _ wid = bumpValue   1.0  wid
 keyUpHandler _   _ _ _  = return ()
 
 startSliderDrag :: MousePressedHandler Global.State
-startSliderDrag evt _ id = do
-    enabled <- isEnabled id
+startSliderDrag evt _ wid = do
+    enabled <- isEnabled wid
     when (enabled && (evt ^. Mouse.button == Mouse.LeftButton)) $ do
-        value <- inRegistry $ UICmd.get id Model.value
-        inRegistry $ UICmd.update_ id $ Model.dragStartValue .~ Just value
-        startDrag evt id
+        value <- inRegistry $ UICmd.get wid Model.value
+        inRegistry $ UICmd.update_ wid $ Model.dragStartValue .~ Just value
+        startDrag evt wid
 
 dragHandler :: DragMoveHandler Global.State
-dragHandler ds _ id = do
-    enabled <- isEnabled id
+dragHandler ds _ wid = do
+    enabled <- isEnabled wid
     when enabled $ do
-        startValue <- inRegistry $ UICmd.get id Model.dragStartValue
+        startValue <- inRegistry $ UICmd.get wid Model.dragStartValue
         withJust startValue $ \startValue -> do
-            -- width <- inRegistry $ UICmd.get id $ Model.size . x
+            -- width <- inRegistry $ UICmd.get wid $ Model.size . x
             let diff    = ds ^. currentPos - ds ^. startPos
                 delta   = if abs (diff ^. x) > abs (diff ^. y) then  diff ^. x /  divider
                                                                else -diff ^. y / (divider * 10.0)
                 divider = keyModMult $ ds ^. keyMods
-            inRegistry $ UICmd.update_ id $ Model.value .~ (startValue + delta)
+            inRegistry $ UICmd.update_ wid $ Model.value .~ (startValue + delta)
 
 dragEndHandler :: DragEndHandler Global.State
-dragEndHandler _ _ id = do
-    enabled <- isEnabled id
+dragEndHandler _ _ wid = do
+    enabled <- isEnabled wid
     when enabled $ do
-        value      <- inRegistry $ UICmd.get id Model.value
-        startValue <- inRegistry $ UICmd.get id Model.dragStartValue
-        inRegistry $ UICmd.update_ id $ Model.dragStartValue .~ Nothing
+        value      <- inRegistry $ UICmd.get wid Model.value
+        startValue <- inRegistry $ UICmd.get wid Model.dragStartValue
+        inRegistry $ UICmd.update_ wid $ Model.dragStartValue .~ Nothing
         let startVal = fromMaybe value startValue
-        when (startVal /= value) $ triggerValueChanged value id
+        when (startVal /= value) $ triggerValueChanged value wid
 
 dblClickHandler :: DblClickHandler Global.State
-dblClickHandler _ _ id = do
-    (tbId:_) <- inRegistry $ UICmd.children id
+dblClickHandler _ _ wid = do
+    (tbId:_) <- inRegistry $ UICmd.children wid
     UICmd.takeFocus tbId
     inRegistry $ UICmd.update_ tbId $ TextBox.isEditing .~ True
 
@@ -89,7 +89,7 @@ widgetHandlers = def & keyUp        .~ keyUpHandler
 
 
 textHandlers :: WidgetId -> HTMap
-textHandlers id = addHandler (ValueChangedHandler $ textValueChangedHandler id) mempty
+textHandlers wid = addHandler (ValueChangedHandler $ textValueChangedHandler wid) mempty
 
 textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
 textValueChangedHandler parent val tbId = do
@@ -106,18 +106,18 @@ textValueChangedHandler parent val tbId = do
 
 
 instance CompositeWidget Model.ContinuousNumber where
-    createWidget id model = do
+    createWidget wid model = do
         let tx      = (model ^. Model.size . x) / 2.0
             ty      =  model ^. Model.size . y
             sx      = tx - (model ^. Model.size . y / 2.0)
             textVal = Text.pack $ show $ model ^. Model.value
             textBox = TextBox.create (Vector2 sx ty) textVal TextBox.Right
 
-        tbId <- UICmd.register id textBox $ textHandlers id
+        tbId <- UICmd.register wid textBox $ textHandlers wid
         UICmd.moveX tbId tx
 
-    updateWidget id _old model = do
-        (tbId:_) <- UICmd.children id
+    updateWidget wid _old model = do
+        (tbId:_) <- UICmd.children wid
         UICmd.update_ tbId $ TextBox.value .~ Text.pack (model ^. Model.displayValue)
 
 instance ResizableWidget Model.ContinuousNumber where resizeWidget = TextBox.labeledEditableResize

@@ -7,7 +7,7 @@ module Reactive.Commands.Node.Ports
 import           Control.Monad.State                 hiding (State)
 import qualified Data.Map.Lazy                       as Map
 import qualified Data.Text.Lazy                      as Text
-import           Utils.PreludePlus                   hiding (id)
+import           Utils.PreludePlus                   hiding (wid)
 import           Utils.Vector
 
 import           Object.Widget                       (WidgetId)
@@ -54,23 +54,23 @@ makePorts node = makePort <$> ports where
         isIn (InPortId Self)    = 0
 
 displayPorts :: WidgetId -> Node -> Command Global.State ()
-displayPorts id node = do
-        portGroup <- inRegistry $ UICmd.get id $ Model.elements . Model.portGroup
+displayPorts wid node = do
+        portGroup <- inRegistry $ UICmd.get wid $ Model.elements . Model.portGroup
         oldPorts  <- inRegistry $ UICmd.children portGroup
-        oldPortWidgets <- forM oldPorts $ \id -> inRegistry $ (UICmd.lookup id)
+        oldPortWidgets <- forM oldPorts $ \wid -> inRegistry $ (UICmd.lookup wid)
         let portRefs = (view PortModel.portRef) <$> oldPortWidgets
-        forM_ portRefs $ \id -> Global.graph . Graph.portWidgetsMap . at id .= Nothing
+        forM_ portRefs $ \wid -> Global.graph . Graph.portWidgetsMap . at wid .= Nothing
         inRegistry $ mapM_ UICmd.removeWidget oldPorts
 
-        groupId      <- inRegistry $ Node.portControlsGroupId id
+        groupId      <- inRegistry $ Node.portControlsGroupId wid
         portControls <- inRegistry $ UICmd.children groupId
         inRegistry $ mapM_ UICmd.removeWidget portControls
 
-        inLabelsGroupId <- inRegistry $ Node.inLabelsGroupId id
+        inLabelsGroupId <- inRegistry $ Node.inLabelsGroupId wid
         inLabels        <- inRegistry $ UICmd.children inLabelsGroupId
         inRegistry $ mapM_ UICmd.removeWidget inLabels
 
-        outLabelsGroupId <- inRegistry $ Node.outLabelsGroupId id
+        outLabelsGroupId <- inRegistry $ Node.outLabelsGroupId wid
         outLabels        <- inRegistry $ UICmd.children outLabelsGroupId
         inRegistry $ mapM_ UICmd.removeWidget outLabels
 

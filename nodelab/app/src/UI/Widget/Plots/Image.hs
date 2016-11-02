@@ -32,14 +32,14 @@ create oid model = do
     return plot
 
 instance UIDisplayObject Model.Image where
-    createUI parentId id model = do
-        plot   <- create id model
+    createUI parentId wid model = do
+        plot   <- create wid model
         parent <- UI.lookup parentId :: IO Widget.GenericWidget
-        UI.register id plot
+        UI.register wid plot
         Widget.add plot parent
 
-    updateUI id _ model = do
-        plot <- UI.lookup id :: IO Image
+    updateUI wid _ model = do
+        plot <- UI.lookup wid :: IO Image
         setData' plot $ lazyTextToJSString $ model ^. Model.image
 
 instance CompositeWidget Model.Image

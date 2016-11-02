@@ -15,10 +15,10 @@ import           Reactive.State.UIRegistry    (addHandler)
 newtype ValueChangedHandler a = ValueChangedHandler (a -> WidgetId -> Command Global.State ())
 
 triggerValueChanged :: Typeable a => a -> WidgetId -> Command Global.State ()
-triggerValueChanged new id = do
+triggerValueChanged new wid = do
     let key = TypeKey :: (TypeKey (ValueChangedHandler a))
-    maybeHandler <- inRegistry $ UICmd.handler id key
-    withJust maybeHandler $ \(ValueChangedHandler handler) -> handler new id
+    maybeHandler <- inRegistry $ UICmd.handler wid key
+    withJust maybeHandler $ \(ValueChangedHandler handler) -> handler new wid
 
 onValueChanged :: Typeable a => (a -> WidgetId -> Command Global.State ()) -> HTMap
 onValueChanged h = addHandler (ValueChangedHandler h) mempty

@@ -111,6 +111,7 @@ mouseHandler event tag =
             jsState <- liftIO getJSState
             liftIO . h $ Mouse jsState $ Mouse.Event tag mousePos button keyMods maybeWidget
 
+mouseDownHandler, mouseUpHandler, mouseMovedHandler, mouseDblClickHandler :: AddHandler Event
 mouseDownHandler     = mouseHandler mouseDown  Mouse.Pressed
 mouseUpHandler       = mouseHandler mouseUp    Mouse.Released
 mouseMovedHandler    = mouseHandler mouseMove  Mouse.Moved

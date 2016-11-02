@@ -31,72 +31,72 @@ import           UI.Widget.Slider              (Slider)
 import qualified UI.Registry                   as UI
 
 isEnabled :: WidgetId -> Command Global.State Bool
-isEnabled id = inRegistry $ UICmd.get id Model.enabled
+isEnabled wid = inRegistry $ UICmd.get wid Model.enabled
 
 keyUpHandler :: KeyUpHandler Global.State
-keyUpHandler 'W' _ _ id = do
-    enabled <- isEnabled id
+keyUpHandler 'W' _ _ wid = do
+    enabled <- isEnabled wid
     when enabled $ do
-        widget <- inRegistry $ UICmd.update id $ Model.boundedNormValue +~ 0.1
-        triggerValueChanged (widget ^. Model.value) id
+        widget <- inRegistry $ UICmd.update wid $ Model.boundedNormValue +~ 0.1
+        triggerValueChanged (widget ^. Model.value) wid
 
-keyUpHandler 'Q' _ _ id = do
-    enabled <- isEnabled id
+keyUpHandler 'Q' _ _ wid = do
+    enabled <- isEnabled wid
     when enabled $ do
-        widget <- inRegistry $  UICmd.update id $ Model.boundedNormValue -~ 0.1
-        triggerValueChanged (widget ^. Model.value) id
+        widget <- inRegistry $  UICmd.update wid $ Model.boundedNormValue -~ 0.1
+        triggerValueChanged (widget ^. Model.value) wid
 
 keyUpHandler _ _ _ _ = return ()
 
 startSliderDrag :: MousePressedHandler Global.State
-startSliderDrag evt _ id = do
-    enabled <- isEnabled id
+startSliderDrag evt _ wid = do
+    enabled <- isEnabled wid
     when (enabled && (evt ^. Mouse.button == Mouse.LeftButton)) $ do
-        value <- inRegistry $ UICmd.get id Model.boundedValue
-        inRegistry $ UICmd.update_ id $ Model.dragStartValue .~ (Just value)
-        startDrag evt id
+        value <- inRegistry $ UICmd.get wid Model.boundedValue
+        inRegistry $ UICmd.update_ wid $ Model.dragStartValue .~ (Just value)
+        startDrag evt wid
 
 dragHandler :: DragMoveHandler Global.State
-dragHandler ds _ id = do
-    enabled <- isEnabled id
+dragHandler ds _ wid = do
+    enabled <- isEnabled wid
     when enabled $ do
-        startValue <- inRegistry $ UICmd.get id Model.dragStartValue
+        startValue <- inRegistry $ UICmd.get wid Model.dragStartValue
         withJust startValue $ \startValue -> do
-            widget <- inRegistry $ UICmd.lookup id
+            widget <- inRegistry $ UICmd.lookup wid
             let width     = widget ^. Model.size . x
                 diff      = ds ^. currentPos - ds ^. startPos
                 deltaNorm = if (abs $ diff ^. x) > (abs $ diff ^. y) then  diff ^. x /  divider
                                                                      else -diff ^. y / (divider * 10.0)
                 divider   = width * (keyModMult $ ds ^. keyMods)
                 delta     = round $ deltaNorm * (fromIntegral $ widget ^. Model.range)
-            inRegistry $ UICmd.update_ id $ Model.boundedValue .~ (startValue + delta)
+            inRegistry $ UICmd.update_ wid $ Model.boundedValue .~ (startValue + delta)
 
 dragEndHandler :: DragEndHandler Global.State
-dragEndHandler _ _ id = do
-    enabled <- isEnabled id
+dragEndHandler _ _ wid = do
+    enabled <- isEnabled wid
     when enabled $ do
-        inRegistry $ UICmd.update_ id $ Model.dragStartValue .~ Nothing
-        value <- inRegistry $ UICmd.get id Model.boundedValue
-        triggerValueChanged value id
+        inRegistry $ UICmd.update_ wid $ Model.dragStartValue .~ Nothing
+        value <- inRegistry $ UICmd.get wid Model.boundedValue
+        triggerValueChanged value wid
 
 dblClickHandler :: DblClickHandler Global.State
-dblClickHandler evt _ id = do
-    enabled <- isEnabled id
+dblClickHandler evt _ wid = do
+    enabled <- isEnabled wid
     let shiftDown = evt ^. Mouse.keyMods . shift
     when (enabled && not shiftDown) $ do
-        (tbId:_) <- inRegistry $ UICmd.children id
+        (tbId:_) <- inRegistry $ UICmd.children wid
         UICmd.takeFocus tbId
         inRegistry $ UICmd.update_ tbId $ TextBox.isEditing .~ True
 
 clickHandler :: DblClickHandler Global.State
-clickHandler evt _ id = do
-    enabled <- isEnabled id
+clickHandler evt _ wid = do
+    enabled <- isEnabled wid
     let shiftDown = evt ^. Mouse.keyMods . shift
     when (enabled && shiftDown) $ do
-        width <- inRegistry $ UICmd.get id $ Model.size . x
+        width <- inRegistry $ UICmd.get wid $ Model.size . x
         let normValue = (evt ^. Mouse.position ^. x) / width
-        widget <- inRegistry $ UICmd.update id $ Model.boundedNormValue .~ normValue
-        triggerValueChanged (widget ^. Model.value) id
+        widget <- inRegistry $ UICmd.update wid $ Model.boundedNormValue .~ normValue
+        triggerValueChanged (widget ^. Model.value) wid
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyUp        .~ keyUpHandler
@@ -109,7 +109,7 @@ widgetHandlers = def & keyUp        .~ keyUpHandler
 -- Constructors
 
 textHandlers :: WidgetId -> HTMap
-textHandlers id = addHandler (ValueChangedHandler $ textValueChangedHandler id)
+textHandlers wid = addHandler (ValueChangedHandler $ textValueChangedHandler wid)
                 $ mempty where
 
 textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
@@ -125,23 +125,23 @@ textValueChangedHandler parent val tbId = do
 
 
 instance CompositeWidget Model.DiscreteSlider where
-    createWidget id model = do
+    createWidget wid model = do
         let tx      = (model ^. Model.size . x) / 2.0
             ty      = (model ^. Model.size . y)
             sx      = tx - (model ^. Model.size . y / 2.0)
             textVal = Text.pack $ show $ model ^. Model.value
             textBox = TextBox.create (Vector2 sx ty) textVal TextBox.Right
 
-        tbId <- UICmd.register id textBox $ textHandlers id
+        tbId <- UICmd.register wid textBox $ textHandlers wid
         UICmd.moveX tbId tx
 
-    updateWidget id _old model = do
-        (tbId:_) <- UICmd.children id
+    updateWidget wid _old model = do
+        (tbId:_) <- UICmd.children wid
         UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ model ^. Model.displayValue)
 
 instance ResizableWidget Model.DiscreteSlider where
-    resizeWidget id size model = do
+    resizeWidget wid size model = do
         performIO $ do
-            slider <- UI.lookup id :: IO Slider
+            slider <- UI.lookup wid :: IO Slider
             setTicks model slider
-        TextBox.labeledEditableResize id size model
+        TextBox.labeledEditableResize wid size model

@@ -59,12 +59,12 @@ updatePosition' widgetId position = do
     recursiveWidgetMoved widgetId
 
 setSize :: WidgetId -> Vector2 Double -> IO ()
-setSize id (Vector2 x y) = do
-    w <- UIR.lookup id :: IO GenericWidget
+setSize wid (Vector2 x y) = do
+    w <- UIR.lookup wid :: IO GenericWidget
     setSize' w x y
 
 defaultResize :: WidgetId -> Vector2 Double -> a -> Command UIRegistry.State ()
-defaultResize id size _ = performIO $ setSize id size
+defaultResize wid size _ = performIO $ setSize wid size
 
 startDrag :: Mouse.Event' -> WidgetId -> Command Global.State ()
 startDrag (Mouse.Event _ pos button keymods (Just (Mouse.EventWidget widgetId mat scene))) _ =

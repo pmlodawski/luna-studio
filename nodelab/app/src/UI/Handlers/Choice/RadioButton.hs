@@ -19,12 +19,12 @@ selectedHandler :: TypeKey SelectedHandler
 selectedHandler = TypeKey
 
 triggerSelected :: WidgetId -> Command Global.State ()
-triggerSelected id = do
-    maybeHandler <- inRegistry $ UICmd.handler id selectedHandler
+triggerSelected wid = do
+    maybeHandler <- inRegistry $ UICmd.handler wid selectedHandler
     withJust maybeHandler $ \(SelectedHandler handler) -> handler
 
 clickHandler :: ClickHandler Global.State
-clickHandler _ _ id = triggerSelected id
+clickHandler _ _ wid = triggerSelected wid
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & click  .~ clickHandler

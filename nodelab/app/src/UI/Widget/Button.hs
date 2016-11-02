@@ -62,15 +62,15 @@ setAlignment :: Model.Button -> Button -> IO ()
 setAlignment model label = setAlignment' label $ JSString.pack $ show $ model ^. Model.style . Model.alignment
 
 instance UIDisplayObject Model.Button where
-    createUI parentId id model = do
-        widget   <- create id model
+    createUI parentId wid model = do
+        widget   <- create wid model
         parent   <- UI.lookup parentId :: IO Widget.GenericWidget
-        UI.register id widget
+        UI.register wid widget
         Widget.add widget parent
         setLabel       model widget
 
-    updateUI id old model = do
-        widget <- UI.lookup id :: IO Button
+    updateUI wid old model = do
+        widget <- UI.lookup wid :: IO Button
         whenChanged old model Model.label   $ setLabel   model widget
         whenChanged old model Model.icon    $ setIcon    model widget
         whenChanged old model Model.enabled $ setEnabled model widget

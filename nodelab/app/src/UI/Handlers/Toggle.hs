@@ -13,20 +13,20 @@ import           UI.Handlers.Generic          (triggerValueChanged)
 import           UI.Widget.Toggle             ()
 
 isEnabled :: WidgetId -> Command Global.State Bool
-isEnabled id = inRegistry $ UICmd.get id Model.enabled
+isEnabled wid = inRegistry $ UICmd.get wid Model.enabled
 
 toggleValue :: WidgetId -> Command Global.State ()
-toggleValue id = do
-    enabled <- isEnabled id
+toggleValue wid = do
+    enabled <- isEnabled wid
     when enabled $ do
-        widget <- inRegistry $ UICmd.update id $ Model.value %~ not
-        triggerValueChanged (widget ^. Model.value) id
+        widget <- inRegistry $ UICmd.update wid $ Model.value %~ not
+        triggerValueChanged (widget ^. Model.value) wid
 
 clickHandler :: ClickHandler Global.State
 clickHandler _ _ = toggleValue
 
 keyUpHandler :: KeyUpHandler Global.State
-keyUpHandler 'r' _ _ id = toggleValue id
+keyUpHandler 'r' _ _ wid = toggleValue wid
 keyUpHandler _ _ _ _ = return ()
 
 widgetHandlers :: UIHandlers Global.State

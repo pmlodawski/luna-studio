@@ -44,14 +44,14 @@ setFocus :: Model.Toggle -> Toggle -> IO ()
 setFocus model slider = setFocus' slider $ model ^. Model.focused
 
 instance UIDisplayObject Model.Toggle where
-    createUI parentId id model = do
-        toggle   <- create id model
+    createUI parentId wid model = do
+        toggle   <- create wid model
         parent   <- UI.lookup parentId :: IO Widget.GenericWidget
-        UI.register id toggle
+        UI.register wid toggle
         Widget.add toggle parent
 
-    updateUI id old model = do
-        slider <- UI.lookup id :: IO Toggle
+    updateUI wid old model = do
+        slider <- UI.lookup wid :: IO Toggle
 
         whenChanged old model Model.label   $ setLabel model slider
         whenChanged old model Model.value   $ setValue model slider

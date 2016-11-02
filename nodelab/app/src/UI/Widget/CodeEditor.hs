@@ -40,14 +40,14 @@ setCode :: Model.CodeEditor -> CodeEditor -> IO ()
 setCode model codeEditor = setCode' codeEditor $ lazyTextToJSString $ model ^. Model.value
 
 instance UIDisplayObject Model.CodeEditor where
-    createUI parentId id model = do
-        codeEditor <- create id model
+    createUI parentId wid model = do
+        codeEditor <- create wid model
         parent     <- UI.lookup parentId :: IO Widget.GenericWidget
-        UI.register id codeEditor
+        UI.register wid codeEditor
         Widget.add codeEditor parent
 
-    updateUI id old model = do
-        codeEditor <- UI.lookup id :: IO CodeEditor
+    updateUI wid old model = do
+        codeEditor <- UI.lookup wid :: IO CodeEditor
         whenChanged old model Model.value $ setCode  model codeEditor
 
 instance CompositeWidget Model.CodeEditor

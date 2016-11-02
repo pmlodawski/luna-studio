@@ -33,13 +33,13 @@ setValue :: Model.ContinuousSlider -> Slider -> IO ()
 setValue model slider = setValue' slider $ model ^. Model.boundedNormValue
 
 instance UIDisplayObject Model.ContinuousSlider where
-    createUI parentId id model = do
-        slider   <- createSlider id model
+    createUI parentId wid model = do
+        slider   <- createSlider wid model
         parent   <- UI.lookup parentId :: IO Widget.GenericWidget
-        UI.register id slider
+        UI.register wid slider
         Widget.add slider parent
 
-    updateUI id old model = do
-        slider <- UI.lookup id :: IO Slider
+    updateUI wid old model = do
+        slider <- UI.lookup wid :: IO Slider
         whenChanged old model Model.label $ setLabel model slider
         whenChanged old model Model.value $ setValue model slider

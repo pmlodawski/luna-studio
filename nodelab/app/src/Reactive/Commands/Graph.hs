@@ -46,13 +46,13 @@ import qualified Empire.API.Data.PortRef             as PortRef
 allNodes :: Command Global.State [WidgetFile Model.Node]
 allNodes = do
     widgetIds <- use $ Global.graph . Graph.nodeWidgets
-    mayWidgets <- mapM (\id -> inRegistry $ UIRegistry.lookupTypedM id) widgetIds
+    mayWidgets <- mapM (\wid -> inRegistry $ UIRegistry.lookupTypedM wid) widgetIds
     return $ catMaybes mayWidgets
 
 -- allPorts :: Command Global.State [WidgetFile PortModel.Port]
 -- allPorts = do
 --     widgetIds <- use $ Global.graph . Graph.portWidgets
---     mayWidgets <- mapM (\id -> inRegistry $ UIRegistry.lookupTypedM id) widgetIds
+--     mayWidgets <- mapM (\wid -> inRegistry $ UIRegistry.lookupTypedM wid) widgetIds
 --     return $ catMaybes mayWidgets
 
 getPort :: AnyPortRef -> Command Global.State (Maybe PortModel.Port)
@@ -84,23 +84,23 @@ nats :: [Integer]
 nats = [1..]
 
 focusNode :: WidgetId -> Command Global.State ()
-focusNode id = do
+focusNode wid = do
     nodes <- allNodes
     let sortedNodes = sortBy (comparing $ negate . (view $ widget . Model.zPos)) nodes
         sortedIds   = (view objectId) <$> sortedNodes
-        newOrder    = id : (delete id sortedIds)
-    inRegistry $ forM_ (zip newOrder nats) $ \(id, ix) -> do
+        newOrder    = wid : (delete wid sortedIds)
+    inRegistry $ forM_ (zip newOrder nats) $ \(wid, ix) -> do
         let newZPos = negate $ (fromIntegral ix) / 100.0
-        UICmd.update id $ Model.zPos .~ newZPos
+        UICmd.update wid $ Model.zPos .~ newZPos
 
 updateNodeZOrder :: Command Global.State ()
 updateNodeZOrder = do
     nodes <- allNodes
     let sortedNodes = sortBy (comparing $ negate . (view $ widget . Model.zPos)) nodes
         sortedIds   = (view objectId) <$> sortedNodes
-    inRegistry $ forM_ (zip sortedIds nats) $ \(id, ix) -> do
+    inRegistry $ forM_ (zip sortedIds nats) $ \(wid, ix) -> do
         let newZPos = negate $ (fromIntegral ix) / 100.0
-        UICmd.update id $ Model.zPos .~ newZPos
+        UICmd.update wid $ Model.zPos .~ newZPos
 
 updateConnections :: Command Global.State ()
 updateConnections = do
@@ -111,7 +111,7 @@ updateConnectionsForNodes :: [NodeId] -> Command Global.State ()
 updateConnectionsForNodes nodes = do
     connections <- uses (Global.graph . Graph.connectionsMap) HashMap.toList
     let nodes' = Set.fromList nodes
-        connectionsToUpdate = [id | (id, conn) <- connections, (    (conn ^. Connection.src . PortRef.srcNodeId) `Set.member` nodes'
+        connectionsToUpdate = [wid | (wid, conn) <- connections, (    (conn ^. Connection.src . PortRef.srcNodeId) `Set.member` nodes'
                                                                  || (conn ^. Connection.dst . PortRef.dstNodeId) `Set.member` nodes') ]
     mapM_ updateConnection connectionsToUpdate
 

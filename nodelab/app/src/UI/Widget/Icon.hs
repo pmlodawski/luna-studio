@@ -35,14 +35,14 @@ setIcon :: Model.Icon -> Icon -> IO ()
 setIcon model widget = setIcon' widget $ lazyTextToJSString $ model ^. Model.shader
 
 instance UIDisplayObject Model.Icon where
-    createUI parentId id model = do
-        widget   <- create id model
+    createUI parentId wid model = do
+        widget   <- create wid model
         parent   <- UI.lookup parentId :: IO Widget.GenericWidget
-        UI.register id widget
+        UI.register wid widget
         Widget.add widget parent
 
-    updateUI id old model = do
-        widget <- UI.lookup id :: IO Icon
+    updateUI wid old model = do
+        widget <- UI.lookup wid :: IO Icon
 
         whenChanged old model Model.shader    $ setIcon model widget
 

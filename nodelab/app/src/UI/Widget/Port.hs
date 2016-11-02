@@ -41,41 +41,41 @@ isSelf (InPortRef' (InPortRef _ Self)) = True
 isSelf _ = False
 
 create :: WidgetId -> Model.Port -> IO Port
-create id model = do
-    port <- create' id (isSelf $ model ^. Model.portRef)
+create wid model = do
+    port <- create' wid (isSelf $ model ^. Model.portRef)
     setAngle     port  (model ^. Model.angle) (model ^. Model.portCount) (model ^. Model.isOnly)
     setColor     port $ model ^. Model.color
     setHighlight port $ model ^. Model.highlight
     return port
 
 instance UIDisplayObject Model.Port where
-    createUI parentId id model = do
-        widget  <- create id model
+    createUI parentId wid model = do
+        widget  <- create wid model
         parent  <- UIR.lookup parentId :: IO GenericWidget
-        UIR.register id widget
+        UIR.register wid widget
         Widget.add widget  parent
 
-    updateUI id _old model = do
-        port <- UIR.lookup id :: IO Port
+    updateUI wid _old model = do
+        port <- UIR.lookup wid :: IO Port
         setAngle     port  (model ^. Model.angle) (model ^. Model.portCount) (model ^. Model.isOnly)
         setColor     port $ model ^. Model.color
         setHighlight port $ model ^. Model.highlight
 
 toNodeId :: WidgetId -> Command UIRegistry.State WidgetId
-toNodeId id = UICmd.parent id >>= UICmd.parent
+toNodeId wid = UICmd.parent wid >>= UICmd.parent
 
 onMouseOver, onMouseOut :: WidgetId -> Command Global.State ()
-onMouseOver id = inRegistry $ do
-    UICmd.update_ id $ Model.highlight .~ True
-    nodeId <- toNodeId id
+onMouseOver wid = inRegistry $ do
+    UICmd.update_ wid $ Model.highlight .~ True
+    nodeId <- toNodeId wid
     Node.showHidePortLabels True nodeId
-onMouseOut  id = inRegistry $ do
-    UICmd.update_ id $ Model.highlight .~ False
-    nodeId <- toNodeId id
+onMouseOut  wid = inRegistry $ do
+    UICmd.update_ wid $ Model.highlight .~ False
+    nodeId <- toNodeId wid
     Node.showHidePortLabels False nodeId
 
-selectNode evt _ id = do
-    nodeId <- inRegistry $ toNodeId id
+selectNode evt _ wid = do
+    nodeId <- inRegistry $ toNodeId wid
     Node.selectNode evt nodeId
 
 widgetHandlers :: UIHandlers Global.State

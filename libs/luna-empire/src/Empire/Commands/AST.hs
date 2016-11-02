@@ -1,59 +1,59 @@
 {-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Empire.Commands.AST where
 
-import           Control.Monad.Except                    (runExceptT)
+import           Control.Arrow                     (second)
+import           Control.Monad.Except              (runExceptT)
 import           Control.Monad.State
-import           Control.Arrow                           (second)
-import           Data.Graph                              (Inputs (..), source)
-import           Data.HMap.Lazy                          (TypeKey (..))
-import qualified Data.HMap.Lazy                          as HMap
-import           Data.Layer_OLD.Cover_OLD                (uncover)
-import           Data.Maybe                              (catMaybes)
-import           Data.Prop                               (prop, ( # ))
-import           Data.Record                             (ANY (..), caseTest, of')
-import           Prologue                                hiding (( # ))
+import           Data.Graph                        (Inputs (..), source)
+import           Data.HMap.Lazy                    (TypeKey (..))
+import qualified Data.HMap.Lazy                    as HMap
+import           Data.Layer_OLD.Cover_OLD          (uncover)
+import           Data.Maybe                        (catMaybes)
+import           Data.Prop                         (prop, ( # ))
+import           Data.Record                       (ANY (..), caseTest, of')
+import           Prologue                          hiding (( # ))
 
-import           Empire.API.Data.DefaultValue            (PortDefault, Value (..))
-import qualified Empire.API.Data.Error                   as APIError
-import           Empire.API.Data.Node                    (NodeId)
-import           Empire.API.Data.NodeMeta                (NodeMeta)
-import           Empire.API.Data.TypeRep                 (TypeRep)
-import           Empire.Data.AST                         (AST, ASTNode, NodeRef)
-import           Empire.Data.NodeMarker                  (NodeMarker (..))
+import           Empire.API.Data.DefaultValue      (PortDefault, Value (..))
+import qualified Empire.API.Data.Error             as APIError
+import           Empire.API.Data.Node              (NodeId)
+import           Empire.API.Data.NodeMeta          (NodeMeta)
+import           Empire.API.Data.TypeRep           (TypeRep)
+import           Empire.Data.AST                   (AST, ASTNode, NodeRef)
+import           Empire.Data.NodeMarker            (NodeMarker (..))
 import           Empire.Empire
 
-import           Empire.ASTOp                            (ASTOp, runASTOp)
-import qualified Empire.ASTOps.Builder                   as ASTBuilder
-import qualified Empire.ASTOps.Parse                     as Parser
-import qualified Empire.ASTOps.Print                     as Printer
-import           Empire.ASTOps.Remove                    (safeRemove)
+import           Empire.ASTOp                      (ASTOp, runASTOp)
+import qualified Empire.ASTOps.Builder             as ASTBuilder
+import qualified Empire.ASTOps.Parse               as Parser
+import qualified Empire.ASTOps.Print               as Printer
+import           Empire.ASTOps.Remove              (safeRemove)
 
-import           Empire.Utils.TextResult                 (nodeValueToText)
+import           Empire.Utils.TextResult           (nodeValueToText)
 
-import           Luna.Pretty.GraphViz                    (renderAndOpen)
+import           Luna.Pretty.GraphViz              (renderAndOpen)
 
-import           Luna.Syntax.Model.Network.Builder       (Meta (..), TCData (..), Type (..), tcErrors)
-import qualified Luna.Syntax.Model.Network.Builder       as Builder
-import           Old.Luna.Syntax.Term.Class              (Cons (..), Unify (..))
-import qualified Old.Luna.Syntax.Term.Expr.Lit           as Lit
+import           Luna.Syntax.Model.Network.Builder (Meta (..), TCData (..), Type (..), tcErrors)
+import qualified Luna.Syntax.Model.Network.Builder as Builder
+import           Old.Luna.Syntax.Term.Class        (Cons (..), Unify (..))
+import qualified Old.Luna.Syntax.Term.Expr.Lit     as Lit
 
-import           Luna.Compilation.Error                  as TCError
+import           Luna.Compilation.Error            as TCError
 
-import           Luna.Interpreter.Layer                  (InterpreterData (..))
-import qualified Luna.Interpreter.Value                  as Value
-import           Luna.Interpreter.Value                  (toExceptIO, unsafeFromData, Data, attachListener)
-import qualified Luna.Interpreter.Layer                  as Interpreter
+import           Luna.Interpreter.Layer            (InterpreterData (..))
+import qualified Luna.Interpreter.Layer            as Interpreter
+import           Luna.Interpreter.Value            (Data, attachListener, toExceptIO, unsafeFromData)
+import qualified Luna.Interpreter.Value            as Value
 
-import           Empire.Commands.Graphics                (fromFigure, fromGeoComponent, fromGeometry, fromGraphics, fromLayer, fromMaterial,
-                                                          fromPrimitive, fromShape, fromSurface)
+import           Empire.Commands.Graphics          (fromMaterial)
 
 
 -- TODO: This might deserve rewriting to some more general solution
-import           Luna.Interpreter.Charts                 (autoScatterChartInt, autoScatterChartDouble, autoScatterChartIntTuple, autoScatterChartDoubleTuple)
-import qualified Graphics.API                            as G
+import qualified Graphics.API                      as G
+import           Luna.Interpreter.Charts           (autoScatterChartDouble, autoScatterChartDoubleTuple, autoScatterChartInt,
+                                                    autoScatterChartIntTuple)
 
 metaKey :: TypeKey NodeMeta
 metaKey = TypeKey

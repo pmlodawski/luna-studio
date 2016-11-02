@@ -26,12 +26,12 @@ setLabel :: Model.ContinuousNumber -> Number -> IO ()
 setLabel model slider = setLabel' slider $ lazyTextToJSString $ model ^. Model.label
 
 instance UIDisplayObject Model.ContinuousNumber where
-    createUI parentId id model = do
-        slider   <- createNumber id model
+    createUI parentId wid model = do
+        slider   <- createNumber wid model
         parent <- UI.lookup parentId :: IO Widget.GenericWidget
-        UI.register id slider
+        UI.register wid slider
         Widget.add slider parent
 
-    updateUI id old model = do
-        slider <- UI.lookup id :: IO Number
+    updateUI wid old model = do
+        slider <- UI.lookup wid :: IO Number
         whenChanged old model Model.label $ setLabel model slider
