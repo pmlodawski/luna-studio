@@ -208,13 +208,13 @@ customEventHandler  = AddHandler $ \h -> do
 copyClipboardHandler :: AddHandler Event
 copyClipboardHandler =
   AddHandler $ \h -> do
-    Clipboard.registerCopyCallback $ \jsval -> do
+    Clipboard.registerCopyCallback $ \jsval ->
       liftIO . h $ Clipboard $ Clipboard.Copy
 
 pasteClipboardHandler :: AddHandler Event
 pasteClipboardHandler =
   AddHandler $ \h -> do
-    Clipboard.registerPasteCallback $ \jsval -> do
+    Clipboard.registerPasteCallback $ \jsval ->
       liftIO . h $ Clipboard $ Clipboard.Paste (lazyTextFromJSString $ pFromJSVal jsval)
 
 -- copyClipboardHandler :: AddHandler Event

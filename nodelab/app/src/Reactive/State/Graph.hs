@@ -46,7 +46,7 @@ import qualified Data.Map.Strict            as Map
 import qualified Data.Set                   as Set
 import           Data.UUID.Types            (UUID)
 
-import           Data.Aeson
+import           Data.Aeson                 hiding ((.:))
 import           Empire.API.Data.Connection (Connection (..), ConnectionId)
 import qualified Empire.API.Data.Connection as Connection
 import           Empire.API.Data.Input      (Input)
@@ -185,20 +185,20 @@ connectionsContainingNode nid state = filter (containsNode nid) $ getConnections
 
 connectionsContainingNodes :: Set.Set NodeId -> State -> [Connection]
 connectionsContainingNodes nodeIds state = do
-  let connections' = filter ((flip Set.member nodeIds) . (^. PortRef.srcNodeId) . (^. Connection.src)) (getConnections state)
-  filter ((flip Set.member nodeIds) . (^. PortRef.srcNodeId) . (^. Connection.src)) connections'
+  let connections' = filter ((flip Set.member nodeIds) . (view $ Connection.src . PortRef.srcNodeId)) $ getConnections state
+  filter ((flip Set.member nodeIds) . (view $ Connection.src . PortRef.srcNodeId)) connections'
 
 connectionIdsContainingNode :: NodeId -> State -> [ConnectionId]
 connectionIdsContainingNode nid state = (view Connection.connectionId) <$> connectionsContainingNode nid state
 
 connectionIdsContainingNodes :: Set.Set NodeId -> State -> [ConnectionId]
-connectionIdsContainingNodes nodeIds state = (^. Connection.connectionId) <$> connectionsContainingNodes nodeIds state
+connectionIdsContainingNodes nodeIds state = (view Connection.connectionId) <$> connectionsContainingNodes nodeIds state
 
 hasConnections :: NodeId -> State -> Bool
-hasConnections nodeId state = not . null $ connectionsContainingNode nodeId state
+hasConnections = (not . null) .: connectionsContainingNode
 
 separateSubgraph :: [NodeId] -> State -> Skeleton
 separateSubgraph nodeIds' state = do
   let nodeIds = Set.fromList nodeIds'
-  let nodes = filter ((flip Set.member nodeIds) . (^. Node.nodeId)) (getNodes state)
+      nodes   = filter ((flip Set.member nodeIds) . (view Node.nodeId)) $ getNodes state
   Skeleton nodes (connectionsContainingNodes nodeIds state)
