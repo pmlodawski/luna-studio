@@ -109,6 +109,13 @@ data Skeleton = Skeleton { _nodesList       :: [Node]
 makeLenses ''Skeleton
 instance ToJSON Skeleton
 
+data Skeleton = Skeleton { _nodesList       :: [Node]
+                         , _connectionsList :: [Connection]
+                         } deriving (Show, Eq, Generic)
+
+makeLenses ''Skeleton
+instance ToJSON Skeleton
+
 connectionToNodeIds :: Connection -> (NodeId, NodeId)
 connectionToNodeIds conn = ( conn ^. Connection.src . PortRef.srcNodeId
                            , conn ^. Connection.dst . PortRef.dstNodeId)
@@ -118,6 +125,9 @@ nodes = to getNodes
 
 nodeWidgets :: Getter State [WidgetId]
 nodeWidgets = to $ HashMap.elems . view nodeWidgetsMap
+
+connections :: Getter State [Connection]
+connections = to getConnections
 
 connections :: Getter State [Connection]
 connections = to getConnections
@@ -188,11 +198,19 @@ connectionsContainingNodes nodeIds state = do
   let connections' = filter ((flip Set.member nodeIds) . (view $ Connection.src . PortRef.srcNodeId)) $ getConnections state
   filter ((flip Set.member nodeIds) . (view $ Connection.src . PortRef.srcNodeId)) connections'
 
+connectionsContainingNodes :: Set.Set NodeId -> State -> [Connection]
+connectionsContainingNodes nodeIds state = do
+  let connections' = filter ((flip Set.member nodeIds) . (^. PortRef.srcNodeId) . (^. Connection.src)) (getConnections state)
+  filter ((flip Set.member nodeIds) . (^. PortRef.srcNodeId) . (^. Connection.src)) connections'
+
 connectionIdsContainingNode :: NodeId -> State -> [ConnectionId]
 connectionIdsContainingNode nid state = (view Connection.connectionId) <$> connectionsContainingNode nid state
 
 connectionIdsContainingNodes :: Set.Set NodeId -> State -> [ConnectionId]
 connectionIdsContainingNodes nodeIds state = (view Connection.connectionId) <$> connectionsContainingNodes nodeIds state
+
+connectionIdsContainingNodes :: Set.Set NodeId -> State -> [ConnectionId]
+connectionIdsContainingNodes nodeIds state = (^. Connection.connectionId) <$> connectionsContainingNodes nodeIds state
 
 hasConnections :: NodeId -> State -> Bool
 hasConnections = (not . null) .: connectionsContainingNode
