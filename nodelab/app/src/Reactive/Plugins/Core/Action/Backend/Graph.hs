@@ -62,13 +62,11 @@ toAction (Event.Batch ev) = Just $ case ev of
             when (isGoodLocation && not isGraphLoaded) $ do
                 let nodes       = result ^. GetProgram.graph . Graph.nodes
                     connections = result ^. GetProgram.graph . Graph.connections
-                    inputs      = result ^. GetProgram.graph . Graph.inputs
-                    outputs     = result ^. GetProgram.graph . Graph.outputs
                     code        = result ^. GetProgram.code
                     nsData      = result ^. GetProgram.nodeSearcherData
 
                 Global.workspace . Workspace.nodeSearcherData .= nsData
-                renderGraph nodes connections inputs outputs
+                renderGraph nodes connections
                 autoZoom
                 performIO $ UI.setText code
                 Global.workspace . Workspace.isGraphLoaded .= True

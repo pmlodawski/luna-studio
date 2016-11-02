@@ -4,6 +4,7 @@ module Reactive.Commands.Graph.Render
 
 import           Utils.PreludePlus
 
+import           Control.Monad                     (msum)
 import qualified Data.HashMap.Lazy                 as HashMap
 import qualified Data.IntMap.Lazy                  as IntMap
 
@@ -31,13 +32,24 @@ fastAddNodes nodes = do
     Global.graph . Graph.nodesMap .= (HashMap.fromList $ nodeIds `zip` nodes)
     mapM_ registerNode nodes
 
-renderGraph :: [Node] -> [(OutPortRef, InPortRef)] -> [Input] -> Output -> Command State ()
-renderGraph nodes edges inputs outputs = do
+splitNodesAndEdges :: [Node] -> ([Input], Maybe Output, [Node])
+splitNodesAndEdges allNodes = (inputEdge, outputEdge, nodes) where
+    inputEdge  = fromMaybe def $ msum mayInputEdges
+    outputEdge = msum mayOutputEdges
+    (mayInputEdges, mayOutputEdges, nodes) = splitNodesAndEdges' allNodes (def, def, def)
+    splitNodesAndEdges' [] r = r
+    splitNodesAndEdges' (node:t) (i, o, n) = splitNodesAndEdges' t $ case node ^. Node.nodeType of
+        Node.InputEdge inputs  -> (Just inputs : i, o, n)
+        Node.OutputEdge output -> (i, Just output : o, n)
+        _ -> (i, o, node:n)
+
+renderGraph :: [Node] -> [(OutPortRef, InPortRef)] -> Command State ()
+renderGraph allNodes connections = do
+    let (inputs, outputs, nodes) = splitNodesAndEdges allNodes
     fastAddNodes nodes
-    mapM_ (uncurry localConnectNodes) edges
+    mapM_ (uncurry localConnectNodes) connections
     addInputs inputs
-    addOutputs outputs
-    --TODO add inputs and outputs widgets
+    withJust outputs addOutputs
     updateConnections
     updateNodeZOrder
 
