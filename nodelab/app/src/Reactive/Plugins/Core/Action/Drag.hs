@@ -17,7 +17,7 @@ import qualified Event.Mouse                       as Mouse
 
 import qualified Reactive.Commands.Batch           as BatchCmd
 import           Reactive.Commands.Command         (Command)
-import           Reactive.Commands.Graph           (allNodes, updateConnectionsForNodes)
+import           Reactive.Commands.Graph           (allNodes, updateConnectionsForNodes, nodeIdToWidgetId)
 import           Reactive.Commands.Graph.Selection (selectedNodes)
 import qualified Reactive.Commands.UIRegistry      as UICmd
 import qualified Reactive.State.Camera             as Camera
@@ -28,6 +28,8 @@ import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph
 import qualified Reactive.State.UIRegistry         as UIRegistry
 
+import           Object.Widget                     (Position)
+import qualified Object.Widget                     as Widget
 import           Object.Widget.Label               (Label)
 import qualified Object.Widget.Node                as Model
 
@@ -38,7 +40,8 @@ import qualified Empire.API.Data.Node              as Node
 
 toAction :: Event -> Maybe (Command State ())
 toAction (Mouse _ (Mouse.Event Mouse.Pressed  pos Mouse.LeftButton (KeyMods False False False False) (Just _))) = Just $ startDrag pos
-toAction (Mouse _ (Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ handleMove pos
+toAction (Mouse _ (Mouse.Event Mouse.Moved    pos Mouse.LeftButton (KeyMods False False False False) _))        = Just $ handleMove pos False
+toAction (Mouse _ (Mouse.Event Mouse.Moved    pos Mouse.LeftButton (KeyMods True  False False False) _))        = Just $ handleMove pos True
 toAction (Mouse _ (Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just stopDrag
 toAction _ = Nothing
 
@@ -60,33 +63,74 @@ isNodeLabelUnderCursor = fromMaybe False <$> runMaybeT act where
         exId <- lift $ Node.expressionId p
         return $ wid == exId
 
+getNodePosUnderCursor :: Command UIRegistry.State (Maybe Position)
+getNodePosUnderCursor = runMaybeT $ do
+    (Just id) <- lift $ use UIRegistry.widgetOver
+    (Just w ) <- lift $ (UIRegistry.lookupTypedM id :: Command UIRegistry.State (Maybe (WidgetFile Model.Node)))
+    return $ w ^. Widget.widget . Model.position
+
+getNodePosLabelUnderCursor :: Command UIRegistry.State (Maybe Position)
+getNodePosLabelUnderCursor = runMaybeT act >>= return . join where
+    act = do
+        (Just id) <- lift $ use UIRegistry.widgetOver
+        (Just w)  <- lift $ (UIRegistry.lookupTypedM id :: Command UIRegistry.State (Maybe (WidgetFile Label)))
+        (Just p)  <- return $ w ^. parent
+        (Just n)  <- lift $ (UIRegistry.lookupTypedM p :: Command UIRegistry.State (Maybe (WidgetFile Model.Node)))
+        exId <- lift $ Node.expressionId p
+        return $ if id == exId
+            then Just $ n ^. Widget.widget . Model.position
+            else Nothing
+
 startDrag :: Vector2 Int -> Command State ()
 startDrag coord = do
-    shouldDrag  <- zoom Global.uiRegistry isNodeUnderCursor
-    shouldDrag' <- zoom Global.uiRegistry isNodeLabelUnderCursor
-    when (shouldDrag || shouldDrag') $
-        Global.drag . Drag.history ?= DragHistory coord coord coord
+    nodePos     <- zoom Global.uiRegistry getNodePosUnderCursor
+    nodePos'    <- zoom Global.uiRegistry getNodePosLabelUnderCursor
+    withJust (nodePos `mplus` nodePos') $ \widgetPos -> do
+        Global.drag . Drag.history ?= DragHistory coord coord coord widgetPos
 
-handleMove :: Vector2 Int -> Command State ()
-handleMove coord = do
+gridSize = 30
+
+snapCoord :: Double -> Double
+snapCoord p = fromIntegral . (* gridSize) . round $ p / fromIntegral gridSize
+
+snap :: Vector2 Double -> Vector2 Double
+snap (Vector2 x y) = Vector2 x' y' where
+  x' = snapCoord x
+  y' = snapCoord y
+
+handleMove :: Vector2 Int -> Bool -> Command State ()
+handleMove coord snapped = do
+    factor <- use $ Global.camera . Camera.camera . Camera.factor
     dragHistory <- use $ Global.drag . Drag.history
-    withJust dragHistory $ \(DragHistory start _ current) -> do
-        Global.drag . Drag.history ?= DragHistory start current coord
-        moveNodes $ coord - current
+    withJust dragHistory $ \(DragHistory start previous current widgetPos) -> do
+        let delta = coord - current
+            deltaWs = Camera.scaledScreenToWorkspace factor delta
+            newNodePos = widgetPos + deltaWs
+            newNodePosSnapped = snap newNodePos
+            newDeltaWsSnapped = newNodePosSnapped - widgetPos
+        if snapped then do
+            when (lengthSquared newDeltaWsSnapped > 0.01) $ do
+                 moveNodes newDeltaWsSnapped
+                 Global.drag . Drag.history ?= DragHistory start current coord newNodePosSnapped
+        else do
+            moveNodes deltaWs
+            Global.drag . Drag.history ?= DragHistory start current coord newNodePos
 
-moveNodes :: Vector2 Int -> Command State ()
+moveNodes :: Vector2 Double -> Command State ()
 moveNodes delta = do
     widgets <- selectedNodes
-    delta'  <- scaledDelta delta
-    let selectedIds = (^. objectId) <$> widgets
-    forM_ selectedIds $ \wid -> zoom Global.uiRegistry $ UICmd.moveBy wid delta'
-    updateConnectionsForNodes $ view (widget . Model.nodeId) <$> widgets
+    let selectedIdsWithPos = (\w -> (w ^. widget . Model.nodeId , w ^. widget . widgetPosition)) <$> widgets --selectedIds = (^. objectId) <$> widgets
+    forM_ selectedIdsWithPos $ \(id, pos) -> do
+        widgetIdMay <- nodeIdToWidgetId id
+        withJust widgetIdMay $ \widgetId ->
+            zoom Global.uiRegistry $ UICmd.move widgetId (pos + delta)
+    updateConnectionsForNodes $ (view $ widget . Model.nodeId) <$> widgets
 
 stopDrag :: Command State ()
 stopDrag = do
     dragHistory <- use $ Global.drag . Drag.history
 
-    withJust dragHistory $ \(DragHistory start current _) -> do
+    withJust dragHistory $ \(DragHistory start current _ _) -> do
         Global.drag . Drag.history .= Nothing
         when (start /= current) $ do
             widgets <- allNodes
@@ -100,8 +144,3 @@ stopDrag = do
                 return $ (wid, ) <$> newMeta
             BatchCmd.updateNodeMeta $ catMaybes updates
             updateConnectionsForNodes $ fst <$> nodesToUpdate
-
-scaledDelta :: Vector2 Int -> Command State (Vector2 Double)
-scaledDelta delta = do
-    factor <- use $ Global.camera . Camera.camera . Camera.factor
-    return $ (/ factor) . fromIntegral <$> delta
