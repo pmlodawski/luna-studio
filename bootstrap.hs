@@ -66,8 +66,6 @@ installBrunch = do
 fedoraPackages :: [T.Text]
 fedoraPackages = [
       "supervisor"
-    , "protobuf"
-    , "protobuf-compiler"
     , "pkgconfig"
     , "zeromq-devel"
     , "ncurses-devel"
@@ -77,7 +75,6 @@ fedoraPackages = [
 brewPackages :: [T.Text]
 brewPackages = [
       "supervisor"
-    , "protobuf"
     , "pkg-config"
     , "zmq"
     ]
@@ -148,9 +145,6 @@ main = do
         chdir ("build" </> "backend") $ cmd "stack" "setup"
         chdir "nodelab" $ cmd "stack" "setup"
 
-        echo "genproto"
-        mkdir_p $ "dist" </> "proto"
-        silently $ bash "./scripts/genproto" []
         bash "./scripts/gencabal" []
 
         chdir "nodelab" $ do
