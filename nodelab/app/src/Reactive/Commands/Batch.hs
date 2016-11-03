@@ -64,8 +64,8 @@ renameNode = withWorkspace .:  BatchCmd.renameNode
 setCode :: NodeId -> Text -> Command State ()
 setCode = withWorkspace .:  BatchCmd.setCode
 
-removeNode :: [NodeId] -> Command State ()
-removeNode = withWorkspace . BatchCmd.removeNode
+removeNodes :: [NodeId] -> Command State ()
+removeNodes = withWorkspace . BatchCmd.removeNodes
 
 connectNodes :: OutPortRef -> InPortRef -> Command State ()
 connectNodes src dst = do
@@ -113,4 +113,3 @@ importProject = withUUID . BatchCmd.importProject
 
 dumpGraphViz :: Command State ()
 dumpGraphViz = withWorkspace BatchCmd.dumpGraphViz
-

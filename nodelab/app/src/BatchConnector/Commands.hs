@@ -73,8 +73,8 @@ renameNode nid name w uuid = sendRequest uuid $ withLibrary w RenameNode.Request
 setCode :: NodeId -> Text -> Workspace -> UUID -> IO ()
 setCode nid newCode w uuid = sendRequest uuid $ withLibrary w SetCode.Request nid newCode
 
-removeNode :: [NodeId] -> Workspace -> UUID ->  IO ()
-removeNode nodeIds workspace uuid = sendRequest uuid $ withLibrary workspace RemoveNode.Request nodeIds
+removeNodes :: [NodeId] -> Workspace -> UUID ->  IO ()
+removeNodes nodeIds workspace uuid = sendRequest uuid $ withLibrary workspace RemoveNode.Request nodeIds
 
 connectNodes :: OutPortRef -> InPortRef -> Workspace -> UUID -> IO ()
 connectNodes src dst workspace uuid = sendRequest uuid $ (withLibrary workspace Connect.Request) src dst

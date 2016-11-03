@@ -29,7 +29,7 @@ removeSelectedNodes = do
 
 performRemoval :: [NodeId] -> Command State ()
 performRemoval nodeIds = do
-    BatchCmd.removeNode nodeIds
+    BatchCmd.removeNodes nodeIds
     GA.sendEvent $ GA.RemoveNode $ length nodeIds
 
 localRemoveNodes :: [NodeId] -> Command State ()

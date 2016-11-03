@@ -11,7 +11,7 @@ import           Event.Keyboard                              (KeyMods (..))
 import           GHCJS.Types                                 (JSString)
 import qualified Object.Widget                               as Widget
 import qualified Object.Widget.Node                          as UINode
-import           Reactive.Commands.Batch                     (removeNode)
+import           Reactive.Commands.Batch                     (removeNodes)
 import           Reactive.Commands.Command                   (Command, performIO)
 import           Reactive.Commands.Graph.Selection           (selectedNodes)
 import qualified Reactive.State.Global                       as Global
@@ -41,7 +41,7 @@ cutSelectionToClipboard = do
   performIO $ putStrLn "Cut launched."
   copySelectionToClipboard
   nodeIds <- map (view $ Widget.widget . UINode.nodeId) <$> selectedNodes
-  removeNode nodeIds
+  removeNodes nodeIds
 
 
 pasteFromClipboard :: Text -> Command State ()
