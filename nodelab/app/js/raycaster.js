@@ -17,8 +17,8 @@ var cachedWidth  = 0;
 var cachedHeight = 0;
 
 function cacheMap() {
-  var width  = $$.renderer.getSize().width  * $$.renderer.getPixelRatio(),
-      height = $$.renderer.getSize().height * $$.renderer.getPixelRatio();
+  var width  = Math.floor($$.renderer.getSize().width  * $$.renderer.getPixelRatio()),
+      height = Math.floor($$.renderer.getSize().height * $$.renderer.getPixelRatio());
   if (cachedWidth !== width || cachedHeight !== height)
       cachedMap = new Uint8Array(4 * width * height);
   cachedWidth  = width;
@@ -27,8 +27,8 @@ function cacheMap() {
 }
 
 function getMapPixelAtCached(x, y) {
-  x = x * $$.renderer.getPixelRatio();
-  y = y * $$.renderer.getPixelRatio();
+  x = Math.floor(x * $$.renderer.getPixelRatio());
+  y = Math.floor(y * $$.renderer.getPixelRatio());
   var offset = 4 * (cachedWidth * (cachedHeight - y - 1) + x);
   return [ cachedMap[offset + 0]
          , cachedMap[offset + 1]

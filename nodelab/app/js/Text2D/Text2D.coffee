@@ -63,7 +63,9 @@ class Text2D extends THREE.Object3D
   setZoom: (zoom) ->
     if (getTopParent this) == $$.sceneHUD
       zoom = 1
-    if @zoom != zoom
+    dpr = @canvas.calculateDPR()
+
+    if @zoom != zoom || dpr != @canvas.dpr
       @zoom = zoom
       @updateText()
 
