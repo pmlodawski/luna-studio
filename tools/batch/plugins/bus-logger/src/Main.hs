@@ -14,7 +14,7 @@ import           Flowbox.Bus.Logger.Cmd      (Cmd)
 import qualified Flowbox.Bus.Logger.Cmd      as Cmd
 import qualified Flowbox.Bus.Logger.Logger   as Logger
 import qualified Flowbox.Bus.Logger.Version  as Version
-import qualified Flowbox.Config.Config       as Config
+import qualified ZMQ.Bus.Config       as Config
 import           Flowbox.Options.Applicative hiding (info)
 import qualified Flowbox.Options.Applicative as Opt
 import           Flowbox.Prelude             hiding (switch)

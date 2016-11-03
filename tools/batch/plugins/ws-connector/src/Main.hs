@@ -7,12 +7,12 @@
 
 module Main where
 
-import qualified Flowbox.Config.Config       as Config
+import qualified ZMQ.Bus.Config       as Config
 import           Flowbox.Options.Applicative hiding (info)
 import qualified Flowbox.Options.Applicative as Opt
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified FlowboxData.Config.Config   as WSConfigLoader
+import qualified ZMQ.Bus.WS.Config   as WSConfigLoader
 import           WSConnector.Cmd             (Cmd (..))
 import qualified WSConnector.Version         as Version
 import qualified WSConnector.WSConfig        as WSConfig

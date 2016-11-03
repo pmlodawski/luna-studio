@@ -27,7 +27,7 @@ Executable broker
                     containers,
                     zmq-bus,
                     zmq-rpc,
-                    flowbox-config,
+                    zmq-bus-config,
                     flowbox-utils,
                     transformers,
                     protocol-buffers,

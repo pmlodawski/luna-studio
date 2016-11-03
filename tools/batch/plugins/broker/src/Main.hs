@@ -17,7 +17,7 @@ import qualified ZMQ.Bus.Broker.Version              as Version
 import qualified ZMQ.Bus.Control.BusCtx          as BusCtx
 import qualified ZMQ.Bus.Control.Handler.Handler as Handler
 import qualified ZMQ.Bus.EndPoint                as EP
-import qualified Flowbox.Config.Config               as Config
+import qualified ZMQ.Bus.Config               as Config
 import           Flowbox.Options.Applicative         hiding (info)
 import qualified Flowbox.Options.Applicative         as Opt
 import           Flowbox.Prelude                     hiding (error, switch)

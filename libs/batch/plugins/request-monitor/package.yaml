@@ -15,7 +15,7 @@ dependencies:
   - either
   - errors
   - zmq-bus
-  - flowbox-config
+  - zmq-bus-config
   - flowbox-utils
   - mtl
   - optparse-applicative

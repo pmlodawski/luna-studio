@@ -40,7 +40,7 @@ import qualified Empire.Env                       as Env
 import qualified Empire.Handlers                  as Handlers
 import qualified Empire.Server.Server             as Server
 import qualified Empire.Utils                     as Utils
-import qualified Flowbox.Config.Config            as Config
+import qualified ZMQ.Bus.Config            as Config
 import           Flowbox.Prelude
 import qualified Flowbox.System.Log.Logger        as Logger
 import           ZMQ.Bus.Bus                      (Bus)

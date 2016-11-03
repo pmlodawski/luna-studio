@@ -1,14 +1,8 @@
----------------------------------------------------------------------------
--- Copyright (C) Flowbox, Inc - All Rights Reserved
--- Unauthorized copying of this file, via any medium is strictly prohibited
--- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2014
----------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE OverloadedStrings         #-}
 {-# LANGUAGE TemplateHaskell           #-}
 
-module Flowbox.Config.Config where
+module ZMQ.Bus.Config where
 
 import           Control.Applicative
 import qualified Control.Exception         as Exception

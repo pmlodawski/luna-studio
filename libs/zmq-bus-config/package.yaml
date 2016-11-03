@@ -1,0 +1,19 @@
+name:               zmq-bus-config
+version:            0.1.0.0
+author:             New Byte Order <contact@newbyteorder.com>
+
+default-extensions:
+    - DoAndIfThenElse
+    - NoImplicitPrelude
+    - TemplateHaskell
+
+dependencies:
+    - base
+    - configurator
+    - either
+    - flowbox-utils
+    - transformers
+
+library:
+    source-dirs: src
+    ghc-options: -Wall -O2

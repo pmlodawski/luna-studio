@@ -14,7 +14,7 @@ dependencies:
   - batch-lib-luna-empire
   - binary
   - zmq-bus
-  - flowbox-config
+  - zmq-bus-config
   - optparse-applicative
   - flowbox-utils
 

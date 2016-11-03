@@ -39,7 +39,7 @@ Library
                   either,
                   fgl,
                   filepath,
-                  flowbox-config,
+                  zmq-bus-config,
                   flowbox-utils,
                   ghc-prim,
                   luna-core,

@@ -9,7 +9,7 @@ import           System.Console.Docopt
 import           System.Environment        (getArgs)
 
 import qualified Empire.Monitor            as Monitor
-import qualified Flowbox.Config.Config     as Config
+import qualified ZMQ.Bus.Config     as Config
 import           Flowbox.System.Log.Logger
 import qualified ZMQ.Bus.EndPoint          as EP
 

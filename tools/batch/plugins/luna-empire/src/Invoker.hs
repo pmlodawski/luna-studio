@@ -37,7 +37,7 @@ import qualified Empire.API.Project.ListProjects  as ListProjects
 import           Empire.API.Request               (Request (..))
 import qualified Empire.API.Response              as Response
 import qualified Empire.API.Topic                 as Topic
-import qualified Flowbox.Config.Config            as Config
+import qualified ZMQ.Bus.Config            as Config
 import           Flowbox.Options.Applicative      (help, long, metavar, short)
 import qualified Flowbox.Options.Applicative      as Opt
 import           Prologue                         hiding (argument)

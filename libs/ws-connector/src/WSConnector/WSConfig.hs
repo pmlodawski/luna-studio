@@ -3,7 +3,7 @@
 module WSConnector.WSConfig where
 
 import           Flowbox.Prelude
-import qualified FlowboxData.Config.Config as FD
+import qualified ZMQ.Bus.WS.Config as FD
 
 data Config = Config { _host     :: String
                      , _port     :: Int

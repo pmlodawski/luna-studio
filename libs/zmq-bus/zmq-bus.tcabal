@@ -21,7 +21,7 @@ Library
                     containers,
                     either,
                     exceptions,
-                    flowbox-config,
+                    zmq-bus-config,
                     flowbox-utils-old,
                     MissingH,
                     monad-loops,

@@ -15,7 +15,7 @@ dependencies:
   - bytestring
   - containers
   - docopt
-  - flowbox-config
+  - zmq-bus-config
   - flowbox-utils
   - luna-empire
   - luna-empire-api

@@ -21,7 +21,7 @@ dependencies:
   - text
   - either
   - exceptions
-  - flowbox-config
+  - zmq-bus-config
   - flowbox-utils
   - mtl
   - websockets

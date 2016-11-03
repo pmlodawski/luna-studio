@@ -5,6 +5,9 @@ author:             New Byte Order <contact@newbyteorder.com>
 default-extensions:
   - NoImplicitPrelude
 
+ghc-options:
+    -Wall
+    
 dependencies:
   - base
   - binary
@@ -13,7 +16,7 @@ dependencies:
   - either
   - errors
   - zmq-bus
-  - flowbox-config
+  - zmq-bus-config
   - flowbox-utils
   - mtl
   - optparse-applicative

@@ -2,7 +2,7 @@ resolver: lts-3.14
 
 packages:
 - ../../libs/batch/plugins/luna-empire
-- ../../libs/config
+- ../../libs/zmq-bus-config
 - ../../libs/luna-empire
 - ../../libs/luna-empire-api
 - ../../libs/luna-empire-api-json

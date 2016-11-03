@@ -9,7 +9,7 @@ import           Empire.Cmd                  (Cmd)
 import qualified Empire.Cmd                  as Cmd
 import qualified Empire.Logger               as Logger
 import qualified Empire.Version              as Version
-import qualified Flowbox.Config.Config       as Config
+import qualified ZMQ.Bus.Config       as Config
 import           Flowbox.Options.Applicative (help, long, metavar, short)
 import qualified Flowbox.Options.Applicative as Opt
 import           Flowbox.System.Log.Logger
