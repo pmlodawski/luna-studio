@@ -14,6 +14,7 @@ import qualified Object.Widget.Node                          as UINode
 import           Reactive.Commands.Batch                     (removeNodes)
 import           Reactive.Commands.Command                   (Command, performIO)
 import           Reactive.Commands.Graph.Selection           (selectedNodes)
+import           Reactive.Commands.Node.Remove               (removeSelectedNodes)
 import qualified Reactive.State.Global                       as Global
 import           Reactive.State.Global                       (State)
 import           Reactive.State.GraphSkeleton                as GraphSkeleton
@@ -37,12 +38,7 @@ copySelectionToClipboard = do
   performIO $ copyStringToClipboard $ fromString $ unpack $ encode subgraph
 
 cutSelectionToClipboard :: Command State()
-cutSelectionToClipboard = do
-  performIO $ putStrLn "Cut launched."
-  copySelectionToClipboard
-  nodeIds <- map (view $ Widget.widget . UINode.nodeId) <$> selectedNodes
-  removeNodes nodeIds
-
+cutSelectionToClipboard = copySelectionToClipboard >> removeSelectedNodes
 
 pasteFromClipboard :: Text -> Command State ()
 pasteFromClipboard clipboardData = do
