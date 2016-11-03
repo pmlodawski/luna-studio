@@ -3,15 +3,14 @@
 
 module ZMQ.Bus.RPC.Server.Processor where
 
+import           Control.Error             (ExceptT, exceptT, hoistEither)
 import           Control.Monad             (liftM)
-import           Data.Either               as Either
-import qualified Data.Maybe                as Maybe
---import           Data.Typeable
 import qualified Control.Monad.Catch       as Catch
 import           Control.Monad.Trans.State (StateT)
 import           Data.Binary               (Binary)
+import           Data.Either               as Either
+import qualified Data.Maybe                as Maybe
 
-import           Flowbox.Control.Error
 import           Flowbox.Prelude           hiding (error)
 import           Flowbox.System.Log.Logger
 import           ZMQ.Bus.Data.Message      (CorrelationID, Message)

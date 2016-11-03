@@ -8,13 +8,13 @@ module ZMQ.Bus.Bus where
 
 import qualified Control.Concurrent              as Concurrent
 import qualified Control.Concurrent.Async        as Async
+import           Control.Error                   (ExceptT, hoistEither, runExceptT)
 import           Control.Monad.State
 import           Data.ByteString                 (ByteString)
 import           System.ZMQ4.Monadic             (ZMQ)
 import qualified System.ZMQ4.Monadic             as ZMQ
 
 import qualified Debug.Trace                     as T
-import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified ZMQ.Bus.Control.Handler.Methods as Methods

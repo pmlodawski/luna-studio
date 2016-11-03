@@ -21,7 +21,7 @@ Library
                     containers,
                     either,
                     errors,
-                    flowbox-utils-old,
+                    flowbox-utils,
                     mtl,
                     transformers,
                     zeromq4-haskell >= 0.6

@@ -1,11 +1,10 @@
 module ZMQ.RPC.RPC where
 
-import           Control.Exception     (SomeException, try)
-import           Control.Monad         (join)
+import           Control.Error     (ExceptT, fmapL, runExceptT)
+import           Control.Exception (SomeException, try)
+import           Control.Monad     (join)
 
-import           Flowbox.Control.Error hiding (err)
 import           Flowbox.Prelude
-
 
 
 type RPC a = ExceptT Error IO a

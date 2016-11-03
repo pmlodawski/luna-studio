@@ -20,9 +20,9 @@ Library
                     bytestring,
                     containers,
                     either,
+                    errors,
                     exceptions,
-                    zmq-bus-config,
-                    flowbox-utils-old,
+                    flowbox-utils,
                     MissingH,
                     monad-loops,
                     mtl,
@@ -31,6 +31,7 @@ Library
                     template-haskell,
                     transformers,
                     zeromq4-haskell >= 0.6,
+                    zmq-bus-config,
                     zmq-rpc
 
 Executable bus-test
@@ -41,7 +42,7 @@ Executable bus-test
     Build-Depends:  base,
                     bytestring,
                     either,
-                    flowbox-utils-old,
+                    flowbox-utils,
                     mtl,
                     transformers,
                     zeromq4-haskell,

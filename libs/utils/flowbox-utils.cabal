@@ -83,7 +83,6 @@ Library
         Data.Vector.Dynamic,
         Flowbox.Control.Applicative,
         Flowbox.Control.Concurrent,
-        Flowbox.Control.Error,
         Flowbox.Control.Guard,
         Flowbox.Control.Monad.Loops,
         Flowbox.Control.Monad.State,

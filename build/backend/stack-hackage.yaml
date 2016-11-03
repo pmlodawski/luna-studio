@@ -7,7 +7,6 @@ packages:
 - ../../libs/luna-empire-api
 - ../../libs/luna-empire-api-json
 - ../../libs/luna/typechecker
-- ../../libs/old-utils
 - ../../libs/scope-searcher
 - ../../libs/utils
 - ../../libs/ws-connector

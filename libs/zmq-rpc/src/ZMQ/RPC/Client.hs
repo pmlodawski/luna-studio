@@ -2,17 +2,16 @@
 
 module ZMQ.RPC.Client where
 
-import           System.ZMQ4.Monadic               (ZMQ)
-import qualified System.ZMQ4.Monadic               as ZMQ
-import qualified Data.Binary as Binary
-import Data.ByteString.Lazy (fromStrict, toStrict)
+import           Control.Error        (ExceptT, hoistEither)
+import qualified Data.Binary          as Binary
+import           Data.ByteString.Lazy (fromStrict, toStrict)
+import           System.ZMQ4.Monadic  (ZMQ)
+import qualified System.ZMQ4.Monadic  as ZMQ
 
-import           Flowbox.Control.Error
-import           Flowbox.Data.Convert              (decodeP)
 import           Flowbox.Prelude
-import ZMQ.RPC.Handler (Serializable)
-import ZMQ.RPC.Response (Response)
-import qualified ZMQ.RPC.Response as Response
+import           ZMQ.RPC.Handler      (Serializable)
+import           ZMQ.RPC.Response     (Response)
+import qualified ZMQ.RPC.Response     as Response
 
 
 

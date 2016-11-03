@@ -7,7 +7,6 @@ packages:
 - {extra-dep: true, location: ../../libs/batch/plugins/luna-empire}
 - {extra-dep: true, location: ../../libs/luna-empire-api-json}
 - {extra-dep: true, location: ../../libs/luna-empire-api}
-- {extra-dep: true, location: ../../libs/old-utils}
 - {extra-dep: true, location: ../../libs/scope-searcher}
 - {extra-dep: true, location: ../../libs/utils}
 - {extra-dep: true, location: ../../libs/ws-connector}

@@ -18,15 +18,15 @@ module ZMQ.Bus.RPC.Types (
     Serializable
 )where
 
-import           Control.Exception     (SomeException)
-import           Control.Monad.Catch   (MonadCatch, catch)
+import           Control.Error        (ExceptT, throwE)
+import           Control.Exception    (SomeException)
+import           Control.Monad.Catch  (MonadCatch, catch)
 import           Data.Binary
-import           Data.ByteString.Lazy  as BS (ByteString)
-import           Data.List             as L
+import           Data.ByteString.Lazy as BS (ByteString)
+import           Data.List            as L
 import           Data.Typeable
 
-import           Flowbox.Control.Error
-import           Flowbox.Prelude       hiding (Context, error)
+import           Flowbox.Prelude      hiding (Context, error)
 
 
 type FunctionName = String

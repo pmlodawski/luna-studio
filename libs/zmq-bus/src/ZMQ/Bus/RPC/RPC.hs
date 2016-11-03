@@ -3,6 +3,7 @@
 {-# LANGUAGE TupleSections   #-}
 module ZMQ.Bus.RPC.RPC where
 
+import           Control.Error             (ExceptT, runExceptT)
 import           Control.Exception         (SomeException)
 import qualified Control.Monad.Catch       as Catch
 import           Control.Monad.Trans.State
@@ -10,7 +11,6 @@ import           Data.Binary               (decode, encode)
 import qualified Data.ByteString           as B
 import qualified Data.ByteString.Lazy      as BL
 
-import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import           ZMQ.Bus.RPC.Types         (Request, Response)

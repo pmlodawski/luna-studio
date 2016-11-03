@@ -9,7 +9,6 @@ import qualified Pipes.Concurrent           as Pipes
 
 import           Control.Monad              (forever)
 import           Flowbox.Control.Concurrent (forkIO_)
-import           Flowbox.Control.Error
 import           Flowbox.Prelude            hiding (error)
 import           Flowbox.System.Log.Logger
 import qualified ZMQ.Bus.Bus                as Bus
@@ -48,9 +47,12 @@ run :: BusEndPoints -> [Topic]
 run endPoints topics = do
     (output1, input1) <- Pipes.spawn $ Pipes.bounded 1
     (output2, input2) <- Pipes.spawn $ Pipes.bounded 1
-    let forkPipesThread fun = forkIO_ $ eitherStringToM' $ Bus.runBus endPoints $ do
+    let forkPipesThread fun = forkIO_ $ eitherStringToM $ Bus.runBus endPoints $ do
                             mapM_ Bus.subscribe topics
                             BusT.runBusT $ Pipes.runEffect fun
     forkPipesThread $ produce >-> Pipes.toOutput output1
     forkPipesThread $ Pipes.fromInput input2 >-> consume
     return (input1, output2)
+
+eitherStringToM :: Monad m => m (Either String b) -> m b
+eitherStringToM action = action >>= either fail return

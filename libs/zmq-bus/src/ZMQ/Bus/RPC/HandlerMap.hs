@@ -22,6 +22,7 @@ module ZMQ.Bus.RPC.HandlerMap (
     topics
 ) where
 
+import           Control.Error              (ExceptT, fromMaybe)
 import           Control.Monad.State        (MonadState)
 import           Control.Monad.Trans.State  (StateT)
 import           Control.Monad.Trans.Writer (WriterT, runWriterT, tell)
@@ -30,7 +31,6 @@ import           Data.Binary                (Binary)
 import           Data.Map                   as X
 import qualified Data.Map                   as Map
 
-import           Flowbox.Control.Error
 import           Flowbox.Prelude            hiding (error)
 import           Flowbox.System.Log.Logger
 import           Language.Haskell.TH

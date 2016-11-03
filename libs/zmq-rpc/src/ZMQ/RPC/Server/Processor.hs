@@ -12,7 +12,6 @@ import           Data.ByteString           (ByteString)
 import           Data.ByteString.Lazy      (fromStrict, toStrict)
 import           System.ZMQ4.Monadic       (ZMQ)
 
-import           Flowbox.Control.Error     hiding (err)
 import           Flowbox.Prelude           hiding (error)
 import           Flowbox.System.Log.Logger
 import           ZMQ.RPC.Handler           (RPCHandler)
