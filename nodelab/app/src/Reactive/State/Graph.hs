@@ -15,6 +15,7 @@ module Reactive.State.Graph
     , getConnectionNodeIds
     , getConnections
     , getConnectionsMap
+    , getNodes
     , getNodesMap
     , hasConnections
     , inputsMap
@@ -31,7 +32,6 @@ module Reactive.State.Graph
     , portWidgetsMap
     , removeConnections
     , removeNode
-    , separateSubgraph
     , updateNodes
     ) where
 
@@ -101,13 +101,6 @@ makeLenses ''State
 instance ToJSON State
 instance Default State where
     def = State def def def def def def def def def
-
-data Skeleton = Skeleton { _nodesList       :: [Node]
-                         , _connectionsList :: [Connection]
-                         } deriving (Show, Eq, Generic)
-
-makeLenses ''Skeleton
-instance ToJSON Skeleton
 
 connectionToNodeIds :: Connection -> (NodeId, NodeId)
 connectionToNodeIds conn = ( conn ^. Connection.src . PortRef.srcNodeId
@@ -196,9 +189,3 @@ connectionIdsContainingNodes nodeIds state = (view Connection.connectionId) <$> 
 
 hasConnections :: NodeId -> State -> Bool
 hasConnections = (not . null) .: connectionsContainingNode
-
-separateSubgraph :: [NodeId] -> State -> Skeleton
-separateSubgraph nodeIds' state = do
-  let nodeIds = Set.fromList nodeIds'
-      nodes   = filter ((flip Set.member nodeIds) . (view Node.nodeId)) $ getNodes state
-  Skeleton nodes (connectionsContainingNodes nodeIds state)

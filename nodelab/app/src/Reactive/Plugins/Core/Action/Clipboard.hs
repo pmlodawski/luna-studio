@@ -1,22 +1,22 @@
 module Reactive.Plugins.Core.Action.Clipboard where
 
 import           Data.Aeson                                  (encode, decode)
-import           Data.ByteString.Lazy.Char8                  (pack, unpack)
-import           Empire.API.Data.PortRef                     as PortRef
+import           Data.ByteString.Lazy.Char8                  (unpack)
+import           Data.Text.Lazy                              (pack)
+import           Data.Text.Lazy.Encoding                     (encodeUtf8)
 import           Event.Event                                 (Event(..))
 import           Event.Keyboard                              (KeyMods (..))
 import qualified Event.Keyboard                              as Keyboard
 import qualified Event.Clipboard                             as Clipboard
-import           GHCJS.Foreign.Callback
-import           GHCJS.Marshal                               (toJSVal)
-import           GHCJS.Types                                 (JSString, JSVal)
+import           GHCJS.Types                                 (JSString)
 import qualified Object.Widget                               as Widget
 import qualified Object.Widget.Node                          as UINode
 import           Reactive.Commands.Command                   (Command, performIO)
 import           Reactive.Commands.Graph.Selection           (selectedNodes)
 import           Reactive.State.Global                       (State)
+import           Reactive.State.Graph                        (addNode)
 import qualified Reactive.State.Global                       as Global
-import           Reactive.State.Graph                        (separateSubgraph)
+import           Reactive.State.GraphSkeleton                as GraphSkeleton
 import           Utils.PreludePlus
 
 foreign import javascript safe "clipboard.copy($1)" copyStringToClipboard :: JSString -> IO ()
@@ -38,4 +38,7 @@ copySelectionToClipboard = do
 pasteFromClipboard :: Text -> Command State ()
 pasteFromClipboard clipboardData = do
   performIO $ putStrLn "Paste launched."
+  let skeleton = fromJust (decode $ encodeUtf8 clipboardData :: Maybe GraphSkeleton)
+      nodes = view GraphSkeleton.nodesList skeleton
+  graph <- use Global.graph
   performIO $ print clipboardData
