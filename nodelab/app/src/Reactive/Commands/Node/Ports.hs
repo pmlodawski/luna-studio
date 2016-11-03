@@ -7,7 +7,7 @@ module Reactive.Commands.Node.Ports
 import           Control.Monad.State                 hiding (State)
 import qualified Data.Map.Lazy                       as Map
 import qualified Data.Text.Lazy                      as Text
-import           Utils.PreludePlus                   hiding (wid)
+import           Utils.PreludePlus
 import           Utils.Vector
 
 import           Object.Widget                       (WidgetId)
@@ -57,9 +57,9 @@ displayPorts :: WidgetId -> Node -> Command Global.State ()
 displayPorts wid node = do
         portGroup <- inRegistry $ UICmd.get wid $ Model.elements . Model.portGroup
         oldPorts  <- inRegistry $ UICmd.children portGroup
-        oldPortWidgets <- forM oldPorts $ \wid -> inRegistry $ (UICmd.lookup wid)
+        oldPortWidgets <- forM oldPorts $ \wid' -> inRegistry $ (UICmd.lookup wid')
         let portRefs = (view PortModel.portRef) <$> oldPortWidgets
-        forM_ portRefs $ \wid -> Global.graph . Graph.portWidgetsMap . at wid .= Nothing
+        forM_ portRefs $ \wid' -> Global.graph . Graph.portWidgetsMap . at wid' .= Nothing
         inRegistry $ mapM_ UICmd.removeWidget oldPorts
 
         groupId      <- inRegistry $ Node.portControlsGroupId wid

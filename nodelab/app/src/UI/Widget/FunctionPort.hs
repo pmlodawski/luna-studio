@@ -8,7 +8,7 @@ import           GHCJS.Types                (JSVal)
 import qualified Style.Function             as Function
 
 import           Object.UITypes
-import           Object.Widget
+import           Object.Widget              hiding (parent, widget)
 import qualified Object.Widget.FunctionPort as Model
 
 import           UI.Generic                 (whenChanged)

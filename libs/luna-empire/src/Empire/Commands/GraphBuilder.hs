@@ -208,7 +208,11 @@ buildInputEdge :: Command Graph API.Node
 buildInputEdge =  --TODO implement
     return $ API.Node (fromJust $ UUID.fromString "2c3f0968-630a-45e1-b030-cff9602004d4")
                       "inputEdge"
-                      (API.InputEdge [Input "input1" ValueType.AnyType, Input "input2" ValueType.AnyType])
+                      (API.InputEdge [ Input "input1" ValueType.AnyType $
+                                            Projection 1
+                                     , Input "input2" ValueType.AnyType $
+                                            Projection 2
+                                     ])
                       False
                       def
                       def
@@ -218,7 +222,8 @@ buildOutputEdge :: Command Graph API.Node
 buildOutputEdge =
     return $ API.Node (fromJust $ UUID.fromString "19349a74-be9a-4262-b223-ab94a6d2cedd")
                       "outputEdge"
-                      (API.OutputEdge $ Output ValueType.AnyType)
+                      (API.OutputEdge $ Output ValueType.AnyType
+                                      $ Arg 1)
                       False
                       def
                       def

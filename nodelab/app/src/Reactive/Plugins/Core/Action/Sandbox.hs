@@ -14,7 +14,6 @@ import qualified Reactive.Commands.UIRegistry    as UICmd
 import           Reactive.State.UIRegistry       (addHandler, sceneGraphId)
 
 import qualified Object.Widget.CodeEditor        as CodeEditor
-import qualified Object.Widget.FunctionPort      as FunctionPort
 import qualified Object.Widget.Graphics          as G
 import qualified Object.Widget.Group             as Group
 import qualified Object.Widget.LabeledTextBox    as LabeledTextBox
@@ -44,12 +43,6 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     performIO $ putStrLn "show sandbox"
     let widget = Group.create
     parent <- UICmd.register sceneGraphId widget (Layout.verticalLayoutHandler 5.0)
-
-    let widget = FunctionPort.create FunctionPort.Input def "x" "x :: X"
-    UICmd.register_ parent widget def
-
-    let widget = FunctionPort.create FunctionPort.Output def "-> Result" "-> Result"
-    UICmd.register_ parent widget def
 
     let widget = DiscreteNumber.create (Vector2 200 20) "Discrete" 42
     UICmd.register_ parent widget def

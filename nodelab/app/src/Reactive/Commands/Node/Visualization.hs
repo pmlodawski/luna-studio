@@ -210,7 +210,7 @@ visualizeNodeValue wid visIx (Graphics (GR.Graphics layers)) = do
     visualize visIx wid create update
     where
         createLabels (GR.Layer _ _ (GR.Labels labels)) = createLabel <$> labels
-        createLabel  (GR.Label (GR.Point x y) fontSize align text) = Graphics.Label (Vector2 x y) fontSize (labelAlign align) $ Text.pack text
+        createLabel  (GR.Label (GR.Point x' y') fontSize align text) = Graphics.Label (Vector2 x' y') fontSize (labelAlign align) $ Text.pack text
         labelAlign GR.Left   = Label.Left
         labelAlign GR.Center = Label.Center
         labelAlign GR.Right  = Label.Right

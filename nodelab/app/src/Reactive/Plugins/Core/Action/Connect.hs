@@ -5,11 +5,11 @@ module Reactive.Plugins.Core.Action.Connect
 
 import           Utils.Angle                     (boundedAngle, toAngle)
 import           Utils.PreludePlus
-import           Utils.Vector
+import           Utils.Vector                    (Vector2 (Vector2), x, y)
 
-import           Object.Widget                   (WidgetFile, parent, widget, objectId, widgetPosition)
+import           Object.Widget                   (WidgetFile, parent, widget, widgetPosition)
 import qualified Object.Widget.Connection        as UIConnection
-import qualified Object.Widget.FunctionPort      as InputModel
+import qualified Object.Widget.FunctionPort      as FPModel
 import qualified Object.Widget.Node              as NodeModel
 import qualified Object.Widget.Port              as PortModel
 import           UI.Handlers.FunctionPort        ()
@@ -24,7 +24,7 @@ import           Reactive.Commands.Graph         (portRefToWidgetId)
 import           Reactive.Commands.Graph.Connect (batchConnectNodes)
 import qualified Reactive.Commands.UIRegistry    as UICmd
 import qualified Reactive.State.Camera           as Camera
-import           Reactive.State.Connect          (connectingFromEdge, connectingFromPort)
+import           Reactive.State.Connect          (Connecting (Connecting))
 import qualified Reactive.State.Connect          as Connect
 import           Reactive.State.Global           (State, inRegistry)
 import qualified Reactive.State.Global           as Global
@@ -57,10 +57,10 @@ hideCurrentConnection :: Command UIRegistry.State ()
 hideCurrentConnection = UICmd.update_ UIRegistry.currentConnectionId $ UIConnection.currentVisible .~ False
 
 getPortWidgetUnderCursor :: EventWidget -> Command UIRegistry.State (Maybe (WidgetFile PortModel.Port))
-getPortWidgetUnderCursor (EventWidget widgetId _ _) = UIRegistry.lookupTypedM widgetId
+getPortWidgetUnderCursor (EventWidget wid _ _) = UIRegistry.lookupTypedM wid
 
-getEdgeWidgetUnderCursor :: EventWidget -> Command UIRegistry.State (Maybe (WidgetFile InputModel.FunctionPort))
-getEdgeWidgetUnderCursor (EventWidget widgetId _ _) = UIRegistry.lookupTypedM widgetId
+getEdgeWidgetUnderCursor :: EventWidget -> Command UIRegistry.State (Maybe (WidgetFile FPModel.FunctionPort))
+getEdgeWidgetUnderCursor (EventWidget wid _ _) = UIRegistry.lookupTypedM wid
 
 startDragFromPort :: Mouse.EventWidget -> Command State ()
 startDragFromPort evWd = do
@@ -70,7 +70,7 @@ startDragFromPort evWd = do
         let sourceRef = model ^. PortModel.portRef
         nodeWidget <- inRegistry $ UICmd.parent $ fromJust $ file ^. parent
         sourceNodePos <- inRegistry $ UICmd.get nodeWidget NodeModel.position
-        Global.connect . Connect.connecting ?= connectingFromPort sourceRef (model ^. PortModel.angleVector) sourceNodePos
+        Global.connect . Connect.connecting ?= Connecting sourceRef (model ^. PortModel.angleVector) sourceNodePos
         zoom Global.uiRegistry $ setCurrentConnectionColor $ model ^. PortModel.color
 
 startDragFromEdge :: Mouse.EventWidget -> Command State ()
@@ -78,37 +78,27 @@ startDragFromEdge evWd = do
     sourcePortWd <- zoom Global.uiRegistry $ getEdgeWidgetUnderCursor evWd
     withJust sourcePortWd $ \file -> do
         let model = file ^. widget
-            inputWidget = file ^. objectId
-
+            inputPos = model ^. FPModel.position
+            inputHeight = model ^. FPModel.size . y
+            portRef = model ^. FPModel.portRef
         edgePos  <- inRegistry $ UICmd.get' (fromJust $ file ^. parent) widgetPosition
-        let inputPos = model ^. InputModel.position
-            inputHeight = model ^. InputModel.size . y
         portPos <- zoom Global.camera $ Camera.screenToWorkspaceM $ (fmap round $ edgePos + inputPos + Vector2 0 (inputHeight / 2)) --TODO find proper position
-        Global.connect . Connect.connecting ?= connectingFromEdge portPos
-        zoom Global.uiRegistry $ setCurrentConnectionColor $ model ^. InputModel.color
+        Global.connect . Connect.connecting ?= Connecting portRef def portPos
+        zoom Global.uiRegistry $ setCurrentConnectionColor $ model ^. FPModel.color
 
-whileConnecting :: (Connect.Connecting -> Command State ()) -> Command State ()
+whileConnecting :: (Connecting -> Command State ()) -> Command State ()
 whileConnecting run = do
     connectingMay <- use $ Global.connect . Connect.connecting
     withJust connectingMay $ \connecting -> run connecting
 
-handleMove :: Vector2 Int -> Connect.Connecting -> Command State ()
-handleMove coord (Connect.ConnectingFromPort fp) = handleMoveConnectingFromPort coord fp
-handleMove coord (Connect.ConnectingFromEdge fp) = handleMoveConnectingFromEdge coord fp
-
-handleMoveConnectingFromEdge :: Vector2 Int -> Connect.FromEdge -> Command State ()
-handleMoveConnectingFromEdge coord (Connect.FromEdge startLine) = do
-    current  <- zoom Global.camera $ Camera.screenToWorkspaceM coord
-    inRegistry $ showCurrentConnection current startLine False
-
-handleMoveConnectingFromPort :: Vector2 Int -> Connect.FromPort -> Command State ()
-handleMoveConnectingFromPort coord (Connect.FromPort sourceRef _ nodePos) = do
+handleMove :: Vector2 Int -> Connecting -> Command State ()
+handleMove coord (Connecting sourceRef _ nodePos) = do
     current <- zoom Global.camera $ Camera.screenToWorkspaceM coord
     startLine <- case sourceRef of
             (InPortRef' (InPortRef _ Self)) -> return nodePos
             _                   -> do
-                sourceWidget <- portRefToWidgetId sourceRef
-                case sourceWidget of
+                maySourceWidget <- portRefToWidgetId sourceRef
+                case maySourceWidget of
                     Just sourceWidget -> inRegistry $ do
                         newVector <- UICmd.get sourceWidget PortModel.angleVector
                         portCount <- UICmd.get sourceWidget PortModel.portCount
@@ -140,7 +130,7 @@ toValidConnection src' dst' = (normalize src' dst') >>= toOtherNode where
         | otherwise                                        = Nothing
 
 stopDrag :: Maybe Mouse.EventWidget -> Connect.Connecting -> Command State ()
-stopDrag mayEvWd connecting = do
+stopDrag mayEvWd (Connecting sourceRef _ _) = do
     Global.connect . Connect.connecting .= Nothing
     zoom Global.uiRegistry hideCurrentConnection
     withJust mayEvWd $ \evWd -> do
@@ -148,13 +138,10 @@ stopDrag mayEvWd connecting = do
         mayDestinationEdgeFile <- zoom Global.uiRegistry $ getEdgeWidgetUnderCursor evWd
         mayDestinationRef <- case (mayDestinationPortFile, mayDestinationEdgeFile) of
             (Just destinationPortFile, _) -> return $ Just $ destinationPortFile ^. widget . PortModel.portRef
-            (_, Just destinationEdgeFile) -> return $ Nothing --TODO implement
+            (_, Just destinationEdgeFile) -> return $ Just $ destinationEdgeFile ^. widget . FPModel.portRef
             _ -> return Nothing
-        withJust mayDestinationRef $ \destinationRef -> case connecting of
-            Connect.ConnectingFromEdge (Connect.FromEdge _) -> do
-                return () --TODO implement
-            Connect.ConnectingFromPort (Connect.FromPort sourceRef _ _) -> do
-                let srcDstMay = toValidConnection sourceRef destinationRef
-                withJust srcDstMay $ \(src, dst) -> do
-                    batchConnectNodes src dst
-                    GA.sendEvent $ GA.Connect GA.Manual
+        withJust mayDestinationRef $ \destinationRef -> do
+            let srcDstMay = toValidConnection sourceRef destinationRef
+            withJust srcDstMay $ \(src, dst) -> do
+                batchConnectNodes src dst
+                GA.sendEvent $ GA.Connect GA.Manual

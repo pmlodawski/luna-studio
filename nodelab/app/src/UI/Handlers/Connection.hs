@@ -18,6 +18,7 @@ import qualified Object.Widget.Port                 as PortModel
 import           Reactive.Commands.Command          (Command)
 import           Reactive.Commands.Graph.Disconnect (disconnectAll)
 import qualified Reactive.Commands.UIRegistry       as UICmd
+import           Reactive.State.Connect             (Connecting (Connecting))
 import qualified Reactive.State.Connect             as Connect
 import           Reactive.State.Global              (inRegistry)
 import qualified Reactive.State.Global              as Global
@@ -62,7 +63,7 @@ dragHandler ds _ wid = do
         sourceNodePos   <- inRegistry $ UICmd.get nodeWidgetId NodeModel.position
         sourcePortAngle <- inRegistry $ UICmd.get portWidgetId PortModel.angleVector
         -- let coord = floor <$> sourceNodePos + shiftVec
-        Global.connect . Connect.connecting ?= Connect.connectingFromPort (PortRef.OutPortRef' srcPortRef) sourcePortAngle sourceNodePos
+        Global.connect . Connect.connecting ?= Connecting (PortRef.OutPortRef' srcPortRef) sourcePortAngle sourceNodePos
         void $ zoom Global.uiRegistry $ setCurrentConnectionColor connectionColor
     when (mouseX < (-endCoeff)) $ do
         connId <- inRegistry $ UICmd.get wid Model.connectionId
@@ -74,7 +75,7 @@ dragHandler ds _ wid = do
         dstNodePos   <- inRegistry $ UICmd.get nodeWidgetId NodeModel.position
         dstPortAngle <- inRegistry $ UICmd.get portWidgetId PortModel.angleVector
         -- let coord = floor <$> dstNodePos + shiftVec
-        Global.connect . Connect.connecting ?= Connect.connectingFromPort (PortRef.InPortRef' dstPortRef) dstPortAngle dstNodePos
+        Global.connect . Connect.connecting ?= Connecting (PortRef.InPortRef' dstPortRef) dstPortAngle dstNodePos
         void $ zoom Global.uiRegistry $ setCurrentConnectionColor connectionColor
     abortDrag
 

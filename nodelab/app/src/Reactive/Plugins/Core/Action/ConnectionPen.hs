@@ -5,7 +5,7 @@ module Reactive.Plugins.Core.Action.ConnectionPen
     ) where
 
 import           Utils.PreludePlus
-import           Utils.Vector
+import           Utils.Vector                       (Vector2)
 
 import qualified JS.ConnectionPen                   as UI
 
