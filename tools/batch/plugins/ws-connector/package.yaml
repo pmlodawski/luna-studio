@@ -18,9 +18,11 @@ dependencies:
   - base
   - bytestring
   - either
-  - mtl
   - lib-ws-connector
-  - zmq-bus-config
-  - flowbox-utils
+  - m-logger
+  - mtl
+  - prologue
   - zeromq4-haskell
+  - optparse-applicative
   - zmq-bus
+  - zmq-bus-config

@@ -4,14 +4,14 @@
 
 module Main where
 
-import           Prologue                  hiding (argument)
+import           Prologue              hiding (argument)
 import           System.Console.Docopt
-import           System.Environment        (getArgs)
+import           System.Environment    (getArgs)
 
-import qualified Empire.Monitor            as Monitor
-import qualified ZMQ.Bus.Config     as Config
-import           Flowbox.System.Log.Logger
-import qualified ZMQ.Bus.EndPoint          as EP
+import qualified Empire.Monitor        as Monitor
+import           System.Log.MLogger
+import qualified ZMQ.Bus.Config        as Config
+import qualified ZMQ.Bus.EndPoint      as EP
 
 patterns :: Docopt
 patterns = [docoptFile|src/RequestMonitorUsage.txt|]
@@ -21,8 +21,8 @@ getArgOrExit = getArgOrExitWith patterns
 rootLogger :: Logger
 rootLogger = getLogger ""
 
-logger :: LoggerIO
-logger = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 main :: IO ()
 main = do

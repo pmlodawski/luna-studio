@@ -2,7 +2,7 @@
 
 module Empire.ResultSaver.Env where
 
-import           Flowbox.Prelude
+import           Prologue
 
 import           Data.UUID                         (UUID)
 import qualified Data.UUID                         as UUID (nil)

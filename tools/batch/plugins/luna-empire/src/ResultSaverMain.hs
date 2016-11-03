@@ -19,17 +19,17 @@ import           Empire.ResultSaver.Cmd         (Cmd)
 import qualified Empire.ResultSaver.Cmd         as Cmd
 import           Empire.ResultSaver.ProjectDump (ProjectDump)
 import qualified Empire.Version                 as Version
-import qualified ZMQ.Bus.Config          as Config
-import           Flowbox.Options.Applicative    (help, long, metavar, optional, short)
-import qualified Flowbox.Options.Applicative    as Opt
-import           Flowbox.System.Log.Logger
+import           System.Log.MLogger
+import           System.Log.Options             (help, long, metavar, optional, short)
+import qualified System.Log.Options             as Opt
+import qualified ZMQ.Bus.Config                 as Config
 import qualified ZMQ.Bus.EndPoint               as EP
 
 defaultTopic :: String
 defaultTopic = "empire."
 
-logger :: LoggerIO
-logger = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 parser :: Opt.Parser Cmd
 parser =   Opt.flag' Cmd.Version (short 'V' <> long "version" <> help "Version information")

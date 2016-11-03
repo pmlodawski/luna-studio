@@ -1,23 +1,18 @@
----------------------------------------------------------------------------
--- Copyright (C) Flowbox, Inc - All Rights Reserved
--- Unauthorized copying of this file, via any medium is strictly prohibited
--- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2015
----------------------------------------------------------------------------
-
 module Main where
 
-import qualified ZMQ.Bus.Config       as Config
-import           Flowbox.Options.Applicative hiding (info)
-import qualified Flowbox.Options.Applicative as Opt
-import           Flowbox.Prelude
-import           Flowbox.System.Log.Logger
-import qualified ZMQ.Bus.WS.Config   as WSConfigLoader
-import           WSConnector.Cmd             (Cmd (..))
-import qualified WSConnector.Version         as Version
-import qualified WSConnector.WSConfig        as WSConfig
-import qualified WSConnector.WSConnector     as WSConnector
-import qualified ZMQ.Bus.EndPoint            as EndPoint
+import           Prologue
+import           System.Log.MLogger
+import           System.Log.Options
+import qualified System.Log.Options      as Opt
+import           WSConnector.Cmd         (Cmd (..))
+import qualified WSConnector.Version     as Version
+import qualified WSConnector.WSConfig    as WSConfig
+import qualified WSConnector.WSConnector as WSConnector
+import qualified ZMQ.Bus.Config          as Config
+import qualified ZMQ.Bus.EndPoint        as EndPoint
+import qualified ZMQ.Bus.WS.Config       as WSConfigLoader
+
+
 
 rootLogger :: Logger
 rootLogger = getLogger ""

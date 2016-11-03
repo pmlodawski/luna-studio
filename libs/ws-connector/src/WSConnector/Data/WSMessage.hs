@@ -5,7 +5,7 @@ module WSConnector.Data.WSMessage where
 
 import           Data.Binary
 import           Data.ByteString (ByteString)
-import           Flowbox.Prelude
+import           Prologue
 
 data ControlCode = ConnectionTakeover
                  | Welcome

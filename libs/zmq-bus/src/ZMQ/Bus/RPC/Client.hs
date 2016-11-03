@@ -6,27 +6,27 @@
 
 module ZMQ.Bus.RPC.Client where
 
-import           Data.Binary                 (Binary, decode, encode)
-import           Data.ByteString.Lazy        (fromStrict, toStrict)
+import           Control.Monad             (liftM)
+import           Data.Binary               (Binary, decode, encode)
+import           Data.ByteString.Lazy      (fromStrict, toStrict)
 
-import qualified Flowbox.Control.Monad.Loops as Loops
-import           Flowbox.Prelude
-import           Flowbox.System.Log.Logger
-import           ZMQ.Bus.Bus                 (Bus)
-import qualified ZMQ.Bus.Bus                 as Bus
-import qualified ZMQ.Bus.Data.Flag           as Flag
-import           ZMQ.Bus.Data.Message        (Message (Message))
-import qualified ZMQ.Bus.Data.Message        as Message
-import           ZMQ.Bus.Data.MessageFrame   (MessageFrame)
-import qualified ZMQ.Bus.Data.MessageFrame   as MessageFrame
-import           ZMQ.Bus.Data.Topic          (Topic)
-import qualified ZMQ.Bus.Data.Topic          as Topic
+import           Prologue
+import           System.Log.MLogger
+import           ZMQ.Bus.Bus               (Bus)
+import qualified ZMQ.Bus.Bus               as Bus
+import qualified ZMQ.Bus.Data.Flag         as Flag
+import           ZMQ.Bus.Data.Message      (Message (Message))
+import qualified ZMQ.Bus.Data.Message      as Message
+import           ZMQ.Bus.Data.MessageFrame (MessageFrame)
+import qualified ZMQ.Bus.Data.MessageFrame as MessageFrame
+import           ZMQ.Bus.Data.Topic        (Topic)
+import qualified ZMQ.Bus.Data.Topic        as Topic
 import           ZMQ.Bus.RPC.Types
 
 
 
-logger :: LoggerIO
-logger = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 
 isCorrelationIDValid :: Message.CorrelationID -> MessageFrame -> Bool
@@ -60,9 +60,16 @@ queryRaw message = do
     Bus.subscribe topicBase
     correlationID <- Bus.send Flag.Enable message
     logger debug "Query : receiving responses..."
-    frames <- Loops.repeatUntil Bus.receive (not . allFramesReceived correlationID)
+    frames <- repeatUntil Bus.receive (not . allFramesReceived correlationID)
     Bus.unsubscribe topicBase
     logger debug "Query : complete"
     return $ map (view MessageFrame.message)
            $ filter (not . isRequest)
            $ filter (isCorrelationIDValid correlationID) frames
+
+repeatUntil :: Monad m => m a -> (a -> Bool) -> m [a]
+repeatUntil action predicate = do
+   result <- action
+   if predicate result
+       then liftM ((:) result) (repeatUntil action predicate)
+       else return [result]

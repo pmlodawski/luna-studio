@@ -7,7 +7,7 @@ import qualified Data.Binary                        as Binary
 import           Data.ByteString                    (ByteString)
 import           Data.ByteString.Base64.Lazy        (decodeLenient, encode)
 import           Data.ByteString.Lazy               (fromStrict, toStrict)
-import           Flowbox.Prelude
+import           Prologue
 
 import           WSConnector.Data.WSMessage
 

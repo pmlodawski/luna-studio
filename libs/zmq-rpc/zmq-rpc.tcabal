@@ -21,7 +21,8 @@ Library
                     containers,
                     either,
                     errors,
-                    flowbox-utils,
+                    m-logger,
                     mtl,
+                    prologue,
                     transformers,
                     zeromq4-haskell >= 0.6

@@ -10,13 +10,14 @@ ghc-options: -Wall -O2 -threaded
 
 dependencies:
   - base
-  - prologue
   - batch-lib-luna-empire
   - binary
+  - m-logger
+  - optparse-applicative
+  - prologue
+  - prologue
   - zmq-bus
   - zmq-bus-config
-  - optparse-applicative
-  - flowbox-utils
 
 executables:
   luna-empire:
@@ -32,16 +33,17 @@ executables:
     source-dirs: src
     main:        ResultSaverMain.hs
     dependencies:
-      - bytestring
-      - containers
-      - text
-      - luna-empire
-      - luna-empire-api
-      - docopt
-      - uuid
-      - binary
       - aeson
       - aeson-pretty
+      - binary
+      - bytestring
+      - containers
+      - docopt
+      - luna-empire
+      - luna-empire-api
+      - m-logger
+      - text
+      - uuid
 
   luna-empire-invoker:
     source-dirs: src
@@ -49,8 +51,9 @@ executables:
     dependencies:
       - bytestring
       - containers
-      - text
+      - docopt
       - luna-empire
       - luna-empire-api
-      - docopt
+      - m-logger
+      - text
       - uuid

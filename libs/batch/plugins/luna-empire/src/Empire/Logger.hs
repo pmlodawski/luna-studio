@@ -45,7 +45,7 @@ import qualified Empire.Env                        as Env
 import qualified Empire.Handlers                   as Handlers
 import qualified Empire.Utils                      as Utils
 
-import qualified Flowbox.System.Log.Logger         as Logger
+import qualified System.Log.MLogger                as Logger
 import qualified ZMQ.Bus.Bus                       as Bus
 import qualified ZMQ.Bus.Data.Message              as Message
 import           ZMQ.Bus.Data.MessageFrame         (MessageFrame (MessageFrame))
@@ -55,8 +55,8 @@ import           ZMQ.Bus.Trans                     (BusT (..))
 import qualified ZMQ.Bus.Trans                     as Bus
 
 
-logger :: Logger.LoggerIO
-logger = Logger.getLoggerIO $(Logger.moduleName)
+logger :: Logger.Logger
+logger = Logger.getLogger $(Logger.moduleName)
 
 run :: BusEndPoints -> [Topic] -> Bool -> IO (Either Bus.Error ())
 run endPoints topics formatted = Bus.runBus endPoints $ do

@@ -2,7 +2,7 @@
 
 module WSConnector.WSConfig where
 
-import           Flowbox.Prelude
+import           Prologue
 import qualified ZMQ.Bus.WS.Config as FD
 
 data Config = Config { _host     :: String

@@ -7,7 +7,7 @@ default-extensions:
 
 ghc-options:
     -Wall
-    
+
 dependencies:
   - base
   - binary
@@ -15,15 +15,16 @@ dependencies:
   - containers
   - either
   - errors
-  - zmq-bus
-  - zmq-bus-config
-  - flowbox-utils
+  - m-logger
   - mtl
   - optparse-applicative
+  - prologue
   - protocol-buffers
   - time
   - transformers
   - zeromq4-haskell >= 0.4
+  - zmq-bus
+  - zmq-bus-config
 
 executables:
   bus-logger:

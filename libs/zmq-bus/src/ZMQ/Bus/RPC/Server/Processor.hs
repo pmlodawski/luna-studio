@@ -11,8 +11,8 @@ import           Data.Binary               (Binary)
 import           Data.Either               as Either
 import qualified Data.Maybe                as Maybe
 
-import           Flowbox.Prelude           hiding (error)
-import           Flowbox.System.Log.Logger
+import           Prologue                  hiding (error)
+import           System.Log.MLogger
 import           ZMQ.Bus.Data.Message      (CorrelationID, Message)
 import qualified ZMQ.Bus.Data.Message      as Message
 import           ZMQ.Bus.Data.Topic        ((/+))
@@ -23,8 +23,8 @@ import           ZMQ.Bus.RPC.Types
 
 
 
-logger :: LoggerIO
-logger = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 
 singleResult :: MonadIO m => (a -> m b) -> a -> m [b]

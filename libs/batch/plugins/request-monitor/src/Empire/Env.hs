@@ -4,7 +4,7 @@
 
 module Empire.Env where
 
-import           Flowbox.Prelude
+import           Prologue
 
 import           Data.Map.Lazy                     (Map)
 import           Data.UUID                         (UUID)

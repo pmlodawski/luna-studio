@@ -4,7 +4,7 @@ import           Control.Applicative
 import           Data.IORef          (IORef)
 import qualified Data.IORef          as IORef
 
-import           Flowbox.Prelude
+import           Prologue
 
 
 

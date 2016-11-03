@@ -4,7 +4,7 @@ module ZMQ.Bus.Control.Handler.Methods where
 
 import           Data.Binary     (Binary)
 
-import           Flowbox.Prelude
+import           Prologue
 
 
 data Methods = CreateID

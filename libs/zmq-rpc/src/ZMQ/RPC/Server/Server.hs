@@ -5,19 +5,19 @@
 
 module ZMQ.RPC.Server.Server where
 
-import           Control.Monad             (forM_)
-import           System.ZMQ4.Monadic       (ZMQ)
-import qualified System.ZMQ4.Monadic       as ZMQ
+import           Control.Monad            (forM_)
+import           System.ZMQ4.Monadic      (ZMQ)
+import qualified System.ZMQ4.Monadic      as ZMQ
 
-import           Flowbox.Prelude
-import           Flowbox.System.Log.Logger
-import           ZMQ.RPC.Handler           (RPCHandler, Serializable)
-import qualified ZMQ.RPC.Server.Processor  as Processor
+import           Prologue
+import           System.Log.MLogger
+import           ZMQ.RPC.Handler          (RPCHandler, Serializable)
+import qualified ZMQ.RPC.Server.Processor as Processor
 
 
 
-loggerIO :: LoggerIO
-loggerIO = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 
 run :: Serializable request result

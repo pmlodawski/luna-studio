@@ -26,7 +26,7 @@ import           Data.ByteString.Lazy as BS (ByteString)
 import           Data.List            as L
 import           Data.Typeable
 
-import           Flowbox.Prelude      hiding (Context, error)
+import           Prologue      hiding (Context)
 
 
 type FunctionName = String

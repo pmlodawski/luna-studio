@@ -37,13 +37,13 @@ import qualified Empire.API.Project.ListProjects  as ListProjects
 import           Empire.API.Request               (Request (..))
 import qualified Empire.API.Response              as Response
 import qualified Empire.API.Topic                 as Topic
-import qualified ZMQ.Bus.Config                   as Config
-import           Flowbox.Options.Applicative      (help, long, metavar, short)
-import qualified Flowbox.Options.Applicative      as Opt
 import           Prologue                         hiding (argument)
 import           System.Console.Docopt
 import           System.Environment               (getArgs)
+import           System.Log.Options               (help, long, metavar, short)
+import qualified System.Log.Options               as Opt
 import qualified ZMQ.Bus.Bus                      as Bus
+import qualified ZMQ.Bus.Config                   as Config
 import qualified ZMQ.Bus.Data.Flag                as Flag
 import qualified ZMQ.Bus.Data.Message             as Message
 import qualified ZMQ.Bus.EndPoint                 as EP

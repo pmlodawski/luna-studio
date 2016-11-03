@@ -16,9 +16,9 @@ tests:
             - hspec
 
 dependencies:
-    - base
-    - aeson-pretty
     - aeson
+    - aeson-pretty
+    - base
     - bytestring
     - container
     - data-construction
@@ -28,14 +28,14 @@ dependencies:
     - either
     - fgl
     - filepath
-    - zmq-bus-config
-    - flowbox-utils
     - ghc-prim
     - luna-core
-    - luna-empire-api-json
     - luna-empire-api
+    - luna-empire-api-json
     - luna-parser
     - lunac
+    - m-logger
+    - MissingH
     - mtl
     - prologue
     - split
@@ -46,14 +46,15 @@ dependencies:
     - uuid
     - visualization-api
     - zmq-bus
+    - zmq-bus-config
 
 default-extensions:
-    - NoImplicitPrelude
-    - TemplateHaskell
     - DeriveFunctor
     - DeriveTraversable
-    - FlexibleInstances
     - FlexibleContexts
-    - TypeFamilies
+    - FlexibleInstances
     - MultiParamTypeClasses
+    - NoImplicitPrelude
     - RankNTypes
+    - TemplateHaskell
+    - TypeFamilies

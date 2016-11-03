@@ -1,36 +1,30 @@
----------------------------------------------------------------------------
--- Copyright (C) Flowbox, Inc - All Rights Reserved
--- Unauthorized copying of this file, via any medium is strictly prohibited
--- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2014
----------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
 module Main where
 
-import qualified Control.Concurrent                  as Concurrent
+import qualified Control.Concurrent              as Concurrent
 
-import           ZMQ.Bus.Broker.Cmd                  (Cmd)
-import qualified ZMQ.Bus.Broker.Cmd                  as Cmd
-import qualified ZMQ.Bus.Broker.Proxy                as Proxy
-import qualified ZMQ.Bus.Broker.Version              as Version
+import           Prologue                        hiding (error, switch)
+import           System.Log.MLogger
+import           System.Log.Options              hiding (info)
+import qualified System.Log.Options              as Opt
+import           ZMQ.Bus.Broker.Cmd              (Cmd)
+import qualified ZMQ.Bus.Broker.Cmd              as Cmd
+import qualified ZMQ.Bus.Broker.Proxy            as Proxy
+import qualified ZMQ.Bus.Broker.Version          as Version
+import qualified ZMQ.Bus.Config                  as Config
 import qualified ZMQ.Bus.Control.BusCtx          as BusCtx
 import qualified ZMQ.Bus.Control.Handler.Handler as Handler
 import qualified ZMQ.Bus.EndPoint                as EP
-import qualified ZMQ.Bus.Config               as Config
-import           Flowbox.Options.Applicative         hiding (info)
-import qualified Flowbox.Options.Applicative         as Opt
-import           Flowbox.Prelude                     hiding (error, switch)
-import           Flowbox.System.Log.Logger
-import qualified ZMQ.RPC.Server.Server       as RPC
+import qualified ZMQ.RPC.Server.Server           as RPC
 
 
 rootLogger :: Logger
 rootLogger = getLogger ""
 
 
-logger :: LoggerIO
-logger = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 
 parser :: Parser Cmd

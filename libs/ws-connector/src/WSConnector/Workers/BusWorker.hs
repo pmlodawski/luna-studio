@@ -3,8 +3,8 @@
 
 module WSConnector.Workers.BusWorker (start) where
 
-import           Flowbox.Prelude
-import           Flowbox.System.Log.Logger
+import           Prologue
+import           System.Log.MLogger
 
 import           Control.Concurrent           (forkIO)
 import           Control.Concurrent.STM       (atomically)
@@ -19,8 +19,8 @@ import           ZMQ.Bus.EndPoint             (BusEndPoints)
 
 import           WSConnector.Data.WSMessage   (WSMessage (..))
 
-logger :: LoggerIO
-logger = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 relevantTopics :: [String]
 relevantTopics =  ["empire."]

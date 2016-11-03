@@ -27,8 +27,9 @@ Executable broker
                     containers,
                     zmq-bus,
                     zmq-rpc,
+                    m-logger,
                     zmq-bus-config,
-                    flowbox-utils,
+                    prologue,
                     transformers,
                     protocol-buffers,
                     zeromq4-haskell >= 0.4

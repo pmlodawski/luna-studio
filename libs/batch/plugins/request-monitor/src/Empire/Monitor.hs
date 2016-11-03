@@ -28,7 +28,7 @@ import           Empire.Env                       (MonitorEnv)
 import qualified Empire.Env                       as Env
 import qualified Empire.Utils                     as Utils
 
-import qualified Flowbox.System.Log.Logger        as Logger
+import qualified System.Log.MLogger               as Logger
 import qualified ZMQ.Bus.Bus                      as Bus
 import qualified ZMQ.Bus.Data.Message             as Message
 import           ZMQ.Bus.Data.MessageFrame        (MessageFrame (MessageFrame))
@@ -42,8 +42,8 @@ import           Data.Time.Clock.POSIX
 defaultTopic :: String
 defaultTopic = "empire."
 
-logger :: Logger.LoggerIO
-logger = Logger.getLoggerIO $(Logger.moduleName)
+logger :: Logger.Logger
+logger = Logger.getLogger $(Logger.moduleName)
 
 run :: BusEndPoints -> FilePath -> Integer -> FilePath -> IO (Either Bus.Error ())
 run endPoints projectRoot timeout script = do

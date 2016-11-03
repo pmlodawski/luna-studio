@@ -2,7 +2,7 @@ module ZMQ.Bus.Data.Flag where
 
 import           Text.Read       as R
 
-import           Flowbox.Prelude
+import           Prologue
 
 
 

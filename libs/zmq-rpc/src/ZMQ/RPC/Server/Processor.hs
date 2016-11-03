@@ -5,23 +5,23 @@
 
 module ZMQ.RPC.Server.Processor where
 
-import           Control.Monad.IO.Class    (MonadIO)
-import           Data.Binary               (Binary)
-import qualified Data.Binary               as Binary
-import           Data.ByteString           (ByteString)
-import           Data.ByteString.Lazy      (fromStrict, toStrict)
-import           System.ZMQ4.Monadic       (ZMQ)
+import           Control.Monad.IO.Class (MonadIO)
+import           Data.Binary            (Binary)
+import qualified Data.Binary            as Binary
+import           Data.ByteString        (ByteString)
+import           Data.ByteString.Lazy   (fromStrict, toStrict)
+import           System.ZMQ4.Monadic    (ZMQ)
 
-import           Flowbox.Prelude           hiding (error)
-import           Flowbox.System.Log.Logger
-import           ZMQ.RPC.Handler           (RPCHandler)
-import           ZMQ.RPC.Response          (Response)
-import qualified ZMQ.RPC.Response          as Response
-import qualified ZMQ.RPC.RPC               as RPC
+import           Prologue               hiding (error)
+import           System.Log.MLogger
+import           ZMQ.RPC.Handler        (RPCHandler)
+import           ZMQ.RPC.Response       (Response)
+import qualified ZMQ.RPC.Response       as Response
+import qualified ZMQ.RPC.RPC            as RPC
 
 
-loggerIO :: LoggerIO
-loggerIO = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 
 process :: (Binary request, Binary result, Show result) => RPCHandler request result
@@ -36,11 +36,11 @@ process handler encodedRequest requestID = toStrict . Binary.encode <$> case Bin
 
 responseResult :: (Show result, MonadIO m) => Int -> result -> m (Response result)
 responseResult requestID result = do
-    loggerIO trace $ show result
+    logger trace $ show result
     return $ Response.Result requestID result
 
 
 responseError :: Int -> RPC.Error -> ZMQ z (Response result)
 responseError requestID err = do
-    loggerIO error err
+    logger error err
     return $ Response.Exception requestID err

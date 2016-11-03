@@ -15,8 +15,8 @@ import           System.ZMQ4.Monadic             (ZMQ)
 import qualified System.ZMQ4.Monadic             as ZMQ
 
 import qualified Debug.Trace                     as T
-import           Flowbox.Prelude
-import           Flowbox.System.Log.Logger
+import           Prologue
+import           System.Log.MLogger
 import qualified ZMQ.Bus.Control.Handler.Methods as Methods
 import           ZMQ.Bus.Data.Flag               (Flag)
 import           ZMQ.Bus.Data.Message            (Message)
@@ -31,8 +31,8 @@ import qualified ZMQ.Bus.Env                     as Env
 import qualified ZMQ.RPC.Client                  as Client
 
 
-logger :: LoggerIO
-logger = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 
 type Error = String

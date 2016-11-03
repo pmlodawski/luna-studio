@@ -44,7 +44,7 @@ import qualified Empire.ResultSaver.Env            as Env
 import           Empire.ResultSaver.ProjectDump    (ProjectDump (..))
 import qualified Empire.Utils                      as Utils
 
-import qualified Flowbox.System.Log.Logger         as Logger
+import qualified System.Log.MLogger                as Logger
 import qualified ZMQ.Bus.Bus                       as Bus
 import qualified ZMQ.Bus.Data.Flag                 as Flag
 import qualified ZMQ.Bus.Data.Message              as Message
@@ -54,8 +54,8 @@ import           ZMQ.Bus.EndPoint                  (BusEndPoints)
 import           ZMQ.Bus.Trans                     (BusT (..))
 import qualified ZMQ.Bus.Trans                     as Bus
 
-logger :: Logger.LoggerIO
-logger = Logger.getLoggerIO $(Logger.moduleName)
+logger :: Logger.Logger
+logger = Logger.getLogger $(Logger.moduleName)
 
 sendToBus :: (Topic.MessageTopic a, Bin.Binary a) => a -> StateT ResultSaverEnv BusT ()
 sendToBus msg = void $ lift $ BusT $ Bus.send Flag.Enable $ Message.Message (Topic.topic msg) $ toStrict . Bin.encode $ msg

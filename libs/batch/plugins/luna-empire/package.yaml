@@ -5,33 +5,34 @@ maintainer:         New Byte Order <contact@newbyteorder.com>
 
 dependencies:
   - base
-  - prologue
   - binary
   - bytestring
-  - text
-  - split
-  - pretty-show
   - containers
   - either
   - errors
-  - zmq-bus-config
-  - flowbox-utils
-  - mtl
-  - optparse-applicative
-  - stm
-  - time
-  - transformers
+  - filemanip
+  - filepath
+  - groom
   - luna-empire
   - luna-empire-api
   - luna-empire-api-json
   - lunac
-  - zeromq4-haskell >= 0.4
-  - filemanip
-  - filepath
-  - uuid-types
+  - m-logger
+  - mtl
+  - optparse-applicative
+  - pretty-show
+  - prologue
+  - prologue
+  - split
+  - stm
+  - text
+  - time
+  - transformers
   - uuid
-  - groom
+  - uuid-types
+  - zeromq4-haskell >= 0.4
   - zmq-bus
+  - zmq-bus-config
 
 default-extensions:
   - NoImplicitPrelude

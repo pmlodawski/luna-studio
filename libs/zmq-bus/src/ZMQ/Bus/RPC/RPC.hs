@@ -11,8 +11,8 @@ import           Data.Binary               (decode, encode)
 import qualified Data.ByteString           as B
 import qualified Data.ByteString.Lazy      as BL
 
-import           Flowbox.Prelude
-import           Flowbox.System.Log.Logger
+import           Prologue
+import           System.Log.MLogger
 import           ZMQ.Bus.RPC.Types         (Request, Response)
 
 
@@ -34,8 +34,8 @@ data NoState = NoState
              deriving (Read, Show)
 
 
-logger :: LoggerIO
-logger = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 
 run :: (Catch.MonadCatch m)

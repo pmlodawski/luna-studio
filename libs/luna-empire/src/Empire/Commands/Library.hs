@@ -5,11 +5,10 @@ module Empire.Commands.Library
     ) where
 
 import           Control.Monad.Error     (throwError)
-import           Control.Monad.State
 import           Control.Monad.Reader
+import           Control.Monad.State
 import qualified Data.IntMap             as IntMap
 import           Prologue
-import           System.Path             (Path)
 
 import           Empire.Data.Library     (Library)
 import qualified Empire.Data.Library     as Library
@@ -24,7 +23,7 @@ import           Empire.Empire           (Command, Empire)
 import qualified Empire.Empire           as Empire
 import qualified Empire.Utils.IdGen      as IdGen
 
-createLibrary :: ProjectId -> Maybe String -> Path -> Empire (LibraryId, Library)
+createLibrary :: ProjectId -> Maybe String -> FilePath -> Empire (LibraryId, Library)
 createLibrary pid name path = withProject pid $ do
     let library = Library.make name path
     id <- insertAtNewId library

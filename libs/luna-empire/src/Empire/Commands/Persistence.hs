@@ -17,7 +17,6 @@ import qualified Data.UUID                       as UUID
 import qualified Data.UUID.V4                    as UUID
 import           Prologue
 import           System.FilePath                 (takeBaseName)
-import           System.Path                     (Path)
 
 import           Empire.Data.Library             (Library)
 import qualified Empire.Data.Library             as Library
@@ -46,12 +45,11 @@ import qualified Data.Aeson.Encode.Pretty        as JSON
 import qualified Data.Text.Lazy                  as Text
 import           Data.Text.Lazy.Encoding         (decodeUtf8, encodeUtf8)
 import           Empire.API.JSONInstances        ()
-import           System.Path                     (Path, native)
 
-import qualified Flowbox.System.Log.Logger       as Logger
+import qualified System.Log.MLogger              as Logger
 
-logger :: Logger.LoggerIO
-logger = Logger.getLoggerIO $(Logger.moduleName)
+logger :: Logger.Logger
+logger = Logger.getLogger $(Logger.moduleName)
 
 
 toPersistentProject :: ProjectId -> Empire P.Project

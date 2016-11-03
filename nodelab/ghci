@@ -20,7 +20,7 @@ ghcjs  -package-db $SNAPSHOT_DB \
        -package containers \
        -package random \
        -package pretty-show \
-       -package flowbox-utils \
+       -package prologue \
        -package convert \
        -package process \
        -package constraints \

@@ -40,11 +40,11 @@ import qualified Empire.Env                       as Env
 import qualified Empire.Handlers                  as Handlers
 import qualified Empire.Server.Server             as Server
 import qualified Empire.Utils                     as Utils
-import qualified ZMQ.Bus.Config            as Config
-import           Flowbox.Prelude
-import qualified Flowbox.System.Log.Logger        as Logger
+import           Prologue
+import qualified System.Log.MLogger               as Logger
 import           ZMQ.Bus.Bus                      (Bus)
 import qualified ZMQ.Bus.Bus                      as Bus
+import qualified ZMQ.Bus.Config                   as Config
 import qualified ZMQ.Bus.Data.Flag                as Flag
 import           ZMQ.Bus.Data.Message             (Message)
 import qualified ZMQ.Bus.Data.Message             as Message
@@ -54,8 +54,8 @@ import           ZMQ.Bus.EndPoint                 (BusEndPoints)
 import           ZMQ.Bus.Trans                    (BusT (..))
 import qualified ZMQ.Bus.Trans                    as BusT
 
-logger :: Logger.LoggerIO
-logger = Logger.getLoggerIO $(Logger.moduleName)
+logger :: Logger.Logger
+logger = Logger.getLogger $(Logger.moduleName)
 
 sendStarted :: BusEndPoints -> IO ()
 sendStarted endPoints = do

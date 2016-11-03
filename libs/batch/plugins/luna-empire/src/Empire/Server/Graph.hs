@@ -61,13 +61,13 @@ import           Empire.Env                            (Env)
 import qualified Empire.Env                            as Env
 import           Empire.Server.Server                  (errorMessage, replyFail, replyOk, replyResult, sendToBus')
 import           Empire.Utils.TextResult               (nodeValueToText)
-import qualified Flowbox.System.Log.Logger             as Logger
 import qualified StdLibMock
+import qualified System.Log.MLogger                    as Logger
 import           ZMQ.Bus.Trans                         (BusT (..))
 
 
-logger :: Logger.LoggerIO
-logger = Logger.getLoggerIO $(Logger.moduleName)
+logger :: Logger.Logger
+logger = Logger.getLogger $(Logger.moduleName)
 
 notifyCodeUpdate :: GraphLocation -> StateT Env BusT ()
 notifyCodeUpdate location = do
