@@ -1,5 +1,6 @@
 module JS.Clipboard
     ( registerCopyCallback
+    , registerCutCallback
     , registerPasteCallback
     ) where
 
@@ -17,6 +18,15 @@ registerCopyCallback :: (JSVal -> IO ()) -> IO (IO ())
 registerCopyCallback callback = do
     wrappedCallback <- asyncCallback1 callback
     registerCopyCallback' wrappedCallback
+    return $ return ()
+
+foreign import javascript safe "window.addEventListener('cut', function(e){$1(e); console.log('cut', e); e.preventDefault();})"
+    registerCutCallback' :: Callback (JSVal -> IO ()) -> IO ()
+
+registerCutCallback :: (JSVal -> IO ()) -> IO (IO ())
+registerCutCallback callback = do
+    wrappedCallback <- asyncCallback1 callback
+    registerCutCallback' wrappedCallback
     return $ return ()
 
 foreign import javascript safe "window.addEventListener('paste', function(e){$1(e.clipboardData.getData('text/plain')); console.log('paste', e); e.preventDefault();})"

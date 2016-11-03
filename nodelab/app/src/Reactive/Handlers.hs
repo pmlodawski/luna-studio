@@ -17,6 +17,7 @@ module Reactive.Handlers
     , textEditorHandler
     , customEventHandler
     , copyClipboardHandler
+    , cutClipboardHandler
     , pasteClipboardHandler
     ) where
 
@@ -210,6 +211,13 @@ copyClipboardHandler =
   AddHandler $ \h -> do
     Clipboard.registerCopyCallback $ \jsval ->
       liftIO . h $ Clipboard $ Clipboard.Copy
+
+cutClipboardHandler :: AddHandler Event
+cutClipboardHandler =
+  AddHandler $ \h -> do
+    Clipboard.registerCutCallback $ \jsval ->
+      liftIO . h $ Clipboard $ Clipboard.Cut
+
 
 pasteClipboardHandler :: AddHandler Event
 pasteClipboardHandler =

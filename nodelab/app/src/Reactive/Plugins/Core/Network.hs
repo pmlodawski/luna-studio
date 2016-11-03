@@ -126,8 +126,8 @@ makeNetworkDescription conn state = do
                    , Handlers.textEditorHandler
                    , Handlers.customEventHandler
                    , Handlers.copyClipboardHandler
+                   , Handlers.cutClipboardHandler
                    , Handlers.pasteClipboardHandler
-                   --, TODO(LJK): Handlers.cutClipboardHandler
                    ]
 
     let registerHandler (AddHandler rh) = rh (processEvent state)
