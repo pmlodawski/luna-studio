@@ -24,6 +24,7 @@ type Handler = ByteString -> StateT Env BusT ()
 handlersMap :: Map String Handler
 handlersMap = Map.fromList
     [ makeHandler Graph.handleAddNode
+    , makeHandler Graph.handleAddSubgraph
     , makeHandler Graph.handleRemoveNode
     , makeHandler Graph.handleUpdateNodeExpression
     , makeHandler Graph.handleUpdateNodeMeta

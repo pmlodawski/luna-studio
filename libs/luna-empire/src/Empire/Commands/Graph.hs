@@ -104,6 +104,9 @@ addPersistentNode n = case n ^. Node.nodeType of
                 _ -> return ()
             _ -> return ()
 
+addSubgraph :: GraphLocation -> [Node] -> [Connection] -> Empire APIGraph.GraphLocation
+addSubgraph = $notImplemented
+
 removeNodes :: GraphLocation -> [NodeId] -> Empire ()
 removeNodes loc nodeIds = withTC loc False $ forM_ nodeIds removeNodeNoTC
 
