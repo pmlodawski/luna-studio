@@ -15,9 +15,9 @@ import qualified Reactive.State.Global        as Global
 
 updateClient :: ClientId -> Command State ColorId
 updateClient clId = do
-    currentData <- preuse $ Global.collaboration . Collaboration.knownClients . ix clId
+    mayCurrentData <- preuse $ Global.collaboration . Collaboration.knownClients . ix clId
     currentTime  <- use Global.lastEventTimestamp
-    zoom Global.collaboration $ case currentData of
+    zoom Global.collaboration $ case mayCurrentData of
         Just currentData -> do
             Collaboration.knownClients . ix clId . Collaboration.lastSeen .= currentTime
             return $ currentData ^. Collaboration.colorId
@@ -30,4 +30,3 @@ updateClient clId = do
                 nextColor' = Collaboration.ColorId nextColor
             Collaboration.knownClients . at clId ?= (Collaboration.Client currentTime nextColor')
             return nextColor'
-

@@ -41,75 +41,59 @@ f2 = '\113'
 toAction :: Event -> Maybe (Command Global.State ())
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.inRegistry $ do
     performIO $ putStrLn "show sandbox"
-    let widget = Group.create
-    parent <- UICmd.register sceneGraphId widget (Layout.verticalLayoutHandler 5.0)
+    let groupWidget = Group.create
+    parent <- UICmd.register sceneGraphId groupWidget (Layout.verticalLayoutHandler 5.0)
+    let register w = UICmd.register_ parent w def
 
-    let widget = DiscreteNumber.create (Vector2 200 20) "Discrete" 42
-    UICmd.register_ parent widget def
-
-    let widget = ContinuousNumber.create (Vector2 200 20) "Continuous" 42.42
-    UICmd.register_ parent widget def
-
-    let widget = ContinuousSlider.create (Vector2 200 20) "ContinuousSlider" (-2.0) 5.0 3.0
-    UICmd.register_ parent widget def
-
-    let widget = DiscreteSlider.create (Vector2 200 20) "DiscreteSlider" (-15) 80 30
-    UICmd.register_ parent widget def
-
-    let widget = DiscreteSlider.create (Vector2 200 20) "DiscreteSlider" 3 8 4
-    UICmd.register_ parent widget def
-
-    let widget = CodeEditor.create (Vector2 300 150) "class Point:\n    x y z :: Int\n  origin      = Point 0 0 0\n  Point x y _ = origin\n  print 'Origin XY coords are ($x,$y)'"
-    UICmd.register_ parent widget def
-
-    let widget = Toggle.create (Vector2 200 20) "Toggle" True
-    UICmd.register_ parent widget def
-
-    let widget = LabeledTextBox.create (Vector2 200 20) "Textbox" "foo"
-    UICmd.register_ parent widget def
+    register $ DiscreteNumber.create (Vector2 200 20) "Discrete" 42
+    register $ ContinuousNumber.create (Vector2 200 20) "Continuous" 42.42
+    register $ ContinuousSlider.create (Vector2 200 20) "ContinuousSlider" (-2.0) 5.0 3.0
+    register $ DiscreteSlider.create (Vector2 200 20) "DiscreteSlider" (-15) 80 30
+    register $ DiscreteSlider.create (Vector2 200 20) "DiscreteSlider" 3 8 4
+    register $ CodeEditor.create (Vector2 300 150) "class Point:\n    x y z :: Int\n  origin      = Point 0 0 0\n  Point x y _ = origin\n  print 'Origin XY coords are ($x,$y)'"
+    register $ Toggle.create (Vector2 200 20) "Toggle" True
+    register $ LabeledTextBox.create (Vector2 200 20) "Textbox" "foo"
 
     let values = (AnyLunaValue <$> ([1, 2, 3, 4, 5, 6, 7] :: [Int]))
               <> (AnyLunaValue <$> ([0.1, 0.2, 0.3] :: [Double]))
               <> (AnyLunaValue <$> [True, False, True])
-        widget = List.createList 200 "List" values $ AnyLunaValue (-1 :: Int)
-    UICmd.register_ parent widget def
-
+    register $ List.createList 200 "List" values $ AnyLunaValue (-1 :: Int)
     return ()
 
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\113' _)) = Just $ Global.inRegistry $ do
     performIO $ putStrLn "show sandbox"
-    let widget = Group.create
-    parent'       <- UICmd.register sceneGraphId widget (Layout.horizontalLayoutHandler 5.0)
-    parent        <- UICmd.register parent'      widget (Layout.verticalLayoutHandler 5.0)
-    resizedParent <- UICmd.register parent'      widget (Layout.verticalLayoutHandler 5.0)
-    flexParent    <- UICmd.register parent'      widget (Layout.flexVerticalLayoutHandler 5.0)
+    let groupWidget = Group.create
+    parent'       <- UICmd.register sceneGraphId groupWidget (Layout.horizontalLayoutHandler 5.0)
+    parent        <- UICmd.register parent'      groupWidget (Layout.verticalLayoutHandler 5.0)
+    resizedParent <- UICmd.register parent'      groupWidget (Layout.verticalLayoutHandler 5.0)
+    flexParent    <- UICmd.register parent'      groupWidget (Layout.flexVerticalLayoutHandler 5.0)
 
-    let widget = ContinuousSlider.create (Vector2 200 20) "ContinuousSlider" (-2.0) 5.0 3.0
-    resizableWidget  <- UICmd.register resizedParent widget def
-    _resizableWidget2 <- UICmd.register resizedParent widget def
-    resizableWidget3 <- UICmd.register resizedParent widget def
-    UICmd.register_ flexParent widget def
-    UICmd.register_ flexParent widget def
-    UICmd.register_ flexParent widget def
-    UICmd.register_ flexParent widget def
-    UICmd.register_ flexParent widget def
-    UICmd.register_ flexParent widget def
+    let widget1 = ContinuousSlider.create (Vector2 200 20) "ContinuousSlider" (-2.0) 5.0 3.0
+    resizableWidget  <- UICmd.register resizedParent widget1 def
+    _resizableWidget2 <- UICmd.register resizedParent widget1 def
+    resizableWidget3 <- UICmd.register resizedParent widget1 def
+    UICmd.register_ flexParent widget1 def
+    UICmd.register_ flexParent widget1 def
+    UICmd.register_ flexParent widget1 def
+    UICmd.register_ flexParent widget1 def
+    UICmd.register_ flexParent widget1 def
+    UICmd.register_ flexParent widget1 def
     -- UICmd.moveX resizedParent 200
 
-    let widget = ContinuousNumber.create (Vector2 200 20) "Width" 200
-    UICmd.register_ parent widget $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ do
+    let widget2 = ContinuousNumber.create (Vector2 200 20) "Width" 200
+    UICmd.register_ parent widget2 $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ do
         UICmd.resize' resizableWidget  (x .~ val)
         UICmd.resize' resizableWidget3 (x .~ val)
         ) mempty
 
-    let widget = ContinuousNumber.create (Vector2 200 20) "Height" 20
-    UICmd.register_ parent widget $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ do
+    let widget3 = ContinuousNumber.create (Vector2 200 20) "Height" 20
+    UICmd.register_ parent widget3 $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ do
         UICmd.resize' resizableWidget  (y .~ val)
         UICmd.resize' resizableWidget3 (y .~ val)
         ) mempty
 
-    let widget = ContinuousNumber.create (Vector2 200 20) "FlexHeight" 100
-    UICmd.register_ parent widget $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ do
+    let widget4 = ContinuousNumber.create (Vector2 200 20) "FlexHeight" 100
+    UICmd.register_ parent widget4 $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ do
         UICmd.resize' flexParent (y .~ val)
         ) mempty
 
@@ -117,8 +101,8 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\113' _)) = Just $ Global.in
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\115' _)) = Just $ Global.inRegistry $ do
     performIO $ putStrLn "show sandbox"
     performIO $ putStrLn "show sandbox"
-    let widget = Group.create
-    parent <- UICmd.register sceneGraphId widget (Layout.verticalLayoutHandler 5.0)
+    let groupWidget = Group.create
+    parent <- UICmd.register sceneGraphId groupWidget (Layout.verticalLayoutHandler 5.0)
 
     let shader  = "void main() { gl_FragColor = vec4(0.1, 0.0, 0.0, 1.0); } "
         shader2 = "void main() { gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0); } "

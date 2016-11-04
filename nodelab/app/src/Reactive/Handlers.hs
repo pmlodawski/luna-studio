@@ -19,12 +19,13 @@ module Reactive.Handlers
     ) where
 
 import           Utils.PreludePlus         hiding (on)
-import           Utils.Vector
+import           Utils.Vector              (Vector2 (Vector2))
 
 import           GHCJS.DOM                 (currentDocument, currentWindow)
 import qualified GHCJS.DOM.Document        as Document
 import           GHCJS.DOM.Element         (Element, dblClick, keyDown, keyPress, keyUp, mouseDown, mouseMove, mouseUp, wheel)
-import           GHCJS.DOM.EventM
+import           GHCJS.DOM.EventM          (EventM, EventName)
+import qualified GHCJS.DOM.EventM          as EventM
 import qualified GHCJS.DOM.KeyboardEvent   as KeyboardEvent
 import qualified GHCJS.DOM.MouseEvent      as MouseEvent
 import qualified GHCJS.DOM.UIEvent         as UIEvent
@@ -51,18 +52,19 @@ import qualified JS.CustomEvent            as CustomEvent
 import qualified JS.TextEditor             as TextEditor
 import qualified JS.WebSocket              as WebSocket
 import           Object.UITypes            as Mouse
-import           UI.Raycaster
+import           UI.Raycaster              hiding (widgetMatrix)
 
 
 data AddHandler a = AddHandler ((a -> IO ()) -> IO (IO ()))
 
 foreign import javascript safe "require('common')" getJSState :: IO JSState
 
+backspace :: Int
 backspace = 8
 
 readKeyMods :: (MouseEvent.IsMouseEvent e) => EventM t e Keyboard.KeyMods
 readKeyMods = do
-    e      <- event
+    e      <- EventM.event
     shift  <- MouseEvent.getShiftKey e
     ctrl   <- MouseEvent.getCtrlKey  e
     alt    <- MouseEvent.getAltKey   e
@@ -71,7 +73,7 @@ readKeyMods = do
 
 readKeyMods' :: EventM t KeyboardEvent.KeyboardEvent Keyboard.KeyMods
 readKeyMods' = do
-    e      <- event
+    e      <- EventM.event
     shift  <- KeyboardEvent.getShiftKey e
     ctrl   <- KeyboardEvent.getCtrlKey  e
     alt    <- KeyboardEvent.getAltKey   e
@@ -80,13 +82,13 @@ readKeyMods' = do
 
 readMousePos :: (MouseEvent.IsMouseEvent e) => EventM t e Mouse.MousePosition
 readMousePos = do
-    e <- event
+    e <- EventM.event
     x <- MouseEvent.getClientX e
     y <- MouseEvent.getClientY e
     return $ Vector2 x y
 
 uiWhichButton :: (UIEvent.IsUIEvent e) => EventM t e Mouse.MouseButton
-uiWhichButton = uiWhich >>= return . Mouse.toMouseButton
+uiWhichButton = EventM.uiWhich >>= return . Mouse.toMouseButton
 
 eventObject :: IO (Maybe Element)
 eventObject = do
@@ -97,7 +99,7 @@ mouseHandler :: EventName Element MouseEvent.MouseEvent -> Mouse.Type -> AddHand
 mouseHandler event tag =
     AddHandler $ \h -> do
         window <- fromJust <$> eventObject
-        window `on` event $ do
+        window `EventM.on` event $ do
             mousePos        <- readMousePos
             button          <- uiWhichButton
             keyMods         <- readKeyMods
@@ -121,8 +123,8 @@ mouseWheelHandler :: AddHandler Event
 mouseWheelHandler =
     AddHandler $ \h -> do
         window <- fromJust <$> eventObject
-        window `on` wheel $ do
-            preventDefault
+        window `EventM.on` wheel $ do
+            EventM.preventDefault
             mousePos        <- readMousePos
             button          <- uiWhichButton
             keyMods         <- readKeyMods
@@ -131,7 +133,7 @@ mouseWheelHandler =
             scene           <- liftIO $ whichScene       objectId
             widgetMatrix    <- liftIO $ readWidgetMatrix objectId
             delta <- do
-                e <- event
+                e <- EventM.event
                 x <- WheelEvent.getDeltaX e
                 y <- WheelEvent.getDeltaY e
                 return $ Vector2 x y
@@ -147,22 +149,22 @@ mouseWheelHandler =
 keyHandler :: EventName Element KeyboardEvent.KeyboardEvent -> EventM Element KeyboardEvent.KeyboardEvent Int -> Keyboard.Type -> AddHandler Event
 keyHandler event getter tag = AddHandler $ \h -> do
     window <- fromJust <$> eventObject
-    window `on` event $ do
+    window `EventM.on` event $ do
         key     <- getter
-        when (key == backspace) preventDefault
+        when (key == backspace) EventM.preventDefault
         keyMods <- readKeyMods'
         jsState <- liftIO getJSState
         liftIO . h $ Keyboard jsState $ Keyboard.Event tag (chr key) keyMods
 
-keyPressedHandler :: AddHandler Event
-keyPressedHandler = keyHandler keyPress uiCharCode Keyboard.Press
-keyDownHandler    = keyHandler keyDown  uiKeyCode  Keyboard.Down
-keyUpHandler      = keyHandler keyUp    uiKeyCode  Keyboard.Up
+keyPressedHandler, keyDownHandler, keyUpHandler :: AddHandler Event
+keyPressedHandler = keyHandler keyPress EventM.uiCharCode Keyboard.Press
+keyDownHandler    = keyHandler keyDown  EventM.uiKeyCode  Keyboard.Down
+keyUpHandler      = keyHandler keyUp    EventM.uiKeyCode  Keyboard.Up
 
 resizeHandler :: AddHandler Event
 resizeHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
-    window `on` resize $ liftIO $ do
+    window `EventM.on` resize $ liftIO $ do
         width  <- getInnerWidth  window
         height <- getInnerHeight window
         h $ Window $ Window.Resized width height
