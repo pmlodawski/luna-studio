@@ -164,7 +164,7 @@ handleAddNode = modifyGraph action success where
             AddNode.ExpressionNode expr -> withJust connectTo $ connectNodes location expr (node ^. Node.nodeId)
 
 handleAddSubgraph :: Request AddSubgraph.Request -> StateT Env BusT ()
-handleSubgraph = $notImplemented
+handleAddSubgraph = $notImplemented
 
 handleRemoveNode :: Request RemoveNode.Request -> StateT Env BusT ()
 handleRemoveNode = modifyGraphOk action success where
