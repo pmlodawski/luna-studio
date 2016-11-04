@@ -10,8 +10,9 @@ import           Reactive.Commands.Command    (Command, performIO)
 import           Reactive.Commands.UUID       (registerRequest)
 import           Reactive.State.Global        (State, workspace, clientId)
 
+import           Empire.API.Data.Connection   (Connection)
 import qualified Empire.API.Data.DefaultValue as DefaultValue
-import           Empire.API.Data.Node         (NodeId)
+import           Empire.API.Data.Node         (Node, NodeId)
 import           Empire.API.Data.Project      (ProjectId)
 import           Empire.API.Data.NodeMeta     (NodeMeta)
 import           Empire.API.Data.PortRef      (AnyPortRef (..), InPortRef (..), OutPortRef (..))
@@ -36,6 +37,9 @@ withUUID act = do
 
 addNode :: Text -> NodeMeta -> Maybe NodeId -> Command State ()
 addNode = withWorkspace .:. BatchCmd.addNode
+
+addSubgraph :: [Node] -> [Connection] -> Command State ()
+addSubgraph = withWorkspace .: BatchCmd.addSubgraph
 
 createProject :: Text -> Command State ()
 createProject = withUUID . BatchCmd.createProject
