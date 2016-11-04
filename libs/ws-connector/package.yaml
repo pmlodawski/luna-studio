@@ -21,10 +21,10 @@ dependencies:
   - text
   - either
   - exceptions
-  - flowbox-bus-binary
-  - flowbox-config
+  - zmq-bus-config
   - flowbox-utils
   - mtl
   - websockets
   - stm
   - zeromq4-haskell
+  - zmq-bus

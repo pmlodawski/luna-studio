@@ -15,12 +15,12 @@ import           UI.Generic                   (defaultResize)
 
 newtype WidgetResizedHandler = WidgetResizedHandler (WidgetId -> Vector2 Double -> Command UIRegistry.State ())
 triggerWidgetResized :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
-triggerWidgetResized id vec = do
+triggerWidgetResized wid vec = do
     let key = TypeKey :: TypeKey WidgetResizedHandler
-    maybeHandler <- UICmd.handler id key
-    withJust maybeHandler $ \(WidgetResizedHandler handler) -> handler id vec
+    maybeHandler <- UICmd.handler wid key
+    withJust maybeHandler $ \(WidgetResizedHandler handler) -> handler wid vec
 
 instance ResizableWidget Model.Group where
-    resizeWidget id vec model = do
-        defaultResize id vec model
-        triggerWidgetResized id vec
+    resizeWidget wid vec model = do
+        defaultResize wid vec model
+        triggerWidgetResized wid vec

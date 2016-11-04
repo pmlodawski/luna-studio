@@ -7,10 +7,8 @@
 * [Supervisord](http://supervisord.org/)
 * [Bower](https://bower.io)
 * [Brunch](http://brunch.io) v.1.8.5 (```npm install -g brunch@1.8.5```)
-* ```brew install protobuf```
 * ```brew install pkg-config```
 * ```brew install zmq```
-* ```stack install hprotoc```
 * ```stack install happy```
 * ```stack install hsc2hs```
 
@@ -33,8 +31,6 @@ $ stack setup # installs ghcjs
 
 ```shell
 $ cd $REPO_DIR
-$ mkdir -p dist/proto
-$ scripts/genproto > /dev/null
 $ scripts/gencabal
 $ cd $REPO_DIR/nodelab
 $ npm install

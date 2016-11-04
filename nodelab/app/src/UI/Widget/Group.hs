@@ -57,22 +57,22 @@ create oid model = do
     return group
 
 instance UIDisplayObject Model.Group where
-    createUI parentId id model = do
-        group    <- create id model
+    createUI parentId wid model = do
+        group    <- create wid model
         parent   <- UI.lookup parentId :: IO Widget.GenericWidget
-        UI.register id group
+        UI.register wid group
         Widget.add group parent
 
-    updateUI id old model = do
-        group <- UI.lookup id :: IO Group
+    updateUI wid old model = do
+        group <- UI.lookup wid :: IO Group
         whenChanged old model Model.visible $ setVisible' group $ model ^. Model.visible
         whenChanged old model (Model.style . Model.background  ) $ setBgColor  group model
         whenChanged old model (Model.style . Model.borderRadius) $ setBorderRadius  group model
         whenChanged old model (Model.style . Model.padding     ) $ setPadding group model
 
 instance CompositeWidget Model.Group where
-    updateWidget id old model = do
+    updateWidget wid old model = do
         let vis = model ^. Model.visible
         when (old ^. Model.visible /= vis) $ do
-            parent <- UICmd.parent id
+            parent <- UICmd.parent wid
             UICmd.triggerChildrenResized parent

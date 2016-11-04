@@ -19,6 +19,7 @@ import           Data.Maybe                        (catMaybes, fromMaybe, maybeT
 import           Data.Prop                         (prop)
 import           Data.Record                       (ANY (..), caseTest, of')
 import qualified Data.Text.Lazy                    as Text
+import qualified Data.UUID                         as UUID
 
 import           Empire.API.Data.Input             (Input (Input))
 import           Empire.API.Data.Output            (Output (Output))
@@ -52,12 +53,15 @@ import qualified Luna.Syntax.Model.Network.Builder as Builder
 
 
 buildGraph :: Command Graph API.Graph
-buildGraph = API.Graph <$> buildNodes <*> buildConnections <*> buildInputs <*> buildOutputs
+buildGraph = API.Graph <$> buildNodes <*> buildConnections
 
 buildNodes :: Command Graph [API.Node]
 buildNodes = do
     allNodeIds <- uses Graph.nodeMapping Map.keys
-    mapM buildNode allNodeIds
+    inputEdge <- buildInputEdge
+    outputEdge <- buildOutputEdge
+    nodes <- mapM buildNode allNodeIds
+    return $ inputEdge : outputEdge : nodes
 
 buildNode :: NodeId -> Command Graph API.Node
 buildNode nid = do
@@ -200,14 +204,30 @@ buildConnections = do
     edges <- mapM getNodeInputs allNodes
     return $ concat edges
 
-buildInputs :: Command Graph [Input]
-buildInputs =
-    return [Input "input1" ValueType.AnyType, Input "input2" ValueType.AnyType] --TODO [MM] Provide proper values
+buildInputEdge :: Command Graph API.Node
+buildInputEdge =  --TODO implement
+    return $ API.Node (fromJust $ UUID.fromString "2c3f0968-630a-45e1-b030-cff9602004d4")
+                      "inputEdge"
+                      (API.InputEdge [ Input "input1" ValueType.AnyType $
+                                            Projection 1
+                                     , Input "input2" ValueType.AnyType $
+                                            Projection 2
+                                     ])
+                      False
+                      def
+                      def
+                      def
 
-buildOutputs :: Command Graph Output
-buildOutputs =
-    return $ Output ValueType.AnyType
-
+buildOutputEdge :: Command Graph API.Node
+buildOutputEdge =
+    return $ API.Node (fromJust $ UUID.fromString "19349a74-be9a-4262-b223-ab94a6d2cedd")
+                      "outputEdge"
+                      (API.OutputEdge $ Output ValueType.AnyType
+                                      $ Arg 1)
+                      False
+                      def
+                      def
+                      def
 
 getSelfNodeRef' :: ASTOp m => Bool -> NodeRef -> m (Maybe NodeRef)
 getSelfNodeRef' seenAcc nodeRef = do

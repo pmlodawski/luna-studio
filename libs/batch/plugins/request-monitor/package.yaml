@@ -14,8 +14,8 @@ dependencies:
   - containers
   - either
   - errors
-  - flowbox-bus-binary
-  - flowbox-config
+  - zmq-bus
+  - zmq-bus-config
   - flowbox-utils
   - mtl
   - optparse-applicative

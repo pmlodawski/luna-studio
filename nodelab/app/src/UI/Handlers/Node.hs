@@ -48,12 +48,12 @@ import           Empire.API.Data.Node         (NodeId)
 
 
 nameHandlers :: WidgetId -> HTMap
-nameHandlers id = addHandler (ValueChangedHandler $ nameValueChangedHandler id)
+nameHandlers wid = addHandler (ValueChangedHandler $ nameValueChangedHandler wid)
                 $ addHandler (UICmd.LostFocus $ inRegistry . flip UICmd.update_ (TextBox.isEditing .~ False))
                 $ mempty
 
 visualizationToggleHandlers :: WidgetId -> HTMap
-visualizationToggleHandlers id = addHandler (ValueChangedHandler $ visualizationToggledHandler id)
+visualizationToggleHandlers wid = addHandler (ValueChangedHandler $ visualizationToggledHandler wid)
                                  $ mempty
 
 nameValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
@@ -67,7 +67,7 @@ visualizationToggledHandler parent val _ = do
     triggerVisualizationsToggledHandler parent model
 
 typeHandlers :: WidgetId -> HTMap
-typeHandlers id = addHandler (ValueChangedHandler $ typeValueChangedHandler id)
+typeHandlers wid = addHandler (ValueChangedHandler $ typeValueChangedHandler wid)
                 $ addHandler (UICmd.LostFocus $ inRegistry . flip UICmd.update_ (TextBox.isEditing .~ False))
                 $ mempty where
 
@@ -80,7 +80,7 @@ codeEditorChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State
 codeEditorChangedHandler nodeWidgetId newCode _ = triggerCodeChangedHandler nodeWidgetId newCode
 
 codeHandlers :: WidgetId -> HTMap
-codeHandlers id = addHandler (ValueChangedHandler $ codeEditorChangedHandler id)
+codeHandlers wid = addHandler (ValueChangedHandler $ codeEditorChangedHandler wid)
                 $ mempty
 
 newtype RemoveNodeHandler = RemoveNodeHandler (Command Global.State ())
@@ -111,68 +111,68 @@ newtype CodeChangedHandler = CodeChangedHandler (NodeId -> Text -> Command Globa
 codeChangedHandler = TypeKey :: TypeKey CodeChangedHandler
 
 triggerRemoveHandler :: WidgetId -> Command Global.State ()
-triggerRemoveHandler id = do
-    maybeHandler <- inRegistry $ UICmd.handler id removeNodeHandler
+triggerRemoveHandler wid = do
+    maybeHandler <- inRegistry $ UICmd.handler wid removeNodeHandler
     withJust maybeHandler $ \(RemoveNodeHandler handler) -> handler
 
 triggerFocusNodeHandler :: WidgetId -> Command Global.State ()
-triggerFocusNodeHandler id = do
-    maybeHandler <- inRegistry $ UICmd.handler id focusNodeHandler
-    withJust maybeHandler $ \(FocusNodeHandler handler) -> handler id
+triggerFocusNodeHandler wid = do
+    maybeHandler <- inRegistry $ UICmd.handler wid focusNodeHandler
+    withJust maybeHandler $ \(FocusNodeHandler handler) -> handler wid
 
 triggerRenameNodeHandler :: WidgetId -> Model.Node -> Command Global.State ()
-triggerRenameNodeHandler id model = do
-    maybeHandler <- inRegistry $ UICmd.handler id renameNodeHandler
-    withJust maybeHandler $ \(RenameNodeHandler handler) -> handler id (model ^. Model.nodeId) (model ^. Model.name)
+triggerRenameNodeHandler wid model = do
+    maybeHandler <- inRegistry $ UICmd.handler wid renameNodeHandler
+    withJust maybeHandler $ \(RenameNodeHandler handler) -> handler wid (model ^. Model.nodeId) (model ^. Model.name)
 
 triggerVisualizationsToggledHandler :: WidgetId -> Model.Node -> Command Global.State ()
-triggerVisualizationsToggledHandler id model = do
-    maybeHandler <- inRegistry $ UICmd.handler id visualizationsToggledHandler
-    withJust maybeHandler $ \(VisualizationsToggledHandler handler) -> handler id (model ^. Model.nodeId) (model ^. Model.visualizationsEnabled)
+triggerVisualizationsToggledHandler wid model = do
+    maybeHandler <- inRegistry $ UICmd.handler wid visualizationsToggledHandler
+    withJust maybeHandler $ \(VisualizationsToggledHandler handler) -> handler wid (model ^. Model.nodeId) (model ^. Model.visualizationsEnabled)
 
 triggerChangeInputNodeTypeHandler :: WidgetId -> Model.Node -> Command Global.State ()
-triggerChangeInputNodeTypeHandler id model = do
+triggerChangeInputNodeTypeHandler wid model = do
     withJust (model ^. Model.tpe) $ \tpe -> do
-        maybeHandler <- inRegistry $ UICmd.handler id changeInputNodeTypeHandler
-        withJust maybeHandler $ \(ChangeInputNodeTypeHandler handler) -> handler id (model ^. Model.nodeId) tpe
+        maybeHandler <- inRegistry $ UICmd.handler wid changeInputNodeTypeHandler
+        withJust maybeHandler $ \(ChangeInputNodeTypeHandler handler) -> handler wid (model ^. Model.nodeId) tpe
 
 triggerEnterNodeHandler :: WidgetId -> Command Global.State ()
-triggerEnterNodeHandler id = do
-    maybeHandler <- inRegistry $ UICmd.handler id enterNodeHandler
+triggerEnterNodeHandler wid = do
+    maybeHandler <- inRegistry $ UICmd.handler wid enterNodeHandler
     withJust maybeHandler $ \(EnterNodeHandler handler) -> handler
 
 triggerExpandNodeHandler :: WidgetId -> Command Global.State ()
-triggerExpandNodeHandler id = do
-    maybeHandler <- inRegistry $ UICmd.handler id expandNodeHandler
+triggerExpandNodeHandler wid = do
+    maybeHandler <- inRegistry $ UICmd.handler wid expandNodeHandler
     withJust maybeHandler $ \(ExpandNodeHandler handler) -> handler
 
 triggerEditNodeExpressionHandler :: WidgetId -> Model.Node -> Command Global.State ()
-triggerEditNodeExpressionHandler id model = do
-    maybeHandler <- inRegistry $ UICmd.handler id editNodeExpressionHandler
+triggerEditNodeExpressionHandler wid model = do
+    maybeHandler <- inRegistry $ UICmd.handler wid editNodeExpressionHandler
     withJust maybeHandler $ \(EditNodeExpressionHandler handler) -> handler (model ^. Model.nodeId)
 
 triggerCodeChangedHandler :: WidgetId -> Text -> Command Global.State ()
-triggerCodeChangedHandler id newCode = do
-    nodeId       <- inRegistry $ UICmd.get id Model.nodeId
-    maybeHandler <- inRegistry $ UICmd.handler id codeChangedHandler
+triggerCodeChangedHandler wid newCode = do
+    nodeId       <- inRegistry $ UICmd.get wid Model.nodeId
+    maybeHandler <- inRegistry $ UICmd.handler wid codeChangedHandler
     withJust maybeHandler $ \(CodeChangedHandler handler) -> handler nodeId newCode
 
 keyDownHandler :: KeyPressedHandler Global.State
-keyDownHandler '\r'   _ _ id = triggerExpandNodeHandler id
-keyDownHandler '\x08' _ _ id = triggerRemoveHandler id
-keyDownHandler '\x2e' _ _ id = triggerRemoveHandler id
+keyDownHandler '\r'   _ _ wid = triggerExpandNodeHandler wid
+keyDownHandler '\x08' _ _ wid = triggerRemoveHandler wid
+keyDownHandler '\x2e' _ _ wid = triggerRemoveHandler wid
 keyDownHandler _      _ _ _  = return ()
 
 selectNode :: Mouse.Event' -> WidgetId -> Command Global.State ()
-selectNode evt id = do
+selectNode evt wid = do
     let action = handleSelection evt
-    selectNode' action id
+    selectNode' action wid
 
 selectNode' :: (WidgetId -> Command Global.State ()) -> WidgetId -> Command Global.State ()
-selectNode' action id = do
-    triggerFocusNodeHandler id
-    UICmd.takeFocus id
-    action id
+selectNode' action wid = do
+    triggerFocusNodeHandler wid
+    UICmd.takeFocus wid
+    action wid
 
 handleSelection :: Mouse.Event' -> (WidgetId -> Command Global.State ())
 handleSelection evt = case evt ^. Mouse.keyMods of
@@ -181,17 +181,17 @@ handleSelection evt = case evt ^. Mouse.keyMods of
     _                               -> const $ return ()
 
 performSelect :: WidgetId -> Command Global.State ()
-performSelect id = do
-    isSelected <- inRegistry $ UICmd.get id Model.isSelected
-    nodeId     <- inRegistry $ UICmd.get id Model.nodeId
+performSelect wid = do
+    isSelected <- inRegistry $ UICmd.get wid Model.isSelected
+    nodeId     <- inRegistry $ UICmd.get wid Model.nodeId
     unless isSelected $ do
         unselectAll
-        inRegistry $ UICmd.update_ id (Model.isSelected .~ True)
+        inRegistry $ UICmd.update_ wid (Model.isSelected .~ True)
         collaborativeTouch [nodeId]
 
 toggleSelect :: WidgetId -> Command Global.State ()
-toggleSelect id = do
-    newNode <- inRegistry $ UICmd.update id (Model.isSelected %~ not)
+toggleSelect wid = do
+    newNode <- inRegistry $ UICmd.update wid (Model.isSelected %~ not)
     let nodeId = newNode ^. Model.nodeId
     if newNode ^. Model.isSelected then
       collaborativeTouch [nodeId]
@@ -215,23 +215,23 @@ dblClickHandler :: DblClickHandler Global.State
 dblClickHandler _ _ = triggerEnterNodeHandler
 
 showHidePortLabels :: Bool -> WidgetId -> Command UIRegistry.State ()
-showHidePortLabels show id = do
-    inLabels <- inLabelsGroupId id
+showHidePortLabels show wid = do
+    inLabels <- inLabelsGroupId wid
     UICmd.update_ inLabels $ Group.visible .~ show
-    outLabels <- outLabelsGroupId id
+    outLabels <- outLabelsGroupId wid
     UICmd.update_ outLabels $ Group.visible .~ show
 
 onMouseOver, onMouseOut :: WidgetId -> Command Global.State ()
-onMouseOver id = inRegistry $ do
-    UICmd.update_ id $ Model.highlight .~ True
-    showHidePortLabels True id
-onMouseOut  id = inRegistry $ do
-    UICmd.update_ id $ Model.highlight .~ False
-    showHidePortLabels False id
+onMouseOver wid = inRegistry $ do
+    UICmd.update_ wid $ Model.highlight .~ True
+    showHidePortLabels True wid
+onMouseOut  wid = inRegistry $ do
+    UICmd.update_ wid $ Model.highlight .~ False
+    showHidePortLabels False wid
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyDown      .~ keyDownHandler
-                     & mousePressed .~ (\evt _ id -> selectNode evt id)
+                     & mousePressed .~ (\evt _ wid -> selectNode evt wid)
                      & dblClick     .~ dblClickHandler
                      & mouseOver .~ const onMouseOver
                      & mouseOut  .~ const onMouseOut
@@ -254,24 +254,24 @@ displayCodeEditor nodeWidgetId nodeGroupId code = do
 
 instance ResizableWidget Model.Node
 instance CompositeWidget Model.Node where
-    createWidget id model = do
+    createWidget wid model = do
         let grp    = Group.create & Group.size .~ Vector2 1 1
-        portGroup <- UICmd.register id grp def
+        portGroup <- UICmd.register wid grp def
 
         let label = Style.expressionLabel $ trimExpression $ model ^. Model.expression
-        expressionLabelId <- UICmd.register id label $ addHandler (DblClickedHandler $ const $ triggerEditNodeExpressionHandler id model)
-                                                     $ onClicked (\evt _ -> selectNode evt id)
+        expressionLabelId <- UICmd.register wid label $ addHandler (DblClickedHandler $ const $ triggerEditNodeExpressionHandler wid model)
+                                                     $ onClicked (\evt _ -> selectNode evt wid)
 
         let group  = Group.create & Group.position .~ Style.controlsPosition
-        controlGroups <- UICmd.register id group Style.controlsLayout
+        controlGroups <- UICmd.register wid group Style.controlsLayout
 
         let inLabelsGroup  = Group.create & Group.position .~ Vector2 (-400) (-30)
                                           & Group.visible .~ False
-        inLabelsGroupId <- UICmd.register id inLabelsGroup Style.inLabelsLayout
+        inLabelsGroupId <- UICmd.register wid inLabelsGroup Style.inLabelsLayout
 
         let outLabelsGroup  = Group.create & Group.position .~ Vector2 40 (-30)
                                            & Group.visible .~ False
-        outLabelsGroupId <- UICmd.register id outLabelsGroup Style.inLabelsLayout
+        outLabelsGroupId <- UICmd.register wid outLabelsGroup Style.inLabelsLayout
 
         let grp    = Group.create & Group.style   .~ Style.expandedGroupStyle
                                   & Group.visible .~ (model ^. Model.isExpanded)
@@ -283,17 +283,17 @@ instance CompositeWidget Model.Node where
         nodeGroupId <- UICmd.register expandedGroup Group.create Style.expandedGroupLayout
 
         let widget = LabeledTextBox.create Style.portControlSize "Name" $ model ^. Model.name
-        nameTextBoxId <- UICmd.register nodeGroupId widget $ nameHandlers id
+        nameTextBoxId <- UICmd.register nodeGroupId widget $ nameHandlers wid
 
-        codeEditorId <- mapM (displayCodeEditor id nodeGroupId) $ model ^. Model.code
+        codeEditorId <- mapM (displayCodeEditor wid nodeGroupId) $ model ^. Model.code
 
         let widget = Toggle.create Style.portControlSize "Display result" $ model ^. Model.visualizationsEnabled
-        visualizationToggleId <- UICmd.register nodeGroupId widget $ visualizationToggleHandlers id
+        visualizationToggleId <- UICmd.register nodeGroupId widget $ visualizationToggleHandlers wid
 
         withJust (model ^. Model.tpe) $ \_tpe -> do
             let widget = LabeledTextBox.create Style.portControlSize "Type" (fromMaybe "" $ model ^. Model.tpe)
-            nodeTpeId <- UICmd.register nodeGroupId widget $ typeHandlers id
-            void $ UIRegistry.updateWidgetM id $ Model.elements . Model.nodeType     ?~ nodeTpeId
+            nodeTpeId <- UICmd.register nodeGroupId widget $ typeHandlers wid
+            void $ UIRegistry.updateWidgetM wid $ Model.elements . Model.nodeType     ?~ nodeTpeId
 
         let grp    = Group.create
         portControlsGroupId <- UICmd.register expandedGroup grp Style.expandedGroupLayout
@@ -306,7 +306,7 @@ instance CompositeWidget Model.Node where
                                   & Group.size    . y .~ 0
         visualizationGroupId <- UICmd.register controlGroups group (Layout.verticalLayoutHandler 0.0)
 
-        void $ UIRegistry.updateWidgetM id $ Model.elements %~ ( (Model.expressionLabel     .~ expressionLabelId          )
+        void $ UIRegistry.updateWidgetM wid $ Model.elements %~ ( (Model.expressionLabel     .~ expressionLabelId          )
                                                                . (Model.expandedGroup       .~ expandedGroup              )
                                                                . (Model.nodeGroup           .~ nodeGroupId                )
                                                                . (Model.portGroup           .~ portGroup                  )
@@ -321,7 +321,7 @@ instance CompositeWidget Model.Node where
                                                                . (Model.codeEditor          .~ codeEditorId               )
                                                                )
 
-    updateWidget id old model = do
+    updateWidget wid old model = do
         whenChanged old model Model.isExpanded $ do
             let controlsId = model ^. Model.elements . Model.expandedGroup
                 valueVisId = model ^. Model.elements . Model.visualizationGroup
@@ -361,8 +361,8 @@ instance CompositeWidget Model.Node where
             let nodeGroupId = model ^. Model.elements . Model.nodeGroup
 
             when (isNothing $ model ^. Model.elements . Model.codeEditor) $ do
-                codeEditorId <- displayCodeEditor id nodeGroupId codeBody
-                void $ UIRegistry.updateWidgetM id $ Model.elements . Model.codeEditor .~ Just codeEditorId
+                codeEditorId <- displayCodeEditor wid nodeGroupId codeBody
+                void $ UIRegistry.updateWidgetM wid $ Model.elements . Model.codeEditor .~ Just codeEditorId
 
             withJust (model ^. Model.elements . Model.codeEditor) $ \codeEditorId ->
                 UICmd.update_ codeEditorId $ CodeEditor.value .~ codeBody
@@ -370,23 +370,23 @@ instance CompositeWidget Model.Node where
         when (isNothing $ model ^. Model.code) $
             withJust (model ^. Model.elements . Model.codeEditor) $ \codeEditorId -> do
                 UICmd.removeWidget codeEditorId
-                void $ UIRegistry.updateWidgetM id $ Model.elements . Model.codeEditor .~ Nothing
+                void $ UIRegistry.updateWidgetM wid $ Model.elements . Model.codeEditor .~ Nothing
 
 
 portControlsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
-portControlsGroupId id = UICmd.get id $ Model.elements . Model.portControls
+portControlsGroupId wid = UICmd.get wid $ Model.elements . Model.portControls
 
 inLabelsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
-inLabelsGroupId id = UICmd.get id $ Model.elements . Model.inLabelsGroup
+inLabelsGroupId wid = UICmd.get wid $ Model.elements . Model.inLabelsGroup
 
 outLabelsGroupId :: WidgetId -> Command UIRegistry.State WidgetId
-outLabelsGroupId id = UICmd.get id $ Model.elements . Model.outLabelsGroup
+outLabelsGroupId wid = UICmd.get wid $ Model.elements . Model.outLabelsGroup
 
 expressionId :: WidgetId -> Command UIRegistry.State WidgetId
-expressionId id = UICmd.get id $ Model.elements . Model.expressionLabel
+expressionId wid = UICmd.get wid $ Model.elements . Model.expressionLabel
 
 valueGroupId :: WidgetId -> Command UIRegistry.State WidgetId
-valueGroupId id = UICmd.get id $ Model.elements . Model.visualizationGroup
+valueGroupId wid = UICmd.get wid $ Model.elements . Model.visualizationGroup
 
 trimExpression :: Text -> Text
 trimExpression expr

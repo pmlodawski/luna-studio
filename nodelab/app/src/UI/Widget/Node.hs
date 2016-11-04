@@ -37,8 +37,8 @@ foreign import javascript safe "$1.setCollaboration($2, $3)"                    
 
 
 createNode :: WidgetId -> Model.Node -> IO Node
-createNode id model = do
-    node <- create' id (model ^. Model.position . x) (model ^. Model.position . y)
+createNode wid model = do
+    node <- create' wid (model ^. Model.position . x) (model ^. Model.position . y)
     return node
 
 ifChanged :: (Eq b) => a -> a -> Lens' a b -> IO () -> IO ()
@@ -55,14 +55,14 @@ setCollaboration n col = do
     setCollaboration' n color users'
 
 instance UIDisplayObject Model.Node where
-    createUI parentId id model = do
-        node   <- createNode id model
+    createUI parentId wid model = do
+        node   <- createNode wid model
         parent <- UIR.lookup parentId :: IO GenericWidget
-        UIR.register id node
+        UIR.register wid node
         UIT.add node parent
 
-    updateUI id old model = do
-        node <- UIR.lookup id :: IO Node
+    updateUI wid old model = do
+        node <- UIR.lookup wid :: IO Node
 
         whenChanged old model Model.isSelected    $ setSelected      node $ model ^. Model.isSelected
         whenChanged old model Model.isError       $ setError         node $ model ^. Model.isError

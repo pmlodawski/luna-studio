@@ -12,8 +12,6 @@ build:
       - apk update && apk add openssh-client
       - mkdir -p .stack
       - export STACK_ROOT=$DRONE_DIR/.stack
-      - mkdir -p dist/proto
-      - scripts/genproto
       - scripts/gencabal
       - cd $DRONE_DIR/build/backend
       - stack build --only-snapshot

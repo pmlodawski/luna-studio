@@ -76,7 +76,7 @@ makeLenses ''Elements
 instance ToJSON Elements
 
 makeNode :: N.NodeId -> Position -> Text -> Maybe Text -> Text -> Maybe Text -> Bool -> Node
-makeNode id pos expr code name tpe vis = Node id [] [] pos 0.0 expr code name "" tpe False False False vis def Nothing False def
+makeNode nid pos expr code name tpe vis = Node nid [] [] pos 0.0 expr code name "" tpe False False False vis def Nothing False def
 
 fromNode :: N.Node -> Node
 fromNode n = let position' = uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position

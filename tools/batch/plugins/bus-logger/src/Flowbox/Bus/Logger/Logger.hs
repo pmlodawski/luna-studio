@@ -9,32 +9,30 @@
 {-# LANGUAGE TemplateHaskell  #-}
 module Flowbox.Bus.Logger.Logger where
 
-import           Control.Monad         (forever)
-import           Control.Monad.State   (StateT, evalStateT, get, put)
-import qualified Data.Binary           as Bin
-import           Data.ByteString       (ByteString)
-import           Data.ByteString.Char8 (unpack)
-import           Data.ByteString.Lazy  (fromStrict, toStrict)
-import qualified Data.Map.Strict       as Map
-import qualified Data.Maybe            as Maybe
-import qualified Data.Time.Clock       as Clock
+import           Control.Monad             (forever)
+import           Control.Monad.State       (StateT, evalStateT, get, put)
+import qualified Data.Binary               as Bin
+import           Data.ByteString           (ByteString)
+import           Data.ByteString.Char8     (unpack)
+import           Data.ByteString.Lazy      (fromStrict, toStrict)
+import qualified Data.Map.Strict           as Map
+import qualified Data.Maybe                as Maybe
+import qualified Data.Time.Clock           as Clock
 
-import qualified Flowbox.Bus.Bus                        as Bus
-import           Flowbox.Bus.BusT                       (BusT (..))
-import qualified Flowbox.Bus.BusT                       as Bus
-import qualified Flowbox.Bus.Data.Message               as Message
-import           Flowbox.Bus.Data.MessageFrame          (MessageFrame (MessageFrame))
-import           Flowbox.Bus.Data.Topic                 (Topic)
-import           Flowbox.Bus.EndPoint                   (BusEndPoints)
-import           Flowbox.Bus.Logger.Env                 (Env)
-import qualified Flowbox.Bus.Logger.Env                 as Env
-import           Flowbox.Bus.RPC.Types                  (Response (Response), Result (ErrorResult, Status), Value (Value))
-import           Control.Monad.Error                    (MonadError)
+import           Control.Monad.Error       (MonadError)
+import           Flowbox.Bus.Logger.Env    (Env)
+import qualified Flowbox.Bus.Logger.Env    as Env
 import           Flowbox.Data.Convert
-import           Flowbox.Prelude                        hiding (error)
+import           Flowbox.Prelude           hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Reexport.Flowbox.Bus.Data.Exception    as Exception
-import qualified Reexport.G.Proto.Bus.Exception         as Gen
+import qualified ZMQ.Bus.Bus               as Bus
+import qualified ZMQ.Bus.Data.Message      as Message
+import           ZMQ.Bus.Data.MessageFrame (MessageFrame (MessageFrame))
+import           ZMQ.Bus.Data.Topic        (Topic)
+import           ZMQ.Bus.EndPoint          (BusEndPoints)
+import           ZMQ.Bus.RPC.Types         (Response (Response), Result (ErrorResult, Status), Value (Value))
+import           ZMQ.Bus.Trans             (BusT (..))
+import qualified ZMQ.Bus.Trans             as Bus
 
 
 

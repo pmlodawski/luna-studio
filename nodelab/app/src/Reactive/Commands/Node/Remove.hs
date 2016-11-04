@@ -7,7 +7,7 @@ import           Object.Widget                      (widget)
 import           Reactive.Commands.Command          (Command)
 import           Reactive.Commands.Graph            (nodeIdToWidgetId)
 import           Reactive.Commands.Graph.Disconnect (localDisconnectAll)
-import           Reactive.Commands.Graph.Selection  (selectedNodes)
+import qualified Reactive.Commands.Graph.Selection  as Selection
 import           Reactive.State.Global              (State, inRegistry)
 import qualified Reactive.State.Global              as Global
 import qualified Reactive.State.Graph               as Graph
@@ -24,7 +24,7 @@ import qualified JS.GoogleAnalytics                 as GA
 
 removeSelectedNodes :: Command State ()
 removeSelectedNodes = do
-    selectedNodes <- selectedNodes
+    selectedNodes <- Selection.selectedNodes
     performRemoval $ (^. widget . NodeModel.nodeId) <$> selectedNodes
 
 performRemoval :: [NodeId] -> Command State ()

@@ -45,15 +45,15 @@ setData model textBox = do
     setData' textBox h d
 
 instance UIDisplayObject Model.DataFrame where
-    createUI parentId id model = do
-        textBox   <- create id model
+    createUI parentId wid model = do
+        textBox   <- create wid model
         parent    <- UI.lookup parentId :: IO Widget.GenericWidget
-        UI.register id textBox
+        UI.register wid textBox
         Widget.add textBox parent
         realayout' textBox
 
-    updateUI id old model = do
-        textBox <- UI.lookup id :: IO DataFrame
+    updateUI wid old model = do
+        textBox <- UI.lookup wid :: IO DataFrame
 
         whenChanged old model Model.rows $     setData      model textBox
 

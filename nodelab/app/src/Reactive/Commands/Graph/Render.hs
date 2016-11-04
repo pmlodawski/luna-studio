@@ -4,13 +4,12 @@ module Reactive.Commands.Graph.Render
 
 import           Utils.PreludePlus
 
+import           Control.Monad                     (msum)
 import qualified Data.HashMap.Lazy                 as HashMap
 import qualified Data.IntMap.Lazy                  as IntMap
 
-import           Empire.API.Data.Input             (Input)
 import           Empire.API.Data.Node              (Node)
 import qualified Empire.API.Data.Node              as Node
-import           Empire.API.Data.Output            (Output)
 import           Empire.API.Data.PortRef           (InPortRef, OutPortRef)
 
 import           Reactive.Commands.Command         (Command)
@@ -31,23 +30,40 @@ fastAddNodes nodes = do
     Global.graph . Graph.nodesMap .= (HashMap.fromList $ nodeIds `zip` nodes)
     mapM_ registerNode nodes
 
-renderGraph :: [Node] -> [(OutPortRef, InPortRef)] -> [Input] -> Output -> Command State ()
-renderGraph nodes edges inputs outputs = do
+splitNodesAndEdges :: [Node] -> (Maybe Node, Maybe Node, [Node])
+splitNodesAndEdges allNodes = (inputEdge, outputEdge, nodes) where
+    inputEdge  = msum mayInputEdges
+    outputEdge = msum mayOutputEdges
+    (mayInputEdges, mayOutputEdges, nodes) = splitNodesAndEdges' allNodes (def, def, def)
+    splitNodesAndEdges' [] r = r
+    splitNodesAndEdges' (node:t) (i, o, n) = splitNodesAndEdges' t $ case node ^. Node.nodeType of
+        Node.InputEdge  {} -> (Just node : i, o, n)
+        Node.OutputEdge {} -> (i, Just node : o, n)
+        _ -> (i, o, node:n)
+
+renderGraph :: [Node] -> [(OutPortRef, InPortRef)] -> Command State ()
+renderGraph allNodes connections = do
+    let (inputs, outputs, nodes) = splitNodesAndEdges allNodes
     fastAddNodes nodes
-    mapM_ (uncurry localConnectNodes) edges
-    addInputs inputs
-    addOutputs outputs
-    --TODO add inputs and outputs widgets
+    mapM_ (uncurry localConnectNodes) connections
+    withJust inputs  addInputs
+    withJust outputs addOutputs
     updateConnections
     updateNodeZOrder
 
-addInputs  :: [Input] -> Command State ()
-addInputs inputs = do
-    let numberedInputs = [0..] `zip` inputs
+addInputs  :: Node -> Command State ()
+addInputs node = do
+    let inputs = node ^. Node.nodeType . Node.inputs
+        numberedInputs = [0..] `zip` inputs
+        nodeId = node ^. Node.nodeId
     Global.graph . Graph.inputsMap .= IntMap.fromList numberedInputs
-    mapM_ (uncurry Input.registerInput) numberedInputs
+    Global.graph . Graph.inputsId ?= nodeId
+    mapM_ (uncurry $ Input.registerInput nodeId) numberedInputs
 
-addOutputs :: Output -> Command State ()
-addOutputs outputs = do
+addOutputs :: Node -> Command State ()
+addOutputs node = do
+    let outputs = node ^?! Node.nodeType . Node.output
+        nodeId  = node ^. Node.nodeId
     Global.graph . Graph.outputs ?= outputs
-    Output.registerOutput outputs
+    Global.graph . Graph.outputsId ?= nodeId
+    Output.registerOutput nodeId outputs

@@ -40,14 +40,14 @@ setValue :: Model.RadioButton -> RadioButton -> IO ()
 setValue model widget = setValue' widget $ model ^. Model.selected
 
 instance UIDisplayObject Model.RadioButton where
-    createUI parentId id model = do
-        widget   <- create id model
+    createUI parentId wid model = do
+        widget   <- create wid model
         parent   <- UI.lookup parentId :: IO Widget.GenericWidget
-        UI.register id widget
+        UI.register wid widget
         Widget.add widget parent
 
-    updateUI id old model = do
-        widget <- UI.lookup id :: IO RadioButton
+    updateUI wid old model = do
+        widget <- UI.lookup wid :: IO RadioButton
 
         whenChanged old model Model.label    $ setLabel model widget
         whenChanged old model Model.selected $ setValue model widget

@@ -38,14 +38,14 @@ setTicks model slider = setTicks' slider True offset span where
     (offset, span) = limitTicks (model ^. Model.minValue) (model ^. Model.maxValue) (model ^. Model.size . x)
 
 instance UIDisplayObject Model.DiscreteSlider where
-    createUI parentId id model = do
-        slider   <- createSlider id model
+    createUI parentId wid model = do
+        slider   <- createSlider wid model
         parent   <- UI.lookup parentId :: IO Widget.GenericWidget
-        UI.register id slider
+        UI.register wid slider
         Widget.add slider parent
 
-    updateUI id old model = do
-        slider <- UI.lookup id :: IO Slider
+    updateUI wid old model = do
+        slider <- UI.lookup wid :: IO Slider
         whenChanged old model Model.label $ setLabel model slider
         whenChanged old model Model.value $ setValue model slider
         whenChanged old model Model.range $ setTicks model slider

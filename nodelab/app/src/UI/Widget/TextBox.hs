@@ -46,15 +46,15 @@ setAlignment :: Model.TextBox -> TextBox -> IO ()
 setAlignment model textBox = setAlignment' textBox $ JSString.pack $ show $ model ^. Model.alignment
 
 instance UIDisplayObject Model.TextBox where
-    createUI parentId id model = do
-        textBox   <- create id model
+    createUI parentId wid model = do
+        textBox   <- create wid model
         parent    <- UI.lookup parentId :: IO Widget.GenericWidget
-        UI.register id textBox
+        UI.register wid textBox
         Widget.add textBox parent
         setValueLabel  model textBox
 
-    updateUI id old model = do
-        textBox <- UI.lookup id :: IO TextBox
+    updateUI wid old model = do
+        textBox <- UI.lookup wid :: IO TextBox
 
         whenChanged old model Model.alignment $ setAlignment   model textBox
         whenChanged old model Model.value     $ setValueLabel  model textBox

@@ -17,7 +17,7 @@ import           Data.Map.Strict                   (Map)
 import qualified Data.Map.Strict                   as Map
 import qualified Data.UUID                         as UUID
 import qualified Data.UUID.V4                      as UUID
-import           Prelude                           (undefined, error)
+import           Prelude                           (error, undefined)
 import           Prologue
 import           Text.Groom                        (groom)
 
@@ -44,15 +44,15 @@ import qualified Empire.ResultSaver.Env            as Env
 import           Empire.ResultSaver.ProjectDump    (ProjectDump (..))
 import qualified Empire.Utils                      as Utils
 
-import qualified Flowbox.Bus.Bus                   as Bus
-import           Flowbox.Bus.BusT                  (BusT (..))
-import qualified Flowbox.Bus.BusT                  as Bus
-import qualified Flowbox.Bus.Data.Flag             as Flag
-import qualified Flowbox.Bus.Data.Message          as Message
-import           Flowbox.Bus.Data.MessageFrame     (MessageFrame (MessageFrame))
-import           Flowbox.Bus.Data.Topic            (Topic)
-import           Flowbox.Bus.EndPoint              (BusEndPoints)
 import qualified Flowbox.System.Log.Logger         as Logger
+import qualified ZMQ.Bus.Bus                       as Bus
+import qualified ZMQ.Bus.Data.Flag                 as Flag
+import qualified ZMQ.Bus.Data.Message              as Message
+import           ZMQ.Bus.Data.MessageFrame         (MessageFrame (MessageFrame))
+import           ZMQ.Bus.Data.Topic                (Topic)
+import           ZMQ.Bus.EndPoint                  (BusEndPoints)
+import           ZMQ.Bus.Trans                     (BusT (..))
+import qualified ZMQ.Bus.Trans                     as Bus
 
 logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)

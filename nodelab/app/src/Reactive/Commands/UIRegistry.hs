@@ -203,14 +203,14 @@ removeWidget widgetId = do
 
 newtype LostFocus = LostFocus (WidgetId -> Command Global.State ())
 triggerLostFocus :: WidgetId -> Command Global.State ()
-triggerLostFocus id = do
+triggerLostFocus wid = do
     let key = TypeKey :: (TypeKey LostFocus)
-    maybeHandler <- Global.inRegistry $ handler id key
-    withJust maybeHandler $ \(LostFocus handler) -> handler id
+    maybeHandler <- Global.inRegistry $ handler wid key
+    withJust maybeHandler $ \(LostFocus handler) -> handler wid
 
 takeFocus :: WidgetId -> Command Global.State ()
-takeFocus id = do
+takeFocus wid = do
     currentFocused <- use $ Global.uiRegistry . UIRegistry.focusedWidget
-    when (currentFocused /= Just id) $ do
+    when (currentFocused /= Just wid) $ do
         withJust currentFocused triggerLostFocus
-        Global.uiRegistry . UIRegistry.focusedWidget ?= id
+        Global.uiRegistry . UIRegistry.focusedWidget ?= wid

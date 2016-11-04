@@ -3,22 +3,20 @@ extra-deps: [ghc-session-0.1.2.0, error-util-0.0.1.1, cond-0.4.1.1, ghc-mtl-1.2.
 ghc-options: {'*': -DFastCompilation -threaded -O}
 local-bin-path: ../../dist/bin
 packages:
-- {extra-dep: true, location: ../../libs/bus}
-- {extra-dep: true, location: ../../libs/bus-binary}
-- {extra-dep: true, location: ../../libs/config}
-- {extra-dep: true, location: ../../libs/luna-empire-api}
 - {extra-dep: false, location: ../../libs/luna-empire}
+- {extra-dep: true, location: ../../libs/batch/plugins/luna-empire}
 - {extra-dep: true, location: ../../libs/luna-empire-api-json}
-- {extra-dep: true, location: ../../libs/old-utils}
-- {extra-dep: true, location: ../../libs/rpc}
+- {extra-dep: true, location: ../../libs/luna-empire-api}
+- {extra-dep: true, location: ../../libs/scope-searcher}
 - {extra-dep: true, location: ../../libs/utils}
 - {extra-dep: true, location: ../../libs/ws-connector}
-- {extra-dep: true, location: ../../libs/batch/plugins/luna-empire}
-- {extra-dep: true, location: ../../libs/scope-searcher}
-- {location: ../../tools/batch/plugins/ws-connector}
+- {extra-dep: true, location: ../../libs/zmq-bus-config}
+- {extra-dep: true, location: ../../libs/zmq-bus}
+- {extra-dep: true, location: ../../libs/zmq-rpc}
 - {location: ../../tools/batch/plugins/broker}
 - {location: ../../tools/batch/plugins/bus-logger}
 - {location: ../../tools/batch/plugins/luna-empire}
+- {location: ../../tools/batch/plugins/ws-connector}
 - extra-dep: false
   location:  ../../../luna/compiler
 - extra-dep: false

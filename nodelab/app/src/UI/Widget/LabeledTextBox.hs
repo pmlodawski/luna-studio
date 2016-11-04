@@ -37,13 +37,13 @@ setLabel :: Model.LabeledTextBox -> LabeledTextBox -> IO ()
 setLabel model textBox = setLabel' textBox $ lazyTextToJSString $ model ^. Model.label
 
 instance UIDisplayObject Model.LabeledTextBox where
-    createUI parentId id model = do
-        textBox   <- create id model
+    createUI parentId wid model = do
+        textBox   <- create wid model
         parent   <- UI.lookup parentId :: IO Widget.GenericWidget
-        UI.register id textBox
+        UI.register wid textBox
         Widget.add textBox parent
         setLabel       model textBox
 
-    updateUI id old model = do
-        textBox <- UI.lookup id :: IO LabeledTextBox
+    updateUI wid old model = do
+        textBox <- UI.lookup wid :: IO LabeledTextBox
         whenChanged old model Model.label $ setLabel   model textBox

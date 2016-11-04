@@ -20,7 +20,7 @@ dependencies:
   - either
   - mtl
   - lib-ws-connector
-  - flowbox-bus-binary
-  - flowbox-config
+  - zmq-bus-config
   - flowbox-utils
   - zeromq4-haskell
+  - zmq-bus

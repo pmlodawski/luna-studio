@@ -10,19 +10,19 @@ module Main where
 
 import qualified Control.Concurrent                  as Concurrent
 
-import           Flowbox.Broker.Cmd                  (Cmd)
-import qualified Flowbox.Broker.Cmd                  as Cmd
-import qualified Flowbox.Broker.Proxy                as Proxy
-import qualified Flowbox.Broker.Version              as Version
-import qualified Flowbox.Bus.Control.BusCtx          as BusCtx
-import qualified Flowbox.Bus.Control.Handler.Handler as Handler
-import qualified Flowbox.Bus.EndPoint                as EP
-import qualified Flowbox.Config.Config               as Config
+import           ZMQ.Bus.Broker.Cmd                  (Cmd)
+import qualified ZMQ.Bus.Broker.Cmd                  as Cmd
+import qualified ZMQ.Bus.Broker.Proxy                as Proxy
+import qualified ZMQ.Bus.Broker.Version              as Version
+import qualified ZMQ.Bus.Control.BusCtx          as BusCtx
+import qualified ZMQ.Bus.Control.Handler.Handler as Handler
+import qualified ZMQ.Bus.EndPoint                as EP
+import qualified ZMQ.Bus.Config               as Config
 import           Flowbox.Options.Applicative         hiding (info)
 import qualified Flowbox.Options.Applicative         as Opt
 import           Flowbox.Prelude                     hiding (error, switch)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.ZMQ.RPC.Server.Server       as RPC
+import qualified ZMQ.RPC.Server.Server       as RPC
 
 
 rootLogger :: Logger

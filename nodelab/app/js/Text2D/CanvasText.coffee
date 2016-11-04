@@ -12,14 +12,17 @@ class CanvasText
   height: -> @canvas.height / @dpr
 
   updateDPR: ->
+    @dpr = @calculateDPR()
+    @dpr
+
+  calculateDPR: ->
     rawDPR = getDevicePixelRatio()
     bsr = @ctx.webkitBackingStorePixelRatio ||
           @ctx.mozBackingStorePixelRatio    ||
           @ctx.msBackingStorePixelRatio     ||
           @ctx.oBackingStorePixelRatio      ||
-          @ctx.backingStorePixelRatio       || 1;
-    @dpr = rawDPR / bsr
-    @dpr
+          @ctx.backingStorePixelRatio       || 1
+    rawDPR / bsr
 
   drawText: (text, ctxOptions) ->
     @ctx.clearRect 0, 0, @canvas.width, @canvas.height

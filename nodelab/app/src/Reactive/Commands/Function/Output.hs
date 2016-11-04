@@ -4,6 +4,7 @@ module Reactive.Commands.Function.Output
 
 import           Prologue
 
+import           Empire.API.Data.Node         (NodeId)
 import           Empire.API.Data.Output       (Output)
 import qualified Object.Widget.FunctionPort   as Model
 import           Reactive.Commands.Command    (Command)
@@ -17,9 +18,9 @@ import           UI.Handlers.FunctionPort     ()
 
 
 
-registerOutput :: Output -> Command State ()
-registerOutput output = do
-    let outputModel = Model.fromOutput output
+registerOutput :: NodeId -> Output -> Command State ()
+registerOutput nodeId output = do
+    let outputModel = Model.fromOutput nodeId output
     outputsEdgeId <- use $ Global.uiElements . UIElements.outputsEdge
     outputWidget <- inRegistry $ UICmd.register outputsEdgeId outputModel def
     Global.graph . Graph.outputWidget ?= outputWidget

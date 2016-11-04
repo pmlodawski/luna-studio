@@ -1,17 +1,17 @@
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE QuasiQuotes       #-}
 
 module Main where
 
-import           Prologue                         hiding (argument)
-import           System.Environment               (getArgs)
+import           Prologue                  hiding (argument)
 import           System.Console.Docopt
+import           System.Environment        (getArgs)
 
-import qualified Flowbox.Bus.EndPoint             as EP
-import qualified Flowbox.Config.Config            as Config
+import qualified Empire.Monitor            as Monitor
+import qualified ZMQ.Bus.Config     as Config
 import           Flowbox.System.Log.Logger
-import qualified Empire.Monitor                   as Monitor
+import qualified ZMQ.Bus.EndPoint          as EP
 
 patterns :: Docopt
 patterns = [docoptFile|src/RequestMonitorUsage.txt|]

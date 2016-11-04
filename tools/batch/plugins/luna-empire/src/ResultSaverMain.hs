@@ -2,9 +2,9 @@
 
 module Main where
 
-import qualified Data.Binary                    as Bin
 import qualified Data.Aeson                     as JSON
 import qualified Data.Aeson.Encode.Pretty       as JSON
+import qualified Data.Binary                    as Bin
 import qualified Data.ByteString.Lazy           as BS
 import qualified Data.List                      as List
 import           Data.Maybe                     (fromMaybe)
@@ -19,11 +19,11 @@ import           Empire.ResultSaver.Cmd         (Cmd)
 import qualified Empire.ResultSaver.Cmd         as Cmd
 import           Empire.ResultSaver.ProjectDump (ProjectDump)
 import qualified Empire.Version                 as Version
-import qualified Flowbox.Bus.EndPoint           as EP
-import qualified Flowbox.Config.Config          as Config
+import qualified ZMQ.Bus.Config          as Config
 import           Flowbox.Options.Applicative    (help, long, metavar, optional, short)
 import qualified Flowbox.Options.Applicative    as Opt
 import           Flowbox.System.Log.Logger
+import qualified ZMQ.Bus.EndPoint               as EP
 
 defaultTopic :: String
 defaultTopic = "empire."

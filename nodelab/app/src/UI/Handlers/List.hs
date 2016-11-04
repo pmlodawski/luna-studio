@@ -48,7 +48,7 @@ removeItemHandlers listId groupId rowId = addHandler (Button.ClickedHandler $ re
                                         $ mempty where
     removeItemHandler _ = inRegistry $ removeElementByWidgetId listId groupId rowId
 
--- TODO: to sth with id param
+-- TODO: to sth with wid param
 listItemHandler :: WidgetId -> WidgetId -> WidgetId -> AnyLunaValue -> WidgetId -> Command Global.State ()
 listItemHandler listWidget groupId rowId val _id = do
     inRegistry $ do
@@ -99,9 +99,9 @@ addNewElement listId groupId width = do
     relayout listId groupId
 
 removeElementByWidgetId :: WidgetId -> WidgetId -> WidgetId -> Command UIRegistry.State ()
-removeElementByWidgetId listId groupId id = do
+removeElementByWidgetId listId groupId wid = do
     items <- UICmd.children groupId
-    let ix = elemIndex id items
+    let ix = elemIndex wid items
     forM_ ix $ \ix -> removeElement listId groupId ix
 
 removeElement :: WidgetId -> WidgetId -> Int -> Command UIRegistry.State ()
@@ -113,7 +113,7 @@ removeElement listId groupId idx = do
     relayout listId groupId
 
 instance CompositeWidget List where
-    createWidget id model = do
+    createWidget wid model = do
         let label        = Label.create (Vector2 100.0 20.0) "Param of list:"
             addButton    = Button.createIcon (Vector2 20 20) "shaders/icon.plus.frag"
             width        = model ^. List.size . x
@@ -121,22 +121,22 @@ instance CompositeWidget List where
             itemWidth    = width - addButton ^. Button.size . x - padding
             buttonIndent = itemWidth
 
-        UICmd.register_ id label def
+        UICmd.register_ wid label def
 
-        groupId     <- UICmd.register id Group.create (Layout.verticalLayoutHandler def)
+        groupId     <- UICmd.register wid Group.create (Layout.verticalLayoutHandler def)
         UICmd.moveX groupId padding
 
-        addButtonId <- UICmd.register id addButton (addItemHandlers id groupId itemWidth)
+        addButtonId <- UICmd.register wid addButton (addItemHandlers wid groupId itemWidth)
         UICmd.moveX addButtonId buttonIndent
 
         let elems = (model ^. List.value) `zip` [0..]
-        forM_ elems $ uncurry $ makeListItem id groupId itemWidth
+        forM_ elems $ uncurry $ makeListItem wid groupId itemWidth
 
-        relayout id groupId
+        relayout wid groupId
 
     updateWidget _id _old _model = return ()
 
 instance ResizableWidget List where
-    resizeWidget id vec model = do
-        defaultResize id vec model
-        triggerWidgetResized id vec
+    resizeWidget wid vec model = do
+        defaultResize wid vec model
+        triggerWidgetResized wid vec

@@ -23,12 +23,12 @@ clickedHandler :: TypeKey ClickedHandler
 clickedHandler = TypeKey
 
 triggerClicked :: WidgetId -> Command Global.State ()
-triggerClicked id = do
-    maybeHandler <- inRegistry $ UICmd.handler id clickedHandler
-    withJust maybeHandler $ \(ClickedHandler handler) -> handler id
+triggerClicked wid = do
+    maybeHandler <- inRegistry $ UICmd.handler wid clickedHandler
+    withJust maybeHandler $ \(ClickedHandler handler) -> handler wid
 
 clickHandler :: ClickHandler Global.State
-clickHandler _ _ id = triggerClicked id
+clickHandler _ _ wid = triggerClicked wid
 
 
 newtype DblClickedHandler = DblClickedHandler (WidgetId -> Command Global.State ())
@@ -37,12 +37,12 @@ dblClickedHandler :: TypeKey DblClickedHandler
 dblClickedHandler = TypeKey
 
 triggerDblClicked :: WidgetId -> Command Global.State ()
-triggerDblClicked id = do
-    maybeHandler <- inRegistry $ UICmd.handler id dblClickedHandler
-    withJust maybeHandler $ \(DblClickedHandler handler) -> handler id
+triggerDblClicked wid = do
+    maybeHandler <- inRegistry $ UICmd.handler wid dblClickedHandler
+    withJust maybeHandler $ \(DblClickedHandler handler) -> handler wid
 
 dblClickHandler :: DblClickHandler Global.State
-dblClickHandler _ _ id = triggerDblClicked id
+dblClickHandler _ _ wid = triggerDblClicked wid
 
 
 newtype MousePressedHandler = MousePressedHandler (Mouse.Event' -> WidgetId  -> Command Global.State ())
@@ -51,9 +51,9 @@ mousePressedHandler :: TypeKey MousePressedHandler
 mousePressedHandler = TypeKey
 
 triggerMousePressed :: Mouse.Event' -> JSState -> WidgetId -> Command Global.State ()
-triggerMousePressed evt _ id = do
-    maybeHandler <- inRegistry $ UICmd.handler id mousePressedHandler
-    withJust maybeHandler $ \(MousePressedHandler handler) -> handler evt id
+triggerMousePressed evt _ wid = do
+    maybeHandler <- inRegistry $ UICmd.handler wid mousePressedHandler
+    withJust maybeHandler $ \(MousePressedHandler handler) -> handler evt wid
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & click        .~ clickHandler

@@ -47,15 +47,15 @@ setMonospace model label = setMonospace' label isMono where
         Model.Monospace -> True
 
 instance UIDisplayObject Model.Label where
-    createUI parentId id model = do
-        widget   <- create id model
+    createUI parentId wid model = do
+        widget   <- create wid model
         parent   <- UI.lookup parentId :: IO Widget.GenericWidget
-        UI.register id widget
+        UI.register wid widget
         Widget.add widget parent
         setLabel       model widget
 
-    updateUI id _old model = do
-        widget <- UI.lookup id :: IO Label
+    updateUI wid _old model = do
+        widget <- UI.lookup wid :: IO Label
         setLabel     model widget
         setAlignment model widget
         setMonospace model widget

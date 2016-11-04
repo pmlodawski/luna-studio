@@ -1,0 +1,34 @@
+Name:               zmq-bus-broker
+Version:            0.1
+Cabal-Version:      >= 1.8
+--License-file:       LICENSE
+Author:             New Byte Order <contact@newbyteorder.com>
+Maintainer:         New Byte Order <contact@newbyteorder.com>
+Build-Type:         Simple
+
+Flag Debug
+    Description:    Enable debug support
+    Default:        False
+
+
+Executable broker
+    Hs-Source-Dirs: src
+    Other-Modules:`findmodules('src', '.*\.hs')`,
+        Paths_zmq_bus_broker
+
+    Main-Is:        Main.hs
+
+    GHC-Options:    -Wall -O2 -threaded
+
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  base,
+                    bytestring,
+                    containers,
+                    zmq-bus,
+                    zmq-rpc,
+                    zmq-bus-config,
+                    flowbox-utils,
+                    transformers,
+                    protocol-buffers,
+                    zeromq4-haskell >= 0.4

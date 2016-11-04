@@ -6,18 +6,18 @@ module WSConnector.Workers.BusWorker (start) where
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
-import           Control.Concurrent                 (forkIO)
-import           Control.Concurrent.STM             (atomically)
+import           Control.Concurrent           (forkIO)
+import           Control.Concurrent.STM       (atomically)
 import           Control.Concurrent.STM.TChan
-import           Control.Monad                      (forever)
-import           Flowbox.Bus.Bus                    (Bus)
-import qualified Flowbox.Bus.Bus                    as Bus
-import qualified Flowbox.Bus.Data.Flag              as Flag
-import qualified Flowbox.Bus.Data.Message           as Message
-import qualified Flowbox.Bus.Data.MessageFrame      as MessageFrame
-import           Flowbox.Bus.EndPoint               (BusEndPoints)
+import           Control.Monad                (forever)
+import           ZMQ.Bus.Bus                  (Bus)
+import qualified ZMQ.Bus.Bus                  as Bus
+import qualified ZMQ.Bus.Data.Flag            as Flag
+import qualified ZMQ.Bus.Data.Message         as Message
+import qualified ZMQ.Bus.Data.MessageFrame    as MessageFrame
+import           ZMQ.Bus.EndPoint             (BusEndPoints)
 
-import           WSConnector.Data.WSMessage (WSMessage (..))
+import           WSConnector.Data.WSMessage   (WSMessage (..))
 
 logger :: LoggerIO
 logger = getLoggerIO $moduleName

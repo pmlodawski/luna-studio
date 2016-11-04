@@ -8,18 +8,18 @@ module Reactive.Plugins.Core.Action.Debug
     ) where
 
 
+import           JS.Debug                  (cinfo, clog, lastEv, processedEvent, saveState, shouldExportState)
 import           Utils.PreludePlus
-import           JS.Debug                    (clog, cinfo, saveState, lastEv, shouldExportState, processedEvent)
 
-import qualified Event.Debug                 as Debug
-import           Event.Event                 (Event(..))
+import qualified Event.Debug               as Debug
+import           Event.Event               (Event (..))
 
-import qualified Reactive.State.Global       as Global
-import           Reactive.Commands.Command   (Command, performIO)
-import           Control.Monad.State         hiding (state)
+import           Control.Monad.State       hiding (state)
+import           Reactive.Commands.Command (Command, performIO)
+import qualified Reactive.State.Global     as Global
 
-import           Data.Aeson                  (toJSON)
-import           GHCJS.Marshal               (toJSVal)
+import           Data.Aeson                (toJSON)
+import           GHCJS.Marshal             (toJSVal)
 
 toAction :: Event -> Maybe (Command Global.State ())
 toAction (Debug Debug.GetState) = Just $ do
@@ -29,7 +29,7 @@ toAction (Debug Debug.GetState) = Just $ do
         val <- toJSVal json
         clog val
         saveState val
-toAction ev = Just $ do
+toAction _ev = Just $ do
     -- logBatch ev
     when shouldExportState $ do
         state <- get

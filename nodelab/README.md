@@ -26,17 +26,14 @@ In interactive mode, the page is reloaded upon file save, however new code is in
 
 ```
 # Use system specific tool in place of brew
-brew install protobuf
 brew install pkg-config
 brew install zeromq
 brew install supervisor
 # export PATH="$HOME/.local/bin:$PATH" # put to .zshrc or equivalent
-stack install alex happy hprotoc hpack
+stack install alex happy hpack
 git clone git@bitbucket.org:NewByteOrder/new_byte_order.git
 cd new_byte_order/
 git submodule update --init --recursive
-mkdir dist/gen # missing this step produces invalid flowbox-rpc.tcabal, flowbox-bus.tcabal files after genproto
-scripts/genproto
 scripts/gencabal
 cd nodelab/
 stack setup
@@ -66,14 +63,6 @@ supervisorctl status all
 supervisorctl restart all
 supervisorctl tail -f luna-empire
 ```
-
-## Protocol buffers
-
-Before building the app for the first time, you need to generate protocol buffers definitions.
-1. Install [Protobuf](https://github.com/google/protobuf) and [hprotoc](https://hackage.haskell.org/package/hprotoc). Make sure the `protoc` and `hprotoc` binaries are available on the `$PATH`.
-2. Ensure `git submodule init` and `git submodule update` were performed.
-3. Run `./scripts/genproto`.
-4. Run `./scripts/gencabal` (the order of `genproto` and `gencabal` matters!).
 
 ## Building for production
 

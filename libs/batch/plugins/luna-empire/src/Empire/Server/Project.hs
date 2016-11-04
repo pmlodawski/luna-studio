@@ -5,26 +5,21 @@ module Empire.Server.Project where
 import           Prologue
 
 import           Control.Monad.State              (StateT)
-import qualified Data.Binary                      as Bin
-import           Data.ByteString                  (ByteString)
-import           Data.ByteString.Lazy             (fromStrict)
 import qualified Empire.API.Project.CreateProject as CreateProject
-import qualified Empire.API.Project.ListProjects  as ListProjects
 import qualified Empire.API.Project.ExportProject as ExportProject
 import qualified Empire.API.Project.ImportProject as ImportProject
-import qualified Empire.API.Topic                 as Topic
-import qualified Empire.API.Response              as Response
-import           Empire.API.Request                (Request(..))
+import qualified Empire.API.Project.ListProjects  as ListProjects
+import           Empire.API.Request               (Request (..))
 import qualified Empire.Commands.Library          as Library
-import qualified Empire.Commands.Project          as Project
 import qualified Empire.Commands.Persistence      as Persistence
+import qualified Empire.Commands.Project          as Project
 import qualified Empire.Data.Project              as DataProject
 import qualified Empire.Empire                    as Empire
 import           Empire.Env                       (Env)
 import qualified Empire.Env                       as Env
-import           Empire.Server.Server             (errorMessage, sendToBus', replyFail, replyResult)
-import           Flowbox.Bus.BusT                 (BusT (..))
+import           Empire.Server.Server             (replyFail, replyResult, sendToBus')
 import qualified Flowbox.System.Log.Logger        as Logger
+import           ZMQ.Bus.Trans                    (BusT (..))
 
 logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)
@@ -91,4 +86,3 @@ handleImportProject req@(Request _ (ImportProject.Request projectData)) = do
             replyResult req $ ImportProject.Result projectId $ DataProject.toAPI project
             sendToBus' $ CreateProject.Update projectId $ DataProject.toAPI project
             sendListProjectsUpdate
-

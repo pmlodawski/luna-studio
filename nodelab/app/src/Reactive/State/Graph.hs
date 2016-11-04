@@ -19,6 +19,7 @@ module Reactive.State.Graph
     , getNodesMap
     , hasConnections
     , inputsMap
+    , inputsId
     , inputWidgets
     , inputWidgetsMap
     , lookUpConnection
@@ -27,6 +28,7 @@ module Reactive.State.Graph
     , nodeWidgets
     , nodeWidgetsMap
     , outputs
+    , outputsId
     , outputWidget
     , portWidgets
     , portWidgetsMap
@@ -87,7 +89,9 @@ instance Hashable AnyPortRef
 
 data State = State { _nodesMap             :: NodesMap
                    , _connectionsMap       :: ConnectionsMap
+                   , _inputsId             :: Maybe NodeId
                    , _inputsMap            :: IntMap Input
+                   , _outputsId            :: Maybe NodeId
                    , _outputs              :: Maybe Output
                    , _nodeWidgetsMap       :: HashMap NodeId     WidgetId
                    , _connectionWidgetsMap :: HashMap InPortRef  WidgetId
@@ -100,7 +104,7 @@ makeLenses ''State
 
 instance ToJSON State
 instance Default State where
-    def = State def def def def def def def def def
+    def = State def def def def def def def def def def def
 
 connectionToNodeIds :: Connection -> (NodeId, NodeId)
 connectionToNodeIds conn = ( conn ^. Connection.src . PortRef.srcNodeId
