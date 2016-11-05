@@ -33,6 +33,7 @@ import           Empire.API.Data.Port                  (InPort (..), OutPort (..
 import           Empire.API.Data.PortRef               (InPortRef (..), OutPortRef (..))
 import           Empire.API.Data.ValueType             (ValueType (..))
 import qualified Empire.API.Graph.AddNode              as AddNode
+import qualified Empire.API.Graph.AddSubgraph          as AddSubgraph
 import qualified Empire.API.Graph.CodeUpdate           as CodeUpdate
 import qualified Empire.API.Graph.Connect              as Connect
 import qualified Empire.API.Graph.Disconnect           as Disconnect
@@ -164,7 +165,10 @@ handleAddNode = modifyGraph action success where
             AddNode.ExpressionNode expr -> withJust connectTo $ connectNodes location expr (node ^. Node.nodeId)
 
 handleAddSubgraph :: Request AddSubgraph.Request -> StateT Env BusT ()
-handleAddSubgraph = $notImplemented
+handleAddSubgraph = modifyGraphOk action success where
+    action  (AddSubgraph.Request location nodes connections) = Graph.addSubgraph location nodes connections
+    success (AddSubgraph.Request location nodes connections) result = sendToBus' $ AddSubgraph.Update location nodes connections
+
 
 handleRemoveNode :: Request RemoveNode.Request -> StateT Env BusT ()
 handleRemoveNode = modifyGraphOk action success where

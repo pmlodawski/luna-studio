@@ -2,6 +2,7 @@ module Empire.Commands.Graph
     ( addNode
     , addNodeCondTC
     , addPersistentNode
+    , addSubgraph
     , removeNodes
     , updateNodeExpression
     , updateNodeMeta
@@ -37,6 +38,7 @@ import qualified Empire.Data.Library     as Library
 import qualified Empire.Data.Graph       as Graph
 import           Empire.Data.Graph       (Graph)
 
+import           Empire.API.Data.Connection    (Connection)
 import           Empire.API.Data.Project       (ProjectId)
 import           Empire.API.Data.Library       (LibraryId)
 import           Empire.API.Data.Port          (InPort(..), OutPort(..), PortId(..))
@@ -104,7 +106,7 @@ addPersistentNode n = case n ^. Node.nodeType of
                 _ -> return ()
             _ -> return ()
 
-addSubgraph :: GraphLocation -> [Node] -> [Connection] -> Empire APIGraph.GraphLocation
+addSubgraph :: GraphLocation -> [Node] -> [Connection] -> Empire ()
 addSubgraph = $notImplemented
 
 removeNodes :: GraphLocation -> [NodeId] -> Empire ()
