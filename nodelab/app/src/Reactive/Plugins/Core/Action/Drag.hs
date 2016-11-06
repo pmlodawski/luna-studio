@@ -98,6 +98,10 @@ snap (Vector2 x y) = Vector2 x' y' where
   x' = snapCoord x
   y' = snapCoord y
 
+delay :: Vector2 Double -> Double -> Bool
+delay (Vector2 x y) d = x < -d || x > d || y > d || y < -d
+
+
 handleMove :: Vector2 Int -> Bool -> Command State ()
 handleMove coord snapped = do
     factor <- use $ Global.camera . Camera.camera . Camera.factor
@@ -109,7 +113,7 @@ handleMove coord snapped = do
             newNodePosSnapped = snap newNodePos
             newDeltaWsSnapped = newNodePosSnapped - widgetPos
         if snapped then do
-            when (lengthSquared newDeltaWsSnapped > 0.01) $ do
+            when ((lengthSquared newDeltaWsSnapped > 0.1) && (delay deltaWs 30.0)) $ do
                  moveNodes newDeltaWsSnapped
                  Global.drag . Drag.history ?= DragHistory start current coord newNodePosSnapped
         else do
