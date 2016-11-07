@@ -1,0 +1,59 @@
+name: luna-empire
+version: "0.1"
+author: New Byte Order <contact@newbyteorder.com>
+maintainer: New Byte Order <contact@newbyteorder.com>
+build-type: Simple
+
+library:
+    source-dirs: src
+
+tests:
+    spec:
+        main: Spec.hs
+        source-dirs: test
+        dependencies:
+            - luna-empire
+            - hspec
+
+dependencies:
+    - base
+    - aeson-pretty
+    - aeson
+    - bytestring
+    - container
+    - data-construction
+    - data-layer
+    - data-member
+    - directory
+    - either
+    - fgl
+    - filepath
+    - zmq-bus-config
+    - flowbox-utils
+    - ghc-prim
+    - luna-core
+    - luna-empire-api-json
+    - luna-empire-api
+    - luna-parser
+    - lunac
+    - mtl
+    - prologue
+    - split
+    - stm
+    - text
+    - transformers
+    - typelevel
+    - uuid
+    - visualization-api
+    - zmq-bus
+
+default-extensions:
+    - NoImplicitPrelude
+    - TemplateHaskell
+    - DeriveFunctor
+    - DeriveTraversable
+    - FlexibleInstances
+    - FlexibleContexts
+    - TypeFamilies
+    - MultiParamTypeClasses
+    - RankNTypes

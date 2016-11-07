@@ -19,10 +19,12 @@ import           Data.Maybe                        (catMaybes, fromMaybe, maybeT
 import           Data.Prop                         (prop)
 import           Data.Record                       (ANY (..), caseTest, of')
 import qualified Data.Text.Lazy                    as Text
+import qualified Data.Tree                         as Tree
 import qualified Data.UUID                         as UUID
 
 import           Empire.API.Data.Input             (Input (Input))
 import           Empire.API.Data.Output            (Output (Output))
+import           Empire.Data.BreadcrumbHierarchy   (topLevelIDs)
 import           Empire.Data.Graph                 (Graph)
 import qualified Empire.Data.Graph                 as Graph
 
@@ -57,7 +59,7 @@ buildGraph = API.Graph <$> buildNodes <*> buildConnections
 
 buildNodes :: Command Graph [API.Node]
 buildNodes = do
-    allNodeIds <- uses Graph.nodeMapping Map.keys
+    allNodeIds <- uses Graph.breadcrumbHierarchy topLevelIDs
     inputEdge <- buildInputEdge
     outputEdge <- buildOutputEdge
     nodes <- mapM buildNode allNodeIds

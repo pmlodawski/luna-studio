@@ -51,16 +51,16 @@ printExpression' suppresNodes paren nodeRef = do
     let recur = printExpression' suppresNodes
     node <- Builder.read nodeRef
     let displayFun funExpr args = do
-        unpackedArgs <- ASTBuilder.unpackArguments args
-        argsRep <- mapM (recur True) unpackedArgs
-        if all (not . isAlpha) funExpr && length argsRep == 2
-            then return $ parenIf paren $ head argsRep ++ " " ++ funExpr ++ " " ++ (argsRep !! 1)
-            else do
-                let dropTailBlanks = dropWhileEnd (== "_") argsRep
-                let shouldParen = paren && not (null args)
-                case argsRep of
-                    a : as -> return $ parenIf shouldParen $ funExpr ++ " " ++ unwords dropTailBlanks
-                    _ -> return funExpr
+            unpackedArgs <- ASTBuilder.unpackArguments args
+            argsRep <- mapM (recur True) unpackedArgs
+            if all (not . isAlpha) funExpr && length argsRep == 2
+                then return $ parenIf paren $ head argsRep ++ " " ++ funExpr ++ " " ++ (argsRep !! 1)
+                else do
+                    let dropTailBlanks = dropWhileEnd (== "_") argsRep
+                    let shouldParen = paren && not (null args)
+                    case argsRep of
+                        a : as -> return $ parenIf shouldParen $ funExpr ++ " " ++ unwords dropTailBlanks
+                        _ -> return funExpr
 
     caseTest (uncover node) $ do
         of' $ \(Lam as o) -> do

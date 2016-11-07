@@ -32,11 +32,11 @@ import qualified Data.Text.Lazy                as Text
 import           Data.Traversable              (forM)
 import qualified Data.UUID                     as UUID
 import           Prologue
-import           Unsafe.Coerce                 (unsafeCoerce)
 
-import           Empire.Data.Graph             (Graph)
-import qualified Empire.Data.Graph             as Graph
-import qualified Empire.Data.Library           as Library
+import           Empire.Data.BreadcrumbHierarchy (addID)
+import           Empire.Data.Graph               (Graph)
+import qualified Empire.Data.Graph               as Graph
+import qualified Empire.Data.Library             as Library
 
 import           Empire.API.Data.Connection    (Connection (..))
 import           Empire.API.Data.DefaultValue  (PortDefault (Constant), Value (..))
@@ -58,10 +58,10 @@ import           Debug.Trace                   (trace)
 import qualified Empire.Commands.AST           as AST
 import qualified Empire.Commands.GraphBuilder  as GraphBuilder
 import qualified Empire.Commands.GraphUtils    as GraphUtils
+import           Empire.Commands.Breadcrumb    (withBreadcrumb)
 import           Empire.Commands.Library       (withLibrary)
 import qualified Empire.Commands.Publisher     as Publisher
 import           Empire.Empire
-
 
 generateNodeName :: Command Graph String
 generateNodeName = do
@@ -86,6 +86,7 @@ addNodeNoTC loc uuid expr meta = do
     zoom Graph.ast $ AST.writeMeta refNode meta
     Graph.nodeMapping . at uuid ?= refNode
     node <- GraphBuilder.buildNode uuid
+    Graph.breadcrumbHierarchy %= addID (node ^. Node.nodeId)
     Publisher.notifyNodeUpdate loc node
     return node
 
@@ -226,7 +227,7 @@ withTC loc flush cmd = withGraph loc $ do
     return res
 
 withGraph :: GraphLocation -> Command Graph a -> Empire a
-withGraph (GraphLocation pid lid _) = withLibrary pid lid . zoom Library.body
+withGraph (GraphLocation pid lid breadcrumb) = withBreadcrumb pid lid breadcrumb
 
 getOutEdges :: NodeId -> Command Graph [InPortRef]
 getOutEdges nodeId = do
