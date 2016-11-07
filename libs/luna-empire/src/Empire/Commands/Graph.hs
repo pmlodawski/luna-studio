@@ -38,7 +38,7 @@ import qualified Empire.Data.Library     as Library
 import qualified Empire.Data.Graph       as Graph
 import           Empire.Data.Graph       (Graph)
 
-import           Empire.API.Data.Connection    (Connection)
+import           Empire.API.Data.Connection    (Connection (..))
 import           Empire.API.Data.Project       (ProjectId)
 import           Empire.API.Data.Library       (LibraryId)
 import           Empire.API.Data.Port          (InPort(..), OutPort(..), PortId(..))
@@ -107,7 +107,12 @@ addPersistentNode n = case n ^. Node.nodeType of
             _ -> return ()
 
 addSubgraph :: GraphLocation -> [Node] -> [Connection] -> Empire ()
-addSubgraph = $notImplemented
+addSubgraph loc nodes conns = withTC loc False $ do
+    forM_ nodes $ \n -> case n ^. Node.nodeType of
+        Node.ExpressionNode expr -> void $ addNodeNoTC loc (n ^. Node.nodeId) expr (n ^. Node.nodeMeta)
+        _ -> return ()
+    forM_ conns $ \(Connection src dst) -> connectNoTC src dst
+
 
 removeNodes :: GraphLocation -> [NodeId] -> Empire ()
 removeNodes loc nodeIds = withTC loc False $ forM_ nodeIds removeNodeNoTC
