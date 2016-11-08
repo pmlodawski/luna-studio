@@ -19,20 +19,10 @@ data Request = Request { _location    :: GraphLocation
 type Response = Response.SimpleResponse Request
 instance Response.ResponseResult Request ()
 
-data Update  = Update  { _location'    :: GraphLocation
-                       , _nodes'       :: [Node]
-                       , _connections' :: [Connection]
-                       } deriving (Generic, Show, Eq)
-
-
-
 makeLenses ''Request
-makeLenses ''Update
 instance Binary Request
-instance Binary Update
 instance G.GraphRequest Request where location = location
 
 topicPrefix = "empire.graph.node.addSubgraph"
 instance T.MessageTopic (R.Request Request)  where topic _ = topicPrefix <> T.request
 instance T.MessageTopic Response             where topic _ = topicPrefix <> T.response
-instance T.MessageTopic Update               where topic _ = topicPrefix <> T.update

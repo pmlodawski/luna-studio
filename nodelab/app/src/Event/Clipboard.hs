@@ -1,7 +1,6 @@
 module Event.Clipboard where
 
-import           Data.Aeson        (ToJSON, toJSON)
-import           GHCJS.Types
+import           Data.Aeson        (ToJSON)
 import           Utils.PreludePlus
 
 data Event = Copy

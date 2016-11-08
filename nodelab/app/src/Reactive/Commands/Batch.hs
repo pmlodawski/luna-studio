@@ -22,13 +22,13 @@ import qualified Empire.API.Data.PortRef      as PortRef (nodeId, dstNodeId)
 withWorkspace :: (Workspace -> UUID -> IO ()) -> Command State ()
 withWorkspace act = do
     uuid      <- registerRequest
-    workspace <- use workspace
-    performIO $ act workspace uuid
+    workspace' <- use workspace
+    performIO $ act workspace' uuid
 
 withWorkspace' :: (Workspace -> IO ()) -> Command State ()
 withWorkspace' act = do
-    workspace <- use workspace
-    performIO $ act workspace
+    workspace' <- use workspace
+    performIO $ act workspace'
 
 withUUID :: (UUID -> IO ()) -> Command State ()
 withUUID act = do

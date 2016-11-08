@@ -183,7 +183,7 @@ connectionsContainingNode nid state = filter (containsNode nid) $ getConnections
 connectionsContainingNodes :: Set.Set NodeId -> State -> [Connection]
 connectionsContainingNodes nodeIds state = do
   let connections' = filter ((flip Set.member nodeIds) . (view $ Connection.src . PortRef.srcNodeId)) $ getConnections state
-  filter ((flip Set.member nodeIds) . (view $ Connection.src . PortRef.srcNodeId)) connections'
+  filter ((flip Set.member nodeIds) . (view $ Connection.dst . PortRef.dstNodeId)) connections'
 
 connectionIdsContainingNode :: NodeId -> State -> [ConnectionId]
 connectionIdsContainingNode nid state = (view Connection.connectionId) <$> connectionsContainingNode nid state

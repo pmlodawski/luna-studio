@@ -26,7 +26,7 @@ import           Utils.Vector              (Vector2 (Vector2))
 
 import           GHCJS.DOM                 (currentDocument, currentWindow)
 import qualified GHCJS.DOM.Document        as Document
-import           GHCJS.DOM.Element         (Element, dblClick, keyDown, keyPress, keyUp, mouseDown, mouseMove, mouseUp, wheel, copy, paste, cut)
+import           GHCJS.DOM.Element         (Element, dblClick, keyDown, keyPress, keyUp, mouseDown, mouseMove, mouseUp, wheel)
 import           GHCJS.DOM.EventM          (EventM, EventName)
 import qualified GHCJS.DOM.EventM          as EventM
 import qualified GHCJS.DOM.KeyboardEvent   as KeyboardEvent
@@ -212,38 +212,17 @@ customEventHandler  = AddHandler $ \h -> do
 copyClipboardHandler :: AddHandler Event
 copyClipboardHandler =
   AddHandler $ \h -> do
-    Clipboard.registerCopyCallback $ \jsval ->
+    Clipboard.registerCopyCallback $ \_ ->
       liftIO . h $ Clipboard $ Clipboard.Copy
 
 cutClipboardHandler :: AddHandler Event
 cutClipboardHandler =
   AddHandler $ \h -> do
-    Clipboard.registerCutCallback $ \jsval ->
+    Clipboard.registerCutCallback $ \_ ->
       liftIO . h $ Clipboard $ Clipboard.Cut
-
 
 pasteClipboardHandler :: AddHandler Event
 pasteClipboardHandler =
   AddHandler $ \h -> do
     Clipboard.registerPasteCallback $ \jsval ->
       liftIO . h $ Clipboard $ Clipboard.Paste (lazyTextFromJSString $ pFromJSVal jsval)
-
--- copyClipboardHandler :: AddHandler Event
--- copyClipboardHandler =
---     AddHandler $ \h -> do
---       Clipboard.registerCallback $ \jsval -> do
---             -- getData => "$1.clipboardData" :: JSval -> JSString
---             -- lazyTextFromJSString
---             trolololDane <- liftIO $ getData jsval
---             liftIO . h $ Clipboard $ Clipboard.Paste $ lazyTextFromJSString trololoDane
-
-
--- copyClipboardHandler :: AddHandler Event
--- copyClipboardHandler =
---     AddHandler $ \h -> do
---         window <- fromJust <$> eventObject
---         window `on` copy $ do
---             preventDefault
---             -- przy paste
---             -- data <- ClipboardEvent.getData czy cos takiego
---             liftIO . h $ Clipboard Clipboard.Copy
