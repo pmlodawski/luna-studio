@@ -60,4 +60,4 @@ fromOutput :: NodeId -> Output -> FunctionPort
 fromOutput nodeId output = create Output port (Colors.vtToColor vt) label label where
     port  = toAnyPortRef nodeId $ InPortId $ output ^. Output.inPort
     vt    = output ^. Output.valueType
-    label = "-> " <> vt ^. ValueType.toText
+    label = "output"
