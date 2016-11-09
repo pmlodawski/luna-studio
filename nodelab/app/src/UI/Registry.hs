@@ -3,7 +3,6 @@ module UI.Registry where
 import           Utils.PreludePlus
 
 import           GHCJS.Marshal.Pure (PFromJSVal (..), PToJSVal (..))
-import           GHCJS.Types        (JSVal)
 import           Object.Widget      (WidgetId, fromWidgetId)
 import           UI.Widget          (UIWidget)
 

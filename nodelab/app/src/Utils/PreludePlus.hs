@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase                #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Utils.PreludePlus (
     module Utils.PreludePlus,
@@ -6,29 +6,32 @@ module Utils.PreludePlus (
     module X
 ) where
 
-import           Control.Applicative                as X
-import           Control.Lens                       as X
-import           Control.Monad                      as X (MonadPlus, mplus, mzero, unless, void, when, join)
-import           Control.Monad.IO.Class             as X (MonadIO, liftIO)
-import           Control.Monad.Trans                as X (MonadTrans, lift)
-import           Data.Default                       as X
-import           Data.Foldable                      as X (Foldable, traverse_, forM_, mapM_, sequenceA_, foldlM)
-import           Data.List                          as X hiding (uncons)
-import           Data.Either                        as X (isLeft, isRight)
-import           Data.Monoid                        as X (Monoid, mappend, mconcat, mempty, (<>))
-import           Data.Maybe                         as X
-import           Data.String                        as X (IsString (fromString))
-import           Data.Char                          as X
-import           Data.Text.Lazy                     as X (Text)
-import           Data.Traversable                   as X (sequenceA, forM, mapM)
-import           Data.Typeable                      as X (Typeable)
-import           Data.Function                      as X (on)
-import           GHC.Exts                           as X (IsList, Item, fromList, fromListN, toList)
-import           GHC.Generics                       as X (Generic)
-import           Prelude                            hiding (mapM, mapM_, print, putStr, putStrLn, (.))
+import           Control.Applicative      as X
+import           Control.Lens             as X
+import           Control.Monad            as X (MonadPlus, join, mplus, mzero, unless, void, when)
+import           Control.Monad.IO.Class   as X (MonadIO, liftIO)
+import           Control.Monad.Trans      as X (MonadTrans, lift)
+import           Data.Char                as X
+import           Data.Default             as X
+import           Data.Either              as X (isLeft, isRight)
+import           Data.Foldable            as X (Foldable, foldlM, forM_, mapM_, sequenceA_, traverse_)
+import           Data.Function            as X (on)
+import           Data.JSString            as X (JSString)
+import           Data.List                as X hiding (uncons)
+import           Data.Maybe               as X
+import           Data.Monoid              as X (Monoid, mappend, mconcat, mempty, (<>))
+import           Data.String              as X (IsString (fromString))
+import           Data.Text.Lazy           as X (Text)
+import           Data.Traversable         as X (forM, mapM, sequenceA)
+import           Data.Typeable            as X (Typeable)
+import           Development.Placeholders as X
+import           GHC.Exts                 as X (IsList, Item, fromList, fromListN, toList)
+import           GHC.Generics             as X (Generic)
+import           GHCJS.Types              as X (JSVal)
+import           Prelude                  hiding (mapM, mapM_, print, putStr, putStrLn, (.))
 import qualified Prelude
-import           Prologue                           as X (toString)
-import           Text.Show.Pretty                   (ppShow)
+import           Prologue                 as X (toString)
+import           Text.Show.Pretty         (ppShow)
 
 
 print :: (MonadIO m, Show s) => s -> m ()

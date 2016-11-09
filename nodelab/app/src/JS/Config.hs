@@ -4,7 +4,6 @@
 module JS.Config (getBackendAddress) where
 
 import           Data.JSString     (unpack)
-import           GHCJS.Types       (JSString)
 import           Utils.PreludePlus
 
 

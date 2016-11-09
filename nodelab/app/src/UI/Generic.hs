@@ -3,13 +3,12 @@
 module UI.Generic where
 
 import           GHCJS.Marshal.Pure        (pToJSVal)
-import           GHCJS.Types               (JSVal)
 import           Utils.PreludePlus         hiding (children)
 import           Utils.Vector
 
 import qualified Event.Mouse               as Mouse
-import           Object.Widget             (DragState (..), IsDisplayObject, WidgetFile, WidgetId, objectId, widget,
-                                            widgetPosition, children)
+import           Object.Widget             (DragState (..), IsDisplayObject, WidgetFile, WidgetId, children, objectId, widget,
+                                            widgetPosition)
 import           Reactive.Commands.Command (Command, performIO)
 import qualified Reactive.State.Global     as Global
 import qualified Reactive.State.UIRegistry as UIRegistry

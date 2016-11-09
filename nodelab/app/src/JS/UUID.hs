@@ -1,10 +1,9 @@
 module JS.UUID (generateUUID) where
 
-import Utils.PreludePlus
+import           Utils.PreludePlus
 
-import           GHCJS.Types                    (JSString)
-import qualified Data.UUID.Types as UUID
-import qualified Data.JSString                  as JSString
+import qualified Data.JSString     as JSString
+import qualified Data.UUID.Types   as UUID
 
 foreign import javascript safe "generateUUID()" generateUUID' :: IO JSString
 

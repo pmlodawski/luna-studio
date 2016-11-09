@@ -2,8 +2,7 @@ module UI.Widget.Slider where
 
 import           Utils.PreludePlus  hiding (span)
 
-import           GHCJS.Types        (JSVal, JSString)
-import           GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
+import           GHCJS.Marshal.Pure (PFromJSVal (..), PToJSVal (..))
 
 import           UI.Widget          (UIWidget)
 

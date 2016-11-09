@@ -10,7 +10,6 @@ module JS.GoogleAnalytics
 import           Data.JSString.Text        (lazyTextToJSString)
 import           Data.Text.Lazy            (pack)
 import           GHCJS.Nullable            (Nullable, maybeToNullable)
-import           GHCJS.Types               (JSString)
 import           Utils.PreludePlus
 
 import           Reactive.Commands.Command (Command, performIO)

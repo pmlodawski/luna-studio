@@ -1,4 +1,4 @@
-{-# LANGUAGE JavaScriptFFI #-}
+{-# LANGUAGE JavaScriptFFI     #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module JS.UI
@@ -11,9 +11,8 @@ module JS.UI
     , triggerWindowResize
     ) where
 
+import           Data.JSString.Text (lazyTextToJSString)
 import           Utils.PreludePlus
-import           GHCJS.Types (JSString)
-import           Data.JSString.Text  (lazyTextToJSString)
 
 foreign import javascript safe "require('Rendering').initialize()" initializeGl :: IO ()
 

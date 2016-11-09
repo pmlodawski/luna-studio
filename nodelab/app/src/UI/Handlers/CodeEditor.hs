@@ -3,7 +3,6 @@ module UI.Handlers.CodeEditor where
 import           Utils.PreludePlus
 
 import           Data.JSString.Text           (lazyTextFromJSString)
-import           GHCJS.Types                  (JSString)
 
 import           Event.Event                  (JSState)
 import           Event.Widget                 (Payload (..))

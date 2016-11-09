@@ -5,15 +5,14 @@ module JS.NodeSearcher
     , TargetSearcher (..)
     ) where
 
+import           Data.JSString.Text             (lazyTextToJSString)
 import           Utils.PreludePlus
 import           Utils.Vector
-import           Data.JSString.Text             (lazyTextToJSString)
 
-import           GHCJS.Types                    (JSString, JSVal)
-import           GHCJS.Marshal                  (toJSVal)
 import           Data.Aeson                     (toJSON)
 import           Empire.API.Data.Node           (NodeId)
 import           Empire.API.JSONInstances       ()
+import           GHCJS.Marshal                  (toJSVal)
 
 import           Text.ScopeSearcher.QueryResult (Highlight (..), QueryResult (..))
 

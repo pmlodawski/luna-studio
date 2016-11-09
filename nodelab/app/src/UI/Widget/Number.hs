@@ -3,7 +3,6 @@ module UI.Widget.Number where
 import           Utils.PreludePlus
 
 import           GHCJS.Marshal.Pure (PFromJSVal (..), PToJSVal (..))
-import           GHCJS.Types        (JSString, JSVal)
 
 import           Event.Keyboard     (KeyMods (..))
 import           UI.Widget          (UIWidget)

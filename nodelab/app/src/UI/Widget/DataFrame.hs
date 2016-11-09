@@ -5,7 +5,6 @@ module UI.Widget.DataFrame where
 
 import           Data.Aeson              (toJSON)
 import           GHCJS.Marshal           (toJSVal)
-import           GHCJS.Types             (JSVal)
 import           Utils.PreludePlus
 import           Utils.Vector
 

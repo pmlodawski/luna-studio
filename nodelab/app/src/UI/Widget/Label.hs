@@ -5,7 +5,6 @@ import           Utils.PreludePlus
 import qualified Data.JSString       as JSString
 import           Data.JSString.Text  (lazyTextToJSString)
 import           GHCJS.Marshal.Pure  (PFromJSVal (..), PToJSVal (..))
-import           GHCJS.Types         (JSString, JSVal)
 import           Utils.Vector
 
 import           Object.UITypes

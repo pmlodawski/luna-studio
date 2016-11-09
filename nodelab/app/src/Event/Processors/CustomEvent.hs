@@ -4,7 +4,6 @@ import           Control.Monad     (liftM)
 import           Data.Aeson        (fromJSON)
 import qualified Data.Aeson        as AE
 import           GHCJS.Marshal     (fromJSVal)
-import           GHCJS.Types       (JSVal)
 import           Utils.PreludePlus
 
 import           Event.CustomEvent as CustomEvent

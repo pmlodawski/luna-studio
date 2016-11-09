@@ -12,11 +12,11 @@ module JS.WebSocket (WebSocket
                     , getCode
                     ) where
 
-import Utils.PreludePlus
-import GHCJS.Types (JSVal, IsJSVal)
-import GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
-import GHCJS.Foreign.Callback
-import Data.JSString
+import           Data.JSString
+import           GHCJS.Foreign.Callback
+import           GHCJS.Marshal.Pure     (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Types            (IsJSVal)
+import           Utils.PreludePlus
 
 newtype WebSocket      = WebSocket      JSVal deriving (PFromJSVal, PToJSVal)
 newtype WSMessageEvent = WSMessageEvent JSVal deriving (PFromJSVal, PToJSVal)
