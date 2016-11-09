@@ -1,22 +1,23 @@
 module Event.Event where
 
+import           Data.Aeson          (ToJSON, toJSON)
+import           GHCJS.Marshal.Pure  (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Types         (JSVal)
 import           Utils.PreludePlus
-import           GHCJS.Types (JSVal)
-import           GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
-import           Data.Aeson (ToJSON, toJSON)
 
-import qualified Event.Keyboard      as Keyboard
-import qualified Event.Mouse         as Mouse
+import qualified Event.Batch         as Batch
 import qualified Event.Clipboard     as Clipboard
-import qualified Event.Window        as Window
-import qualified Event.NodeSearcher  as NodeSearcher
 import qualified Event.Connection    as Connection
 import qualified Event.ConnectionPen as ConnectionPen
-import qualified Event.Batch         as Batch
-import qualified Event.TextEditor    as TextEditor
-import qualified Event.Debug         as Debug
 import qualified Event.CustomEvent   as CustomEvent
+import qualified Event.Debug         as Debug
+import qualified Event.Keyboard      as Keyboard
+import qualified Event.Mouse         as Mouse
+import qualified Event.NodeSearcher  as NodeSearcher
+import qualified Event.TextEditor    as TextEditor
 import qualified Event.Widget        as Widget
+import qualified Event.Window        as Window
+
 
 newtype JSState = JSState JSVal deriving (PFromJSVal, PToJSVal)
 

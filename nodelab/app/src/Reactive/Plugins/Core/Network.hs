@@ -45,6 +45,7 @@ import           JS.WebSocket                                        (WebSocket)
 
 import qualified Data.JSString                                       as JSString
 
+
 displayProcessingTime :: Bool
 displayProcessingTime = False
 

@@ -8,6 +8,7 @@ import           GHCJS.Foreign.Callback
 import           GHCJS.Types
 import           Utils.PreludePlus
 
+
 foreign import javascript safe "window.addEventListener('copy', function(e){$1(e); e.preventDefault();})"
     registerCopyCallback' :: Callback (JSVal -> IO ()) -> IO ()
 

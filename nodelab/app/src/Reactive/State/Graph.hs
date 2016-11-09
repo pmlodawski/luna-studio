@@ -63,7 +63,6 @@ import           Object.UITypes             (WidgetId)
 import           Reactive.Commands.Command  (Command)
 
 
-
 type NodesMap       = HashMap NodeId Node
 type ConnectionsMap = HashMap InPortRef Connection
 

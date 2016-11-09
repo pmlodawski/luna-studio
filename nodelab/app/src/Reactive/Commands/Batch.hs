@@ -8,15 +8,15 @@ import qualified BatchConnector.Commands      as BatchCmd
 
 import           Reactive.Commands.Command    (Command, performIO)
 import           Reactive.Commands.UUID       (registerRequest)
-import           Reactive.State.Global        (State, workspace, clientId)
+import           Reactive.State.Global        (State, clientId, workspace)
 
 import           Empire.API.Data.Connection   (Connection)
 import qualified Empire.API.Data.DefaultValue as DefaultValue
 import           Empire.API.Data.Node         (Node, NodeId)
-import           Empire.API.Data.Project      (ProjectId)
 import           Empire.API.Data.NodeMeta     (NodeMeta)
 import           Empire.API.Data.PortRef      (AnyPortRef (..), InPortRef (..), OutPortRef (..))
-import qualified Empire.API.Data.PortRef      as PortRef (nodeId, dstNodeId)
+import qualified Empire.API.Data.PortRef      as PortRef (dstNodeId, nodeId)
+import           Empire.API.Data.Project      (ProjectId)
 
 
 withWorkspace :: (Workspace -> UUID -> IO ()) -> Command State ()

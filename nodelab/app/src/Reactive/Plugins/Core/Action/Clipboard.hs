@@ -1,23 +1,24 @@
 module Reactive.Plugins.Core.Action.Clipboard where
 
-import           Data.Aeson                                  (encode, decode)
-import           Data.ByteString.Lazy.Char8                  (unpack)
-import           Data.Text.Lazy.Encoding                     (encodeUtf8)
-import qualified Event.Clipboard                             as Clipboard
-import           Event.Event                                 (Event(..))
-import qualified Event.Keyboard                              as Keyboard
-import           Event.Keyboard                              (KeyMods (..))
-import           GHCJS.Types                                 (JSString)
-import qualified Object.Widget                               as Widget
-import qualified Object.Widget.Node                          as UINode
-import           Reactive.Commands.Batch                     (addSubgraph)
-import           Reactive.Commands.Command                   (Command, performIO)
-import           Reactive.Commands.Graph.Selection           (selectedNodes)
-import           Reactive.Commands.Node.Remove               (removeSelectedNodes)
-import qualified Reactive.State.Global                       as Global
-import           Reactive.State.Global                       (State)
-import           Reactive.State.GraphSkeleton                as GraphSkeleton
+import           Data.Aeson                        (decode, encode)
+import           Data.ByteString.Lazy.Char8        (unpack)
+import           Data.Text.Lazy.Encoding           (encodeUtf8)
+import qualified Event.Clipboard                   as Clipboard
+import           Event.Event                       (Event (..))
+import           Event.Keyboard                    (KeyMods (..))
+import qualified Event.Keyboard                    as Keyboard
+import           GHCJS.Types                       (JSString)
+import qualified Object.Widget                     as Widget
+import qualified Object.Widget.Node                as UINode
+import           Reactive.Commands.Batch           (addSubgraph)
+import           Reactive.Commands.Command         (Command, performIO)
+import           Reactive.Commands.Graph.Selection (selectedNodes)
+import           Reactive.Commands.Node.Remove     (removeSelectedNodes)
+import           Reactive.State.Global             (State)
+import qualified Reactive.State.Global             as Global
+import           Reactive.State.GraphSkeleton      as GraphSkeleton
 import           Utils.PreludePlus
+
 
 foreign import javascript safe "clipboard.copy($1)" copyStringToClipboard :: JSString -> IO ()
 

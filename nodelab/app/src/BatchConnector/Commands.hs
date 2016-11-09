@@ -40,7 +40,6 @@ import qualified Empire.API.Project.ImportProject      as ImportProject
 import qualified Empire.API.Project.ListProjects       as ListProjects
 
 
-
 withLibrary :: Workspace -> (GraphLocation -> a) -> a
 withLibrary w f = f (w ^. Workspace.currentLocation)
 

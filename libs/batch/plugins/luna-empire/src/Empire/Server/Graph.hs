@@ -55,8 +55,8 @@ import qualified Empire.API.Response                   as Response
 import qualified Empire.API.Topic                      as Topic
 import qualified Empire.Commands.Graph                 as Graph
 import qualified Empire.Commands.Persistence           as Persistence
-import qualified Empire.Empire                         as Empire
 import           Empire.Empire                         (Empire)
+import qualified Empire.Empire                         as Empire
 import           Empire.Env                            (Env)
 import qualified Empire.Env                            as Env
 import           Empire.Server.Server                  (errorMessage, replyFail, replyOk, replyResult, sendToBus')
