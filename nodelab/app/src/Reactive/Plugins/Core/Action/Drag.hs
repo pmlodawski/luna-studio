@@ -88,7 +88,7 @@ startDrag coord = do
     withJust (nodePos `mplus` nodePos') $ \widgetPos -> do
         Global.drag . Drag.history ?= DragHistory coord coord coord widgetPos
 
-gridSize = 30
+gridSize = 8
 
 snapCoord :: Double -> Double
 snapCoord p = fromIntegral . (* gridSize) . round $ p / fromIntegral gridSize
@@ -113,7 +113,7 @@ handleMove coord snapped = do
             newNodePosSnapped = snap newNodePos
             newDeltaWsSnapped = newNodePosSnapped - widgetPos
         if snapped then do
-            when ((lengthSquared newDeltaWsSnapped > 0.1) && (delay deltaWs 30.0)) $ do
+            when ((lengthSquared newDeltaWsSnapped > 0.1) && (delay deltaWs $ fromIntegral gridSize)) $ do
                  moveNodes newDeltaWsSnapped
                  Global.drag . Drag.history ?= DragHistory start current coord newNodePosSnapped
         else do
