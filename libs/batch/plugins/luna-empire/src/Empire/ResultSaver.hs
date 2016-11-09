@@ -28,8 +28,8 @@ import           Empire.API.Data.GraphLocation     (GraphLocation (..))
 import qualified Empire.API.Data.Node              as Node
 import           Empire.API.Data.Project           (ProjectId)
 import qualified Empire.API.Graph.GetProgram       as GetProgram
-import qualified Empire.API.Graph.Node             as NodeUpdate
 import qualified Empire.API.Graph.NodeResultUpdate as NodeResultUpdate
+import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
 import qualified Empire.API.Project.ExportProject  as ExportProject
 import qualified Empire.API.Project.ImportProject  as ImportProject
 import           Empire.API.Request                (Request (..))

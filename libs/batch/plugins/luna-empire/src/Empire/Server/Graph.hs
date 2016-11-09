@@ -32,13 +32,14 @@ import qualified Empire.API.Data.NodeSearcher          as NS
 import           Empire.API.Data.Port                  (InPort (..), OutPort (..), Port (..), PortId (..), PortState (..))
 import           Empire.API.Data.PortRef               (InPortRef (..), OutPortRef (..))
 import           Empire.API.Data.ValueType             (ValueType (..))
+import qualified Empire.API.Graph.AddNode              as AddNode
 import qualified Empire.API.Graph.CodeUpdate           as CodeUpdate
 import qualified Empire.API.Graph.Connect              as Connect
 import qualified Empire.API.Graph.Disconnect           as Disconnect
 import qualified Empire.API.Graph.DumpGraphViz         as DumpGraphViz
 import qualified Empire.API.Graph.GetProgram           as GetProgram
-import qualified Empire.API.Graph.Node                 as AddNode
 import qualified Empire.API.Graph.NodeResultUpdate     as NodeResultUpdate
+import qualified Empire.API.Graph.NodeUpdate           as NodeUpdate
 import qualified Empire.API.Graph.RemoveNode           as RemoveNode
 import qualified Empire.API.Graph.RenameNode           as RenameNode
 import qualified Empire.API.Graph.Request              as G

@@ -16,13 +16,14 @@ import qualified Data.Map.Strict                   as Map
 import           Prologue
 
 import qualified Empire.API.Control.EmpireStarted  as EmpireStarted
+import qualified Empire.API.Graph.AddNode          as AddNode
 import qualified Empire.API.Graph.CodeUpdate       as CodeUpdate
 import qualified Empire.API.Graph.Connect          as Connect
 import qualified Empire.API.Graph.Disconnect       as Disconnect
 import qualified Empire.API.Graph.DumpGraphViz     as DumpGraphViz
 import qualified Empire.API.Graph.GetProgram       as GetProgram
-import qualified Empire.API.Graph.Node             as Node
 import qualified Empire.API.Graph.NodeResultUpdate as NodeResultUpdate
+import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
 import qualified Empire.API.Graph.RemoveNode       as RemoveNode
 import qualified Empire.API.Graph.RenameNode       as RenameNode
 import qualified Empire.API.Graph.SetDefaultValue  as SetDefaultValue
@@ -110,9 +111,9 @@ logMessage logMsg topic content = do
 
 -- loggFormattersMap :: Map String LogFormatter
 -- loggFormattersMap = Map.fromList
---     [ makeHandler (Proxy :: Proxy (Request Node.Request          ))
---     , makeHandler (Proxy :: Proxy (Node.Response         ))
---     , makeHandler (Proxy :: Proxy (Node.Update           ))
+--     [ makeHandler (Proxy :: Proxy (Request AddNode.Request          ))
+--     , makeHandler (Proxy :: Proxy (AddNode.Response         ))
+--     , makeHandler (Proxy :: Proxy (AddNode.Update           ))
 --     , makeHandler (Proxy :: Proxy (Request RemoveNode.Request       ))
 --     , makeHandler (Proxy :: Proxy (RemoveNode.Response      ))
 --     , makeHandler (Proxy :: Proxy (RemoveNode.Update        ))

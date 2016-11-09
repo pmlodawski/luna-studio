@@ -25,6 +25,7 @@ import           System.FilePath.Manip            ()
 import qualified Empire.API.Control.EmpireStarted as EmpireStarted
 import           Empire.API.Data.AsyncUpdate      (AsyncUpdate (..))
 import           Empire.API.Data.GraphLocation    (GraphLocation)
+import qualified Empire.API.Graph.NodeUpdate      as NodeUpdate
 import qualified Empire.API.Topic                 as Topic
 import           Empire.Data.Graph                (Graph, ast)
 
@@ -39,11 +40,11 @@ import qualified Empire.Env                       as Env
 import qualified Empire.Handlers                  as Handlers
 import qualified Empire.Server.Server             as Server
 import qualified Empire.Utils                     as Utils
+import qualified ZMQ.Bus.Config            as Config
 import           Flowbox.Prelude
 import qualified Flowbox.System.Log.Logger        as Logger
 import           ZMQ.Bus.Bus                      (Bus)
 import qualified ZMQ.Bus.Bus                      as Bus
-import qualified ZMQ.Bus.Config                   as Config
 import qualified ZMQ.Bus.Data.Flag                as Flag
 import           ZMQ.Bus.Data.Message             (Message)
 import qualified ZMQ.Bus.Data.Message             as Message
