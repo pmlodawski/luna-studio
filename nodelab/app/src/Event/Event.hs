@@ -3,8 +3,8 @@ module Event.Event where
 import           Data.Aeson          (ToJSON, toJSON)
 import           GHCJS.Marshal.Pure  (PFromJSVal (..), PToJSVal (..))
 import           GHCJS.Types         (JSVal)
-import           Utils.PreludePlus
 
+import           Utils.PreludePlus
 import qualified Event.Batch         as Batch
 import qualified Event.Clipboard     as Clipboard
 import qualified Event.Connection    as Connection

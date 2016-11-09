@@ -7,7 +7,6 @@ import qualified Data.JSString        as JSString
 import           Data.JSString.Text   (lazyTextToJSString)
 import           GHCJS.Marshal.Pure   (PFromJSVal (..), PToJSVal (..))
 import           GHCJS.Nullable       (Nullable, maybeToNullable)
-import           GHCJS.Types          (JSString, JSVal)
 
 import           Object.UITypes
 import           Object.Widget

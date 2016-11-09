@@ -4,7 +4,6 @@ import           Utils.PreludePlus      hiding (Item)
 import           Utils.Vector
 
 import           GHCJS.Marshal.Pure     (PFromJSVal (..), PToJSVal (..))
-import           GHCJS.Types            (JSVal)
 
 import           Object.UITypes
 import           Object.Widget

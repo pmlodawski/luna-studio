@@ -17,8 +17,8 @@ import           Data.Maybe                      (fromMaybe)
 import qualified Data.UUID                       as UUID
 import qualified Data.UUID.V4                    as UUID
 import           Prologue
-import           System.Path                     (Path)
 import           System.FilePath                 (takeBaseName)
+import           System.Path                     (Path)
 
 import           Empire.Data.Library             (Library)
 import qualified Empire.Data.Library             as Library
@@ -45,7 +45,7 @@ import qualified Data.Aeson                      as JSON
 import qualified Data.Aeson.Encode.Pretty        as JSON
 
 import qualified Data.Text.Lazy                  as Text
-import           Data.Text.Lazy.Encoding         (encodeUtf8, decodeUtf8)
+import           Data.Text.Lazy.Encoding         (decodeUtf8, encodeUtf8)
 import           Empire.API.JSONInstances        ()
 import           System.Path                     (Path, native)
 
@@ -102,7 +102,7 @@ createProjectFromPersistent maybePid p = do
           nodes = graph ^. G.nodes
           connections = graph ^. G.connections
       mapM Graph.addPersistentNode nodes
-      mapM (uncurry Graph.connectNoTC) connections
+      mapM (uncurry Graph.connectPersistent) connections
   project <- withProject pid (get >>= return)
   return (pid, project)
 
@@ -145,5 +145,3 @@ createDefaultProject = do
   logger Logger.info "Creating default project"
   (projectId, _) <- createProject Nothing defaultProjectName
   void $ createLibrary projectId (Just defaultLibraryName) (fromString defaultLibraryPath)
-
-

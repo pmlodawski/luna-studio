@@ -5,7 +5,6 @@ import           Utils.PreludePlus
 import           Utils.Vector
 
 import           Data.JSString.Text           (lazyTextFromJSString)
-import           GHCJS.Types                  (JSString)
 
 import           Event.Event                  (JSState)
 import           Object.Widget                (ClickHandler, IsDisplayObject, KeyDownHandler, UIHandlers, WidgetId, dblClick, fromWidgetId,

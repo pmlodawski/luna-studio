@@ -3,7 +3,6 @@ module Event.CustomEvent where
 
 import           Data.Aeson        (ToJSON, toJSON)
 import           Utils.PreludePlus
-import           GHCJS.Types (JSVal)
 
 
 data Event = RawEvent String JSVal deriving (Generic)

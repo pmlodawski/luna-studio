@@ -6,7 +6,6 @@ import           Utils.Vector
 
 import           GHCJS.Marshal      (fromJSVal)
 import           GHCJS.Marshal.Pure (pFromJSVal)
-import           GHCJS.Types        (JSVal)
 import           JavaScript.Array   (JSArray)
 import qualified JavaScript.Array   as JSArray
 

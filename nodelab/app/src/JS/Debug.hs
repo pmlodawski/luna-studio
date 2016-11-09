@@ -3,7 +3,6 @@ module JS.Debug where
 import           Data.Aeson         (ToJSON, toJSON)
 import           Data.JSString.Text (lazyTextToJSString)
 import           GHCJS.Marshal      (toJSVal)
-import           GHCJS.Types        (JSString, JSVal)
 import           Utils.PreludePlus
 
 foreign import javascript safe "window.state  = $1"         saveState :: JSVal -> IO ()

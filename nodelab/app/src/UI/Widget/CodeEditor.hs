@@ -9,7 +9,6 @@ import           Utils.Vector
 import qualified Data.JSString            ()
 import           Data.JSString.Text       (lazyTextToJSString)
 import           GHCJS.Marshal.Pure       (PFromJSVal (..), PToJSVal (..))
-import           GHCJS.Types              (JSString, JSVal)
 
 import           Object.UITypes
 import           Object.Widget

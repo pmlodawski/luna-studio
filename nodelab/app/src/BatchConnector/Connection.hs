@@ -1,17 +1,16 @@
 module BatchConnector.Connection where
 
-import           Data.Binary (Binary)
+import           Data.Binary                 (Binary)
 import qualified Data.Binary                 as Binary
-import           GHCJS.Types (JSString)
-import           Data.JSString.Text
-import           Data.UUID.Types (UUID)
-import           Data.ByteString.Lazy.Char8  (ByteString, pack)
 import qualified Data.ByteString.Base64.Lazy as Base64
+import           Data.ByteString.Lazy.Char8  (ByteString, pack)
+import           Data.JSString.Text
 import           Data.Text.Lazy.Encoding     (decodeUtf8)
-import           Utils.PreludePlus           hiding (Text)
+import           Data.UUID.Types             (UUID)
+import           Empire.API.Request          (Request (..))
+import qualified Empire.API.Topic            as Topic
 import           JS.WebSocket
-import qualified Empire.API.Topic                  as Topic
-import           Empire.API.Request                (Request(..))
+import           Utils.PreludePlus           hiding (Text)
 
 data ControlCode = ConnectionTakeover
                  | Welcome
@@ -61,4 +60,3 @@ sendUpdate = sendMessage . makeMessage'
 
 sendRequests :: (Topic.MessageTopic (Request a), Binary a) => [(UUID, a)] -> IO ()
 sendRequests msgs = sendMessages $ uncurry makeMessage <$> msgs
-

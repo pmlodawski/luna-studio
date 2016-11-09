@@ -6,7 +6,6 @@ module JS.GraphLocation (
 
 import           Data.Aeson                 (decode, encode)
 import           Data.ByteString.Lazy.Char8 as ByteString
-import           Data.JSString              (JSString)
 import qualified Data.JSString              as JSString
 import           JavaScript.Web.Storage     (getItem, localStorage, setItem)
 import           Utils.PreludePlus

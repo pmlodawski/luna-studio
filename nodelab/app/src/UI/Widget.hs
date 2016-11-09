@@ -2,8 +2,7 @@ module UI.Widget where
 
 import           Utils.PreludePlus
 
-import           GHCJS.Marshal.Pure        (PFromJSVal (..), PToJSVal (..))
-import           GHCJS.Types               (JSVal)
+import           GHCJS.Marshal.Pure (PFromJSVal (..), PToJSVal (..))
 
 newtype Container = Container { unContainer :: JSVal } deriving (PFromJSVal, PToJSVal)
 newtype Mesh      = Mesh      { unMesh :: JSVal } deriving (PFromJSVal, PToJSVal)

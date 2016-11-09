@@ -2,26 +2,25 @@
 
 module UI.Widget.Node where
 
-import qualified Data.Map.Lazy      as Map
+import qualified Data.Map.Lazy                as Map
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           GHCJS.Marshal.Pure (PFromJSVal (..), PToJSVal (..))
-import           GHCJS.Types        (JSVal)
-import           Data.Aeson         (toJSON)
-import           GHCJS.Marshal      (toJSVal)
+import           Data.Aeson                   (toJSON)
+import           GHCJS.Marshal                (toJSVal)
+import           GHCJS.Marshal.Pure           (PFromJSVal (..), PToJSVal (..))
 
 
 import           Object.UITypes
 import           Object.Widget
+import qualified Object.Widget.Node           as Model
 import           Reactive.State.Collaboration (unColorId)
-import qualified Object.Widget.Node as Model
 
-import           UI.Generic         (whenChanged)
-import qualified UI.Registry        as UIR
-import           UI.Widget          (UIContainer, UIWidget)
-import           UI.Widget          (GenericWidget (..))
-import qualified UI.Widget          as UIT
+import           UI.Generic                   (whenChanged)
+import qualified UI.Registry                  as UIR
+import           UI.Widget                    (UIContainer, UIWidget)
+import           UI.Widget                    (GenericWidget (..))
+import qualified UI.Widget                    as UIT
 
 newtype Node = Node { unNode :: JSVal } deriving (PToJSVal, PFromJSVal)
 

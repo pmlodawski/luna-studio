@@ -7,6 +7,7 @@ module Empire.Commands.Graph
     , updateNodeExpression
     , updateNodeMeta
     , connect
+    , connectPersistent
     , connectCondTC
     , connectNoTC
     , disconnect
@@ -111,7 +112,7 @@ addSubgraph loc nodes conns = withTC loc False $ do
     forM_ nodes $ \n -> case n ^. Node.nodeType of
         Node.ExpressionNode expr -> void $ addNodeNoTC loc (n ^. Node.nodeId) expr (n ^. Node.nodeMeta)
         _ -> return ()
-    forM_ conns $ \(Connection src dst) -> connectNoTC src dst
+    forM_ conns $ \(Connection src dst) -> connectNoTC loc src dst
 
 
 removeNodes :: GraphLocation -> [NodeId] -> Empire ()
@@ -150,18 +151,23 @@ updateNodeMeta loc nodeId newMeta = withGraph loc $ do
 
 connectCondTC :: Bool -> GraphLocation -> OutPortRef -> InPortRef -> Empire ()
 connectCondTC doTC loc outPort inPort = withGraph loc $ do
-    connectNoTC outPort inPort
+    connectNoTC loc outPort inPort
     when doTC $ runTC loc False
 
 connect :: GraphLocation -> OutPortRef -> InPortRef -> Empire ()
-connect loc outPort inPort = withTC loc False $ connectNoTC outPort inPort
+connect loc outPort inPort = withTC loc False $ connectNoTC loc outPort inPort
 
-connectNoTC :: OutPortRef -> InPortRef -> Command Graph ()
-connectNoTC (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) =
+connectPersistent :: OutPortRef -> InPortRef -> Command Graph ()
+connectPersistent (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) =
     case dstPort of
         Self    -> makeAcc srcNodeId dstNodeId
         Arg num -> makeApp srcNodeId dstNodeId num
-connectNoTC _ _ = throwError "Source port should be All"
+connectPersistent _ _ = throwError "Source port should be All"
+
+connectNoTC :: GraphLocation -> OutPortRef -> InPortRef -> Command Graph ()
+connectNoTC loc outPort@(OutPortRef srcNodeId All) inPort@(InPortRef dstNodeId dstPort) = do
+    connectPersistent outPort inPort
+    Publisher.notifyConnectionUpdate loc outPort inPort
 
 setDefaultValue :: GraphLocation -> AnyPortRef -> PortDefault -> Empire ()
 setDefaultValue loc portRef val = withTC loc False $ setDefaultValue' portRef val

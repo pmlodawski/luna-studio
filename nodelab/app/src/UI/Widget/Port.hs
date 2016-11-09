@@ -5,7 +5,6 @@ module UI.Widget.Port where
 import           Utils.PreludePlus
 
 import           GHCJS.Marshal.Pure           (PFromJSVal (..), PToJSVal (..))
-import           GHCJS.Types                  (JSVal)
 
 import           Object.UITypes
 import           Object.Widget
@@ -17,14 +16,14 @@ import           Reactive.State.Global        (inRegistry)
 import qualified Reactive.State.Global        as Global
 import qualified Reactive.State.UIRegistry    as UIRegistry (State)
 
+import qualified UI.Handlers.Node             as Node
 import qualified UI.Registry                  as UIR
 import           UI.Widget                    (UIWidget)
 import           UI.Widget                    (GenericWidget (..))
 import qualified UI.Widget                    as Widget
-import qualified UI.Handlers.Node             as Node
 
-import           Empire.API.Data.Port (InPort (Self))
-import           Empire.API.Data.PortRef (AnyPortRef (InPortRef'), InPortRef(..))
+import           Empire.API.Data.Port         (InPort (Self))
+import           Empire.API.Data.PortRef      (AnyPortRef (InPortRef'), InPortRef (..))
 
 newtype Port = Port { unPort :: JSVal } deriving (PToJSVal, PFromJSVal)
 

@@ -9,7 +9,6 @@ module JS.ConnectionPen
     ) where
 
 import           GHCJS.Foreign.Callback
-import           GHCJS.Types            (JSVal)
 import           JavaScript.Array
 import           Utils.PreludePlus
 import           Utils.Vector
@@ -46,6 +45,3 @@ registerCallback callback = do
     wrappedCallback <- asyncCallback1 callback
     registerCallback' wrappedCallback
     return $ unregisterCallback' wrappedCallback >> releaseCallback wrappedCallback
-
-
-

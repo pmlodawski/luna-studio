@@ -112,8 +112,9 @@ startAsyncUpdateWorker :: TChan AsyncUpdate -> StateT Env BusT ()
 startAsyncUpdateWorker asyncChan = forever $ do
     update <- liftIO $ atomically $ readTChan asyncChan
     case update of
-        NodeUpdate   up -> Server.sendToBus' up
-        ResultUpdate up -> Server.sendToBus' up
+        NodeUpdate       up -> Server.sendToBus' up
+        ResultUpdate     up -> Server.sendToBus' up
+        ConnectionUpdate up -> Server.sendToBus' up
 
 projectFiles :: FilePath -> IO [FilePath]
 projectFiles = find always (extension ==? ".lproj")
