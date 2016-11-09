@@ -29,15 +29,14 @@ import           Empire.API.Data.PortRef               as PortRef
 import           Empire.API.Data.Project               as Project
 import           Empire.API.Data.TypeRep               as TypeRep
 import           Empire.API.Data.ValueType             as ValueType
-import           Empire.API.Graph.AddNode              as AddNode
 import           Empire.API.Graph.CodeUpdate           as CodeUpdate
 import           Empire.API.Graph.Collaboration        as Collaboration
 import           Empire.API.Graph.Connect              as Connect
 import           Empire.API.Graph.Disconnect           as Disconnect
 import           Empire.API.Graph.GetProgram           as GetProgram
+import           Empire.API.Graph.Node                 as AddNode
 import           Empire.API.Graph.NodeResultUpdate     as NodeResultUpdate
 import           Empire.API.Graph.NodeSearcherUpdate   as NodeSearcherUpdate
-import           Empire.API.Graph.NodeUpdate           as NodeUpdate
 import           Empire.API.Graph.RemoveNode           as RemoveNode
 import           Empire.API.Graph.RenameNode           as RenameNode
 import           Empire.API.Graph.SetDefaultValue      as SetDefaultValue
@@ -157,8 +156,6 @@ instance ToJSON RenameNode.Update
 
 instance ToJSON UpdateNodeMeta.Request
 instance ToJSON UpdateNodeMeta.Update
-
-instance ToJSON NodeUpdate.Update
 
 instance ToJSON UpdateNodeExpression.Request
 

@@ -1,16 +1,16 @@
-module Empire.API.Graph.AddNode where
+module Empire.API.Graph.Node where
 
 import           Data.Binary                   (Binary)
-import           Prologue
 import qualified Data.Text.Lazy                as Text
+import           Prologue
 
 import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.Node          (Node, NodeId)
 import           Empire.API.Data.NodeMeta      (NodeMeta)
-import qualified Empire.API.Response           as Response
 import qualified Empire.API.Graph.Request      as G
-import qualified Empire.API.Topic              as T
 import qualified Empire.API.Request            as R
+import qualified Empire.API.Response           as Response
+import qualified Empire.API.Topic              as T
 
 data NodeType = ExpressionNode { _expression :: Text } deriving (Generic, Show, Eq)
 

@@ -1,16 +1,16 @@
 module Empire.Commands.Publisher where
 
-import Prologue
-import Empire.Empire
-import Control.Monad.Reader
-import Control.Monad.STM             (atomically)
-import Control.Concurrent.STM.TChan  (writeTChan)
-import Empire.Data.Graph             (Graph)
-import Empire.API.Data.AsyncUpdate   (AsyncUpdate (..))
-import Empire.API.Data.GraphLocation (GraphLocation)
-import Empire.API.Data.Node          (Node, NodeId)
+import           Control.Concurrent.STM.TChan      (writeTChan)
+import           Control.Monad.Reader
+import           Control.Monad.STM                 (atomically)
+import           Empire.API.Data.AsyncUpdate       (AsyncUpdate (..))
+import           Empire.API.Data.GraphLocation     (GraphLocation)
+import           Empire.API.Data.Node              (Node, NodeId)
+import           Empire.Data.Graph                 (Graph)
+import           Empire.Empire
+import           Prologue
 
-import qualified Empire.API.Graph.NodeUpdate       as Node
+import qualified Empire.API.Graph.Node             as Node
 import qualified Empire.API.Graph.NodeResultUpdate as NodeResult
 
 notifyNodeUpdate :: GraphLocation -> Node -> Command s ()

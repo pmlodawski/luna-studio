@@ -17,12 +17,12 @@ import           Empire.API.Data.NodeMeta              (NodeMeta)
 import           Empire.API.Data.PortRef               (AnyPortRef (..), InPortRef (..), OutPortRef (..))
 import           Empire.API.Data.Project               (ProjectId)
 
-import qualified Empire.API.Graph.AddNode              as AddNode
 import qualified Empire.API.Graph.Collaboration        as Collaboration
 import qualified Empire.API.Graph.Connect              as Connect
 import qualified Empire.API.Graph.Disconnect           as Disconnect
 import qualified Empire.API.Graph.DumpGraphViz         as DumpGraphViz
 import qualified Empire.API.Graph.GetProgram           as GetProgram
+import qualified Empire.API.Graph.Node                 as Node
 import qualified Empire.API.Graph.RemoveNode           as RemoveNode
 import qualified Empire.API.Graph.RenameNode           as RenameNode
 import qualified Empire.API.Graph.SetCode              as SetCode
@@ -43,7 +43,7 @@ withLibrary :: Workspace -> (GraphLocation -> a) -> a
 withLibrary w f = f (w ^. Workspace.currentLocation)
 
 addNode :: Text -> NodeMeta -> Maybe NodeId -> Workspace -> UUID -> IO ()
-addNode expression meta connectTo workspace uuid = sendRequest uuid $ (withLibrary workspace AddNode.Request) (AddNode.ExpressionNode expression) meta connectTo
+addNode expression meta connectTo workspace uuid = sendRequest uuid $ (withLibrary workspace Node.Request) (Node.ExpressionNode expression) meta connectTo
 
 createProject :: Text -> UUID -> IO ()
 createProject name uuid = sendRequest uuid $ CreateProject.Request $ Text.unpack name

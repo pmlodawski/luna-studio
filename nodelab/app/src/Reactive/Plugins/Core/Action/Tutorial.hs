@@ -12,7 +12,7 @@ import qualified Empire.API.Data.Node              as Node
 import qualified Empire.API.Data.Port              as Port
 import qualified Empire.API.Data.PortRef           as PortRef
 import qualified Empire.API.Graph.Connect          as Connect
-import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
+import qualified Empire.API.Graph.Node             as NodeUpdate
 import qualified Event.Batch                       as Batch
 import qualified Event.CustomEvent                 as CustomEvent
 import           Event.Event                       (Event (..))
@@ -87,7 +87,7 @@ toAction (Batch        (Batch.NodesConnected update))                           
 --         whenStep 15 $ andConnected update "switch"         "readFile" (Port.Arg 0) $ nextStep
 --
 toAction (Batch        (Batch.NodeUpdated update))                                                = Just $ do
-    shouldProcess <- isCurrentLocation (update ^. NodeUpdate.location)
+    shouldProcess <- isCurrentLocation (update ^. NodeUpdate.location')
     when shouldProcess $
         whenStep 13 $ andPortDefaultChanged update "readFile" (Port.Arg 0) (DefaultValue.StringValue "/ipsum.txt") nextStep
 toAction (CustomEvent (CustomEvent.RawEvent "closeOnboarding" _)) = Just $ do
@@ -142,7 +142,7 @@ andConnected update expr1 expr2 portId action = void $ runMaybeT $ do
 
 andPortDefaultChanged :: NodeUpdate.Update -> Text -> Port.InPort -> DefaultValue.Value -> Command Global.State () -> Command Global.State ()
 andPortDefaultChanged update expr portId value _action = do
-    let node     = update ^. NodeUpdate.node
+    let node     = update ^. NodeUpdate.node'
         nodeExpr = node ^? Node.nodeType . Node._ExpressionNode
 
     withJust nodeExpr $ \nodeExpr -> do

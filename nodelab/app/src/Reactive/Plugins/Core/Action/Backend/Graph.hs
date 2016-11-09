@@ -9,14 +9,13 @@ import qualified Batch.Workspace                             as Workspace
 
 import qualified Empire.API.Data.Graph                       as Graph
 import           Empire.API.Data.GraphLocation               (GraphLocation)
-import qualified Empire.API.Graph.AddNode                    as AddNode
 import qualified Empire.API.Graph.CodeUpdate                 as CodeUpdate
 import qualified Empire.API.Graph.Connect                    as Connect
 import qualified Empire.API.Graph.Disconnect                 as Disconnect
 import qualified Empire.API.Graph.GetProgram                 as GetProgram
+import qualified Empire.API.Graph.Node                       as Node
 import qualified Empire.API.Graph.NodeResultUpdate           as NodeResultUpdate
 import qualified Empire.API.Graph.NodeSearcherUpdate         as NodeSearcherUpdate
-import qualified Empire.API.Graph.NodeUpdate                 as NodeUpdate
 import qualified Empire.API.Graph.RemoveNode                 as RemoveNode
 import qualified Empire.API.Graph.RenameNode                 as RenameNode
 import qualified Empire.API.Graph.UpdateNodeMeta             as UpdateNodeMeta
@@ -86,12 +85,12 @@ toAction (Event.Batch ev) = Just $ case ev of
         when shouldProcess $ updateNodesMeta (update ^. UpdateNodeMeta.updates')
 
     NodeAdded update -> do
-        shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. AddNode.location')
-        when shouldProcess $ addDummyNode (update ^. AddNode.node')
+        shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. Node.location')
+        when shouldProcess $ addDummyNode (update ^. Node.node')
 
     NodeUpdated update -> do
-        shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. NodeUpdate.location)
-        when shouldProcess $ updateNode $ update ^. NodeUpdate.node
+        shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. Node.location')
+        when shouldProcess $ updateNode $ update ^. Node.node'
 
     NodeRenamed update -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. RenameNode.location')
