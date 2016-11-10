@@ -15,7 +15,7 @@ build:
       - scripts/gencabal
       - cd $DRONE_DIR/build/backend
       - stack build --only-snapshot
-      - stack build --copy-bins --fast
+      - stack build --copy-bins --fast  --test --coverage
       - cd $DRONE_DIR
       - ./run_tests.sh
   frontend:
