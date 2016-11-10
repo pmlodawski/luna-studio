@@ -16,21 +16,21 @@ import           Empire.API.Data.Breadcrumb (Breadcrumb (..), BreadcrumbItem (..
 import           Empire.API.Data.Node       (NodeId)
 
 
-newtype BreadcrumbHierarchy = BC (Forest NodeId) deriving Show
+newtype BreadcrumbHierarchy = BC (Forest NodeId) deriving (Eq, Show)
 
 empty :: BreadcrumbHierarchy
 empty = BC []
 
-replaceAt :: Breadcrumb -> BreadcrumbHierarchy -> BreadcrumbHierarchy -> BreadcrumbHierarchy
-replaceAt (Breadcrumb bs) (BC forest) (BC hierarchy) = BC $ go bs forest hierarchy
+replaceAt :: Breadcrumb -> BreadcrumbHierarchy -> BreadcrumbHierarchy -> Maybe BreadcrumbHierarchy
+replaceAt (Breadcrumb bs) (BC forest) (BC hierarchy) = BC <$> go bs forest hierarchy
     where
-      go :: [BreadcrumbItem] -> Forest NodeId -> Forest NodeId -> Forest NodeId
-      go [] newForest _ = newForest
+      go :: [BreadcrumbItem] -> Forest NodeId -> Forest NodeId -> Maybe (Forest NodeId)
+      go [] newForest _ = Just newForest
       go (Lambda b:bs) newForest forest = case find (\(Node l _) -> b == l) forest of
-          Just a@(Node b f) -> Node b (go bs newForest f) : delete a forest
-          -- _                 -> TODO this cannot occur since we check beforehand that
-          -- it is safe to navigate to breadcrumb in breadcrumbHierarchy
-          -- should be handled better, though
+          Just a@(Node b f) -> case go bs newForest f of
+              Just x -> Just $ Node b x : delete a forest
+              _      -> Nothing
+          _                 -> Nothing
 
 navigateTo :: BreadcrumbHierarchy -> Breadcrumb -> Maybe BreadcrumbHierarchy
 navigateTo (BC forest) (Breadcrumb breadcrumbs) = BC <$> go forest nodeIds
