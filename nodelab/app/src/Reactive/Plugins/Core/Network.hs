@@ -21,6 +21,7 @@ import qualified Reactive.Plugins.Core.Action.Backend.Control        as Control
 import qualified Reactive.Plugins.Core.Action.Backend.Graph          as Graph
 import qualified Reactive.Plugins.Core.Action.Backend.ProjectManager as ProjectManager
 import qualified Reactive.Plugins.Core.Action.Camera                 as Camera
+import qualified Reactive.Plugins.Core.Action.Clipboard              as Clipboard
 import qualified Reactive.Plugins.Core.Action.Collaboration          as Collaboration
 import qualified Reactive.Plugins.Core.Action.Connect                as Connect
 import qualified Reactive.Plugins.Core.Action.ConnectionPen          as ConnectionPen
@@ -43,6 +44,7 @@ import qualified JS.UI                                               as UI
 import           JS.WebSocket                                        (WebSocket)
 
 import qualified Data.JSString                                       as JSString
+
 
 displayProcessingTime :: Bool
 displayProcessingTime = False
@@ -75,6 +77,7 @@ actions =  [ Debug.toActionEv
            , ConnectionPen.toAction
            , Tutorial.toAction
            , Sandbox.toAction
+           , Clipboard.toAction
            , Debug.toAction
            ]
 
@@ -123,6 +126,9 @@ makeNetworkDescription conn state = do
                    , Handlers.connectionPenHandler
                    , Handlers.textEditorHandler
                    , Handlers.customEventHandler
+                   , Handlers.copyClipboardHandler
+                   , Handlers.cutClipboardHandler
+                   , Handlers.pasteClipboardHandler
                    ]
 
     let registerHandler (AddHandler rh) = rh (processEvent state)

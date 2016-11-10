@@ -27,5 +27,3 @@ contains' nid (Connection src dst) = (src ^. srcNodeId == nid)
 
 contains :: NodeId -> Getter Connection Bool
 contains nid = to (contains' nid)
-
-

@@ -9,15 +9,17 @@ import           Batch.Workspace                       (Workspace)
 import qualified Batch.Workspace                       as Workspace
 import           BatchConnector.Connection             (sendRequest, sendUpdate)
 
+import           Empire.API.Data.Connection            (Connection)
 import qualified Empire.API.Data.DefaultValue          as DefaultValue
 import           Empire.API.Data.GraphLocation         (GraphLocation)
 import qualified Empire.API.Data.GraphLocation         as GraphLocation
-import           Empire.API.Data.Node                  (NodeId)
+import           Empire.API.Data.Node                  (Node, NodeId)
 import           Empire.API.Data.NodeMeta              (NodeMeta)
 import           Empire.API.Data.PortRef               (AnyPortRef (..), InPortRef (..), OutPortRef (..))
 import           Empire.API.Data.Project               (ProjectId)
 
 import qualified Empire.API.Graph.AddNode              as AddNode
+import qualified Empire.API.Graph.AddSubgraph          as AddSubgraph
 import qualified Empire.API.Graph.Collaboration        as Collaboration
 import qualified Empire.API.Graph.Connect              as Connect
 import qualified Empire.API.Graph.Disconnect           as Disconnect
@@ -38,12 +40,14 @@ import qualified Empire.API.Project.ImportProject      as ImportProject
 import qualified Empire.API.Project.ListProjects       as ListProjects
 
 
-
 withLibrary :: Workspace -> (GraphLocation -> a) -> a
 withLibrary w f = f (w ^. Workspace.currentLocation)
 
 addNode :: Text -> NodeMeta -> Maybe NodeId -> Workspace -> UUID -> IO ()
 addNode expression meta connectTo workspace uuid = sendRequest uuid $ (withLibrary workspace AddNode.Request) (AddNode.ExpressionNode expression) meta connectTo
+
+addSubgraph :: [Node] -> [Connection] -> Workspace -> UUID -> IO ()
+addSubgraph nodes connections workspace uuid = sendRequest uuid $ (withLibrary workspace AddSubgraph.Request) nodes connections
 
 createProject :: Text -> UUID -> IO ()
 createProject name uuid = sendRequest uuid $ CreateProject.Request $ Text.unpack name
@@ -73,8 +77,8 @@ renameNode nid name w uuid = sendRequest uuid $ withLibrary w RenameNode.Request
 setCode :: NodeId -> Text -> Workspace -> UUID -> IO ()
 setCode nid newCode w uuid = sendRequest uuid $ withLibrary w SetCode.Request nid newCode
 
-removeNode :: [NodeId] -> Workspace -> UUID ->  IO ()
-removeNode nodeIds workspace uuid = sendRequest uuid $ withLibrary workspace RemoveNode.Request nodeIds
+removeNodes :: [NodeId] -> Workspace -> UUID ->  IO ()
+removeNodes nodeIds workspace uuid = sendRequest uuid $ withLibrary workspace RemoveNode.Request nodeIds
 
 connectNodes :: OutPortRef -> InPortRef -> Workspace -> UUID -> IO ()
 connectNodes src dst workspace uuid = sendRequest uuid $ (withLibrary workspace Connect.Request) src dst

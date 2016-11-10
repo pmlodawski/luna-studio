@@ -2,6 +2,7 @@ module Empire.Commands.Graph
     ( addNode
     , addNodeCondTC
     , addPersistentNode
+    , addSubgraph
     , removeNodes
     , updateNodeExpression
     , updateNodeMeta
@@ -106,6 +107,14 @@ addPersistentNode n = case n ^. Node.nodeType of
                 (InPortId pid) -> setDefaultValue' (PortRef.toAnyPortRef nodeId (InPortId pid)) (Constant val)
                 _ -> return ()
             _ -> return ()
+
+addSubgraph :: GraphLocation -> [Node] -> [Connection] -> Empire ()
+addSubgraph loc nodes conns = withTC loc False $ do
+    forM_ nodes $ \n -> case n ^. Node.nodeType of
+        Node.ExpressionNode expr -> void $ addNodeNoTC loc (n ^. Node.nodeId) expr (n ^. Node.nodeMeta)
+        _ -> return ()
+    forM_ conns $ \(Connection src dst) -> connectNoTC loc src dst
+
 
 removeNodes :: GraphLocation -> [NodeId] -> Empire ()
 removeNodes loc nodeIds = withTC loc False $ forM_ nodeIds removeNodeNoTC

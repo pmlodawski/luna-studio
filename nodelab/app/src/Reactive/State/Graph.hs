@@ -5,13 +5,17 @@ module Reactive.State.Graph
     , addConnection
     , addNode
     , connectionIdsContainingNode
-    , connectionsContainingNode
-    , connectionsMap
+    , connectionIdsContainingNodes
     , connectionWidgets
     , connectionWidgetsMap
+    , connectionsContainingNode
+    , connectionsContainingNodes
+    , connectionsMap
+    , connections
     , getConnectionNodeIds
     , getConnections
     , getConnectionsMap
+    , getNodes
     , getNodesMap
     , hasConnections
     , inputsMap
@@ -41,9 +45,10 @@ import qualified Data.HashMap.Strict        as HashMap
 import           Data.IntMap                (IntMap)
 import qualified Data.IntMap                as IntMap
 import qualified Data.Map.Strict            as Map
+import qualified Data.Set                   as Set
 import           Data.UUID.Types            (UUID)
 
-import           Data.Aeson
+import           Data.Aeson                 hiding ((.:))
 import           Empire.API.Data.Connection (Connection (..), ConnectionId)
 import qualified Empire.API.Data.Connection as Connection
 import           Empire.API.Data.Input      (Input)
@@ -56,7 +61,6 @@ import qualified Empire.API.Data.PortRef    as PortRef
 import qualified Empire.API.JSONInstances   ()
 import           Object.UITypes             (WidgetId)
 import           Reactive.Commands.Command  (Command)
-
 
 
 type NodesMap       = HashMap NodeId Node
@@ -110,6 +114,9 @@ nodes = to getNodes
 
 nodeWidgets :: Getter State [WidgetId]
 nodeWidgets = to $ HashMap.elems . view nodeWidgetsMap
+
+connections :: Getter State [Connection]
+connections = to getConnections
 
 connectionWidgets :: Getter State [WidgetId]
 connectionWidgets = to $ HashMap.elems . view connectionWidgetsMap
@@ -172,8 +179,16 @@ endsWithNode nid conn = conn ^. Connection.dst . PortRef.dstNodeId == nid
 connectionsContainingNode :: NodeId -> State -> [Connection]
 connectionsContainingNode nid state = filter (containsNode nid) $ getConnections state
 
+connectionsContainingNodes :: Set.Set NodeId -> State -> [Connection]
+connectionsContainingNodes nodeIds state = do
+  let connections' = filter ((flip Set.member nodeIds) . (view $ Connection.src . PortRef.srcNodeId)) $ getConnections state
+  filter (flip Set.member nodeIds . (view $ Connection.dst . PortRef.dstNodeId)) connections'
+
 connectionIdsContainingNode :: NodeId -> State -> [ConnectionId]
-connectionIdsContainingNode nid state = (view Connection.connectionId) <$> connectionsContainingNode nid state
+connectionIdsContainingNode nid state = view Connection.connectionId <$> connectionsContainingNode nid state
+
+connectionIdsContainingNodes :: Set.Set NodeId -> State -> [ConnectionId]
+connectionIdsContainingNodes nodeIds state = view Connection.connectionId <$> connectionsContainingNodes nodeIds state
 
 hasConnections :: NodeId -> State -> Bool
-hasConnections nodeId state = not . null $ connectionsContainingNode nodeId state
+hasConnections = (not . null) .: connectionsContainingNode

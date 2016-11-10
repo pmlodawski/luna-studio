@@ -56,6 +56,7 @@ import           Empire.API.Project.ListProjects       as ListProjects
 import           Empire.API.Request                    as Request
 import           Empire.API.Response                   as Response
 
+
 instance ToJSON Project.Project
 instance ToJSON Library.Library
 
@@ -124,6 +125,7 @@ instance ToJSON PortRef.InPortRef
 instance FromJSON PortRef.InPortRef
 
 instance ToJSON Connection.Connection
+instance FromJSON Connection.Connection
 
 instance ToJSON DefaultValue.Value
 instance FromJSON DefaultValue.Value

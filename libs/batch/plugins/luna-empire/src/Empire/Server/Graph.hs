@@ -23,6 +23,7 @@ import qualified Data.UUID.Types                       as UUID
 import qualified Data.UUID.V4                          as UUID
 import           Prologue                              hiding (Item)
 
+import           Empire.API.Data.Connection            as Connection
 import           Empire.API.Data.DefaultValue          (Value (..))
 import           Empire.API.Data.GraphLocation         (GraphLocation)
 import           Empire.API.Data.Node                  (Node (..), NodeId)
@@ -31,8 +32,10 @@ import           Empire.API.Data.NodeMeta              (NodeMeta)
 import qualified Empire.API.Data.NodeSearcher          as NS
 import           Empire.API.Data.Port                  (InPort (..), OutPort (..), Port (..), PortId (..), PortState (..))
 import           Empire.API.Data.PortRef               (InPortRef (..), OutPortRef (..))
+import           Empire.API.Data.PortRef               as PortRef
 import           Empire.API.Data.ValueType             (ValueType (..))
 import qualified Empire.API.Graph.AddNode              as AddNode
+import qualified Empire.API.Graph.AddSubgraph          as AddSubgraph
 import qualified Empire.API.Graph.CodeUpdate           as CodeUpdate
 import qualified Empire.API.Graph.Connect              as Connect
 import qualified Empire.API.Graph.Disconnect           as Disconnect
@@ -52,6 +55,7 @@ import qualified Empire.API.Response                   as Response
 import qualified Empire.API.Topic                      as Topic
 import qualified Empire.Commands.Graph                 as Graph
 import qualified Empire.Commands.Persistence           as Persistence
+import           Empire.Empire                         (Empire)
 import qualified Empire.Empire                         as Empire
 import           Empire.Env                            (Env)
 import qualified Empire.Env                            as Env
@@ -108,7 +112,7 @@ forceTC location = do
     empireNotifEnv   <- use Env.empireNotif
     void $ liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.typecheck location
 
-modifyGraph :: forall a b c. (G.GraphRequest a, Response.ResponseResult a c) => (a -> Empire.Empire b) -> (Request a -> b -> StateT Env BusT ()) -> Request a -> StateT Env BusT ()
+modifyGraph :: forall a b c. (G.GraphRequest a, Response.ResponseResult a c) => (a -> Empire b) -> (Request a -> b -> StateT Env BusT ()) -> Request a -> StateT Env BusT ()
 modifyGraph action success req@(Request uuid request) = do
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
@@ -121,22 +125,18 @@ modifyGraph action success req@(Request uuid request) = do
             notifyCodeUpdate $ request ^. G.location
             saveCurrentProject $ request ^. G.location
 
-modifyGraphOk :: forall a b c. (Bin.Binary a, G.GraphRequest a, Response.ResponseResult a c, Response.ResponseResult a ()) => (a -> Empire.Empire b) -> (a -> b -> StateT Env BusT ()) -> Request a -> StateT Env BusT ()
+modifyGraphOk :: forall a b c. (Bin.Binary a, G.GraphRequest a, Response.ResponseResult a c, Response.ResponseResult a ()) => (a -> Empire b) -> (a -> b -> StateT Env BusT ()) -> Request a -> StateT Env BusT ()
 modifyGraphOk action success = modifyGraph action (\req@(Request uuid request) res -> replyOk req >> success request res)
 
 -- helpers
 
-generateNodeId :: Text -> Empire.Empire NodeId
-generateNodeId expression = case expression of
-    "inside"               -> return $ fromJust $ UUID.fromString "1a9eeda0-4627-4597-9d09-167c44cbe87e"
-    "outside"              -> return $ fromJust $ UUID.fromString "1a9eeda0-4627-4597-9d09-167c44cbe87f"
-    "temperatureThreshold" -> return $ fromJust $ UUID.fromString "77962bb1-32f1-4f4d-ae5f-4328b7c83708"
-    _  -> liftIO $ UUID.nextRandom
+generateNodeId :: IO NodeId
+generateNodeId = UUID.nextRandom
 
-addExpressionNode :: GraphLocation -> Text -> NodeMeta -> Maybe NodeId -> Empire.Empire Node
+addExpressionNode :: GraphLocation -> Text -> NodeMeta -> Maybe NodeId -> Empire Node
 addExpressionNode location expression nodeMeta connectTo = case parseExpr expression of
     Expression expression -> do
-        nodeId <- generateNodeId expression
+        nodeId <- liftIO generateNodeId
         Graph.addNodeCondTC (isNothing connectTo) location nodeId expression nodeMeta
     Function name -> throwError "Function Nodes not yet supported"
     Module   name -> throwError "Module Nodes not yet supported"
@@ -162,6 +162,20 @@ handleAddNode = modifyGraph action success where
         sendToBus' $ AddNode.Update location node
         case nodeType of
             AddNode.ExpressionNode expr -> withJust connectTo $ connectNodes location expr (node ^. Node.nodeId)
+
+handleAddSubgraph :: Request AddSubgraph.Request -> StateT Env BusT ()
+handleAddSubgraph (Request reqId (AddSubgraph.Request location nodes connections)) = do
+    newIds <- liftIO $ mapM (\node -> generateNodeId) nodes
+    let idMapping = Map.fromList $ flip zip newIds $ flip map nodes $ view Node.nodeId
+    let nodes' = flip map nodes $ Node.nodeId %~ (idMapping Map.!)
+        connections' = map (\conn -> conn & Connection.src . PortRef.srcNodeId %~ (idMapping Map.!)
+                                          & Connection.dst . PortRef.dstNodeId %~ (idMapping Map.!)
+                           ) connections
+        action  _       = Graph.addSubgraph location nodes' connections'
+        success _ result = do
+            forM_ nodes' $ \node -> sendToBus' $ AddNode.Update location node
+            forM_ connections' $ \conn -> sendToBus' $ Connect.Update location (conn ^. Connection.src) (conn ^. Connection.dst)
+    modifyGraphOk action success (Request reqId (AddSubgraph.Request location nodes' connections'))
 
 handleRemoveNode :: Request RemoveNode.Request -> StateT Env BusT ()
 handleRemoveNode = modifyGraphOk action success where

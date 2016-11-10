@@ -8,26 +8,27 @@ import qualified BatchConnector.Commands      as BatchCmd
 
 import           Reactive.Commands.Command    (Command, performIO)
 import           Reactive.Commands.UUID       (registerRequest)
-import           Reactive.State.Global        (State, workspace, clientId)
+import           Reactive.State.Global        (State, clientId, workspace)
 
+import           Empire.API.Data.Connection   (Connection)
 import qualified Empire.API.Data.DefaultValue as DefaultValue
-import           Empire.API.Data.Node         (NodeId)
-import           Empire.API.Data.Project      (ProjectId)
+import           Empire.API.Data.Node         (Node, NodeId)
 import           Empire.API.Data.NodeMeta     (NodeMeta)
 import           Empire.API.Data.PortRef      (AnyPortRef (..), InPortRef (..), OutPortRef (..))
-import qualified Empire.API.Data.PortRef      as PortRef (nodeId, dstNodeId)
+import qualified Empire.API.Data.PortRef      as PortRef (dstNodeId, nodeId)
+import           Empire.API.Data.Project      (ProjectId)
 
 
 withWorkspace :: (Workspace -> UUID -> IO ()) -> Command State ()
 withWorkspace act = do
     uuid      <- registerRequest
-    workspace <- use workspace
-    performIO $ act workspace uuid
+    workspace' <- use workspace
+    performIO $ act workspace' uuid
 
 withWorkspace' :: (Workspace -> IO ()) -> Command State ()
 withWorkspace' act = do
-    workspace <- use workspace
-    performIO $ act workspace
+    workspace' <- use workspace
+    performIO $ act workspace'
 
 withUUID :: (UUID -> IO ()) -> Command State ()
 withUUID act = do
@@ -36,6 +37,9 @@ withUUID act = do
 
 addNode :: Text -> NodeMeta -> Maybe NodeId -> Command State ()
 addNode = withWorkspace .:. BatchCmd.addNode
+
+addSubgraph :: [Node] -> [Connection] -> Command State ()
+addSubgraph = withWorkspace .: BatchCmd.addSubgraph
 
 createProject :: Text -> Command State ()
 createProject = withUUID . BatchCmd.createProject
@@ -64,8 +68,8 @@ renameNode = withWorkspace .:  BatchCmd.renameNode
 setCode :: NodeId -> Text -> Command State ()
 setCode = withWorkspace .:  BatchCmd.setCode
 
-removeNode :: [NodeId] -> Command State ()
-removeNode = withWorkspace . BatchCmd.removeNode
+removeNodes :: [NodeId] -> Command State ()
+removeNodes = withWorkspace . BatchCmd.removeNodes
 
 connectNodes :: OutPortRef -> InPortRef -> Command State ()
 connectNodes src dst = do
@@ -113,4 +117,3 @@ importProject = withUUID . BatchCmd.importProject
 
 dumpGraphViz :: Command State ()
 dumpGraphViz = withWorkspace BatchCmd.dumpGraphViz
-

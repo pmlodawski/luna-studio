@@ -16,6 +16,9 @@ module Reactive.Handlers
     , connectionPenHandler
     , textEditorHandler
     , customEventHandler
+    , copyClipboardHandler
+    , cutClipboardHandler
+    , pasteClipboardHandler
     ) where
 
 import           Utils.PreludePlus         hiding (on)
@@ -39,6 +42,7 @@ import qualified JavaScript.Array          as JSArray
 import qualified BatchConnector.Connection as Connection
 import qualified Data.JSString             as JSString
 import           Data.JSString.Text        (lazyTextFromJSString)
+import qualified Event.Clipboard           as Clipboard
 import qualified Event.Connection          as Connection
 import qualified Event.ConnectionPen       as ConnectionPen
 import qualified Event.CustomEvent         as CustomEvent
@@ -47,6 +51,7 @@ import qualified Event.Keyboard            as Keyboard
 import qualified Event.Mouse               as Mouse
 import qualified Event.TextEditor          as TextEditor
 import qualified Event.Window              as Window
+import qualified JS.Clipboard              as Clipboard
 import qualified JS.ConnectionPen          as ConnectionPen
 import qualified JS.CustomEvent            as CustomEvent
 import qualified JS.TextEditor             as TextEditor
@@ -203,3 +208,21 @@ customEventHandler  = AddHandler $ \h -> do
     CustomEvent.initializeEvents
     CustomEvent.registerCallback $ \topic payload ->
         liftIO $ h $ CustomEvent $ CustomEvent.RawEvent (JSString.unpack $ pFromJSVal topic) payload
+
+copyClipboardHandler :: AddHandler Event
+copyClipboardHandler =
+  AddHandler $ \h -> do
+    Clipboard.registerCopyCallback $ \_ ->
+      liftIO . h $ Clipboard $ Clipboard.Copy
+
+cutClipboardHandler :: AddHandler Event
+cutClipboardHandler =
+  AddHandler $ \h -> do
+    Clipboard.registerCutCallback $ \_ ->
+      liftIO . h $ Clipboard $ Clipboard.Cut
+
+pasteClipboardHandler :: AddHandler Event
+pasteClipboardHandler =
+  AddHandler $ \h -> do
+    Clipboard.registerPasteCallback $ \jsval ->
+      liftIO . h $ Clipboard $ Clipboard.Paste (lazyTextFromJSString $ pFromJSVal jsval)
