@@ -49,13 +49,13 @@ pasteFromClipboard clipboardData = do
       connections = view GraphSkeleton.connectionsList skeleton
   mousePos <- use $ Global.mousePos
   (Vector2 mousePosX mousePosY) <- zoom Global.camera $ Camera.screenToWorkspaceM mousePos
-  let shiftX = mousePosX - (minimum $ map (\node -> fst (node ^. (Node.nodeMeta . NodeMeta.position))) nodes)
-      shiftY = mousePosY - (minimum $ map (\node -> snd (node ^. (Node.nodeMeta . NodeMeta.position))) nodes)
+  let shiftX = mousePosX - (minimum $ map (^. Node.nodeMeta . NodeMeta.position . _1) nodes)
+      shiftY = mousePosY - (minimum $ map (^. Node.nodeMeta . NodeMeta.position . _2) nodes)
       shiftNodeX :: Node -> Node
-      shiftNodeX node = node & (Node.nodeMeta . NodeMeta.position . _1) %~ (+shiftX)
+      shiftNodeX = Node.nodeMeta . NodeMeta.position . _1 %~ (+shiftX)
       shiftNodeY :: Node -> Node
-      shiftNodeY node = node & (Node.nodeMeta . NodeMeta.position . _2) %~ (+shiftY)
+      shiftNodeY = Node.nodeMeta . NodeMeta.position . _2 %~ (+shiftY)
       shiftNode :: Node -> Node
-      shiftNode node = shiftNodeY $ shiftNodeX node
-      nodes' = map (shiftNode) nodes
+      shiftNode = shiftNodeY . shiftNodeX
+      nodes' = map shiftNode nodes
   addSubgraph nodes' connections

@@ -22,5 +22,5 @@ instance FromJSON GraphSkeleton
 separateSubgraph :: [NodeId] -> State -> GraphSkeleton
 separateSubgraph nodeIds' state = do
   let nodeIds = Set.fromList nodeIds'
-      nodes   = filter ((flip Set.member nodeIds) . (view Node.nodeId)) $ getNodes state
+      nodes   = filter (flip Set.member nodeIds . view Node.nodeId) $ getNodes state
   GraphSkeleton nodes (connectionsContainingNodes nodeIds state)

@@ -166,16 +166,15 @@ handleAddNode = modifyGraph action success where
 handleAddSubgraph :: Request AddSubgraph.Request -> StateT Env BusT ()
 handleAddSubgraph (Request reqId (AddSubgraph.Request location nodes connections)) = do
     newIds <- liftIO $ mapM (\node -> generateNodeId) nodes
-    let idMapping = Map.fromList $ zip (map (view Node.nodeId) nodes) newIds
-    liftIO $ putStrLn $ show idMapping
-    let nodes' = map (\node -> node & Node.nodeId %~ (idMapping Map.!)) nodes
+    let idMapping = Map.fromList $ flip zip newIds $ flip map nodes $ view Node.nodeId
+    let nodes' = flip map nodes $ Node.nodeId %~ (idMapping Map.!)
         connections' = map (\conn -> conn & Connection.src . PortRef.srcNodeId %~ (idMapping Map.!)
                                           & Connection.dst . PortRef.dstNodeId %~ (idMapping Map.!)
                            ) connections
         action  _       = Graph.addSubgraph location nodes' connections'
         success _ result = do
-            forM_ nodes' (\node -> sendToBus' $ AddNode.Update location node)
-            forM_ connections' (\conn -> sendToBus' $ Connect.Update location (conn ^. Connection.src) (conn ^. Connection.dst))
+            forM_ nodes' $ \node -> sendToBus' $ AddNode.Update location node
+            forM_ connections' $ \conn -> sendToBus' $ Connect.Update location (conn ^. Connection.src) (conn ^. Connection.dst)
     modifyGraphOk action success (Request reqId (AddSubgraph.Request location nodes' connections'))
 
 handleRemoveNode :: Request RemoveNode.Request -> StateT Env BusT ()
