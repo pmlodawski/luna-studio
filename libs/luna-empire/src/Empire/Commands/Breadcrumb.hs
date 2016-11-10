@@ -28,8 +28,7 @@ withBreadcrumb :: ProjectId -> LibraryId -> Breadcrumb -> Command Graph.Graph a 
 withBreadcrumb pid lid breadcrumb act = withLibrary pid lid $
     zoom (Library.body) $ do
         graph <- get
-        let nodeIds = map (\(Lambda id) -> id) (coerce breadcrumb)
-            breadcrumbHierarchy = graph ^. Graph.breadcrumbHierarchy
+        let  breadcrumbHierarchy = graph ^. Graph.breadcrumbHierarchy
         case breadcrumbHierarchy `navigateTo` breadcrumb of
             Just newHierarchy -> do
                 env <- ask
@@ -38,8 +37,10 @@ withBreadcrumb pid lid breadcrumb act = withLibrary pid lid $
                 case res of
                     Right res' -> do
                         let modifiedHierarchy = state ^. Graph.breadcrumbHierarchy
-                            properHierarchy = replaceAt breadcrumb modifiedHierarchy breadcrumbHierarchy
-                            properState = state & Graph.breadcrumbHierarchy .~ properHierarchy
+                        properHierarchy <- case replaceAt breadcrumb modifiedHierarchy breadcrumbHierarchy of
+                            Just x -> return x
+                            _      -> throwError $ "Breadcrumb " ++ show breadcrumb ++ " does not exist."
+                        let properState = state & Graph.breadcrumbHierarchy .~ properHierarchy
                         put properState
                         return res'
                     Left err -> throwError err
