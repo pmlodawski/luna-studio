@@ -60,7 +60,7 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     register $ List.createList 200 "List" values $ AnyLunaValue (-1 :: Int)
     return ()
 
-toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\113' _)) = Just $ Global.inRegistry $ do
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\116' _)) = Just $ Global.inRegistry $ do
     performIO $ putStrLn "show sandbox"
     let groupWidget = Group.create
     parent'       <- UICmd.register sceneGraphId groupWidget (Layout.horizontalLayoutHandler 5.0)
@@ -117,6 +117,6 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\115' _)) = Just $ Global.in
 
     return ()
 
-toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\116' _)) = Just BatchCmd.dumpGraphViz
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\113' _)) = Just BatchCmd.dumpGraphViz
 
 toAction _  = Nothing
