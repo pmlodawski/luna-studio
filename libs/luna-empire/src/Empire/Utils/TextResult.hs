@@ -54,4 +54,4 @@ nodeValueToText w = Text.pack $ case w of
     StringMaybeList v -> "Vector [" <> showLength v <> "]"
 
     Graphics        _ -> "Graphics"
-    _                 -> "(unknow type)"
+    _                 -> "(unknown type)"
