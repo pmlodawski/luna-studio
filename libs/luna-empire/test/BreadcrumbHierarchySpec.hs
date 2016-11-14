@@ -44,3 +44,5 @@ spec = describe "forest" $ do
         nested4nested5 `navigateTo` breadcrumb14 == Just (addID (uuid 5) empty)
     it "replaceAt fails on non-existent breadcrumb" $
         replaceAt (Breadcrumb [Lambda (uuid 9)]) empty forest123 == Nothing
+    it "removes from top level" $
+        topLevelIDs (removeID (uuid 1) forest123) == [uuid 3, uuid 2]

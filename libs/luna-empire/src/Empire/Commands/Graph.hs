@@ -34,7 +34,7 @@ import           Data.Traversable              (forM)
 import qualified Data.UUID                     as UUID
 import           Prologue
 
-import           Empire.Data.BreadcrumbHierarchy (addID)
+import           Empire.Data.BreadcrumbHierarchy (addID, removeID)
 import           Empire.Data.Graph               (Graph)
 import qualified Empire.Data.Graph               as Graph
 import qualified Empire.Data.Library             as Library
@@ -126,6 +126,7 @@ removeNodeNoTC nodeId = do
     mapM_ disconnectPort obsoleteEdges
     zoom Graph.ast $ AST.removeSubtree astRef
     Graph.nodeMapping %= Map.delete nodeId
+    Graph.breadcrumbHierarchy %= removeID nodeId
 
 updateNodeExpression :: GraphLocation -> NodeId -> NodeId -> Text -> Empire (Maybe Node)
 updateNodeExpression loc nodeId newNodeId expr = do
