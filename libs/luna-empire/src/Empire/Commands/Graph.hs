@@ -21,7 +21,7 @@ module Empire.Commands.Graph
     ) where
 
 import           Control.Monad                 (forM, forM_)
-import           Control.Monad.Error           (throwError)
+import           Control.Monad.Except          (throwError)
 import           Control.Monad.State           hiding (when)
 import           Data.IntMap                   (IntMap)
 import qualified Data.IntMap                   as IntMap

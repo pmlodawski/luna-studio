@@ -7,8 +7,7 @@ module Empire.Commands.Persistence
     , exportProject
     ) where
 
-import           Control.Monad.Error             (throwError)
-import           Control.Monad.Error             (catchError)
+import           Control.Monad.Except            (catchError, throwError)
 import           Control.Monad.Reader
 import           Control.Monad.State
 import qualified Data.ByteString.Lazy            as BS (ByteString, putStrLn, readFile, writeFile)
