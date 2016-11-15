@@ -82,7 +82,7 @@ toAction (Event.Batch ev) = Just $ case ev of
             when shouldProcess $ do
               maybeWidgetId <- nodeIdToWidgetId $ nodeId
               case maybeWidgetId of Just widgetId -> Node.selectNode' Node.performSelect widgetId
-                                    Nothing -> modify (& Global.nodeToSelect .~ Just nodeId)
+                                    Nothing       -> modify (& Global.nodeToSelect .~ Just nodeId)
 
     NodesConnected update -> do
         whenM (isCurrentLocation $ update ^. Connect.location') $ do

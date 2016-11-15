@@ -174,9 +174,7 @@ handleAddSubgraph (Request reqId (AddSubgraph.Request location nodes connections
                                           & Connection.dst . PortRef.dstNodeId %~ (idMapping Map.!)
                            ) connections
         action  _       = Graph.addSubgraph location nodes' connections'
-        success _ result = do
-            forM_ nodes' $ \node -> sendToBus' $ AddNode.Update location node
-            forM_ connections' $ \conn -> sendToBus' $ Connect.Update location (conn ^. Connection.src) (conn ^. Connection.dst)
+        success _ _     = return ()
     modifyGraphOk action success (Request reqId (AddSubgraph.Request location nodes' connections'))
 
 handleRemoveNode :: Request RemoveNode.Request -> StateT Env BusT ()

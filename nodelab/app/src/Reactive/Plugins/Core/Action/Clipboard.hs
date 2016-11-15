@@ -44,18 +44,20 @@ cutSelectionToClipboard = copySelectionToClipboard >> removeSelectedNodes
 
 pasteFromClipboard :: Text -> Command State ()
 pasteFromClipboard clipboardData = do
-  let skeleton = fromJust (decode $ encodeUtf8 clipboardData :: Maybe GraphSkeleton)
-      nodes = view GraphSkeleton.nodesList skeleton
-      connections = view GraphSkeleton.connectionsList skeleton
-  mousePos <- use $ Global.mousePos
-  (Vector2 mousePosX mousePosY) <- zoom Global.camera $ Camera.screenToWorkspaceM mousePos
-  let shiftX = mousePosX - (minimum $ map (^. Node.nodeMeta . NodeMeta.position . _1) nodes)
-      shiftY = mousePosY - (minimum $ map (^. Node.nodeMeta . NodeMeta.position . _2) nodes)
-      shiftNodeX :: Node -> Node
-      shiftNodeX = Node.nodeMeta . NodeMeta.position . _1 %~ (+shiftX)
-      shiftNodeY :: Node -> Node
-      shiftNodeY = Node.nodeMeta . NodeMeta.position . _2 %~ (+shiftY)
-      shiftNode :: Node -> Node
-      shiftNode = shiftNodeY . shiftNodeX
-      nodes' = map shiftNode nodes
-  addSubgraph nodes' connections
+  let maybeSkeleton = decode $ encodeUtf8 clipboardData :: Maybe GraphSkeleton
+  when (isJust maybeSkeleton) $ do
+      let skeleton    = fromJust maybeSkeleton
+          nodes       = view GraphSkeleton.nodesList skeleton
+          connections = view GraphSkeleton.connectionsList skeleton
+      mousePos <- use $ Global.mousePos
+      (Vector2 mousePosX mousePosY) <- zoom Global.camera $ Camera.screenToWorkspaceM mousePos
+      let shiftX = mousePosX - (minimum $ map (^. Node.nodeMeta . NodeMeta.position . _1) nodes)
+          shiftY = mousePosY - (minimum $ map (^. Node.nodeMeta . NodeMeta.position . _2) nodes)
+          shiftNodeX :: Node -> Node
+          shiftNodeX = Node.nodeMeta . NodeMeta.position . _1 %~ (+shiftX)
+          shiftNodeY :: Node -> Node
+          shiftNodeY = Node.nodeMeta . NodeMeta.position . _2 %~ (+shiftY)
+          shiftNode :: Node -> Node
+          shiftNode = shiftNodeY . shiftNodeX
+          nodes' = map shiftNode nodes
+      addSubgraph nodes' connections
