@@ -5,7 +5,7 @@ module Empire.Commands.GraphBuilder where
 
 import           Prologue
 
-import           Control.Monad.Error               (throwError)
+import           Control.Monad.Except              (throwError)
 import           Control.Monad.State
 import           Control.Monad.Trans.Maybe         (MaybeT (..), runMaybeT)
 
@@ -72,10 +72,19 @@ buildNode nid = do
     expr  <- zoom Graph.ast $ runASTOp $ Print.printNodeExpression ref
     meta  <- zoom Graph.ast $ AST.readMeta uref
     name  <- getNodeName nid
+    canEnter <- rhsIsLambda nid
     ports <- buildPorts ref
     let code    = Nothing -- Just $ Text.pack expr
         portMap = Map.fromList $ flip fmap ports $ \p@(Port id _ _ _) -> (id, p)
-    return $ API.Node nid (Text.pack name) (API.ExpressionNode $ Text.pack expr) False portMap (fromMaybe def meta) code
+    return $ API.Node nid (Text.pack name) (API.ExpressionNode $ Text.pack expr) canEnter portMap (fromMaybe def meta) code
+
+rhsIsLambda :: NodeId -> Command Graph Bool
+rhsIsLambda nid = do
+    ref <- GraphUtils.getASTTarget nid
+    zoom Graph.ast $ runASTOp $ do
+        node <- Builder.read ref
+        caseTest (uncover node) $ do
+            of' $ \(Lam _ _) -> return True
 
 getNodeName :: NodeId -> Command Graph String
 getNodeName nid = do
