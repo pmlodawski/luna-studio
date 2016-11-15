@@ -85,6 +85,7 @@ rhsIsLambda nid = do
         node <- Builder.read ref
         caseTest (uncover node) $ do
             of' $ \(Lam _ _) -> return True
+            of' $ \ANY       -> return False
 
 getNodeName :: NodeId -> Command Graph String
 getNodeName nid = do
