@@ -48,7 +48,10 @@ addNode node = do
     zoom Global.graph $ modify (Graph.addNode node)
     widgetId <- registerNode node
     focusNode widgetId
-    Node.selectNode' Node.performSelect widgetId
+    maybeSelect <- use Global.nodeToSelect
+    when (isJust maybeSelect && fromJust maybeSelect == node ^. Node.nodeId) $ do
+        Node.selectNode' Node.performSelect widgetId
+        modify (& Global.nodeToSelect .~ Nothing)
 
 addDummyNode :: Node -> Command State ()
 addDummyNode dummyNode = do

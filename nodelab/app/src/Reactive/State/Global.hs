@@ -44,6 +44,7 @@ data State = State { _mousePos           :: Vector2 Int
                    , _jsState            :: Event.JSState
                    , _collaboration      :: Collaboration.State
                    , _pendingRequests    :: Set UUID
+                   , _nodeToSelect       :: Maybe UUID
                    , _lastEventTimestamp :: DateTime
                    , _clientId           :: Collaboration.ClientId
                    , _random             :: StdGen
@@ -57,7 +58,7 @@ instance ToJSON StdGen where
 makeLenses ''State
 
 initialState :: DateTime -> Collaboration.ClientId -> StdGen -> Maybe Int -> State
-initialState = State (Vector2 200 200) def def def def def def def def def def def defJsState def def
+initialState = State (Vector2 200 200) def def def def def def def def def def def defJsState def def def
 
 inRegistry :: Command UIRegistry.State a -> Command State a
 inRegistry = zoom uiRegistry

@@ -6,6 +6,7 @@ module Reactive.Plugins.Core.Action.Backend.Graph
 import           Utils.PreludePlus
 
 import qualified Batch.Workspace                             as Workspace
+import           Control.Monad.State                         (modify)
 
 import qualified Empire.API.Data.Graph                       as Graph
 import           Empire.API.Data.GraphLocation               (GraphLocation)
@@ -28,7 +29,7 @@ import qualified Event.Event                                 as Event
 import           Reactive.Commands.Batch                     (collaborativeModify, requestCollaborationRefresh)
 import           Reactive.Commands.Camera                    (autoZoom)
 import           Reactive.Commands.Command                   (Command, performIO)
-import           Reactive.Commands.Graph                     (updateConnection)
+import           Reactive.Commands.Graph                     (nodeIdToWidgetId, updateConnection)
 import           Reactive.Commands.Graph.Connect             (localConnectNodes)
 import           Reactive.Commands.Graph.Disconnect          (localDisconnectAll)
 import           Reactive.Commands.Graph.Render              (renderGraph)
@@ -37,11 +38,13 @@ import           Reactive.Commands.Node.Create               (addDummyNode)
 import           Reactive.Commands.Node.NodeMeta             (updateNodesMeta)
 import           Reactive.Commands.Node.Remove               (localRemoveNodes)
 import           Reactive.Commands.Node.Update               (updateNode, updateNodeProfilingData, updateNodeValue)
+import           Reactive.Commands.UUID                      (isOwnRequest)
 import           Reactive.Plugins.Core.Action.Backend.Common (doNothing, handleResponse)
 import           Reactive.State.Global                       (State)
 import qualified Reactive.State.Global                       as Global
 
 import qualified JS.TextEditor                               as UI
+import qualified UI.Handlers.Node                            as Node
 
 
 isCurrentLocation :: GraphLocation -> Command State Bool
@@ -71,6 +74,15 @@ toAction (Event.Batch ev) = Just $ case ev of
                 performIO $ UI.setText code
                 Global.workspace . Workspace.isGraphLoaded .= True
                 requestCollaborationRefresh
+
+    AddNodeResponse response@(Response.Response uuid _ _) -> do
+        shouldProcess <- isOwnRequest uuid
+        handleResponse response $ \_ nodeId -> do
+            collaborativeModify [nodeId]
+            when shouldProcess $ do
+              maybeWidgetId <- nodeIdToWidgetId $ nodeId
+              case maybeWidgetId of Just widgetId -> Node.selectNode' Node.performSelect widgetId
+                                    Nothing -> modify (& Global.nodeToSelect .~ Just nodeId)
 
     NodesConnected update -> do
         whenM (isCurrentLocation $ update ^. Connect.location') $ do
@@ -116,7 +128,6 @@ toAction (Event.Batch ev) = Just $ case ev of
 
     -- CollaborationUpdate update -> -- handled in Collaboration.hs
     RemoveNodeResponse           response -> handleResponse response doNothing
-    AddNodeResponse              response -> handleResponse response $ \_ nodeId -> collaborativeModify [nodeId]
     ConnectResponse              response -> handleResponse response doNothing
     DisconnectResponse           response -> handleResponse response doNothing
     NodeMetaResponse             response -> handleResponse response doNothing
