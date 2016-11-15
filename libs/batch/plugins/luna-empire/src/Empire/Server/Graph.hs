@@ -138,7 +138,9 @@ addExpressionNode location expression nodeMeta connectTo = case parseExpr expres
     Expression expression -> do
         nodeId <- liftIO generateNodeId
         Graph.addNodeCondTC (isNothing connectTo) location nodeId expression nodeMeta
-    Function name -> throwError "Function Nodes not yet supported"
+    Function (Just name) -> do
+        nodeId <- liftIO generateNodeId
+        Graph.addNodeCondTC False location nodeId (Text.append "def " name) nodeMeta
     Module   name -> throwError "Module Nodes not yet supported"
     Input    name -> throwError "Input Nodes not yet supported"
     Output   name -> throwError "Output Nodes not yet supported"

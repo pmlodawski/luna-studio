@@ -11,9 +11,10 @@ import           Data.Graph                        (Inputs (..), source)
 import           Data.HMap.Lazy                    (TypeKey (..))
 import qualified Data.HMap.Lazy                    as HMap
 import           Data.Layer_OLD.Cover_OLD          (uncover)
-import           Data.Maybe                        (catMaybes)
+import           Data.Maybe                        (catMaybes, fromMaybe)
 import           Data.Prop                         (prop, ( # ))
 import           Data.Record                       (ANY (..), caseTest, of')
+import qualified Data.Text.Lazy                    as Text
 import           Prologue                          hiding (( # ))
 
 import           Empire.API.Data.DefaultValue      (PortDefault, Value (..))
@@ -59,7 +60,10 @@ metaKey :: TypeKey NodeMeta
 metaKey = TypeKey
 
 addNode :: NodeId -> String -> String -> Command AST NodeRef
-addNode nid name expr = runASTOp $ Parser.parseExpr expr >>= ASTBuilder.makeNodeRep (NodeMarker nid) name
+addNode nid name expr = runASTOp $ do
+    (exprName, ref) <- Parser.parseExpr expr
+    let name' = fromMaybe name $ fmap Text.unpack exprName
+    ASTBuilder.makeNodeRep (NodeMarker nid) name' ref
 
 addDefault :: PortDefault -> Command AST NodeRef
 addDefault val = runASTOp $ Parser.parsePortDefault val

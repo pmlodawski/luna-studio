@@ -4,9 +4,10 @@ module Empire.ASTOps.Parse where
 
 import           Prologue
 
-import           Control.Monad.Error          (throwError)
+import           Control.Monad.Except         (throwError)
 import           Data.List.Split              (splitOn)
 import           Data.List                    (partition)
+import qualified Data.Text.Lazy               as Text
 
 import           Empire.Data.AST              (NodeRef)
 import           Empire.ASTOp                 (ASTOp)
@@ -21,18 +22,18 @@ import qualified Luna.Parser.Parser as Parser
 import qualified Luna.Parser.State  as Parser
 import qualified Luna.Parser.Term   as Term
 
-parseExpr :: ASTOp m => String -> m NodeRef
+parseExpr :: ASTOp m => String -> m (Maybe Text, NodeRef)
 parseExpr s = do
     lamRes <- tryParseLambda s
     case lamRes of
-        Just l  -> return l
-        Nothing -> case parsed of
+        (name, Just l)  -> return (name, l)
+        _               -> case parsed of
             Left d          -> throwError $ "Parser error: " <> show d
             Right (bldr, _) -> do
                 r     <- bldr
                 fixed <- applyAccessors r
                 when (fixed /= r) $ safeRemove r
-                return fixed
+                return (Nothing, fixed)
           where
           operatorHotFix = replace "_.+" "_.op+"
                          . replace "_.*" "_.op*"
@@ -42,21 +43,28 @@ parseExpr s = do
                          $ s
           parsed = Parser.parseString operatorHotFix $ Parser.parseGen Term.partial Parser.defState
 
-tryParseLambda :: ASTOp m => String -> m (Maybe NodeRef)
+tryParseLambda :: ASTOp m => String -> m (Maybe Text, Maybe NodeRef)
 tryParseLambda s = case words s of
+    ("def" : name : _) -> do
+        v <- Builder.var $ fromString "in0"
+        lam <- Builder.lam [Builder.arg v] v
+        return (Just (Text.pack name), Just lam)
     ["->"] -> do
         v <- Builder.var $ fromString "arg0"
-        Just <$> Builder.lam [Builder.arg v] v
+        lam <- Builder.lam [Builder.arg v] v
+        return $ (Nothing, Just lam)
     ("->" : rest) -> do
         let (as, body) = partition ((== '$') . head) rest
         let args = fmap (drop 1) as
         argRefs <- mapM (Builder.var . fromString) args
-        bodyRef <- parseExpr $ unwords body
-        Just <$> Builder.lam (Builder.arg <$> argRefs) bodyRef
-    _ -> return Nothing
+        (_, bodyRef) <- parseExpr $ unwords body
+        let arg = Builder.arg <$> argRefs
+        lam <- Builder.lam arg bodyRef
+        return $ (Nothing, Just lam)
+    _ -> return (Nothing, Nothing)
 
 parsePortDefault :: ASTOp m => PortDefault -> m NodeRef
-parsePortDefault (Expression expr)          = parseExpr expr
+parsePortDefault (Expression expr)          = snd <$> parseExpr expr
 parsePortDefault (Constant (IntValue i))    = Builder.int $ fromIntegral i
 parsePortDefault (Constant (StringValue s)) = Builder.str s
 parsePortDefault (Constant (DoubleValue d)) = Builder.double d
