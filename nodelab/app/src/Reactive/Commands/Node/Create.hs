@@ -14,12 +14,11 @@ import qualified Data.Text.Lazy                    as Text
 import           Object.UITypes                    (WidgetId)
 import           Object.Widget                     (objectId, widget)
 import qualified Object.Widget.Node                as Model
-import qualified UI.Handlers.Node                  as Node
 
 import           Reactive.Commands.Command         (Command)
 import           Reactive.Commands.EnterNode       (enterNode)
 import           Reactive.Commands.Graph           (focusNode, widgetIdToNodeWidget)
-import           Reactive.Commands.Graph.Selection (selectedNodes)
+import           Reactive.Commands.Graph.Selection (selectedNodes, trySelectFromState)
 import           Reactive.Commands.Node.NodeMeta   (modifyNodeMeta)
 import           Reactive.Commands.Node.Remove     (removeSelectedNodes)
 import qualified Reactive.Commands.UIRegistry      as UICmd
@@ -48,10 +47,7 @@ addNode node = do
     zoom Global.graph $ modify (Graph.addNode node)
     widgetId <- registerNode node
     focusNode widgetId
-    maybeSelect <- use Global.nodeToSelect
-    when (isJust maybeSelect && fromJust maybeSelect == node ^. Node.nodeId) $ do
-        Node.selectNode' Node.performSelect widgetId
-        modify (& Global.nodeToSelect .~ Nothing)
+    trySelectFromState
 
 addDummyNode :: Node -> Command State ()
 addDummyNode dummyNode = do

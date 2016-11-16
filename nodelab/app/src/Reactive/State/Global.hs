@@ -44,7 +44,7 @@ data State = State { _mousePos           :: Vector2 Int
                    , _jsState            :: Event.JSState
                    , _collaboration      :: Collaboration.State
                    , _pendingRequests    :: Set UUID
-                   , _nodeToSelect       :: Maybe UUID
+                   , _nodesToSelectIds   :: Set UUID
                    , _lastEventTimestamp :: DateTime
                    , _clientId           :: Collaboration.ClientId
                    , _random             :: StdGen

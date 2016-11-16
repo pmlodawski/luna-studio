@@ -3,14 +3,16 @@ module Reactive.Plugins.Core.Action.Backend.Graph
     ) where
 
 
-import           Utils.PreludePlus
-
 import qualified Batch.Workspace                             as Workspace
 import           Control.Monad.State                         (modify)
+import qualified Data.Set                                    as Set
+import           Utils.PreludePlus
 
 import qualified Empire.API.Data.Graph                       as Graph
 import           Empire.API.Data.GraphLocation               (GraphLocation)
+import qualified Empire.API.Data.Node                        as Node
 import qualified Empire.API.Graph.AddNode                    as AddNode
+import qualified Empire.API.Graph.AddSubgraph                as AddSubgraph
 import qualified Empire.API.Graph.CodeUpdate                 as CodeUpdate
 import qualified Empire.API.Graph.Connect                    as Connect
 import qualified Empire.API.Graph.Disconnect                 as Disconnect
@@ -29,10 +31,11 @@ import qualified Event.Event                                 as Event
 import           Reactive.Commands.Batch                     (collaborativeModify, requestCollaborationRefresh)
 import           Reactive.Commands.Camera                    (autoZoom)
 import           Reactive.Commands.Command                   (Command, performIO)
-import           Reactive.Commands.Graph                     (nodeIdToWidgetId, updateConnection)
+import           Reactive.Commands.Graph                     (updateConnection)
 import           Reactive.Commands.Graph.Connect             (localConnectNodes)
 import           Reactive.Commands.Graph.Disconnect          (localDisconnectAll)
 import           Reactive.Commands.Graph.Render              (renderGraph)
+import           Reactive.Commands.Graph.Selection           (trySelectFromState)
 import           Reactive.Commands.Node                      (renameNode)
 import           Reactive.Commands.Node.Create               (addDummyNode)
 import           Reactive.Commands.Node.NodeMeta             (updateNodesMeta)
@@ -44,7 +47,6 @@ import           Reactive.State.Global                       (State)
 import qualified Reactive.State.Global                       as Global
 
 import qualified JS.TextEditor                               as UI
-import qualified UI.Handlers.Node                            as Node
 
 
 isCurrentLocation :: GraphLocation -> Command State Bool
@@ -78,11 +80,20 @@ toAction (Event.Batch ev) = Just $ case ev of
     AddNodeResponse response@(Response.Response uuid _ _) -> do
         shouldProcess <- isOwnRequest uuid
         handleResponse response $ \_ nodeId -> do
-            collaborativeModify [nodeId]
             when shouldProcess $ do
-              maybeWidgetId <- nodeIdToWidgetId $ nodeId
-              case maybeWidgetId of Just widgetId -> Node.selectNode' Node.performSelect widgetId
-                                    Nothing       -> modify (& Global.nodeToSelect .~ Just nodeId)
+                collaborativeModify [nodeId]
+                modify (& Global.nodesToSelectIds .~ (Set.fromList [nodeId]))
+                trySelectFromState
+
+    --TODO(LJK, MK): Result should be a list of added nodes ids
+    AddSubgraphResponse response@(Response.Response uuid (AddSubgraph.Request _ nodes _) _) -> do
+        shouldProcess <- isOwnRequest uuid
+        handleResponse response doNothing
+        when shouldProcess $ do
+            let nodeIds = map (^. Node.nodeId) nodes
+            collaborativeModify nodeIds
+            modify (& Global.nodesToSelectIds .~ Set.fromList nodeIds)
+            trySelectFromState
 
     NodesConnected update -> do
         whenM (isCurrentLocation $ update ^. Connect.location') $ do

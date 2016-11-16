@@ -4,6 +4,7 @@ import           Utils.PreludePlus
 
 import qualified Empire.API.Control.EmpireStarted      as EmpireStarted
 import qualified Empire.API.Graph.AddNode              as AddNode
+import qualified Empire.API.Graph.AddSubgraph          as AddSubgraph
 import qualified Empire.API.Graph.CodeUpdate           as CodeUpdate
 import qualified Empire.API.Graph.Collaboration        as Collaboration
 import qualified Empire.API.Graph.Connect              as Connect
@@ -42,6 +43,7 @@ data Event = UnknownEvent String
            | UpdateNodeExpressionResponse UpdateNodeExpression.Response
            | CodeUpdated                            CodeUpdate.Update
            | NodeResultUpdated                NodeResultUpdate.Update
+           | AddSubgraphResponse                   AddSubgraph.Response
            | ProjectList                          ListProjects.Response
            | ProjectCreated                      CreateProject.Response
            | ProjectCreatedUpdate                CreateProject.Update
