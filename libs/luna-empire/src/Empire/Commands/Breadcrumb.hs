@@ -42,6 +42,7 @@ withBreadcrumb pid lid breadcrumb act = withLibrary pid lid $
                             Just x -> return x
                             _      -> throwError $ show breadcrumb ++ " does not exist."
                         let properState = state & Graph.breadcrumbHierarchy .~ properHierarchy
+                                                & Graph.insideNode .~ Nothing
                         put properState
                         return res'
                     Left err -> throwError err

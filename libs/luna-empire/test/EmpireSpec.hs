@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE ViewPatterns         #-}
@@ -8,18 +9,24 @@ module EmpireSpec (spec) where
 import           Prologue
 import           Control.Exception (bracket)
 import           Control.Monad.Except (throwError)
-import           Data.List (sort)
+import           Data.List (find, sort)
+import qualified Data.Map as Map
 import           Data.UUID (nil)
 import           Data.UUID.V4 (nextRandom)
 import           Empire.API.Data.DefaultValue (PortDefault (..), Value (..))
 import qualified Empire.API.Data.Graph        as Graph
 import qualified Empire.Commands.GraphBuilder as GraphBuilder
-import           Empire.API.Data.Node
+import qualified Empire.Commands.GraphUtils   as GraphUtils
+import           Empire.API.Data.Input        as Input
+import           Empire.API.Data.Output       as Output
+import           Empire.API.Data.Node         as Node
 import           Empire.API.Data.NodeMeta
 import           Empire.API.Data.Port
 import           Empire.API.Data.GraphLocation
 import           Empire.API.Data.Breadcrumb   as Breadcrumb
 import           Empire.API.Data.PortRef      (AnyPortRef(..), InPortRef (..), OutPortRef (..))
+import           Empire.API.Data.TypeRep
+import           Empire.API.Data.ValueType
 import           Empire.Commands.AST
 import           Empire.Commands.Graph        as Graph
 import           Empire.Commands.Library
@@ -33,15 +40,28 @@ import           Control.Concurrent.STM.TChan (TChan, newTChan)
 import           Control.Concurrent.STM       (atomically)
 import           Luna.Pretty.GraphViz         (renderAndOpen, toGraphViz)
 
-import           Test.Hspec (around, describe, expectationFailure, it, shouldSatisfy)
+import           Test.Hspec (around, describe, expectationFailure, it,
+                             shouldBe, shouldSatisfy, shouldMatchList)
 
 
-runGraph env act = runGraph' env def act
+runGraph env act = runEmpire env def $ do
+    (pid, _) <- createProject Nothing "dupa"
+    (lid, _) <- createLibrary pid (Just "xd") "/xd/xd"
+    let toLoc = GraphLocation pid lid
+    act toLoc
 
 -- runGraph' :: CommunicationEnv -> Env -> ((Breadcrumb -> GraphLocation) -> Command Graph a) -> IO (Either Error a, Env)
 runGraph' env graph act = runEmpire env graph $ do
-    (pid, _) <- createProject Nothing "dupa"
-    (lid, _) <- createLibrary pid (Just "xd") "/xd/xd"
+    pid <- (fst . head) <$> listProjects
+    lid <- (fst . head) <$> listLibraries pid
+    let toLoc = GraphLocation pid lid
+    act toLoc
+
+-- runGraph'' :: _ -> _ -> Graph -> _ -> _
+runGraph'' env st newGraph act = runEmpire env st $ do
+    pid <- (fst . head) <$> listProjects
+    lid <- (fst . head) <$> listLibraries pid
+    withLibrary pid lid $ body .= newGraph
     let toLoc = GraphLocation pid lid
     act toLoc
 
@@ -83,7 +103,7 @@ spec = around withChannels $
                 graphIDs $ mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
             case res of
                 Left err -> expectationFailure err
-                Right ids -> print ids >> (ids `shouldSatisfy` (not.null))
+                Right ids -> ids `shouldSatisfy` ((== 2) . length)
         it "int literal has no nodes inside" $ \env -> do
             u1 <- nextRandom
             (res, _) <- runGraph env $ \mkLoc -> do
@@ -96,25 +116,44 @@ spec = around withChannels $
                 Right ids -> ids `shouldSatisfy` null
         it "properly typechecks input nodes" $ \env -> do
             u1 <- nextRandom
-            (res, g) <- runGraph env $ \mkLoc -> do
+            (res, st) <- runGraph env $ \mkLoc -> do
                 let loc = mkLoc $ Breadcrumb []
                     loc' = mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
-                -- Graph.addNode loc u1 "-> $a $b a + b" def
-                Graph.addNode loc u1 "def foo" def
-                graphIDs loc'
+                Graph.addNode loc u1 "-> $a $b a + b" def
+                let GraphLocation pid lid _ = loc
+                withLibrary pid lid (use $ body)
             case res of
                 Left err -> expectationFailure err
-                Right ids -> do
-                    print ids
-                    (res'', _) <- runGraph' env g $ \mkLoc -> do
-                        u2 <- liftIO $ nextRandom
-                        nodes <- Graph.getGraph (mkLoc $ Breadcrumb [])
-                        print nodes
-                    case res'' of
-                        Left err -> expectationFailure err
-                        Right node -> return ()
-
-
+                Right g -> do
+                    (res', (exGraph -> g')) <- runEmpire env (InterpreterEnv def def def g def) $
+                        Typecheck.run $ GraphLocation nil 0 $ Breadcrumb []
+                    (Right foo,_) <- runGraph'' env st g' $ \mkLoc -> do
+                        Graph.getGraph $ mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
+                    let nodes' = foo ^. Graph.nodes
+                        Just input = find ((== "inputEdge") . Node._name) nodes'
+                        inputsTypes = input ^. nodeType . inputs
+                        types = map Input._valueType inputsTypes
+                    types `shouldMatchList` [TypeIdent (TCons "Int" []), TypeIdent (TCons "Int" [])]
+        it "properly typechecks output nodes" $ \env -> do
+            u1 <- nextRandom
+            (res, st) <- runGraph env $ \mkLoc -> do
+                let loc = mkLoc $ Breadcrumb []
+                    loc' = mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
+                Graph.addNode loc u1 "-> $a $b a + b" def
+                let GraphLocation pid lid _ = loc
+                withLibrary pid lid (use $ body)
+            case res of
+                Left err -> expectationFailure err
+                Right g -> do
+                    (res', (exGraph -> g')) <- runEmpire env (InterpreterEnv def def def g def) $
+                        Typecheck.run $ GraphLocation nil 0 $ Breadcrumb []
+                    (Right foo,_) <- runGraph'' env st g' $ \mkLoc -> do
+                        Graph.getGraph $ mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
+                    let nodes' = foo ^. Graph.nodes
+                        Just output' = find ((== "outputEdge") . Node._name) nodes'
+                        outputType = output' ^. nodeType
+                        types = Output._valueType $ Node._output outputType
+                    types `shouldBe` TypeIdent (TCons "Int" [])
 
 withChannels :: (CommunicationEnv -> IO ()) -> IO ()
 withChannels = bracket createChannels (const $ return ())

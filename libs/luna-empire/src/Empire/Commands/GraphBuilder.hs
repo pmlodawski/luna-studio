@@ -36,6 +36,7 @@ import qualified Empire.API.Data.Node              as API
 import           Empire.API.Data.NodeMeta          (NodeMeta (..))
 import           Empire.API.Data.Port              (InPort (..), OutPort (..), Port (..), PortId (..), PortState (..))
 import           Empire.API.Data.PortRef           (InPortRef (..), OutPortRef (..))
+import           Empire.API.Data.TypeRep           (TypeRep(TLam))
 import           Empire.API.Data.ValueType         (ValueType (..))
 import qualified Empire.API.Data.ValueType         as ValueType
 
@@ -251,7 +252,8 @@ buildConnections = do
 buildInputEdge :: NodeId -> NodeId -> Command Graph API.Node
 buildInputEdge lastb nid = do
     ref   <- GraphUtils.getASTTarget lastb
-    argTypes <- zoom Graph.ast $ runASTOp $ extractArgTypes ref
+    argTypes <- zoom Graph.ast $ runASTOp $ fst <$> extractPortInfo ref
+    out <- zoom Graph.ast $ runASTOp $ followTypeRep ref
     let nameGen = fmap (\i -> Text.pack $ "input" ++ show i) [0..]
         inputEdges = zipWith3 (\n t i -> Input n t $ Projection i) nameGen argTypes [0..]
     return $
@@ -264,15 +266,22 @@ buildInputEdge lastb nid = do
             def
 
 buildOutputEdge :: NodeId -> NodeId -> Command Graph API.Node
-buildOutputEdge lastb nid = return $
-    API.Node nid
-        "outputEdge"
-        (API.OutputEdge $ Output ValueType.AnyType
-                        $ Arg 1)
-        False
-        def
-        def
-        def
+buildOutputEdge lastb nid = do
+    ref <- GraphUtils.getASTTarget lastb
+    out <- zoom Graph.ast $ runASTOp $ followTypeRep ref
+    outputType <- case out of
+        TypeIdent (TLam _ t) -> return $ TypeIdent t
+        TypeIdent t -> return $ TypeIdent t
+        a -> return a
+    return $
+        API.Node nid
+            "outputEdge"
+            (API.OutputEdge $ Output outputType
+                            $ Arg 1)
+            False
+            def
+            def
+            def
 
 getSelfNodeRef' :: ASTOp m => Bool -> NodeRef -> m (Maybe NodeRef)
 getSelfNodeRef' seenAcc nodeRef = do
