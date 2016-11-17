@@ -28,6 +28,8 @@ import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph
 import qualified Reactive.State.UIRegistry         as UIRegistry
 
+import           Style.Layout                       (gridSize)
+
 import           Object.Widget                     (Position)
 import qualified Object.Widget                     as Widget
 import           Object.Widget.Label               (Label)
@@ -88,7 +90,7 @@ startDrag coord = do
     withJust (nodePos `mplus` nodePos') $ \widgetPos -> do
         Global.drag . Drag.history ?= DragHistory coord coord coord widgetPos
 
-gridSize = 8
+-- gridSize = 8
 
 snapCoord :: Double -> Double
 snapCoord p = fromIntegral . (* gridSize) . round $ p / fromIntegral gridSize
