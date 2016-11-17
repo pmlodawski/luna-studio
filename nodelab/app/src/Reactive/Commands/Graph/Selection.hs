@@ -3,26 +3,21 @@ module Reactive.Commands.Graph.Selection
      , focusSelectedNode
      , selectAll
      , selectNodes
-     , trySelectFromState
      , unselectAll
      ) where
 
-import           Control.Monad.State          (modify)
-import qualified Data.Set                     as Set
 import           Utils.PreludePlus
 
 import           Empire.API.Data.Node         (NodeId)
-import qualified Empire.API.Data.Node         as Node
 
 import           Object.Widget                (WidgetFile (..), objectId, widget)
 import qualified Object.Widget.Node           as NodeModel
 
 import           Reactive.Commands.Batch      (cancelCollaborativeTouch, collaborativeTouch)
-import           Reactive.Commands.Command    (Command)
+import           Reactive.Commands.Command    (Command, performIO)
 import           Reactive.Commands.Graph      (allNodes, nodeIdToWidgetId)
 import qualified Reactive.Commands.UIRegistry as UICmd
-import           Reactive.State.Global        (State, graph, inRegistry, nodesToSelectIds)
-import           Reactive.State.Graph         (getNodes)
+import           Reactive.State.Global        (State, inRegistry)
 import qualified Reactive.State.UIRegistry    as UIRegistry
 
 
@@ -45,6 +40,8 @@ selectAll = do
 
 selectNodes :: [NodeId] -> Command State ()
 selectNodes nodeIds = do
+    unselectAll
+    widgets <- allNodes
     widgetIds <- fmap catMaybes $ mapM nodeIdToWidgetId nodeIds
     inRegistry $ forM_ widgetIds $ (flip UICmd.update) (NodeModel.isSelected .~ True)
     focusSelectedNode
@@ -54,17 +51,6 @@ selectedNodes :: Command State [WidgetFile NodeModel.Node]
 selectedNodes = do
     widgets <- allNodes
     return $ filter (^. widget . NodeModel.isSelected) widgets
-
-trySelectFromState :: Command State ()
-trySelectFromState = do
-    graph'    <- use graph
-    toSelect  <- use nodesToSelectIds
-    let allNodeIds    = Set.fromList $ map (^. Node.nodeId) $ getNodes graph'
-        shouldProceed = Set.isSubsetOf toSelect allNodeIds && not (Set.null toSelect)
-    when shouldProceed $ do
-        unselectAll
-        selectNodes $ Set.toList toSelect
-        modify (& nodesToSelectIds .~ Set.empty)
 
 focusSelectedNode :: Command State ()
 focusSelectedNode = do

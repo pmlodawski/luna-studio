@@ -19,7 +19,7 @@ data Request = Request { _location  :: GraphLocation
                        , _nodeMeta  :: NodeMeta
                        , _connectTo :: Maybe NodeId
                        } deriving (Generic, Show, Eq)
-type Result = NodeId
+type Result = Node
 
 type Response = Response.Response Request Result
 instance Response.ResponseResult Request Result

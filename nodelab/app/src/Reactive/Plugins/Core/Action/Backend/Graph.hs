@@ -4,10 +4,9 @@ module Reactive.Plugins.Core.Action.Backend.Graph
 
 
 import qualified Batch.Workspace                             as Workspace
-import           Control.Monad.State                         (modify)
-import qualified Data.Set                                    as Set
 import           Utils.PreludePlus
 
+import qualified Empire.API.Data.Connection                  as Connection
 import qualified Empire.API.Data.Graph                       as Graph
 import           Empire.API.Data.GraphLocation               (GraphLocation)
 import qualified Empire.API.Data.Node                        as Node
@@ -35,7 +34,7 @@ import           Reactive.Commands.Graph                     (updateConnection)
 import           Reactive.Commands.Graph.Connect             (localConnectNodes)
 import           Reactive.Commands.Graph.Disconnect          (localDisconnectAll)
 import           Reactive.Commands.Graph.Render              (renderGraph)
-import           Reactive.Commands.Graph.Selection           (trySelectFromState)
+import           Reactive.Commands.Graph.Selection           (selectNodes)
 import           Reactive.Commands.Node                      (renameNode)
 import           Reactive.Commands.Node.Create               (addDummyNode)
 import           Reactive.Commands.Node.NodeMeta             (updateNodesMeta)
@@ -77,23 +76,27 @@ toAction (Event.Batch ev) = Just $ case ev of
                 Global.workspace . Workspace.isGraphLoaded .= True
                 requestCollaborationRefresh
 
-    AddNodeResponse response@(Response.Response uuid _ _) -> do
-        shouldProcess <- isOwnRequest uuid
-        handleResponse response $ \_ nodeId -> do
+    AddNodeResponse response@(Response.Response uuid (AddNode.Request loc _ _ _) _) -> do
+        shouldProcess <- isCurrentLocationAndGraphLoaded loc
+        shouldSelect  <- isOwnRequest uuid
+        handleResponse response $ \_ node -> do
             when shouldProcess $ do
+                addDummyNode node
+                let nodeId = node ^. Node.nodeId
                 collaborativeModify [nodeId]
-                modify (& Global.nodesToSelectIds .~ (Set.fromList [nodeId]))
-                trySelectFromState
+                when shouldSelect $ selectNodes [nodeId]
 
     --TODO(LJK, MK): Result should be a list of added nodes ids
-    AddSubgraphResponse response@(Response.Response uuid (AddSubgraph.Request _ nodes _) _) -> do
-        shouldProcess <- isOwnRequest uuid
-        handleResponse response doNothing
-        when shouldProcess $ do
+    AddSubgraphResponse response@(Response.Response uuid (AddSubgraph.Request loc nodes connections) _) -> do
+        whenM (isCurrentLocationAndGraphLoaded loc) $ mapM_ addDummyNode nodes
+        whenM (isCurrentLocation loc) $ do
+            connectionIds <- forM connections $ \conn -> localConnectNodes (conn ^. Connection.src) (conn ^. Connection.dst)
+            mapM_ updateConnection connectionIds
+        whenM (isOwnRequest uuid) $ do
             let nodeIds = map (^. Node.nodeId) nodes
             collaborativeModify nodeIds
-            modify (& Global.nodesToSelectIds .~ Set.fromList nodeIds)
-            trySelectFromState
+            selectNodes nodeIds
+        handleResponse response doNothing
 
     NodesConnected update -> do
         whenM (isCurrentLocation $ update ^. Connect.location') $ do

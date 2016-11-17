@@ -18,7 +18,7 @@ import qualified Object.Widget.Node                as Model
 import           Reactive.Commands.Command         (Command)
 import           Reactive.Commands.EnterNode       (enterNode)
 import           Reactive.Commands.Graph           (focusNode, widgetIdToNodeWidget)
-import           Reactive.Commands.Graph.Selection (selectedNodes, trySelectFromState)
+import           Reactive.Commands.Graph.Selection (selectedNodes)
 import           Reactive.Commands.Node.NodeMeta   (modifyNodeMeta)
 import           Reactive.Commands.Node.Remove     (removeSelectedNodes)
 import qualified Reactive.Commands.UIRegistry      as UICmd
@@ -47,7 +47,6 @@ addNode node = do
     zoom Global.graph $ modify (Graph.addNode node)
     widgetId <- registerNode node
     focusNode widgetId
-    trySelectFromState
 
 addDummyNode :: Node -> Command State ()
 addDummyNode dummyNode = do

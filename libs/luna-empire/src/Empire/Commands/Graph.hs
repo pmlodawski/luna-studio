@@ -167,9 +167,7 @@ connectPersistent (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) =
 connectPersistent _ _ = throwError "Source port should be All"
 
 connectNoTC :: GraphLocation -> OutPortRef -> InPortRef -> Command Graph ()
-connectNoTC loc outPort@(OutPortRef srcNodeId All) inPort@(InPortRef dstNodeId dstPort) = do
-    connectPersistent outPort inPort
-    Publisher.notifyConnectionUpdate loc outPort inPort
+connectNoTC loc outPort@(OutPortRef srcNodeId All) inPort@(InPortRef dstNodeId dstPort) = connectPersistent outPort inPort
 
 setDefaultValue :: GraphLocation -> AnyPortRef -> PortDefault -> Empire ()
 setDefaultValue loc portRef val = withTC loc False $ setDefaultValue' portRef val

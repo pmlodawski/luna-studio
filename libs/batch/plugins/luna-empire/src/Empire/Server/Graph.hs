@@ -160,7 +160,7 @@ handleAddNode = modifyGraph action success where
     action (AddNode.Request location nodeType nodeMeta connectTo) = case nodeType of
         AddNode.ExpressionNode expression -> addExpressionNode location expression nodeMeta connectTo
     success request@(Request _ req@(AddNode.Request location nodeType nodeMeta connectTo)) node = do
-        replyResult request (node ^. Node.nodeId)
+        replyResult request node
         sendToBus' $ AddNode.Update location node
         case nodeType of
             AddNode.ExpressionNode expr -> withJust connectTo $ connectNodes location expr (node ^. Node.nodeId)
