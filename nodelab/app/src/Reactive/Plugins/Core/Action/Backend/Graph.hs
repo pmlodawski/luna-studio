@@ -20,7 +20,7 @@ import qualified Empire.API.Graph.GetProgram                 as GetProgram
 import qualified Empire.API.Graph.NodeResultUpdate           as NodeResultUpdate
 import qualified Empire.API.Graph.NodeSearcherUpdate         as NodeSearcherUpdate
 import qualified Empire.API.Graph.NodeUpdate                 as NodeUpdate
-import qualified Empire.API.Graph.RemoveNode                 as RemoveNode
+import qualified Empire.API.Graph.RemoveNodes                as RemoveNodes
 import qualified Empire.API.Graph.RenameNode                 as RenameNode
 import qualified Empire.API.Graph.UpdateNodeMeta             as UpdateNodeMeta
 import qualified Empire.API.Response                         as Response
@@ -120,9 +120,9 @@ toAction (Event.Batch ev) = Just $ case ev of
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. RenameNode.location')
         when shouldProcess $ renameNode (update ^. RenameNode.nodeId') (update ^. RenameNode.name')
 
-    NodeRemoved update -> do
-        shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. RemoveNode.location')
-        when shouldProcess $ localRemoveNodes $ update ^. RemoveNode.nodeIds'
+    NodesRemoved update -> do
+        shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. RemoveNodes.location')
+        when shouldProcess $ localRemoveNodes $ update ^. RemoveNodes.nodeIds'
 
     NodeResultUpdated update -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. NodeResultUpdate.location)
@@ -138,7 +138,7 @@ toAction (Event.Batch ev) = Just $ case ev of
         when shouldProcess $ performIO $ UI.setText $ update ^. CodeUpdate.code
 
     -- CollaborationUpdate update -> -- handled in Collaboration.hs
-    RemoveNodeResponse           response -> handleResponse response doNothing
+    RemoveNodesResponse          response -> handleResponse response doNothing
     ConnectResponse              response -> handleResponse response doNothing
     DisconnectResponse           response -> handleResponse response doNothing
     NodeMetaResponse             response -> handleResponse response doNothing

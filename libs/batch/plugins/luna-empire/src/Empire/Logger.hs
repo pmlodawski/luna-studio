@@ -24,7 +24,7 @@ import qualified Empire.API.Graph.DumpGraphViz     as DumpGraphViz
 import qualified Empire.API.Graph.GetProgram       as GetProgram
 import qualified Empire.API.Graph.NodeResultUpdate as NodeResultUpdate
 import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
-import qualified Empire.API.Graph.RemoveNode       as RemoveNode
+import qualified Empire.API.Graph.RemoveNodes      as RemoveNodes
 import qualified Empire.API.Graph.RenameNode       as RenameNode
 import qualified Empire.API.Graph.SetDefaultValue  as SetDefaultValue
 import qualified Empire.API.Graph.TypeCheck        as TypeCheck
@@ -114,9 +114,9 @@ logMessage logMsg topic content = do
 --     [ makeHandler (Proxy :: Proxy (Request AddNode.Request          ))
 --     , makeHandler (Proxy :: Proxy (AddNode.Response         ))
 --     , makeHandler (Proxy :: Proxy (AddNode.Update           ))
---     , makeHandler (Proxy :: Proxy (Request RemoveNode.Request       ))
---     , makeHandler (Proxy :: Proxy (RemoveNode.Response      ))
---     , makeHandler (Proxy :: Proxy (RemoveNode.Update        ))
+--     , makeHandler (Proxy :: Proxy (Request RemoveNodes.Request       ))
+--     , makeHandler (Proxy :: Proxy (RemoveNodes.Response      ))
+--     , makeHandler (Proxy :: Proxy (RemoveNodes.Update        ))
 --     , makeHandler (Proxy :: Proxy (Request UpdateNodeMeta.Request   ))
 --     , makeHandler (Proxy :: Proxy (UpdateNodeMeta.Response  ))
 --     , makeHandler (Proxy :: Proxy (UpdateNodeMeta.Update    ))

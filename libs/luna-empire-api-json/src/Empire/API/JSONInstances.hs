@@ -39,7 +39,7 @@ import           Empire.API.Graph.GetProgram           as GetProgram
 import           Empire.API.Graph.NodeResultUpdate     as NodeResultUpdate
 import           Empire.API.Graph.NodeSearcherUpdate   as NodeSearcherUpdate
 import           Empire.API.Graph.NodeUpdate           as NodeUpdate
-import           Empire.API.Graph.RemoveNode           as RemoveNode
+import           Empire.API.Graph.RemoveNodes          as RemoveNodes
 import           Empire.API.Graph.RenameNode           as RenameNode
 import           Empire.API.Graph.SetDefaultValue      as SetDefaultValue
 import           Empire.API.Graph.SetInputNodeType     as SetInputNodeType
@@ -154,8 +154,8 @@ instance ToJSON Connect.Update
 instance ToJSON Disconnect.Request
 instance ToJSON Disconnect.Update
 
-instance ToJSON RemoveNode.Request
-instance ToJSON RemoveNode.Update
+instance ToJSON RemoveNodes.Request
+instance ToJSON RemoveNodes.Update
 
 instance ToJSON RenameNode.Request
 instance ToJSON RenameNode.Update

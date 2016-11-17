@@ -43,7 +43,7 @@ import qualified Empire.API.Graph.DumpGraphViz         as DumpGraphViz
 import qualified Empire.API.Graph.GetProgram           as GetProgram
 import qualified Empire.API.Graph.NodeResultUpdate     as NodeResultUpdate
 import qualified Empire.API.Graph.NodeUpdate           as NodeUpdate
-import qualified Empire.API.Graph.RemoveNode           as RemoveNode
+import qualified Empire.API.Graph.RemoveNodes          as RemoveNodes
 import qualified Empire.API.Graph.RenameNode           as RenameNode
 import qualified Empire.API.Graph.Request              as G
 import qualified Empire.API.Graph.SetDefaultValue      as SetDefaultValue
@@ -177,10 +177,10 @@ handleAddSubgraph (Request reqId (AddSubgraph.Request location nodes connections
         success _ _     = return ()
     modifyGraphOk action success (Request reqId (AddSubgraph.Request location nodes' connections'))
 
-handleRemoveNode :: Request RemoveNode.Request -> StateT Env BusT ()
-handleRemoveNode = modifyGraphOk action success where
-    action  (RemoveNode.Request location nodeIds) = Graph.removeNodes location nodeIds
-    success (RemoveNode.Request location nodeIds) result = sendToBus' $ RemoveNode.Update location nodeIds
+handleRemoveNodes :: Request RemoveNodes.Request -> StateT Env BusT ()
+handleRemoveNodes = modifyGraphOk action success where
+    action  (RemoveNodes.Request location nodeIds) = Graph.removeNodes location nodeIds
+    success (RemoveNodes.Request location nodeIds) result = sendToBus' $ RemoveNodes.Update location nodeIds
 
 handleUpdateNodeExpression :: Request UpdateNodeExpression.Request -> StateT Env BusT ()
 handleUpdateNodeExpression = modifyGraphOk action success where
@@ -192,7 +192,7 @@ handleUpdateNodeExpression = modifyGraphOk action success where
         withJust nodeMay $ \node -> do
             -- replyResult request (node ^. Node.nodeId)
             sendToBus' $ AddNode.Update location node
-            sendToBus' $ RemoveNode.Update location [nodeId]
+            sendToBus' $ RemoveNodes.Update location [nodeId]
 
 handleUpdateNodeMeta :: Request UpdateNodeMeta.Request -> StateT Env BusT ()
 handleUpdateNodeMeta = modifyGraphOk action success where

@@ -1,4 +1,4 @@
-module Empire.API.Graph.RemoveNode where
+module Empire.API.Graph.RemoveNodes where
 
 import           Data.Binary                   (Binary)
 import           Prologue

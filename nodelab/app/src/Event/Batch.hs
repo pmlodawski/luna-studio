@@ -13,7 +13,7 @@ import qualified Empire.API.Graph.GetProgram           as GetProgram
 import qualified Empire.API.Graph.NodeResultUpdate     as NodeResultUpdate
 import qualified Empire.API.Graph.NodeSearcherUpdate   as NodeSearcherUpdate
 import qualified Empire.API.Graph.NodeUpdate           as NodeUpdate
-import qualified Empire.API.Graph.RemoveNode           as RemoveNode
+import qualified Empire.API.Graph.RemoveNodes          as RemoveNodes
 import qualified Empire.API.Graph.RenameNode           as RenameNode
 import qualified Empire.API.Graph.UpdateNodeExpression as UpdateNodeExpression
 import qualified Empire.API.Graph.UpdateNodeMeta       as UpdateNodeMeta
@@ -28,8 +28,8 @@ import           Data.Aeson                            (ToJSON)
 data Event = UnknownEvent String
            | AddNodeResponse                           AddNode.Response
            | NodeAdded                                 AddNode.Update
-           | RemoveNodeResponse                     RemoveNode.Response
-           | NodeRemoved                            RemoveNode.Update
+           | RemoveNodesResponse                   RemoveNodes.Response
+           | NodesRemoved                          RemoveNodes.Update
            | ProgramFetched                         GetProgram.Response
            | NodesConnected                            Connect.Update
            | ConnectResponse                           Connect.Response
