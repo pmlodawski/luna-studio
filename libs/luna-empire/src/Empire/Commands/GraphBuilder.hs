@@ -57,12 +57,13 @@ import qualified Luna.Syntax.Model.Network.Builder as Builder
 import Data.IORef
 import System.IO.Unsafe
 
-buildGraph :: Maybe NodeId -> Command Graph API.Graph
-buildGraph lastBreadcrumbId = API.Graph <$> buildNodes lastBreadcrumbId <*> buildConnections
+buildGraph :: Command Graph API.Graph
+buildGraph = API.Graph <$> buildNodes <*> buildConnections
 
-buildNodes :: Maybe NodeId -> Command Graph [API.Node]
-buildNodes lastBreadcrumbId = do
+buildNodes :: Command Graph [API.Node]
+buildNodes = do
     allNodeIds <- uses Graph.breadcrumbHierarchy topLevelIDs
+    lastBreadcrumbId <- use Graph.insideNode
     edges <- do
         case lastBreadcrumbId of
             Nothing -> return []

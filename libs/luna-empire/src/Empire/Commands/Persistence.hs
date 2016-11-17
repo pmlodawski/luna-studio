@@ -62,7 +62,7 @@ toPersistentProject pid = do
     return $ Project.toPersistent proj
 
   libs' <- forM (libs) $ \(lid, lib) -> do
-    graph <- withLibrary pid lid . zoom Library.body $ buildGraph Nothing
+    graph <- withLibrary pid lid . zoom Library.body $ buildGraph
     return $ (lid, Library.toPersistent lib graph)
 
   return $ almostProject $ IntMap.fromList libs'
