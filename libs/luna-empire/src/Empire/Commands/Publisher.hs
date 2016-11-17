@@ -10,8 +10,8 @@ import           Empire.Data.Graph                 (Graph)
 import           Empire.Empire
 import           Prologue
 
-import qualified Empire.API.Graph.NodesUpdate      as Node
 import qualified Empire.API.Graph.NodeResultUpdate as NodeResult
+import qualified Empire.API.Graph.NodesUpdate      as Node
 
 notifyNodesUpdate :: GraphLocation -> Node -> Command s ()
 notifyNodesUpdate loc n = do
