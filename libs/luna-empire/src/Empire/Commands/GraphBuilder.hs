@@ -21,6 +21,7 @@ import           Data.Record                       (ANY (..), caseTest, of')
 import qualified Data.Text.Lazy                    as Text
 import qualified Data.Tree                         as Tree
 import qualified Data.UUID                         as UUID
+import qualified Data.UUID.V4                      as UUID (nextRandom)
 
 import           Empire.API.Data.Input             (Input (Input))
 import           Empire.API.Data.Output            (Output (Output))
@@ -53,17 +54,47 @@ import qualified Old.Luna.Syntax.Term.Expr.Lit     as Lit
 import           Luna.Syntax.Model.Network.Builder (TCData (..), Type (..), replacement)
 import qualified Luna.Syntax.Model.Network.Builder as Builder
 
+import Data.IORef
+import System.IO.Unsafe
 
-buildGraph :: Command Graph API.Graph
-buildGraph = API.Graph <$> buildNodes <*> buildConnections
+buildGraph :: Maybe NodeId -> Command Graph API.Graph
+buildGraph lastBreadcrumbId = API.Graph <$> buildNodes lastBreadcrumbId <*> buildConnections
 
-buildNodes :: Command Graph [API.Node]
-buildNodes = do
+buildNodes :: Maybe NodeId -> Command Graph [API.Node]
+buildNodes lastBreadcrumbId = do
     allNodeIds <- uses Graph.breadcrumbHierarchy topLevelIDs
-    inputEdge <- buildInputEdge
-    outputEdge <- buildOutputEdge
+    edges <- do
+        case lastBreadcrumbId of
+            Nothing -> return []
+            Just nid -> do
+                isLambda <- rhsIsLambda nid
+                if isLambda then do
+                    (inputPort, outputPort) <- getPortMapping nid
+                    inputEdge <- buildInputEdge nid inputPort
+                    outputEdge <- buildOutputEdge nid outputPort
+                    return [inputEdge, outputEdge]
+                else return []
     nodes <- mapM buildNode allNodeIds
-    return $ inputEdge : outputEdge : nodes
+    return $ edges ++ nodes
+
+uuids :: IORef [Int]
+uuids = unsafePerformIO $ newIORef [0xFA..]
+{-# NOINLINE uuids #-}
+
+uuid :: IO UUID.UUID
+uuid = do
+    foo <- atomicModifyIORef uuids $ \list -> (tail list, head list)
+    return $ UUID.fromWords 0 0 0 (fromIntegral foo)
+
+getPortMapping :: NodeId -> Command Graph (NodeId, NodeId)
+getPortMapping lastBreadcrumbId = do
+    existingMapping <- uses Graph.breadcrumbPortMapping $ Map.lookup lastBreadcrumbId
+    case existingMapping of
+        Just m -> return m
+        _      -> do
+            ids <- liftIO $ (,) <$> uuid <*> uuid
+            Graph.breadcrumbPortMapping . at lastBreadcrumbId ?= ids
+            return ids
 
 buildNode :: NodeId -> Command Graph API.Node
 buildNode nid = do
@@ -216,30 +247,31 @@ buildConnections = do
     edges <- mapM getNodeInputs allNodes
     return $ concat edges
 
-buildInputEdge :: Command Graph API.Node
-buildInputEdge =  --TODO implement
-    return $ API.Node (fromJust $ UUID.fromString "2c3f0968-630a-45e1-b030-cff9602004d4")
-                      "inputEdge"
-                      (API.InputEdge [ Input "input1" ValueType.AnyType $
-                                            Projection 1
-                                     , Input "input2" ValueType.AnyType $
-                                            Projection 2
-                                     ])
-                      False
-                      def
-                      def
-                      def
+buildInputEdge :: NodeId -> NodeId -> Command Graph API.Node
+buildInputEdge lastb nid = do
+    ref   <- GraphUtils.getASTTarget lastb
+    argTypes <- zoom Graph.ast $ runASTOp $ extractArgTypes ref
+    let nameGen = fmap (\i -> Text.pack $ "input" ++ show i) [0..]
+        inputEdges = zipWith3 (\n t i -> Input n t $ Projection i) nameGen argTypes [0..]
+    return $
+        API.Node nid
+            "inputEdge"
+            (API.InputEdge inputEdges)
+            False
+            def
+            def
+            def
 
-buildOutputEdge :: Command Graph API.Node
-buildOutputEdge =
-    return $ API.Node (fromJust $ UUID.fromString "19349a74-be9a-4262-b223-ab94a6d2cedd")
-                      "outputEdge"
-                      (API.OutputEdge $ Output ValueType.AnyType
-                                      $ Arg 1)
-                      False
-                      def
-                      def
-                      def
+buildOutputEdge :: NodeId -> NodeId -> Command Graph API.Node
+buildOutputEdge lastb nid = return $
+    API.Node nid
+        "outputEdge"
+        (API.OutputEdge $ Output ValueType.AnyType
+                        $ Arg 1)
+        False
+        def
+        def
+        def
 
 getSelfNodeRef' :: ASTOp m => Bool -> NodeRef -> m (Maybe NodeRef)
 getSelfNodeRef' seenAcc nodeRef = do

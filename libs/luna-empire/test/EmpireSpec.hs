@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE ViewPatterns         #-}
 
 module EmpireSpec (spec) where
 
@@ -12,6 +13,7 @@ import           Data.UUID (nil)
 import           Data.UUID.V4 (nextRandom)
 import           Empire.API.Data.DefaultValue (PortDefault (..), Value (..))
 import qualified Empire.API.Data.Graph        as Graph
+import qualified Empire.Commands.GraphBuilder as GraphBuilder
 import           Empire.API.Data.Node
 import           Empire.API.Data.NodeMeta
 import           Empire.API.Data.Port
@@ -34,27 +36,85 @@ import           Luna.Pretty.GraphViz         (renderAndOpen, toGraphViz)
 import           Test.Hspec (around, describe, expectationFailure, it, shouldSatisfy)
 
 
+runGraph env act = runGraph' env def act
+
+-- runGraph' :: CommunicationEnv -> Env -> ((Breadcrumb -> GraphLocation) -> Command Graph a) -> IO (Either Error a, Env)
+runGraph' env graph act = runEmpire env graph $ do
+    (pid, _) <- createProject Nothing "dupa"
+    (lid, _) <- createLibrary pid (Just "xd") "/xd/xd"
+    let toLoc = GraphLocation pid lid
+    act toLoc
+
+graphIDs loc = do
+  nodes <- view Graph.nodes <$> Graph.getGraph loc
+  let ids = map (^. nodeId) nodes
+  return ids
+
+exGraph (InterpreterEnv _ _ _ g _) = g
+
 spec = around withChannels $
     describe "luna-empire" $ do
         it "descends into `def foo` and asserts null list of nodes inside" $ \env -> do
             u1 <- nextRandom
-            (res, state) <- runEmpire env def $ do
-                (pid, _) <- createProject Nothing "dupa"
-                (lid, _) <- createLibrary pid (Just "xd") "/xd/xd"
-
-                let loc = GraphLocation pid lid $ Breadcrumb []
-                let loc' = GraphLocation pid lid $ Breadcrumb [Breadcrumb.Lambda u1]
+            (res, state) <- runGraph env $ \mkLoc -> do
+                let loc = mkLoc $ Breadcrumb []
+                let loc' = mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
                 n1 <- Graph.addNode loc u1 "def foo" def
-                let graphIDs loc = do
-                        nodes <- view Graph.nodes <$> Graph.getGraph loc
-                        let ids = map (^. nodeId) nodes
-                        return ids
                 topLevel <- graphIDs loc
                 n1Level <- graphIDs loc'
                 return (topLevel, n1Level)
             case res of
                 Left err -> expectationFailure err
                 Right ids -> u1 `shouldSatisfy` (`elem` (fst ids))
+        it "adds node" $ \env -> do
+            u1 <- nextRandom
+            (res, _) <- runGraph env $ \mkLoc -> do
+                let loc = mkLoc $ Breadcrumb []
+                n1 <- Graph.addNode loc u1 "def foo" def
+                return n1
+            case res of
+                Left err -> expectationFailure err
+                Right _ -> return ()
+        it "has nodes inside function" $ \env -> do
+            u1 <- nextRandom
+            (res, _) <- runGraph env $ \mkLoc -> do
+                let loc = mkLoc $ Breadcrumb []
+                n1 <- Graph.addNode loc u1 "def foo" def
+                graphIDs $ mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
+            case res of
+                Left err -> expectationFailure err
+                Right ids -> print ids >> (ids `shouldSatisfy` (not.null))
+        it "int literal has no nodes inside" $ \env -> do
+            u1 <- nextRandom
+            (res, _) <- runGraph env $ \mkLoc -> do
+                let loc = mkLoc $ Breadcrumb []
+                    loc' = mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
+                n1 <- Graph.addNode loc u1 "4" def
+                graphIDs loc'
+            case res of
+                Left err -> expectationFailure err
+                Right ids -> ids `shouldSatisfy` null
+        it "properly typechecks input nodes" $ \env -> do
+            u1 <- nextRandom
+            (res, g) <- runGraph env $ \mkLoc -> do
+                let loc = mkLoc $ Breadcrumb []
+                    loc' = mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
+                -- Graph.addNode loc u1 "-> $a $b a + b" def
+                Graph.addNode loc u1 "def foo" def
+                graphIDs loc'
+            case res of
+                Left err -> expectationFailure err
+                Right ids -> do
+                    print ids
+                    (res'', _) <- runGraph' env g $ \mkLoc -> do
+                        u2 <- liftIO $ nextRandom
+                        nodes <- Graph.getGraph (mkLoc $ Breadcrumb [])
+                        print nodes
+                    case res'' of
+                        Left err -> expectationFailure err
+                        Right node -> return ()
+
+
 
 withChannels :: (CommunicationEnv -> IO ()) -> IO ()
 withChannels = bracket createChannels (const $ return ())

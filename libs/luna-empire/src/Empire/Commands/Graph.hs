@@ -18,14 +18,16 @@ module Empire.Commands.Graph
     , renameNode
     , dumpGraphViz
     , typecheck
+    , withTC
     ) where
 
 import           Control.Monad                 (forM, forM_)
 import           Control.Monad.Except          (throwError)
 import           Control.Monad.State           hiding (when)
+import           Data.Coerce                   (coerce)
 import           Data.IntMap                   (IntMap)
 import qualified Data.IntMap                   as IntMap
-import           Data.List                     (sort)
+import           Data.List                     as List (last, sort)
 import qualified Data.Map                      as Map
 import           Data.Maybe                    (catMaybes)
 import           Data.Text.Lazy                (Text)
@@ -39,8 +41,9 @@ import           Empire.Data.Graph               (Graph)
 import qualified Empire.Data.Graph               as Graph
 import qualified Empire.Data.Library             as Library
 
+import           Empire.API.Data.Breadcrumb    (Breadcrumb(..), BreadcrumbItem(..))
 import           Empire.API.Data.Connection    (Connection (..))
-import           Empire.API.Data.DefaultValue  (PortDefault (Constant), Value (..))
+import           Empire.API.Data.DefaultValue  (PortDefault (Constant), Value)
 import qualified Empire.API.Data.Graph         as APIGraph
 import           Empire.API.Data.GraphLocation (GraphLocation (..))
 import qualified Empire.API.Data.GraphLocation as GraphLocation
@@ -115,14 +118,18 @@ addSubgraph loc nodes conns = withTC loc False $ do
         _ -> return ()
     forM_ conns $ \(Connection src dst) -> connectNoTC loc src dst
 
+lastBreadcrumb :: GraphLocation -> Maybe NodeId
+lastBreadcrumb loc = case coerce (loc ^. GraphLocation.breadcrumb) of
+    [] -> Nothing
+    breadcrumbs -> Just $ (\(Lambda nid) -> nid) . last $ breadcrumbs
 
 removeNodes :: GraphLocation -> [NodeId] -> Empire ()
-removeNodes loc nodeIds = withTC loc False $ forM_ nodeIds removeNodeNoTC
+removeNodes loc nodeIds = withTC loc False $ forM_ nodeIds $ removeNodeNoTC (lastBreadcrumb loc)
 
-removeNodeNoTC :: NodeId -> Command Graph ()
-removeNodeNoTC nodeId = do
+removeNodeNoTC :: Maybe NodeId -> NodeId -> Command Graph ()
+removeNodeNoTC lastBreadcrumbId nodeId = do
     astRef <- GraphUtils.getASTPointer nodeId
-    obsoleteEdges <- getOutEdges nodeId
+    obsoleteEdges <- getOutEdges lastBreadcrumbId nodeId
     mapM_ disconnectPort obsoleteEdges
     zoom Graph.ast $ AST.removeSubtree astRef
     Graph.nodeMapping %= Map.delete nodeId
@@ -135,7 +142,7 @@ updateNodeExpression loc nodeId newNodeId expr = do
         zoom Graph.ast $ AST.readMeta ref
     forM metaMay $ \meta ->
         withTC loc False $ do
-            removeNodeNoTC nodeId
+            removeNodeNoTC (lastBreadcrumb loc) nodeId
             addNodeNoTC loc newNodeId expr meta
 
 updateNodeMeta :: GraphLocation -> NodeId -> NodeMeta -> Empire ()
@@ -205,7 +212,7 @@ getCode loc = withGraph loc $ do
     return $ unlines lines
 
 getGraph :: GraphLocation -> Empire APIGraph.Graph
-getGraph loc = withTC loc True GraphBuilder.buildGraph
+getGraph loc = withTC loc True $ GraphBuilder.buildGraph (lastBreadcrumb loc)
 
 renameNode :: GraphLocation -> NodeId -> Text -> Empire ()
 renameNode loc nid name = withTC loc False $ do
@@ -214,8 +221,7 @@ renameNode loc nid name = withTC loc False $ do
 
 dumpGraphViz :: GraphLocation -> Empire ()
 dumpGraphViz loc = withGraph loc $ do
-    zoom Graph.ast   $ AST.dumpGraphViz "gui_dump"
-    {-zoom Graph.tcAST $ AST.dumpGraphViz "gui_tc_dump"-}
+    zoom Graph.ast $ AST.dumpGraphViz "gui_dump"
 
 typecheck :: GraphLocation -> Empire ()
 typecheck loc = withGraph loc $ runTC loc False
@@ -239,9 +245,9 @@ withTC loc flush cmd = withGraph loc $ do
 withGraph :: GraphLocation -> Command Graph a -> Empire a
 withGraph (GraphLocation pid lid breadcrumb) = withBreadcrumb pid lid breadcrumb
 
-getOutEdges :: NodeId -> Command Graph [InPortRef]
-getOutEdges nodeId = do
-    graphRep <- GraphBuilder.buildGraph
+getOutEdges :: Maybe NodeId -> NodeId -> Command Graph [InPortRef]
+getOutEdges lastBreadcrumbId nodeId = do
+    graphRep <- GraphBuilder.buildGraph lastBreadcrumbId
     let edges    = graphRep ^. APIGraph.connections
         filtered = filter (\(opr, _) -> opr ^. PortRef.srcNodeId == nodeId) edges
     return $ view _2 <$> filtered

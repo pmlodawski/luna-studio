@@ -45,3 +45,8 @@ withBreadcrumb pid lid breadcrumb act = withLibrary pid lid $
                         return res'
                     Left err -> throwError err
             _ -> throwError $ "Breadcrumb " ++ show breadcrumb ++ " does not exist."
+
+lastBreadcrumb :: Breadcrumb -> Maybe NodeId
+lastBreadcrumb breadcrumb = case coerce breadcrumb of
+    [] -> Nothing
+    breadcrumbs -> Just $ (\(Lambda nid) -> nid) . last $ breadcrumbs
