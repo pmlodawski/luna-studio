@@ -46,6 +46,15 @@ screenToGl (Vector2 screenSizeX screenSizeY) (Vector2 x y) = Vector2
     (fromIntegral x - (fromIntegral screenSizeX) / 2.0)
     (fromIntegral y - (fromIntegral screenSizeY) / 2.0)
 
+scaledScreenToWorkspace :: Double -> Vector2 Int -> Vector2 Double
+scaledScreenToWorkspace factor delta =
+    (/ factor) . fromIntegral <$> delta
+
+scaledScreenToWorkspaceM :: Vector2 Int -> Command State (Vector2 Double)
+scaledScreenToWorkspaceM delta = do
+    factor <- use $ camera . factor
+    return $ (/ factor) . fromIntegral <$> delta
+
 screenToWorkspace :: Camera -> Vector2 Int -> Vector2 Double
 screenToWorkspace camera pos =
     glToWorkspace camera $ screenToGl (camera ^. screenSize) pos

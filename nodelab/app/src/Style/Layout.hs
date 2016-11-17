@@ -89,3 +89,7 @@ errorMessageWidgetSize, visualizationWidgetSize , dataFrameWidgetSize :: Vector2
 errorMessageWidgetSize  = Vector2 200 200
 visualizationWidgetSize = Vector2 200 200
 dataFrameWidgetSize     = Vector2 400 200
+
+
+gridSize :: Int
+gridSize = 8
