@@ -12,7 +12,7 @@ import qualified Empire.API.Graph.Disconnect           as Disconnect
 import qualified Empire.API.Graph.GetProgram           as GetProgram
 import qualified Empire.API.Graph.NodeResultUpdate     as NodeResultUpdate
 import qualified Empire.API.Graph.NodeSearcherUpdate   as NodeSearcherUpdate
-import qualified Empire.API.Graph.NodeUpdate           as NodeUpdate
+import qualified Empire.API.Graph.NodesUpdate          as NodesUpdate
 import qualified Empire.API.Graph.RemoveNodes          as RemoveNodes
 import qualified Empire.API.Graph.RenameNode           as RenameNode
 import qualified Empire.API.Graph.UpdateNodeExpression as UpdateNodeExpression
@@ -39,7 +39,7 @@ data Event = UnknownEvent String
            | NodeMetaResponse                   UpdateNodeMeta.Response
            | NodeRenamed                            RenameNode.Update
            | NodeRenameResponse                     RenameNode.Response
-           | NodeUpdated                            NodeUpdate.Update
+           | NodesUpdated                          NodesUpdate.Update
            | UpdateNodeExpressionResponse UpdateNodeExpression.Response
            | CodeUpdated                            CodeUpdate.Update
            | NodeResultUpdated                NodeResultUpdate.Update

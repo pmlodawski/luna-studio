@@ -12,7 +12,7 @@ import qualified Empire.API.Data.Node              as Node
 import qualified Empire.API.Data.Port              as Port
 import qualified Empire.API.Data.PortRef           as PortRef
 import qualified Empire.API.Graph.Connect          as Connect
-import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
+import qualified Empire.API.Graph.NodesUpdate      as NodesUpdate
 import qualified Event.Batch                       as Batch
 import qualified Event.CustomEvent                 as CustomEvent
 import           Event.Event                       (Event (..))
@@ -86,8 +86,8 @@ toAction (Batch        (Batch.NodesConnected update))                           
 --         whenStep 13 $ andConnected update "\"/ipsum.txt\"" "switch"   (Port.Arg 2) $ nextStep
 --         whenStep 15 $ andConnected update "switch"         "readFile" (Port.Arg 0) $ nextStep
 --
-toAction (Batch        (Batch.NodeUpdated update))                                                = Just $ do
-    shouldProcess <- isCurrentLocation (update ^. NodeUpdate.location)
+toAction (Batch        (Batch.NodesUpdated update))                                                = Just $ do
+    shouldProcess <- isCurrentLocation (update ^. NodesUpdate.location)
     when shouldProcess $
         whenStep 13 $ andPortDefaultChanged update "readFile" (Port.Arg 0) (DefaultValue.StringValue "/ipsum.txt") nextStep
 toAction (CustomEvent (CustomEvent.RawEvent "closeOnboarding" _)) = Just $ do
@@ -140,17 +140,17 @@ andConnected update expr1 expr2 portId action = void $ runMaybeT $ do
 
         when (Text.isInfixOf expr1 srcExpr && Text.isInfixOf expr2 dstExpr) $ lift action
 
-andPortDefaultChanged :: NodeUpdate.Update -> Text -> Port.InPort -> DefaultValue.Value -> Command Global.State () -> Command Global.State ()
+andPortDefaultChanged :: NodesUpdate.Update -> Text -> Port.InPort -> DefaultValue.Value -> Command Global.State () -> Command Global.State ()
 andPortDefaultChanged update expr portId value _action = do
-    let node     = update ^. NodeUpdate.node
-        nodeExpr = node ^? Node.nodeType . Node._ExpressionNode
+    forM_ (update ^. NodesUpdate.nodes) $ \node -> do
+        let nodeExpr = node ^? Node.nodeType . Node._ExpressionNode
 
-    withJust nodeExpr $ \nodeExpr -> do
-        let isExprOk = Text.isInfixOf expr nodeExpr
+        withJust nodeExpr $ \nodeExpr -> do
+          let isExprOk = Text.isInfixOf expr nodeExpr
 
-        when isExprOk $ do
-            let portDefault = node ^? Node.ports . ix (Port.InPortId portId) . Port.state . Port._WithDefault . DefaultValue._Constant
-            when (portDefault == Just value) nextStep
+          when isExprOk $ do
+              let portDefault = node ^? Node.ports . ix (Port.InPortId portId) . Port.state . Port._WithDefault . DefaultValue._Constant
+              when (portDefault == Just value) nextStep
 
 isCurrentLocation :: GraphLocation -> Command Global.State Bool
 isCurrentLocation location = uses (Global.workspace . Workspace.currentLocation) (== location)

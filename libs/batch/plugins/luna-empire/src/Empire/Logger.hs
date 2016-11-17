@@ -23,7 +23,7 @@ import qualified Empire.API.Graph.Disconnect       as Disconnect
 import qualified Empire.API.Graph.DumpGraphViz     as DumpGraphViz
 import qualified Empire.API.Graph.GetProgram       as GetProgram
 import qualified Empire.API.Graph.NodeResultUpdate as NodeResultUpdate
-import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
+import qualified Empire.API.Graph.NodesUpdate      as NodesUpdate
 import qualified Empire.API.Graph.RemoveNodes      as RemoveNodes
 import qualified Empire.API.Graph.RenameNode       as RenameNode
 import qualified Empire.API.Graph.SetDefaultValue  as SetDefaultValue
@@ -131,7 +131,7 @@ logMessage logMsg topic content = do
 --     , makeHandler (Proxy :: Proxy (Disconnect.Update        ))
 --     , makeHandler (Proxy :: Proxy (Request GetProgram.Request       ))
 --     , makeHandler (Proxy :: Proxy (GetProgram.Response      ))
---     , makeHandler (Proxy :: Proxy (NodeUpdate.Update        ))
+--     , makeHandler (Proxy :: Proxy (NodesUpdate.Update        ))
 --     , makeHandler (Proxy :: Proxy (NodeResultUpdate.Update  ))
 --     , makeHandler (Proxy :: Proxy (CodeUpdate.Update        ))
 --     , makeHandler (Proxy :: Proxy (Request CreateProject.Request    ))

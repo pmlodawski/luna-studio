@@ -118,7 +118,7 @@ updateNodes loc = do
         rep <- zoom graph $ GraphBuilder.buildNode id
         cached <- uses nodesCache $ Map.lookup id
         when (cached /= Just rep) $ do
-            Publisher.notifyNodeUpdate loc rep
+            Publisher.notifyNodesUpdate loc rep
             nodesCache %= Map.insert id rep
 
 updateValues :: GraphLocation -> Command InterpreterEnv ()

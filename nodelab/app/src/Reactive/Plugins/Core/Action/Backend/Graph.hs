@@ -19,7 +19,7 @@ import qualified Empire.API.Graph.Disconnect                 as Disconnect
 import qualified Empire.API.Graph.GetProgram                 as GetProgram
 import qualified Empire.API.Graph.NodeResultUpdate           as NodeResultUpdate
 import qualified Empire.API.Graph.NodeSearcherUpdate         as NodeSearcherUpdate
-import qualified Empire.API.Graph.NodeUpdate                 as NodeUpdate
+import qualified Empire.API.Graph.NodesUpdate                as NodesUpdate
 import qualified Empire.API.Graph.RemoveNodes                as RemoveNodes
 import qualified Empire.API.Graph.RenameNode                 as RenameNode
 import qualified Empire.API.Graph.UpdateNodeMeta             as UpdateNodeMeta
@@ -112,9 +112,9 @@ toAction (Event.Batch ev) = Just $ case ev of
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. AddNode.location')
         when shouldProcess $ addDummyNode (update ^. AddNode.node')
 
-    NodeUpdated update -> do
-        shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. NodeUpdate.location)
-        when shouldProcess $ updateNode $ update ^. NodeUpdate.node
+    NodesUpdated update -> do
+        shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. NodesUpdate.location)
+        when shouldProcess $ mapM_ updateNode $ update ^. NodesUpdate.nodes
 
     NodeRenamed update -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. RenameNode.location')
