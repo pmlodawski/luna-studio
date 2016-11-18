@@ -95,6 +95,20 @@ spec = around withChannels $
             case res of
                 Left err -> expectationFailure err
                 Right _ -> return ()
+        it "cannot enter lambda applied to value" $ \env -> do
+            u1 <- nextRandom
+            u2 <- nextRandom
+            (res, _) <- runGraph env $ \mkLoc -> do
+                let loc = mkLoc $ Breadcrumb []
+                n1 <- Graph.addNode loc u1 "def foo" def
+                n2 <- Graph.addNode loc u2 "4" def
+                Graph.connect loc (OutPortRef u2 All) (InPortRef u1 (Arg 0))
+                Graph.getGraph loc
+            case res of
+                Left err -> expectationFailure err
+                Right g -> do
+                    let Just lambdaNode = find ((== u1) . Node._nodeId) $ Graph._nodes g
+                    lambdaNode ^. Node.canEnter `shouldBe` False
         it "has nodes inside function" $ \env -> do
             u1 <- nextRandom
             (res, _) <- runGraph env $ \mkLoc -> do
