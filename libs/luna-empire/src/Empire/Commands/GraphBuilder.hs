@@ -252,7 +252,8 @@ buildConnections = do
 buildInputEdge :: NodeId -> NodeId -> Command Graph API.Node
 buildInputEdge lastb nid = do
     ref   <- GraphUtils.getASTTarget lastb
-    argTypes <- zoom Graph.ast $ runASTOp $ fst <$> extractPortInfo ref
+    (types, states) <- zoom Graph.ast $ runASTOp $ extractPortInfo ref
+    let argTypes = types ++ replicate (length states - length types) AnyType
     out <- zoom Graph.ast $ runASTOp $ followTypeRep ref
     let nameGen = fmap (\i -> Text.pack $ "input" ++ show i) [0..]
         inputEdges = zipWith3 (\n t i -> Input n t $ Projection i) nameGen argTypes [0..]
