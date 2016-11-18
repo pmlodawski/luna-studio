@@ -14,6 +14,7 @@ import           Data.Maybe              (isNothing)
 
 import qualified Empire.Data.Graph                 as Graph
 import           Empire.Data.Graph                 (Graph)
+import           Empire.Data.BreadcrumbHierarchy   (topLevelIDs)
 import           Empire.API.Data.Node              (NodeId)
 import qualified Empire.API.Data.NodeMeta          as NodeMeta
 import           Empire.API.Data.GraphLocation     (GraphLocation (..))
@@ -108,7 +109,7 @@ reportError loc id err = do
 
 updateNodes :: GraphLocation -> Command InterpreterEnv ()
 updateNodes loc = do
-    allNodeIds <- uses (graph . Graph.nodeMapping) Map.keys
+    allNodeIds <- uses (graph . Graph.breadcrumbHierarchy) topLevelIDs
     forM_ allNodeIds $ \id -> do
         ref <- zoom graph $ GraphUtils.getASTTarget id
 
