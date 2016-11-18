@@ -212,7 +212,7 @@ buildPorts ref = zoom Graph.ast $ runASTOp $ do
 
 buildConnections :: Command Graph [(OutPortRef, InPortRef)]
 buildConnections = do
-    allNodes <- uses Graph.nodeMapping Map.keys
+    allNodes <- uses Graph.breadcrumbHierarchy topLevelIDs
     edges <- mapM getNodeInputs allNodes
     return $ concat edges
 
