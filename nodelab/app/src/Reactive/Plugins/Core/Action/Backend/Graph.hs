@@ -77,10 +77,11 @@ toAction (Event.Batch ev) = Just $ case ev of
                 requestCollaborationRefresh
 
     AddNodeResponse response@(Response.Response uuid (AddNode.Request loc _ _ _) _) -> do
-        shouldProcess <- isCurrentLocationAndGraphLoaded loc
-        shouldSelect  <- isOwnRequest uuid
+        shouldProcess   <- isCurrentLocationAndGraphLoaded loc
+        correctLocation <- isCurrentLocation loc
+        shouldSelect    <- isOwnRequest uuid
         handleResponse response $ \_ node -> do
-            when shouldProcess $ do
+            when (shouldProcess && correctLocation) $ do
                 addDummyNode node
                 let nodeId = node ^. Node.nodeId
                 collaborativeModify [nodeId]
@@ -108,37 +109,46 @@ toAction (Event.Batch ev) = Just $ case ev of
             localDisconnectAll $ [update ^. Disconnect.dst']
 
     NodeMetaUpdated update -> do
-        shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. UpdateNodeMeta.location')
-        when shouldProcess $ updateNodesMeta (update ^. UpdateNodeMeta.updates')
+        shouldProcess   <- isCurrentLocationAndGraphLoaded (update ^. UpdateNodeMeta.location')
+        correctLocation <- isCurrentLocation (update ^. UpdateNodeMeta.location')
+        when (shouldProcess && correctLocation) $ updateNodesMeta (update ^. UpdateNodeMeta.updates')
 
     NodeAdded update -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. AddNode.location')
-        when shouldProcess $ addDummyNode (update ^. AddNode.node')
+        correctLocation <- isCurrentLocation (update ^. AddNode.location')
+        when (shouldProcess && correctLocation) $ addDummyNode (update ^. AddNode.node')
 
     NodesUpdated update -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. NodesUpdate.location)
-        when shouldProcess $ mapM_ updateNode $ update ^. NodesUpdate.nodes
+        correctLocation <- isCurrentLocation (update ^. NodesUpdate.location)
+        when (shouldProcess && correctLocation) $ mapM_ updateNode $ update ^. NodesUpdate.nodes
 
     NodeRenamed update -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. RenameNode.location')
-        when shouldProcess $ renameNode (update ^. RenameNode.nodeId') (update ^. RenameNode.name')
+        correctLocation <- isCurrentLocation (update ^. RenameNode.location')
+        when (shouldProcess && correctLocation) $ renameNode (update ^. RenameNode.nodeId') (update ^. RenameNode.name')
 
     NodesRemoved update -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. RemoveNodes.location')
-        when shouldProcess $ localRemoveNodes $ update ^. RemoveNodes.nodeIds'
+        correctLocation <- isCurrentLocation (update ^. RemoveNodes.location')
+        when (shouldProcess && correctLocation) $ localRemoveNodes $ update ^. RemoveNodes.nodeIds'
 
     NodeResultUpdated update -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. NodeResultUpdate.location)
-        when shouldProcess $ do
+        correctLocation <- isCurrentLocation (update ^. NodeResultUpdate.location)
+        when (shouldProcess && correctLocation) $ do
             updateNodeValue         (update ^. NodeResultUpdate.nodeId) (update ^. NodeResultUpdate.value)
             updateNodeProfilingData (update ^. NodeResultUpdate.nodeId) (update ^. NodeResultUpdate.execTime)
 
     NodeSearcherUpdated update -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. NodeSearcherUpdate.location)
-        when shouldProcess $ Global.workspace . Workspace.nodeSearcherData .= update ^. NodeSearcherUpdate.nodeSearcherData
+        correctLocation <- isCurrentLocation (update ^. NodeSearcherUpdate.location)
+        when (shouldProcess && correctLocation) $ Global.workspace . Workspace.nodeSearcherData .= update ^. NodeSearcherUpdate.nodeSearcherData
+
     CodeUpdated update -> do
         shouldProcess <- isCurrentLocationAndGraphLoaded (update ^. CodeUpdate.location)
-        when shouldProcess $ performIO $ UI.setText $ update ^. CodeUpdate.code
+        correctLocation <- isCurrentLocation (update ^. CodeUpdate.location)
+        when (shouldProcess && correctLocation) $ performIO $ UI.setText $ update ^. CodeUpdate.code
 
     -- CollaborationUpdate update -> -- handled in Collaboration.hs
     RemoveNodesResponse          response -> handleResponse response doNothing
