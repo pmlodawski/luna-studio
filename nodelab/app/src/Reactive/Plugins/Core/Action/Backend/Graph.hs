@@ -89,14 +89,16 @@ toAction (Event.Batch ev) = Just $ case ev of
 
     --TODO(LJK, MK): Result should be a list of added nodes ids
     AddSubgraphResponse response@(Response.Response uuid (AddSubgraph.Request loc nodes connections) _) -> do
-        whenM (isCurrentLocationAndGraphLoaded loc) $ mapM_ addDummyNode nodes
-        whenM (isCurrentLocation loc) $ do
+        shouldProcess   <- isCurrentLocationAndGraphLoaded loc
+        correctLocation <- isCurrentLocation loc
+        when (shouldProcess && correctLocation) $ do
+            mapM_ addDummyNode nodes
             connectionIds <- forM connections $ \conn -> localConnectNodes (conn ^. Connection.src) (conn ^. Connection.dst)
             mapM_ updateConnection connectionIds
-        whenM (isOwnRequest uuid) $ do
-            let nodeIds = map (^. Node.nodeId) nodes
-            collaborativeModify nodeIds
-            selectNodes nodeIds
+            whenM (isOwnRequest uuid) $ do
+                let nodeIds = map (^. Node.nodeId) nodes
+                collaborativeModify nodeIds
+                selectNodes nodeIds
         handleResponse response doNothing
 
     NodesConnected update -> do
