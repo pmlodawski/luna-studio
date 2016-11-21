@@ -23,6 +23,7 @@ import qualified Data.UUID.Types                       as UUID
 import qualified Data.UUID.V4                          as UUID
 import           Prologue                              hiding (Item)
 
+import           Empire.API.Data.Breadcrumb            (Breadcrumb (..))
 import           Empire.API.Data.Connection            as Connection
 import           Empire.API.Data.DefaultValue          (Value (..))
 import           Empire.API.Data.GraphLocation         (GraphLocation)
@@ -165,7 +166,7 @@ handleAddNode = modifyGraph action success where
 
 handleAddSubgraph :: Request AddSubgraph.Request -> StateT Env BusT ()
 handleAddSubgraph (Request reqId (AddSubgraph.Request location nodes connections)) = do
-    newIds <- liftIO $ mapM (\node -> generateNodeId) nodes
+    newIds <- liftIO $ mapM (const generateNodeId) nodes
     let idMapping = Map.fromList $ flip zip newIds $ flip map nodes $ view Node.nodeId
     let nodes' = flip map nodes $ Node.nodeId %~ (idMapping Map.!)
         connections' = map (\conn -> conn & Connection.src . PortRef.srcNodeId %~ (idMapping Map.!)
@@ -237,7 +238,7 @@ handleGetProgram req@(Request uuid request) = do
         (Left err, _) -> replyFail logger err req
         (_, Left err) -> replyFail logger err req
         (Right graph, Right code) -> do
-            replyResult req $ GetProgram.Result graph (Text.pack code) mockNSData
+            replyResult req $ GetProgram.Result graph (Text.pack code) (Breadcrumb []) mockNSData
 
 handleDumpGraphViz :: Request DumpGraphViz.Request -> StateT Env BusT ()
 handleDumpGraphViz (Request _ request) = do

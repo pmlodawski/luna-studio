@@ -5,11 +5,11 @@ import           Data.Binary                (Binary)
 
 import           Empire.API.Data.Project    (ProjectId)
 import           Empire.API.Data.Library    (LibraryId)
-import           Empire.API.Data.Breadcrumb (Breadcrumb)
+import           Empire.API.Data.Breadcrumb (Breadcrumb, BreadcrumbItem)
 
 data GraphLocation = GraphLocation { _projectId  :: ProjectId
                                    , _libraryId  :: LibraryId
-                                   , _breadcrumb :: Breadcrumb
+                                   , _breadcrumb :: Breadcrumb BreadcrumbItem
                                    } deriving (Show, Eq, Generic)
 
 makeLenses ''GraphLocation

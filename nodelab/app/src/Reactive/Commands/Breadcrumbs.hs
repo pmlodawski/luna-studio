@@ -21,7 +21,7 @@ import qualified Style.Layout                  as Style
 import           UI.Handlers.Button            (ClickedHandler (..))
 import           UI.Instances                  ()
 
-import           Empire.API.Data.Breadcrumb    (Breadcrumb (..))
+import           Empire.API.Data.Breadcrumb    (Breadcrumb (..), BreadcrumbItem)
 import qualified Empire.API.Data.Breadcrumb    as Breadcrumb
 import qualified Empire.API.Data.GraphLocation as GraphLocation
 import qualified Empire.API.Data.Project       as Project
@@ -33,7 +33,7 @@ destroyBreadcrumbs = do
     breadcrumbItems <- inRegistry $ UICmd.children breadcrumbs
     inRegistry  $ mapM_ UICmd.removeWidget breadcrumbItems
 
-displayBreadcrumbs :: (Breadcrumb -> Command State ()) -> Command State ()
+displayBreadcrumbs :: (Breadcrumb BreadcrumbItem -> Command State ()) -> Command State ()
 displayBreadcrumbs enterBreadcrumbs = do
     group <- use $ Global.uiElements . UIElements.breadcrumbs
 
@@ -56,7 +56,7 @@ displayBreadcrumbs enterBreadcrumbs = do
             UICmd.register group widget handlers
 
 
-update :: (Breadcrumb -> Command State ()) -> Command State ()
+update :: (Breadcrumb BreadcrumbItem -> Command State ()) -> Command State ()
 update enterBreadcrumbs = do
     destroyBreadcrumbs
     displayBreadcrumbs enterBreadcrumbs

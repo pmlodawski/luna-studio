@@ -61,10 +61,13 @@ import           Empire.API.Response                   as Response
 instance ToJSON Project.Project
 instance ToJSON Library.Library
 
-instance ToJSON Breadcrumb.Breadcrumb
-instance ToJSON Breadcrumb.BreadcrumbItem
-instance FromJSON Breadcrumb.Breadcrumb
-instance FromJSON Breadcrumb.BreadcrumbItem
+instance ToJSON a   => ToJSON (Breadcrumb.Breadcrumb a)
+instance ToJSON a   => ToJSON (Breadcrumb.Named a)
+instance               ToJSON Breadcrumb.BreadcrumbItem
+
+instance FromJSON a => FromJSON (Breadcrumb.Breadcrumb a)
+instance FromJSON a => FromJSON (Breadcrumb.Named a)
+instance               FromJSON Breadcrumb.BreadcrumbItem
 
 instance ToJSON GraphLocation.GraphLocation
 

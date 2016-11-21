@@ -24,7 +24,7 @@ import           Empire.API.Data.Project    (ProjectId)
 import           Empire.Commands.Library    (withLibrary)
 import           Empire.Empire              (Command, Empire, empire, runEmpire)
 
-withBreadcrumb :: ProjectId -> LibraryId -> Breadcrumb -> Command Graph.Graph a -> Empire a
+withBreadcrumb :: ProjectId -> LibraryId -> Breadcrumb BreadcrumbItem -> Command Graph.Graph a -> Empire a
 withBreadcrumb pid lid breadcrumb act = withLibrary pid lid $
     zoom (Library.body) $ do
         graph <- get
