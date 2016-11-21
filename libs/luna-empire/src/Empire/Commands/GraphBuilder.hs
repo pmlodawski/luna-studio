@@ -64,20 +64,28 @@ buildGraph = API.Graph <$> buildNodes <*> buildConnections
 buildNodes :: Command Graph [API.Node]
 buildNodes = do
     allNodeIds <- uses Graph.breadcrumbHierarchy topLevelIDs
-    lastBreadcrumbId <- use Graph.insideNode
-    edges <- do
-        case lastBreadcrumbId of
-            Nothing -> return []
-            Just nid -> do
-                isLambda <- rhsIsLambda nid
-                if isLambda then do
-                    (inputPort, outputPort) <- getPortMapping nid
-                    inputEdge <- buildInputEdge nid inputPort
-                    outputEdge <- buildOutputEdge nid outputPort
-                    return [inputEdge, outputEdge]
-                else return []
+    edges <- buildEdgeNodes
     nodes <- mapM buildNode allNodeIds
-    return $ edges ++ nodes
+    return $ nodes ++ case edges of
+        Just (inputEdge, outputEdge) -> [inputEdge, outputEdge]
+        _                            -> []
+
+type EdgeNodes = (API.Node, API.Node)
+
+buildEdgeNodes :: Command Graph (Maybe EdgeNodes)
+buildEdgeNodes = do
+    lastBreadcrumbId <- use Graph.insideNode
+    case lastBreadcrumbId of
+        Nothing -> return Nothing
+        Just nodeId -> do
+            isLambda <- rhsIsLambda nodeId
+            if isLambda then do
+                (inputPort, outputPort) <- getPortMapping nodeId
+                inputEdge <- buildInputEdge nodeId inputPort
+                outputEdge <- buildOutputEdge nodeId outputPort
+                return $ Just (inputEdge, outputEdge)
+            else return Nothing
+
 
 uuids :: IORef [Int]
 uuids = unsafePerformIO $ newIORef [0xFA..]
