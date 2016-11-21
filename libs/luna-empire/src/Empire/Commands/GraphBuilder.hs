@@ -253,7 +253,11 @@ buildInputEdge :: NodeId -> NodeId -> Command Graph API.Node
 buildInputEdge lastb nid = do
     ref   <- GraphUtils.getASTTarget lastb
     (types, states) <- zoom Graph.ast $ runASTOp $ extractPortInfo ref
-    let argTypes = types ++ replicate (length states - length types) AnyType
+    argTypes <- case types of
+        [] -> do
+            numberOfArguments <- length <$> (zoom Graph.ast $ runASTOp $ extractArgTypes ref)
+            return $ replicate numberOfArguments AnyType
+        _ -> return types
     out <- zoom Graph.ast $ runASTOp $ followTypeRep ref
     let nameGen = fmap (\i -> Text.pack $ "input" ++ show i) [0..]
         inputEdges = zipWith3 (\n t i -> Input n t $ Projection i) nameGen argTypes [0..]
