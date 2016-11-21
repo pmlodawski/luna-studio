@@ -139,17 +139,15 @@ main = do
 
         echo "Updating submodules"
         cmd "git" ["submodule", "update", "--init"]
-        
+
         echo "stack setup"
         repoDir <- pwd
         chdir ("build" </> "backend") $ cmd "stack" "setup"
         chdir "nodelab" $ cmd "stack" "setup"
-
-        bash "./scripts/gencabal" []
 
         chdir "nodelab" $ do
             cmd "npm" "install"
             cmd "bower" "install" "--allow-root"
 
         chdir ("build" </> "backend") $ cmd "stack" "build" "--copy-bins" "--fast"
-        chdir "nodelab" $ cmd "brunch" "build"        
+        chdir "nodelab" $ cmd "brunch" "build"

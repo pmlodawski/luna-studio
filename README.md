@@ -30,18 +30,9 @@ $ stack setup # installs ghcjs
 ### Code generation & deps installation
 
 ```shell
-$ cd $REPO_DIR
-$ scripts/gencabal
 $ cd $REPO_DIR/nodelab
 $ npm install
 $ bower install --allow-root
-```
-
-### After each pull
-
-```shell
-$ cd $REPO_DIR
-$ scripts/gencabal
 ```
 
 ### Backend & GUI
