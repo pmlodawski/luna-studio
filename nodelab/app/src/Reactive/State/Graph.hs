@@ -5,13 +5,13 @@ module Reactive.State.Graph
     , addConnection
     , addNode
     , connectionIdsContainingNode
-    , connectionIdsContainingNodes
     , connectionWidgets
     , connectionWidgetsMap
     , connectionsContainingNode
-    , connectionsContainingNodes
     , connectionsMap
     , connections
+    , connectionsToNodes
+    , connectionsToNodesIds
     , getConnectionNodeIds
     , getConnections
     , getConnectionsMap
@@ -179,16 +179,14 @@ endsWithNode nid conn = conn ^. Connection.dst . PortRef.dstNodeId == nid
 connectionsContainingNode :: NodeId -> State -> [Connection]
 connectionsContainingNode nid state = filter (containsNode nid) $ getConnections state
 
-connectionsContainingNodes :: Set.Set NodeId -> State -> [Connection]
-connectionsContainingNodes nodeIds state = do
-  let connections' = filter ((flip Set.member nodeIds) . (view $ Connection.src . PortRef.srcNodeId)) $ getConnections state
-  filter (flip Set.member nodeIds . (view $ Connection.dst . PortRef.dstNodeId)) connections'
+connectionsToNodes :: Set.Set NodeId -> State -> [Connection]
+connectionsToNodes nodeIds state = filter ((flip Set.member nodeIds) . (view $ Connection.dst . PortRef.dstNodeId)) $ getConnections state
 
 connectionIdsContainingNode :: NodeId -> State -> [ConnectionId]
 connectionIdsContainingNode nid state = view Connection.connectionId <$> connectionsContainingNode nid state
 
-connectionIdsContainingNodes :: Set.Set NodeId -> State -> [ConnectionId]
-connectionIdsContainingNodes nodeIds state = view Connection.connectionId <$> connectionsContainingNodes nodeIds state
+connectionsToNodesIds :: Set.Set NodeId -> State -> [ConnectionId]
+connectionsToNodesIds nodeIds state = view Connection.connectionId <$> connectionsToNodes nodeIds state
 
 hasConnections :: NodeId -> State -> Bool
 hasConnections = (not . null) .: connectionsContainingNode

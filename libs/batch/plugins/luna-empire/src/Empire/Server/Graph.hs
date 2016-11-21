@@ -167,8 +167,10 @@ handleAddNode = modifyGraph action success where
 handleAddSubgraph :: Request AddSubgraph.Request -> StateT Env BusT ()
 handleAddSubgraph (Request reqId (AddSubgraph.Request location nodes connections)) = do
     newIds <- liftIO $ mapM (const generateNodeId) nodes
-    let idMapping = Map.fromList $ flip zip newIds $ flip map nodes $ view Node.nodeId
-    let nodes' = flip map nodes $ Node.nodeId %~ (idMapping Map.!)
+    let idMapping' = Map.fromList $ flip zip newIds $ flip map nodes $ view Node.nodeId
+        connectionsSrcs = map (^. Connection.src . PortRef.srcNodeId) connections
+        idMapping = Map.union idMapping' $ Map.fromList (zip connectionsSrcs connectionsSrcs)
+        nodes' = flip map nodes $ Node.nodeId %~ (idMapping Map.!)
         connections' = map (\conn -> conn & Connection.src . PortRef.srcNodeId %~ (idMapping Map.!)
                                           & Connection.dst . PortRef.dstNodeId %~ (idMapping Map.!)
                            ) connections
