@@ -19,7 +19,7 @@ import qualified Reactive.Commands.Batch           as BatchCmd
 import           Reactive.Commands.Command         (Command)
 import           Reactive.Commands.Graph           (allNodes, updateConnectionsForNodes, nodeIdToWidgetId)
 import           Reactive.Commands.Graph.Selection (selectedNodes)
-import           Reactive.Commands.Node.Snap
+import           Reactive.Commands.Node.Snap       (snap)
 import qualified Reactive.Commands.UIRegistry      as UICmd
 import qualified Reactive.State.Camera             as Camera
 import           Reactive.State.Drag               (DragHistory (..))
@@ -29,7 +29,7 @@ import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph
 import qualified Reactive.State.UIRegistry         as UIRegistry
 
-import           Style.Layout                       (gridSize)
+import           Style.Layout                      (gridSize)
 
 import           Object.Widget                     (Position)
 import qualified Object.Widget                     as Widget
