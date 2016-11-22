@@ -2,7 +2,7 @@ module ZMQ.Bus.EndPoint where
 
 import           ZMQ.Bus.Config (Config)
 import qualified ZMQ.Bus.Config as Config
-import           Flowbox.Prelude
+import           Prologue
 
 
 

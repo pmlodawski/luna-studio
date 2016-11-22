@@ -1,25 +1,19 @@
----------------------------------------------------------------------------
--- Copyright (C) Flowbox, Inc - All Rights Reserved
--- Unauthorized copying of this file, via any medium is strictly prohibited
--- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2014
----------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
 module Main where
 
-import qualified Data.List                   as List
+import qualified Data.List                  as List
 
-import           Flowbox.Bus.Logger.Cmd      (Cmd)
-import qualified Flowbox.Bus.Logger.Cmd      as Cmd
-import qualified Flowbox.Bus.Logger.Logger   as Logger
-import qualified Flowbox.Bus.Logger.Version  as Version
-import qualified ZMQ.Bus.Config       as Config
-import           Flowbox.Options.Applicative hiding (info)
-import qualified Flowbox.Options.Applicative as Opt
-import           Flowbox.Prelude             hiding (switch)
-import           Flowbox.System.Log.Logger
-import qualified ZMQ.Bus.EndPoint            as EP
+import           ZMQ.Bus.Logger.Cmd     (Cmd)
+import qualified ZMQ.Bus.Logger.Cmd     as Cmd
+import qualified ZMQ.Bus.Logger.Logger  as Logger
+import qualified ZMQ.Bus.Logger.Version as Version
+import           Prologue                   hiding (switch)
+import           System.Log.MLogger
+import           System.Log.Options         hiding (info)
+import qualified System.Log.Options         as Opt
+import qualified ZMQ.Bus.Config             as Config
+import qualified ZMQ.Bus.EndPoint           as EP
 
 
 
@@ -27,8 +21,8 @@ rootLogger :: Logger
 rootLogger = getLogger ""
 
 
-logger :: LoggerIO
-logger = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 
 parser :: Parser Cmd

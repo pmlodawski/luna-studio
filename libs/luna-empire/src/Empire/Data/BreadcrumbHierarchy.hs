@@ -22,7 +22,7 @@ newtype BreadcrumbHierarchy = BC (Forest NodeId) deriving (Eq, Show)
 empty :: BreadcrumbHierarchy
 empty = BC []
 
-replaceAt :: Breadcrumb -> BreadcrumbHierarchy -> BreadcrumbHierarchy -> Maybe BreadcrumbHierarchy
+replaceAt :: Breadcrumb BreadcrumbItem -> BreadcrumbHierarchy -> BreadcrumbHierarchy -> Maybe BreadcrumbHierarchy
 replaceAt (Breadcrumb bs) (BC forest) (BC hierarchy) = BC <$> go bs forest hierarchy
     where
       go :: [BreadcrumbItem] -> Forest NodeId -> Forest NodeId -> Maybe (Forest NodeId)
@@ -33,7 +33,7 @@ replaceAt (Breadcrumb bs) (BC forest) (BC hierarchy) = BC <$> go bs forest hiera
               _      -> Nothing
           _                 -> Nothing
 
-navigateTo :: BreadcrumbHierarchy -> Breadcrumb -> Maybe BreadcrumbHierarchy
+navigateTo :: BreadcrumbHierarchy -> Breadcrumb BreadcrumbItem -> Maybe BreadcrumbHierarchy
 navigateTo (BC forest) (Breadcrumb breadcrumbs) = BC <$> go forest nodeIds
     where
       nodeIds = map (\(Lambda id) -> id) breadcrumbs

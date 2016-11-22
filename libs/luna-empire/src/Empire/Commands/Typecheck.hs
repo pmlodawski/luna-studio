@@ -15,6 +15,7 @@ import           Data.Maybe              (isNothing, maybeToList)
 import           Empire.Data.BreadcrumbHierarchy   (topLevelIDs)
 import qualified Empire.Data.Graph                 as Graph
 import           Empire.Data.Graph                 (Graph)
+import           Empire.Data.BreadcrumbHierarchy   (topLevelIDs)
 import           Empire.API.Data.Node              (NodeId, nodeId)
 import qualified Empire.API.Data.NodeMeta          as NodeMeta
 import           Empire.API.Data.GraphLocation     (GraphLocation (..))
@@ -119,14 +120,14 @@ updateNodes loc = do
         rep <- zoom graph $ GraphBuilder.buildNode id
         cached <- uses nodesCache $ Map.lookup id
         when (cached /= Just rep) $ do
-            Publisher.notifyNodeUpdate loc rep
+            Publisher.notifyNodesUpdate loc rep
             nodesCache %= Map.insert id rep
     edgeNodes  <- zoom graph $ GraphBuilder.buildEdgeNodes
     forM_ edgeNodes $ \edges -> forM_ edges $ \rep -> do
         let id = rep ^. nodeId
         cached <- uses nodesCache $ Map.lookup id
         when (cached /= Just rep) $ do
-            Publisher.notifyNodeUpdate loc rep
+            Publisher.notifyNodesUpdate loc rep
             nodesCache %= Map.insert id rep
 
 updateValues :: GraphLocation -> Command InterpreterEnv ()

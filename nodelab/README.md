@@ -34,7 +34,6 @@ stack install alex happy hpack
 git clone git@bitbucket.org:NewByteOrder/new_byte_order.git
 cd new_byte_order/
 git submodule update --init --recursive
-scripts/gencabal
 cd nodelab/
 stack setup
 sudo npm install -g brunch bower

@@ -11,29 +11,26 @@ flags:
 
 dependencies:
   - base
-  - lens
-  - prologue
   - binary
-  - containers
-  - text
-  - hashable
-  - scope-searcher
-  - visualization-api
-  - uuid-types
   - bytestring
+  - containers
+  - hashable
+  - lens
   - pretty-show
+  - prologue
+  - scope-searcher
+  - text
+  - uuid-types
+  - visualization-api
 
 default-extensions:
-  - NoImplicitPrelude
   - DeriveGeneric
-  - TemplateHaskell
   - FlexibleInstances
-  - TypeSynonymInstances
   - MultiParamTypeClasses
+  - NoImplicitPrelude
+  - TemplateHaskell
+  - TypeSynonymInstances
 
 library:
   source-dirs: src
   ghc-options: -Wall -O2 -threaded
-
-
-

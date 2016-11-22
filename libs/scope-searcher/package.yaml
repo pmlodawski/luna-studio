@@ -1,0 +1,59 @@
+name:     scope-searcher
+version:  0.1.0.0
+synopsis: Scope searcher library
+author:   New Byte Order <contact@newbyteorder.com>
+
+ghc-options: -threaded
+
+dependencies:
+    - base
+    - text
+    - containers
+    - lens
+    - data-default
+
+library:
+    source-dirs: src
+    default-extensions:
+        - FlexibleContexts
+        - TemplateHaskell
+        - DeriveGeneric
+    ghc-options:
+        - -Wall
+        - -O2
+    dependencies:
+        - binary
+        - aeson
+
+executables:
+  scope-searcher-exe:
+    main: Main.hs
+    source-dirs:
+        - app
+        - data
+    default-extensions:
+        - FlexibleContexts
+        - TemplateHaskell
+    ghc-options:
+        - -rtsopts
+        - -with-rtsopts=-N
+    dependencies:
+        - mtl
+        - pretty-show
+        - ansi-terminal
+        - scope-searcher
+
+tests:
+  scope-searcher-test:
+    main: Main.hs
+    source-dirs:
+        - test
+        - data
+    ghc-options:
+        - -rtsopts
+        - -with-rtsopts=-N
+    dependencies:
+        - scope-searcher
+        - HUnit
+        - test-framework
+        - test-framework-hunit

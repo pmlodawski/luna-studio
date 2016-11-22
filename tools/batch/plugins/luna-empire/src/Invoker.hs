@@ -26,7 +26,7 @@ import qualified Empire.API.Graph.Connect         as Connect
 import qualified Empire.API.Graph.Disconnect      as Disconnect
 import qualified Empire.API.Graph.DumpGraphViz    as DumpGraphViz
 import qualified Empire.API.Graph.GetProgram      as GetProgram
-import qualified Empire.API.Graph.RemoveNode      as RemoveNode
+import qualified Empire.API.Graph.RemoveNodes     as RemoveNodes
 import qualified Empire.API.Graph.SetDefaultValue as SetDefaultValue
 import qualified Empire.API.Graph.TypeCheck       as TypeCheck
 import qualified Empire.API.Graph.UpdateNodeMeta  as UpdateNodeMeta
@@ -37,13 +37,13 @@ import qualified Empire.API.Project.ListProjects  as ListProjects
 import           Empire.API.Request               (Request (..))
 import qualified Empire.API.Response              as Response
 import qualified Empire.API.Topic                 as Topic
-import qualified ZMQ.Bus.Config            as Config
-import           Flowbox.Options.Applicative      (help, long, metavar, short)
-import qualified Flowbox.Options.Applicative      as Opt
 import           Prologue                         hiding (argument)
 import           System.Console.Docopt
 import           System.Environment               (getArgs)
+import           System.Log.Options               (help, long, metavar, short)
+import qualified System.Log.Options               as Opt
 import qualified ZMQ.Bus.Bus                      as Bus
+import qualified ZMQ.Bus.Config                   as Config
 import qualified ZMQ.Bus.Data.Flag                as Flag
 import qualified ZMQ.Bus.Data.Message             as Message
 import qualified ZMQ.Bus.EndPoint                 as EP
@@ -138,7 +138,7 @@ addNode :: EP.BusEndPoints -> GraphLocation -> String -> Double -> Double -> IO 
 addNode endPoints graphLocation expression x y = sendToBus endPoints $ AddNode.Request graphLocation (AddNode.ExpressionNode $ Text.pack expression) (NodeMeta.NodeMeta (x, y) True) Nothing
 
 removeNode :: EP.BusEndPoints -> GraphLocation -> NodeId -> IO ()
-removeNode endPoints graphLocation nodeId = sendToBus endPoints $ RemoveNode.Request graphLocation [nodeId]
+removeNode endPoints graphLocation nodeId = sendToBus endPoints $ RemoveNodes.Request graphLocation [nodeId]
 
 updateNodeMeta :: EP.BusEndPoints -> GraphLocation -> NodeId -> Double -> Double -> Bool -> IO ()
 updateNodeMeta endPoints graphLocation nodeId x y req = sendToBus endPoints $ UpdateNodeMeta.Request graphLocation [(nodeId, NodeMeta.NodeMeta (x, y) req)]

@@ -8,8 +8,8 @@ import           Control.Monad.Morph
 import           Control.Monad.Trans
 import           Control.Monad.Trans.State
 
-import           Flowbox.Prelude           hiding (error)
-import           Flowbox.System.Log.Logger
+import           Prologue                  hiding (error)
+import           System.Log.MLogger
 import           ZMQ.Bus.Bus               (Bus)
 import qualified ZMQ.Bus.Bus               as Bus
 import qualified ZMQ.Bus.Data.Flag         as Flag
@@ -23,8 +23,8 @@ import qualified ZMQ.Bus.Trans             as BusT
 
 
 
-logger :: LoggerIO
-logger = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 
 run :: BusEndPoints -> [Topic] -> (Message -> IO [Message]) -> IO (Either Bus.Error ())

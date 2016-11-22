@@ -41,30 +41,30 @@ import           Empire.Data.Graph               (Graph)
 import qualified Empire.Data.Graph               as Graph
 import qualified Empire.Data.Library             as Library
 
-import           Empire.API.Data.Breadcrumb    (Breadcrumb(..), BreadcrumbItem(..))
-import           Empire.API.Data.Connection    (Connection (..))
-import           Empire.API.Data.DefaultValue  (PortDefault (Constant), Value)
-import qualified Empire.API.Data.Graph         as APIGraph
-import           Empire.API.Data.GraphLocation (GraphLocation (..))
-import qualified Empire.API.Data.GraphLocation as GraphLocation
-import           Empire.API.Data.Library       (LibraryId)
-import           Empire.API.Data.Node          (Node (..), NodeId)
-import qualified Empire.API.Data.Node          as Node
-import           Empire.API.Data.NodeMeta      (NodeMeta)
-import qualified Empire.API.Data.NodeMeta      as NodeMeta
-import           Empire.API.Data.Port          (InPort (..), OutPort (..), PortId (..))
-import qualified Empire.API.Data.Port          as Port (PortState (..), state)
-import           Empire.API.Data.PortRef       (AnyPortRef (..), InPortRef (..), OutPortRef (..))
-import qualified Empire.API.Data.PortRef       as PortRef
-import           Empire.API.Data.Project       (ProjectId)
+import           Empire.API.Data.Breadcrumb      (Breadcrumb(..), BreadcrumbItem(..))
+import           Empire.API.Data.Connection      (Connection (..))
+import           Empire.API.Data.DefaultValue    (PortDefault (Constant), Value (..))
+import qualified Empire.API.Data.Graph           as APIGraph
+import           Empire.API.Data.GraphLocation   (GraphLocation (..))
+import qualified Empire.API.Data.GraphLocation   as GraphLocation
+import           Empire.API.Data.Library         (LibraryId)
+import           Empire.API.Data.Node            (Node (..), NodeId)
+import qualified Empire.API.Data.Node            as Node
+import           Empire.API.Data.NodeMeta        (NodeMeta)
+import qualified Empire.API.Data.NodeMeta        as NodeMeta
+import           Empire.API.Data.Port            (InPort (..), OutPort (..), PortId (..))
+import qualified Empire.API.Data.Port            as Port (PortState (..), state)
+import           Empire.API.Data.PortRef         (AnyPortRef (..), InPortRef (..), OutPortRef (..))
+import qualified Empire.API.Data.PortRef         as PortRef
+import           Empire.API.Data.Project         (ProjectId)
 
-import           Debug.Trace                   (trace)
-import qualified Empire.Commands.AST           as AST
-import qualified Empire.Commands.GraphBuilder  as GraphBuilder
-import qualified Empire.Commands.GraphUtils    as GraphUtils
-import           Empire.Commands.Breadcrumb    (withBreadcrumb)
-import           Empire.Commands.Library       (withLibrary)
-import qualified Empire.Commands.Publisher     as Publisher
+import           Debug.Trace                     (trace)
+import qualified Empire.Commands.AST             as AST
+import           Empire.Commands.Breadcrumb      (withBreadcrumb)
+import qualified Empire.Commands.GraphBuilder    as GraphBuilder
+import qualified Empire.Commands.GraphUtils      as GraphUtils
+import           Empire.Commands.Library         (withLibrary)
+import qualified Empire.Commands.Publisher       as Publisher
 import           Empire.Empire
 
 generateNodeName :: Command Graph String
@@ -91,7 +91,7 @@ addNodeNoTC loc uuid expr meta = do
     Graph.nodeMapping . at uuid ?= refNode
     node <- GraphBuilder.buildNode uuid
     Graph.breadcrumbHierarchy %= addID (node ^. Node.nodeId)
-    Publisher.notifyNodeUpdate loc node
+    Publisher.notifyNodesUpdate loc node
     return node
 
 addPersistentNode :: Node -> Command Graph NodeId
@@ -169,9 +169,7 @@ connectPersistent (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) =
 connectPersistent _ _ = throwError "Source port should be All"
 
 connectNoTC :: GraphLocation -> OutPortRef -> InPortRef -> Command Graph ()
-connectNoTC loc outPort@(OutPortRef srcNodeId All) inPort@(InPortRef dstNodeId dstPort) = do
-    connectPersistent outPort inPort
-    Publisher.notifyConnectionUpdate loc outPort inPort
+connectNoTC loc outPort@(OutPortRef srcNodeId All) inPort@(InPortRef dstNodeId dstPort) = connectPersistent outPort inPort
 
 setDefaultValue :: GraphLocation -> AnyPortRef -> PortDefault -> Empire ()
 setDefaultValue loc portRef val = withTC loc False $ setDefaultValue' portRef val

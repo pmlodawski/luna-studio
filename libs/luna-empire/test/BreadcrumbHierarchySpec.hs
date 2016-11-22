@@ -20,7 +20,7 @@ uuid i = fromWords 0 0 0 (fromIntegral i)
 forest123 = addID (uuid 3) $ addID (uuid 2) $ addID (uuid 1) empty
 forest4 = addID (uuid 4) empty
 
-addToTree :: Breadcrumb -> Int -> BreadcrumbHierarchy -> Maybe BreadcrumbHierarchy
+addToTree :: Breadcrumb BreadcrumbItem -> Int -> BreadcrumbHierarchy -> Maybe BreadcrumbHierarchy
 addToTree b i h | Just h' <- h `navigateTo` b = replaceAt b (addID (uuid i) h') h
                 | otherwise = Nothing
 

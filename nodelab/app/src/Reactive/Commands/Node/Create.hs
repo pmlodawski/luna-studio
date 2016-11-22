@@ -14,7 +14,6 @@ import qualified Data.Text.Lazy                    as Text
 import           Object.UITypes                    (WidgetId)
 import           Object.Widget                     (objectId, widget)
 import qualified Object.Widget.Node                as Model
-import qualified UI.Handlers.Node                  as Node
 
 import           Reactive.Commands.Command         (Command)
 import           Reactive.Commands.EnterNode       (enterNode)
@@ -48,7 +47,6 @@ addNode node = do
     zoom Global.graph $ modify (Graph.addNode node)
     widgetId <- registerNode node
     focusNode widgetId
-    Node.selectNode' Node.performSelect widgetId
 
 addDummyNode :: Node -> Command State ()
 addDummyNode dummyNode = do

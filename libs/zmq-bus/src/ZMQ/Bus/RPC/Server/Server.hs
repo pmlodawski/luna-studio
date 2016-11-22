@@ -4,8 +4,8 @@
 
 module ZMQ.Bus.RPC.Server.Server where
 
-import           Flowbox.Prelude              hiding (error)
-import           Flowbox.System.Log.Logger
+import           Prologue                     hiding (error)
+import           System.Log.MLogger
 import           ZMQ.Bus.Bus                  (Bus)
 import           ZMQ.Bus.EndPoint             (BusEndPoints)
 import           ZMQ.Bus.RPC.HandlerMap       (HandlerMap)
@@ -14,8 +14,8 @@ import qualified ZMQ.Bus.RPC.Server.Processor as Processor
 import qualified ZMQ.Bus.Server               as Server
 import qualified ZMQ.Bus.Util                 as Util
 
-logger :: LoggerIO
-logger = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 
 run :: String -> Bus () -> BusEndPoints -> s -> HandlerMap s IO -> IO (Either String ())

@@ -14,11 +14,11 @@ import qualified Empire.Empire                    as Empire
 import           Empire.Env                       (Env)
 import qualified Empire.Env                       as Env
 import           Empire.Server.Server             (errorMessage, replyFail, replyResult, sendToBus')
-import qualified Flowbox.System.Log.Logger        as Logger
+import qualified System.Log.MLogger               as Logger
 import           ZMQ.Bus.Trans                    (BusT (..))
 
-logger :: Logger.LoggerIO
-logger = Logger.getLoggerIO $(Logger.moduleName)
+logger :: Logger.Logger
+logger = Logger.getLogger $(Logger.moduleName)
 
 
 handleCreateLibrary :: Request CreateLibrary.Request -> StateT Env BusT ()

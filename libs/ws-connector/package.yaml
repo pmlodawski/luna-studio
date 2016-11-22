@@ -15,16 +15,17 @@ library:
 dependencies:
   - async
   - base
-  - bytestring
   - base64-bytestring
   - binary
-  - text
+  - bytestring
   - either
   - exceptions
-  - zmq-bus-config
-  - flowbox-utils
+  - m-logger
   - mtl
-  - websockets
+  - prologue
   - stm
+  - text
+  - websockets
   - zeromq4-haskell
   - zmq-bus
+  - zmq-bus-config

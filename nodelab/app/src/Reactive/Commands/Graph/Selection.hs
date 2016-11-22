@@ -2,20 +2,23 @@ module Reactive.Commands.Graph.Selection
      ( selectedNodes
      , focusSelectedNode
      , selectAll
+     , selectNodes
      , unselectAll
      ) where
 
 import           Utils.PreludePlus
 
+import           Empire.API.Data.Node         (NodeId)
+
 import           Object.Widget                (WidgetFile (..), objectId, widget)
 import qualified Object.Widget.Node           as NodeModel
 
-import           Reactive.Commands.Command    (Command)
-import           Reactive.Commands.Graph      (allNodes)
+import           Reactive.Commands.Batch      (cancelCollaborativeTouch, collaborativeTouch)
+import           Reactive.Commands.Command    (Command, performIO)
+import           Reactive.Commands.Graph      (allNodes, nodeIdToWidgetId)
 import qualified Reactive.Commands.UIRegistry as UICmd
-import qualified Reactive.State.UIRegistry    as UIRegistry
 import           Reactive.State.Global        (State, inRegistry)
-import           Reactive.Commands.Batch      (collaborativeTouch, cancelCollaborativeTouch)
+import qualified Reactive.State.UIRegistry    as UIRegistry
 
 
 unselectAll :: Command State ()
@@ -33,8 +36,13 @@ unselectAll = do
 selectAll :: Command State ()
 selectAll = do
     widgets <- allNodes
-    let widgetIds = (view objectId) <$> widgets
-        nodeIds   = (view $ widget . NodeModel.nodeId) <$> widgets
+    selectNodes $ (view $ widget . NodeModel.nodeId) <$> widgets
+
+selectNodes :: [NodeId] -> Command State ()
+selectNodes nodeIds = do
+    unselectAll
+    widgets <- allNodes
+    widgetIds <- fmap catMaybes $ mapM nodeIdToWidgetId nodeIds
     inRegistry $ forM_ widgetIds $ (flip UICmd.update) (NodeModel.isSelected .~ True)
     focusSelectedNode
     collaborativeTouch nodeIds

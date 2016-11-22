@@ -4,7 +4,7 @@ module ZMQ.Bus.Trans where
 
 import           Control.Monad.IO.Class
 
-import           Flowbox.Prelude
+import           Prologue
 import           ZMQ.Bus.Bus            (Bus)
 
 

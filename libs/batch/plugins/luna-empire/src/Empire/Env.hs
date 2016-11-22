@@ -4,7 +4,7 @@
 
 module Empire.Env where
 
-import           Flowbox.Prelude
+import           Prologue
 
 import           Control.Concurrent.STM.TChan  (TChan)
 import           Empire.API.Data.AsyncUpdate   (AsyncUpdate)

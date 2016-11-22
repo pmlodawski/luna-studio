@@ -23,6 +23,7 @@ import qualified Data.UUID.Types                       as UUID
 import qualified Data.UUID.V4                          as UUID
 import           Prologue                              hiding (Item)
 
+import           Empire.API.Data.Breadcrumb            (Breadcrumb (..))
 import           Empire.API.Data.Connection            as Connection
 import           Empire.API.Data.DefaultValue          (Value (..))
 import           Empire.API.Data.GraphLocation         (GraphLocation)
@@ -42,8 +43,8 @@ import qualified Empire.API.Graph.Disconnect           as Disconnect
 import qualified Empire.API.Graph.DumpGraphViz         as DumpGraphViz
 import qualified Empire.API.Graph.GetProgram           as GetProgram
 import qualified Empire.API.Graph.NodeResultUpdate     as NodeResultUpdate
-import qualified Empire.API.Graph.NodeUpdate           as NodeUpdate
-import qualified Empire.API.Graph.RemoveNode           as RemoveNode
+import qualified Empire.API.Graph.NodesUpdate          as NodesUpdate
+import qualified Empire.API.Graph.RemoveNodes          as RemoveNodes
 import qualified Empire.API.Graph.RenameNode           as RenameNode
 import qualified Empire.API.Graph.Request              as G
 import qualified Empire.API.Graph.SetDefaultValue      as SetDefaultValue
@@ -61,13 +62,13 @@ import           Empire.Env                            (Env)
 import qualified Empire.Env                            as Env
 import           Empire.Server.Server                  (errorMessage, replyFail, replyOk, replyResult, sendToBus')
 import           Empire.Utils.TextResult               (nodeValueToText)
-import qualified Flowbox.System.Log.Logger             as Logger
 import qualified StdLibMock
+import qualified System.Log.MLogger                    as Logger
 import           ZMQ.Bus.Trans                         (BusT (..))
 
 
-logger :: Logger.LoggerIO
-logger = Logger.getLoggerIO $(Logger.moduleName)
+logger :: Logger.Logger
+logger = Logger.getLogger $(Logger.moduleName)
 
 notifyCodeUpdate :: GraphLocation -> StateT Env BusT ()
 notifyCodeUpdate location = do
@@ -96,11 +97,9 @@ data Expr = Expression        Text
           | Output     (Maybe Text)
 
 parseExpr :: Text -> Expr
-parseExpr (stripPrefix "def "    -> Just name) = Function $ Just name
 parseExpr (stripPrefix "module " -> Just name) = Module   $ Just name
 parseExpr (stripPrefix "in "     -> Just name) = Input    $ Just name
 parseExpr (stripPrefix "out "    -> Just name) = Output   $ Just name
-parseExpr "def"                                = Function   Nothing
 parseExpr "module"                             = Module     Nothing
 parseExpr "in"                                 = Input      Nothing
 parseExpr "out"                                = Output     Nothing
@@ -160,29 +159,29 @@ handleAddNode = modifyGraph action success where
     action (AddNode.Request location nodeType nodeMeta connectTo) = case nodeType of
         AddNode.ExpressionNode expression -> addExpressionNode location expression nodeMeta connectTo
     success request@(Request _ req@(AddNode.Request location nodeType nodeMeta connectTo)) node = do
-        replyResult request (node ^. Node.nodeId)
+        replyResult request node
         sendToBus' $ AddNode.Update location node
         case nodeType of
             AddNode.ExpressionNode expr -> withJust connectTo $ connectNodes location expr (node ^. Node.nodeId)
 
 handleAddSubgraph :: Request AddSubgraph.Request -> StateT Env BusT ()
 handleAddSubgraph (Request reqId (AddSubgraph.Request location nodes connections)) = do
-    newIds <- liftIO $ mapM (\node -> generateNodeId) nodes
-    let idMapping = Map.fromList $ flip zip newIds $ flip map nodes $ view Node.nodeId
-    let nodes' = flip map nodes $ Node.nodeId %~ (idMapping Map.!)
+    newIds <- liftIO $ mapM (const generateNodeId) nodes
+    let idMapping' = Map.fromList $ flip zip newIds $ flip map nodes $ view Node.nodeId
+        connectionsSrcs = map (^. Connection.src . PortRef.srcNodeId) connections
+        idMapping = Map.union idMapping' $ Map.fromList (zip connectionsSrcs connectionsSrcs)
+        nodes' = flip map nodes $ Node.nodeId %~ (idMapping Map.!)
         connections' = map (\conn -> conn & Connection.src . PortRef.srcNodeId %~ (idMapping Map.!)
                                           & Connection.dst . PortRef.dstNodeId %~ (idMapping Map.!)
                            ) connections
         action  _       = Graph.addSubgraph location nodes' connections'
-        success _ result = do
-            forM_ nodes' $ \node -> sendToBus' $ AddNode.Update location node
-            forM_ connections' $ \conn -> sendToBus' $ Connect.Update location (conn ^. Connection.src) (conn ^. Connection.dst)
+        success _ _     = return ()
     modifyGraphOk action success (Request reqId (AddSubgraph.Request location nodes' connections'))
 
-handleRemoveNode :: Request RemoveNode.Request -> StateT Env BusT ()
-handleRemoveNode = modifyGraphOk action success where
-    action  (RemoveNode.Request location nodeIds) = Graph.removeNodes location nodeIds
-    success (RemoveNode.Request location nodeIds) result = sendToBus' $ RemoveNode.Update location nodeIds
+handleRemoveNodes :: Request RemoveNodes.Request -> StateT Env BusT ()
+handleRemoveNodes = modifyGraphOk action success where
+    action  (RemoveNodes.Request location nodeIds) = Graph.removeNodes location nodeIds
+    success (RemoveNodes.Request location nodeIds) result = sendToBus' $ RemoveNodes.Update location nodeIds
 
 handleUpdateNodeExpression :: Request UpdateNodeExpression.Request -> StateT Env BusT ()
 handleUpdateNodeExpression = modifyGraphOk action success where
@@ -194,7 +193,7 @@ handleUpdateNodeExpression = modifyGraphOk action success where
         withJust nodeMay $ \node -> do
             -- replyResult request (node ^. Node.nodeId)
             sendToBus' $ AddNode.Update location node
-            sendToBus' $ RemoveNode.Update location [nodeId]
+            sendToBus' $ RemoveNodes.Update location [nodeId]
 
 handleUpdateNodeMeta :: Request UpdateNodeMeta.Request -> StateT Env BusT ()
 handleUpdateNodeMeta = modifyGraphOk action success where
@@ -241,7 +240,7 @@ handleGetProgram req@(Request uuid request) = do
         (Left err, _) -> replyFail logger err req
         (_, Left err) -> replyFail logger err req
         (Right graph, Right code) -> do
-            replyResult req $ GetProgram.Result graph (Text.pack code) mockNSData
+            replyResult req $ GetProgram.Result graph (Text.pack code) (Breadcrumb []) mockNSData
 
 handleDumpGraphViz :: Request DumpGraphViz.Request -> StateT Env BusT ()
 handleDumpGraphViz (Request _ request) = do

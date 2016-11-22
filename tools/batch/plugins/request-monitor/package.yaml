@@ -15,15 +15,16 @@ dependencies:
   - bytestring
   - containers
   - docopt
-  - zmq-bus-config
-  - flowbox-utils
   - luna-empire
   - luna-empire-api
+  - m-logger
   - optparse-applicative
+  - prologue
   - prologue
   - text
   - uuid
   - zmq-bus
+  - zmq-bus-config
 
 executables:
   request-monitor:

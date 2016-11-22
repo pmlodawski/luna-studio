@@ -5,7 +5,7 @@ module ZMQ.Bus.Data.Message where
 
 import           Data.ByteString    (ByteString)
 
-import           Flowbox.Prelude
+import           Prologue
 import           ZMQ.Bus.Data.Topic (Topic, (/+))
 import qualified ZMQ.Bus.Data.Topic as Topic
 import qualified ZMQ.Bus.RPC.RPC    as RPC

@@ -31,17 +31,17 @@ import           Data.Binary                (Binary)
 import           Data.Map                   as X
 import qualified Data.Map                   as Map
 
-import           Flowbox.Prelude            hiding (error)
-import           Flowbox.System.Log.Logger
 import           Language.Haskell.TH
+import           Prologue                   hiding (error)
+import           System.Log.MLogger
 import           ZMQ.Bus.Data.Message       (CorrelationID)
 import           ZMQ.Bus.RPC.RPC            (RPC)
 import           ZMQ.Bus.RPC.Types
 
 
 
-logger :: LoggerIO
-logger = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 
 newtype BatchT s m a = BatchT { runBatchT :: m a }
@@ -74,7 +74,7 @@ runBatchWriter callback method = callback (\cid arg -> runWriterT $ runBatchT $ 
 
 
 topics :: Monad m => String -> HandlerMap s m -> [FunctionName]
-topics pluginName handlerMap = Flowbox.Prelude.map (mkTopic pluginName) $ Map.keys $ handlerMap emptyCallback
+topics pluginName handlerMap = Prologue.map (mkTopic pluginName) $ Map.keys $ handlerMap emptyCallback
     where
         emptyCallback :: Monad m => Callback s m
         emptyCallback = const $ return (ErrorResult "", [])

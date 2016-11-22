@@ -29,7 +29,7 @@ import qualified Empire.API.Data.Node              as Node
 import           Empire.API.Data.Project           (ProjectId)
 import qualified Empire.API.Graph.GetProgram       as GetProgram
 import qualified Empire.API.Graph.NodeResultUpdate as NodeResultUpdate
-import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
+import qualified Empire.API.Graph.NodesUpdate      as NodesUpdate
 import qualified Empire.API.Project.ExportProject  as ExportProject
 import qualified Empire.API.Project.ImportProject  as ImportProject
 import           Empire.API.Request                (Request (..))
@@ -44,7 +44,7 @@ import qualified Empire.ResultSaver.Env            as Env
 import           Empire.ResultSaver.ProjectDump    (ProjectDump (..))
 import qualified Empire.Utils                      as Utils
 
-import qualified Flowbox.System.Log.Logger         as Logger
+import qualified System.Log.MLogger                as Logger
 import qualified ZMQ.Bus.Bus                       as Bus
 import qualified ZMQ.Bus.Data.Flag                 as Flag
 import qualified ZMQ.Bus.Data.Message              as Message
@@ -54,8 +54,8 @@ import           ZMQ.Bus.EndPoint                  (BusEndPoints)
 import           ZMQ.Bus.Trans                     (BusT (..))
 import qualified ZMQ.Bus.Trans                     as Bus
 
-logger :: Logger.LoggerIO
-logger = Logger.getLoggerIO $(Logger.moduleName)
+logger :: Logger.Logger
+logger = Logger.getLogger $(Logger.moduleName)
 
 sendToBus :: (Topic.MessageTopic a, Bin.Binary a) => a -> StateT ResultSaverEnv BusT ()
 sendToBus msg = void $ lift $ BusT $ Bus.send Flag.Enable $ Message.Message (Topic.topic msg) $ toStrict . Bin.encode $ msg
@@ -124,7 +124,7 @@ makeHandler h = (Topic.topic (undefined :: a), process) where
 handlersMap :: Map String (ByteString -> StateT ResultSaverEnv BusT ())
 handlersMap = Map.fromList [ makeHandler importProjectResponseHandler
                            , makeHandler getProgramResponseHandler
-                           , makeHandler nodeUpdateHandler
+                           , makeHandler nodesUpdateHandler
                            , makeHandler nodeResultUpdateHandler
                            ]
 
@@ -159,13 +159,14 @@ getProgramResponseHandler response = do
         _ -> return ()
     Response.Error msg -> Env.state .= Env.Error msg
 
-nodeUpdateHandler :: NodeUpdate.Update -> StateT ResultSaverEnv BusT ()
-nodeUpdateHandler (NodeUpdate.Update gl node) = do
+nodesUpdateHandler :: NodesUpdate.Update -> StateT ResultSaverEnv BusT ()
+nodesUpdateHandler (NodesUpdate.Update gl nodes') = do
   state <- use Env.state
   case state of
       st@(Env.ProgramReceived (ProjectDump program nodes results)) -> do
-        let nodeId = node ^. Node.nodeId
-        Env.state .= Env.ProgramReceived (ProjectDump program (Map.insert nodeId node nodes) results)
+        let nodesIds = map (^. Node.nodeId) nodes'
+            nodesMap = Map.fromList $ zip nodesIds nodes'
+        Env.state .= Env.ProgramReceived (ProjectDump program (Map.union nodesMap nodes) results)
         checkIfDone
       _ -> return ()
 

@@ -6,8 +6,8 @@ module ZMQ.Bus.Control.Handler.ID where
 
 import qualified Data.IORef                      as IORef
 
-import           Flowbox.Prelude
-import           Flowbox.System.Log.Logger
+import           Prologue
+import           System.Log.MLogger
 import           ZMQ.Bus.Control.BusCtx          (BusCtx)
 import qualified ZMQ.Bus.Control.BusCtx          as BusCtx
 import           ZMQ.Bus.Control.Handler.Methods
@@ -15,8 +15,8 @@ import           ZMQ.RPC.RPC                     (RPC)
 
 
 
-logger :: LoggerIO
-logger = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 -------- public api -------------------------------------------------
 

@@ -1,7 +1,7 @@
 module ZMQ.Bus.Data.Prefix where
 
 import           Control.Arrow      (first)
-import           Flowbox.Prelude
+import           Prologue
 import           ZMQ.Bus.Data.Topic (Topic)
 
 

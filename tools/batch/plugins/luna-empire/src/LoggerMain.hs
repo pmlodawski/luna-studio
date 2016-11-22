@@ -2,18 +2,18 @@
 
 module Main where
 
-import qualified Data.List                   as List
+import qualified Data.List          as List
 import           Prologue
 
-import           Empire.Cmd                  (Cmd)
-import qualified Empire.Cmd                  as Cmd
-import qualified Empire.Logger               as Logger
-import qualified Empire.Version              as Version
-import qualified ZMQ.Bus.Config       as Config
-import           Flowbox.Options.Applicative (help, long, metavar, short)
-import qualified Flowbox.Options.Applicative as Opt
-import           Flowbox.System.Log.Logger
-import qualified ZMQ.Bus.EndPoint            as EP
+import           Empire.Cmd         (Cmd)
+import qualified Empire.Cmd         as Cmd
+import qualified Empire.Logger      as Logger
+import qualified Empire.Version     as Version
+import           System.Log.MLogger
+import           System.Log.Options (help, long, metavar, short)
+import qualified System.Log.Options as Opt
+import qualified ZMQ.Bus.Config     as Config
+import qualified ZMQ.Bus.EndPoint   as EP
 
 defaultTopic :: String
 defaultTopic = "empire."
@@ -21,8 +21,8 @@ defaultTopic = "empire."
 rootLogger :: Logger
 rootLogger = getLogger ""
 
-logger :: LoggerIO
-logger = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 parser :: Opt.Parser Cmd
 parser = Opt.flag' Cmd.Version (short 'V' <> long "version" <> help "Version information")

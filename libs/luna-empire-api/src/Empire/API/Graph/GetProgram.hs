@@ -4,6 +4,7 @@ import           Data.Binary                   (Binary)
 import           Data.Text.Lazy                (Text)
 import           Prologue
 
+import           Empire.API.Data.Breadcrumb    (Breadcrumb, BreadcrumbItem, Named)
 import           Empire.API.Data.Graph         (Graph)
 import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.NodeSearcher  (Items)
@@ -17,6 +18,7 @@ data Request = Request { _location :: GraphLocation
 
 data Result  = Result  { _graph            :: Graph
                        , _code             :: Text
+                       , _breadcrumb       :: Breadcrumb (Named BreadcrumbItem)
                        , _nodeSearcherData :: Items
                        } deriving (Generic, Show, Eq)
 

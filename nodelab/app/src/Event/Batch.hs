@@ -4,6 +4,7 @@ import           Utils.PreludePlus
 
 import qualified Empire.API.Control.EmpireStarted      as EmpireStarted
 import qualified Empire.API.Graph.AddNode              as AddNode
+import qualified Empire.API.Graph.AddSubgraph          as AddSubgraph
 import qualified Empire.API.Graph.CodeUpdate           as CodeUpdate
 import qualified Empire.API.Graph.Collaboration        as Collaboration
 import qualified Empire.API.Graph.Connect              as Connect
@@ -11,8 +12,8 @@ import qualified Empire.API.Graph.Disconnect           as Disconnect
 import qualified Empire.API.Graph.GetProgram           as GetProgram
 import qualified Empire.API.Graph.NodeResultUpdate     as NodeResultUpdate
 import qualified Empire.API.Graph.NodeSearcherUpdate   as NodeSearcherUpdate
-import qualified Empire.API.Graph.NodeUpdate           as NodeUpdate
-import qualified Empire.API.Graph.RemoveNode           as RemoveNode
+import qualified Empire.API.Graph.NodesUpdate          as NodesUpdate
+import qualified Empire.API.Graph.RemoveNodes          as RemoveNodes
 import qualified Empire.API.Graph.RenameNode           as RenameNode
 import qualified Empire.API.Graph.UpdateNodeExpression as UpdateNodeExpression
 import qualified Empire.API.Graph.UpdateNodeMeta       as UpdateNodeMeta
@@ -27,8 +28,8 @@ import           Data.Aeson                            (ToJSON)
 data Event = UnknownEvent String
            | AddNodeResponse                           AddNode.Response
            | NodeAdded                                 AddNode.Update
-           | RemoveNodeResponse                     RemoveNode.Response
-           | NodeRemoved                            RemoveNode.Update
+           | RemoveNodesResponse                   RemoveNodes.Response
+           | NodesRemoved                          RemoveNodes.Update
            | ProgramFetched                         GetProgram.Response
            | NodesConnected                            Connect.Update
            | ConnectResponse                           Connect.Response
@@ -38,10 +39,11 @@ data Event = UnknownEvent String
            | NodeMetaResponse                   UpdateNodeMeta.Response
            | NodeRenamed                            RenameNode.Update
            | NodeRenameResponse                     RenameNode.Response
-           | NodeUpdated                            NodeUpdate.Update
+           | NodesUpdated                          NodesUpdate.Update
            | UpdateNodeExpressionResponse UpdateNodeExpression.Response
            | CodeUpdated                            CodeUpdate.Update
            | NodeResultUpdated                NodeResultUpdate.Update
+           | AddSubgraphResponse                   AddSubgraph.Response
            | ProjectList                          ListProjects.Response
            | ProjectCreated                      CreateProject.Response
            | ProjectCreatedUpdate                CreateProject.Update

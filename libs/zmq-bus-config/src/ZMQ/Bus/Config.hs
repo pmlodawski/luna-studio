@@ -5,17 +5,17 @@
 module ZMQ.Bus.Config where
 
 import           Control.Applicative
-import qualified Control.Exception         as Exception
-import qualified Data.Configurator         as Configurator
-import qualified System.Environment        as Env
+import qualified Control.Exception   as Exception
+import qualified Data.Configurator   as Configurator
+import qualified System.Environment  as Env
 
-import           Flowbox.Prelude           hiding (error)
-import           Flowbox.System.Log.Logger
+import           Prologue            hiding (error)
+import           System.Log.MLogger
 
 
 
-logger :: LoggerIO
-logger = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 
 data Config = Config      { root      :: Section
@@ -52,7 +52,7 @@ load = do
           *> logger error ("Environment variable '" ++ lunaRootEnv ++ "' not defined.")
           *> logger error ("Please run 'source <LUNA_INSTALL_PATH>/setup' and try again.")
 
-    cfgFile <- Configurator.load [Configurator.Required $ cpath ++ "/config/flowbox.config"]
+    cfgFile <- Configurator.load [Configurator.Required $ cpath ++ "/config/luna.config"]
 
     let readConf name = Exception.onException (fromJustM =<< (Configurator.lookup cfgFile name :: IO (Maybe String)))
                       $ logger error ("Error reading config variable '" ++ show name)
@@ -73,4 +73,4 @@ load = do
                           <*> readConf "bus.clientPubEndPoint"
                )
 
--- TODO[wd]: (?) Lunac powinien czytac config i jezli nie da sie go odczytac (np zmienna srodowiskowa nie istnieje, powinien zalozyc, ze zyje w $HOME/.flowbox - defaultowy config?)
+-- TODO[wd]: (?) Lunac powinien czytac config i jezli nie da sie go odczytac (np zmienna srodowiskowa nie istnieje, powinien zalozyc, ze zyje w $HOME/.luna - defaultowy config?)

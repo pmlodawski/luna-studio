@@ -4,7 +4,7 @@ import           Control.Error     (ExceptT, fmapL, runExceptT)
 import           Control.Exception (SomeException, try)
 import           Control.Monad     (join)
 
-import           Flowbox.Prelude
+import           Prologue
 
 
 type RPC a = ExceptT Error IO a

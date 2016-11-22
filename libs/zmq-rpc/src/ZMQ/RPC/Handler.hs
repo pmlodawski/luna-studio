@@ -5,7 +5,7 @@
 module ZMQ.RPC.Handler where
 
 import           Data.Binary         (Binary)
-import           Flowbox.Prelude
+import           Prologue
 import           System.ZMQ4.Monadic (ZMQ)
 
 import           ZMQ.RPC.Response    (Response)

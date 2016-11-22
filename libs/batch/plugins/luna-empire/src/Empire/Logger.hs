@@ -23,8 +23,8 @@ import qualified Empire.API.Graph.Disconnect       as Disconnect
 import qualified Empire.API.Graph.DumpGraphViz     as DumpGraphViz
 import qualified Empire.API.Graph.GetProgram       as GetProgram
 import qualified Empire.API.Graph.NodeResultUpdate as NodeResultUpdate
-import qualified Empire.API.Graph.NodeUpdate       as NodeUpdate
-import qualified Empire.API.Graph.RemoveNode       as RemoveNode
+import qualified Empire.API.Graph.NodesUpdate      as NodesUpdate
+import qualified Empire.API.Graph.RemoveNodes      as RemoveNodes
 import qualified Empire.API.Graph.RenameNode       as RenameNode
 import qualified Empire.API.Graph.SetDefaultValue  as SetDefaultValue
 import qualified Empire.API.Graph.TypeCheck        as TypeCheck
@@ -45,7 +45,7 @@ import qualified Empire.Env                        as Env
 import qualified Empire.Handlers                   as Handlers
 import qualified Empire.Utils                      as Utils
 
-import qualified Flowbox.System.Log.Logger         as Logger
+import qualified System.Log.MLogger                as Logger
 import qualified ZMQ.Bus.Bus                       as Bus
 import qualified ZMQ.Bus.Data.Message              as Message
 import           ZMQ.Bus.Data.MessageFrame         (MessageFrame (MessageFrame))
@@ -55,8 +55,8 @@ import           ZMQ.Bus.Trans                     (BusT (..))
 import qualified ZMQ.Bus.Trans                     as Bus
 
 
-logger :: Logger.LoggerIO
-logger = Logger.getLoggerIO $(Logger.moduleName)
+logger :: Logger.Logger
+logger = Logger.getLogger $(Logger.moduleName)
 
 run :: BusEndPoints -> [Topic] -> Bool -> IO (Either Bus.Error ())
 run endPoints topics formatted = Bus.runBus endPoints $ do
@@ -114,9 +114,9 @@ logMessage logMsg topic content = do
 --     [ makeHandler (Proxy :: Proxy (Request AddNode.Request          ))
 --     , makeHandler (Proxy :: Proxy (AddNode.Response         ))
 --     , makeHandler (Proxy :: Proxy (AddNode.Update           ))
---     , makeHandler (Proxy :: Proxy (Request RemoveNode.Request       ))
---     , makeHandler (Proxy :: Proxy (RemoveNode.Response      ))
---     , makeHandler (Proxy :: Proxy (RemoveNode.Update        ))
+--     , makeHandler (Proxy :: Proxy (Request RemoveNodes.Request       ))
+--     , makeHandler (Proxy :: Proxy (RemoveNodes.Response      ))
+--     , makeHandler (Proxy :: Proxy (RemoveNodes.Update        ))
 --     , makeHandler (Proxy :: Proxy (Request UpdateNodeMeta.Request   ))
 --     , makeHandler (Proxy :: Proxy (UpdateNodeMeta.Response  ))
 --     , makeHandler (Proxy :: Proxy (UpdateNodeMeta.Update    ))
@@ -131,7 +131,7 @@ logMessage logMsg topic content = do
 --     , makeHandler (Proxy :: Proxy (Disconnect.Update        ))
 --     , makeHandler (Proxy :: Proxy (Request GetProgram.Request       ))
 --     , makeHandler (Proxy :: Proxy (GetProgram.Response      ))
---     , makeHandler (Proxy :: Proxy (NodeUpdate.Update        ))
+--     , makeHandler (Proxy :: Proxy (NodesUpdate.Update        ))
 --     , makeHandler (Proxy :: Proxy (NodeResultUpdate.Update  ))
 --     , makeHandler (Proxy :: Proxy (CodeUpdate.Update        ))
 --     , makeHandler (Proxy :: Proxy (Request CreateProject.Request    ))

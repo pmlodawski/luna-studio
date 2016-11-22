@@ -6,7 +6,7 @@ import           Data.Map.Lazy                 (Map)
 import           Data.UUID.Types               (nil)
 import           Utils.PreludePlus
 
-import           Empire.API.Data.Breadcrumb    (Breadcrumb (..))
+import           Empire.API.Data.Breadcrumb    (Breadcrumb (..), BreadcrumbItem)
 import           Empire.API.Data.GraphLocation (GraphLocation (..))
 import qualified Empire.API.Data.GraphLocation as GraphLocation
 import           Empire.API.Data.Library       (Library)
@@ -19,7 +19,7 @@ import           Text.ScopeSearcher.Item       (Items)
 
 data UIGraphLocation = UIGraphLocation { _projectId   :: ProjectId
                                        , _libraryName :: String
-                                       , _breadcrumb  :: Breadcrumb
+                                       , _breadcrumb  :: Breadcrumb BreadcrumbItem
                                        } deriving (Show, Eq, Generic)
 
 

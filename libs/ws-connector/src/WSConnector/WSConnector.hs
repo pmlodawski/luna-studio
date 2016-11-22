@@ -3,8 +3,8 @@
 
 module WSConnector.WSConnector where
 
-import           Flowbox.Prelude
-import           Flowbox.System.Log.Logger
+import           Prologue
+import           System.Log.MLogger
 
 import           Control.Concurrent            (forkIO)
 import           Control.Concurrent.STM        (STM, atomically)
@@ -21,8 +21,8 @@ import           WSConnector.Data.WSMessage    (ControlCode (..), WSMessage (..)
 import qualified WSConnector.Workers.BusWorker as BusWorker
 import qualified WSConnector.WSConfig          as WSConfig
 
-logger :: LoggerIO
-logger = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 handleDisconnect :: WS.ConnectionException -> IO ()
 handleDisconnect _ = logger info "User disconnected"

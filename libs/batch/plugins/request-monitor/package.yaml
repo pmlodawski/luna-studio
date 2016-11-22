@@ -5,35 +5,36 @@ maintainer:         Nodelab <contact@nodelab.io>
 
 dependencies:
   - base
-  - prologue
   - binary
   - bytestring
-  - text
-  - split
-  - pretty-show
   - containers
+  - directory
   - either
   - errors
-  - zmq-bus
-  - zmq-bus-config
-  - flowbox-utils
-  - mtl
-  - optparse-applicative
-  - stm
-  - time
-  - transformers
+  - filemanip
+  - filepath
+  - groom
   - luna-empire
   - luna-empire-api
   - luna-empire-api-json
   - lunac
-  - zeromq4-haskell >= 0.4
-  - filemanip
-  - filepath
-  - uuid-types
-  - uuid
-  - groom
-  - directory
+  - m-logger
+  - mtl
+  - optparse-applicative
+  - pretty-show
   - process
+  - prologue
+  - prologue
+  - split
+  - stm
+  - text
+  - time
+  - transformers
+  - uuid
+  - uuid-types
+  - zeromq4-haskell >= 0.4
+  - zmq-bus
+  - zmq-bus-config
 
 default-extensions:
   - NoImplicitPrelude

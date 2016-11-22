@@ -25,7 +25,7 @@ handlersMap :: Map String Handler
 handlersMap = Map.fromList
     [ makeHandler Graph.handleAddNode
     , makeHandler Graph.handleAddSubgraph
-    , makeHandler Graph.handleRemoveNode
+    , makeHandler Graph.handleRemoveNodes
     , makeHandler Graph.handleUpdateNodeExpression
     , makeHandler Graph.handleUpdateNodeMeta
     , makeHandler Graph.handleRenameNode

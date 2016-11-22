@@ -30,6 +30,7 @@ import           Empire.API.Data.Project               as Project
 import           Empire.API.Data.TypeRep               as TypeRep
 import           Empire.API.Data.ValueType             as ValueType
 import           Empire.API.Graph.AddNode              as AddNode
+import           Empire.API.Graph.AddSubgraph          as AddSubgraph
 import           Empire.API.Graph.CodeUpdate           as CodeUpdate
 import           Empire.API.Graph.Collaboration        as Collaboration
 import           Empire.API.Graph.Connect              as Connect
@@ -37,8 +38,8 @@ import           Empire.API.Graph.Disconnect           as Disconnect
 import           Empire.API.Graph.GetProgram           as GetProgram
 import           Empire.API.Graph.NodeResultUpdate     as NodeResultUpdate
 import           Empire.API.Graph.NodeSearcherUpdate   as NodeSearcherUpdate
-import           Empire.API.Graph.NodeUpdate           as NodeUpdate
-import           Empire.API.Graph.RemoveNode           as RemoveNode
+import           Empire.API.Graph.NodesUpdate          as NodesUpdate
+import           Empire.API.Graph.RemoveNodes          as RemoveNodes
 import           Empire.API.Graph.RenameNode           as RenameNode
 import           Empire.API.Graph.SetDefaultValue      as SetDefaultValue
 import           Empire.API.Graph.SetInputNodeType     as SetInputNodeType
@@ -60,10 +61,13 @@ import           Empire.API.Response                   as Response
 instance ToJSON Project.Project
 instance ToJSON Library.Library
 
-instance ToJSON Breadcrumb.Breadcrumb
-instance ToJSON Breadcrumb.BreadcrumbItem
-instance FromJSON Breadcrumb.Breadcrumb
-instance FromJSON Breadcrumb.BreadcrumbItem
+instance ToJSON a   => ToJSON (Breadcrumb.Breadcrumb a)
+instance ToJSON a   => ToJSON (Breadcrumb.Named a)
+instance               ToJSON Breadcrumb.BreadcrumbItem
+
+instance FromJSON a => FromJSON (Breadcrumb.Breadcrumb a)
+instance FromJSON a => FromJSON (Breadcrumb.Named a)
+instance               FromJSON Breadcrumb.BreadcrumbItem
 
 instance ToJSON GraphLocation.GraphLocation
 
@@ -145,14 +149,16 @@ instance ToJSON AddNode.NodeType
 instance ToJSON AddNode.Request
 instance ToJSON AddNode.Update
 
+instance ToJSON AddSubgraph.Request
+
 instance ToJSON Connect.Request
 instance ToJSON Connect.Update
 
 instance ToJSON Disconnect.Request
 instance ToJSON Disconnect.Update
 
-instance ToJSON RemoveNode.Request
-instance ToJSON RemoveNode.Update
+instance ToJSON RemoveNodes.Request
+instance ToJSON RemoveNodes.Update
 
 instance ToJSON RenameNode.Request
 instance ToJSON RenameNode.Update
@@ -160,7 +166,7 @@ instance ToJSON RenameNode.Update
 instance ToJSON UpdateNodeMeta.Request
 instance ToJSON UpdateNodeMeta.Update
 
-instance ToJSON NodeUpdate.Update
+instance ToJSON NodesUpdate.Update
 
 instance ToJSON UpdateNodeExpression.Request
 

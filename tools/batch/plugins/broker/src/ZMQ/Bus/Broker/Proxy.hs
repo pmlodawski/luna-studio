@@ -3,7 +3,7 @@ module ZMQ.Bus.Broker.Proxy where
 import           System.ZMQ4.Monadic (ZMQ)
 import qualified System.ZMQ4.Monadic as ZMQ
 
-import           Flowbox.Prelude
+import           Prologue
 import           ZMQ.Bus.EndPoint    (EndPoint)
 
 

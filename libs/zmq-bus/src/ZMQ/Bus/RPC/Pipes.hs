@@ -3,28 +3,28 @@
 
 module ZMQ.Bus.RPC.Pipes where
 
-import           Pipes                      ((>->))
+import           Control.Concurrent        (forkIO)
+import           Control.Monad             (forever)
+import           Pipes                     ((>->))
 import qualified Pipes
-import qualified Pipes.Concurrent           as Pipes
+import qualified Pipes.Concurrent          as Pipes
+import           Prologue                  hiding (error)
 
-import           Control.Monad              (forever)
-import           Flowbox.Control.Concurrent (forkIO_)
-import           Flowbox.Prelude            hiding (error)
-import           Flowbox.System.Log.Logger
-import qualified ZMQ.Bus.Bus                as Bus
-import           ZMQ.Bus.Data.Flag          (Flag)
-import           ZMQ.Bus.Data.Message       (Message)
-import qualified ZMQ.Bus.Data.Message       as Message
-import qualified ZMQ.Bus.Data.MessageFrame  as MessageFrame
-import           ZMQ.Bus.Data.Topic         (Topic)
-import           ZMQ.Bus.EndPoint           (BusEndPoints)
-import           ZMQ.Bus.Trans              (BusT (BusT))
-import qualified ZMQ.Bus.Trans              as BusT
+import           System.Log.MLogger
+import qualified ZMQ.Bus.Bus               as Bus
+import           ZMQ.Bus.Data.Flag         (Flag)
+import           ZMQ.Bus.Data.Message      (Message)
+import qualified ZMQ.Bus.Data.Message      as Message
+import qualified ZMQ.Bus.Data.MessageFrame as MessageFrame
+import           ZMQ.Bus.Data.Topic        (Topic)
+import           ZMQ.Bus.EndPoint          (BusEndPoints)
+import           ZMQ.Bus.Trans             (BusT (BusT))
+import qualified ZMQ.Bus.Trans             as BusT
 
 
 
-logger :: LoggerIO
-logger = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 
 produce :: Pipes.Producer (Message, Message.CorrelationID) BusT ()
@@ -47,7 +47,7 @@ run :: BusEndPoints -> [Topic]
 run endPoints topics = do
     (output1, input1) <- Pipes.spawn $ Pipes.bounded 1
     (output2, input2) <- Pipes.spawn $ Pipes.bounded 1
-    let forkPipesThread fun = forkIO_ $ eitherStringToM $ Bus.runBus endPoints $ do
+    let forkPipesThread fun = void $ forkIO $ eitherStringToM $ Bus.runBus endPoints $ do
                             mapM_ Bus.subscribe topics
                             BusT.runBusT $ Pipes.runEffect fun
     forkPipesThread $ produce >-> Pipes.toOutput output1

@@ -7,21 +7,21 @@
 
 module ZMQ.Bus.Util where
 
-import           Data.Binary               (Binary)
+import           Data.Binary        (Binary)
 
-import           Flowbox.Prelude
-import           Flowbox.System.Log.Logger as L
-import           ZMQ.Bus.Bus               (Bus)
-import qualified ZMQ.Bus.Bus               as Bus
-import           ZMQ.Bus.Data.Topic        (Topic)
-import qualified ZMQ.Bus.Data.Topic        as Topic
-import qualified ZMQ.Bus.RPC.Client        as Client
+import           Prologue
+import           System.Log.MLogger as L
+import           ZMQ.Bus.Bus        (Bus)
+import qualified ZMQ.Bus.Bus        as Bus
+import           ZMQ.Bus.Data.Topic (Topic)
+import qualified ZMQ.Bus.Data.Topic as Topic
+import qualified ZMQ.Bus.RPC.Client as Client
 
-import           Debug.Trace               as T
+import           Debug.Trace        as T
 
 
-logger :: LoggerIO
-logger = getLoggerIO $moduleName
+logger :: Logger
+logger = getLogger $moduleName
 
 
 data Ping = forall arg result. (Typeable arg, Binary arg, Typeable result, Binary result) =>

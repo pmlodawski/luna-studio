@@ -16,7 +16,7 @@ import           Empire.API.Topic             (MessageTopic)
 import qualified Empire.API.Topic             as Topic
 import           Empire.Env                   (Env)
 import qualified Empire.Env                   as Env
-import qualified Flowbox.System.Log.Logger    as Logger
+import qualified System.Log.MLogger           as Logger
 import qualified ZMQ.Bus.Bus                  as Bus
 import qualified ZMQ.Bus.Data.Message         as Message
 import           ZMQ.Bus.Trans                (BusT (..))
@@ -29,7 +29,7 @@ sendToBus topic bin = do
 sendToBus' :: (MessageTopic a, Binary a) => a -> StateT Env BusT ()
 sendToBus' msg = sendToBus (Topic.topic msg) msg
 
-replyFail :: forall a b. (Binary a, Response.ResponseResult a b) => Logger.LoggerIO -> String -> Request a -> StateT Env BusT ()
+replyFail :: forall a b. (Binary a, Response.ResponseResult a b) => Logger.Logger -> String -> Request a -> StateT Env BusT ()
 replyFail logger errMsg req = do
   logger Logger.error $ formatErrorMessage req errMsg
   sendToBus' $ Response.error req errMsg
