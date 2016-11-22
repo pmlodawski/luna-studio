@@ -56,7 +56,7 @@ import qualified Luna.Syntax.Model.Network.Builder as Builder
 
 decodeBreadcrumbs :: Breadcrumb BreadcrumbItem -> Command Graph (Breadcrumb (Named BreadcrumbItem))
 decodeBreadcrumbs (Breadcrumb items) = do
-    fmap Breadcrumb $ forM items $ \item@(Breadcrumb.Lambda nid) -> flip Named item <$> getNodeName nid
+    fmap Breadcrumb $ forM items $ \item@(Breadcrumb.Lambda nid) -> flip Named item <$> (Text.pack <$> getNodeName nid)
 
 buildGraph :: Command Graph API.Graph
 buildGraph = API.Graph <$> buildNodes <*> buildConnections
