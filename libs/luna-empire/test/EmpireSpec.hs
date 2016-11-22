@@ -95,6 +95,24 @@ spec = around withChannels $
             case res of
                 Left err -> expectationFailure err
                 Right _ -> return ()
+        it "creates two nested lambdas and a node inside" $ \env -> do
+            u1 <- nextRandom
+            u2 <- nextRandom
+            u3 <- nextRandom
+            (res, state) <- runGraph env $ \mkLoc -> do
+                let loc = mkLoc $ Breadcrumb []
+                let loc' = mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
+                n1 <- Graph.addNode loc u1 "def foo" def
+                n2 <- Graph.addNode loc' u2 "def bar" def
+                let loc'' = mkLoc $ Breadcrumb [Breadcrumb.Lambda u1, Breadcrumb.Lambda u2]
+                n3 <- Graph.addNode loc'' u3 "4" def
+                graphIDs loc''
+            case res of
+                Left err -> expectationFailure err
+                Right ids -> do
+                    u3 `shouldSatisfy` (`elem` ids)
+                    u1 `shouldSatisfy` (`notElem` ids)
+                    u2 `shouldSatisfy` (`notElem` ids)
         it "cannot enter lambda applied to value" $ \env -> do
             u1 <- nextRandom
             u2 <- nextRandom
