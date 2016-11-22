@@ -41,9 +41,6 @@ import qualified Empire.API.Data.Node              as Node
 
 
 toAction :: Event -> Maybe (Command State ())
-toAction (Mouse _ (Mouse.Event Mouse.Pressed  pos Mouse.LeftButton (KeyMods False False False False) (Just _))) = Just $ startDrag pos
-toAction (Mouse _ (Mouse.Event Mouse.Moved    pos Mouse.LeftButton (KeyMods False False False False) _))        = Just $ handleMove pos False
-toAction (Mouse _ (Mouse.Event Mouse.Moved    pos Mouse.LeftButton (KeyMods True  False False False) _))        = Just $ handleMove pos True
 toAction (Mouse _ (Mouse.Event Mouse.Pressed  pos Mouse.LeftButton (KeyMods _ False False False) (Just _))) = Just $ startDrag pos
 toAction (Mouse _ (Mouse.Event Mouse.Moved    pos Mouse.LeftButton (KeyMods True False False False) _))        = Just $ handleMove pos False
 toAction (Mouse _ (Mouse.Event Mouse.Moved    pos Mouse.LeftButton (KeyMods False  False False False) _))        = Just $ handleMove pos True
