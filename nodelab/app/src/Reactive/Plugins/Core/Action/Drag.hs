@@ -128,7 +128,7 @@ handleMove coord snapped = do
 moveNodes :: Vector2 Double -> Command State ()
 moveNodes delta = do
     widgets <- selectedNodes
-    let selectedIdsWithPos = (\w -> (w ^. widget . Model.nodeId , w ^. widget . widgetPosition)) <$> widgets --selectedIds = (^. objectId) <$> widgets
+    let selectedIdsWithPos = (\w -> (w ^. widget . Model.nodeId , w ^. widget . widgetPosition)) <$> widgets
     forM_ selectedIdsWithPos $ \(id, pos) -> do
         widgetIdMay <- nodeIdToWidgetId id
         withJust widgetIdMay $ \widgetId ->
