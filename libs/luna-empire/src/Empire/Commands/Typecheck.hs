@@ -120,14 +120,14 @@ updateNodes loc = do
         rep <- zoom graph $ GraphBuilder.buildNode id
         cached <- uses nodesCache $ Map.lookup id
         when (cached /= Just rep) $ do
-            Publisher.notifyNodesUpdate loc rep
+            Publisher.notifyNodeUpdate loc rep
             nodesCache %= Map.insert id rep
     edgeNodes  <- zoom graph $ GraphBuilder.buildEdgeNodes
     forM_ edgeNodes $ \edges -> forM_ edges $ \rep -> do
         let id = rep ^. nodeId
         cached <- uses nodesCache $ Map.lookup id
         when (cached /= Just rep) $ do
-            Publisher.notifyNodesUpdate loc rep
+            Publisher.notifyNodeUpdate loc rep
             nodesCache %= Map.insert id rep
 
 updateValues :: GraphLocation -> Command InterpreterEnv ()

@@ -91,7 +91,7 @@ addNodeNoTC loc uuid expr meta = do
     Graph.nodeMapping . at uuid ?= refNode
     node <- GraphBuilder.buildNode uuid
     Graph.breadcrumbHierarchy %= addID (node ^. Node.nodeId)
-    Publisher.notifyNodesUpdate loc node
+    Publisher.notifyNodeUpdate loc node
     return node
 
 addPersistentNode :: Node -> Command Graph NodeId
