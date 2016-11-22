@@ -1,7 +1,7 @@
 module Reactive.Commands.Node.Snap
     ( snap
+    , snapCoord
     ) where
-
 
 import           Style.Layout                       (gridSize)
 import           Utils.PreludePlus
