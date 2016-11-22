@@ -19,6 +19,7 @@ import qualified Reactive.Commands.Batch           as BatchCmd
 import           Reactive.Commands.Command         (Command)
 import           Reactive.Commands.Graph           (allNodes, updateConnectionsForNodes, nodeIdToWidgetId)
 import           Reactive.Commands.Graph.Selection (selectedNodes)
+import           Reactive.Commands.Node.Snap
 import qualified Reactive.Commands.UIRegistry      as UICmd
 import qualified Reactive.State.Camera             as Camera
 import           Reactive.State.Drag               (DragHistory (..))
@@ -89,16 +90,6 @@ startDrag coord = do
     nodePos'    <- zoom Global.uiRegistry getNodePosLabelUnderCursor
     withJust (nodePos `mplus` nodePos') $ \widgetPos -> do
         Global.drag . Drag.history ?= DragHistory coord coord coord widgetPos
-
--- gridSize = 8
-
-snapCoord :: Double -> Double
-snapCoord p = fromIntegral . (* gridSize) . round $ p / fromIntegral gridSize
-
-snap :: Vector2 Double -> Vector2 Double
-snap (Vector2 x y) = Vector2 x' y' where
-  x' = snapCoord x
-  y' = snapCoord y
 
 delay :: Vector2 Double -> Double -> Bool
 delay (Vector2 x y) d = x < -d || x > d || y > d || y < -d
