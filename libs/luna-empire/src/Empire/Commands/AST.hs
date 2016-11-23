@@ -5,12 +5,13 @@
 module Empire.Commands.AST where
 
 import           Control.Arrow                     (second)
-import           Control.Monad.Except              (runExceptT)
+import           Control.Monad.Except              (runExceptT, throwError)
 import           Control.Monad.State
 import           Data.Graph                        (Inputs (..), source)
 import           Data.HMap.Lazy                    (TypeKey (..))
 import qualified Data.HMap.Lazy                    as HMap
 import           Data.Layer_OLD.Cover_OLD          (uncover)
+import           Data.List.Index                   (setAt)
 import           Data.Maybe                        (catMaybes, fromMaybe)
 import           Data.Prop                         (prop, ( # ))
 import           Data.Record                       (ANY (..), caseTest, of')
@@ -38,7 +39,7 @@ import           Luna.Pretty.GraphViz              (renderAndOpen)
 
 import           Luna.Syntax.Model.Network.Builder (Meta (..), TCData (..), Type (..), tcErrors)
 import qualified Luna.Syntax.Model.Network.Builder as Builder
-import           Old.Luna.Syntax.Term.Class        (Cons (..), Unify (..))
+import           Old.Luna.Syntax.Term.Class        (Cons (..), Unify (..), Lam(..))
 import qualified Old.Luna.Syntax.Term.Expr.Lit     as Lit
 
 import           Luna.Compilation.Error            as TCError
@@ -272,6 +273,15 @@ printExpression = runASTOp . Printer.printExpression
 applyFunction :: NodeRef -> NodeRef -> Int -> Command AST NodeRef
 applyFunction = runASTOp .:. ASTBuilder.applyFunction
 
+redirectLambdaOutput :: NodeRef -> NodeRef -> Int -> Command AST NodeRef
+redirectLambdaOutput lambdaRef newOutputRef pos = runASTOp $ do
+    lambda <- Builder.read lambdaRef
+    caseTest (uncover lambda) $ do
+        of' $ \(Lam args _) -> do
+            args' <- (mapM . mapM) (Builder.follow source) args
+            Builder.lam args' newOutputRef
+        of' $ \ANY -> throwError $ show lambdaRef ++ " is not lambda"
+
 unapplyArgument :: NodeRef -> Int -> Command AST NodeRef
 unapplyArgument = runASTOp .: ASTBuilder.removeArg
 
@@ -290,6 +300,12 @@ getVarNode :: NodeRef -> Command AST NodeRef
 getVarNode nodeRef = runASTOp $ Builder.read nodeRef
                             >>= return . view ASTBuilder.leftMatchOperand
                             >>= Builder.follow source
+
+getLambdaInputRef :: NodeRef -> Int -> Command AST NodeRef
+getLambdaInputRef nodeRef pos = runASTOp $ do
+    node <- Builder.read nodeRef
+    caseTest (uncover node) $ do
+        of' $ \(Lam args out) -> (!! pos) <$> ASTBuilder.unpackArguments args
 
 replaceTargetNode :: NodeRef -> NodeRef -> Command AST ()
 replaceTargetNode matchNodeId newTargetId = runASTOp $ do

@@ -95,6 +95,57 @@ spec = around withChannels $
             case res of
                 Left err -> expectationFailure err
                 Right _ -> return ()
+        it "does not crash on connecting to output edge" $ \env -> do
+            u1 <- nextRandom
+            u2 <- nextRandom
+            (res, _) <- runGraph env $ \mkLoc -> do
+                let loc = mkLoc $ Breadcrumb []
+                let loc' = mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
+                n1 <- Graph.addNode loc u1 "def foo" def
+                n2 <- Graph.addNode loc' u2 "4" def
+                a <- Graph.getGraph loc'
+                print a
+                Just (_, out) <- Graph.withGraph loc' $ GraphBuilder.getEdgePortMapping
+                Graph.connect loc' (OutPortRef (n2 ^. nodeId) All) (InPortRef out (Arg 0))
+                Graph.getGraph loc'
+            case res of
+                Left err -> expectationFailure err
+                Right g -> do
+                    print g
+                    g ^. Graph.connections `shouldSatisfy` (not.null)
+        it "does not crash on connecting to input edge" $ \env -> do
+            u1 <- nextRandom
+            u2 <- nextRandom
+            (res, _) <- runGraph env $ \mkLoc -> do
+                let loc = mkLoc $ Breadcrumb []
+                let loc' = mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
+                n1 <- Graph.addNode loc u1 "def foo" def
+                n2 <- Graph.addNode loc' u2 "succ" def
+                a <- Graph.getGraph loc'
+                print a
+                Just (input, out) <- Graph.withGraph loc' $ GraphBuilder.getEdgePortMapping
+                Graph.connect loc' (OutPortRef input (Projection 0)) (InPortRef (n2 ^. nodeId) (Arg 0))
+                Graph.getGraph loc'
+            case res of
+                Left err -> expectationFailure err
+                Right g -> do
+                    print g
+                    g ^. Graph.connections `shouldSatisfy` (not.null)
+        it "shows connection inside lambda" $ \env -> do
+            u1 <- nextRandom
+            u2 <- nextRandom
+            u3 <- nextRandom
+            (res, _) <- runGraph env $ \mkLoc -> do
+                let loc = mkLoc $ Breadcrumb []
+                let loc' = mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
+                n1 <- Graph.addNode loc u1 "def foo" def
+                n2 <- Graph.addNode loc' u2 "4" def
+                n3 <- Graph.addNode loc' u3 "succ" def
+                Graph.connect loc' (OutPortRef (n2 ^. nodeId) All) (InPortRef (n3 ^. nodeId) (Arg 0))
+                Graph.getGraph loc'
+            case res of
+                Left err -> expectationFailure err
+                Right g -> g ^. Graph.connections `shouldSatisfy` (not.null)
         it "creates two nested lambdas and a node inside" $ \env -> do
             u1 <- nextRandom
             u2 <- nextRandom

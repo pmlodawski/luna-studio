@@ -1,3 +1,4 @@
+{-# LANGUAGE MultiWayIf #-}
 module Empire.Commands.Graph
     ( addNode
     , addNodeCondTC
@@ -19,6 +20,7 @@ module Empire.Commands.Graph
     , dumpGraphViz
     , typecheck
     , withTC
+    , withGraph
     ) where
 
 import           Control.Monad                 (forM, forM_)
@@ -162,14 +164,15 @@ connect :: GraphLocation -> OutPortRef -> InPortRef -> Empire ()
 connect loc outPort inPort = withTC loc False $ connectNoTC loc outPort inPort
 
 connectPersistent :: OutPortRef -> InPortRef -> Command Graph ()
-connectPersistent (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) =
+connectPersistent (OutPortRef srcNodeId srcPort) (InPortRef dstNodeId dstPort) =
     case dstPort of
         Self    -> makeAcc srcNodeId dstNodeId
-        Arg num -> makeApp srcNodeId dstNodeId num
-connectPersistent _ _ = throwError "Source port should be All"
+        Arg num -> makeApp srcNodeId dstNodeId num $ case srcPort of
+            All            -> 0
+            Projection int -> int
 
 connectNoTC :: GraphLocation -> OutPortRef -> InPortRef -> Command Graph ()
-connectNoTC loc outPort@(OutPortRef srcNodeId All) inPort@(InPortRef dstNodeId dstPort) = connectPersistent outPort inPort
+connectNoTC loc outPort@(OutPortRef srcNodeId srcPort) inPort@(InPortRef dstNodeId dstPort) = connectPersistent outPort inPort
 
 setDefaultValue :: GraphLocation -> AnyPortRef -> PortDefault -> Empire ()
 setDefaultValue loc portRef val = withTC loc False $ setDefaultValue' portRef val
@@ -270,9 +273,28 @@ makeAcc src dst = do
     newNodeRef <- zoom Graph.ast $ AST.makeAccessor srcAst dstAst
     GraphUtils.rewireNode dst newNodeRef
 
-makeApp :: NodeId -> NodeId -> Int -> Command Graph ()
-makeApp src dst pos = do
-    srcAst <- GraphUtils.getASTVar    src
-    dstAst <- GraphUtils.getASTTarget dst
-    newNodeRef <- zoom Graph.ast $ AST.applyFunction dstAst srcAst pos
-    GraphUtils.rewireNode dst newNodeRef
+
+makeApp :: NodeId -> NodeId -> Int -> Int -> Command Graph ()
+makeApp src dst pos inputPos = do
+    edges <- GraphBuilder.getEdgePortMapping
+    let (connectToInputEdge, connectToOutputEdge) = case edges of
+            Nothing           -> (False, False)
+            Just (input, out) -> (input == src, out == dst)
+    if | connectToOutputEdge -> do
+        Just lambda <- use Graph.insideNode
+        srcAst <- GraphUtils.getASTVar    src
+        dstAst <- GraphUtils.getASTTarget lambda
+        newNodeRef <- zoom Graph.ast $ AST.redirectLambdaOutput dstAst srcAst pos
+        GraphUtils.rewireNode lambda newNodeRef
+       | connectToInputEdge -> do
+        Just lambda <- use Graph.insideNode
+        foo <- GraphUtils.getASTTarget lambda
+        srcAst <- zoom Graph.ast $ AST.getLambdaInputRef foo inputPos
+        dstAst <- GraphUtils.getASTTarget dst
+        newNodeRef <- zoom Graph.ast $ AST.applyFunction dstAst srcAst pos
+        GraphUtils.rewireNode dst newNodeRef
+       | otherwise -> do
+        srcAst <- GraphUtils.getASTVar    src
+        dstAst <- GraphUtils.getASTTarget dst
+        newNodeRef <- zoom Graph.ast $ AST.applyFunction dstAst srcAst pos
+        GraphUtils.rewireNode dst newNodeRef

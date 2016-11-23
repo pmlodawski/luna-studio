@@ -29,6 +29,7 @@ dependencies:
     - fgl
     - filepath
     - ghc-prim
+    - ilist
     - luna-core
     - luna-empire-api
     - luna-empire-api-json
