@@ -95,7 +95,7 @@ spec = around withChannels $
             case res of
                 Left err -> expectationFailure err
                 Right _ -> return ()
-        it "does not crash on connecting to output edge" $ \env -> do
+        it "makes connection to output edge" $ \env -> do
             u1 <- nextRandom
             u2 <- nextRandom
             (res, _) <- runGraph env $ \mkLoc -> do
@@ -103,17 +103,17 @@ spec = around withChannels $
                 let loc' = mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
                 n1 <- Graph.addNode loc u1 "def foo" def
                 n2 <- Graph.addNode loc' u2 "4" def
-                a <- Graph.getGraph loc'
-                print a
                 Just (_, out) <- Graph.withGraph loc' $ GraphBuilder.getEdgePortMapping
-                Graph.connect loc' (OutPortRef (n2 ^. nodeId) All) (InPortRef out (Arg 0))
-                Graph.getGraph loc'
+                let referenceConnection = (OutPortRef (n2 ^. nodeId) All, InPortRef out (Arg 0))
+                Graph.connect loc' (referenceConnection ^. _1) (referenceConnection ^. _2)
+                connections <- view Graph.connections <$> Graph.getGraph loc'
+                return (referenceConnection, connections)
             case res of
                 Left err -> expectationFailure err
-                Right g -> do
-                    print g
-                    g ^. Graph.connections `shouldSatisfy` (not.null)
-        it "does not crash on connecting to input edge" $ \env -> do
+                Right (conn, connections) -> do
+                    connections `shouldSatisfy` ((== 1) . length)
+                    head connections `shouldBe` conn
+        it "makes connection to input edge" $ \env -> do
             u1 <- nextRandom
             u2 <- nextRandom
             (res, _) <- runGraph env $ \mkLoc -> do
@@ -121,16 +121,16 @@ spec = around withChannels $
                 let loc' = mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
                 n1 <- Graph.addNode loc u1 "def foo" def
                 n2 <- Graph.addNode loc' u2 "succ" def
-                a <- Graph.getGraph loc'
-                print a
-                Just (input, out) <- Graph.withGraph loc' $ GraphBuilder.getEdgePortMapping
-                Graph.connect loc' (OutPortRef input (Projection 0)) (InPortRef (n2 ^. nodeId) (Arg 0))
-                Graph.getGraph loc'
+                Just (input, _) <- Graph.withGraph loc' $ GraphBuilder.getEdgePortMapping
+                let referenceConnection = (OutPortRef input All, InPortRef (n2 ^. nodeId) (Arg 0))
+                Graph.connect loc' (referenceConnection ^. _1) (referenceConnection ^. _2)
+                connections <- view Graph.connections <$> Graph.getGraph loc'
+                return (referenceConnection, connections)
             case res of
                 Left err -> expectationFailure err
-                Right g -> do
-                    print g
-                    g ^. Graph.connections `shouldSatisfy` (not.null)
+                Right (conn, connections) -> do
+                    connections `shouldSatisfy` ((== 1) . length)
+                    head connections `shouldBe` conn
         it "shows connection inside lambda" $ \env -> do
             u1 <- nextRandom
             u2 <- nextRandom
@@ -141,11 +141,15 @@ spec = around withChannels $
                 n1 <- Graph.addNode loc u1 "def foo" def
                 n2 <- Graph.addNode loc' u2 "4" def
                 n3 <- Graph.addNode loc' u3 "succ" def
-                Graph.connect loc' (OutPortRef (n2 ^. nodeId) All) (InPortRef (n3 ^. nodeId) (Arg 0))
-                Graph.getGraph loc'
+                let referenceConnection = (OutPortRef (n2 ^. nodeId) All, InPortRef (n3 ^. nodeId) (Arg 0))
+                Graph.connect loc' (referenceConnection ^. _1) (referenceConnection ^. _2)
+                connections <- view Graph.connections <$> Graph.getGraph loc'
+                return (referenceConnection, connections)
             case res of
                 Left err -> expectationFailure err
-                Right g -> g ^. Graph.connections `shouldSatisfy` (not.null)
+                Right (ref, connections) -> do
+                    connections `shouldSatisfy` ((== 1) . length)
+                    head connections `shouldBe` ref
         it "creates two nested lambdas and a node inside" $ \env -> do
             u1 <- nextRandom
             u2 <- nextRandom
@@ -242,45 +246,3 @@ withChannels :: (CommunicationEnv -> IO ()) -> IO ()
 withChannels = bracket createChannels (const $ return ())
     where
         createChannels = atomically $ CommunicationEnv <$> newTChan <*> newTChan
-
-test :: Empire Graph
-test = do
-    (pid, _) <- createProject Nothing "dupa"
-    (lid, _) <- createLibrary pid (Just "xd") "/xd/xd"
-
-    let loc = GraphLocation pid lid $ Breadcrumb []
-
-    u1 <- liftIO $ nextRandom
-    u2 <- liftIO $ nextRandom
-    u3 <- liftIO $ nextRandom
-    n1 <- Graph.addNode loc u1 "foo" def
-    n2 <- Graph.addNode loc u2 "bar" def
-    n3 <- Graph.addNode loc u3 "baz" def
-
-    let loc' = GraphLocation pid lid $ Breadcrumb [Breadcrumb.Lambda u1]
-
-    u4 <- liftIO $ nextRandom
-    n4 <- Graph.addNode loc' u4 "cokolwiek" def
-
-    let graphIDs loc = do
-            nodes <- view Graph.nodes <$> Graph.getGraph loc
-            let ids = map (^. nodeId) nodes
-            return ids
-
-    ids <- graphIDs loc
-    when (u1 `notElem` ids || u2 `notElem` ids || u3 `notElem` ids) $ throwError "ERROR"
-
-    ids <- graphIDs loc'
-    when (u4 `notElem` ids) $ throwError "ERROR2"
-    withLibrary pid lid (use $ body)
-
-main :: IO ()
-main = do
-    dummyNotif <- atomically newTChan
-    dummyTC    <- atomically newTChan
-    (g, st)    <- runEmpire (CommunicationEnv dummyNotif dummyTC) def test
-    case g of
-        Left err -> putStrLn err
-        Right g  -> do
-            res <- runEmpire (CommunicationEnv dummyNotif dummyTC) (InterpreterEnv def def def g def) $ Typecheck.run $ GraphLocation nil 0 $ Breadcrumb []
-            return ()

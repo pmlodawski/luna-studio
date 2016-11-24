@@ -168,7 +168,7 @@ connectPersistent (OutPortRef srcNodeId srcPort) (InPortRef dstNodeId dstPort) =
     case dstPort of
         Self    -> makeAcc srcNodeId dstNodeId
         Arg num -> makeApp srcNodeId dstNodeId num $ case srcPort of
-            All            -> 0
+            All            -> 0   -- FIXME: do not equalise All with Projection 0
             Projection int -> int
 
 connectNoTC :: GraphLocation -> OutPortRef -> InPortRef -> Command Graph ()
@@ -208,7 +208,7 @@ getCode loc = withGraph loc $ do
     return $ unlines lines
 
 getGraph :: GraphLocation -> Empire APIGraph.Graph
-getGraph loc = withTC loc True $ GraphBuilder.buildGraph
+getGraph loc = withTC loc True GraphBuilder.buildGraph
 
 renameNode :: GraphLocation -> NodeId -> Text -> Empire ()
 renameNode loc nid name = withTC loc False $ do
@@ -281,16 +281,16 @@ makeApp src dst pos inputPos = do
             Nothing           -> (False, False)
             Just (input, out) -> (input == src, out == dst)
     if | connectToOutputEdge -> do
-        Just lambda <- use Graph.insideNode
+        lambda <- use Graph.insideNode <?!> "impossible: connecting to output edge while outside node"
         srcAst <- GraphUtils.getASTVar    src
         dstAst <- GraphUtils.getASTTarget lambda
         newNodeRef <- zoom Graph.ast $ AST.redirectLambdaOutput dstAst srcAst pos
         GraphUtils.rewireNode lambda newNodeRef
        | connectToInputEdge -> do
-        Just lambda <- use Graph.insideNode
-        foo <- GraphUtils.getASTTarget lambda
-        srcAst <- zoom Graph.ast $ AST.getLambdaInputRef foo inputPos
-        dstAst <- GraphUtils.getASTTarget dst
+        lambda  <- use Graph.insideNode <?!> "impossible: connecting to input edge while outside node"
+        lambda' <- GraphUtils.getASTTarget lambda
+        srcAst  <- zoom Graph.ast $ AST.getLambdaInputRef lambda' inputPos
+        dstAst  <- GraphUtils.getASTTarget dst
         newNodeRef <- zoom Graph.ast $ AST.applyFunction dstAst srcAst pos
         GraphUtils.rewireNode dst newNodeRef
        | otherwise -> do
