@@ -11,7 +11,6 @@ import           Data.Graph                        (Inputs (..), source)
 import           Data.HMap.Lazy                    (TypeKey (..))
 import qualified Data.HMap.Lazy                    as HMap
 import           Data.Layer_OLD.Cover_OLD          (uncover)
-import           Data.List.Index                   (setAt)
 import           Data.Maybe                        (catMaybes, fromMaybe)
 import           Data.Prop                         (prop, ( # ))
 import           Data.Record                       (ANY (..), caseTest, of')
