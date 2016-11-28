@@ -39,8 +39,8 @@ spec = around withChannels $
         it "descends into `def foo` and asserts null list of nodes inside" $ \env -> do
             u1 <- nextRandom
             (res, state) <- runEmpire env def $ do
-                (pid, _) <- createProject Nothing "dupa"
-                (lid, _) <- createLibrary pid (Just "xd") "/xd/xd"
+                (pid, _) <- createProject Nothing "project1"
+                (lid, _) <- createLibrary pid (Just "lib1") "/libs/lib1"
 
                 let loc = GraphLocation pid lid $ Breadcrumb []
                 let loc' = GraphLocation pid lid $ Breadcrumb [Breadcrumb.Lambda u1]
@@ -63,8 +63,8 @@ withChannels = bracket createChannels (const $ return ())
 
 test :: Empire Graph
 test = do
-    (pid, _) <- createProject Nothing "dupa"
-    (lid, _) <- createLibrary pid (Just "xd") "/xd/xd"
+    (pid, _) <- createProject Nothing "project1"
+    (lid, _) <- createLibrary pid (Just "lib1") "/libs/lib1"
 
     let loc = GraphLocation pid lid $ Breadcrumb []
 
