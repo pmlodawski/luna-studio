@@ -6,10 +6,11 @@
 
 module EmpireSpec (spec) where
 
-import           Prologue
+import           Prologue hiding (toList)
 import           Control.Exception (bracket)
 import           Control.Monad.Except (throwError)
-import           Data.List (find, sort)
+import           Data.Foldable (toList)
+import           Data.List (find, sort, stripPrefix)
 import qualified Data.Map as Map
 import           Data.UUID (nil)
 import           Data.UUID.V4 (nextRandom)
@@ -72,6 +73,13 @@ graphIDs loc = do
 
 exGraph (InterpreterEnv _ _ _ g _) = g
 
+excludeEdges :: [Node] -> [Node]
+excludeEdges = filter (not . isEdge . view nodeType)
+    where
+        isEdge InputEdge{}  = True
+        isEdge OutputEdge{} = True
+        isEdge _            = False
+
 spec = around withChannels $
     describe "luna-empire" $ do
         it "descends into `def foo` and asserts null list of nodes inside" $ \env -> do
@@ -85,7 +93,8 @@ spec = around withChannels $
                 return (topLevel, n1Level)
             case res of
                 Left err -> expectationFailure err
-                Right ids -> u1 `shouldSatisfy` (`elem` (fst ids))
+                Right ids -> do
+                    u1 `shouldSatisfy` (`elem` (fst ids))
         it "adds node" $ \env -> do
             u1 <- nextRandom
             (res, _) <- runGraph env $ \mkLoc -> do
@@ -187,10 +196,12 @@ spec = around withChannels $
             (res, _) <- runGraph env $ \mkLoc -> do
                 let loc = mkLoc $ Breadcrumb []
                 n1 <- Graph.addNode loc u1 "def foo" def
-                graphIDs $ mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
+                view Graph.nodes <$> Graph.getGraph (mkLoc $ Breadcrumb [Breadcrumb.Lambda u1])
             case res of
                 Left err -> expectationFailure err
-                Right ids -> ids `shouldSatisfy` ((== 2) . length)
+                Right (excludeEdges -> ids) -> do
+                    ids `shouldSatisfy` ((== 1) . length)
+                    head ids `shouldSatisfy` (\a -> a ^. nodeType . expression == "in0")
         it "int literal has no nodes inside" $ \env -> do
             u1 <- nextRandom
             (res, _) <- runGraph env $ \mkLoc -> do
@@ -199,8 +210,10 @@ spec = around withChannels $
                 n1 <- Graph.addNode loc u1 "4" def
                 graphIDs loc'
             case res of
-                Left err -> expectationFailure err
-                Right ids -> ids `shouldSatisfy` null
+                Left err -> case stripPrefix "cannot enter node Just" err of
+                    Just _ -> return ()
+                    _      -> expectationFailure err
+                Right _  -> expectationFailure "should throw"
         it "properly typechecks input nodes" $ \env -> do
             u1 <- nextRandom
             (res, st) <- runGraph env $ \mkLoc -> do
@@ -241,6 +254,32 @@ spec = around withChannels $
                         outputType = output' ^. nodeType
                         types = Output._valueType $ Node._output outputType
                     types `shouldBe` TypeIdent (TCons "Int" [])
+        it "adds lambda nodeid to node mapping" $ \env -> do
+            u1 <- nextRandom
+            (res, _) <- runGraph env $ \mkLoc -> do
+                let loc = mkLoc $ Breadcrumb []
+                Graph.addNode loc u1 "-> $a $b a + b" def
+                withGraph loc $ use nodeMapping
+            case res of
+                Left err -> expectationFailure err
+                Right (toList -> mapping) -> do
+                    let isLambdaNode n = case n of
+                            AnonymousNode _ -> True
+                            _               -> False
+                        lambdaNodes = filter isLambdaNode mapping
+                    lambdaNodes `shouldSatisfy` (not . null)
+        it "puts + inside plus lambda" $ \env -> do
+            u1 <- nextRandom
+            (res, _) <- runGraph env $ \mkLoc -> do
+                let loc = mkLoc $ Breadcrumb []
+                    loc' = mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
+                Graph.addNode loc u1 "-> $a $b a + b" def
+                view Graph.nodes <$> Graph.getGraph loc'
+            case res of
+                Left err -> expectationFailure err
+                Right (excludeEdges -> nodes) -> do
+                    nodes `shouldSatisfy` ((== 1) . length)
+                    head nodes `shouldSatisfy` (\a -> a ^. nodeType . expression == "a + b")
 
 withChannels :: (CommunicationEnv -> IO ()) -> IO ()
 withChannels = bracket createChannels (const $ return ())

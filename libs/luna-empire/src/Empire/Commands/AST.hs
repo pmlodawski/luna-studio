@@ -59,11 +59,11 @@ import           Luna.Interpreter.Charts           (autoScatterChartDouble, auto
 metaKey :: TypeKey NodeMeta
 metaKey = TypeKey
 
-addNode :: NodeId -> String -> String -> Command AST NodeRef
+addNode :: NodeId -> String -> String -> Command AST (NodeRef, NodeRef)
 addNode nid name expr = runASTOp $ do
     (exprName, ref) <- Parser.parseExpr expr
     let name' = fromMaybe name $ fmap Text.unpack exprName
-    ASTBuilder.makeNodeRep (NodeMarker nid) name' ref
+    (,) <$> pure ref <*> ASTBuilder.makeNodeRep (NodeMarker nid) name' ref
 
 addDefault :: PortDefault -> Command AST NodeRef
 addDefault val = runASTOp $ Parser.parsePortDefault val
@@ -305,6 +305,19 @@ getLambdaInputRef nodeRef pos = runASTOp $ do
     node <- Builder.read nodeRef
     caseTest (uncover node) $ do
         of' $ \(Lam args out) -> (!! pos) <$> ASTBuilder.unpackArguments args
+
+isLambda :: NodeRef -> Command AST Bool
+isLambda ref = runASTOp $ do
+  node <- Builder.read ref
+  caseTest (uncover node) $ do
+    of' $ \(Lam _ _) -> return True
+    of' $ \ANY       -> return False
+
+getLambdaOutputRef :: NodeRef -> Command AST NodeRef
+getLambdaOutputRef lambdaRef = runASTOp $ do
+    lambda <- Builder.read lambdaRef
+    caseTest (uncover lambda) $ do
+        of' $ \(Lam _ out) -> Builder.follow source out
 
 replaceTargetNode :: NodeRef -> NodeRef -> Command AST ()
 replaceTargetNode matchNodeId newTargetId = runASTOp $ do

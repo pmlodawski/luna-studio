@@ -6,7 +6,7 @@ module Empire.Commands.GraphBuilder where
 import           Prologue
 
 import           Control.Monad.Except              (throwError)
-import           Control.Monad.State
+import           Control.Monad.State               hiding (when)
 import           Control.Monad.Trans.Maybe         (MaybeT (..), runMaybeT)
 
 import           Data.Graph                        (source)
@@ -55,13 +55,19 @@ import qualified Old.Luna.Syntax.Term.Expr.Lit     as Lit
 import           Luna.Syntax.Model.Network.Builder (TCData (..), Type (..), replacement)
 import qualified Luna.Syntax.Model.Network.Builder as Builder
 
+import Data.IORef
+import System.IO.Unsafe
 
 decodeBreadcrumbs :: Breadcrumb BreadcrumbItem -> Command Graph (Breadcrumb (Named BreadcrumbItem))
 decodeBreadcrumbs (Breadcrumb items) = do
     fmap Breadcrumb $ forM items $ \item@(Breadcrumb.Lambda nid) -> flip Named item <$> getNodeName nid
 
 buildGraph :: Command Graph API.Graph
-buildGraph = API.Graph <$> buildNodes <*> buildConnections
+buildGraph = do
+    parent <- use Graph.insideNode
+    canEnter <- forM parent canEnterNode
+    when (not $ fromMaybe True canEnter) $ throwError $ "cannot enter node " ++ show parent
+    API.Graph <$> buildNodes <*> buildConnections
 
 buildNodes :: Command Graph [API.Node]
 buildNodes = do
@@ -82,13 +88,22 @@ buildEdgeNodes = getEdgePortMapping >>= \p -> case p of
         return $ Just (inputEdge, outputEdge)
     _ -> return Nothing
 
+uuids :: IORef [Int]
+uuids = unsafePerformIO $ newIORef [0xFA..]
+{-# NOINLINE uuids #-}
+
+uuid :: IO UUID.UUID
+uuid = do
+    foo <- atomicModifyIORef uuids $ \list -> (tail list, head list)
+    return $ UUID.fromWords 0 0 0 (fromIntegral foo)
+
 getOrCreatePortMapping :: NodeId -> Command Graph (NodeId, NodeId)
 getOrCreatePortMapping nid = do
     existingMapping <- uses Graph.breadcrumbPortMapping $ Map.lookup nid
     case existingMapping of
         Just m -> return m
         _      -> do
-            ids <- liftIO $ (,) <$> UUID.nextRandom <*> UUID.nextRandom
+            ids <- liftIO $ (,) <$> uuid <*> uuid
             Graph.breadcrumbPortMapping . at nid ?= ids
             return ids
 
@@ -105,16 +120,30 @@ getEdgePortMapping = do
 
 buildNode :: NodeId -> Command Graph API.Node
 buildNode nid = do
-    ref   <- GraphUtils.getASTTarget nid
-    uref  <- GraphUtils.getASTPointer nid
+    root  <- GraphUtils.getASTPointer nid
+    match <- isMatch root
+    ref   <- if match then GraphUtils.getASTTarget nid else return root
     expr  <- zoom Graph.ast $ runASTOp $ Print.printNodeExpression ref
-    meta  <- zoom Graph.ast $ AST.readMeta uref
-    name  <- getNodeName nid
-    canEnter <- rhsIsLambda nid
+    meta  <- zoom Graph.ast $ AST.readMeta root
+    name  <- fromMaybe "" <$> getNodeName nid
+    canEnter <- canEnterNode nid
     ports <- buildPorts ref
     let code    = Nothing -- Just $ Text.pack expr
         portMap = Map.fromList $ flip fmap ports $ \p@(Port id _ _ _) -> (id, p)
     return $ API.Node nid (Text.pack name) (API.ExpressionNode $ Text.pack expr) canEnter portMap (fromMaybe def meta) code
+
+isMatch :: NodeRef -> Command Graph Bool
+isMatch ref = zoom Graph.ast $ runASTOp $ do
+    node <- Builder.read ref
+    caseTest (uncover node) $ do
+        of' $ \(Match _ _) -> return True
+        of' $ \ANY         -> return False
+
+canEnterNode :: NodeId -> Command Graph Bool
+canEnterNode nid = do
+    root  <- GraphUtils.getASTPointer nid
+    match <- isMatch root
+    if match then rhsIsLambda nid else return False
 
 rhsIsLambda :: NodeId -> Command Graph Bool
 rhsIsLambda nid = do
@@ -125,12 +154,16 @@ rhsIsLambda nid = do
             of' $ \(Lam _ _) -> return True
             of' $ \ANY       -> return False
 
-getNodeName :: NodeId -> Command Graph String
+getNodeName :: NodeId -> Command Graph (Maybe String)
 getNodeName nid = do
-    vref <- GraphUtils.getASTVar nid
-    zoom Graph.ast $ runASTOp $ do
-        vnode <- Builder.read vref
-        caseTest (uncover vnode) $ of' $ \(Var (Lit.String n)) -> return . toString $ n
+    root  <- GraphUtils.getASTPointer nid
+    match <- isMatch root
+    if match then do
+        vref <- GraphUtils.getASTVar nid
+        zoom Graph.ast $ runASTOp $ do
+            vnode <- Builder.read vref
+            caseTest (uncover vnode) $ of' $ \(Var (Lit.String n)) -> return . Just . toString $ n
+    else return Nothing
 
 getPortState :: ASTOp m => NodeRef -> m PortState
 getPortState ref = do
@@ -364,18 +397,21 @@ getOuterLambdaArguments = do
 
 getNodeInputs :: Maybe (NodeId, NodeId) -> NodeId -> Command Graph [(OutPortRef, InPortRef)]
 getNodeInputs edgeNodes nodeId = do
-    ref         <- GraphUtils.getASTTarget nodeId
-    selfMay     <- zoom Graph.ast $ runASTOp $ getSelfNodeRef ref
-    selfNodeMay <- case selfMay of
-        Just self -> zoom Graph.ast $ runASTOp $ ASTBuilder.getNodeId self
-        Nothing   -> return Nothing
-    let selfConnMay = (,) <$> (OutPortRef <$> selfNodeMay <*> Just All)
-                          <*> (Just $ InPortRef nodeId Self)
+    root        <- GraphUtils.getASTPointer nodeId
+    match       <- isMatch root
+    if not match then return [] else do
+        ref         <- GraphUtils.getASTTarget nodeId
+        selfMay     <- zoom Graph.ast $ runASTOp $ getSelfNodeRef ref
+        selfNodeMay <- case selfMay of
+            Just self -> zoom Graph.ast $ runASTOp $ ASTBuilder.getNodeId self
+            Nothing   -> return Nothing
+        let selfConnMay = (,) <$> (OutPortRef <$> selfNodeMay <*> Just All)
+                              <*> (Just $ InPortRef nodeId Self)
 
-    args       <- zoom Graph.ast $ runASTOp $ getPositionalNodeRefs ref
-    lambdaArgs <- getOuterLambdaArguments
-    nodeMays   <- mapM (resolveInputNodeId edgeNodes lambdaArgs) args
-    let withInd  = zip nodeMays [0..]
-        onlyExt  = catMaybes $ (\(n, i) -> (,) <$> n <*> Just i) <$> withInd
-        conns    = flip fmap onlyExt $ \(n, i) -> (OutPortRef n All, InPortRef nodeId (Arg i))
-    return $ maybeToList selfConnMay ++ conns
+        args       <- zoom Graph.ast $ runASTOp $ getPositionalNodeRefs ref
+        lambdaArgs <- getOuterLambdaArguments
+        nodeMays   <- mapM (resolveInputNodeId edgeNodes lambdaArgs) args
+        let withInd  = zip nodeMays [0..]
+            onlyExt  = catMaybes $ (\(n, i) -> (,) <$> n <*> Just i) <$> withInd
+            conns    = flip fmap onlyExt $ \(n, i) -> (OutPortRef n All, InPortRef nodeId (Arg i))
+        return $ maybeToList selfConnMay ++ conns

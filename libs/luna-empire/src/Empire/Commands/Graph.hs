@@ -37,9 +37,10 @@ import           Data.Text.Lazy                (Text)
 import qualified Data.Text.Lazy                as Text
 import           Data.Traversable              (forM)
 import qualified Data.UUID                     as UUID
+import qualified Data.UUID.V4                  as UUID (nextRandom)
 import           Prologue
 
-import           Empire.Data.BreadcrumbHierarchy (addID, removeID)
+import           Empire.Data.BreadcrumbHierarchy (addID, addWithLeafs, removeID)
 import           Empire.Data.Graph               (Graph)
 import qualified Empire.Data.Graph               as Graph
 import qualified Empire.Data.Library             as Library
@@ -89,11 +90,16 @@ addNode loc uuid expr meta = withTC loc False $ addNodeNoTC loc uuid expr meta
 addNodeNoTC :: GraphLocation -> NodeId -> Text -> NodeMeta -> Command Graph Node
 addNodeNoTC loc uuid expr meta = do
     newNodeName <- generateNodeName
-    refNode <- zoom Graph.ast $ AST.addNode uuid newNodeName (Text.unpack expr)
+    (parsedRef, refNode) <- zoom Graph.ast $ AST.addNode uuid newNodeName (Text.unpack expr)
+    parsedIsLambda <- zoom Graph.ast $ AST.isLambda parsedRef
     zoom Graph.ast $ AST.writeMeta refNode meta
-    Graph.nodeMapping . at uuid ?= refNode
+    Graph.nodeMapping . at uuid ?= Graph.MatchNode refNode
     node <- GraphBuilder.buildNode uuid
-    Graph.breadcrumbHierarchy %= addID (node ^. Node.nodeId)
+    when parsedIsLambda $ do
+        lambdaUUID <- liftIO $ UUID.nextRandom
+        lambdaOutput <- zoom Graph.ast $ AST.getLambdaOutputRef parsedRef
+        Graph.nodeMapping . at lambdaUUID ?= Graph.AnonymousNode lambdaOutput
+        Graph.breadcrumbHierarchy %= addWithLeafs (node ^. Node.nodeId) [lambdaUUID]
     Publisher.notifyNodeUpdate loc node
     return node
 
@@ -101,9 +107,11 @@ addPersistentNode :: Node -> Command Graph NodeId
 addPersistentNode n = case n ^. Node.nodeType of
     Node.ExpressionNode expr -> do
         let newNodeId = n ^. Node.nodeId
-        refNode <- zoom Graph.ast $ AST.addNode newNodeId (Text.unpack $ n ^. Node.name) (Text.unpack expr)
+        (parsedRef, refNode) <- zoom Graph.ast $ AST.addNode newNodeId (Text.unpack $ n ^. Node.name) (Text.unpack expr)
         zoom Graph.ast $ AST.writeMeta refNode (n ^. Node.nodeMeta)
-        Graph.nodeMapping . at newNodeId ?= refNode
+        Graph.nodeMapping . at newNodeId ?= Graph.MatchNode refNode
+        lambdaUUID <- liftIO $ UUID.nextRandom
+        Graph.nodeMapping . at lambdaUUID ?= Graph.AnonymousNode parsedRef
         mapM_ (setDefault newNodeId) (Map.toList $ n ^. Node.ports)
         return newNodeId
     _ -> return UUID.nil

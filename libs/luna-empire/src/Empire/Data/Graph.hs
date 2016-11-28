@@ -10,12 +10,20 @@ import           Prologue
 import           Luna.Syntax.Model.Network.Builder (runNetworkBuilderT, star)
 
 data Graph = Graph { _ast                   :: AST
-                   , _nodeMapping           :: Map NodeId NodeRef
+                   , _nodeMapping           :: Map NodeId NodeIDTarget
                    , _breadcrumbHierarchy   :: BreadcrumbHierarchy
                    , _breadcrumbPortMapping :: Map NodeId (NodeId, NodeId)
                    , _lastNameId            :: Integer
                    , _insideNode            :: Maybe NodeId
                    } deriving (Show)
+
+data NodeIDTarget = MatchNode     NodeRef
+                  | AnonymousNode NodeRef
+    deriving Show
+
+getAnyRef :: NodeIDTarget -> NodeRef
+getAnyRef (MatchNode ref)     = ref
+getAnyRef (AnonymousNode ref) = ref
 
 makeLenses ''Graph
 
