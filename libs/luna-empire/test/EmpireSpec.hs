@@ -29,7 +29,7 @@ import           Empire.Data.Library
 import           Empire.Empire
 import           Control.Concurrent.STM.TChan (TChan, newTChan)
 import           Control.Concurrent.STM       (atomically)
-import           Luna.Pretty.GraphViz         (renderAndOpen, toGraphViz)
+import           Old.Luna.Pretty.GraphViz     (renderAndOpen, toGraphViz)
 
 import           Test.Hspec (around, describe, expectationFailure, it, shouldSatisfy)
 
