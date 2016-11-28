@@ -23,8 +23,7 @@ import qualified Data.Tree                         as Tree
 import qualified Data.UUID                         as UUID
 import qualified Data.UUID.V4                      as UUID (nextRandom)
 
-import           Empire.API.Data.Input             (Input (Input))
-import           Empire.API.Data.Output            (Output (Output))
+import           Empire.API.Data.Breadcrumb        as Breadcrumb
 import           Empire.Data.BreadcrumbHierarchy   (topLevelIDs)
 import           Empire.Data.Graph                 (Graph)
 import qualified Empire.Data.Graph                 as Graph
@@ -35,6 +34,7 @@ import           Empire.API.Data.Node              (NodeId)
 import qualified Empire.API.Data.Node              as API
 import           Empire.API.Data.NodeMeta          (NodeMeta (..))
 import           Empire.API.Data.Port              (InPort (..), OutPort (..), Port (..), PortId (..), PortState (..))
+import qualified Empire.API.Data.Port              as Port
 import           Empire.API.Data.PortRef           (InPortRef (..), OutPortRef (..))
 import           Empire.API.Data.TypeRep           (TypeRep(TLam))
 import           Empire.API.Data.ValueType         (ValueType (..))
@@ -55,6 +55,10 @@ import qualified Old.Luna.Syntax.Term.Expr.Lit     as Lit
 import           Luna.Syntax.Model.Network.Builder (TCData (..), Type (..), replacement)
 import qualified Luna.Syntax.Model.Network.Builder as Builder
 
+
+decodeBreadcrumbs :: Breadcrumb BreadcrumbItem -> Command Graph (Breadcrumb (Named BreadcrumbItem))
+decodeBreadcrumbs (Breadcrumb items) = do
+    fmap Breadcrumb $ forM items $ \item@(Breadcrumb.Lambda nid) -> flip Named item <$> getNodeName nid
 
 buildGraph :: Command Graph API.Graph
 buildGraph = API.Graph <$> buildNodes <*> buildConnections
@@ -265,13 +269,13 @@ buildInputEdge nid = do
         _ -> return types
     out <- zoom Graph.ast $ runASTOp $ followTypeRep ref
     let nameGen = fmap (\i -> Text.pack $ "input" ++ show i) [0..]
-        inputEdges = zipWith3 (\n t i -> Input n t $ Projection i) nameGen argTypes [0..]
+        inputEdges = zipWith3 (\n t i -> Port (OutPortId $ Projection i) (Text.unpack n) t Port.NotConnected) nameGen argTypes [0..]
     return $
         API.Node nid
             "inputEdge"
-            (API.InputEdge inputEdges)
+            API.InputEdge
             False
-            def
+            (Map.fromList $ flip map inputEdges $ \port -> (port ^. Port.portId, port))
             def
             def
 
@@ -284,13 +288,13 @@ buildOutputEdge nid = do
         TypeIdent (TLam _ t) -> return $ TypeIdent t
         TypeIdent t -> return $ TypeIdent t
         a -> return a
+    let port = Port (InPortId $ Arg 0) "output" outputType Port.NotConnected
     return $
         API.Node nid
             "outputEdge"
-            (API.OutputEdge $ Output outputType
-                            $ Arg 0)
+            API.OutputEdge
             False
-            def
+            (Map.fromList [(port ^. Port.portId, port)])
             def
             def
 

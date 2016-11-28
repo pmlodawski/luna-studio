@@ -18,18 +18,11 @@ module Reactive.State.Graph
     , getNodes
     , getNodesMap
     , hasConnections
-    , inputsMap
-    , inputsId
-    , inputWidgets
-    , inputWidgetsMap
     , lookUpConnection
     , nodes
     , nodesMap
     , nodeWidgets
     , nodeWidgetsMap
-    , outputs
-    , outputsId
-    , outputWidget
     , portWidgets
     , portWidgetsMap
     , removeConnections
@@ -51,10 +44,8 @@ import           Data.UUID.Types            (UUID)
 import           Data.Aeson                 hiding ((.:))
 import           Empire.API.Data.Connection (Connection (..), ConnectionId)
 import qualified Empire.API.Data.Connection as Connection
-import           Empire.API.Data.Input      (Input)
 import           Empire.API.Data.Node       (Node, NodeId)
 import qualified Empire.API.Data.Node       as Node
-import           Empire.API.Data.Output     (Output)
 import           Empire.API.Data.Port       (InPort, OutPort)
 import           Empire.API.Data.PortRef    (AnyPortRef, InPortRef, OutPortRef)
 import qualified Empire.API.Data.PortRef    as PortRef
@@ -88,22 +79,16 @@ instance Hashable AnyPortRef
 
 data State = State { _nodesMap             :: NodesMap
                    , _connectionsMap       :: ConnectionsMap
-                   , _inputsId             :: Maybe NodeId
-                   , _inputsMap            :: IntMap Input
-                   , _outputsId            :: Maybe NodeId
-                   , _outputs              :: Maybe Output
                    , _nodeWidgetsMap       :: HashMap NodeId     WidgetId
                    , _connectionWidgetsMap :: HashMap InPortRef  WidgetId
                    , _portWidgetsMap       :: HashMap AnyPortRef WidgetId
-                   , _inputWidgetsMap      :: IntMap WidgetId
-                   , _outputWidget         :: Maybe WidgetId
                    } deriving (Show, Eq, Generic)
 
 makeLenses ''State
 
 instance ToJSON State
 instance Default State where
-    def = State def def def def def def def def def def def
+    def = State def def def def def
 
 connectionToNodeIds :: Connection -> (NodeId, NodeId)
 connectionToNodeIds conn = ( conn ^. Connection.src . PortRef.srcNodeId
@@ -120,9 +105,6 @@ connections = to getConnections
 
 connectionWidgets :: Getter State [WidgetId]
 connectionWidgets = to $ HashMap.elems . view connectionWidgetsMap
-
-inputWidgets :: Getter State [WidgetId]
-inputWidgets = to $ IntMap.elems . view inputWidgetsMap
 
 portWidgets :: Getter State [WidgetId]
 portWidgets = to $ HashMap.elems . view portWidgetsMap
