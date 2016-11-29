@@ -390,14 +390,14 @@ getNodeInputs edgeNodes nodeId = do
     match       <- isMatch root
     ref         <- if match then GraphUtils.getASTTarget nodeId else return root
     selfMay     <- zoom Graph.ast $ runASTOp $ getSelfNodeRef ref
+    lambdaArgs  <- getOuterLambdaArguments
     selfNodeMay <- case selfMay of
-        Just self -> zoom Graph.ast $ runASTOp $ ASTBuilder.getNodeId self
+        Just self -> resolveInputNodeId edgeNodes lambdaArgs self
         Nothing   -> return Nothing
     let selfConnMay = (,) <$> (OutPortRef <$> selfNodeMay <*> Just All)
                           <*> (Just $ InPortRef nodeId Self)
 
     args       <- zoom Graph.ast $ runASTOp $ getPositionalNodeRefs ref
-    lambdaArgs <- getOuterLambdaArguments
     nodeMays   <- mapM (resolveInputNodeId edgeNodes lambdaArgs) args
     let withInd  = zip nodeMays [0..]
         onlyExt  = catMaybes $ (\(n, i) -> (,) <$> n <*> Just i) <$> withInd

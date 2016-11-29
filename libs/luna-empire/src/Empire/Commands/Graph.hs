@@ -182,12 +182,13 @@ connect :: GraphLocation -> OutPortRef -> InPortRef -> Empire ()
 connect loc outPort inPort = withTC loc False $ connectNoTC loc outPort inPort
 
 connectPersistent :: OutPortRef -> InPortRef -> Command Graph ()
-connectPersistent (OutPortRef srcNodeId srcPort) (InPortRef dstNodeId dstPort) =
-    case dstPort of
-        Self    -> makeAcc srcNodeId dstNodeId
-        Arg num -> makeApp srcNodeId dstNodeId num $ case srcPort of
+connectPersistent (OutPortRef srcNodeId srcPort) (InPortRef dstNodeId dstPort) = do
+    let inputPos = case srcPort of
             All            -> 0   -- FIXME: do not equalise All with Projection 0
             Projection int -> int
+    case dstPort of
+        Self    -> makeAcc srcNodeId dstNodeId inputPos
+        Arg num -> makeApp srcNodeId dstNodeId num inputPos
 
 connectNoTC :: GraphLocation -> OutPortRef -> InPortRef -> Command Graph ()
 connectNoTC loc outPort@(OutPortRef srcNodeId srcPort) inPort@(InPortRef dstNodeId dstPort) = connectPersistent outPort inPort
@@ -287,12 +288,24 @@ unApp nodeId pos = do
     newNodeRef <- zoom Graph.ast $ AST.unapplyArgument astNode pos
     GraphUtils.rewireNode nodeId newNodeRef
 
-makeAcc :: NodeId -> NodeId -> Command Graph ()
-makeAcc src dst = do
-    srcAst <- GraphUtils.getASTVar    src
-    dstAst <- GraphUtils.getASTTarget dst
-    newNodeRef <- zoom Graph.ast $ AST.makeAccessor srcAst dstAst
-    GraphUtils.rewireNode dst newNodeRef
+makeAcc :: NodeId -> NodeId -> Int -> Command Graph ()
+makeAcc src dst inputPos = do
+    edges <- GraphBuilder.getEdgePortMapping
+    let (connectToInputEdge, connectToOutputEdge) = case edges of
+            Nothing           -> (False, False)
+            Just (input, out) -> (input == src, out == dst)
+    if | connectToInputEdge -> do
+        lambda  <- use Graph.insideNode <?!> "impossible: connecting to input edge while outside node"
+        lambda' <- GraphUtils.getASTTarget lambda
+        srcAst  <- zoom Graph.ast $ AST.getLambdaInputRef lambda' inputPos
+        dstAst  <- GraphUtils.getASTTarget dst
+        newNodeRef <- zoom Graph.ast $ AST.makeAccessor srcAst dstAst
+        GraphUtils.rewireNode dst newNodeRef
+       | otherwise -> do
+        srcAst <- GraphUtils.getASTVar    src
+        dstAst <- GraphUtils.getASTTarget dst
+        newNodeRef <- zoom Graph.ast $ AST.makeAccessor srcAst dstAst
+        GraphUtils.rewireNode dst newNodeRef
 
 
 makeApp :: NodeId -> NodeId -> Int -> Int -> Command Graph ()

@@ -120,7 +120,25 @@ spec = around withChannels $
                 Right (conn, connections) -> do
                     connections `shouldSatisfy` ((== 1) . length)
                     head connections `shouldBe` conn
-        it "makes connection to input edge" $ \env -> do
+        it "connects input edge to succ (Self)" $ \env -> do
+            u1 <- nextRandom
+            u2 <- nextRandom
+            (res, _) <- runGraph env $ \mkLoc -> do
+                let loc = mkLoc $ Breadcrumb []
+                let loc' = mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
+                n1 <- Graph.addNode loc u1 "def foo" def
+                n2 <- Graph.addNode loc' u2 "succ" def
+                Just (input, _) <- Graph.withGraph loc' $ GraphBuilder.getEdgePortMapping
+                let referenceConnection = (OutPortRef input All, InPortRef (n2 ^. nodeId) Self)
+                Graph.connect loc' (referenceConnection ^. _1) (referenceConnection ^. _2)
+                connections <- view Graph.connections <$> Graph.getGraph loc'
+                return (referenceConnection, connections)
+            case res of
+                Left err -> expectationFailure err
+                Right (conn, connections) -> do
+                    connections `shouldSatisfy` ((== 2) . length)
+                    connections `shouldContain` [conn]
+        it "connects input edge to dummy node (Arg 0)" $ \env -> do
             u1 <- nextRandom
             u2 <- nextRandom
             (res, _) <- runGraph env $ \mkLoc -> do
@@ -161,7 +179,7 @@ spec = around withChannels $
                 n1 <- Graph.addNode loc u1 "def foo" def
                 n2 <- Graph.addNode loc' u2 "4" def
                 n3 <- Graph.addNode loc' u3 "succ" def
-                let referenceConnection = (OutPortRef (n2 ^. nodeId) All, InPortRef (n3 ^. nodeId) (Arg 0))
+                let referenceConnection = (OutPortRef (n2 ^. nodeId) All, InPortRef (n3 ^. nodeId) Self)
                 Graph.connect loc' (referenceConnection ^. _1) (referenceConnection ^. _2)
                 connections <- view Graph.connections <$> Graph.getGraph loc'
                 return (referenceConnection, connections)
