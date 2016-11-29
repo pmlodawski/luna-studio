@@ -61,10 +61,10 @@ import qualified Empire.API.Data.Port            as Port (PortState (..), state)
 import           Empire.API.Data.PortRef         (AnyPortRef (..), InPortRef (..), OutPortRef (..))
 import qualified Empire.API.Data.PortRef         as PortRef
 import           Empire.API.Data.Project         (ProjectId)
-import qualified Luna.Syntax.Model.Network.Builder  as Builder
+import qualified Old.Luna.Syntax.Model.Network.Builder  as Builder
 import qualified Data.HMap.Lazy                     as HMap
 import           Empire.Data.NodeMarker             (NodeMarker(..), nodeMarkerKey)
-import           Data.Prop                          (prop, ( # ))
+import           Old.Data.Prop                      (prop, ( # ))
 import Empire.ASTOp (runASTOp)
 
 import           Debug.Trace                     (trace)

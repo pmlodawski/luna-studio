@@ -16,7 +16,7 @@ import qualified Data.List                         as List
 import           Data.Map                          (Map)
 import qualified Data.Map                          as Map
 import           Data.Maybe                        (catMaybes, fromMaybe, maybeToList)
-import           Data.Prop                         (prop)
+import           Old.Data.Prop                     (prop)
 import           Data.Record                       (ANY (..), caseTest, of')
 import qualified Data.Text.Lazy                    as Text
 import qualified Data.Tree                         as Tree
@@ -48,18 +48,16 @@ import qualified Empire.Commands.GraphUtils        as GraphUtils
 import           Empire.Data.AST                   (ClusRef, EdgeRef, NodeRef)
 import           Empire.Empire
 
-import qualified Luna.Syntax.Term.Function         as Function
 import           Old.Luna.Syntax.Term.Class        (Acc (..), App (..), Blank (..), Cons (..), Lam (..), Match (..), Var (..))
 import qualified Old.Luna.Syntax.Term.Expr.Lit     as Lit
 
-import           Luna.Syntax.Model.Network.Builder (TCData (..), Type (..), replacement)
-import qualified Luna.Syntax.Model.Network.Builder as Builder
+import           Old.Luna.Syntax.Model.Network.Builder (TCData (..), Type (..), replacement)
+import qualified Old.Luna.Syntax.Model.Network.Builder as Builder
 
 nameBreadcrumb :: BreadcrumbItem -> Command Graph (Named BreadcrumbItem)
 nameBreadcrumb item@(Breadcrumb.Lambda nid) = do
     name <- getNodeName nid
     return $ Named (fromMaybe "" name) item
-
 
 decodeBreadcrumbs :: Breadcrumb BreadcrumbItem -> Command Graph (Breadcrumb (Named BreadcrumbItem))
 decodeBreadcrumbs (Breadcrumb items) = fmap Breadcrumb $ forM items nameBreadcrumb
@@ -123,7 +121,7 @@ buildNode nid = do
     ports <- buildPorts ref
     let code    = Nothing -- Just $ Text.pack expr
         portMap = Map.fromList $ flip fmap ports $ \p@(Port id _ _ _) -> (id, p)
-    return $ API.Node nid (Text.pack name) (API.ExpressionNode $ Text.pack expr) canEnter portMap (fromMaybe def meta) code
+    return $ API.Node nid name (API.ExpressionNode $ Text.pack expr) canEnter portMap (fromMaybe def meta) code
 
 isMatch :: NodeRef -> Command Graph Bool
 isMatch ref = zoom Graph.ast $ runASTOp $ do
@@ -147,7 +145,7 @@ rhsIsLambda nid = do
             of' $ \(Lam _ _) -> return True
             of' $ \ANY       -> return False
 
-getNodeName :: NodeId -> Command Graph (Maybe String)
+getNodeName :: NodeId -> Command Graph (Maybe Text)
 getNodeName nid = do
     root  <- GraphUtils.getASTPointer nid
     match <- isMatch root
@@ -155,7 +153,7 @@ getNodeName nid = do
         vref <- GraphUtils.getASTVar nid
         zoom Graph.ast $ runASTOp $ do
             vnode <- Builder.read vref
-            caseTest (uncover vnode) $ of' $ \(Var (Lit.String n)) -> return . Just . toString $ n
+            caseTest (uncover vnode) $ of' $ \(Var (Lit.String n)) -> return $ Just (Text.pack n)
     else return Nothing
 
 getPortState :: ASTOp m => NodeRef -> m PortState
@@ -175,20 +173,6 @@ getPortState ref = do
                 _       -> WithDefault . Expression <$> Print.printExpression ref
             of' $ \Blank   -> return NotConnected
             of' $ \ANY     -> WithDefault . Expression <$> Print.printExpression ref
-
-extractAppArgTypes :: ASTOp m => NodeRef -> m [ValueType]
-extractAppArgTypes ref = do
-    node <- Builder.read ref
-    args <- runMaybeT $ do
-        repl :: ClusRef <- MaybeT $ cast <$> Builder.follow (prop TCData . replacement) ref
-        sig <- MaybeT $ Builder.follow (prop Builder.Lambda) repl
-        return $ sig ^. Function.args
-    case args of
-        Nothing -> return []
-        Just as -> do
-            let unpacked = unlayer <$> as
-            types <- mapM (Builder.follow (prop Type) >=> Builder.follow source) unpacked
-            mapM getTypeRep types
 
 extractArgTypes :: ASTOp m => NodeRef -> m [ValueType]
 extractArgTypes ref = do
