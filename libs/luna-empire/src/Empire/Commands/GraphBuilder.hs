@@ -55,9 +55,11 @@ import qualified Old.Luna.Syntax.Term.Expr.Lit     as Lit
 import           Luna.Syntax.Model.Network.Builder (TCData (..), Type (..), replacement)
 import qualified Luna.Syntax.Model.Network.Builder as Builder
 
+nameBreadcrumb :: BreadcrumbItem -> Command Graph (Named BreadcrumbItem)
+nameBreadcrumb item@(Breadcrumb.Lambda nid) = flip Named item <$> getNodeName nid
+
 decodeBreadcrumbs :: Breadcrumb BreadcrumbItem -> Command Graph (Breadcrumb (Named BreadcrumbItem))
-decodeBreadcrumbs (Breadcrumb items) = do
-    fmap Breadcrumb $ forM items $ \item@(Breadcrumb.Lambda nid) -> flip Named item <$> getNodeName nid
+decodeBreadcrumbs (Breadcrumb items) = fmap Breadcrumb $ forM items nameBreadcrumb
 
 buildGraph :: Command Graph API.Graph
 buildGraph = do
@@ -289,8 +291,8 @@ buildInputEdge nid = do
             return $ replicate numberOfArguments AnyType
         _ -> return types
     out <- zoom Graph.ast $ runASTOp $ followTypeRep ref
-    let nameGen = fmap (\i -> Text.pack $ "input" ++ show i) [0..]
-        inputEdges = zipWith3 (\n t i -> Port (OutPortId $ Projection i) (Text.unpack n) t Port.NotConnected) nameGen argTypes [0..]
+    let nameGen = fmap (\i -> "input" ++ show i) [0..]
+        inputEdges = zipWith3 (\n t i -> Port (OutPortId $ Projection i) n t Port.NotConnected) nameGen argTypes [0..]
     return $
         API.Node nid
             "inputEdge"
@@ -315,7 +317,7 @@ buildOutputEdge nid = do
             "outputEdge"
             API.OutputEdge
             False
-            (Map.fromList [(port ^. Port.portId, port)])
+            (Map.singleton (port ^. Port.portId) port)
             def
             def
 
