@@ -32,18 +32,18 @@ instance IsDisplayObject Port where
         set w _    = w
     widgetVisible  = to $ const True
 
-angleToDimVecIn  :: Double -> Vector2 Double
-angleToDimVecIn  angle' = (/ 10.0) <$> Vector2 (cos angle') (-sin angle')
+angleToDimVec :: Double -> Vector2 Double
+angleToDimVec angle' = (/ 10.0) <$> Vector2 (cos angle') (-sin angle')
 
-angleToDimVecOut :: Double -> Vector2 Double
-angleToDimVecOut angle' = (/ 10.0) <$> Vector2 (-cos angle') (-sin angle')
+angleToDimVec' :: Double -> Vector2 Double
+angleToDimVec' angle' = (/ 10.0) <$> Vector2 (-cos angle') (-sin angle')
 
 defaultAngle :: Int -> PortId -> Vector2 Double
-defaultAngle _        (OutPortId (All)               ) = angleToDimVecOut 0.0
-defaultAngle numPorts (OutPortId (Projection portNum)) = angleToDimVecOut angle' where
+defaultAngle numPorts (OutPortId All)                  = angleToDimVec' pi where
+defaultAngle numPorts (OutPortId (Projection portNum)) = angleToDimVec' angle' where
     angle' = delta * (fromIntegral portNum) + delta / 2.0 + pi / 2.0
     delta  = pi / (fromIntegral numPorts)
-defaultAngle _        (InPortId (Self)               ) = angleToDimVecIn 0.0
-defaultAngle numPorts (InPortId (Arg portNum)        ) = angleToDimVecIn angle' where
+defaultAngle _        (InPortId (Self))                = angleToDimVec 0.0
+defaultAngle numPorts (InPortId (Arg portNum))         = angleToDimVec angle' where
     angle' = delta * (fromIntegral portNum) + delta / 2.0 + pi / 2.0
     delta  = pi / (fromIntegral numPorts)

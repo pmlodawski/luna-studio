@@ -27,7 +27,7 @@ import qualified Reactive.State.UIRegistry           as UIRegistry
 
 import           Empire.API.Data.Node                (Node)
 import qualified Empire.API.Data.Node                as Node
-import           Empire.API.Data.Port                (InPort (..), Port (..), PortId (..))
+import           Empire.API.Data.Port                (InPort (..), OutPort (..), Port (..), PortId (..))
 import qualified Empire.API.Data.Port                as Port
 import           Empire.API.Data.PortRef             (toAnyPortRef)
 import qualified Empire.API.Data.ValueType           as ValueType
@@ -39,7 +39,6 @@ makePorts node = makePort <$> ports where
         portId  = port ^. Port.portId
         portRef = toAnyPortRef nodeId portId
         angle   = PortModel.defaultAngle (portCount portId) portId
-        isOnly  = 0 == portCount portId
     ports   = Map.elems $ node ^. Node.ports
     portIds = Map.keys  $ node ^. Node.ports
     portCount :: PortId -> Int
@@ -52,6 +51,14 @@ makePorts node = makePort <$> ports where
         isIn (OutPortId _)      = 0
         isIn (InPortId (Arg _)) = 1
         isIn (InPortId Self)    = 0
+    isOnly :: Bool
+    isOnly = 0 == (sum $ fmap shouldCount portIds) where
+        shouldCount :: PortId -> Int
+        shouldCount (OutPortId All)            = 0
+        shouldCount (InPortId Self)            = 0
+        shouldCount (OutPortId (Projection _)) = 1
+        shouldCount (InPortId (Arg _))         = 1
+
 
 displayPorts :: WidgetId -> Node -> Command Global.State ()
 displayPorts wid node = do
