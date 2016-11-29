@@ -55,9 +55,6 @@ import qualified Old.Luna.Syntax.Term.Expr.Lit     as Lit
 import           Luna.Syntax.Model.Network.Builder (TCData (..), Type (..), replacement)
 import qualified Luna.Syntax.Model.Network.Builder as Builder
 
-import Data.IORef
-import System.IO.Unsafe
-
 decodeBreadcrumbs :: Breadcrumb BreadcrumbItem -> Command Graph (Breadcrumb (Named BreadcrumbItem))
 decodeBreadcrumbs (Breadcrumb items) = do
     fmap Breadcrumb $ forM items $ \item@(Breadcrumb.Lambda nid) -> flip Named item <$> getNodeName nid
@@ -88,22 +85,13 @@ buildEdgeNodes = getEdgePortMapping >>= \p -> case p of
         return $ Just (inputEdge, outputEdge)
     _ -> return Nothing
 
-uuids :: IORef [Int]
-uuids = unsafePerformIO $ newIORef [0xFA..]
-{-# NOINLINE uuids #-}
-
-uuid :: IO UUID.UUID
-uuid = do
-    foo <- atomicModifyIORef uuids $ \list -> (tail list, head list)
-    return $ UUID.fromWords 0 0 0 (fromIntegral foo)
-
 getOrCreatePortMapping :: NodeId -> Command Graph (NodeId, NodeId)
 getOrCreatePortMapping nid = do
     existingMapping <- uses Graph.breadcrumbPortMapping $ Map.lookup nid
     case existingMapping of
         Just m -> return m
         _      -> do
-            ids <- liftIO $ (,) <$> uuid <*> uuid
+            ids <- liftIO $ (,) <$> UUID.nextRandom <*> UUID.nextRandom
             Graph.breadcrumbPortMapping . at nid ?= ids
             return ids
 
@@ -287,8 +275,8 @@ buildConnections = do
     edges <- getEdgePortMapping
     connections <- mapM (getNodeInputs edges) allNodes
     outputEdgeConnections <- forM edges $ uncurry getOutputEdgeInputs
-    let foo = maybeToList outputEdgeConnections
-    return $ concat foo ++ concat connections
+    let foo = maybeToList $ join outputEdgeConnections
+    return $ foo ++ concat connections
 
 buildInputEdge :: NodeId -> Command Graph API.Node
 buildInputEdge nid = do
@@ -349,8 +337,8 @@ getPositionalNodeRefs nodeRef = do
         of' $ \(App _ args) -> ASTBuilder.unpackArguments args
         of' $ \ANY          -> return []
 
-getLambdaNodeRefs :: ASTOp m => NodeRef -> m NodeRef
-getLambdaNodeRefs nodeRef = do
+getLambdaOutputRef :: ASTOp m => NodeRef -> m NodeRef
+getLambdaOutputRef nodeRef = do
     node <- Builder.read nodeRef
     caseTest (uncover node) $ do
         of' $ \(Lam _ out) -> Builder.follow source out
@@ -362,28 +350,40 @@ getLambdaArgRefs nodeRef = do
         of' $ \(Lam args _) -> ASTBuilder.unpackArguments args
         of' $ \ANY          -> return []
 
-getOutputEdgeInputs :: NodeId -> NodeId -> Command Graph [(OutPortRef, InPortRef)]
+getLambdaInputArgNumber :: ASTOp m => NodeRef -> m (Maybe Int)
+getLambdaInputArgNumber lambdaRef = do
+    lambda <- Builder.read lambdaRef
+    caseTest (uncover lambda) $ do
+        of' $ \(Lam args out) -> do
+            out' <- Builder.follow source out
+            (out' `List.elemIndex`) <$> ASTBuilder.unpackArguments args
+        of' $ \ANY -> return Nothing
+
+getOutputEdgeInputs :: NodeId -> NodeId -> Command Graph (Maybe (OutPortRef, InPortRef))
 getOutputEdgeInputs inputEdge outputEdge = do
     lambda <- use Graph.insideNode <?!> "top-level nodes have no edges"
     ref <- GraphUtils.getASTTarget lambda
-    output <- zoom Graph.ast $ runASTOp $ getLambdaNodeRefs ref
-    nid <- zoom Graph.ast $ runASTOp $ ASTBuilder.getNodeId output
+    nid <- zoom Graph.ast $ runASTOp $ do
+        outputIsInputNum <- getLambdaInputArgNumber ref
+        case outputIsInputNum of
+            Just ix -> return $ Just (inputEdge, Projection ix)
+            _       -> do
+                output <- getLambdaOutputRef ref
+                nid <- ASTBuilder.getNodeId output
+                case nid of
+                    Just id -> return $ Just (id, All)
+                    _       -> return Nothing
     case nid of
-        Just id -> do
-            let connectionToOutputEdge = (OutPortRef id All, InPortRef outputEdge (Arg 0))
-            return [connectionToOutputEdge]
-        _ -> return []
+        Just (id, arg) -> do
+            return $ Just (OutPortRef id arg, InPortRef outputEdge (Arg 0))
+        _ -> return Nothing
 
 resolveInputNodeId :: Maybe (NodeId, NodeId) -> [NodeRef] -> NodeRef -> Command Graph (Maybe NodeId)
 resolveInputNodeId edgeNodes lambdaArgs ref = do
     nodeId <- zoom Graph.ast $ runASTOp $ ASTBuilder.getNodeId ref
-    case nodeId of
-        Just nid -> return $ Just nid
-        _ -> case List.find (== ref) lambdaArgs of
-            Just a -> case edgeNodes of
-                Just (i, _) -> return $ Just i
-                _ -> return Nothing
-            _ -> return Nothing
+    case List.find (== ref) lambdaArgs of
+        Just a -> return $ fmap fst edgeNodes
+        _      -> return nodeId
 
 getOuterLambdaArguments :: Command Graph [NodeRef]
 getOuterLambdaArguments = do
@@ -399,19 +399,18 @@ getNodeInputs :: Maybe (NodeId, NodeId) -> NodeId -> Command Graph [(OutPortRef,
 getNodeInputs edgeNodes nodeId = do
     root        <- GraphUtils.getASTPointer nodeId
     match       <- isMatch root
-    if not match then return [] else do
-        ref         <- GraphUtils.getASTTarget nodeId
-        selfMay     <- zoom Graph.ast $ runASTOp $ getSelfNodeRef ref
-        selfNodeMay <- case selfMay of
-            Just self -> zoom Graph.ast $ runASTOp $ ASTBuilder.getNodeId self
-            Nothing   -> return Nothing
-        let selfConnMay = (,) <$> (OutPortRef <$> selfNodeMay <*> Just All)
-                              <*> (Just $ InPortRef nodeId Self)
+    ref         <- if match then GraphUtils.getASTTarget nodeId else return root
+    selfMay     <- zoom Graph.ast $ runASTOp $ getSelfNodeRef ref
+    selfNodeMay <- case selfMay of
+        Just self -> zoom Graph.ast $ runASTOp $ ASTBuilder.getNodeId self
+        Nothing   -> return Nothing
+    let selfConnMay = (,) <$> (OutPortRef <$> selfNodeMay <*> Just All)
+                          <*> (Just $ InPortRef nodeId Self)
 
-        args       <- zoom Graph.ast $ runASTOp $ getPositionalNodeRefs ref
-        lambdaArgs <- getOuterLambdaArguments
-        nodeMays   <- mapM (resolveInputNodeId edgeNodes lambdaArgs) args
-        let withInd  = zip nodeMays [0..]
-            onlyExt  = catMaybes $ (\(n, i) -> (,) <$> n <*> Just i) <$> withInd
-            conns    = flip fmap onlyExt $ \(n, i) -> (OutPortRef n All, InPortRef nodeId (Arg i))
-        return $ maybeToList selfConnMay ++ conns
+    args       <- zoom Graph.ast $ runASTOp $ getPositionalNodeRefs ref
+    lambdaArgs <- getOuterLambdaArguments
+    nodeMays   <- mapM (resolveInputNodeId edgeNodes lambdaArgs) args
+    let withInd  = zip nodeMays [0..]
+        onlyExt  = catMaybes $ (\(n, i) -> (,) <$> n <*> Just i) <$> withInd
+        conns    = flip fmap onlyExt $ \(n, i) -> (OutPortRef n All, InPortRef nodeId (Arg i))
+    return $ maybeToList selfConnMay ++ conns

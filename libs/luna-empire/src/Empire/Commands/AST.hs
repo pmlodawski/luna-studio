@@ -10,6 +10,7 @@ import           Control.Monad.State
 import           Data.Graph                        (Inputs (..), source)
 import           Data.HMap.Lazy                    (TypeKey (..))
 import qualified Data.HMap.Lazy                    as HMap
+import           Data.List                         (find)
 import           Data.Layer_OLD.Cover_OLD          (uncover)
 import           Data.Maybe                        (catMaybes, fromMaybe)
 import           Data.Prop                         (prop, ( # ))
@@ -312,6 +313,12 @@ isLambda ref = runASTOp $ do
   caseTest (uncover node) $ do
     of' $ \(Lam _ _) -> return True
     of' $ \ANY       -> return False
+
+isLambdaInput :: ASTOp m => NodeRef -> NodeRef -> m Bool
+isLambdaInput node lambdaRef = do
+    lambda <- Builder.read lambdaRef
+    caseTest (uncover lambda) $ do
+        of' $ \(Lam args _) -> (node `elem`) <$> ASTBuilder.unpackArguments args
 
 getLambdaOutputRef :: NodeRef -> Command AST NodeRef
 getLambdaOutputRef lambdaRef = runASTOp $ do

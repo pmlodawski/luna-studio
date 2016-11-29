@@ -61,6 +61,11 @@ import qualified Empire.API.Data.Port            as Port (PortState (..), state)
 import           Empire.API.Data.PortRef         (AnyPortRef (..), InPortRef (..), OutPortRef (..))
 import qualified Empire.API.Data.PortRef         as PortRef
 import           Empire.API.Data.Project         (ProjectId)
+import qualified Luna.Syntax.Model.Network.Builder  as Builder
+import qualified Data.HMap.Lazy                     as HMap
+import           Empire.Data.NodeMarker             (NodeMarker(..), nodeMarkerKey)
+import           Data.Prop                          (prop, ( # ))
+import Empire.ASTOp (runASTOp)
 
 import           Debug.Trace                     (trace)
 import qualified Empire.Commands.AST             as AST
@@ -95,11 +100,15 @@ addNodeNoTC loc uuid expr meta = do
     zoom Graph.ast $ AST.writeMeta refNode meta
     Graph.nodeMapping . at uuid ?= Graph.MatchNode refNode
     node <- GraphBuilder.buildNode uuid
-    when parsedIsLambda $ do
+    if parsedIsLambda then do
         lambdaUUID <- liftIO $ UUID.nextRandom
         lambdaOutput <- zoom Graph.ast $ AST.getLambdaOutputRef parsedRef
+        outputIsOneOfTheInputs <- zoom Graph.ast $ runASTOp $ lambdaOutput `AST.isLambdaInput` parsedRef
         Graph.nodeMapping . at lambdaUUID ?= Graph.AnonymousNode lambdaOutput
-        Graph.breadcrumbHierarchy %= addWithLeafs (node ^. Node.nodeId) [lambdaUUID]
+        Graph.breadcrumbHierarchy %= addWithLeafs (node ^. Node.nodeId)
+            (if outputIsOneOfTheInputs then [] else [lambdaUUID])
+        zoom Graph.ast $ runASTOp $ Builder.withRef lambdaOutput $ prop Builder.Meta %~ HMap.insert nodeMarkerKey (NodeMarker lambdaUUID)
+    else Graph.breadcrumbHierarchy %= addID (node ^. Node.nodeId)
     Publisher.notifyNodeUpdate loc node
     return node
 

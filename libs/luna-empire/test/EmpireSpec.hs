@@ -25,7 +25,7 @@ import           Empire.API.Data.NodeMeta
 import           Empire.API.Data.Port
 import           Empire.API.Data.GraphLocation
 import           Empire.API.Data.Breadcrumb   as Breadcrumb
-import           Empire.API.Data.PortRef      (AnyPortRef(..), InPortRef (..), OutPortRef (..))
+import           Empire.API.Data.PortRef      (AnyPortRef(..), InPortRef (..), OutPortRef (..), srcNodeId)
 import           Empire.API.Data.TypeRep
 import           Empire.API.Data.ValueType
 import           Empire.Commands.AST
@@ -42,7 +42,7 @@ import           Control.Concurrent.STM       (atomically)
 import           Luna.Pretty.GraphViz         (renderAndOpen, toGraphViz)
 
 import           Test.Hspec (around, describe, expectationFailure, it,
-                             shouldBe, shouldSatisfy, shouldMatchList)
+                             shouldBe, shouldContain, shouldSatisfy, shouldMatchList)
 
 
 runGraph env act = runEmpire env def $ do
@@ -138,8 +138,21 @@ spec = around withChannels $
             case res of
                 Left err -> expectationFailure err
                 Right (conn, connections) -> do
-                    connections `shouldSatisfy` ((== 1) . length)
-                    head connections `shouldBe` conn
+                    connections `shouldSatisfy` ((== 2) . length)
+                    connections `shouldContain` [conn]
+        it "has proper connection inside `def foo`" $ \env -> do
+            u1 <- nextRandom
+            (res, _) <- runGraph env $ \mkLoc -> do
+                let loc = mkLoc $ Breadcrumb []
+                    loc' = mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
+                n1 <- Graph.addNode loc u1 "def foo" def
+                conns <- view Graph.connections <$> Graph.getGraph loc'
+                Just edges <- Graph.withGraph loc' $ GraphBuilder.getEdgePortMapping
+                return (conns, edges)
+            case res of
+                Left err -> expectationFailure err
+                Right (connections, (inputEdge, outputEdge)) -> do
+                    connections `shouldMatchList` [(OutPortRef inputEdge (Projection 0), InPortRef outputEdge (Arg 0))]
         it "shows connection inside lambda" $ \env -> do
             u1 <- nextRandom
             u2 <- nextRandom
@@ -157,8 +170,8 @@ spec = around withChannels $
             case res of
                 Left err -> expectationFailure err
                 Right (ref, connections) -> do
-                    connections `shouldSatisfy` ((== 1) . length)
-                    head connections `shouldBe` ref
+                    connections `shouldSatisfy` ((== 2) . length)
+                    connections `shouldContain` [ref]
         it "creates two nested lambdas and a node inside" $ \env -> do
             u1 <- nextRandom
             u2 <- nextRandom
@@ -191,7 +204,7 @@ spec = around withChannels $
                 Right g -> do
                     let Just lambdaNode = find ((== u1) . Node._nodeId) $ Graph._nodes g
                     lambdaNode ^. Node.canEnter `shouldBe` False
-        it "has nodes inside function" $ \env -> do
+        it "has no null node inside `def foo`" $ \env -> do
             u1 <- nextRandom
             (res, _) <- runGraph env $ \mkLoc -> do
                 let loc = mkLoc $ Breadcrumb []
@@ -200,8 +213,7 @@ spec = around withChannels $
             case res of
                 Left err -> expectationFailure err
                 Right (excludeEdges -> ids) -> do
-                    ids `shouldSatisfy` ((== 1) . length)
-                    head ids `shouldSatisfy` (\a -> a ^. nodeType . expression == "in0")
+                    ids `shouldSatisfy` null
         it "int literal has no nodes inside" $ \env -> do
             u1 <- nextRandom
             (res, _) <- runGraph env $ \mkLoc -> do
@@ -280,6 +292,17 @@ spec = around withChannels $
                 Right (excludeEdges -> nodes) -> do
                     nodes `shouldSatisfy` ((== 1) . length)
                     head nodes `shouldSatisfy` (\a -> a ^. nodeType . expression == "a + b")
+        it "places connections between + node and output" $ \env -> do
+          u1 <- nextRandom
+          (res, _) <- runGraph env $ \mkLoc -> do
+              let loc = mkLoc $ Breadcrumb []
+                  loc' = mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
+              Graph.addNode loc u1 "-> $a $b a + b" def
+              view Graph.connections <$> Graph.getGraph loc'
+          case res of
+              Left err -> expectationFailure err
+              Right conns -> do
+                  conns `shouldSatisfy` ((== 1) . length)
 
 withChannels :: (CommunicationEnv -> IO ()) -> IO ()
 withChannels = bracket createChannels (const $ return ())
