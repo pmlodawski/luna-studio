@@ -56,7 +56,10 @@ import           Luna.Syntax.Model.Network.Builder (TCData (..), Type (..), repl
 import qualified Luna.Syntax.Model.Network.Builder as Builder
 
 nameBreadcrumb :: BreadcrumbItem -> Command Graph (Named BreadcrumbItem)
-nameBreadcrumb item@(Breadcrumb.Lambda nid) = flip Named item <$> getNodeName nid
+nameBreadcrumb item@(Breadcrumb.Lambda nid) = do
+    name <- getNodeName nid
+    return $ Named (fromMaybe "" name) item
+
 
 decodeBreadcrumbs :: Breadcrumb BreadcrumbItem -> Command Graph (Breadcrumb (Named BreadcrumbItem))
 decodeBreadcrumbs (Breadcrumb items) = fmap Breadcrumb $ forM items nameBreadcrumb

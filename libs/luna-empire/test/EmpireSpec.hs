@@ -18,8 +18,6 @@ import           Empire.API.Data.DefaultValue (PortDefault (..), Value (..))
 import qualified Empire.API.Data.Graph        as Graph
 import qualified Empire.Commands.GraphBuilder as GraphBuilder
 import qualified Empire.Commands.GraphUtils   as GraphUtils
-import           Empire.API.Data.Input        as Input
-import           Empire.API.Data.Output       as Output
 import           Empire.API.Data.Node         as Node
 import           Empire.API.Data.NodeMeta
 import           Empire.API.Data.Port
@@ -243,8 +241,8 @@ spec = around withChannels $
                         Graph.getGraph $ mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
                     let nodes' = foo ^. Graph.nodes
                         Just input = find ((== "inputEdge") . Node._name) nodes'
-                        inputsTypes = input ^. nodeType . inputs
-                        types = map Input._valueType inputsTypes
+                        ports' = toList $ input ^. ports
+                        types = map (view valueType) ports'
                     types `shouldMatchList` [TypeIdent (TCons "Int" []), TypeIdent (TCons "Int" [])]
         it "properly typechecks output nodes" $ \env -> do
             u1 <- nextRandom
@@ -263,9 +261,9 @@ spec = around withChannels $
                         Graph.getGraph $ mkLoc $ Breadcrumb [Breadcrumb.Lambda u1]
                     let nodes' = foo ^. Graph.nodes
                         Just output' = find ((== "outputEdge") . Node._name) nodes'
-                        outputType = output' ^. nodeType
-                        types = Output._valueType $ Node._output outputType
-                    types `shouldBe` TypeIdent (TCons "Int" [])
+                        ports' = toList $ output' ^. ports
+                        types = map (view valueType) ports'
+                    types `shouldBe` [TypeIdent (TCons "Int" [])]
         it "adds lambda nodeid to node mapping" $ \env -> do
             u1 <- nextRandom
             (res, _) <- runGraph env $ \mkLoc -> do
