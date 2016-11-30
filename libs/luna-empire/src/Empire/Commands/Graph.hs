@@ -229,7 +229,7 @@ getNodeMeta loc nodeId = withGraph loc $ do
 
 getCode :: GraphLocation -> Empire String
 getCode loc = withGraph loc $ do
-    allNodes <- uses Graph.nodeMapping Map.keys
+    allNodes <- uses Graph.breadcrumbHierarchy topLevelIDs
     refs     <- mapM GraphUtils.getASTPointer allNodes
     metas    <- zoom Graph.ast $ mapM AST.readMeta refs
     let sorted = fmap snd $ sort $ zip metas allNodes
