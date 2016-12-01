@@ -31,7 +31,7 @@ import           Reactive.Commands.Graph.Selection (focusSelectedNode,
                                                     selectAll,
                                                     selectedNodes,
                                                     unselectAll,
-                                                    unselectAll')
+                                                    unselectAllAndDropSelectionHistory)
 import qualified Reactive.Commands.UIRegistry      as UICmd
 
 import           UI.Raycaster                      (getObjectsInRect)
@@ -54,12 +54,12 @@ trySelectAll = do
 tryUnselectAll :: Command State ()
 tryUnselectAll = do
     focusedWidget <- inRegistry $ use UIRegistry.focusedWidget
-    when (isNothing focusedWidget) unselectAll
+    when (isNothing focusedWidget) unselectAllAndDropSelectionHistory
 
 startDrag :: Vector2 Int -> Command State ()
 startDrag coord = do
     Global.multiSelection . MultiSelection.history ?= DragHistory coord coord
-    unselectAll'
+    unselectAll
 
 handleMove :: JSState -> Vector2 Int -> Command State ()
 handleMove jsstate coord = do

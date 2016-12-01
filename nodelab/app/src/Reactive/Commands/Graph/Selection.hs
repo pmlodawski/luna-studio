@@ -3,14 +3,13 @@ module Reactive.Commands.Graph.Selection
      , focusSelectedNode
      , selectAll
      , selectNodes
-     , unselectAll'
      , unselectAll
+     , unselectAllAndDropSelectionHistory
      , dropSelectionHistory
      , modifySelectionHistory
      , selectPreviousNodes
      ) where
 
-import           Control.Monad.State                      (modify)
 import qualified Data.Set                                 as Set
 import           Utils.PreludePlus
 
@@ -29,8 +28,8 @@ import qualified Reactive.State.Global                    as Global
 import qualified Reactive.State.UIRegistry                as UIRegistry
 
 
-unselectAll' :: Command State ()
-unselectAll' = do
+unselectAll :: Command State ()
+unselectAll = do
     widgets <- allNodes
     nodesToCancelTouch <- inRegistry $ forM widgets $ \wf -> do
         let widgetId = wf ^. objectId
@@ -41,8 +40,8 @@ unselectAll' = do
 
     cancelCollaborativeTouch $ catMaybes nodesToCancelTouch
 
-unselectAll :: Command State ()
-unselectAll = unselectAll' >> dropSelectionHistory
+unselectAllAndDropSelectionHistory :: Command State ()
+unselectAllAndDropSelectionHistory = unselectAll >> dropSelectionHistory
 
 selectAll :: Command State ()
 selectAll = do
@@ -54,7 +53,7 @@ selectNodes nodeIds = selectNodes' nodeIds >> modifySelectionHistory nodeIds
 
 selectNodes' :: [NodeId] -> Command State ()
 selectNodes' nodeIds = do
-    unselectAll'
+    unselectAll
     widgetIds <- fmap catMaybes $ mapM nodeIdToWidgetId nodeIds
     inRegistry $ forM_ widgetIds $ (flip UICmd.update) (NodeModel.isSelected .~ True)
     focusSelectedNode
@@ -62,12 +61,11 @@ selectNodes' nodeIds = do
 
 selectPreviousNodes :: Command State ()
 selectPreviousNodes = do
-    selectionHistory <- use $ Global.selectionHistory
-    let maybeHead = listToMaybe selectionHistory
-    case maybeHead of
+    maybeSelection <- uses Global.selectionHistory listToMaybe
+    case maybeSelection of
         Nothing         -> dropSelectionHistory
         Just nodeIdsSet -> do
-            Global.selectionHistory .= (tail selectionHistory)
+            Global.selectionHistory %= drop 1
             selectNodes' $ Set.toList nodeIdsSet
             selection <- map (^. widget . NodeModel.nodeId) <$> selectedNodes
             case selection of

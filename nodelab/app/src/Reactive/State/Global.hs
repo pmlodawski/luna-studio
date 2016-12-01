@@ -35,7 +35,6 @@ data State = State { _mousePos                  :: Vector2 Int
                    , _camera                    :: Camera.State
                    , _multiSelection            :: MultiSelection.State
                    , _selectionHistory          :: [Set Node.NodeId]
-                   , _selectionHistoryMaxLength :: Int
                    , _drag                      :: Drag.State
                    , _connect                   :: Connect.State
                    , _uiRegistry                :: UIRegistry.State
@@ -60,7 +59,7 @@ instance ToJSON StdGen where
 makeLenses ''State
 
 initialState :: DateTime -> Collaboration.ClientId -> StdGen -> Maybe Int -> State
-initialState = State (Vector2 200 200) def def def def 10 def def def def def def def def defJsState def def
+initialState = State (Vector2 200 200) def def def def def def def def def def def def defJsState def def
 
 inRegistry :: Command UIRegistry.State a -> Command State a
 inRegistry = zoom uiRegistry

@@ -9,17 +9,18 @@ import           Reactive.Commands.Command (Command)
 import           Reactive.State.Global     (State)
 import qualified Reactive.State.Global     as Global
 
+
+historyMaxLength = 10
+
 dropSelectionHistory :: Command State ()
 dropSelectionHistory = Global.selectionHistory .= def
 
 modifySelectionHistory :: [NodeId] -> Command State ()
 modifySelectionHistory nodeIds = do
-    selectionHistory   <- use Global.selectionHistory
-    maxLength          <- use Global.selectionHistoryMaxLength
-    let maybeSelection = listToMaybe selectionHistory
-        nodeIdsSet     = Set.fromList nodeIds
+    maybeSelection <- uses Global.selectionHistory listToMaybe
+    let nodeIdsSet = Set.fromList nodeIds
     case maybeSelection of
         Nothing        -> Global.selectionHistory .= [nodeIdsSet]
         Just selection -> when (nodeIdsSet /= selection) $ do
-            Global.selectionHistory .= (take maxLength $ nodeIdsSet : selectionHistory)
+            Global.selectionHistory %= (take historyMaxLength) . (nodeIdsSet :)
     when (Set.null nodeIdsSet) dropSelectionHistory
