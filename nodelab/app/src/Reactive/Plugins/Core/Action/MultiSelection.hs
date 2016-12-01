@@ -2,6 +2,7 @@
 
 module Reactive.Plugins.Core.Action.MultiSelection where
 
+import           Control.Monad.State               (modify)
 import qualified Data.Set                          as Set
 import           JS.MultiSelection                 (displaySelectionBox, hideSelectionBox)
 import           Utils.PreludePlus
@@ -25,7 +26,12 @@ import qualified Reactive.State.UIRegistry         as UIRegistry
 import           Reactive.Commands.Batch           (cancelCollaborativeTouch, collaborativeTouch)
 import           Reactive.Commands.Command         (Command, performIO)
 import           Reactive.Commands.Graph           (widgetIdToNodeWidget)
-import           Reactive.Commands.Graph.Selection (focusSelectedNode, selectAll, selectedNodes, unselectAll)
+import           Reactive.Commands.Graph.Selection (focusSelectedNode,
+                                                    modifySelectionHistory,
+                                                    selectAll,
+                                                    selectedNodes,
+                                                    unselectAll,
+                                                    unselectAll')
 import qualified Reactive.Commands.UIRegistry      as UICmd
 
 import           UI.Raycaster                      (getObjectsInRect)
@@ -53,7 +59,7 @@ tryUnselectAll = do
 startDrag :: Vector2 Int -> Command State ()
 startDrag coord = do
     Global.multiSelection . MultiSelection.history ?= DragHistory coord coord
-    unselectAll
+    unselectAll'
 
 handleMove :: JSState -> Vector2 Int -> Command State ()
 handleMove jsstate coord = do
@@ -101,3 +107,6 @@ stopDrag = do
         Global.multiSelection . MultiSelection.history .= Nothing
         performIO hideSelectionBox
         focusSelectedNode
+        selectedWidgets <- selectedNodes
+        let selectedNodesIds = map (^. widget . NodeModel.nodeId) selectedWidgets
+        modifySelectionHistory selectedNodesIds

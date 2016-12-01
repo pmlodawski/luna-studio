@@ -3,11 +3,12 @@ module Reactive.Commands.Node.Remove
     , localRemoveNodes
     ) where
 
+import qualified Data.Set                           as Set
 import           Object.Widget                      (widget)
 import           Reactive.Commands.Command          (Command)
 import           Reactive.Commands.Graph            (nodeIdToWidgetId)
 import           Reactive.Commands.Graph.Disconnect (localDisconnectAll)
-import qualified Reactive.Commands.Graph.Selection  as Selection
+import           Reactive.Commands.Graph.Selection  (selectPreviousNodes, selectedNodes)
 import           Reactive.State.Global              (State, inRegistry)
 import qualified Reactive.State.Global              as Global
 import qualified Reactive.State.Graph               as Graph
@@ -24,8 +25,9 @@ import qualified JS.GoogleAnalytics                 as GA
 
 removeSelectedNodes :: Command State ()
 removeSelectedNodes = do
-    selectedNodes <- Selection.selectedNodes
+    selectedNodes <- selectedNodes
     performRemoval $ (^. widget . NodeModel.nodeId) <$> selectedNodes
+    selectPreviousNodes
 
 performRemoval :: [NodeId] -> Command State ()
 performRemoval nodeIds = do
@@ -34,6 +36,8 @@ performRemoval nodeIds = do
 
 localRemoveNodes :: [NodeId] -> Command State ()
 localRemoveNodes nodeIds = forM_ nodeIds $ \nodeId -> do
+    selectedNodesIds <- map (^. widget . NodeModel.nodeId) <$> selectedNodes
+    let selectPrevious =  Set.isSubsetOf (Set.fromList selectedNodesIds) $ Set.fromList nodeIds
     danglingConns <- uses Global.graph $ Graph.connectionIdsContainingNode nodeId
     localDisconnectAll danglingConns
 
@@ -42,3 +46,4 @@ localRemoveNodes nodeIds = forM_ nodeIds $ \nodeId -> do
 
     Global.graph %= Graph.removeNode nodeId
     Global.graph . Graph.nodeWidgetsMap . at nodeId .= Nothing
+    when selectPrevious selectPreviousNodes

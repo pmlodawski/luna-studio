@@ -2,49 +2,51 @@
 
 module UI.Handlers.Node where
 
-import           Utils.PreludePlus            hiding (stripPrefix)
+import           Utils.PreludePlus                        hiding (stripPrefix)
 
-import           Data.HMap.Lazy               (HTMap, TypeKey (..))
-import qualified Data.Text.Lazy               as Text
+import           Data.HMap.Lazy                           (HTMap, TypeKey (..))
+import qualified Data.Set                                 as Set
+import qualified Data.Text.Lazy                           as Text
 import           Utils.Vector
 
-import           Event.Keyboard               (KeyMods (..))
-import qualified Event.Mouse                  as Mouse
-import           Object.Widget                (CompositeWidget, DblClickHandler, KeyPressedHandler, ResizableWidget,
-                                               UIHandlers, WidgetFile, WidgetId, createWidget, dblClick, keyDown,
-                                               mouseOut, mouseOver, mousePressed, objectId, updateWidget, widget)
+import           Event.Keyboard                           (KeyMods (..))
+import qualified Event.Mouse                              as Mouse
+import           Object.Widget                            (CompositeWidget, DblClickHandler, KeyPressedHandler, ResizableWidget, UIHandlers,
+                                                           WidgetFile, WidgetId, createWidget, dblClick, keyDown, mouseOut, mouseOver,
+                                                           mousePressed, objectId, updateWidget, widget)
 
-import qualified Object.Widget.Group          as Group
-import qualified Object.Widget.Label          as Label
-import qualified Object.Widget.LabeledTextBox as LabeledTextBox
-import qualified Object.Widget.Node           as Model
-import qualified Object.Widget.TextBox        as TextBox
-import qualified Object.Widget.Toggle         as Toggle
-import qualified Object.Widget.CodeEditor     as CodeEditor
-import           Reactive.Commands.Batch      (cancelCollaborativeTouch, collaborativeTouch)
-import           Reactive.Commands.Command    (Command)
-import qualified Reactive.Commands.UIRegistry as UICmd
-import           Reactive.State.Global        (inRegistry)
-import qualified Reactive.State.Global        as Global
-import qualified Reactive.State.Graph         as Graph
-import           Reactive.State.UIRegistry    (addHandler)
-import qualified Reactive.State.UIRegistry    as UIRegistry
+import qualified Object.Widget.CodeEditor                 as CodeEditor
+import qualified Object.Widget.Group                      as Group
+import qualified Object.Widget.Label                      as Label
+import qualified Object.Widget.LabeledTextBox             as LabeledTextBox
+import qualified Object.Widget.Node                       as Model
+import qualified Object.Widget.TextBox                    as TextBox
+import qualified Object.Widget.Toggle                     as Toggle
+import           Reactive.Commands.Batch                  (cancelCollaborativeTouch, collaborativeTouch)
+import           Reactive.Commands.Command                (Command)
+import           Reactive.Commands.Graph.SelectionHistory (dropSelectionHistory, modifySelectionHistory)
+import qualified Reactive.Commands.UIRegistry             as UICmd
+import           Reactive.State.Global                    (inRegistry)
+import qualified Reactive.State.Global                    as Global
+import qualified Reactive.State.Graph                     as Graph
+import           Reactive.State.UIRegistry                (addHandler)
+import qualified Reactive.State.UIRegistry                as UIRegistry
 
-import qualified Style.Node                   as Style
-import           UI.Generic                   (whenChanged)
-import           UI.Handlers.Button           (DblClickedHandler (..), MousePressedHandler (..))
-import           UI.Handlers.Generic          (ValueChangedHandler (..))
-import           UI.Handlers.LabeledTextBox   ()
-import           UI.Layout                    as Layout
-import           UI.Widget.Group              ()
-import           UI.Widget.Label              ()
-import           UI.Widget.LabeledTextBox     ()
-import           UI.Widget.Node               ()
-import           UI.Widget.TextBox            ()
-import           UI.Widget.Toggle             ()
-import           UI.Widget.CodeEditor         ()
+import qualified Style.Node                               as Style
+import           UI.Generic                               (whenChanged)
+import           UI.Handlers.Button                       (DblClickedHandler (..), MousePressedHandler (..))
+import           UI.Handlers.Generic                      (ValueChangedHandler (..))
+import           UI.Handlers.LabeledTextBox               ()
+import           UI.Layout                                as Layout
+import           UI.Widget.CodeEditor                     ()
+import           UI.Widget.Group                          ()
+import           UI.Widget.Label                          ()
+import           UI.Widget.LabeledTextBox                 ()
+import           UI.Widget.Node                           ()
+import           UI.Widget.TextBox                        ()
+import           UI.Widget.Toggle                         ()
 
-import           Empire.API.Data.Node         (NodeId)
+import           Empire.API.Data.Node                     (NodeId)
 
 
 nameHandlers :: WidgetId -> HTMap
@@ -187,6 +189,7 @@ performSelect wid = do
     unless isSelected $ do
         unselectAll
         inRegistry $ UICmd.update_ wid (Model.isSelected .~ True)
+        modifySelectionHistory [nodeId]
         collaborativeTouch [nodeId]
 
 toggleSelect :: WidgetId -> Command Global.State ()
@@ -194,9 +197,9 @@ toggleSelect wid = do
     newNode <- inRegistry $ UICmd.update wid (Model.isSelected %~ not)
     let nodeId = newNode ^. Model.nodeId
     if newNode ^. Model.isSelected then
-      collaborativeTouch [nodeId]
+        modifySelectionHistory [nodeId] >> collaborativeTouch [nodeId]
     else
-      cancelCollaborativeTouch [nodeId]
+        dropSelectionHistory >> cancelCollaborativeTouch [nodeId]
 
 
 unselectAll :: Command Global.State ()
