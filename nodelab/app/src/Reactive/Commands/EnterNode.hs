@@ -18,7 +18,7 @@ import qualified Empire.API.Data.GraphLocation    as GraphLocation
 enterNode :: BreadcrumbItem -> Command State ()
 enterNode item = do
     location <- use $ Global.workspace . Workspace.currentLocation
-    let newLocation = location & GraphLocation.breadcrumb . Breadcrumb.items %~ (item:)
+    let newLocation = location & GraphLocation.breadcrumb . Breadcrumb.items %~ (++ [item])
     ProjectManager.navigateToGraph newLocation
 
 exitNode :: Command State ()

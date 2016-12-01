@@ -38,8 +38,8 @@ displayBreadcrumbs enterBreadcrumbs (Breadcrumb items) = do
     currentProjectName <- use $ Global.workspace . Workspace.currentProject . Project.name
 
     inRegistry $ do
-        forM_ (reverse $ tails items) $ \bc -> do
-            let name = case bc of
+        forM_ (inits items) $ \bc -> do
+            let name = case reverse bc of
                     (item:_) -> case item of
                         Breadcrumb.Named name' _ -> name'
                     [] -> Text.pack currentProjectName
