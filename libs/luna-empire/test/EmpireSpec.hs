@@ -8,44 +8,37 @@
 
 module EmpireSpec (spec) where
 
-import           Prologue hiding (toList, (|>))
+import           Prologue hiding (mapping, toList, (|>))
 import           Control.Exception (Exception, bracket)
-import           Control.Monad.Except (throwError)
 import           Data.Coerce (coerce)
 import           Data.Container.Class (usedIxes)
 import           Data.Foldable (toList)
 import           Data.Graph.Model.Node (nodeStore)
-import           Data.List (find, sort, stripPrefix)
+import           Data.List (find, stripPrefix)
 import qualified Data.Map as Map
 import           Data.UUID (nil)
 import           Data.UUID.V4 (nextRandom)
-import           Empire.API.Data.DefaultValue (PortDefault (..), Value (..))
 import qualified Empire.API.Data.Graph        as Graph
 import qualified Empire.Commands.GraphBuilder as GraphBuilder
 import qualified Empire.Commands.GraphUtils   as GraphUtils
 import           Empire.API.Data.Node         as Node
-import           Empire.API.Data.NodeMeta
 import           Empire.API.Data.Port
 import           Empire.API.Data.GraphLocation hiding (breadcrumb)
 import           Empire.API.Data.Breadcrumb   as Breadcrumb hiding (breadcrumb)
-import           Empire.API.Data.PortRef      (AnyPortRef(..), InPortRef (..), OutPortRef (..), srcNodeId)
+import           Empire.API.Data.PortRef      (InPortRef (..), OutPortRef (..))
 import           Empire.API.Data.TypeRep
 import           Empire.API.Data.ValueType
 import           Empire.ASTOp                 (runASTOp)
 import           Empire.ASTOps.Print          (printNodeExpression)
-import           Empire.Commands.AST
 import           Empire.Commands.Graph        as Graph
 import           Empire.Commands.Library
 import           Empire.Commands.Project
 import           Empire.Commands.Typecheck    as Typecheck
-import           Empire.Data.AST
 import           Empire.Data.Graph
 import           Empire.Data.Library
 import           Empire.Empire
-import           Control.Concurrent.STM.TChan (TChan, newTChan)
+import           Control.Concurrent.STM.TChan (newTChan)
 import           Control.Concurrent.STM       (atomically)
-import           Old.Luna.Pretty.GraphViz     (renderAndOpen, toGraphViz)
-import           System.IO.Unsafe             (unsafePerformIO)
 
 import           Test.Hspec (Spec, around, describe, expectationFailure, it,
                              shouldBe, shouldContain, shouldSatisfy, shouldMatchList)
@@ -57,21 +50,23 @@ runGraph env act = runEmpire env def $ do
     let toLoc = GraphLocation pid lid
     let ?graphLoc = toLoc $ Breadcrumb [] in act
 
-runGraph'' :: CommunicationEnv -> Env -> Graph ->
+runGraph' :: CommunicationEnv -> Env -> Graph ->
               ((?graphLoc :: GraphLocation) => Command Env a) -> IO (Either Error a, Env)
-runGraph'' env st newGraph act = runEmpire env st $ do
+runGraph' env st newGraph act = runEmpire env st $ do
     pid <- (fst . head) <$> listProjects
     lid <- (fst . head) <$> listLibraries pid
     withLibrary pid lid $ body .= newGraph
     let toLoc = GraphLocation pid lid
     let ?graphLoc = toLoc $ Breadcrumb [] in act
 
+graphIDs :: GraphLocation -> Command Env [NodeId]
 graphIDs loc = do
   nodes <- view Graph.nodes <$> Graph.getGraph loc
   let ids = map (^. nodeId) nodes
   return ids
 
-exGraph (InterpreterEnv _ _ _ g _) = g
+extractGraph :: InterpreterEnv -> Graph
+extractGraph (InterpreterEnv _ _ _ g _) = g
 
 excludeEdges :: [Node] -> [Node]
 excludeEdges = filter (not . isEdge . view nodeType)
@@ -100,8 +95,8 @@ spec = around withChannels $
     describe "luna-empire" $ do
         it "descends into `def foo` and asserts null list of nodes inside" $ \env -> do
             u1 <- nextRandom
-            (res, state) <- runGraph env $ do
-                n1 <- Graph.addNode top u1 "def foo" def
+            (res, _) <- runGraph env $ do
+                Graph.addNode top u1 "def foo" def
                 topLevel <- graphIDs top
                 n1Level <- graphIDs (top |> u1)
                 return (topLevel, n1Level)
@@ -110,14 +105,13 @@ spec = around withChannels $
         it "adds node" $ \env -> do
             u1 <- nextRandom
             (res, _) <- runGraph env $ do
-                n1 <- Graph.addNode top u1 "def foo" def
-                return n1
+                Graph.addNode top u1 "def foo" def
             withResult res $ \_ -> return ()
         it "makes connection to output edge" $ \env -> do
             u1 <- nextRandom
             u2 <- nextRandom
             (res, _) <- runGraph env $ do
-                n1 <- Graph.addNode top u1 "def foo" def
+                _ <- Graph.addNode top u1 "def foo" def
                 let loc' = top |> u1
                 n2 <- Graph.addNode loc' u2 "4" def
                 Just (_, out) <- Graph.withGraph loc' $ GraphBuilder.getEdgePortMapping
@@ -132,11 +126,11 @@ spec = around withChannels $
             u1 <- nextRandom
             u2 <- nextRandom
             (res, _) <- runGraph env $ do
-                n1 <- Graph.addNode top u1 "def foo" def
+                Graph.addNode top u1 "def foo" def
                 let loc' = top |> u1
-                n2 <- Graph.addNode loc' u2 "succ" def
+                Graph.addNode loc' u2 "succ" def
                 Just (input, _) <- Graph.withGraph loc' $ GraphBuilder.getEdgePortMapping
-                let referenceConnection = (OutPortRef input All, InPortRef (n2 ^. nodeId) Self)
+                let referenceConnection = (OutPortRef input All, InPortRef u2 Self)
                 Graph.connect loc' (referenceConnection ^. _1) (referenceConnection ^. _2)
                 connections <- view Graph.connections <$> Graph.getGraph loc'
                 return (referenceConnection, connections)
@@ -148,7 +142,7 @@ spec = around withChannels $
             u2 <- nextRandom
             (res, _) <- runGraph env $ do
                 let loc' = top |> u1
-                n1 <- Graph.addNode top u1 "def foo" def
+                Graph.addNode top u1 "def foo" def
                 n2 <- Graph.addNode loc' u2 "succ" def
                 Just (input, _) <- Graph.withGraph loc' $ GraphBuilder.getEdgePortMapping
                 let referenceConnection = (OutPortRef input All, InPortRef (n2 ^. nodeId) (Arg 0))
@@ -162,7 +156,7 @@ spec = around withChannels $
             u1 <- nextRandom
             (res, _) <- runGraph env $ do
                 let loc' = top |> u1
-                n1 <- Graph.addNode top u1 "def foo" def
+                Graph.addNode top u1 "def foo" def
                 conns <- view Graph.connections <$> Graph.getGraph loc'
                 Just edges <- Graph.withGraph loc' $ GraphBuilder.getEdgePortMapping
                 return (conns, edges)
@@ -174,7 +168,7 @@ spec = around withChannels $
             u3 <- nextRandom
             (res, _) <- runGraph env $ do
                 let loc' = top |> u1
-                n1 <- Graph.addNode top u1 "def foo" def
+                Graph.addNode top u1 "def foo" def
                 n2 <- Graph.addNode loc' u2 "4" def
                 n3 <- Graph.addNode loc' u3 "succ" def
                 let referenceConnection = (OutPortRef (n2 ^. nodeId) All, InPortRef (n3 ^. nodeId) Self)
@@ -188,12 +182,12 @@ spec = around withChannels $
             u1 <- nextRandom
             u2 <- nextRandom
             u3 <- nextRandom
-            (res, state) <- runGraph env $ do
+            (res, _) <- runGraph env $ do
                 let loc' = top |> u1
-                n1 <- Graph.addNode top u1 "def foo" def
-                n2 <- Graph.addNode loc' u2 "def bar" def
+                Graph.addNode top u1 "def foo" def
+                Graph.addNode loc' u2 "def bar" def
                 let loc'' = loc' |> u2
-                n3 <- Graph.addNode loc'' u3 "4" def
+                Graph.addNode loc'' u3 "4" def
                 graphIDs loc''
             withResult res $ \ids -> do
                 u3 `shouldSatisfy` (`elem` ids)
@@ -203,8 +197,8 @@ spec = around withChannels $
             u1 <- nextRandom
             u2 <- nextRandom
             (res, _) <- runGraph env $ do
-                n1 <- Graph.addNode top u1 "def foo" def
-                n2 <- Graph.addNode top u2 "4" def
+                Graph.addNode top u1 "def foo" def
+                Graph.addNode top u2 "4" def
                 Graph.connect top (OutPortRef u2 All) (InPortRef u1 (Arg 0))
                 Graph.getGraph top
             withResult res $ \g -> do
@@ -213,16 +207,15 @@ spec = around withChannels $
         it "has no null node inside `def foo`" $ \env -> do
             u1 <- nextRandom
             (res, _) <- runGraph env $ do
-                n1 <- Graph.addNode top u1 "def foo" def
+                Graph.addNode top u1 "def foo" def
                 view Graph.nodes <$> Graph.getGraph (top |> u1)
             withResult res $ \(excludeEdges -> ids) -> do
                 ids `shouldSatisfy` null
         it "int literal has no nodes inside" $ \env -> do
             u1 <- nextRandom
             (res, _) <- runGraph env $ do
-                n1 <- Graph.addNode top u1 "4" def
-                let loc' = top |> u1
-                graphIDs loc'
+                Graph.addNode top u1 "4" def
+                graphIDs $ top |> u1
             case res of
                 Left err -> case stripPrefix "cannot enter node Just" err of
                     Just _ -> return ()
@@ -231,14 +224,13 @@ spec = around withChannels $
         it "properly typechecks input nodes" $ \env -> do
             u1 <- nextRandom
             (res, st) <- runGraph env $ do
-                let loc' = top |> u1
                 Graph.addNode top u1 "-> $a $b a + b" def
                 let GraphLocation pid lid _ = top
                 withLibrary pid lid (use $ body)
             withResult res $ \g -> do
-                (res', (exGraph -> g')) <- runEmpire env (InterpreterEnv def def def g def) $
+                (_, (extractGraph -> g')) <- runEmpire env (InterpreterEnv def def def g def) $
                     Typecheck.run $ GraphLocation nil 0 $ Breadcrumb []
-                (res'', _) <- runGraph'' env st g' $ do
+                (res'', _) <- runGraph' env st g' $ do
                     Graph.getGraph $ top |> u1
                 withResult res'' $ \foo -> do
                     let nodes' = foo ^. Graph.nodes
@@ -249,14 +241,13 @@ spec = around withChannels $
         it "properly typechecks output nodes" $ \env -> do
             u1 <- nextRandom
             (res, st) <- runGraph env $ do
-                let loc' = top |> u1
                 Graph.addNode top u1 "-> $a $b a + b" def
                 let GraphLocation pid lid _ = top
                 withLibrary pid lid (use $ body)
             withResult res $ \g -> do
-                (res', (exGraph -> g')) <- runEmpire env (InterpreterEnv def def def g def) $
+                (_, (extractGraph -> g')) <- runEmpire env (InterpreterEnv def def def g def) $
                     Typecheck.run $ GraphLocation nil 0 $ Breadcrumb []
-                (res'',_) <- runGraph'' env st g' $ do
+                (res'',_) <- runGraph' env st g' $ do
                     Graph.getGraph $ top |> u1
                 withResult res'' $ \foo -> do
                     let nodes' = foo ^. Graph.nodes
@@ -304,11 +295,11 @@ spec = around withChannels $
                 Graph.connect loc' (referenceConnection ^. _1) (referenceConnection ^. _2)
                 Graph.removeNodes top [u1]
                 mapping <- withGraph top $ use nodeMapping
-                ast <- withGraph top $ use ast
-                return (ast, mapping)
-            withResult res $ \(ast, mapping) -> do
+                endAst <- withGraph top $ use ast
+                return (endAst, mapping)
+            withResult res $ \(endAst, mapping) -> do
                 mapping `shouldSatisfy` Map.null
-                ast ^. _Wrapped . nodeStore . to usedIxes `shouldMatchList` [0]
+                endAst ^. _Wrapped . nodeStore . to usedIxes `shouldMatchList` [0]
         it "ignores nodes outside lambda while pretty-printing code inside it" $ \env -> do
             u1 <- nextRandom
             u2 <- nextRandom
@@ -332,16 +323,16 @@ spec = around withChannels $
                 let loc' = top |> u1
                 Graph.addNode top u1 "-> $a $b a + b" def
                 Graph.getCode loc'
-            withResult res $ \code -> do
-                    lines code `shouldMatchList` ["def node1 a b:", "    a + b"]
+            withResult res $ \pprCode -> do
+                    lines pprCode `shouldMatchList` ["def node1 a b:", "    a + b"]
         it "prints `def foo` function" $ \env -> do
           u1 <- nextRandom
           (res, _) <- runGraph env $ do
               let loc' = top |> u1
               Graph.addNode top u1 "def foo" def
               Graph.getCode loc'
-          withResult res $ \code -> do
-                  lines code `shouldMatchList` ["def foo in0:", "    in0"]
+          withResult res $ \pprCode -> do
+                  lines pprCode `shouldMatchList` ["def foo in0:", "    in0"]
         it "prints node name for `def foo`" $ \env -> do
             u1 <- nextRandom
             (res, _) <- runGraph env $ do
