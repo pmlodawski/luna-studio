@@ -48,8 +48,8 @@ import           Test.Hspec (around, describe, expectationFailure, it,
 
 
 runGraph env act = runEmpire env def $ do
-    (pid, _) <- createProject Nothing "dupa"
-    (lid, _) <- createLibrary pid (Just "xd") "/xd/xd"
+    (pid, _) <- createProject Nothing "project1"
+    (lid, _) <- createLibrary pid (Just "lib1") "/libs/lib1"
     let toLoc = GraphLocation pid lid
     act toLoc
 
