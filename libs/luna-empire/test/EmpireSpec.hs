@@ -1,44 +1,44 @@
-{-# LANGUAGE DeriveAnyClass       #-}
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE ImplicitParams       #-}
+{-# LANGUAGE DeriveAnyClass        #-}
+-- {-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE ImplicitParams        #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE PartialTypeSignatures #-}
-{-# LANGUAGE OverloadedStrings    #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE ViewPatterns         #-}
+-- {-# LANGUAGE TypeSynonymInstances  #-}
+{-# LANGUAGE ViewPatterns          #-}
 
 module EmpireSpec (spec) where
 
-import           Prologue hiding (mapping, toList, (|>))
-import           Control.Exception (Exception, bracket)
-import           Data.Coerce (coerce)
-import           Data.Container.Class (usedIxes)
-import           Data.Foldable (toList)
-import           Data.Graph.Model.Node (nodeStore)
-import           Data.List (find, stripPrefix)
-import qualified Data.Map as Map
-import           Data.UUID (nil)
-import           Data.UUID.V4 (nextRandom)
-import qualified Empire.API.Data.Graph        as Graph
-import qualified Empire.Commands.GraphBuilder as GraphBuilder
-import qualified Empire.Commands.GraphUtils   as GraphUtils
-import           Empire.API.Data.Node         as Node
-import           Empire.API.Data.Port
+import           Control.Concurrent.STM        (atomically)
+import           Control.Concurrent.STM.TChan  (newTChan)
+import           Control.Exception             (Exception, bracket)
+import           Data.Coerce                   (coerce)
+import           Data.Container.Class          (usedIxes)
+import           Data.Foldable                 (toList)
+import           Data.Graph.Model.Node         (nodeStore)
+import           Data.List                     (find, stripPrefix)
+import qualified Data.Map                      as Map
+import           Data.UUID                     (nil)
+import           Data.UUID.V4                  (nextRandom)
+import           Empire.API.Data.Breadcrumb    as Breadcrumb hiding (breadcrumb)
+import qualified Empire.API.Data.Graph         as Graph
 import           Empire.API.Data.GraphLocation hiding (breadcrumb)
-import           Empire.API.Data.Breadcrumb   as Breadcrumb hiding (breadcrumb)
-import           Empire.API.Data.PortRef      (InPortRef (..), OutPortRef (..))
+import           Empire.API.Data.Node          as Node
+import           Empire.API.Data.Port
+import           Empire.API.Data.PortRef       (InPortRef (..), OutPortRef (..))
 import           Empire.API.Data.TypeRep
 import           Empire.API.Data.ValueType
-import           Empire.ASTOp                 (runASTOp)
-import           Empire.ASTOps.Print          (printNodeExpression)
-import           Empire.Commands.Graph        as Graph
+import           Empire.ASTOp                  (runASTOp)
+import           Empire.ASTOps.Print           (printNodeExpression)
+import           Empire.Commands.Graph         as Graph
+import qualified Empire.Commands.GraphBuilder  as GraphBuilder
+import qualified Empire.Commands.GraphUtils    as GraphUtils
 import           Empire.Commands.Library
 import           Empire.Commands.Project
-import           Empire.Commands.Typecheck    as Typecheck
+import           Empire.Commands.Typecheck     as Typecheck
 import           Empire.Data.Graph
 import           Empire.Data.Library
 import           Empire.Empire
-import           Control.Concurrent.STM.TChan (newTChan)
-import           Control.Concurrent.STM       (atomically)
+import           Prologue                      hiding (mapping, toList, (|>))
 
 import           Test.Hspec (Spec, around, describe, expectationFailure, it,
                              shouldBe, shouldContain, shouldSatisfy, shouldMatchList)
