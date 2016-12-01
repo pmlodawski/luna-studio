@@ -96,20 +96,25 @@ infixr 5 |>
 spec :: Spec
 spec = around withChannels $
     describe "luna-empire" $ do
-        it "descends into `def foo` and asserts null list of nodes inside" $ \env -> do
+        it "descends into `def foo` and asserts two edges inside" $ \env -> do
             u1 <- nextRandom
             res <- evalEmp env $ do
                 Graph.addNode top u1 "def foo" def
                 topLevel <- graphIDs top
-                n1Level <- graphIDs (top |> u1)
+                n1Level <- view Graph.nodes <$> Graph.getGraph (top |> u1)
                 return (topLevel, n1Level)
-            withResult res $ \ids -> do
-                u1 `shouldSatisfy` (`elem` (fst ids))
-        it "adds node" $ \env -> do
+            withResult res $ \(topLevel, n1Level) -> do
+                [u1] `shouldMatchList` topLevel
+                n1Level `shouldSatisfy` ((== 2) . length)
+                excludeEdges n1Level `shouldSatisfy` null
+        it "asserts things about `def foo`" $ \env -> do
             u1 <- nextRandom
             res <- evalEmp env $ do
                 Graph.addNode top u1 "def foo" def
-            withResult res $ \_ -> return ()
+            withResult res $ \node -> do
+                node ^. Node.name `shouldBe` "foo"
+                node ^. nodeType `shouldBe` ExpressionNode "-> $in0 in0"
+                node ^. canEnter `shouldBe` True
         it "makes connection to output edge" $ \env -> do
             u1 <- nextRandom
             u2 <- nextRandom
