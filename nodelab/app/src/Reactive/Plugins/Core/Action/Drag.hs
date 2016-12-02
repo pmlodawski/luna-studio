@@ -18,13 +18,13 @@ import qualified Event.Mouse                       as Mouse
 import qualified Reactive.Commands.Batch           as BatchCmd
 import           Reactive.Commands.Command         (Command)
 import           Reactive.Commands.Graph           (allNodes, updateConnectionsForNodes, nodeIdToWidgetId)
-import           Reactive.Commands.Graph.Selection (selectedNodes)
+import           Reactive.Commands.Graph.Selection (selectNodes, selectedNodes)
 import           Reactive.Commands.Node.Snap       (snap)
 import qualified Reactive.Commands.UIRegistry      as UICmd
 import qualified Reactive.State.Camera             as Camera
 import           Reactive.State.Drag               (DragHistory (..))
 import qualified Reactive.State.Drag               as Drag
-import           Reactive.State.Global             (State)
+import           Reactive.State.Global             (State, inRegistry)
 import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Graph              as Graph
 import qualified Reactive.State.UIRegistry         as UIRegistry
@@ -129,15 +129,20 @@ stopDrag = do
 
     withJust dragHistory $ \(DragHistory start current _ _) -> do
         Global.drag . Drag.history .= Nothing
-        when (start /= current) $ do
-            widgets <- allNodes
+        case start == current of
+            False -> do
+                widgets <- allNodes
 
-            let selected = filter (^. widget . Model.isSelected) widgets
-                nodesToUpdate = (\w -> (w ^. widget . Model.nodeId, w ^. widget . widgetPosition)) <$> selected
+                let selected = filter (^. widget . Model.isSelected) widgets
+                    nodesToUpdate = (\w -> (w ^. widget . Model.nodeId, w ^. widget . widgetPosition)) <$> selected
 
-            updates <- forM nodesToUpdate $ \(wid, pos) -> do
-                Global.graph . Graph.nodesMap . ix wid . Node.position .= toTuple pos
-                newMeta <- preuse $ Global.graph . Graph.nodesMap . ix wid . Node.nodeMeta
-                return $ (wid, ) <$> newMeta
-            BatchCmd.updateNodeMeta $ catMaybes updates
-            updateConnectionsForNodes $ fst <$> nodesToUpdate
+                updates <- forM nodesToUpdate $ \(wid, pos) -> do
+                    Global.graph . Graph.nodesMap . ix wid . Node.position .= toTuple pos
+                    newMeta <- preuse $ Global.graph . Graph.nodesMap . ix wid . Node.nodeMeta
+                    return $ (wid, ) <$> newMeta
+                BatchCmd.updateNodeMeta $ catMaybes updates
+                updateConnectionsForNodes $ fst <$> nodesToUpdate
+            True -> whenM (zoom Global.uiRegistry isNodeUnderCursor) $ do
+                (Just id) <- inRegistry $ use UIRegistry.widgetOver
+                (Just w ) <- inRegistry $ (UIRegistry.lookupTypedM id :: Command UIRegistry.State (Maybe (WidgetFile Model.Node)))
+                selectNodes [w ^. Widget.widget . Model.nodeId]
