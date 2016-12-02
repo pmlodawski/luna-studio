@@ -37,7 +37,7 @@ unselectAll = do
                 UICmd.update_ widgetId $ NodeModel.isSelected .~ False
                 return $ Just $ wf ^. widget . NodeModel.nodeId
         else return Nothing
-
+    inRegistry $ UIRegistry.focusedWidget .= def
     cancelCollaborativeTouch $ catMaybes nodesToCancelTouch
 
 unselectAllAndDropSelectionHistory :: Command State ()
