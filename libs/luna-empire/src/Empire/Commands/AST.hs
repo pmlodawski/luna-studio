@@ -17,7 +17,7 @@ import           Data.Maybe                        (catMaybes, fromMaybe)
 import           Old.Data.Prop                     (prop, ( # ))
 import           Old.Data.Record                       (ANY (..), caseTest, of')
 import qualified Data.Text.Lazy                    as Text
-import           Prologue                          hiding (( # ), TypeRep)
+import           Prologue                          hiding (( # ), TypeRep, tryHead)
 
 import           Empire.API.Data.DefaultValue      (PortDefault, Value (..))
 import qualified Empire.API.Data.Error             as APIError
@@ -239,6 +239,10 @@ readMeta ref = runASTOp $ HMap.lookup metaKey . view (prop Meta) <$> Builder.rea
 
 getError :: NodeRef -> Command AST (Maybe (APIError.Error TypeRep))
 getError = runASTOp . getError'
+
+tryHead :: [a] -> Maybe a
+tryHead [] = Nothing
+tryHead (a:_) = Just a
 
 getError' :: ASTOp m => NodeRef -> m (Maybe (APIError.Error TypeRep))
 getError' ref = do
