@@ -11,6 +11,7 @@ import qualified Data.Map                          as Map
 
 import           Object.Widget                     (WidgetFile, parent, widget, widgetPosition)
 
+import           Control.Arrow
 import           Control.Monad.State               ()
 import           Control.Monad.Trans.Maybe
 
@@ -55,19 +56,19 @@ toAction _                                                                      
 
 getNodeIdUnderCursorFromNode :: Command UIRegistry.State (Maybe NodeId)
 getNodeIdUnderCursorFromNode = runMaybeT $ do
-    (Just id') <- lift $ use UIRegistry.widgetOver
-    (Just w )  <- lift $ (UIRegistry.lookupTypedM id' :: Command UIRegistry.State (Maybe (WidgetFile Model.Node)))
+    Just wid <- lift $ use UIRegistry.widgetOver
+    Just w   <- lift (UIRegistry.lookupTypedM wid :: Command UIRegistry.State (Maybe (WidgetFile Model.Node)))
     return $ w ^. Widget.widget . Model.nodeId
 
 getNodeIdUnderCursorFromLabel :: Command UIRegistry.State (Maybe NodeId)
 getNodeIdUnderCursorFromLabel = runMaybeT act >>= return . join where
     act = do
-        (Just id') <- lift $ use UIRegistry.widgetOver
-        (Just w)   <- lift $ (UIRegistry.lookupTypedM id' :: Command UIRegistry.State (Maybe (WidgetFile Label)))
-        (Just p)   <- return $ w ^. parent
-        (Just n)   <- lift $ (UIRegistry.lookupTypedM p :: Command UIRegistry.State (Maybe (WidgetFile Model.Node)))
+        Just wid <- lift $ use UIRegistry.widgetOver
+        Just w   <- lift (UIRegistry.lookupTypedM wid :: Command UIRegistry.State (Maybe (WidgetFile Label)))
+        Just p   <- return $ w ^. parent
+        Just n   <- lift (UIRegistry.lookupTypedM p :: Command UIRegistry.State (Maybe (WidgetFile Model.Node)))
         exId <- lift $ Node.expressionId p
-        return $ if id' == exId
+        return $ if wid == exId
             then Just $ n ^. Widget.widget . Model.nodeId
             else Nothing
 
@@ -77,8 +78,8 @@ startDrag coord snapped = do
     nodeId'' <- zoom Global.uiRegistry getNodeIdUnderCursorFromLabel
     withJust (nodeId' <|> nodeId'') $ \nodeId -> do
         nodes' <- selectedNodes
-        let nodes = map (^. Widget.widget) nodes'
-            nodesPos = Map.fromList $ zip (map (^. Model.nodeId) nodes) (map (^. Model.position) nodes)
+        let nodes = view Widget.widget <$> nodes'
+            nodesPos = Map.fromList $ (view Model.nodeId &&& view Model.position) <$> nodes
         if snapped
             then do
                 let snappedNodes = Map.map snap nodesPos
@@ -93,13 +94,12 @@ handleMove coord snapped = do
     withJust dragHistory $ \(DragHistory mousePos draggedNodeId nodesPos) -> do
         let delta = coord - mousePos
             deltaWs = Camera.scaledScreenToWorkspace factor delta
-        if snapped
-            then case (Map.lookup draggedNodeId nodesPos) of
-                Just pos -> do
-                    let delta' = (snap $ pos + deltaWs) - pos
-                    moveNodes $ Map.map (+delta') nodesPos
-                Nothing  -> moveNodes $ Map.map (+deltaWs) nodesPos
-            else moveNodes $ Map.map (+deltaWs) nodesPos
+            shift = if snapped
+                        then case Map.lookup draggedNodeId nodesPos of
+                            Just pos -> snap (pos + deltaWs) - pos
+                            Nothing  -> deltaWs
+                        else deltaWs
+        moveNodes $ Map.map (+shift) nodesPos
 
 moveNodes :: Map NodeId (Vector2 Double) -> Command State ()
 moveNodes nodesPos = do
