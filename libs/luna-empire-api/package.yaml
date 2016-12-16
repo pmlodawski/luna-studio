@@ -10,6 +10,7 @@ flags:
     manual:           false
 
 dependencies:
+  - aeson
   - base
   - binary
   - bytestring
@@ -20,6 +21,7 @@ dependencies:
   - prologue
   - scope-searcher
   - text
+  - uuid-aeson
   - uuid-types
   - visualization-api
 

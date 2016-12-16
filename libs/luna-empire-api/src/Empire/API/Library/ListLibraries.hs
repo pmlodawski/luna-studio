@@ -1,6 +1,8 @@
 module Empire.API.Library.ListLibraries where
 
 import           Prologue
+import           Data.Aeson              (ToJSON)
+import           Data.UUID.Aeson         ()
 import           Data.Binary             (Binary)
 
 import           Empire.API.Data.Project (ProjectId)
@@ -23,6 +25,9 @@ makeLenses ''Result
 
 instance Binary Request
 instance Binary Result
+
+instance ToJSON Request
+instance ToJSON Result
 
 topicPrefix = "empire.library.list"
 instance T.MessageTopic (R.Request Request)  where topic _ = topicPrefix <> T.request

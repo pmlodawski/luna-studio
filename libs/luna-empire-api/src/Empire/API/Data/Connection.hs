@@ -1,6 +1,7 @@
 {-# LANGUAGE Rank2Types #-}
 module Empire.API.Data.Connection where
 
+import           Data.Aeson              (FromJSON, ToJSON)
 import           Data.Binary             (Binary)
 import           Prologue
 
@@ -17,6 +18,9 @@ data Connection = Connection { _src :: OutPortRef
 
 makeLenses ''Connection
 instance Binary Connection
+
+instance ToJSON Connection
+instance FromJSON Connection
 
 connectionId :: Lens' Connection ConnectionId
 connectionId = dst

@@ -4,6 +4,7 @@ author:             New Byte Order <contact@newbyteorder.com>
 maintainer:         New Byte Order <contact@newbyteorder.com>
 
 dependencies:
+  - aeson
   - base
   - binary
   - bytestring
@@ -15,7 +16,6 @@ dependencies:
   - groom
   - luna-empire
   - luna-empire-api
-  - luna-empire-api-json
   - lunac
   - m-logger
   - mtl

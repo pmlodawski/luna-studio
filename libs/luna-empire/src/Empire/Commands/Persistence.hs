@@ -44,7 +44,6 @@ import qualified Data.Aeson.Encode.Pretty        as JSON
 
 import qualified Data.Text.Lazy                  as Text
 import           Data.Text.Lazy.Encoding         (decodeUtf8, encodeUtf8)
-import           Empire.API.JSONInstances        ()
 
 import qualified System.Log.MLogger              as Logger
 

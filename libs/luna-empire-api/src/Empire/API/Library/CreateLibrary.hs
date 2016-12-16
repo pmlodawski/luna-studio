@@ -4,7 +4,9 @@
 module Empire.API.Library.CreateLibrary where
 
 import           Prologue
+import           Data.Aeson              (ToJSON)
 import           Data.Binary             (Binary)
+import           Data.UUID.Aeson         ()
 
 import           Empire.API.Data.Project (ProjectId)
 import           Empire.API.Data.Library (LibraryId, Library)
@@ -36,6 +38,10 @@ makeLenses ''Update
 instance Binary Request
 instance Binary Result
 instance Binary Update
+
+instance ToJSON Request
+instance ToJSON Result
+instance ToJSON Update
 
 topicPrefix = "empire.library.create"
 instance T.MessageTopic (R.Request Request)  where topic _ = topicPrefix <> T.request

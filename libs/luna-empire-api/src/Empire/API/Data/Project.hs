@@ -2,6 +2,7 @@ module Empire.API.Data.Project where
 
 import Prologue
 
+import Data.Aeson              (ToJSON)
 import Data.Binary             (Binary)
 import Data.IntMap.Lazy        (IntMap)
 import Data.UUID.Types         (UUID)
@@ -16,3 +17,4 @@ data Project = Project { _name     :: String
 makeLenses ''Project
 
 instance Binary Project
+instance ToJSON Project

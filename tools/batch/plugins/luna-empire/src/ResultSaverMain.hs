@@ -45,7 +45,6 @@ opts = Opt.info (Opt.helper <*> parser)
 main :: IO ()
 main = Opt.execParser opts >>= run
 
-instance JSON.ToJSON ProjectDump
 
 run :: Cmd -> IO ()
 run cmd = case cmd of

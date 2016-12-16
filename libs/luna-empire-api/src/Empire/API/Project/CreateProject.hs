@@ -3,7 +3,9 @@
 module Empire.API.Project.CreateProject where
 
 import           Prologue
+import           Data.Aeson                    (ToJSON)
 import           Data.Binary                   (Binary)
+import           Data.UUID.Aeson               ()
 
 import           Empire.API.Data.Project       (ProjectId, Project)
 import qualified Empire.API.Response           as Response
@@ -31,6 +33,10 @@ makeLenses ''Update
 instance Binary Request
 instance Binary Result
 instance Binary Update
+
+instance ToJSON Request
+instance ToJSON Result
+instance ToJSON Update
 
 topicPrefix = "empire.project.create"
 instance T.MessageTopic (R.Request Request)  where topic _ = topicPrefix <> T.request

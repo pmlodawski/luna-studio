@@ -1,6 +1,7 @@
 module Empire.API.Graph.SetDefaultValue where
 
 import           Prologue
+import           Data.Aeson                    (ToJSON)
 import           Data.Binary                   (Binary)
 
 import           Empire.API.Data.GraphLocation (GraphLocation)
@@ -22,6 +23,9 @@ instance Response.ResponseResult Request ()
 
 makeLenses ''Request
 instance Binary Request
+
+instance ToJSON Request
+
 instance G.GraphRequest Request where location = location
 
 topicPrefix = "empire.graph.node.defaultValue"

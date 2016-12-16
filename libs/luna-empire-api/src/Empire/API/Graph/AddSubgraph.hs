@@ -1,5 +1,6 @@
 module Empire.API.Graph.AddSubgraph where
 
+import           Data.Aeson                    (ToJSON)
 import           Data.Binary                   (Binary)
 import           Prologue
 
@@ -22,6 +23,9 @@ instance Response.ResponseResult Request ()
 
 makeLenses ''Request
 instance Binary Request
+
+instance ToJSON Request
+
 instance G.GraphRequest Request where location = location
 
 topicPrefix = "empire.graph.node.addSubgraph"

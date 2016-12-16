@@ -2,6 +2,7 @@ module Empire.API.Persistence.Project where
 
 import Prologue
 
+import Data.Aeson              (FromJSON, ToJSON)
 import Data.Binary             (Binary)
 import Data.IntMap.Lazy        (IntMap)
 import Empire.API.Persistence.Library (Library)
@@ -15,3 +16,6 @@ data Project = Project { _name     :: String
 makeLenses ''Project
 
 instance Binary Project
+
+instance ToJSON Project
+instance FromJSON Project

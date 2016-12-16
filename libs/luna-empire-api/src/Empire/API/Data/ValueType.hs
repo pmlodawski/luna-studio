@@ -3,6 +3,7 @@
 
 module Empire.API.Data.ValueType where
 
+import           Data.Aeson              (FromJSON, ToJSON)
 import           Data.Binary             (Binary)
 import           Data.Hashable           (Hashable)
 import qualified Data.Text.Lazy          as Text
@@ -21,9 +22,14 @@ data ValueTypeEnum = DiscreteNumber
                    | Other
                    deriving (Show, Eq, Enum, Generic)
 
+makeLenses ''ValueType
+
 instance Binary ValueType
 instance Binary ValueTypeEnum
-makeLenses ''ValueType
+
+instance ToJSON ValueType
+instance FromJSON ValueType
+instance ToJSON ValueTypeEnum
 
 toEnum' :: ValueType -> ValueTypeEnum
 toEnum' (TypeIdent (TCons name _)) = case name of

@@ -34,7 +34,6 @@ dependencies:
     - ghc-prim
     - luna
     - luna-empire-api
-    - luna-empire-api-json
     - luna-parser
     - lunac
     - m-logger

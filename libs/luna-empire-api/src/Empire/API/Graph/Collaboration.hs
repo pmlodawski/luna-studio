@@ -1,5 +1,6 @@
 module Empire.API.Graph.Collaboration where
 
+import           Data.Aeson                    (ToJSON)
 import           Data.Binary                   (Binary)
 import           Prologue
 
@@ -28,6 +29,9 @@ makeLenses ''Event
 
 instance Binary Update
 instance Binary Event
+
+instance ToJSON Update
+instance ToJSON Event
 
 topicPrefix = "empire.graph.collaboration"
 instance T.MessageTopic Update   where topic _ = topicPrefix <> T.update

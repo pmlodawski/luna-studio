@@ -1,9 +1,10 @@
 module Empire.API.Data.PortRef where
 
 import Prologue
+import Data.Aeson           (FromJSON, ToJSON)
+import Data.Binary          (Binary)
 import Empire.API.Data.Port (OutPort, InPort, PortId(..))
 import Empire.API.Data.Node (NodeId)
-import Data.Binary          (Binary)
 
 data InPortRef  = InPortRef  { _dstNodeId :: NodeId
                              , _dstPortId :: InPort
@@ -46,3 +47,10 @@ makeLenses ''InPortRef
 instance Binary AnyPortRef
 instance Binary InPortRef
 instance Binary OutPortRef
+
+instance ToJSON AnyPortRef
+instance FromJSON AnyPortRef
+instance ToJSON OutPortRef
+instance FromJSON OutPortRef
+instance ToJSON InPortRef
+instance FromJSON InPortRef

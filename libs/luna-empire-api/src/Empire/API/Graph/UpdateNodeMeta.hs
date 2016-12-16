@@ -1,5 +1,6 @@
 module Empire.API.Graph.UpdateNodeMeta where
 
+import           Data.Aeson                    (ToJSON)
 import           Data.Binary                   (Binary)
 import           Prologue
 
@@ -30,6 +31,10 @@ makeLenses ''Update
 
 instance Binary Request
 instance Binary Update
+
+instance ToJSON Request
+instance ToJSON Update
+
 instance G.GraphRequest Request where location = location
 
 topicPrefix = "empire.graph.node.updateMeta"

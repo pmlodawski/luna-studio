@@ -1,12 +1,11 @@
 extra-deps: [ghc-session-0.1.2.0, error-util-0.0.1.1, cond-0.4.1.1, ghc-mtl-1.2.1.0,
-  serialport-0.4.7, aeson-1.0.2.1]
+  serialport-0.4.7, aeson-1.0.2.1, uuid-aeson-0.1.0.0]
 ghc-options: {'*': -DFastCompilation -threaded -O -fconstraint-solver-iterations=100}
 local-bin-path: ../../dist/bin
 packages:
 - {extra-dep: false, location: ../../libs/luna-empire}
 - {extra-dep: true, location: ../../libs/batch/plugins/luna-empire}
 - {extra-dep: true, location: ../../libs/batch/plugins/request-monitor}
-- {extra-dep: true, location: ../../libs/luna-empire-api-json}
 - {extra-dep: true, location: ../../libs/luna-empire-api}
 - {extra-dep: true, location: ../../libs/m-logger}
 - {extra-dep: true, location: ../../libs/scope-searcher}

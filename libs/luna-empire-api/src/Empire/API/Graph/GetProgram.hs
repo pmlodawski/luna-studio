@@ -1,5 +1,6 @@
 module Empire.API.Graph.GetProgram where
 
+import           Data.Aeson                    (ToJSON)
 import           Data.Binary                   (Binary)
 import           Data.Text.Lazy                (Text)
 import           Prologue
@@ -30,6 +31,10 @@ makeLenses ''Result
 
 instance Binary Request
 instance Binary Result
+
+instance ToJSON Request
+instance ToJSON Result
+
 instance G.GraphRequest Request where location = location
 
 topicPrefix = "empire.graph.program"

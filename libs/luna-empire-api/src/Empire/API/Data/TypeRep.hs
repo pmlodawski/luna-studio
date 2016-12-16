@@ -2,6 +2,7 @@ module Empire.API.Data.TypeRep where
 
 import Prologue    hiding (intercalate, TypeRep)
 
+import Data.Aeson  (FromJSON, ToJSON)
 import Data.Binary (Binary)
 import Data.List   (intercalate)
 
@@ -14,6 +15,9 @@ data TypeRep = TCons String    [TypeRep]
              deriving (Show, Eq, Generic)
 
 instance Binary TypeRep
+
+instance ToJSON TypeRep
+instance FromJSON TypeRep
 
 instance ToString TypeRep where
     toString = toString' False False where

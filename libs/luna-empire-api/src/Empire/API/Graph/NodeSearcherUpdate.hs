@@ -1,6 +1,7 @@
 module Empire.API.Graph.NodeSearcherUpdate where
 
 import           Prologue
+import           Data.Aeson                    (ToJSON)
 import           Data.Binary                   (Binary)
 
 import           Empire.API.Data.GraphLocation (GraphLocation)
@@ -14,6 +15,8 @@ data Update = Update { _location         :: GraphLocation
 makeLenses ''Update
 
 instance Binary Update
+
+instance ToJSON Update
 
 topicPrefix = "empire.graph.nodeSearcher"
 instance T.MessageTopic Update   where topic _ = topicPrefix <> T.update

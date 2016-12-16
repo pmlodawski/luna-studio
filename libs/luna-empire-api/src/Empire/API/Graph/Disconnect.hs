@@ -1,5 +1,6 @@
 module Empire.API.Graph.Disconnect where
 
+import           Data.Aeson                    (ToJSON)
 import           Data.Binary                   (Binary)
 import           Prologue
 
@@ -28,6 +29,9 @@ makeLenses ''Request
 makeLenses ''Update
 instance Binary Request
 instance Binary Update
+
+instance ToJSON Request
+instance ToJSON Update
 
 instance G.GraphRequest Request where location = location
 
