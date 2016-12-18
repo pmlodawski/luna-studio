@@ -42,9 +42,6 @@ import qualified Empire.Utils.IdGen              as IdGen
 import qualified Data.Aeson                      as JSON
 import qualified Data.Aeson.Encode.Pretty        as JSON
 
-import qualified Data.Text.Lazy                  as Text
-import           Data.Text.Lazy.Encoding         (decodeUtf8, encodeUtf8)
-
 import qualified System.Log.MLogger              as Logger
 
 logger :: Logger.Logger
@@ -122,7 +119,7 @@ importProject :: Text -> Empire (ProjectId, Project)
 importProject bytes = do
     logger Logger.info $ "Importing project"
     projectId <- liftIO $ UUID.nextRandom
-    let proj = readProject $ encodeUtf8 bytes
+    let proj = readProject $ convert bytes
     case proj of
       Nothing   -> throwError $ "Cannot decode JSON"
       Just proj -> createProjectFromPersistent (Just projectId) proj
@@ -130,7 +127,7 @@ importProject bytes = do
 exportProject :: ProjectId -> Empire Text
 exportProject pid = do
   project <- toPersistentProject pid
-  return $ decodeUtf8 $ serialize $ E.pack project
+  return $ convert $ serialize $ E.pack project
 
 defaultProjectName = "default"
 defaultLibraryName = "Main"

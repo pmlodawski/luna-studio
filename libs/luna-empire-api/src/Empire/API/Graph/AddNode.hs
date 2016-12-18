@@ -2,7 +2,7 @@ module Empire.API.Graph.AddNode where
 
 import           Data.Aeson                    (ToJSON)
 import           Data.Binary                   (Binary)
-import qualified Data.Text.Lazy                as Text
+import qualified Data.Text                     as Text
 import           Prologue
 
 import           Empire.API.Data.GraphLocation (GraphLocation)

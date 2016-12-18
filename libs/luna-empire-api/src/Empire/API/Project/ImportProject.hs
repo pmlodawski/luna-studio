@@ -5,7 +5,6 @@ module Empire.API.Project.ImportProject where
 import           Data.Aeson             (ToJSON)
 import           Data.UUID.Aeson        ()
 import           Data.Binary            (Binary)
-import           Data.Text.Lazy         (Text)
 import           Prologue
 
 import           Empire.API.Data.Project (Project, ProjectId)

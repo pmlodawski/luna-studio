@@ -6,7 +6,6 @@ import           Prologue
 import           Data.Aeson            (ToJSON)
 import           Data.UUID.Aeson       ()
 import           Data.Binary           (Binary)
-import           Data.Text.Lazy        (Text)
 
 import           Empire.API.Data.Project       (ProjectId, Project)
 import qualified Empire.API.Response           as Response
