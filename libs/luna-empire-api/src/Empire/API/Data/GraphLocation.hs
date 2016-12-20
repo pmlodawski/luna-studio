@@ -1,7 +1,6 @@
 module Empire.API.Data.GraphLocation where
 
 import           Prologue
-import           Data.Aeson                 (ToJSON)
 import           Data.Binary                (Binary)
 
 import           Empire.API.Data.Project    (ProjectId)
@@ -16,4 +15,3 @@ data GraphLocation = GraphLocation { _projectId  :: ProjectId
 makeLenses ''GraphLocation
 
 instance Binary GraphLocation
-instance ToJSON GraphLocation

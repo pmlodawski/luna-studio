@@ -1,7 +1,6 @@
 module Empire.API.Graph.RenameNode where
 
 import           Prologue
-import           Data.Aeson                    (ToJSON)
 import           Data.Binary                   (Binary)
 
 import           Empire.API.Data.GraphLocation (GraphLocation)
@@ -29,10 +28,6 @@ makeLenses ''Request
 makeLenses ''Update
 instance Binary Request
 instance Binary Update
-
-instance ToJSON Request
-instance ToJSON Update
-
 instance G.GraphRequest Request where location = location
 
 topicPrefix = "empire.graph.node.rename"

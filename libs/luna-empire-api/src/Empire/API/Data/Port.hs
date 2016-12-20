@@ -1,7 +1,6 @@
 module Empire.API.Data.Port where
 
 import Prologue
-import Data.Aeson                   (FromJSON, ToJSON, FromJSONKey, ToJSONKey)
 import Data.Binary                  (Binary)
 
 import Empire.API.Data.DefaultValue (PortDefault)
@@ -47,15 +46,4 @@ instance Binary PortId
 instance Binary Port
 instance Binary PortState
 
-instance ToJSON Port
-instance FromJSON Port
-instance ToJSON InPort
-instance FromJSON InPort
-instance ToJSON OutPort
-instance FromJSON OutPort
-instance ToJSON PortId
-instance FromJSONKey PortId
-instance ToJSONKey PortId
-instance FromJSON PortId
-instance ToJSON PortState
-instance FromJSON PortState
+

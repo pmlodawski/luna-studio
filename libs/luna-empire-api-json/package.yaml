@@ -1,4 +1,4 @@
-name:               luna-empire-api
+name:               luna-empire-api-json
 version:            0.1.0.0
 author:             New Byte Order <contact@newbyteorder.com>
 maintainer:         New Byte Order <contact@newbyteorder.com>
@@ -11,26 +11,21 @@ flags:
 
 dependencies:
   - base
-  - binary
-  - bytestring
-  - containers
-  - hashable
   - lens
-  - pretty-show
   - prologue
-  - scope-searcher
-  - text
+  - containers
+  - luna-empire-api
+  - aeson
   - uuid-types
-  - visualization-api
+  - text
 
 default-extensions:
-  - DeriveGeneric
-  - FlexibleInstances
-  - MultiParamTypeClasses
   - NoImplicitPrelude
+  - DeriveGeneric
   - TemplateHaskell
-  - TypeSynonymInstances
 
 library:
   source-dirs: src
   ghc-options: -Wall -O2 -threaded
+
+

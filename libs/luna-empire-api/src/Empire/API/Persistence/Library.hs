@@ -2,7 +2,6 @@ module Empire.API.Persistence.Library where
 
 import Prologue
 
-import Data.Aeson  (FromJSON, ToJSON)
 import Data.Binary (Binary)
 import Empire.API.Data.Graph (Graph)
 
@@ -16,6 +15,3 @@ data Library = Library { _name    :: Maybe String
 makeLenses ''Library
 
 instance Binary Library
-
-instance ToJSON Library
-instance FromJSON Library

@@ -2,8 +2,6 @@
 {-# LANGUAGE TypeSynonymInstances  #-}
 module Empire.API.Project.ImportProject where
 
-import           Data.Aeson             (ToJSON)
-import           Data.UUID.Aeson        ()
 import           Data.Binary            (Binary)
 import           Prologue
 
@@ -27,9 +25,6 @@ makeLenses ''Result
 
 instance Binary Request
 instance Binary Result
-
-instance ToJSON Request
-instance ToJSON Result
 
 topicPrefix = "empire.project.import"
 instance T.MessageTopic (R.Request Request)  where topic _ = topicPrefix <> T.request

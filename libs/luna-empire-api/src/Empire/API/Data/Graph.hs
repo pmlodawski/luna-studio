@@ -1,6 +1,5 @@
 module Empire.API.Data.Graph where
 
-import           Data.Aeson              (FromJSON, ToJSON)
 import           Data.Binary             (Binary)
 import           Prologue
 
@@ -15,6 +14,3 @@ data Graph = Graph { _nodes       :: [Node]
 
 makeLenses ''Graph
 instance Binary Graph
-
-instance ToJSON Graph
-instance FromJSON Graph

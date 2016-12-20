@@ -1,6 +1,5 @@
 module Empire.API.Data.Breadcrumb where
 
-import           Data.Aeson           (FromJSON, ToJSON)
 import           Data.Binary          (Binary)
 import           Empire.API.Data.Node (NodeId)
 import           Prologue
@@ -18,11 +17,3 @@ makeLenses ''Named
 instance Binary a => Binary (Breadcrumb a)
 instance Binary a => Binary (Named a)
 instance Binary BreadcrumbItem
-
-instance ToJSON a   => ToJSON (Breadcrumb a)
-instance ToJSON a   => ToJSON (Named a)
-instance               ToJSON BreadcrumbItem
-
-instance FromJSON a => FromJSON (Breadcrumb a)
-instance FromJSON a => FromJSON (Named a)
-instance               FromJSON BreadcrumbItem

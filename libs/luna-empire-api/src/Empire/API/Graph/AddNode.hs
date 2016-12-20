@@ -1,6 +1,5 @@
 module Empire.API.Graph.AddNode where
 
-import           Data.Aeson                    (ToJSON)
 import           Data.Binary                   (Binary)
 import qualified Data.Text                     as Text
 import           Prologue
@@ -35,10 +34,6 @@ makeLenses ''Update
 instance Binary NodeType
 instance Binary Request
 instance Binary Update
-
-instance ToJSON NodeType
-instance ToJSON Request
-instance ToJSON Update
 
 instance G.GraphRequest Request where location = location
 

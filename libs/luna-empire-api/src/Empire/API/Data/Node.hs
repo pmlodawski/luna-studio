@@ -1,10 +1,8 @@
 module Empire.API.Data.Node where
 
-import           Data.Aeson                (FromJSON, ToJSON)
 import           Data.Binary               (Binary)
 import           Data.Map.Lazy             (Map)
 import qualified Data.Map.Lazy             as Map
-import           Data.UUID.Aeson           ()
 import           Data.UUID.Types           (UUID)
 import           Prologue
 
@@ -36,11 +34,6 @@ data Node = Node { _nodeId   :: NodeId
                  , _nodeMeta :: NodeMeta
                  , _code     :: Maybe Text
                  } deriving (Generic, Typeable, Show, Eq)
-
-instance ToJSON Node
-instance FromJSON Node
-instance ToJSON NodeType
-instance FromJSON NodeType
 
 makeLenses ''Node
 makeLenses ''NodeType

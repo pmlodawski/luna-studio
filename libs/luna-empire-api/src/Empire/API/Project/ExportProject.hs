@@ -3,12 +3,10 @@
 module Empire.API.Project.ExportProject where
 
 import           Prologue
-import           Data.Aeson            (ToJSON)
-import           Data.UUID.Aeson       ()
 import           Data.Binary           (Binary)
 
-import           Empire.API.Data.Project       (ProjectId, Project)
-import qualified Empire.API.Response           as Response
+import           Empire.API.Data.Project          (ProjectId, Project)
+import qualified Empire.API.Response             as Response
 import qualified Empire.API.Topic              as T
 import qualified Empire.API.Request            as R
 
@@ -26,9 +24,6 @@ makeLenses ''Result
 
 instance Binary Request
 instance Binary Result
-
-instance ToJSON Request
-instance ToJSON Result
 
 topicPrefix = "empire.project.export"
 instance T.MessageTopic (R.Request Request)  where topic _ = topicPrefix <> T.request

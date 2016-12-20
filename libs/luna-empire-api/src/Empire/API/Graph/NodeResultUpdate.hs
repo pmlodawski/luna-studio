@@ -1,7 +1,6 @@
 module Empire.API.Graph.NodeResultUpdate where
 
 import           Prologue                      hiding (TypeRep)
-import           Data.Aeson                    (ToJSON)
 import           Data.Binary                   (Binary)
 
 import qualified Empire.API.Data.DefaultValue  as DV (Value)
@@ -23,9 +22,6 @@ makeLenses ''Update
 
 instance Binary Update
 instance Binary NodeValue
-
-instance ToJSON Update
-instance ToJSON NodeValue
 
 topicPrefix = "empire.graph.result"
 instance T.MessageTopic Update   where topic _ = topicPrefix <> T.update

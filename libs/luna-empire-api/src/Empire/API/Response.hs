@@ -6,8 +6,6 @@ module Empire.API.Response where
 
 import           Prologue
 
-import           Data.Aeson  (ToJSON)
-import           Data.UUID.Aeson ()
 import           Data.Binary (Binary)
 import           Data.UUID.Types (UUID)
 import           Empire.API.Topic (MessageTopic)
@@ -28,9 +26,6 @@ data Response req res = Response { _requestId :: UUID
                       deriving (Generic, Show, Eq)
 
 type SimpleResponse req = Response req ()
-
-instance (ToJSON req, ToJSON res) => ToJSON (Response req res)
-instance (ToJSON payload) => ToJSON (Status payload)
 
 class (MessageTopic (Request req), MessageTopic (Response req res), Binary req, Binary res) => ResponseResult req res | req -> res where
   result :: Request req -> res -> Response req res

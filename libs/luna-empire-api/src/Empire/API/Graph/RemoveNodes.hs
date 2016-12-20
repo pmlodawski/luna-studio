@@ -1,6 +1,5 @@
 module Empire.API.Graph.RemoveNodes where
 
-import           Data.Aeson                    (ToJSON)
 import           Data.Binary                   (Binary)
 import           Prologue
 
@@ -24,14 +23,9 @@ data Update  = Update  { _location' :: GraphLocation
 
 
 makeLenses ''Request
-makeLenses ''Update
-
 instance Binary Request
+makeLenses ''Update
 instance Binary Update
-
-instance ToJSON Request
-instance ToJSON Update
-
 instance G.GraphRequest Request where location = location
 
 topicPrefix = "empire.graph.node.remove"

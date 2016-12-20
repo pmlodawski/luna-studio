@@ -1,6 +1,5 @@
 module Empire.API.Data.DefaultValue where
 
-import           Data.Aeson           (FromJSON, ToJSON)
 import           Data.Binary          (Binary)
 import           Prologue
 
@@ -41,11 +40,6 @@ data PortDefault = Expression String | Constant Value deriving (Generic, Show, E
 
 instance Binary Value
 instance Binary PortDefault
-
-instance ToJSON Value
-instance FromJSON Value
-instance ToJSON PortDefault
-instance FromJSON PortDefault
 
 makePrisms ''Value
 makePrisms ''PortDefault
