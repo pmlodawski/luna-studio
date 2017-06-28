@@ -27,6 +27,7 @@ handlers = Map.fromList [ handle EmpireStarted
                         , handle FileOpened
                         , handle FileSaved
                         , handle BufferGetResponse
+                        , handle GetProgramResponse
                         , handle SubstituteResponse
                         , handle SubstituteUpdate
                         ]

@@ -12,6 +12,7 @@ import qualified LunaStudio.API.Atom.OpenFile               as OpenFile
 import qualified LunaStudio.API.Atom.SaveFile               as SaveFile
 import qualified LunaStudio.API.Atom.SetProject             as SetProject
 import qualified LunaStudio.API.Control.EmpireStarted       as EmpireStarted
+import qualified LunaStudio.API.Graph.GetProgram as GetProgram
 
 
 data Event = UnknownEvent String
@@ -27,6 +28,7 @@ data Event = UnknownEvent String
            | BufferGetResponse                       GetBuffer.Response
            | SubstituteResponse                     Substitute.Response
            | SubstituteUpdate                       Substitute.Update
+           | GetProgramResponse                     GetProgram.Response
            deriving (Eq, Show, Generic, NFData)
 
 instance ToJSON Event
