@@ -69,6 +69,20 @@ mainFile = [r|def main:
     «3»bar = foo 8 c
 |]
 
+testLuna = [r|def main:
+    «0»pi = 3.14
+    «1»foo = a: b:
+        «5»lala = 17.0
+        «12»buzz = x: y:
+            «9»x * y
+        «6»pi = 3.14
+        «7»n = buzz a lala
+        «8»m = buzz b pi
+        «11»m + n
+    «2»c = 4.0
+    «3»bar = foo 8.0 c
+|]
+
 atXPos = ($ def) . (NodeMeta.position . Position.x .~)
 
 specifyCodeChange :: Text -> Text -> (GraphLocation -> Empire a) -> CommunicationEnv -> Expectation
@@ -145,19 +159,19 @@ spec = around withChannels $ parallel $ do
                 return graph
             withResult res $ \(Graph.Graph nodes connections _ _ _) -> do
                 let Just pi = find (\node -> node ^. Node.name == Just "pi") nodes
-                pi ^. Node.code `shouldBe` Just "3.14"
+                pi ^. Node.code `shouldBe` "3.14"
                 pi ^. Node.canEnter `shouldBe` False
                 let Just foo = find (\node -> node ^. Node.name == Just "foo") nodes
-                foo ^. Node.code `shouldBe` Just "a: b: «5»a + b"
+                foo ^. Node.code `shouldBe` "a: b: «5»a + b"
                 foo ^. Node.canEnter `shouldBe` True
                 let Just bar = find (\node -> node ^. Node.name == Just "bar") nodes
-                bar ^. Node.code `shouldBe` Just "foo c 6"
+                bar ^. Node.code `shouldBe` "foo c 6"
                 bar ^. Node.canEnter `shouldBe` False
                 let Just anon = find (\node -> node ^. Node.name == Nothing) nodes
-                anon ^. Node.code `shouldBe` Just "print pi"
+                anon ^. Node.code `shouldBe` "print pi"
                 anon ^. Node.canEnter `shouldBe` False
                 let Just c = find (\node -> node ^. Node.name == Just "c") nodes
-                c ^. Node.code `shouldBe` Just "3"
+                c ^. Node.code `shouldBe` "3"
                 c ^. Node.canEnter `shouldBe` False
                 connections `shouldMatchList` [
                       (outPortRef (pi ^. Node.nodeId) [], inPortRef (anon ^. Node.nodeId) [Port.Arg 0])
@@ -193,7 +207,7 @@ spec = around withChannels $ parallel $ do
                 length cNodes `shouldBe` 1
                 let [cNode] = cNodes
                     Just bar = find (\node -> node ^. Node.name == Just "bar") nodes
-                cNode ^. Node.code `shouldBe` Just "334"
+                cNode ^. Node.code `shouldBe` "334"
                 connections `shouldMatchList` [
                       (outPortRef (cNode ^. Node.nodeId) [], inPortRef (bar ^. Node.nodeId) [Port.Arg 1])
                     ]
@@ -212,8 +226,8 @@ spec = around withChannels $ parallel $ do
                 length cNodes `shouldBe` 1
                 let [cNode] = cNodes
                     Just bar = find (\node -> node ^. Node.name == Just "bar") nodes
-                cNode ^. Node.code `shouldBe` Just "34"
-                bar ^. Node.code `shouldBe` Just "foo 18 c"
+                cNode ^. Node.code `shouldBe` "34"
+                bar ^. Node.code `shouldBe` "foo 18 c"
                 connections `shouldMatchList` [
                       (outPortRef (cNode ^. Node.nodeId) [], inPortRef (bar ^. Node.nodeId) [Port.Arg 1])
                     ]
@@ -227,7 +241,7 @@ spec = around withChannels $ parallel $ do
             withResult res $ \graph -> do
                 let Graph.Graph nodes connections _ _ _ = graph
                     Just d = find (\node -> node ^. Node.name == Just "d") nodes
-                d ^. Node.code `shouldBe` Just "10"
+                d ^. Node.code `shouldBe` "10"
                 let Just c = find (\node -> node ^. Node.name == Just "c") nodes
                     Just bar = find (\node -> node ^. Node.name == Just "bar") nodes
                 connections `shouldMatchList` [
@@ -246,9 +260,9 @@ spec = around withChannels $ parallel $ do
                     Just pi = find (\node -> node ^. Node.name == Just "pi") nodes
                     Just c = find (\node -> node ^. Node.name == Just "c") nodes
                     Just bar = find (\node -> node ^. Node.name == Just "bar") nodes
-                pi ^. Node.code `shouldBe` Just "5"
-                c ^. Node.code `shouldBe` Just "4"
-                bar ^. Node.code `shouldBe` Just "foo 8 c"
+                pi ^. Node.code `shouldBe` "5"
+                c ^. Node.code `shouldBe` "4"
+                bar ^. Node.code `shouldBe` "foo 8 c"
                 connections `shouldMatchList` [
                       (outPortRef (c ^. Node.nodeId) [], inPortRef (bar ^. Node.nodeId) [Port.Arg 1])
                     ]
@@ -292,6 +306,15 @@ spec = around withChannels $ parallel $ do
             let positions = map (view (Node.nodeMeta . NodeMeta.position)) nodes
                 uniquePositions = Set.size $ Set.fromList positions
             uniquePositions `shouldBe` length nodes
+        it "retains node ids on code reload" $ \env -> do
+            nodes <- evalEmp env $ do
+                Library.createLibrary Nothing "TestPath" testLuna
+                let loc = GraphLocation "TestPath" $ Breadcrumb []
+                Just foo <- Graph.withGraph loc $ Graph.loadCode testLuna >> runASTOp (Graph.getNodeIdForMarker 1)
+                Graph.substituteCode "TestPath" 65 66 "5" (Just 66)
+                Graph.getNodes (loc |> foo)
+            let Just lala = find (\n -> n ^. Node.name == Just "lala") nodes
+            lala ^. Node.code `shouldBe` "15.0"
     describe "code spans" $ do
         it "simple example" $ \env -> do
             let code = Text.pack $ normalizeQQ $ [r|
