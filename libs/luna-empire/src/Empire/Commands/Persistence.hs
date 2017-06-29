@@ -3,6 +3,7 @@
 module Empire.Commands.Persistence
     ( saveProject
     , saveLocation
+    , saveLunaFile
     -- , loadProject
     , createDefaultProject
     , importProject
@@ -16,10 +17,14 @@ import qualified Data.ByteString.Lazy            as BS (ByteString, readFile, wr
 import qualified Data.IntMap                     as IntMap
 import           Data.String                     (fromString)
 import           Data.Text                       (Text)
+import qualified Data.Text.IO                    as Text
 import qualified Data.UUID                       as UUID
 import           Empire.Prelude
+import qualified Path
 import           System.Environment              (getEnv)
 import           System.FilePath                 ((</>), takeBaseName)
+import qualified System.Directory               as Dir
+import qualified System.IO.Temp                 as Temp
 
 import qualified Empire.Data.Library             as Library
 import           Empire.Data.Project             (Project)
@@ -37,7 +42,9 @@ import           Empire.ASTOp                    (runASTOp)
 import qualified Empire.Commands.Graph           as Graph
 import           Empire.Commands.GraphBuilder    (buildGraph)
 import           Empire.Commands.Library         (createLibrary, listLibraries, withLibrary)
+import qualified Empire.Data.Graph               as Graph
 import           Empire.Empire                   (Empire)
+import qualified Empire.Empire                   as Empire
 
 import qualified Data.Aeson                      as JSON
 import qualified Data.Aeson.Encode.Pretty        as JSON
@@ -77,7 +84,22 @@ saveProject projectRoot pid = do
 
 
 saveLocation :: FilePath -> GraphLocation -> Empire ()
-saveLocation projectRoot (GraphLocation _ _) = return () -- saveProject projectRoot pid
+saveLocation _projectRoot (GraphLocation filePath _) = saveLunaFile filePath
+
+saveLunaFile :: FilePath -> Empire ()
+saveLunaFile filePath = do
+    source <- preuse (Empire.activeFiles . at filePath . traverse . Library.body . Graph.code)
+    case source of
+        Nothing     -> logger Logger.error $ "Error saving file: " <> filePath <> " is not open"
+        Just source -> do
+            logger Logger.info $ "Saving file: " <> filePath
+            path <- Path.parseAbsFile filePath
+            let dir  = Path.toFilePath $ Path.parent path
+                file = Path.toFilePath $ Path.filename path
+            liftIO $ Temp.withTempFile dir (file ++ ".tmp") $ \tmpFile handle -> do
+                Text.hPutStr handle source
+                Dir.renameFile (Path.toFilePath path) (Path.toFilePath path ++ ".backup")
+                Dir.renameFile tmpFile (Path.toFilePath path)
 
 readProject :: BS.ByteString -> Maybe P.Project
 readProject bytes = (view E.project) <$> envelope where
