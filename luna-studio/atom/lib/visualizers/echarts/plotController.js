@@ -114,6 +114,53 @@
     return addLegendData(options);
   }
 
+  function addData (options, newData) {
+    if (!options.series) options.series = [];
+    if (options.toolbox[0].feature.myBoxPlot.iconStatus.myBoxPlot == "emphasis") {
+      boxData = prepareBoxPlotData(data);
+      options.xAxis[0].data = boxData.axisData;
+      options.series = [
+          {
+              name: 'boxplot',
+              type: 'boxplot',
+              data: boxData.boxData,
+              tooltip: {
+                  formatter: function (param) {
+                      return [
+                          'upper: ' + param.data[4],
+                          'Q3: ' + param.data[3],
+                          'median: ' + param.data[2],
+                          'Q1: ' + param.data[1],
+                          'lower: ' + param.data[0]
+                      ].join('<br/>')
+                  }
+              }
+          },
+          {
+              name: 'outlier',
+              type: 'scatter',
+              data: boxData.outliers
+          }
+      ];
+    } else if (options.xAxis[0].type == "value") {
+      newData.forEach(function (d, i) {
+        if (!options.series[i])
+            options.series[i] = { name: "Data" + i, type: "line", areaStyle: {empahsis: {}}, symbolSize: 1, symbol: "circle", data: [] };
+        offset = options.series[i].data.length;
+        d.forEach(function (x, j) { options.series[i].data.push([offset + j, x]); });
+      });
+    } else if (options.xAxis[0].type == "category") {
+      newData.forEach(function (entryData, i) {
+        if (!options.series[i])
+          options.series[i] = { name: "Data" + i, type: "line", areaStyle: {empahsis: {}}, symbolSize: 1, symbol: "circle", data: [] };
+        options.series[i].data.push(entryData);
+        while (options.xAxis[0].data.length < options.series[i].data.length) options.xAxis[0].data.push(options.xAxis[0].data.length);
+      });
+    }
+    return addLegendData(options);
+  }
+
+
   var defaultOptions = {
     legend: [{
       data: [],
@@ -349,6 +396,7 @@
   window.addEventListener("message", function (evt) {
     mayOptions = chart.getOption();
     newOptions = mayOptions ? mayOptions : defaultOptions;
+    var newData = [];
     var data;
     if (Array.isArray(evt.data.data)) {
       data = evt.data.data.map( function (x) { return JSON.parse(x); });
@@ -356,25 +404,25 @@
       data = JSON.parse(evt.data.data);
     }
     if (evt.data.event == "restart") {
-      currentData = [];
+      clearSeries();
       data.forEach (function (datapoint) {
         datapoint.forEach(function (x, i) {
-          currentData[i] = currentData[i] ? currentData[i] : [];
-          currentData[i].push(x);
+          newData[i] = newData[i] ? newData[i] : [];
+          newData[i].push(x);
         });
       })
     } else if (evt.data.event == "datapoint") {
       if (!currentData) currentData = [];
       if (!Array.isArray(data)) data = [data];
       data.forEach(function (x, i) {
-        currentData[i] = currentData[i] ? currentData[i] : [];
-        currentData[i].push(x);
+        newData[i] = newData[i] ? newData[i] : [];
+        newData[i].push(x);
       });
     } else {
       if (!(data[0] && Array.isArray(data[0]))) data = [data];
-      newOptions.series = []
-      currentData = data;
+      clearSeries();
+      newData = data;
     }
-    chart.setOption(applyData(newOptions, currentData));
+    chart.setOption(addData(newOptions, newData));
   });
 }());
