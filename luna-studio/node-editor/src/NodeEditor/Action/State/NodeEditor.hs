@@ -261,6 +261,9 @@ instance NodeEditorElementId ConnectionId where
 getPort :: NE.GetPort a b => a -> Command State (Maybe b)
 getPort portRef = NE.getPort portRef <$> getNodeEditor
 
+modifyInPort :: Monoid r => InPortRef -> M.State InPort r -> Command State r
+modifyInPort portRef action = modifyExpressionNode (portRef ^. PortRef.nodeLoc) $ zoom (inPortAt $ portRef ^. PortRef.portId) action
+
 getPortDefault :: InPortRef -> Command State (Maybe PortDefault)
 getPortDefault portRef = maybe Nothing (\mayPort -> mayPort ^? state . _WithDefault) <$> (NE.getPort portRef <$> getNodeEditor)
 

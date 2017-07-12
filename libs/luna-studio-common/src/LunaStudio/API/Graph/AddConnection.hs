@@ -10,13 +10,20 @@ import           LunaStudio.Data.Connection    (ConnectionId)
 import           LunaStudio.Data.GraphLocation (GraphLocation)
 import           LunaStudio.Data.Node          (NodeId)
 import           LunaStudio.Data.NodeLoc       (NodeLoc)
-import           LunaStudio.Data.PortRef       (AnyPortRef, OutPortRef)
+import           LunaStudio.Data.PortRef       (InPortRef, OutPortRef)
 import           Prologue
 
+data ConnectionDestination = InPort  InPortRef
+                           | OutPort OutPortRef
+                           | Node    NodeLoc
+                           deriving (Eq, Generic, NFData, Show)
+
+makePrisms ''ConnectionDestination
+instance Binary ConnectionDestination
 
 data Request = Request { _location :: GraphLocation
                        , _src      :: Either OutPortRef NodeId
-                       , _dst      :: Either AnyPortRef NodeLoc
+                       , _dst      :: ConnectionDestination
                        } deriving (Eq, Generic, NFData, Show)
 
 data Inverse = Inverse { _connId :: ConnectionId

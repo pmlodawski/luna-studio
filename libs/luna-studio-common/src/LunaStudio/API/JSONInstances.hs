@@ -95,11 +95,9 @@ instance FromJSON NodeValue.VisualizationValue
 instance FromJSON PEnvelope.Envelope
 instance FromJSON PLibrary.Library
 instance FromJSON Point
-instance FromJSON Port.AnyPortId
 instance FromJSON Port.PortState
 instance FromJSON PortDefault.PortDefault
 instance FromJSON PortDefault.PortValue
-instance FromJSON PortRef.AnyPortRef
 instance FromJSON PortRef.InPortRef
 instance FromJSON PortRef.OutPortRef
 instance FromJSON Position.Position
@@ -107,7 +105,6 @@ instance FromJSON PProject.Project
 instance FromJSON Result.Result
 instance FromJSON TypeRep.TypeRep
 
-instance FromJSONKey AnyPortRef
 instance FromJSONKey Breadcrumb.BreadcrumbItem
 instance FromJSONKey InPortRef
 instance FromJSONKey NodeLoc
@@ -118,6 +115,7 @@ instance ToJSON a => ToJSON (Breadcrumb.Breadcrumb a)
 instance ToJSON a => ToJSON (Breadcrumb.Named a)
 instance ToJSON a => ToJSON (Request.Request a)
 instance ToJSON a => ToJSON (Vector2.Vector2 a)
+instance ToJSON AddConnection.ConnectionDestination
 instance ToJSON AddConnection.Inverse
 instance ToJSON AddConnection.Request
 instance ToJSON AddNode.Request
@@ -188,11 +186,9 @@ instance ToJSON payload => ToJSON (Response.Status payload)
 instance ToJSON PEnvelope.Envelope
 instance ToJSON PLibrary.Library
 instance ToJSON Point
-instance ToJSON Port.AnyPortId
 instance ToJSON Port.PortState
 instance ToJSON PortDefault.PortDefault
 instance ToJSON PortDefault.PortValue
-instance ToJSON PortRef.AnyPortRef
 instance ToJSON PortRef.InPortRef
 instance ToJSON PortRef.OutPortRef
 instance ToJSON Position.Position
@@ -230,7 +226,6 @@ instance ToJSON Undo.Request
 instance ToJSON Undo.UndoRequest
 instance ToJSON ValueType.ValueTypeEnum
 
-instance ToJSONKey AnyPortRef
 instance ToJSONKey Breadcrumb.BreadcrumbItem
 instance ToJSONKey InPortRef
 instance ToJSONKey NodeLoc

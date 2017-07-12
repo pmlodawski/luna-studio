@@ -22,8 +22,8 @@ module EmpireUtils (
     , inPortRef
     ) where
 
-import           Control.Concurrent.STM        (atomically)
 import           Control.Concurrent.MVar       (newEmptyMVar)
+import           Control.Concurrent.STM        (atomically)
 import           Control.Concurrent.STM.TChan  (newTChan)
 import           Control.Exception             (Exception, bracket)
 import           Data.Coerce                   (coerce)
@@ -31,21 +31,21 @@ import qualified Data.Map                      as Map
 import           Data.Reflection               (Given (..), give)
 import           Data.UUID                     (UUID, nil)
 import           Data.UUID.V4                  (nextRandom)
-import           LunaStudio.Data.Breadcrumb    (Breadcrumb(..), BreadcrumbItem(Lambda, Arg))
-import           LunaStudio.Data.Connection    (Connection)
-import           LunaStudio.Data.GraphLocation (GraphLocation(..))
-import           LunaStudio.Data.Port          (Port)
-import qualified LunaStudio.Data.Port          as Port
-import           LunaStudio.Data.NodeLoc       (NodeLoc(..))
-import           LunaStudio.Data.PortRef       (AnyPortRef(InPortRef'), InPortRef(..), OutPortRef(..))
-import           LunaStudio.Data.Node          (ExpressionNode, NodeId, nodeId)
-import qualified Empire.Commands.Graph         as Graph (connect, getNodes)
+import qualified Empire.Commands.Graph         as Graph (connectToInPort, getNodes)
 import           Empire.Commands.Library       (createLibrary, listLibraries, withLibrary)
 import           Empire.Data.AST               ()
 import           Empire.Data.Graph             (AST, ASTState (..), Graph)
 import qualified Empire.Data.Library           as Library (body, path)
 import           Empire.Empire                 (CommunicationEnv (..), Empire, Env, Error, InterpreterEnv (..), runEmpire)
 import           Luna.IR                       (AnyExpr, Link')
+import           LunaStudio.Data.Breadcrumb    (Breadcrumb (..), BreadcrumbItem (Arg, Lambda))
+import           LunaStudio.Data.Connection    (Connection)
+import           LunaStudio.Data.GraphLocation (GraphLocation (..))
+import           LunaStudio.Data.Node          (ExpressionNode, NodeId, nodeId)
+import           LunaStudio.Data.NodeLoc       (NodeLoc (..))
+import           LunaStudio.Data.Port          (Port)
+import qualified LunaStudio.Data.Port          as Port
+import           LunaStudio.Data.PortRef       (InPortRef (..), OutPortRef (..), PortRef (..))
 import           Prologue                      hiding (mapping, toList, (|>))
 
 import           Test.Hspec                    (expectationFailure)
@@ -103,10 +103,10 @@ mkUUID :: MonadIO m => m UUID
 mkUUID = liftIO nextRandom
 
 connectToInput :: GraphLocation -> OutPortRef -> InPortRef -> Empire Connection
-connectToInput loc outPort inPort = Graph.connect loc outPort (InPortRef' inPort)
+connectToInput loc outPort inPort = Graph.connectToInPort loc outPort inPort
 
 outPortRef :: NodeId -> Port.OutPortId -> OutPortRef
-outPortRef = OutPortRef . NodeLoc def
+outPortRef = PortRef . NodeLoc def
 
 inPortRef :: NodeId -> Port.InPortId -> InPortRef
-inPortRef = InPortRef . NodeLoc def
+inPortRef = PortRef . NodeLoc def

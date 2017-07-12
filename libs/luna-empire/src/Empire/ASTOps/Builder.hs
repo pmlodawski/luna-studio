@@ -14,7 +14,7 @@ import           Empire.Prelude                     (stringToName)
 import           Prologue
 
 import           LunaStudio.Data.Node               (NodeId)
-import           LunaStudio.Data.PortRef            (OutPortRef (..))
+import           LunaStudio.Data.PortRef            (PortRef (..))
 import           LunaStudio.Data.NodeLoc            (NodeLoc (..))
 import qualified LunaStudio.Data.Port               as Port
 import           Empire.ASTOp                       (ASTOp, match)
@@ -316,7 +316,7 @@ detachNodeMarkers ref' = do
 attachNodeMarkers :: ASTOp m => NodeId -> Port.OutPortId -> NodeRef -> m ()
 attachNodeMarkers marker port ref' = do
     ref <- ASTRead.cutThroughGroups ref'
-    IR.putLayer @Marker ref $ Just $ OutPortRef (NodeLoc def marker) port
+    IR.putLayer @Marker ref $ Just $ PortRef (NodeLoc def marker) port
     match ref $ \case
         Cons _ as -> do
             args <- mapM IR.source as

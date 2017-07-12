@@ -39,7 +39,7 @@ import           LunaStudio.Data.Connection             as Connection
 import qualified LunaStudio.Data.Graph                  as Graph
 import qualified LunaStudio.Data.Node                   as Node
 import           LunaStudio.Data.Port                   (OutPortIndex (Projection))
-import           LunaStudio.Data.PortRef                (AnyPortRef (InPortRef'), OutPortRef (..))
+import           LunaStudio.Data.PortRef                (OutPortRef (..), PortRef (..))
 import           Prologue                               hiding (throwM)
 
 type Handler = ByteString -> UndoPure ()
@@ -133,7 +133,7 @@ handleAddNodeUndo (Response.Response _ _ req _ (Response.Ok _)) =
 
 
 getUndoAddPort :: AddPort.Request -> RemovePort.Request
-getUndoAddPort (AddPort.Request location portRef connections) =
+getUndoAddPort (AddPort.Request location portRef _ _) =
     RemovePort.Request location portRef
 
 handleAddPortUndo :: AddPort.Response -> Maybe (RemovePort.Request, AddPort.Request)
@@ -160,8 +160,8 @@ handleAddConnectionUndo (Response.Response _ _ req (Response.Ok inv) (Response.O
 
 getUndoMovePort :: MovePort.Request -> MovePort.Request
 getUndoMovePort (MovePort.Request location oldPortRef newPos) = case oldPortRef of
-    OutPortRef nid (Projection i : rest) ->
-        MovePort.Request location (OutPortRef nid $ Projection newPos : rest) i
+    PortRef nid (Projection i : rest) ->
+        MovePort.Request location (PortRef nid $ Projection newPos : rest) i
 
 handleMovePortUndo :: MovePort.Response -> Maybe (MovePort.Request, MovePort.Request)
 handleMovePortUndo (Response.Response _ _ req _ (Response.Ok _)) =
@@ -170,7 +170,7 @@ handleMovePortUndo (Response.Response _ _ req _ (Response.Ok _)) =
 
 getUndoRemoveConnection :: RemoveConnection.Request -> RemoveConnection.Inverse -> AddConnection.Request
 getUndoRemoveConnection (RemoveConnection.Request location dst) (RemoveConnection.Inverse src) =
-    AddConnection.Request location (Left src) (Left $ InPortRef' dst)
+    AddConnection.Request location (Left src) (AddConnection.InPort dst)
 
 handleRemoveConnectionUndo :: RemoveConnection.Response -> Maybe (AddConnection.Request, RemoveConnection.Request)
 handleRemoveConnectionUndo (Response.Response _ _ req (Response.Ok inv) (Response.Ok _)) =
@@ -189,7 +189,7 @@ handleRemoveNodesUndo (Response.Response _ _ req (Response.Ok inv) (Response.Ok 
 -- TODO[LJK/SB]: Preserve connections
 getUndoRemovePort :: RemovePort.Request -> RemovePort.Inverse -> AddPort.Request
 getUndoRemovePort (RemovePort.Request location portRef) (RemovePort.Inverse conns) =
-    AddPort.Request location portRef $ map (InPortRef' . view Connection.dst) conns
+    AddPort.Request location portRef (map (view Connection.dst) conns) []
 
 handleRemovePortUndo :: RemovePort.Response -> Maybe (AddPort.Request, RemovePort.Request)
 handleRemovePortUndo (Response.Response _ _ req (Response.Ok inv) (Response.Ok _)) =

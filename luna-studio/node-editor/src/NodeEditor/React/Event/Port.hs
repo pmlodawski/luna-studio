@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE RankNTypes     #-}
 
 module NodeEditor.React.Event.Port where
 

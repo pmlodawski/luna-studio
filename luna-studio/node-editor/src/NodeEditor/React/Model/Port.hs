@@ -12,8 +12,7 @@ import           LunaStudio.Data.LabeledTree      (LabeledTree (LabeledTree))
 import           LunaStudio.Data.Port             as X hiding (InPort, OutPort, Port (..), name, portId, state, valueType)
 import qualified LunaStudio.Data.Port             as Empire
 import           LunaStudio.Data.PortDefault      as X (PortDefault (..))
-import           LunaStudio.Data.PortRef          as X (AnyPortRef (InPortRef', OutPortRef'), InPortRef (InPortRef),
-                                                        OutPortRef (OutPortRef))
+import           LunaStudio.Data.PortRef          as X (InPortRef, OutPortRef, PortRef (PortRef))
 import           LunaStudio.Data.Position         (Position)
 import           LunaStudio.Data.TypeRep          (TypeRep (..))
 import           NodeEditor.Data.Color            (Color)
@@ -45,7 +44,7 @@ data Port i = Port
 
 type InPort = Port InPortId
 type OutPort = Port OutPortId
-type AnyPort = Port AnyPortId
+-- type AnyPort = Port AnyPortId
 type EitherPort = Either InPort OutPort
 
 makeLenses ''Port
@@ -93,18 +92,18 @@ inPortTreeLeafs inPortTree  = inPortTreeLeafs' inPortTree where
     findSelf (LabeledTree (InPorts Nothing     _ _) p) = [p]
 
 
-instance Convertible InPort  AnyPort where convert = fmap InPortId'
-instance Convertible OutPort AnyPort where convert = fmap OutPortId'
+-- instance Convertible InPort  AnyPort where convert = fmap InPortId'
+-- instance Convertible OutPort AnyPort where convert = fmap OutPortId'
 instance Convertible InPort  EitherPort where convert = convert . fmap InPortId'
 instance Convertible OutPort EitherPort where convert = convert . fmap OutPortId'
 
-instance Convertible AnyPort EitherPort where
-    convert (Port (InPortId'  i) n nt s c m) = Left $ Port i n nt s c m
-    convert (Port (OutPortId' i) n nt s c m) = Right $ Port i n nt s c m
-
-instance Convertible EitherPort AnyPort where
-    convert (Left  port) = InPortId'  <$> port
-    convert (Right port) = OutPortId' <$> port
+-- instance Convertible AnyPort EitherPort where
+--     convert (Port (InPortId'  i) n nt s c m) = Left $ Port i n nt s c m
+--     convert (Port (OutPortId' i) n nt s c m) = Right $ Port i n nt s c m
+--
+-- instance Convertible EitherPort AnyPort where
+--     convert (Left  port) = InPortId'  <$> port
+--     convert (Right port) = OutPortId' <$> port
 
 instance Convertible (Empire.Port i) (Port i) where
     convert p = Port

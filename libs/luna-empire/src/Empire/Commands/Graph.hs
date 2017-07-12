@@ -22,10 +22,14 @@ module Empire.Commands.Graph
     , setNodeExpression
     , setNodeMeta
     , setNodePosition
-    , connect
-    , connectPersistent
-    , connectCondTC
-    , connectNoTC
+    , connectToInPort
+    , connectToOutPort
+    , connectPersistentToInPort
+    , connectPersistentToOutPort
+    , connectCondTCToInPort
+    , connectCondTCToOutPort
+    , connectNoTCToInPort
+    , connectNoTCToOutPort
     , decodeLocation
     , disconnect
     , getNodeMeta
@@ -112,7 +116,7 @@ import qualified LunaStudio.Data.NodeMeta         as NodeMeta
 import           LunaStudio.Data.Point            (Point)
 import           LunaStudio.Data.Port             (InPortIndex (..), OutPortId, getPortNumber, InPortId)
 import           LunaStudio.Data.PortDefault      (PortDefault)
-import           LunaStudio.Data.PortRef          (AnyPortRef (..), InPortRef (..), OutPortRef (..))
+import           LunaStudio.Data.PortRef          (PortRef (..), InPortRef (..), OutPortRef (..), AnyPortRef)
 import qualified LunaStudio.Data.PortRef          as PortRef
 import           LunaStudio.Data.Position         (Position)
 import qualified LunaStudio.Data.Position         as Position
@@ -296,7 +300,7 @@ childrenFromSeq nodeIdCache ref = do
                     ASTBuilder.attachNodeMarkers uid []      =<< IR.source l
                     IR.source r
                 _ -> do
-                    IR.putLayer @Marker expr' $ Just $ OutPortRef (NodeLoc def uid) []
+                    IR.putLayer @Marker expr' $ Just $ PortRef (NodeLoc def uid) []
                     return expr'
             child <- prepareChild nodeIdCache ref childTarget
             return $ Map.singleton uid child
@@ -385,7 +389,7 @@ addPort :: GraphLocation -> OutPortRef -> Empire InputSidebar
 addPort loc portRef = withTC loc False $ addPortNoTC loc portRef
 
 addPortNoTC :: GraphLocation -> OutPortRef -> Command Graph InputSidebar
-addPortNoTC loc (OutPortRef nl pid) = runASTOp $ do
+addPortNoTC loc (PortRef nl pid) = runASTOp $ do
     let nid      = nl ^. NodeLoc.nodeId
         position = getPortNumber pid
     edges <- GraphBuilder.getEdgePortMapping
@@ -397,16 +401,17 @@ addPortNoTC loc (OutPortRef nl pid) = runASTOp $ do
     mapM_ (ASTBuilder.attachNodeMarkersForArgs nid []) newLam
     GraphBuilder.buildInputSidebar nid
 
-addPortWithConnections :: GraphLocation -> OutPortRef -> [AnyPortRef] -> Empire InputSidebar
-addPortWithConnections loc portRef connectTo = withTC loc False $ do
+addPortWithConnections :: GraphLocation -> OutPortRef -> [InPortRef] -> [OutPortRef] -> Empire InputSidebar
+addPortWithConnections loc portRef connectToIn connectToOut = withTC loc False $ do
     newPorts <- addPortNoTC loc portRef
-    forM_ connectTo $ connectNoTC loc portRef
+    forM_ connectToIn  $ connectNoTCToInPort loc portRef
+    forM_ connectToOut $ connectNoTCToOutPort loc portRef
     return newPorts
 
 addSubgraph :: GraphLocation -> [ExpressionNode] -> [Connection] -> Empire [ExpressionNode]
 addSubgraph loc nodes conns = withTC loc False $ do
     newNodes <- forM nodes $ \n -> addNodeNoTC loc (n ^. Node.nodeId) (n ^. Node.expression) (n ^. Node.name) (n ^. Node.nodeMeta)
-    forM_ conns $ \(Connection src dst) -> connectNoTC loc src (InPortRef' dst)
+    forM_ conns $ \(Connection src dst) -> connectNoTCToInPort loc src dst
     return newNodes
 
 removeNodes :: GraphLocation -> [NodeId] -> Empire ()
@@ -428,7 +433,7 @@ removeNodeNoTC nodeId = do
     mapM deepRemoveExprMarkers =<< use (Graph.breadcrumbHierarchy . BH.children . at nodeId)
     Graph.breadcrumbHierarchy . BH.children . at nodeId .= Nothing
     removeFromSequence astRef
-    return $ map (view PortRef.dstNodeId) obsoleteEdges
+    return $ map (view PortRef.nodeId) obsoleteEdges
 
 removeExprMarker :: ASTOp m => NodeRef -> m ()
 removeExprMarker ref = do
@@ -478,13 +483,13 @@ removeFromSequence ref = do
 
 removePort :: GraphLocation -> OutPortRef -> Empire InputSidebar
 removePort loc portRef = withGraph loc $ runASTOp $ do
-    let nodeId = portRef ^. PortRef.srcNodeId
+    let nodeId = portRef ^. PortRef.nodeId
     Just ref    <- ASTRead.getCurrentASTTarget
     ASTBuilder.detachNodeMarkersForArgs ref
     edges <- GraphBuilder.getEdgePortMapping
     newRef <- case edges of
         Just (input, _output) -> do
-            if nodeId == input then ASTModify.removeLambdaArg (portRef ^. PortRef.srcPortId) ref
+            if nodeId == input then ASTModify.removeLambdaArg (portRef ^. PortRef.portId) ref
                                else throwM NotInputEdgeException
         _ -> return ref
     when (ref /= newRef) $ ASTModify.rewireCurrentNode newRef
@@ -493,12 +498,12 @@ removePort loc portRef = withGraph loc $ runASTOp $ do
 
 movePort :: GraphLocation -> OutPortRef -> Int -> Empire InputSidebar
 movePort loc portRef newPosition = withGraph loc $ runASTOp $ do
-    let nodeId = portRef ^. PortRef.srcNodeId
+    let nodeId = portRef ^. PortRef.nodeId
     Just ref    <- ASTRead.getCurrentASTTarget
     edges       <- GraphBuilder.getEdgePortMapping
     newRef      <- case edges of
         Just (input, _) -> do
-            if nodeId == input then ASTModify.moveLambdaArg (portRef ^. PortRef.srcPortId) newPosition ref
+            if nodeId == input then ASTModify.moveLambdaArg (portRef ^. PortRef.portId) newPosition ref
                                else throwM NotInputEdgeException
         _ -> throwM NotInputEdgeException
     when (ref /= newRef) $ ASTModify.rewireCurrentNode newRef
@@ -507,12 +512,12 @@ movePort loc portRef newPosition = withGraph loc $ runASTOp $ do
 
 renamePort :: GraphLocation -> OutPortRef -> Text -> Empire InputSidebar
 renamePort loc portRef newName = withGraph loc $ runASTOp $ do
-    let nodeId = portRef ^. PortRef.srcNodeId
+    let nodeId = portRef ^. PortRef.nodeId
     Just ref    <- ASTRead.getCurrentASTTarget
     edges       <- GraphBuilder.getEdgePortMapping
     _newRef     <- case edges of
         Just (input, _) -> do
-            if nodeId == input then ASTModify.renameLambdaArg (portRef ^. PortRef.srcPortId) (Text.unpack newName) ref
+            if nodeId == input then ASTModify.renameLambdaArg (portRef ^. PortRef.portId) (Text.unpack newName) ref
                                else throwM NotInputEdgeException
         _ -> throwM NotInputEdgeException
     GraphBuilder.buildInputSidebar nodeId
@@ -576,34 +581,52 @@ setNodePositionAST nodeId newPos = do
     oldMeta <- fromMaybe def <$> AST.readMeta ref
     AST.writeMeta ref $ oldMeta & NodeMeta.position .~ newPos
 
-connectCondTC :: Bool -> GraphLocation -> OutPortRef -> AnyPortRef -> Empire Connection
-connectCondTC True  loc outPort anyPort = connect loc outPort anyPort
-connectCondTC False loc outPort anyPort = do
-    connection <- withGraph loc $ connectNoTC loc outPort anyPort
+connectCondTCToInPort :: Bool -> GraphLocation -> OutPortRef -> InPortRef -> Empire Connection
+connectCondTCToInPort True  loc outPort inPort = connectToInPort loc outPort inPort
+connectCondTCToInPort False loc outPort inPort = do
+    connection <- withGraph loc $ connectNoTCToInPort loc outPort inPort
     resendCode loc
     return connection
 
-connect :: GraphLocation -> OutPortRef -> AnyPortRef -> Empire Connection
-connect loc outPort anyPort = do
-    connection <- withTC loc False $ connectNoTC loc outPort anyPort
+connectCondTCToOutPort :: Bool -> GraphLocation -> OutPortRef -> OutPortRef -> Empire Connection
+connectCondTCToOutPort True  loc outPort dstPort = connectToOutPort loc outPort dstPort
+connectCondTCToOutPort False loc outPort dstPort = do
+    connection <- withGraph loc $ connectNoTCToOutPort loc outPort dstPort
     resendCode loc
     return connection
 
-connectPersistent :: ASTOp m => OutPortRef -> AnyPortRef -> m Connection
-connectPersistent src@(OutPortRef (NodeLoc _ srcNodeId) srcPort) (InPortRef' dst@(InPortRef (NodeLoc _ dstNodeId) dstPort)) = do
+connectToInPort :: GraphLocation -> OutPortRef -> InPortRef -> Empire Connection
+connectToInPort loc outPort inPort = do
+    connection <- withTC loc False $ connectNoTCToInPort loc outPort inPort
+    resendCode loc
+    return connection
+
+connectToOutPort :: GraphLocation -> OutPortRef -> OutPortRef -> Empire Connection
+connectToOutPort loc outPort dstPort = do
+    connection <- withTC loc False $ connectNoTCToOutPort loc outPort dstPort
+    resendCode loc
+    return connection
+
+connectPersistentToInPort :: ASTOp m => OutPortRef -> InPortRef -> m Connection
+connectPersistentToInPort src@(PortRef (NodeLoc _ srcNodeId) srcPort) dst@(PortRef (NodeLoc _ dstNodeId) dstPort) = do
     case dstPort of
         []        -> makeWhole srcNodeId dstNodeId srcPort
         _         -> makeInternalConnection srcNodeId dstNodeId srcPort dstPort
     return $ Connection src dst
-connectPersistent src@(OutPortRef (NodeLoc _ srcNodeId) srcPort) (OutPortRef' dst@(OutPortRef d@(NodeLoc _ dstNodeId) dstPort)) = do
+
+connectPersistentToOutPort :: ASTOp m => OutPortRef -> OutPortRef -> m Connection
+connectPersistentToOutPort src@(PortRef (NodeLoc _ srcNodeId) srcPort) dst@(PortRef d@(NodeLoc _ dstNodeId) dstPort) = do
     case dstPort of
         []    -> do
             ASTBuilder.flipNode dstNodeId
-            connectPersistent src (InPortRef' (InPortRef d []))
+            connectPersistentToInPort src (PortRef d [])
         _ : _ -> throwM InvalidConnectionException
 
-connectNoTC :: GraphLocation -> OutPortRef -> AnyPortRef -> Command Graph Connection
-connectNoTC loc outPort anyPort = runASTOp $ connectPersistent outPort anyPort
+connectNoTCToInPort :: GraphLocation -> OutPortRef -> InPortRef -> Command Graph Connection
+connectNoTCToInPort loc outPort inPort = runASTOp $ connectPersistentToInPort outPort inPort
+
+connectNoTCToOutPort :: GraphLocation -> OutPortRef -> OutPortRef -> Command Graph Connection
+connectNoTCToOutPort loc outPort dstPort = runASTOp $ connectPersistentToOutPort outPort dstPort
 
 data SelfPortDefaultException = SelfPortDefaultException InPortRef
     deriving (Show)
@@ -613,11 +636,11 @@ instance Exception SelfPortDefaultException where
     toException = astExceptionToException
 
 getPortDefault :: GraphLocation -> InPortRef -> Empire (Maybe PortDefault)
-getPortDefault loc port@(InPortRef  _ (Self : _))              = throwM $ SelfPortDefaultException port
-getPortDefault loc (InPortRef  (NodeLoc _ nodeId) (Arg x : _)) = withGraph loc $ runASTOp $ flip GraphBuilder.getInPortDefault x =<< GraphUtils.getASTTarget nodeId
+getPortDefault loc port@(PortRef  _ (Self : _))              = throwM $ SelfPortDefaultException port
+getPortDefault loc (PortRef  (NodeLoc _ nodeId) (Arg x : _)) = withGraph loc $ runASTOp $ flip GraphBuilder.getInPortDefault x =<< GraphUtils.getASTTarget nodeId
 
 setPortDefault :: GraphLocation -> InPortRef -> Maybe PortDefault -> Empire ()
-setPortDefault loc (InPortRef (NodeLoc _ nodeId) port) (Just val) = withTC loc False $ runASTOp $ do
+setPortDefault loc (PortRef (NodeLoc _ nodeId) port) (Just val) = withTC loc False $ runASTOp $ do
     parsed <- ASTParse.parsePortDefault val
     refBeg <- Code.getASTTargetBeginning nodeId
     e <- ASTRead.getTargetEdge nodeId
@@ -629,7 +652,7 @@ setPortDefault loc (InPortRef (NodeLoc _ nodeId) port) (Just val) = withTC loc F
 setPortDefault loc port Nothing = withTC loc False $ runASTOp $ disconnectPort port
 
 disconnect :: GraphLocation -> InPortRef -> Empire ()
-disconnect loc@(GraphLocation file _) port@(InPortRef (NodeLoc _ nid) _) = do
+disconnect loc@(GraphLocation file _) port@(PortRef (NodeLoc _ nid) _) = do
     nodeId <- withTC loc False $ runASTOp $ do
         disconnectPort port
 
@@ -970,11 +993,11 @@ withGraph (GraphLocation file breadcrumb) = withBreadcrumb file breadcrumb
 getOutEdges :: ASTOp m => NodeId -> m [InPortRef]
 getOutEdges nodeId = do
     edges <- GraphBuilder.buildConnections
-    let filtered = filter (\(opr, _) -> opr ^. PortRef.srcNodeId == nodeId) edges
+    let filtered = filter (\(opr, _) -> opr ^. PortRef.nodeId == nodeId) edges
     return $ view _2 <$> filtered
 
 disconnectPort :: ASTOp m => InPortRef -> m ()
-disconnectPort (InPortRef (NodeLoc _ dstNodeId) dstPort) = case dstPort of
+disconnectPort (PortRef (NodeLoc _ dstNodeId) dstPort) = case dstPort of
     []        -> setToNothing dstNodeId
     _         -> removeInternalConnection dstNodeId dstPort
 
@@ -991,7 +1014,7 @@ setToNothing dst = do
             let item = BH.ExprItem Map.empty nothing
             uid <- liftIO $ UUID.nextRandom
             Graph.breadcrumbHierarchy . BH.children . at uid ?= BH.ExprChild item
-            IR.putLayer @Marker nothing $ Just $ OutPortRef (NodeLoc def uid) []
+            IR.putLayer @Marker nothing $ Just $ PortRef (NodeLoc def uid) []
         else GraphUtils.rewireNode dst nothing
 
 removeInternalConnection :: ASTOp m => NodeId -> InPortId -> m ()

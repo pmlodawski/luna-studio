@@ -5,14 +5,14 @@ module NodeEditor.React.Event.Sidebar where
 
 import           Common.Prelude
 import           LunaStudio.Data.NodeLoc (NodeLoc)
-import           LunaStudio.Data.PortRef (AnyPortRef, OutPortRef)
+import           LunaStudio.Data.PortRef (OutPortRef)
 import           React.Flux              (MouseEvent)
 
 
 
-data Event = AddPort           AnyPortRef
+data Event = AddPort           OutPortRef
            | MouseMove         MouseEvent NodeLoc
-           | RemovePort        AnyPortRef
+           | RemovePort        OutPortRef
            | EditPortName      OutPortRef
            | ToggleInputMode   NodeLoc
            | ToggleOutputMode  NodeLoc

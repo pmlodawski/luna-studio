@@ -1,47 +1,44 @@
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE ViewPatterns          #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module CaseSpec (spec) where
 
-import           Data.Foldable                 (toList)
-import           Data.List                     (find, stripPrefix)
-import qualified Data.Map                      as Map
-import qualified LunaStudio.Data.Graph         as Graph
-import qualified Empire.Data.Graph             as Graph (breadcrumbHierarchy)
-import           LunaStudio.Data.GraphLocation (GraphLocation(..))
-import qualified LunaStudio.Data.Node          as Node
-import           LunaStudio.Data.NodeMeta      (NodeMeta(..))
-import qualified LunaStudio.Data.Port          as Port
-import           LunaStudio.Data.Port          (OutPortTree (..))
-import           LunaStudio.Data.NodeLoc       (NodeLoc (..))
-import           LunaStudio.Data.PortDefault   (PortDefault (Constant, Expression))
-import           LunaStudio.Data.LabeledTree   (LabeledTree (..))
-import           LunaStudio.Data.PortRef       (InPortRef (..), OutPortRef (..), AnyPortRef(..))
-import           LunaStudio.Data.TypeRep       (TypeRep(TCons, TStar, TLam, TVar))
-import           Empire.ASTOp                  (runASTOp)
-import qualified Empire.ASTOps.Deconstruct     as ASTDeconstruct
-import qualified Empire.ASTOps.Parse           as Parser
-import           Empire.ASTOps.Print           (printExpression)
-import qualified Empire.ASTOps.Read            as ASTRead
-import qualified Empire.Commands.AST           as AST (isTrivialLambda, dumpGraphViz)
-import           Empire.Commands.Breadcrumb    (BreadcrumbDoesNotExistException)
-import qualified Empire.Commands.Graph         as Graph (addNode, connect, getGraph, getNodes,
-                                                         getConnections, removeNodes, withGraph,
-                                                         renameNode, disconnect, addPort, movePort,
-                                                         removePort, renamePort)
+import           Data.Foldable                   (toList)
+import           Data.List                       (find, stripPrefix)
+import qualified Data.Map                        as Map
+import           Empire.ASTOp                    (runASTOp)
+import qualified Empire.ASTOps.Deconstruct       as ASTDeconstruct
+import qualified Empire.ASTOps.Parse             as Parser
+import           Empire.ASTOps.Print             (printExpression)
+import qualified Empire.ASTOps.Read              as ASTRead
+import qualified Empire.Commands.AST             as AST (dumpGraphViz, isTrivialLambda)
+import           Empire.Commands.Breadcrumb      (BreadcrumbDoesNotExistException)
+import qualified Empire.Commands.Graph           as Graph (addNode, addPort, disconnect, getConnections, getGraph, getNodes, movePort,
+                                                           removeNodes, removePort, renameNode, renamePort, withGraph)
 import qualified Empire.Commands.GraphBuilder    as GraphBuilder
 import           Empire.Commands.Library         (withLibrary)
 import qualified Empire.Commands.Typecheck       as Typecheck (run)
-import           Empire.Data.Graph               (breadcrumbHierarchy)
-import qualified Empire.Data.Library             as Library (body)
 import qualified Empire.Data.BreadcrumbHierarchy as BH
-import           Empire.Empire                   (InterpreterEnv(..))
-import           Prologue                        hiding (mapping, toList, (|>))
+import           Empire.Data.Graph               (breadcrumbHierarchy)
+import qualified Empire.Data.Graph               as Graph (breadcrumbHierarchy)
+import qualified Empire.Data.Library             as Library (body)
+import           Empire.Empire                   (InterpreterEnv (..))
+import qualified LunaStudio.Data.Graph           as Graph
+import           LunaStudio.Data.GraphLocation   (GraphLocation (..))
+import           LunaStudio.Data.LabeledTree     (LabeledTree (..))
+import qualified LunaStudio.Data.Node            as Node
+import           LunaStudio.Data.NodeLoc         (NodeLoc (..))
+import           LunaStudio.Data.NodeMeta        (NodeMeta (..))
+import           LunaStudio.Data.Port            (OutPortTree (..))
+import qualified LunaStudio.Data.Port            as Port
+import           LunaStudio.Data.PortDefault     (PortDefault (Constant, Expression))
+import           LunaStudio.Data.PortRef         (InPortRef (..), OutPortRef (..), PortRef (..))
+import           LunaStudio.Data.TypeRep         (TypeRep (TCons, TLam, TStar, TVar))
 import           OCI.IR.Class                    (exprs, links)
+import           Prologue                        hiding (mapping, toList, (|>))
 
-import           Test.Hspec (Spec, Selector, around, describe, expectationFailure, it, parallel,
-                             shouldBe, shouldContain, shouldSatisfy, shouldMatchList,
-                             shouldStartWith, shouldThrow, xit, xdescribe)
+import           Test.Hspec                      (Selector, Spec, around, describe, expectationFailure, it, parallel, shouldBe,
+                                                  shouldContain, shouldMatchList, shouldSatisfy, shouldStartWith, shouldThrow, xdescribe,
+                                                  xit)
 
 import           EmpireUtils
 
@@ -81,8 +78,8 @@ spec = around withChannels $ id $ do
                       Port.Port [] "output" TStar Port.Connected
                     ]
                 connections `shouldMatchList` [
-                      (OutPortRef (NodeLoc def $ inputEdge  ^. Node.nodeId) [Port.Projection 0],
-                       InPortRef  (NodeLoc def $ outputEdge ^. Node.nodeId) [])
+                      (PortRef (NodeLoc def $ inputEdge  ^. Node.nodeId) [Port.Projection 0],
+                       PortRef (NodeLoc def $ outputEdge ^. Node.nodeId) [])
                     ]
         {-xit "shows anonymous breadcrumbs in foo ((Acc a): b: a + b) 1 ((Vector a b c): a * b + c)" $ \env -> do-}
             {-u1 <- mkUUID-}

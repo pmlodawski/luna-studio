@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE QuasiQuotes         #-}
+{-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections       #-}
 
@@ -19,13 +19,13 @@ import qualified Empire.ASTOps.Parse             as ASTParse
 import qualified Empire.ASTOps.Print             as ASTPrint
 import qualified Empire.ASTOps.Read              as ASTRead
 import qualified Empire.Commands.AST             as AST
-import qualified Empire.Commands.Graph           as Graph
 import qualified Empire.Commands.Code            as Code
+import qualified Empire.Commands.Graph           as Graph
 import qualified Empire.Commands.GraphBuilder    as GraphBuilder
 import qualified Empire.Commands.Library         as Library
 import           Empire.Data.AST                 (SomeASTException)
-import qualified Empire.Data.Graph               as Graph (code, codeMarkers, breadcrumbHierarchy)
 import qualified Empire.Data.BreadcrumbHierarchy as BH
+import qualified Empire.Data.Graph               as Graph (breadcrumbHierarchy, code, codeMarkers)
 import           Empire.Empire                   (CommunicationEnv (..), Empire)
 import qualified Luna.Syntax.Text.Parser.Parser  as Parser (ReparsingChange (..), ReparsingStatus (..))
 import           LunaStudio.Data.Breadcrumb      (Breadcrumb (..))
@@ -44,8 +44,8 @@ import           LunaStudio.Data.TypeRep         (TypeRep (TStar))
 import           Empire.Prelude
 import           Luna.Prelude                    (normalizeQQ)
 
-import           Test.Hspec                      (Spec, around, describe, expectationFailure, it, parallel, shouldBe, shouldMatchList,
-                                                  shouldNotBe, shouldSatisfy, shouldStartWith, xit, Expectation)
+import           Test.Hspec                      (Expectation, Spec, around, describe, expectationFailure, it, parallel, shouldBe,
+                                                  shouldMatchList, shouldNotBe, shouldSatisfy, shouldStartWith, xit)
 
 import           EmpireUtils
 
@@ -460,7 +460,7 @@ spec = around withChannels $ parallel $ do
             in specifyCodeChange mainCondensed expectedCode $ \loc -> do
                 [Just pi, Just bar] <- Graph.withGraph loc $ runASTOp $ mapM (Graph.getNodeIdForMarker) [0,3]
                 Graph.disconnect loc (inPortRef bar [Port.Arg 1])
-                Graph.connect loc (outPortRef pi []) (InPortRef' $ inPortRef bar [Port.Arg 1])
+                Graph.connectToInPort loc (outPortRef pi []) (inPortRef bar [Port.Arg 1])
         it "adds one node to existing file via node editor" $ let
             expectedCode = [r|
                 def main:
@@ -694,7 +694,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just b, Just foo] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [2, 1]
-                Graph.connect loc (outPortRef foo []) (InPortRef' $ inPortRef b [Port.Self])
+                Graph.connectToInPort loc (outPortRef foo []) (inPortRef b [Port.Self])
         it "reconnects self port retaining formatting" $ let
             initialCode = [r|
                 def main:
@@ -710,7 +710,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just b, Just foo] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [2, 1]
-                Graph.connect loc (outPortRef foo []) (InPortRef' $ inPortRef b [Port.Self])
+                Graph.connectToInPort loc (outPortRef foo []) (inPortRef b [Port.Self])
         it "disconnects self port retaining formatting" $ let
             initialCode = [r|
                 def main:
@@ -738,9 +738,9 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just a, Just b] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0, 1]
-                Graph.connect loc (outPortRef a []) (InPortRef' $ inPortRef b [Port.Self])
+                Graph.connectToInPort loc (outPortRef a []) (inPortRef b [Port.Self])
                 Graph.disconnect loc (inPortRef b [Port.Self])
-                Graph.connect loc (outPortRef a []) (InPortRef' $ inPortRef b [Port.Self])
+                Graph.connectToInPort loc (outPortRef a []) (inPortRef b [Port.Self])
                 Graph.disconnect loc (inPortRef b [Port.Self])
         it "connects to application port" $ let
             initialCode = [r|
@@ -755,7 +755,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just a, Just b] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0, 1]
-                Graph.connect loc (outPortRef a []) (InPortRef' $ inPortRef b [Port.Arg 2])
+                Graph.connectToInPort loc (outPortRef a []) (inPortRef b [Port.Arg 2])
         it "connects to a deep self port" $ let
             initialCode = [r|
                 def main:
@@ -769,7 +769,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just a, Just b] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0, 1]
-                Graph.connect loc (outPortRef a []) (InPortRef' $ inPortRef b [Port.Self, Port.Self])
+                Graph.connectToInPort loc (outPortRef a []) (inPortRef b [Port.Self, Port.Self])
         it "connects to a deep application port" $ let
             initialCode = [r|
                 def main:
@@ -783,7 +783,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just a, Just b] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0, 1]
-                Graph.connect loc (outPortRef a []) (InPortRef' $ inPortRef b [Port.Self, Port.Arg 0])
+                Graph.connectToInPort loc (outPortRef a []) (inPortRef b [Port.Self, Port.Arg 0])
         it "disconnects an application port" $ let
             initialCode = [r|
                 def main:
@@ -857,9 +857,9 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just a, Just bb, Just ccc, Just dddd] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0..3]
-                Graph.connect loc (outPortRef ccc []) (InPortRef' $ inPortRef dddd [Port.Arg 2])
-                Graph.connect loc (outPortRef a   []) (InPortRef' $ inPortRef dddd [Port.Arg 0])
-                Graph.connect loc (outPortRef bb  []) (InPortRef' $ inPortRef dddd [Port.Arg 1])
+                Graph.connectToInPort loc (outPortRef ccc []) (inPortRef dddd [Port.Arg 2])
+                Graph.connectToInPort loc (outPortRef a   []) (inPortRef dddd [Port.Arg 0])
+                Graph.connectToInPort loc (outPortRef bb  []) (inPortRef dddd [Port.Arg 1])
 
         it "applies operators at first argument" $ let
             initialCode = [r|
@@ -874,7 +874,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just aa, Just b] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0..1]
-                Graph.connect loc (outPortRef aa []) (InPortRef' $ inPortRef b [Port.Arg 0])
+                Graph.connectToInPort loc (outPortRef aa []) (inPortRef b [Port.Arg 0])
 
         it "applies operators at both arguments" $ let
             initialCode = [r|
@@ -891,8 +891,8 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just aa, Just bar, Just c] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0..2]
-                Graph.connect loc (outPortRef bar []) (InPortRef' $ inPortRef c [Port.Arg 1])
-                Graph.connect loc (outPortRef aa [])  (InPortRef' $ inPortRef c [Port.Arg 0])
+                Graph.connectToInPort loc (outPortRef bar []) (inPortRef c [Port.Arg 1])
+                Graph.connectToInPort loc (outPortRef aa [])  (inPortRef c [Port.Arg 0])
 
         it "applies operators at second argument only" $ let
             initialCode = [r|
@@ -907,7 +907,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just aa, Just b] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0..1]
-                Graph.connect loc (outPortRef aa []) (InPortRef' $ inPortRef b [Port.Arg 1])
+                Graph.connectToInPort loc (outPortRef aa []) (inPortRef b [Port.Arg 1])
 
         it "applies operators at the first argument when the second is already applied " $ let
             initialCode = [r|
@@ -922,7 +922,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just aa, Just b] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0..1]
-                Graph.connect loc (outPortRef aa []) (InPortRef' $ inPortRef b [Port.Arg 0])
+                Graph.connectToInPort loc (outPortRef aa []) (inPortRef b [Port.Arg 0])
 
         xit "updates code after disconnecting lambda output" $ let
             expectedCode = [r|

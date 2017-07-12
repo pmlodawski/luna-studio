@@ -40,7 +40,8 @@ import           LunaStudio.Data.Port            (InPort, InPortId, InPortIndex 
                                                   OutPortIndex (..), OutPortTree, OutPorts (..), Port (..), PortState (..))
 import qualified LunaStudio.Data.Port            as Port
 import           LunaStudio.Data.PortDefault     (PortDefault (..), PortValue (..))
-import           LunaStudio.Data.PortRef         (InPortRef (..), OutPortRef (..), srcNodeId)
+import           LunaStudio.Data.PortRef         (InPortRef (..), OutPortRef (..), PortRef (..))
+import qualified LunaStudio.Data.PortRef         as PortRef
 import           LunaStudio.Data.TypeRep         (TypeRep (TCons, TStar))
 
 
@@ -400,29 +401,29 @@ getOutputSidebarInputs outputEdge = do
     Just ref <- ASTRead.getCurrentASTTarget
     out      <- ASTRead.getLambdaOutputRef ref
     wholeIn  <- resolveInput out
-    return $ (, InPortRef (NodeLoc def outputEdge) []) <$> wholeIn
+    return $ (, PortRef (NodeLoc def outputEdge) []) <$> wholeIn
 
 nodeConnectedToOutput :: ASTOp m => m (Maybe NodeId)
 nodeConnectedToOutput = do
     edges  <- preuse $ Graph.breadcrumbHierarchy . BH._LambdaParent . BH.portMapping
     fmap join $ forM edges $ \(i, o) -> do
         connection <- getOutputSidebarInputs o
-        return $ (view $ _1 . srcNodeId) <$> connection
+        return $ (view $ _1 . PortRef.nodeId) <$> connection
 
 resolveInput :: ASTOp m => NodeRef -> m (Maybe OutPortRef)
 resolveInput = IR.getLayer @Marker
 
 deepResolveInputs :: ASTOp m => NodeId -> NodeRef -> InPortRef -> m [(OutPortRef, InPortRef)]
-deepResolveInputs nid ref portRef@(InPortRef loc id) = do
-    currentPortResolution <- filter ((/= nid) . view srcNodeId) . toList <$> resolveInput ref
+deepResolveInputs nid ref portRef@(PortRef loc id) = do
+    currentPortResolution <- filter ((/= nid) . view PortRef.nodeId) . toList <$> resolveInput ref
     let currentPortConn = (, portRef) <$> currentPortResolution
     args      <- reverse <$> ASTDeconstruct.extractAppArguments ref
-    argsConns <- forM (zip args [0..]) $ \(arg, i) -> deepResolveInputs nid arg (InPortRef loc (id ++ [Arg i]))
+    argsConns <- forM (zip args [0..]) $ \(arg, i) -> deepResolveInputs nid arg (PortRef loc (id ++ [Arg i]))
     head      <- ASTDeconstruct.extractFun ref
     self      <- ASTDeconstruct.extractSelf head
     headConns <- case (self, head == ref) of
-        (Just s, _) -> deepResolveInputs nid s    (InPortRef loc (id ++ [Self]))
-        (_, False)  -> deepResolveInputs nid head (InPortRef loc (id ++ [Head]))
+        (Just s, _) -> deepResolveInputs nid s    (PortRef loc (id ++ [Self]))
+        (_, False)  -> deepResolveInputs nid head (PortRef loc (id ++ [Head]))
         _           -> return []
     return $ concat [currentPortConn, headConns, concat argsConns]
 
@@ -430,4 +431,4 @@ getNodeInputs :: ASTOp m => NodeId -> m [(OutPortRef, InPortRef)]
 getNodeInputs nid = do
     let loc = NodeLoc def nid
     ref      <- ASTRead.getASTTarget   nid
-    deepResolveInputs nid ref (InPortRef loc [])
+    deepResolveInputs nid ref (PortRef loc [])

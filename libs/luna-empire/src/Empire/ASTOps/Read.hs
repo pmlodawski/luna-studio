@@ -69,7 +69,7 @@ isGraphNode :: ASTOp m => NodeRef -> m Bool
 isGraphNode = fmap isJust . getNodeId
 
 getNodeId :: ASTOp m => NodeRef -> m (Maybe NodeId)
-getNodeId node = preview (_Just . PortRef.srcNodeLoc . NodeLoc.nodeId) <$> IR.getLayer @Marker node
+getNodeId node = preview (_Just . PortRef.nodeId) <$> IR.getLayer @Marker node
 
 getPatternNames :: ASTOp m => NodeRef -> m [String]
 getPatternNames node = match node $ \case

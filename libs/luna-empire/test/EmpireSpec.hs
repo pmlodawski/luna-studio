@@ -15,9 +15,9 @@ import           Empire.ASTOps.Print             (printExpression)
 import qualified Empire.ASTOps.Read              as ASTRead
 import qualified Empire.Commands.AST             as AST (dumpGraphViz, isTrivialLambda)
 import           Empire.Commands.Breadcrumb      (BreadcrumbDoesNotExistException)
-import qualified Empire.Commands.Graph           as Graph (addNode, addPort, connect, disconnect, getConnections, getGraph,
-                                                           getNodeIdForMarker, getNodes, loadCode, movePort, removeNodes, removePort,
-                                                           renameNode, renamePort, setNodeExpression, setNodeMeta, withGraph)
+import qualified Empire.Commands.Graph           as Graph (addNode, addPort, connectToInPort, connectToOutPort, disconnect, getConnections,
+                                                           getGraph, getNodeIdForMarker, getNodes, loadCode, movePort, removeNodes,
+                                                           removePort, renameNode, renamePort, setNodeExpression, setNodeMeta, withGraph)
 import qualified Empire.Commands.GraphBuilder    as GraphBuilder
 import           Empire.Commands.Library         (createLibrary, withLibrary)
 import qualified Empire.Commands.Typecheck       as Typecheck (run)
@@ -1009,7 +1009,7 @@ spec = around withChannels $ parallel $ do
             res <- evalEmp env $ do
                 Graph.addNode top u1 "myVec" def
                 Graph.addNode top u2 "Vector x y z" def
-                Graph.connect top (outPortRef u1 []) (OutPortRef' (outPortRef u2 []))
+                Graph.connectToOutPort top (outPortRef u1 []) (outPortRef u2 [])
                 Graph.withGraph top $ runASTOp $
                     (,,,) <$> GraphBuilder.buildNode u1
                           <*> GraphBuilder.buildNode u2
@@ -1035,7 +1035,7 @@ spec = around withChannels $ parallel $ do
             res <- evalEmp env $ do
                 Graph.addNode top u1 "myVec" def
                 Graph.addNode top u2 "Vector x y z" def
-                Graph.connect top (outPortRef u1 []) (OutPortRef' (outPortRef u2 []))
+                Graph.connectToOutPort top (outPortRef u1 []) (outPortRef u2 [])
                 Graph.disconnect top (inPortRef u2 [])
 
                 Graph.withGraph top $ runASTOp $
@@ -1064,9 +1064,9 @@ spec = around withChannels $ parallel $ do
             res <- evalEmp env $ do
                 Graph.addNode top u1 "myVec" def
                 Graph.addNode top u2 "Vector x y z" def
-                Graph.connect top (outPortRef u1 []) (OutPortRef' (outPortRef u2 []))
+                Graph.connectToOutPort top (outPortRef u1 []) (outPortRef u2 [])
                 Graph.disconnect top (inPortRef u2 [])
-                Graph.connect top (outPortRef u1 []) (InPortRef' (inPortRef u2 []))
+                Graph.connectToInPort top (outPortRef u1 []) (inPortRef u2 [])
 
                 Graph.withGraph top $ runASTOp $
                     (,,,) <$> GraphBuilder.buildNode u1
@@ -1096,7 +1096,7 @@ spec = around withChannels $ parallel $ do
                 Graph.addNode top u2 "Vector x y z" def
                 Graph.addNode top u3 "a: b: a + b" def
 
-                Graph.connect top (outPortRef u1 []) (OutPortRef' (outPortRef u2 []))
+                Graph.connectToOutPort top (outPortRef u1 []) (outPortRef u2 [])
                 connectToInput top (outPortRef u2 [Port.Projection 0]) (inPortRef u3 [Port.Arg 0])
                 connectToInput top (outPortRef u2 [Port.Projection 1]) (inPortRef u3 [Port.Arg 1])
 
@@ -1131,7 +1131,7 @@ spec = around withChannels $ parallel $ do
             res <- evalEmp env $ do
                 Graph.addNode top u1 "myVec" def
                 Graph.addNode top u2 "SomeCons (Just a) 0 \"foo\" x" def
-                Graph.connect top (outPortRef u1 []) (OutPortRef' (outPortRef u2 []))
+                Graph.connectToOutPort top (outPortRef u1 []) (outPortRef u2 [])
 
                 Graph.withGraph top $ runASTOp $
                     (,,,) <$> GraphBuilder.buildNode u1

@@ -199,10 +199,10 @@ getNodeById :: GraphLocation -> NodeId -> Empire (Maybe Node.Node)
 getNodeById location nid = fmap listToMaybe $ getNodesByIds location [nid]
 
 getSrcPortByNodeId :: NodeId -> OutPortRef
-getSrcPortByNodeId nid = OutPortRef (NodeLoc def nid) []
+getSrcPortByNodeId nid = PortRef (NodeLoc def nid) []
 
-getDstPortByNodeLoc :: NodeLoc -> AnyPortRef
-getDstPortByNodeLoc nl = InPortRef' $ InPortRef nl [Self]
+getDstPortByNodeLoc :: NodeLoc -> InPortRef
+getDstPortByNodeLoc nl = PortRef nl [Self]
 
 prepareNSData :: Empire.SymbolMap -> NS.Items ExpressionNode
 prepareNSData sMap = Map.fromList $ functionsList <> methodsList where
@@ -227,13 +227,14 @@ handleGetProgram = modifyGraph defInverse action replyResult where
 handleAddConnection :: Request AddConnection.Request -> StateT Env BusT ()
 handleAddConnection = modifyGraph inverse action replyResult where
     getSrcPort = either id getSrcPortByNodeId
-    getDstPort = either id getDstPortByNodeLoc
-    inverse (AddConnection.Request _ _ dst') = return . AddConnection.Inverse $
-        case getDstPort dst' of
-            InPortRef'  portRef -> portRef
-            OutPortRef' portRef -> InPortRef (portRef ^. PortRef.nodeLoc) []
-    action  (AddConnection.Request location src' dst') = withDefaultResult location $
-        Graph.connectCondTC True location (getSrcPort src') (getDstPort dst')
+    inverse (AddConnection.Request _ _ dst') = return . AddConnection.Inverse $ case dst' of
+        AddConnection.InPort  portRef -> portRef
+        AddConnection.OutPort portRef -> PortRef (portRef ^. PortRef.nodeLoc) []
+        AddConnection.Node    nl      -> getDstPortByNodeLoc nl
+    action  (AddConnection.Request location src' dst') = withDefaultResult location $ case dst' of
+        AddConnection.InPort  portRef -> Graph.connectCondTCToInPort  True location (getSrcPort src') portRef
+        AddConnection.OutPort portRef -> Graph.connectCondTCToOutPort True location (getSrcPort src') portRef
+        AddConnection.Node    nl      -> Graph.connectCondTCToInPort  True location (getSrcPort src') $ getDstPortByNodeLoc nl
 
 handleAddNode :: Request AddNode.Request -> StateT Env BusT ()
 handleAddNode = modifyGraph defInverse action replyResult where
@@ -245,14 +246,14 @@ handleAddNode = modifyGraph defInverse action replyResult where
                 symbolMap <- liftIO . readMVar =<< view Empire.scopeVar
                 let shouldConnectToArg w = elem w (symbolMap ^. Empire.functions) || isUpper (Text.head w)
                 let port = if shouldConnectToArg firstWord then [Arg 0] else [Self]
-                void $ Graph.connectCondTC False location (getSrcPortByNodeId nid) (InPortRef' $ InPortRef nl port)
+                void $ Graph.connectCondTCToInPort False location (getSrcPortByNodeId nid) (PortRef nl port)
                 Graph.withGraph location $ runASTOp $ Graph.autolayoutNodes [nodeId]
         Graph.typecheck location
 
 handleAddPort :: Request AddPort.Request -> StateT Env BusT ()
 handleAddPort = modifyGraph defInverse action replyResult where
-    action (AddPort.Request location portRef connsDst) = withDefaultResult location $
-        Graph.addPortWithConnections location portRef connsDst
+    action (AddPort.Request location portRef connsToIn connsToOut) = withDefaultResult location $
+        Graph.addPortWithConnections location portRef connsToIn connsToOut
 
 handleAddSubgraph :: Request AddSubgraph.Request -> StateT Env BusT ()
 handleAddSubgraph = modifyGraph defInverse action replyResult where
@@ -307,7 +308,7 @@ handleRemoveConnection = modifyGraph inverse action replyResult where
             Nothing       -> throwM $ ConnectionDoesNotExistException dst
             Just (src, _) -> return $ RemoveConnection.Inverse src
     action (RemoveConnection.Request location dst) = withDefaultResult location $ do
-        mayDstNode <- getNodeById location $ dst ^. PortRef.dstNodeId
+        mayDstNode <- getNodeById location $ dst ^. PortRef.nodeId
         when (isNothing mayDstNode) $ throwM $ DestinationDoesNotExistException dst
         Graph.disconnect location dst
 
@@ -317,9 +318,9 @@ handleRemoveNodes = modifyGraph inverse action replyResult where
         let nodeIds = convert <$> nodeLocs --TODO[PM -> MM] Use NodeLoc instead of NodeId
         Graph allNodes allConnections _ _ monads <- Graph.withGraph location $ runASTOp buildGraph
         let idSet = Set.fromList nodeIds
-            nodes = flip filter allNodes       $ \node ->   Set.member (node ^. Node.nodeId)            idSet
-            conns = flip filter allConnections $ \conn -> ( Set.member (conn ^. _1 . PortRef.srcNodeId) idSet
-                                                         || Set.member (conn ^. _2 . PortRef.dstNodeId) idSet )
+            nodes = flip filter allNodes       $ \node ->   Set.member (node ^. Node.nodeId)         idSet
+            conns = flip filter allConnections $ \conn -> ( Set.member (conn ^. _1 . PortRef.nodeId) idSet
+                                                         || Set.member (conn ^. _2 . PortRef.nodeId) idSet )
         return $ RemoveNodes.Inverse nodes $ map (uncurry Connection) conns
     action (RemoveNodes.Request location nodeLocs) = withDefaultResult location $
         Graph.removeNodes location $ convert <$> nodeLocs --TODO[PM -> MM] Use NodeLoc instead of NodeId

@@ -18,7 +18,8 @@ import           LunaStudio.Data.Constants (gapBetweenNodes)
 import           LunaStudio.Data.Geometry  (snap)
 import           LunaStudio.Data.Node      (ExpressionNode, NodeId, exprNodeId, findPredecessorPosition, findSuccessorPosition, position)
 import           LunaStudio.Data.Port      (isSelf)
-import           LunaStudio.Data.PortRef   (InPortRef, OutPortRef, dstNodeId, dstPortId, srcNodeId, srcPortId)
+import           LunaStudio.Data.PortRef   (InPortRef, OutPortRef)
+import qualified LunaStudio.Data.PortRef   as PortRef
 import           LunaStudio.Data.Position  (Position, fromDoubles, leftTopPoint, move, vector, x, y)
 import           LunaStudio.Data.Vector2   (Vector2 (Vector2))
 
@@ -55,8 +56,8 @@ autolayoutNodes nids allNodes allConns =
         leftTop  = maybe (fromDoubles 0 0) snap $ leftTopPoint $ view position <$> nodes
         nodesMap = Map.fromList $ flip map nodes $ \n ->
             let nid       = n ^. exprNodeId
-                inConns'  = filter ((== nid) . view (_2 . dstNodeId)) allConns
-                outConns' = filter ((== nid) . view (_1 . srcNodeId)) allConns
+                inConns'  = filter ((== nid) . view (_2 . PortRef.nodeId)) allConns
+                outConns' = filter ((== nid) . view (_1 . PortRef.nodeId)) allConns
             in (nid, NodeInfo nid leftTop Nothing NotProcessed inConns' outConns')
     in Map.toList $ fmap (view actPos) $ execState (findPositions leftTop allNodes allConns) nodesMap
 
@@ -96,10 +97,10 @@ areInChain n1 n2 =
         areInChain' n1' n2' = maybe False (\(nid2, nid1) -> isIdTheSame n2' nid2 && isIdTheSame n1' nid1) $ (,) <$> onlyOutConnNid n1' <*> onlyInConnNid n2'
         hasSingleInConn  n  = length (n ^. inConns)  == 1
         hasSingleOutConn n  = length (n ^. outConns) == 1
-        onlyInConnNid  n    = if hasSingleInConn  n then Just . view (_1 . srcNodeId) . head $ n ^. inConns  else Nothing
-        onlyOutConnNid n    = if hasSingleOutConn n then Just . view (_2 . dstNodeId) . head $ n ^. outConns else Nothing
-        onlyToSelfConnNid n = case filter (isSelf . (view $ _2 . dstPortId)) $ n ^. outConns of
-            [conn] -> Just $ conn ^. _2 . dstNodeId
+        onlyInConnNid  n    = if hasSingleInConn  n then Just . view (_1 . PortRef.nodeId) . head $ n ^. inConns  else Nothing
+        onlyOutConnNid n    = if hasSingleOutConn n then Just . view (_2 . PortRef.nodeId) . head $ n ^. outConns else Nothing
+        onlyToSelfConnNid n = case filter (isSelf . (view $ _2 . PortRef.portId)) $ n ^. outConns of
+            [conn] -> Just $ conn ^. _2 . PortRef.nodeId
             _      -> Nothing
 
 areOnTheSameLevel :: NodeInfo -> NodeInfo -> Bool
@@ -111,11 +112,11 @@ areOnTheSameLevel node1 node2 = areOnTheSameLevel' node1 node2 || areOnTheSameLe
 
 getPrevInChain :: NodeInfo -> AutolayoutState (Maybe NodeInfo)
 getPrevInChain n =
-    find (areInChain n) . catMaybes <$> mapM (lookupNode . view (_1 . srcNodeId)) (n ^. inConns)
+    find (areInChain n) . catMaybes <$> mapM (lookupNode . view (_1 . PortRef.nodeId)) (n ^. inConns)
 
 getNextInChain :: NodeInfo -> AutolayoutState (Maybe NodeInfo)
 getNextInChain n =
-    find (areInChain n) . catMaybes <$> mapM (lookupNode . view (_2 . dstNodeId)) (n ^. outConns)
+    find (areInChain n) . catMaybes <$> mapM (lookupNode . view (_2 . PortRef.nodeId)) (n ^. outConns)
 
 isHeadInChain :: NodeInfo -> AutolayoutState Bool
 isHeadInChain = fmap isNothing . getPrevInChain
@@ -131,7 +132,7 @@ removeCyclesForNode :: NodeId -> AutolayoutState ()
 removeCyclesForNode nid = withJustM (lookupNode nid) $ \n -> when (n ^. dfsState == NotProcessed) $ do
     ix nid . dfsState .= InProcess
     let removeConnectionsWithNode :: NodeId -> [Connection] -> [Connection]
-        removeConnectionsWithNode nid' = filter (\(src, dst) -> src ^. srcNodeId /= nid && dst ^. dstNodeId /= nid')
+        removeConnectionsWithNode nid' = filter (\(src, dst) -> src ^. PortRef.nodeId /= nid && dst ^. PortRef.nodeId /= nid')
         processDstNode :: NodeId -> AutolayoutState ()
         processDstNode dstId = withJustM (lookupNode dstId) $ \dstNode -> case dstNode ^. dfsState of
             NotProcessed -> removeCyclesForNode dstId
@@ -139,7 +140,7 @@ removeCyclesForNode nid = withJustM (lookupNode nid) $ \n -> when (n ^. dfsState
             InProcess    -> do
                 ix dstId . inConns  %= removeConnectionsWithNode nid
                 ix nid   . outConns %= removeConnectionsWithNode dstId
-    forM_ (view (_2 . dstNodeId) <$> n ^. outConns) $ processDstNode
+    forM_ (view (_2 . PortRef.nodeId) <$> n ^. outConns) $ processDstNode
     ix nid . dfsState .= Processed
 
 alignNeighboursX :: NodeInfo -> AutolayoutState (Set NodeId)
@@ -160,16 +161,16 @@ alignNeighboursX n = do
                 let nid = node ^. nodeId
                 ix nid . actPos . x .= nextX
                 return $ Just nid
-    preds <- lookupNodes . map (view srcNodeId . fst) $ n ^. inConns
-    succs <- lookupNodes . map (view dstNodeId . snd) $ n ^. outConns
+    preds <- lookupNodes . map (view PortRef.nodeId . fst) $ n ^. inConns
+    succs <- lookupNodes . map (view PortRef.nodeId . snd) $ n ^. outConns
     predsToUpdate <- fmap catMaybes $ mapM proccessPred preds
     succsToUpdate <- fmap catMaybes $ mapM proccessSucc succs
     return . Set.fromList $ predsToUpdate ++ succsToUpdate
 
 alignChainsX :: NodeId -> AutolayoutState ()
 alignChainsX nid = withJustM (lookupNode nid) $ \n -> do
-    preds  <- lookupNodes . map (view srcNodeId . fst) $ n ^. inConns
-    succs  <- lookupNodes . map (view dstNodeId . snd) $ n ^. outConns
+    preds  <- lookupNodes . map (view PortRef.nodeId . fst) $ n ^. inConns
+    succs  <- lookupNodes . map (view PortRef.nodeId . snd) $ n ^. outConns
     isLast <- isLastInChain n
     let alignToLeft = not (null preds) && (null succs || (length succs == 1 && not isLast))
     if alignToLeft then do
@@ -187,14 +188,14 @@ alignChainsX nid = withJustM (lookupNode nid) $ \n -> do
 sortOutConns :: [Connection] -> [Connection]
 sortOutConns conns = do
     let sortFunction (src1, dst1) (src2, dst2) =
-            if      isSelf $ dst1 ^. dstPortId then LT
-            else if isSelf $ dst2 ^. dstPortId then GT
-            else (src1 ^. srcPortId) `compare` (src2 ^. srcPortId)
+            if      isSelf $ dst1 ^. PortRef.portId then LT
+            else if isSelf $ dst2 ^. PortRef.portId then GT
+            else (src1 ^. PortRef.portId) `compare` (src2 ^. PortRef.portId)
     List.sortBy sortFunction conns
 
 sortInConns :: [Connection] -> [Connection]
 sortInConns conns = do
-    let sortFunction (src1, dst1) (src2, dst2) = compare (dst1 ^. dstPortId) (dst2 ^. dstPortId)
+    let sortFunction (src1, dst1) (src2, dst2) = compare (dst1 ^. PortRef.portId) (dst2 ^. PortRef.portId)
     List.sortBy sortFunction conns
 
 maxMaybe :: Ord a => Maybe a -> Maybe a -> Maybe a
@@ -205,7 +206,7 @@ maxMaybe (Just a) (Just b) = Just $ max a b
 
 findYPositionForward :: NodeInfo -> Subgraph -> AutolayoutState (Maybe Double)
 findYPositionForward n s = do
-    succs <- lookupNodes . map (view $ _2 . dstNodeId) . sortOutConns $ n ^. outConns
+    succs <- lookupNodes . map (view $ _2 . PortRef.nodeId) . sortOutConns $ n ^. outConns
     let mayNYPos = (+gapBetweenNodes) . snd <$> (Map.lookup (n ^. actPos . x) $ s ^. yMinMaxAtX)
     if null succs || (not . areOnTheSameLevel n $ head succs)
         then return mayNYPos
@@ -215,7 +216,7 @@ findYPositionForward n s = do
 
 findYPositionBackward :: NodeInfo -> Subgraph -> AutolayoutState (Maybe Double)
 findYPositionBackward n s = do
-    preds <- lookupNodes . map (view $ _1 . srcNodeId) . sortInConns $ n ^. inConns
+    preds <- lookupNodes . map (view $ _1 . PortRef.nodeId) . sortInConns $ n ^. inConns
     let mayNYPos = (+gapBetweenNodes) . snd <$> (Map.lookup (n ^. actPos . x) $ s ^. yMinMaxAtX)
     if null preds || (not . areOnTheSameLevel n $ head preds)
         then return mayNYPos
@@ -228,7 +229,7 @@ findYPosition n s = maxMaybe <$> findYPositionBackward n s <*> findYPositionForw
 
 findHigherNodeForward :: NodeInfo -> AutolayoutState (Maybe NodeInfo)
 findHigherNodeForward n = do
-    succs <- lookupNodes . map (view $ _2 . dstNodeId) . sortOutConns $ n ^. outConns
+    succs <- lookupNodes . map (view $ _2 . PortRef.nodeId) . sortOutConns $ n ^. outConns
     if null succs || (isJust . view subgraph $ head succs)
         then return Nothing
     else if areOnTheSameLevel n $ head succs
@@ -237,7 +238,7 @@ findHigherNodeForward n = do
 
 findHigherNodeBackward :: NodeInfo -> AutolayoutState (Maybe NodeInfo)
 findHigherNodeBackward n = do
-    preds <- lookupNodes . map (view $ _1 . srcNodeId) . sortInConns $ n ^. inConns
+    preds <- lookupNodes . map (view $ _1 . PortRef.nodeId) . sortInConns $ n ^. inConns
     if null preds || (isJust . view subgraph $ head preds)
         then return Nothing
     else if areOnTheSameLevel n $ head preds
@@ -267,8 +268,8 @@ addToSubgraph s n = do
                              & yMinMaxAtX %~ Map.insert (n ^. actPos . x) getYMinMaxAtX
                 proccessN :: Subgraph -> NodeId -> AutolayoutState Subgraph
                 proccessN s' nl = lookupNode nl >>= maybe (return s') (addToSubgraph s')
-            foldlM proccessN updatedS $ (map (view $ _1 . srcNodeId) . sortInConns  $ n ^. inConns)
-                             ++ (map (view $ _2 . dstNodeId) . sortOutConns $ n ^. outConns)
+            foldlM proccessN updatedS $ (map (view $ _1 . PortRef.nodeId) . sortInConns  $ n ^. inConns)
+                             ++ (map (view $ _2 . PortRef.nodeId) . sortOutConns $ n ^. outConns)
 
 alignSubgraph :: Position -> Subgraph -> AutolayoutState Position
 alignSubgraph pos s = case getSubgraphMinimumRectangle s of
@@ -310,10 +311,10 @@ alignNodesY pos = do
 
 alignToEndpoint :: SubgraphMap -> [ExpressionNode] -> [Connection] -> AutolayoutState ()
 alignToEndpoint subgraphs nodes conns = forM_ subgraphs $ \s -> forM_ (findEndPoint s nodes conns) $ \((src, dst), node) -> do
-    mayNode <- lookupNode $ if src ^. srcNodeId /= node ^. exprNodeId then src ^. srcNodeId else dst ^. dstNodeId
+    mayNode <- lookupNode $ if src ^. PortRef.nodeId /= node ^. exprNodeId then src ^. PortRef.nodeId else dst ^. PortRef.nodeId
     forM_ mayNode $ \n -> do
         state <- get
-        let newPos = if src ^. srcNodeId == node ^. exprNodeId
+        let newPos = if src ^. PortRef.nodeId == node ^. exprNodeId
                 then findSuccessorPosition   node $ filter (\n -> Map.notMember (n ^. exprNodeId) state) nodes
                 else findPredecessorPosition node $ filter (\n -> Map.notMember (n ^. exprNodeId) state) nodes
             shift  = newPos ^. vector - n ^. actPos . vector
@@ -324,6 +325,6 @@ findEndPoint s nodes conns = listToMaybe endPoints where
     inSubgraph nid = Set.member nid $ s ^. members
     endPoints :: [(Connection, ExpressionNode)]
     endPoints = catMaybes . flip map conns $ \conn@(src, dst) ->
-        if      inSubgraph (src ^. srcNodeId) && (not $ inSubgraph (dst ^. dstNodeId)) then (conn, ) <$> find (\n -> n ^. exprNodeId == dst ^. dstNodeId) nodes
-        else if (not $ inSubgraph (src ^. srcNodeId)) && inSubgraph (dst ^. dstNodeId) then (conn, ) <$> find (\n -> n ^. exprNodeId == src ^. srcNodeId) nodes
+        if      inSubgraph (src ^. PortRef.nodeId) && (not $ inSubgraph (dst ^. PortRef.nodeId)) then (conn, ) <$> find (\n -> n ^. exprNodeId == dst ^. PortRef.nodeId) nodes
+        else if (not $ inSubgraph (src ^. PortRef.nodeId)) && inSubgraph (dst ^. PortRef.nodeId) then (conn, ) <$> find (\n -> n ^. exprNodeId == src ^. PortRef.nodeId) nodes
         else    Nothing

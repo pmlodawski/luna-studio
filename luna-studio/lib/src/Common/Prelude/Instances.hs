@@ -54,7 +54,6 @@ instance Convertible JSString String where
 --     toJSON = toJSON . HashMap.toList
 instance Default (HashMap a b) where def = HashMap.empty
 instance Hashable a => Hashable (Breadcrumb a)
-instance Hashable AnyPortRef
 instance Hashable BreadcrumbItem
 instance Hashable InPortIndex
 instance Hashable InPortRef

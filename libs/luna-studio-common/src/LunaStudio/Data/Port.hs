@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveFoldable    #-}
 {-# LANGUAGE DeriveFunctor     #-}
 {-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE RankNTypes        #-}
 {-# LANGUAGE TypeFamilies      #-}
 
 module LunaStudio.Data.Port
@@ -55,12 +56,6 @@ type instance IxValue (OutPorts s) = s
 instance Ixed (OutPorts s) where
     ix (Projection i) = wrapped . ix i
 
-
-data AnyPortId = InPortId'  { inPortId'  :: InPortId  }
-               | OutPortId' { outPortId' :: OutPortId }
-               deriving (Generic, Show, Eq, Ord, NFData)
-makePrisms ''AnyPortId
-
 data PortState = NotConnected | Connected | WithDefault PortDefault deriving (Eq, Generic, NFData, Show)
 
 data Port i = Port
@@ -75,17 +70,17 @@ type OutPort = Port OutPortId
 
 makeLenses ''Port
 makePrisms ''PortState
-instance Binary AnyPortId
+-- instance Binary AnyPortId
 instance Binary i => Binary (Port i)
 instance Binary PortState
 
-isInPort :: AnyPortId -> Bool
-isInPort (InPortId' _) = True
-isInPort _             = False
-
-isOutPort :: AnyPortId -> Bool
-isOutPort (OutPortId' _) = True
-isOutPort _              = False
+-- isInPort :: AnyPortId -> Bool
+-- isInPort (InPortId' _) = True
+-- isInPort _             = False
+--
+-- isOutPort :: AnyPortId -> Bool
+-- isOutPort (OutPortId' _) = True
+-- isOutPort _              = False
 
 isSelf :: InPortId -> Bool
 isSelf (Self:_) = True
@@ -107,11 +102,11 @@ isProjection :: OutPortId -> Bool
 isProjection (Projection _:_) = True
 isProjection _                = False
 
-withOut :: (OutPortId -> Bool) -> AnyPortId -> Bool
-withOut = anyOf _OutPortId'
-
-withIn :: (InPortId -> Bool) -> AnyPortId -> Bool
-withIn = anyOf _InPortId'
+-- withOut :: (OutPortId -> Bool) -> AnyPortId -> Bool
+-- withOut = anyOf _OutPortId'
+--
+-- withIn :: (InPortId -> Bool) -> AnyPortId -> Bool
+-- withIn = anyOf _InPortId'
 
 class PortNumber p where
     getPortNumber :: p -> Int
@@ -121,6 +116,6 @@ instance PortNumber InPortId where
 instance PortNumber OutPortId where
     getPortNumber (Projection i : _) = i
     getPortNumber _                  = 0
-instance PortNumber AnyPortId where
-    getPortNumber (InPortId' i) = getPortNumber i
-    getPortNumber (OutPortId' i) = getPortNumber i
+-- instance PortNumber AnyPortId where
+--     getPortNumber (InPortId' i) = getPortNumber i
+--     getPortNumber (OutPortId' i) = getPortNumber i
