@@ -45,13 +45,13 @@ handle _                                               = Nothing
 
 handleCommand :: Shortcut.Command -> Command State ()
 handleCommand = \case
-    Shortcut.CenterGraph -> centerGraph
+    Shortcut.CenterGraph -> void centerGraph
     Shortcut.PanDown     -> panDown
     Shortcut.PanLeft     -> panLeft
     Shortcut.PanRight    -> panRight
     Shortcut.PanUp       -> panUp
     Shortcut.ResetCamera -> resetCamera
-    Shortcut.ResetPan    -> resetPan >> centerGraph
+    Shortcut.ResetPan    -> resetPan >> void centerGraph
     Shortcut.ResetZoom   -> resetZoom
     Shortcut.ZoomIn      -> zoomIn
     Shortcut.ZoomOut     -> zoomOut

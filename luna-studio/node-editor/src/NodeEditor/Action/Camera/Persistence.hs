@@ -21,8 +21,8 @@ saveCamera = do
     withJustM (preuse $ workspace . traverse . currentLocation) $ \location ->
         liftIO $ JS.saveCamera location camera
 
-tryLoadCamera :: Command State ()
-tryLoadCamera = maybe centerGraph return =<< runMaybeT (do
+tryLoadCamera :: Command State Bool
+tryLoadCamera = maybe centerGraph (const $ return True) =<< runMaybeT (do
     location <- MaybeT $ preuse $ workspace . traverse . currentLocation
     camera <- MaybeT $ liftIO $ JS.loadCamera location
     lift $ modifyNodeEditor $ screenTransform .= camera)

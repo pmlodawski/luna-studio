@@ -6,7 +6,7 @@ import           Common.Prelude
 
 import           NodeEditor.Action.Command          (Command)
 import qualified NodeEditor.Action.Searcher         as Searcher
-import           NodeEditor.Action.State.NodeEditor (whenGraphLoaded)
+import           NodeEditor.Action.State.NodeEditor (whenGraphPresent)
 import           NodeEditor.Event.Event             (Event (Shortcut, UI))
 import qualified NodeEditor.Event.Shortcut          as Shortcut
 import           NodeEditor.Event.UI                (UIEvent (AppEvent, NodeEditorEvent, SearcherEvent))
@@ -18,8 +18,8 @@ import           NodeEditor.State.Global            (State)
 
 
 handle :: (Event -> IO ()) -> Event -> Maybe (Command State ())
-handle _ (Shortcut (Shortcut.Event Shortcut.SearcherOpen _)) = Just $ whenGraphLoaded Searcher.open
-handle _ (UI (NodeEditorEvent NodeEditor.ContextMenu))       = Just $ whenGraphLoaded Searcher.open
+handle _ (Shortcut (Shortcut.Event Shortcut.SearcherOpen _)) = Just $ whenGraphPresent Searcher.open
+handle _ (UI (NodeEditorEvent NodeEditor.ContextMenu))       = Just $ whenGraphPresent Searcher.open
 handle scheduleEvent (UI (SearcherEvent evt))                = Just $ handleEvent scheduleEvent evt
 handle _ (UI (AppEvent (App.MouseDown _ _)))                 = Just $ continue Searcher.close
 handle _ _                                                   = Nothing

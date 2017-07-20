@@ -92,42 +92,39 @@ nodeEditor = React.defineView name $ \(ref, ne') -> do
         visualizations = NodeEditor.getVisualizations ne
         isAnyVisActive = any (\visProp -> elem (visProp ^. visPropVisualization . visualizationMode) [Preview, FullScreen, Focused]) visualizations
         nodesWithVis   = Set.fromList $ map (^. visPropNodeLoc) visualizations
+        graphView  = div_
+            [ "className"   $= Style.prefixFromList (["graph"]++if isAnyVisActive then ["graph--has-visualization-active"] else [])
+            , "id"          $= sceneId
+            , "key"         $= "graph"
+            , onMouseDown   $ \_ m   -> dispatch ref $ UI.NodeEditorEvent $ NE.MouseDown m
+            , onDoubleClick $ \_ _   -> dispatch' ref $ Shortcut $ Shortcut.Event Shortcut.ExitGraph def
+            , onWheel       $ \e m w -> preventDefault e : dispatch ref (UI.NodeEditorEvent $ NE.Wheel m w)
+            , onScroll      $ \e     -> [preventDefault e]
+            ] $ do
+                dynamicStyles_ camera $ ne ^. NodeEditor.expressionNodesRecursive
+                svgPlanes_ $ do
+                    planeMonads_ $ monads_ monads
+                    planeConnections_ $ do
+                        forM_     (ne ^. NodeEditor.posConnections ) $ connection_ ref
+                        forKeyed_ (ne ^. NodeEditor.posHalfConnections) $ uncurry halfConnection_
+                        forM_     (ne ^. NodeEditor.selectionBox   ) selectionBox_
+                        forM_     (ne ^. NodeEditor.connectionPen  ) connectionPen_
+                planeNodes_ $ do
+                    forM_  nodes         $ \n -> node_ ref
+                                                       n
+                                                       (filterOutSearcherIfNotRelated (n ^. Node.nodeLoc) maySearcher)
+                                                       (Set.filter (ExpressionNode.containsNode (n ^. Node.nodeLoc)) nodesWithVis)
+                    forM_ visualizations $ nodeVisualization_ ref
+                withJust input  $ \n -> sidebar_ ref (filterOutSearcherIfNotRelated (n ^. Node.nodeLoc) maySearcher) n
+                withJust output $ sidebar_ ref Nothing
+                planeCanvas_ mempty
+
     case ne ^. NodeEditor.graphStatus of
-        GraphLoaded ->
-          div_
-              [ "className"   $= Style.prefixFromList (["graph"]++if isAnyVisActive then ["graph--has-visualization-active"] else [])
-              , "id"          $= sceneId
-              , "key"         $= "graph"
-              , onMouseDown   $ \_ m   -> dispatch ref $ UI.NodeEditorEvent $ NE.MouseDown m
-              , onDoubleClick $ \_ _   -> dispatch' ref $ Shortcut $ Shortcut.Event Shortcut.ExitGraph def
-              , onWheel       $ \e m w -> preventDefault e : dispatch ref (UI.NodeEditorEvent $ NE.Wheel m w)
-              , onScroll      $ \e     -> [preventDefault e]
-              ] $ do
-              dynamicStyles_ camera $ ne ^. NodeEditor.expressionNodesRecursive
-
-              svgPlanes_ $ do
-                  planeMonads_ $
-                      monads_ monads
-                  planeConnections_ $ do
-                      forM_     (ne ^. NodeEditor.posConnections ) $ connection_ ref
-                      forKeyed_ (ne ^. NodeEditor.posHalfConnections) $ uncurry halfConnection_
-                      forM_     (ne ^. NodeEditor.selectionBox   ) selectionBox_
-                      forM_     (ne ^. NodeEditor.connectionPen  ) connectionPen_
-
-              planeNodes_ $ do
-                  forM_  nodes         $ \n -> node_ ref
-                                                     n
-                                                     (filterOutSearcherIfNotRelated (n ^. Node.nodeLoc) maySearcher)
-                                                     (Set.filter (ExpressionNode.containsNode (n ^. Node.nodeLoc)) nodesWithVis)
-                  forM_ visualizations $ nodeVisualization_ ref
-
-              withJust input  $ \n -> sidebar_ ref (filterOutSearcherIfNotRelated (n ^. Node.nodeLoc) maySearcher) n
-              withJust output $ sidebar_ ref Nothing
-
-              planeCanvas_ mempty
-        GraphLoading   -> noGraph_ True "Loading..."
-        NoGraph        -> noGraph_ False ""
-        GraphError msg -> noGraph_ True msg
+        GraphLoaded      -> graphView
+        GraphNotCentered -> graphView
+        GraphLoading     -> noGraph_ True "Loading..."
+        NoGraph          -> noGraph_ False ""
+        GraphError msg   -> noGraph_ True msg
 
 
 noGraph_ :: Bool -> String -> ReactElementM ViewEventHandler ()

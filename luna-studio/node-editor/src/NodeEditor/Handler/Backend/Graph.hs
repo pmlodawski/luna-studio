@@ -60,7 +60,7 @@ import           NodeEditor.Event.Batch                      (Event (..))
 import qualified NodeEditor.Event.Event                      as Event
 import           NodeEditor.Handler.Backend.Common           (doNothing, handleResponse)
 import qualified NodeEditor.React.Model.Node.ExpressionNode  as Node
-import           NodeEditor.React.Model.NodeEditor           (GraphStatus (GraphError, GraphLoaded))
+import           NodeEditor.React.Model.NodeEditor           (GraphStatus (GraphError, GraphLoaded, GraphNotCentered))
 import           NodeEditor.State.Global                     (State)
 import qualified NodeEditor.State.Global                     as Global
 
@@ -110,10 +110,10 @@ handle (Event.Batch ev) = Just $ case ev of
                             monads      = graph ^. Graph.monads
                         shouldCenter <- not <$> isGraphLoaded
                         updateGraph nodes input output connections monads
-                        setGraphStatus GraphLoaded
                         updateScene
                         when shouldCenter $ do
-                            tryLoadCamera
+                            success' <- tryLoadCamera
+                            setGraphStatus $ if success' then GraphLoaded else GraphNotCentered
                             requestCollaborationRefresh
         failure _ = do
             isOnTop <- fromMaybe True <$> preuses (Global.workspace . traverse) Workspace.isOnTopBreadcrumb

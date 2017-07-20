@@ -4,20 +4,22 @@ module NodeEditor.Handler.App
 
 import           Common.Prelude
 
-import           NodeEditor.Action.Basic        (setFile, unselectAll, unsetFile, updateScene)
-import qualified NodeEditor.Action.Batch        as Batch
-import           NodeEditor.Action.Command      (Command)
-import           NodeEditor.Action.State.Action (endActions, endAllActions)
-import qualified NodeEditor.Event.Atom          as Atom
-import           NodeEditor.Event.Event         (Event (Atom, Init, Shortcut, UI))
-import           NodeEditor.Event.Mouse         (mousePosition)
-import qualified NodeEditor.Event.Shortcut      as Shortcut
-import           NodeEditor.Event.UI            (UIEvent (AppEvent))
-import qualified NodeEditor.React.Event.App     as App
-import           NodeEditor.State.Action        (actionsClosingOnMouseLeave)
-import           NodeEditor.State.Global        (State)
-import qualified NodeEditor.State.Global        as Global
-import qualified NodeEditor.State.UI            as UI
+import           NodeEditor.Action.Basic            (centerGraph, setFile, unselectAll, unsetFile, updateScene)
+import qualified NodeEditor.Action.Batch            as Batch
+import           NodeEditor.Action.Command          (Command)
+import           NodeEditor.Action.State.Action     (endActions, endAllActions)
+import           NodeEditor.Action.State.NodeEditor (getGraphStatus, setGraphStatus)
+import qualified NodeEditor.Event.Atom              as Atom
+import           NodeEditor.Event.Event             (Event (Atom, Init, Shortcut, UI))
+import           NodeEditor.Event.Mouse             (mousePosition)
+import qualified NodeEditor.Event.Shortcut          as Shortcut
+import           NodeEditor.Event.UI                (UIEvent (AppEvent))
+import qualified NodeEditor.React.Event.App         as App
+import           NodeEditor.React.Model.NodeEditor  (GraphStatus (GraphLoaded, GraphNotCentered))
+import           NodeEditor.State.Action            (actionsClosingOnMouseLeave)
+import           NodeEditor.State.Global            (State)
+import qualified NodeEditor.State.Global            as Global
+import qualified NodeEditor.State.UI                as UI
 
 
 handle :: Event -> Maybe (Command Global.State ())
@@ -28,6 +30,8 @@ handle (Shortcut (Shortcut.Event command _)) = Just $ handleCommand command
 handle  Init                                 = Just $ Batch.getProgram >> Batch.searchNodes
 handle (Atom (Atom.SetFile path)           ) = Just $ setFile path
 handle (Atom  Atom.UnsetFile               ) = Just   unsetFile
+handle (Atom  Atom.LunaStudioFocused       ) = Just $
+    whenM ((== GraphNotCentered) <$> getGraphStatus) $ whenM centerGraph $ setGraphStatus GraphLoaded
 handle _                                     = Nothing
 
 

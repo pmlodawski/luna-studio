@@ -56,6 +56,9 @@ module.exports = LunaStudio =
         if items instanceof LunaEditorTab
             nodeEditor.pushEvent(tag: "SetFile", path: items.uri)
 
+    @subs.add atom.workspace.onDidChangeActivePaneItem (items) ->
+        if items instanceof LunaStudioTab
+            nodeEditor.pushEvent(tag: "LunaStudioFocused")
 
     @subs.add atom.workspace.onDidDestroyPaneItem (event) =>
         if (event.item instanceof LunaEditorTab)

@@ -36,6 +36,7 @@ import           NodeEditor.React.Model.Visualization       (NodeVisualizations,
 import qualified NodeEditor.React.Model.Visualization       as Visualization
 
 data GraphStatus = GraphLoaded
+                 | GraphNotCentered
                  | GraphLoading
                  | NoGraph
                  | GraphError Error
@@ -86,6 +87,9 @@ makeLenses ''NodeEditor
 
 isGraphLoaded :: Getter NodeEditor Bool
 isGraphLoaded = graphStatus . to (== GraphLoaded)
+
+isGraphPresent :: Getter NodeEditor Bool
+isGraphPresent = graphStatus . to (flip elem [GraphLoaded, GraphNotCentered])
 
 screenTransform :: Lens' NodeEditor CameraTransformation
 screenTransform = layout . Layout.screenTransform

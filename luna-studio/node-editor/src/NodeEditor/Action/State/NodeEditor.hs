@@ -62,11 +62,20 @@ getNodeEditor = get nodeEditor
 modifyNodeEditor :: M.State NodeEditor r -> Command State r
 modifyNodeEditor = modify nodeEditor
 
+getGraphStatus :: Command State GraphStatus
+getGraphStatus = view NE.graphStatus <$> getNodeEditor
+
 isGraphLoaded :: Command State Bool
 isGraphLoaded = view NE.isGraphLoaded <$> getNodeEditor
 
 whenGraphLoaded :: Command State () -> Command State ()
 whenGraphLoaded = whenM isGraphLoaded
+
+isGraphPresent :: Command State Bool
+isGraphPresent = view NE.isGraphPresent <$> getNodeEditor
+
+whenGraphPresent :: Command State () -> Command State ()
+whenGraphPresent = whenM isGraphPresent
 
 setGraphStatus :: GraphStatus -> Command State ()
 setGraphStatus graphStatus = modifyNodeEditor $ NE.graphStatus .= graphStatus
