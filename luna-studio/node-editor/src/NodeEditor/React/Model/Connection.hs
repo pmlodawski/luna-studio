@@ -1,4 +1,3 @@
-{-# LANGUAGE StrictData #-}
 module NodeEditor.React.Model.Connection
     ( module X
     , module NodeEditor.React.Model.Connection

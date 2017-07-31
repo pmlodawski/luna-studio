@@ -23,6 +23,7 @@ default-extensions:
   - FlexibleInstances
   - GeneralizedNewtypeDeriving
   - LambdaCase
+  - Strict
   - MultiParamTypeClasses
   - NoImplicitPrelude
   - ScopedTypeVariables

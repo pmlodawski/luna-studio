@@ -1,4 +1,3 @@
-{-# LANGUAGE StrictData #-}
 module NodeEditor.React.Model.DataFrame where
 
 import           Common.Prelude

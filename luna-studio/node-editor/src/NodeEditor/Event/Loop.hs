@@ -1,3 +1,4 @@
+{-# LANGUAGE NoStrictData #-}
 module NodeEditor.Event.Loop where
 
 import           Control.Concurrent.Chan  (Chan)

@@ -1,4 +1,5 @@
 {-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE NoStrict #-}
 module Main where
 
 import           Common.Prelude

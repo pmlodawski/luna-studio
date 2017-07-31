@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TypeFamilies   #-}
-
+{-# LANGUAGE NoStrictData #-}
 module NodeEditor.React.Store.Ref where
 
 import           Common.Prelude             as P hiding (transform)

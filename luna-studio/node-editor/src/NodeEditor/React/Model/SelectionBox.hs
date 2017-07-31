@@ -1,4 +1,3 @@
-{-# LANGUAGE StrictData #-}
 module NodeEditor.React.Model.SelectionBox where
 
 import           Common.Prelude

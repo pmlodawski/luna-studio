@@ -1,4 +1,3 @@
-{-# LANGUAGE StrictData #-}
 module NodeEditor.React.Model.Field where
 
 import           Common.Prelude

@@ -1,4 +1,3 @@
-{-# LANGUAGE StrictData #-}
 module NodeEditor.React.Model.ConnectionPen where
 
 import           Common.Prelude

@@ -1,8 +1,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TypeFamilies   #-}
+{-# LANGUAGE NoStrict #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-
-
 module NodeEditor.React.Store
     ( module NodeEditor.React.Store
     , module X

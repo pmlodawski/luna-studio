@@ -24,6 +24,7 @@ default-extensions:
   - NoImplicitPrelude
   - ScopedTypeVariables
   - StandaloneDeriving
+  - Strict
   - TemplateHaskell
   - TupleSections
   - ViewPatterns
