@@ -1,0 +1,7 @@
+/home/pmlodawski/dev/projects/luna-studio3/luna-studio/atom/test.luna:
+  typeRepToVisMap: []
+  breadcrumbsSettings:
+  - - []
+    - logicalToScreen: ! '[[1.0,0.0,0.0,0.0],[0.0,1.0,0.0,0.0],[0.0,0.0,1.0,0.0],[236.0,228.0,0.0,1.0]]'
+      screenToLogical: ! '[[1.0,0.0,0.0,0.0],[0.0,1.0,0.0,0.0],[0.0,0.0,1.0,0.0],[-236.0,-228.0,0.0,1.0]]'
+      lastInverse: 0

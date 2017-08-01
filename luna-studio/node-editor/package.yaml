@@ -30,7 +30,7 @@ default-extensions:
   - ViewPatterns
 
 ghc-options:
-  -Wall -O2
+  -Wall -O2 -funbox-strict-fields -fspecialise-aggressively -fexcess-precision -fexpose-all-unfoldings -fsimpl-tick-factor=1000 -fmax-simplifier-iterations=10 -fsimplifier-phases=5 
 
 #
 # ACHTUNG! Zmieniasz tu - zmien w interactive

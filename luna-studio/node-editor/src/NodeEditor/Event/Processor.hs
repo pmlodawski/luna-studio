@@ -83,20 +83,21 @@ preprocessEvent ev = do
     return $ fromMaybe ev $ getLast $ Last batchEvent <> Last shortcutEvent
 
 processEvent :: LoopRef -> Event -> IO ()
-processEvent loop ev = modifyMVar_ (loop ^. Loop.state) $ \state -> do
+processEvent loop ev = timeIt "processEvent" $ modifyMVar_ (loop ^. Loop.state) $ \state -> do
     realEvent <- preprocessEvent ev
-    when displayProcessingTime $ do
-        consoleTimeStart $ (realEvent ^. Event.name) <>" show and force"
-        JS.Debug.error (convert $ realEvent ^. Event.name) ()
-        consoleTimeEnd $ (realEvent ^. Event.name) <> " show and force"
-        consoleTimeStart (realEvent ^. Event.name)
-    timestamp <- getCurrentTime
-    let state' = state & Global.lastEventTimestamp .~ timestamp
-    handle (handleExcept state realEvent) $ do
-        newState <- execCommand (runCommands (actions loop) realEvent >> renderIfNeeded) state'
-        when displayProcessingTime $
-            consoleTimeEnd (realEvent ^. Event.name)
-        return newState
+    timeIt (take 100 $ show realEvent) $ do
+        when displayProcessingTime $ do
+            consoleTimeStart $ (realEvent ^. Event.name) <>" show and force"
+            JS.Debug.error (convert $ realEvent ^. Event.name) ()
+            consoleTimeEnd $ (realEvent ^. Event.name) <> " show and force"
+            consoleTimeStart (realEvent ^. Event.name)
+        timestamp <- getCurrentTime
+        let state' = state & Global.lastEventTimestamp .~ timestamp
+        handle (handleExcept state realEvent) $ do
+            newState <- execCommand (runCommands (actions loop) realEvent >> renderIfNeeded) state'
+            when displayProcessingTime $
+                consoleTimeEnd (realEvent ^. Event.name)
+            return newState
 
 connectEventSources :: WebSocket -> LoopRef -> IO ()
 connectEventSources conn loop = do
