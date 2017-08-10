@@ -16,11 +16,29 @@ import           Data.Convert            (Convertible (convert))
 import           Data.Fixed              (mod')
 import           Data.Hashable           (hash)
 import           LunaStudio.Data.TypeRep (TypeRep (..))
-
+import System.IO.Unsafe (unsafePerformIO)
+import           GHCJS.Marshal.Pure                 (pFromJSVal, pToJSVal)
 
 newtype Color = Color { fromColor :: Int }
               deriving (Eq, Generic, Ord, Show, NFData)
 
+
+
+foreign import javascript safe "document.l" docL' :: JSVal -> JSVal
+foreign import javascript safe "document.c" docC' :: JSVal -> JSVal
+foreign import javascript safe "document.h" docH' :: JSVal -> JSVal
+
+{-# NOINLINE docC #-}
+docC :: Int -> Float
+docC = fromMaybe 45 . pFromJSVal . docC' . pToJSVal
+
+{-# NOINLINE docL #-}
+docL :: Int -> Float
+docL = fromMaybe 30 . pFromJSVal . docL' . pToJSVal
+
+{-# NOINLINE docH #-}
+docH :: Int -> Float
+docH = fromMaybe 100.7 . pFromJSVal . docH' . pToJSVal
 
 data HSL a = HSL { _h :: a
                  , _s :: a
@@ -40,9 +58,8 @@ buildHsl (Color i) = HSL (hue * 2.0 * pi) 0.6 0.5
 
 buildLCH :: Color -> Color.LCH
 buildLCH (Color 0) = Color.LCH 50  0 0 255
-buildLCH (Color i) = Color.LCH 30 45 h' 255 where
-    h'    = (start + delta * (fromIntegral i - 1)) `mod'` 360
-    start = 100.7
+buildLCH (Color i) = Color.LCH (docL i) (docC i) h' 255 where
+    h'    = (docH i + delta * (fromIntegral i - 1)) `mod'` 360
     delta = 256/pi
 
 instance Convertible Color.LCH JSString where
