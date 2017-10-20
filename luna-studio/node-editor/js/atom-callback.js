@@ -8,7 +8,8 @@ var removeFromArray = function (array, elt) {
 module.exports = function () {
 
   var listeners = {
-    onEvent: []
+    onEvent: [],
+    fieldListener: null 
   };
 
   var globalRegistry;
@@ -89,6 +90,15 @@ module.exports = function () {
       listeners.onEvent.forEach(function(listener) {
         listener(data);
       });
+    },
+    onInputFieldRequest: function (listener) {
+      listeners.fieldListener = listener;
+    },
+    requestInputField: function (fieldId, content) {
+      console.log("CALLBACK", fieldId, content);
+      if (listeners.fieldListener)
+        listeners.fieldListener(fieldId, content); 
+      
     }
   };
 };

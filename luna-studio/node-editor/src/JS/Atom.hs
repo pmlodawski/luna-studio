@@ -1,6 +1,7 @@
 {-# LANGUAGE JavaScriptFFI #-}
 module JS.Atom
     ( setActiveLocation
+    , requestInputField
     , onEvent
     ) where
 import           Common.Prelude
@@ -23,6 +24,9 @@ foreign import javascript safe "$1.unOnEvent()"
 foreign import javascript safe "atomCallback.setActiveLocation($1)"
     setActiveLocation' :: JSVal -> IO ()
 
+foreign import javascript safe "atomCallback.requestInputField($1, $2)"
+    requestInputField' :: JSString -> JSString -> IO ()
+
 onEvent :: (Event -> IO ()) -> IO (IO ())
 onEvent callback = do
     wrappedCallback <- syncCallback1 ContinueAsync $ mapM_ callback <=< parseEvent
@@ -40,3 +44,6 @@ parseEvent jsval = do
 
 setActiveLocation :: MonadIO m => GraphLocation -> m ()
 setActiveLocation gl = liftIO $ setActiveLocation' =<< toJSVal_aeson gl
+
+requestInputField :: MonadIO m => JSString -> Text -> m ()
+requestInputField fid t = liftIO $ requestInputField' fid $ convert t

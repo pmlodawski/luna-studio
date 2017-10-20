@@ -17,20 +17,19 @@ import qualified NodeEditor.Event.Mouse                               as Mouse
 import qualified NodeEditor.Event.UI                                  as UI
 import qualified NodeEditor.React.Event.Node                          as Node
 import qualified NodeEditor.React.Event.Visualization                 as Visualization
-import qualified NodeEditor.React.Model.Field                         as Field
+import           NodeEditor.React.IsRef                               (IsRef, dispatch)
+import qualified NodeEditor.React.Model.InputField                    as Field
 import           NodeEditor.React.Model.Node.ExpressionNode           (ExpressionNode, NodeLoc, Subgraph, countArgPorts, countOutPorts,
-                                                                      isAnyPortHighlighted, isCollapsed, returnsError)
+                                                                       isAnyPortHighlighted, isCollapsed, returnsError)
 import qualified NodeEditor.React.Model.Node.ExpressionNode           as Node
 import qualified NodeEditor.React.Model.Node.ExpressionNodeProperties as Prop
 import           NodeEditor.React.Model.Port                          (isAll, isInPort, isSelf, withOut)
 import qualified NodeEditor.React.Model.Port                          as Port
 import           NodeEditor.React.Model.Searcher                      (Searcher)
 import qualified NodeEditor.React.Model.Searcher                      as Searcher
-import           NodeEditor.React.IsRef                               (IsRef, dispatch)
 import           NodeEditor.React.View.ColorizedExpression            (colorizedExpression_)
 import           NodeEditor.React.View.ExpressionNode.NodeValue       (nodeValue_)
 import           NodeEditor.React.View.ExpressionNode.Properties      (nodeProperties_)
-import           NodeEditor.React.View.Field                          (multilineField_)
 import           NodeEditor.React.View.Monad                          (monads_)
 import           NodeEditor.React.View.Plane                          (planeMonads_)
 import           NodeEditor.React.View.Port                           (argumentConstructor_, portExpanded_, port_)
@@ -133,7 +132,7 @@ node = React.defineView name $ \(ref, n, performingConnect, maySearcher, related
                         --  && (n ^. Node.argConstructorMode /= Port.Highlighted)
                         --  && (not $ any Port.isHighlighted (inPortsList n))
                         --  && (not $ any Port.isHighlighted (outPortsList n)) then ["hover"] else []
-            hasArgConstructor = elem (n ^. Node.argConstructorMode) [Port.Normal, Port.Highlighted] 
+            hasArgConstructor = elem (n ^. Node.argConstructorMode) [Port.Normal, Port.Highlighted]
         div_
             [ "key"       $= prefixNode (jsShow nodeId)
             , "id"        $= prefixNode (jsShow nodeId)
@@ -190,9 +189,9 @@ nodeBody = React.defineView objNameBody $ \(ref, n) -> do
         selectionMark_
         case n ^. Node.mode of
             Node.Expanded Node.Controls -> nodeProperties_ ref $ Prop.fromNode n
-            Node.Expanded Node.Editor   -> multilineField_ [] "editor"
-                $ Field.mk ref (n ^. Node.code)
-                & Field.onCancel .~ Just (UI.NodeEvent . Node.SetExpression nodeLoc)
+            -- Node.Expanded Node.Editor   -> multilineField_ [] "editor"
+            --     $ Field.mk ref (n ^. Node.code)
+            --     & Field.onCancel .~ Just (UI.NodeEvent . Node.SetExpression nodeLoc)
             _                           -> ""
 
 nodePorts_ :: IsRef ref => ref -> ExpressionNode -> Bool -> Bool -> ReactElementM ViewEventHandler ()
@@ -239,7 +238,7 @@ nodePorts = React.defineView objNamePorts $ \(ref, n, hasAlias, hasSelf) -> do
                 ports $ filter (      isSelf . (^. Port.portId)) nodePorts'
 
                 forM_  (filter (not . isSelf . (^. Port.portId)) nodePorts') $ portExpanded_ ref nodeLoc
-                
+
             argumentConstructor_ ref nodeLoc (countArgPorts n) (n ^. Node.argConstructorMode == Port.Highlighted) hasAlias hasSelf
 
 nodeContainer_ :: IsRef ref => ref -> Bool -> Maybe Searcher -> Set NodeLoc -> [Subgraph] -> ReactElementM ViewEventHandler ()

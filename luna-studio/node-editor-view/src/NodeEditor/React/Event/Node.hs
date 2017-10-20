@@ -4,9 +4,9 @@ module NodeEditor.React.Event.Node where
 
 import           Common.Prelude
 import           LunaStudio.Data.NodeLoc     (NodeLoc)
-import           LunaStudio.Data.PortDefault (PortDefault)
 import           LunaStudio.Data.PortRef     (InPortRef)
 import           NodeEditor.Data.Slider      (InitValue)
+import           NodeEditor.React.Model.Port (PortDefault)
 import           React.Flux                  (KeyboardEvent, MouseEvent)
 
 

@@ -22,8 +22,6 @@ import           LunaStudio.Data.NodeMeta                    (NodeMeta)
 import           LunaStudio.Data.NodeSearcher                (ImportName, ModuleHints)
 import qualified LunaStudio.Data.NodeSearcher                as NS
 import           LunaStudio.Data.NodeValue                   (VisualizationId, Visualizer, VisualizerName, VisualizerPath, applyType)
-import           LunaStudio.Data.Port                        (_WithDefault)
-import           LunaStudio.Data.PortDefault                 (PortDefault)
 import           LunaStudio.Data.PortRef                     (AnyPortRef (..), InPortRef (..), OutPortRef (..))
 import qualified LunaStudio.Data.PortRef                     as PortRef
 import           LunaStudio.Data.Position                    (Position)
@@ -45,7 +43,7 @@ import           NodeEditor.React.Model.Node.ExpressionNode  (ExpressionNode, is
 import qualified NodeEditor.React.Model.Node.ExpressionNode  as ExpressionNode
 import           NodeEditor.React.Model.NodeEditor           (GraphStatus, NodeEditor, VisualizationBackup)
 import qualified NodeEditor.React.Model.NodeEditor           as NE
-import           NodeEditor.React.Model.Port                 (InPort, OutPort, state)
+import           NodeEditor.React.Model.Port                 (InPort, OutPort, PortDefault, state, _WithDefault)
 import qualified NodeEditor.React.Model.Port                 as Port
 import           NodeEditor.React.Model.Searcher             (Searcher)
 import qualified NodeEditor.React.Model.Searcher             as Searcher

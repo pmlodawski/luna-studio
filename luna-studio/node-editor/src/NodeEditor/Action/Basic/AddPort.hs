@@ -4,7 +4,7 @@ import           Common.Action.Command                   (Command)
 import           Common.Prelude
 import qualified Data.Text                               as Text
 import           LunaStudio.Data.LabeledTree             (LabeledTree (LabeledTree))
-import           LunaStudio.Data.Port                    (Port (Port))
+import qualified LunaStudio.Data.Port                    as Empire
 import           LunaStudio.Data.PortRef                 (InPortRef, OutPortRef (OutPortRef), srcPortId)
 import           LunaStudio.Data.TypeRep                 (TypeRep (TStar))
 import           NodeEditor.Action.Basic.AddConnection   (localAddConnection)
@@ -13,7 +13,7 @@ import qualified NodeEditor.Action.Batch                 as Batch
 import           NodeEditor.Action.State.NodeEditor      (getConnectionsContainingNode, getInputNode)
 import qualified NodeEditor.React.Model.Connection       as Connection
 import           NodeEditor.React.Model.Node.SidebarNode (countProjectionPorts, inputSidebarPorts)
-import           NodeEditor.React.Model.Port             (OutPortIndex (Projection), OutPorts (OutPorts), PortState (NotConnected))
+import           NodeEditor.React.Model.Port             (OutPortIndex (Projection), OutPorts (OutPorts))
 import           NodeEditor.State.Global                 (State)
 
 
@@ -28,7 +28,7 @@ localAddPort portRef@(OutPortRef nid pid@[Projection pos]) mayConnDst mayName = 
         || pos < 0
             then return False
             else do
-                let newPort     = LabeledTree (OutPorts []) $ convert $ Port pid (fromMaybe def mayName) TStar NotConnected
+                let newPort     = LabeledTree (OutPorts []) $ convert $ Empire.Port pid (fromMaybe def mayName) TStar Empire.NotConnected
                     oldPorts    = node ^. inputSidebarPorts
                     (portsBefore, portsAfter) = splitAt pos oldPorts
                     newPorts    = portsBefore <> [newPort] <> portsAfter

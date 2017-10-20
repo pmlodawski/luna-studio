@@ -1,3 +1,4 @@
+-- THIS FILE NEEDS UPDATE - WEB VERSION IS NOT CURRENTLY PROPERLY SUPPORTED
 module NodeEditor.Event.KeyMap where
 
 import           React.Flux                      (KeyboardEvent)

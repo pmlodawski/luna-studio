@@ -6,21 +6,24 @@ module NodeEditor.React.Model.Port
     )
     where
 
-import           Common.Prelude                   hiding (set)
-import           Data.Convert                     (Convertible (convert))
-import           LunaStudio.Data.Angle            (Angle)
-import           LunaStudio.Data.LabeledTree      (LabeledTree (LabeledTree))
-import qualified LunaStudio.Data.LabeledTree      as LabeledTree
-import           LunaStudio.Data.Port             as X hiding (InPort, OutPort, Port (..), name, portId, state, valueType)
-import qualified LunaStudio.Data.Port             as Empire
-import           LunaStudio.Data.PortDefault      as X (PortDefault (..))
-import           LunaStudio.Data.PortRef          as X (AnyPortRef (InPortRef', OutPortRef'), InPortRef (InPortRef),
-                                                       OutPortRef (OutPortRef))
-import           LunaStudio.Data.Position         (Position)
-import           LunaStudio.Data.TypeRep          (TypeRep (..))
-import           NodeEditor.Data.Color            (Color)
-import qualified NodeEditor.Data.Color            as Color
-import           NodeEditor.React.Model.Constants (nodeRadius, lineHeight)
+import           Common.Prelude                    hiding (set)
+import           Data.Convert                      (Convertible (convert))
+import           LunaStudio.Data.Angle             (Angle)
+import           LunaStudio.Data.LabeledTree       (LabeledTree (LabeledTree))
+import qualified LunaStudio.Data.LabeledTree       as LabeledTree
+import           LunaStudio.Data.Port              as X hiding (InPort, OutPort, Port (..), PortState (..), name, portId, state, valueType,
+                                                         _Connected, _NotConnected, _WithDefault)
+import qualified LunaStudio.Data.Port              as Empire
+import qualified LunaStudio.Data.PortDefault       as Empire
+import           LunaStudio.Data.PortRef           as X (AnyPortRef (InPortRef', OutPortRef'), InPortRef (InPortRef),
+                                                         OutPortRef (OutPortRef))
+import           LunaStudio.Data.Position          (Position)
+import           LunaStudio.Data.TypeRep           (TypeRep (..))
+import           NodeEditor.Data.Color             (Color)
+import qualified NodeEditor.Data.Color             as Color
+import           NodeEditor.React.Model.Constants  (lineHeight, nodeRadius)
+import           NodeEditor.React.Model.InputField (InputField, content, mkInputField)
+
 
 type IsAlias = Bool
 type IsSelf  = Bool
@@ -37,6 +40,53 @@ data Mode = Normal
 
 instance Default Mode where
     def = Normal
+
+data PortValue = IntValue  Integer
+               | RealValue Double
+               | BoolValue Bool
+               | TextValue InputField
+               deriving (Eq, Generic, NFData, Show)
+
+data PortDefault = Expression Text
+                 | Constant   PortValue
+                 deriving (Eq, Generic, NFData, Show)
+
+data PortState = NotConnected | Connected | WithDefault PortDefault deriving (Eq, Generic, NFData, Show)
+
+makePrisms ''PortValue
+makePrisms ''PortDefault
+makePrisms ''PortState
+
+instance Convertible Empire.PortValue PortValue where
+    convert (Empire.IntValue  i) = IntValue i
+    convert (Empire.RealValue r) = RealValue r
+    convert (Empire.BoolValue b) = BoolValue b
+    convert (Empire.TextValue s) = TextValue . mkInputField $ convert s
+
+instance Convertible Empire.PortDefault PortDefault where
+    convert (Empire.Expression s) = Expression $ convert s
+    convert (Empire.Constant   c) = Constant   $ convert c
+
+instance Convertible Empire.PortState PortState where
+    convert (Empire.NotConnected)  = NotConnected
+    convert (Empire.Connected)     = Connected
+    convert (Empire.WithDefault v) = WithDefault $ convert v
+
+
+instance Convertible PortValue Empire.PortValue where
+    convert (IntValue  i) = Empire.IntValue i
+    convert (RealValue r) = Empire.RealValue r
+    convert (BoolValue b) = Empire.BoolValue b
+    convert (TextValue f) = Empire.TextValue . convert $ f ^. content
+
+instance Convertible PortDefault Empire.PortDefault where
+    convert (Expression s) = Empire.Expression $ convert s
+    convert (Constant   c) = Empire.Constant   $ convert c
+
+instance Convertible PortState Empire.PortState where
+    convert (NotConnected)  = Empire.NotConnected
+    convert (Connected)     = Empire.Connected
+    convert (WithDefault v) = Empire.WithDefault $ convert v
 
 data Port i = Port
         { _portId    :: i
@@ -115,7 +165,7 @@ instance Convertible (Empire.Port i) (Port i) where
         {- portId    -} (p ^. Empire.portId)
         {- name      -} (p ^. Empire.name)
         {- nodeType  -} (p ^. Empire.valueType)
-        {- state     -} (p ^. Empire.state)
+        {- state     -} (convert $ p ^. Empire.state)
         {- mode      -} Normal
 
 instance Convertible (Port i) (Empire.Port i) where
@@ -123,7 +173,7 @@ instance Convertible (Port i) (Empire.Port i) where
         {- portId    -} (p ^. portId)
         {- name      -} (p ^. name)
         {- nodeType  -} (p ^. valueType)
-        {- state     -} (p ^. state)
+        {- state     -} (convert $ p ^. state)
 
 
 portGap :: Double -> Angle

@@ -15,6 +15,7 @@ import           LunaStudio.Data.Position             (Position)
 import           LunaStudio.Data.ScreenPosition       (ScreenPosition)
 import           NodeEditor.Data.Slider               (InitValue)
 import           NodeEditor.React.Model.Connection    (ConnectionId)
+import           NodeEditor.React.Model.InputField    (ActiveInputField, InputFieldId)
 import           NodeEditor.React.Model.Visualization (VisualizationId, VisualizationMode)
 
 data NodeDrag = NodeDrag { _nodeDragStartPos      :: Position
@@ -88,21 +89,19 @@ data Searcher = Searcher deriving (Eq, Generic, Show, Typeable)
 
 makeLenses ''Searcher
 
-data VisualizationDrag = VisualizationDrag
-    { _visNodeLoc :: NodeLoc
-    , _visIdx     :: Int
-    , _visPos     :: Position
-    } deriving (Eq, Show, Generic, Typeable)
+data VisualizationDrag = VisualizationDrag { _visNodeLoc :: NodeLoc
+                                           , _visIdx     :: Int
+                                           , _visPos     :: Position
+                                           } deriving (Eq, Show, Generic, Typeable)
 
 makeLenses ''VisualizationDrag
 
 
-data VisualizationActive = VisualizationActive
-    { _visualizationActiveNodeLoc         :: NodeLoc
-    , _visualizationActiveVisualizationId :: VisualizationId
-    , _visualizationActiveSelectedMode    :: VisualizationMode
-    , _visualizationActiveTriggeredByVis  :: Bool
-    } deriving (Eq, Show, Generic, Typeable)
+data VisualizationActive = VisualizationActive { _visualizationActiveNodeLoc         :: NodeLoc
+                                               , _visualizationActiveVisualizationId :: VisualizationId
+                                               , _visualizationActiveSelectedMode    :: VisualizationMode
+                                               , _visualizationActiveTriggeredByVis  :: Bool
+                                               } deriving (Eq, Show, Generic, Typeable)
 
 makeLenses ''VisualizationActive
 
@@ -110,6 +109,12 @@ data SidebarAddRemoveMode = SidebarAddRemoveMode { _sidebarAddRemoveModeNodeLoc 
                                                  } deriving (Eq, Show, Generic, Typeable)
 
 makeLenses ''SidebarAddRemoveMode
+
+data InputFieldActive = InputFieldActive { _inputFieldActiveFieldId :: InputFieldId
+                                         , _inputFieldActiveState   :: ActiveInputField
+                                         } deriving (Eq, Show, Generic, Typeable)
+
+makeLenses ''InputFieldActive
 
 data SomeAction m = forall a. (Action m a, Show a, Typeable a) => SomeAction Dynamic a deriving (Typeable)
 
@@ -138,62 +143,64 @@ fromSomeAction (SomeAction d _) = fromDynamic d
 
 newtype ActionRep = ActionRep TypeRep deriving (Show, Eq, Ord)
 
-nodeDragAction, multiSelectionAction, visualizationDragAction, panDragAction, zoomDragAction, sidebarAddRemoveModeAction, sliderDragAction, penConnectAction, penDisconnectAction, connectAction, portDragAction, searcherAction, visualizationActiveAction :: ActionRep
-nodeDragAction             = ActionRep (typeOf NodeDrag)
+connectAction, inputFieldActiveAction, multiSelectionAction, nodeDragAction, panDragAction, penConnectAction, penDisconnectAction, portDragAction, searcherAction, sidebarAddRemoveModeAction, sliderDragAction, visualizationActiveAction, visualizationDragAction, zoomDragAction :: ActionRep
+connectAction              = ActionRep (typeOf Connect)
+inputFieldActiveAction     = ActionRep (typeOf InputFieldActive)
 multiSelectionAction       = ActionRep (typeOf MultiSelection)
+nodeDragAction             = ActionRep (typeOf NodeDrag)
 panDragAction              = ActionRep (typeOf PanDrag)
-zoomDragAction             = ActionRep (typeOf ZoomDrag)
-sliderDragAction           = ActionRep (typeOf SliderDrag)
 penConnectAction           = ActionRep (typeOf PenConnect)
 penDisconnectAction        = ActionRep (typeOf PenDisconnect)
-connectAction              = ActionRep (typeOf Connect)
 portDragAction             = ActionRep (typeOf PortDrag)
-sidebarAddRemoveModeAction = ActionRep (typeOf SidebarAddRemoveMode)
 searcherAction             = ActionRep (typeOf Searcher)
-visualizationDragAction    = ActionRep (typeOf VisualizationDrag)
+sidebarAddRemoveModeAction = ActionRep (typeOf SidebarAddRemoveMode)
+sliderDragAction           = ActionRep (typeOf SliderDrag)
 visualizationActiveAction  = ActionRep (typeOf VisualizationActive)
+visualizationDragAction    = ActionRep (typeOf VisualizationDrag)
+zoomDragAction             = ActionRep (typeOf ZoomDrag)
 
 overlappingActions :: [Set ActionRep]
 overlappingActions = [ Set.fromList [ connectAction
+                                    , inputFieldActiveAction
                                     , multiSelectionAction
                                     , nodeDragAction
                                     , penConnectAction
                                     , penDisconnectAction
+                                    , portDragAction
                                     , searcherAction
                                     , sidebarAddRemoveModeAction
                                     , sliderDragAction
-                                    , visualizationDragAction
-                                    , portDragAction
                                     , visualizationActiveAction
+                                    , visualizationDragAction
                                     ]
                      , Set.fromList [ panDragAction
-                                    , zoomDragAction
                                     , portDragAction
                                     , visualizationActiveAction
+                                    , zoomDragAction
                                     ]
                      ]
 
 actionsBlockingPortHighlight :: Set ActionRep
 actionsBlockingPortHighlight = Set.fromList [ multiSelectionAction
                                             , nodeDragAction
+                                            , panDragAction
                                             , penConnectAction
                                             , penDisconnectAction
+                                            , portDragAction
                                             , searcherAction
                                             , sliderDragAction
                                             , visualizationDragAction
-                                            , panDragAction
                                             , zoomDragAction
-                                            , portDragAction
                                             ]
 
 actionsClosingOnMouseLeave :: Set ActionRep
-actionsClosingOnMouseLeave = Set.fromList [ nodeDragAction
-                                          , multiSelectionAction
+actionsClosingOnMouseLeave = Set.fromList [ multiSelectionAction
+                                          , nodeDragAction
                                           , panDragAction
-                                          , zoomDragAction
-                                          , sliderDragAction
                                           , penConnectAction
                                           , penDisconnectAction
                                           , portDragAction
+                                          , sliderDragAction
                                           , visualizationDragAction
+                                          , zoomDragAction
                                           ]

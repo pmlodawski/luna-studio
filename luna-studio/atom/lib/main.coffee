@@ -55,6 +55,7 @@ module.exports = LunaStudio =
                             pane.uri = newUri
 
         codeEditor.statusListener actStatus
+        nodeEditor.onInputFieldRequest (a, content) => @addInputField(a, content)
         atom.workspace.onDidChangeActivePaneItem (item) => @handleItemChange(item)
         atom.workspace.onDidDestroyPaneItem (event) => @handleItemDestroy(event)
         atom.workspace.observeTextEditors (editor) => @handleSaveAsLuna(editor)
@@ -70,6 +71,26 @@ module.exports = LunaStudio =
             'luna-studio:welcome': => @welcome.attach()
             'core:cancel': => @welcome.detach()
         codeEditor.start()
+
+    addInputField: (fieldId, content) ->
+        console.log content
+        line_edit_model = atom.workspace.buildTextEditor(mini: true)
+        line_edit_model.setText(content)
+        line_edit_model.onDidChangeCursorPosition (e) => @sendInputFieldUpdate e, line_edit_model
+        line_edit_model.onDidStopChanging         (e) => @sendInputFieldUpdate e, line_edit_model
+        line_edit_model.onDidChangeSelectionRange (e) => @sendInputFieldUpdate e, line_edit_model
+        console.log line_edit_model
+        line_edit = atom.views.getView(line_edit_model)
+        console.log line_edit
+        root = document.getElementById(fieldId)
+        root.appendChild(line_edit)
+
+    sendInputFieldUpdate: (e, model) ->
+        nodeEditor.pushEvent
+            tag: "InputFieldUpdate"
+            content: model.getText()
+            cursors: model.getCursorBufferPositions().map (cursor) -> cursor.column
+            selection: model.getSelectedBufferRanges().map (range) -> [range.start.column, range.end.column]
 
     loadAnalyticsConfig: ->
         try

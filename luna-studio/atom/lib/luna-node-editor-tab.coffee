@@ -80,6 +80,8 @@ class LunaNodeEditorTab extends View
             # MockMonads
             'luna-studio:mock-add-monad':    -> pushShortcutEvent("MockAddMonad")
             'luna-studio:mock-clear-monads': -> pushShortcutEvent("MockClearMonads")
+            # input-field
+            'luna-studio:input-accept': -> pushShortcutEvent("AcceptInput")
             # searcher
             'luna-studio:searcher-open':         -> pushShortcutEvent("SearcherOpen")
         atom.commands.add '.luna-searcher',

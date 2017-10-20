@@ -27,6 +27,7 @@ import qualified NodeEditor.Handler.Camera              as Camera
 import qualified NodeEditor.Handler.Clipboard           as Clipboard
 import qualified NodeEditor.Handler.Connect             as Connect
 import qualified NodeEditor.Handler.ConnectionPen       as ConnectionPen
+import qualified NodeEditor.Handler.InputField          as Field
 import qualified NodeEditor.Handler.MockMonads          as MockMonads
 import qualified NodeEditor.Handler.MultiSelection      as MultiSelection
 import qualified NodeEditor.Handler.Navigation          as Navigation
@@ -59,6 +60,7 @@ actions loop =
     , ConnectionPen.handle
     , Control.handle
     , Graph.handle
+    , Field.handle
     , MultiSelection.handle
     , Navigation.handle
     , Node.handle

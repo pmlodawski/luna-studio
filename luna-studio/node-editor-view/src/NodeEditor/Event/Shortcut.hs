@@ -23,6 +23,8 @@ data Command = Cancel
              | Copy
              | Cut
              | Paste
+             -- InputField
+             | AcceptInput
              -- navigation
              | ExitGraph
              | GoConeDown

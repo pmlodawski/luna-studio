@@ -11,7 +11,6 @@ import           Common.Prelude
 import           Data.Time.Clock                    (UTCTime)
 import qualified Data.Time.Clock                    as Clock
 import qualified JS.UI                              as JS
-import           LunaStudio.Data.PortDefault        (PortDefault (Constant), PortValue (IntValue, RealValue))
 import           LunaStudio.Data.PortRef            (InPortRef)
 import           LunaStudio.Data.ScreenPosition     (ScreenPosition, x)
 import           NodeEditor.Action.Basic            (localSetPortDefault)
@@ -19,8 +18,9 @@ import qualified NodeEditor.Action.Batch            as Batch
 import           NodeEditor.Action.State.Action     (beginActionWithKey, continueActionWithKey, removeActionFromState, updateActionWithKey)
 import           NodeEditor.Action.State.NodeEditor (getPortDefault)
 import           NodeEditor.Data.Slider             (InitValue (Continous, Discrete))
+import           NodeEditor.React.Model.Port        (PortDefault (Constant), PortValue (IntValue, RealValue))
 import           NodeEditor.State.Action            (Action (begin, continue, end, update), SliderDrag (SliderDrag), sliderDragAction,
-                                                    sliderDragInitValue, sliderDragPortRef, sliderDragStartTime)
+                                                     sliderDragInitValue, sliderDragPortRef, sliderDragStartTime)
 import           NodeEditor.State.Global            (State)
 
 
@@ -45,7 +45,7 @@ startMoveSlider portRef initVal = do
 moveSlider :: ScreenPosition -> SliderDrag -> Command State ()
 moveSlider movement state = do
     currentTime <- liftIO Clock.getCurrentTime
-    let portRef = state ^. sliderDragPortRef
+    let portRef  = state ^. sliderDragPortRef
         newValue = newSliderValue movement currentTime state
     begin $ state & sliderDragStartTime .~ currentTime
                   & sliderDragInitValue .~ newValue
@@ -55,9 +55,9 @@ stopMoveSlider :: ScreenPosition -> SliderDrag -> Command State ()
 stopMoveSlider _currentPostion state = do
     JS.unlockCursor
     -- currentTime <- liftIO Clock.getCurrentTime
-    let portRef = state ^. sliderDragPortRef
+    let portRef  = state ^. sliderDragPortRef
         newValue = state ^. sliderDragInitValue
-    Batch.setPortDefault portRef $ toPortValue newValue
+    Batch.setPortDefault portRef . convert $ toPortValue newValue
     removeActionFromState sliderDragAction
 
 sign :: Double -> Double
