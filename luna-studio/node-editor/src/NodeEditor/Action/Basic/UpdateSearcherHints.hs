@@ -11,6 +11,7 @@ import           Data.Set                           (Set)
 import qualified Data.Set                           as Set
 import           Data.Text                          (Text)
 import qualified Data.Text                          as Text
+import           JS.Markdown                        (mdToHtml)
 import           LunaStudio.Data.Node               (ExpressionNode)
 import           LunaStudio.Data.NodeSearcher       (EntryType (Function), ImportName, ImportsHints, Match (Match),
                                                      ModuleHints (ModuleHints), RawEntry (RawEntry), TypePreferation (TypePreferation),
@@ -39,7 +40,12 @@ selectHint i = when (i >= 0) . modifySearcher $ do
     when (i <= hLen) $ Searcher.selected .= i
 
 localAddSearcherHints :: ImportsHints -> Command State ()
-localAddSearcherHints ih = do
+localAddSearcherHints ih' = do
+    let moduleHintsDocsMdToHtml mh = mapMOf (NS.functions . traverse . _2) mdToHtml mh
+                                 >>= mapMOf (NS.classes   . traverse)      classHintsDocsToHtml
+        classHintsDocsToHtml ch = mapMOf (NS.constructors . traverse . _2) mdToHtml ch
+                              >>= mapMOf (NS.methods      . traverse . _2) mdToHtml
+    ih <- liftIO $ mapMOf traverse moduleHintsDocsMdToHtml ih'
     nodeSearcherData . imports %= Map.union ih
     localUpdateSearcherHintsPreservingSelection
 

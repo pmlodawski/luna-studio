@@ -17,6 +17,7 @@ import qualified NodeEditor.React.View.Style     as Style
 import           React.Flux
 import qualified React.Flux                      as React
 
+
 name :: JSString
 name = "searcher"
 
@@ -68,14 +69,11 @@ searcher =  React.defineView name $ \(ref, s) -> do
             let selected = s ^. Searcher.selected
             case s ^. Searcher.mode of
                 Searcher.Command    results -> do results_   ref selected results
-                                                  resultDoc_ ref selected results
                 Searcher.Node   _ _ results -> do results_   ref selected results
-                                                  resultDoc_ ref selected results
+                                                  withJust (s ^? Searcher.selectedMatch . _Just . NS.doc) $ \d -> unless (Text.null d) $ resultDoc_ ref d
                 Searcher.NodeName _ results -> do results_   ref selected results
-                                                  resultDoc_ ref selected results
                 Searcher.PortName _ results -> do results_   ref selected results
-                                                  resultDoc_ ref selected results
-                
+
 
     -- div_
         --     [ "key"       $= "searcherPreview"
@@ -126,15 +124,9 @@ highlighted_ result = prefixElem >> highlighted_' 0 highlights where
                 $ elemString highlighted
             highlighted_' (start + len) rest
 
-resultDoc_ :: IsRef ref => ref -> Int -> [Match] -> ReactElementM ViewEventHandler ()
-resultDoc_ ref selected results = do
-    let r   = drop (selected - 1) results
-        doc' = case r of
-                   []    -> ""
-                   (x:_) -> case Text.unpack $ x ^. NS.doc of
-                                 [] -> "No documentation."
-                                 _  -> Text.unpack $ x ^. NS.doc
+resultDoc_ :: IsRef ref => ref -> Text -> ReactElementM ViewEventHandler ()
+resultDoc_ ref doc = do
     div_
         [ "key"       $= "doc"
         , "className" $= Style.prefix "searcher__doc"
-        ] $ elemString doc'
+        ] $ elemString $ convert doc

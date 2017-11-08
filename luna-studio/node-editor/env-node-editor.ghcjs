@@ -6,7 +6,8 @@ var analytics        = require('./analytics')
     fontSize         = require('./font-size');
     init             = require('./init'),
     lexerClasses     = require('./lexer-classes'),
-    gzip             = require('./gzip')
+    gzip             = require('./gzip'),
+    showdown         = require('showdown')
 
 
 var run = function(maybe_url, maybe_mountPoint, websocket) {
