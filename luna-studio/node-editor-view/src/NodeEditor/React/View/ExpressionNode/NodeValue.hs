@@ -30,7 +30,6 @@ nodeValue = React.defineView nodeValueName $ \(ref, n) ->
             [ "key"       $= "shortValue"
             , "className" $= Style.prefixFromList ["node__short-value", "noselect" ]
             , onDoubleClick $ \e _ -> [stopPropagation e]
-            , onClick       $ \_ _ -> dispatch ref $ UI.NodeEvent $ Node.ShowFullError $ n ^. Node.nodeLoc
             ] $ elemString $ strValue n
 
 strValue :: ExpressionNode -> String
