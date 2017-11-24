@@ -3,9 +3,9 @@ module NodeEditor.Handler.Node where
 import           Common.Action.Command                      (Command)
 import           Common.Prelude
 import           LunaStudio.Data.ScreenPosition             (ScreenPosition)
-import           NodeEditor.Action.Basic                    (collapseToFunction, enterNode, removeSelectedNodes,
-                                                             selectAll, setNodeExpression, setPortDefault, toggleSelect,
-                                                             toggleSelectedNodesMode, toggleSelectedNodesUnfold)
+import           NodeEditor.Action.Basic                    (collapseToFunction, enterNode, removeSelectedNodes, selectAll,
+                                                             setNodeExpression, setPortDefault, toggleSelect, toggleSelectedNodesMode,
+                                                             toggleSelectedNodesUnfold)
 import           NodeEditor.Action.Batch                    (autolayoutNodes)
 import qualified NodeEditor.Action.Node                     as Node
 import qualified NodeEditor.Action.Port                     as PortControl
@@ -43,7 +43,6 @@ handle (UI (NodeEvent    (Node.PortSetPortDefault        portRef portDef)))    =
 handle (UI (NodeEvent    (Node.PortInitSlider       _    portRef sliderInit))) = Just $ PortControl.startMoveSlider portRef sliderInit
 handle (UI (NodeEvent    (Node.MouseEnter                nl))) = Just $ Node.handleMouseEnter nl
 handle (UI (NodeEvent    (Node.MouseLeave                nl))) = Just $ Node.handleMouseLeave nl
-handle (UI (NodeEvent    (Node.ShowFullError             nl))) = Just $ Node.showFullError nl
 handle _ = Nothing
 
 handleCommand :: Shortcut.Command -> Command State ()
