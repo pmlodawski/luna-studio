@@ -1,11 +1,10 @@
 fs       = require 'fs-plus'
 path     = require 'path'
-request  = require 'request'
 yaml     = require 'js-yaml'
 
+VisualGuide      = require './guide'
 stats = require './stats'
 analytics = require './gen/analytics'
-VisualGuide        = require './guide'
 LunaCodeEditorTab  = require './luna-code-editor-tab'
 LunaNodeEditorTab  = require './luna-node-editor-tab'
 LunaWelcomeTab = require './luna-welcome-tab'
@@ -27,7 +26,7 @@ analyticsConfigRequest =
 
 module.exports = LunaStudio =
     activate: (state) ->
-        @loadAnalyticsConfig()
+        stats.initialize()
         atom.grammars.addGrammar(new LunaSemanticGrammar(atom.grammars, codeEditor.lex))
         atom.workspace.addOpener (uri) => @lunaOpener(uri)
         codeEditor.connect(nodeEditor.connector)
@@ -89,14 +88,7 @@ module.exports = LunaStudio =
             'core:cancel': => @welcome.detach()
         codeEditor.start()
 
-    loadAnalyticsConfig: ->
-        try
-            request.get analyticsConfigRequest, (err, response, body) =>
-                filters = yaml.safeLoad(body)
-                analytics.setFilters filters
-                stats.collect()
-        catch error
-            console.error error
+
 
     consumeStatusBar: (statusBar) ->
         myElement = new Statusbar(codeEditor)
@@ -168,6 +160,9 @@ module.exports = LunaStudio =
             if @openProjectInBackground
                 @openProjectInBackground = false
             else
+                analytics.track 'LunaStudio.Project.Open',
+                    name: path.basename projectPath
+                    path: projectPath
                 @welcome.detach()
         if @moving
             @moving = false

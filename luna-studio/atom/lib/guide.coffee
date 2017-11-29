@@ -1,8 +1,11 @@
-{View} = require 'atom-space-pen-views'
-fs     = require 'fs-plus'
-path   = require 'path'
-yaml   = require 'js-yaml'
-{VM}   = require 'vm2'
+{View}    = require 'atom-space-pen-views'
+analytics = require './gen/analytics'
+fs        = require 'fs-plus'
+path      = require 'path'
+yaml      = require 'js-yaml'
+{VM}      = require 'vm2'
+showdown  = require 'showdown'
+converter = new showdown.Converter()
 
 vm     = new VM
             timeout: 1000
@@ -24,36 +27,36 @@ module.exports =
         @content: ->
             @div =>
                 @div class: 'luna-guide__pointer', outlet: 'pointer'
-                @div class: 'luna-guide__message', outlet: 'messageBox', =>
-                    @div
-                        class: 'luna-guide__title'
-                        outlet: 'guideTitle'
-                    @div
-                        class: 'luna-guide__description'
-                        outlet: 'guideDescription'
-                    @div class: 'luna-guide__buttons', =>
-                        @button
-                            outlet: 'buttonContinue'
-                            class: 'luna-guide__button luna-guide__button--continue'
-                            'Continue'
-                        @button
-                            outlet: 'buttonDoIt'
-                            class: 'luna-guide__button luna-guide__button--doit'
-                            'Next'
+                @div class: 'luna-guide__message-positioner', =>
+                    @div class: 'luna-guide__message', outlet: 'messageBox', =>
+                        @div
+                            class: 'luna-guide__title'
+                            outlet: 'guideTitle'
+                        @div
+                            class: 'luna-guide__description'
+                            outlet: 'guideDescription'
                         @button
                             outlet: 'buttonHide'
-                            class: 'luna-guide__button luna-guide__button--hide luna-guide__button--link'
-                            'Hide'
-                        @button
-                            outlet: 'buttonDisable'
-                            class: 'luna-guide__button luna-guide__button--disable luna-guide__button--link'
-                            'Do not show again'
+                            class: 'luna-guide__close-icon close icon icon-x'
+                        @div class: 'luna-guide__buttons', =>
+                            @button
+                                outlet: 'buttonContinue'
+                                class: 'luna-guide__button luna-guide__button--continue'
+                                'Next'
+                            @button
+                                outlet: 'buttonDoIt'
+                                class: 'luna-guide__button luna-guide__button--doit'
+                                'Next'
+                            # @button
+                            #     outlet: 'buttonDisable'
+                            #     class: 'luna-guide__button luna-guide__button--disable luna-guide__button--link'
+                            #     'Do not show again'
 
         initialize: =>
             @buttonHide.on 'click', @detach
-            @buttonDisable.on 'click', @disable
+            # @buttonDisable.on 'click', @disable
             @buttonContinue.on 'click', =>
-                @nextStep()
+                @nextStep @nextStepNo
                 @buttonContinue.hide()
             @buttonContinue.hide()
             @buttonDoIt.on 'click', =>
@@ -61,7 +64,10 @@ module.exports =
                 @doIt()
             @buttonDoIt.hide()
 
-        nextStep: =>
+        nextStep: (nextStepNo) =>
+            if nextStepNo != @nextStepNo
+                return
+
             if @currentStep? and @currentStep.after?
                 try
                     vm.run @currentStep.after
@@ -70,13 +76,27 @@ module.exports =
 
             @unsetHighlightedElem()
 
-            @currentStep = @guide.steps[@currentStepNo]
-            @currentStepNo++
+            projectPath = atom.project.getPaths()[0]
+            projectPath ?= '(None)'
+            analytics.track 'LunaStudio.Guide.Step',
+                number: @nextStepNo
+                name: path.basename projectPath
+                path: projectPath
+            @currentStep = @guide.steps[@nextStepNo]
+            @nextStepNo++
 
             if @currentStep?
                 @target = @currentStep.target
                 @target ?= {}
                 @target.action ?= 'proceed'
+
+                # msgBoxDefaultOffset = 20
+                # @msgBoxOffset = @currentStep.offset
+                # @msgBoxOffset ?= {}
+                # @msgBoxOffset.left   ?= msgBoxDefaultOffset
+                # @msgBoxOffset.right  ?= msgBoxDefaultOffset
+                # @msgBoxOffset.top    ?= msgBoxDefaultOffset
+                # @msgBoxOffset.bottom ?= msgBoxDefaultOffset
                 @displayStep()
             else
                 @detach()
@@ -115,56 +135,59 @@ module.exports =
 
         installHandlers: =>
             if @highlightedElem?
-                highlightedRect = @highlightedElem.getBoundingClientRect()
+                hgElem = @highlightedElem
+                nextStepNo = @nextStepNo
+                highlightedRect = hgElem.getBoundingClientRect()
                 if highlightedRect.width != 0 and highlightedRect.height != 0
                     if @target.action is 'value'
                         @buttonDoIt.show()
-                        oldHandlers = @highlightedElem.onkeyup
-                        @highlightedElem.onkeyup = =>
-                            if @highlightedElem.value is @target.value
-                                @highlightedElem.onkeyup = oldHandlers
-                                @nextStep()
+                        oldHandlers = hgElem.oninput
+                        hgElem.oninput = =>
+                            if hgElem? and (hgElem.value is @target.value)
+                                hgElem.oninput = oldHandlers
+                                setTimeout => @nextStep nextStepNo
                     else if @target.action.includes ':'
                         @buttonDoIt.show()
                         handler = {}
                         handler[@target.action] = =>
                             @disposable.dispose()
-                            @nextStep()
-                        @disposable = atom.commands.add @highlightedElem, handler
-                    else if @highlightedElem?
+                            setTimeout => @nextStep nextStepNo
+                        @disposable = atom.commands.add hgElem, handler
+                    else if hgElem?
                         @buttonDoIt.show()
-                        oldHandlers = @highlightedElem[@target.action]
-                        @highlightedElem[@target.action] = =>
-                            @highlightedElem[@target.action] = oldHandlers
-                            @nextStep()
+                        oldHandlers = hgElem[@target.action]
+                        hgElem[@target.action] = =>
+                            if hgElem?
+                                hgElem[@target.action] = oldHandlers
+                                setTimeout => @nextStep nextStepNo
 
         doIt: =>
+            mkEvent = (name) => new Event name,
+                                    view: window
+                                    bubbles: true
+                                    cancelable: true
             if @highlightedElem?
                 if @target.action is 'value'
+                    event = mkEvent 'input',
                     @highlightedElem.value = @target.value
+                    event.simulated = true
+                    @highlightedElem.dispatchEvent(event)
                 else if @target.action.includes ':'
                     view = atom.views.getView @highlightedElem
-                    atom.commands.dispatch view, @target.action
+                    atom.commands.dispatch view, @target.action, @target.payload
                 else if @highlightedElem?
                     if @target.action.startsWith 'on'
                         action = @target.action.slice 2
                     else
                         action = @target.action
-                    event = new Event action,
-                                        view: window
-                                        bubbles: true
-                                        cancelable: true
-                    @highlightedElem.dispatchEvent(event)
+                    if action is 'click'
+                        @highlightedElem.dispatchEvent mkEvent 'mousedown'
+                        @highlightedElem.dispatchEvent mkEvent 'mouseup'
+                    @highlightedElem.dispatchEvent mkEvent action
 
         displayStep: (retry = false) =>
             @setHighlightedElem()
-
-            msgBoxWidth = 292
-            msgBoxHeight = 50
-            msgBoxOffset = 10
             windowRect = document.body.getBoundingClientRect()
-            msgBoxLeft = (windowRect.width - msgBoxWidth)/2
-            msgBoxTop  = (windowRect.height - msgBoxHeight)/2
 
             if @target.action is 'proceed'
                 @buttonContinue.show()
@@ -173,36 +196,40 @@ module.exports =
                 unless retry
                     @guideTitle[0].innerText = @currentStep.title
                     @guideDescription[0].innerText = 'Please wait...'
-                    @messageBox[0].style.width = msgBoxWidth + 'px'
-                    @messageBox[0].style.height = msgBoxHeight + 'px'
-                    @messageBox[0].style.top = msgBoxTop + 'px'
-                    @messageBox[0].style.left = msgBoxLeft + 'px'
+                    msgBoxRect = @messageBox[0].getBoundingClientRect()
+                    # msgBoxLeft = (windowRect.width - msgBoxRect.width)/2
+                    # msgBoxTop  = (windowRect.height - msgBoxRect.height)/2
+                    # @messageBox[0].style.top = msgBoxTop + 'px'
+                    # @messageBox[0].style.left = msgBoxLeft + 'px'
 
                 setTimeout (=> @displayStep(true)), 300
                 return
 
             @installHandlers()
 
+            @guideTitle[0].innerText = @currentStep.title
+            @guideDescription[0].innerHTML = converter.makeHtml @currentStep.description
+            msgBoxRect = @messageBox[0].getBoundingClientRect()
+            # msgBoxLeft = (windowRect.width - msgBoxRect.width)/2
+            # msgBoxTop  = (windowRect.height - msgBoxRect.height)/2
+
             if @highlightedElem?
                 highlightedRect = @highlightedElem.getBoundingClientRect()
-                if highlightedRect.width != 0 and highlightedRect.height != 0
-                    if highlightedRect.left > msgBoxWidth + msgBoxOffset
-                        msgBoxLeft = highlightedRect.left - msgBoxWidth - msgBoxOffset
-                        msgBoxTop = highlightedRect.top + highlightedRect.height/2 - msgBoxHeight/2
-                    else if highlightedRect.right + msgBoxWidth + msgBoxOffset < windowRect.width
-                        msgBoxLeft = highlightedRect.right + msgBoxOffset
-                        msgBoxTop = highlightedRect.top + highlightedRect.height/2 - msgBoxHeight/2
-                    else if highlightedRect.top > msgBoxHeight + msgBoxOffset
-                        msgBoxTop = highlightedRect.top - msgBoxHeight - msgBoxOffset
-                    else if highlightedRect.bottom + msgBoxHeight + msgBoxOffset < windowRect.height
-                        msgBoxTop = highlightedRect.bottom + msgBoxOffset
+                # if highlightedRect.width != 0 and highlightedRect.height != 0
+                #     if highlightedRect.left > msgBoxRect.width + @msgBoxOffset.left
+                #         msgBoxLeft = highlightedRect.left - msgBoxRect.width - @msgBoxOffset.left
+                #         msgBoxTop = highlightedRect.top + highlightedRect.height/2 - msgBoxRect.height/2
+                #     else if highlightedRect.right + msgBoxRect.width + @msgBoxOffset.right < windowRect.width
+                #         msgBoxLeft = highlightedRect.right + @msgBoxOffset.right
+                #         msgBoxTop = highlightedRect.top + highlightedRect.height/2 - msgBoxRect.height/2
+                #     else if highlightedRect.top > msgBoxRect.height + @msgBoxOffset.top
+                #         msgBoxTop = highlightedRect.top - msgBoxRect.height - @msgBoxOffset.top
+                #     else if highlightedRect.bottom + msgBoxRect.height + @msgBoxOffset.bottom < windowRect.height
+                #         msgBoxTop = highlightedRect.bottom + @msgBoxOffset.bottom
 
-            @guideTitle[0].innerText = @currentStep.title
-            @guideDescription[0].innerText = @currentStep.description
-            @messageBox[0].style.width = msgBoxWidth + 'px'
-            @messageBox[0].style.height = msgBoxHeight + 'px'
-            @messageBox[0].style.top = msgBoxTop + 'px'
-            @messageBox[0].style.left = msgBoxLeft + 'px'
+
+            # @messageBox[0].style.top = msgBoxTop + 'px'
+            # @messageBox[0].style.left = msgBoxLeft + 'px'
 
             if @highlightedElem?
                 @retryWhenHighlightedElementIsGone()
@@ -269,6 +296,6 @@ module.exports =
 
         start: (@guide, @guidePath) =>
             @guide ?= welcomeGuide
-            @currentStepNo = 0
+            @nextStepNo = 0
             @attach()
-            @nextStep()
+            @nextStep 0
