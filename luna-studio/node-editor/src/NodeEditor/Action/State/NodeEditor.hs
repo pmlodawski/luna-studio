@@ -21,13 +21,14 @@ import           LunaStudio.Data.MonadPath                   (MonadPath)
 import           LunaStudio.Data.NodeMeta                    (NodeMeta)
 import           LunaStudio.Data.NodeSearcher                (ImportName, ModuleHints)
 import qualified LunaStudio.Data.NodeSearcher                as NS
-import           LunaStudio.Data.NodeValue                   (VisualizationId, Visualizer, VisualizerName, VisualizerPath, applyType)
+import           LunaStudio.Data.NodeValue                   (VisualizationId, Visualizer, VisualizerName, VisualizerPath, applyType,
+                                                              errorVisName)
 import           LunaStudio.Data.Port                        (_WithDefault)
 import           LunaStudio.Data.PortDefault                 (PortDefault)
 import           LunaStudio.Data.PortRef                     (AnyPortRef (..), InPortRef (..), OutPortRef (..))
 import qualified LunaStudio.Data.PortRef                     as PortRef
 import           LunaStudio.Data.Position                    (Position)
-import           LunaStudio.Data.TypeRep                     (TypeRep (TStar), errorTypeRep)
+import           LunaStudio.Data.TypeRep                     (TypeRep (TStar))
 import qualified NodeEditor.Action.Batch                     as Batch
 import           NodeEditor.Action.State.App                 (get, getWorkspace, modify, modifyApp)
 import qualified NodeEditor.Action.State.Internal.NodeEditor as Internal
@@ -53,7 +54,8 @@ import           NodeEditor.React.Model.Searcher             (Searcher)
 import qualified NodeEditor.React.Model.Searcher             as Searcher
 import           NodeEditor.React.Model.Visualization        (NodeVisualizations)
 import qualified NodeEditor.React.Model.Visualization        as Visualization
-import           NodeEditor.State.Global                     (State, nodeSearcherData, preferedVisualizers, visualizers)
+import           NodeEditor.State.Global                     (State, internalVisualizers, nodeSearcherData, preferedVisualizers,
+                                                              visualizers)
 
 
 getNodeEditor :: Command State NodeEditor
@@ -304,8 +306,8 @@ removeBackupForNodes nls = modifyNodeEditor $ NE.visualizationsBackup . NE.backu
 getNodeVisualizations :: NodeLoc -> Command State (Maybe NodeVisualizations)
 getNodeVisualizations nl = (^? NE.nodeVisualizations . ix nl) <$> getNodeEditor
 
-getVisualizers :: TypeRep -> Command State (Maybe (Visualizer, Map VisualizerName VisualizerPath))
-getVisualizers tpe = do
+getVisualizersForType :: TypeRep -> Command State (Maybe (Visualizer, Map VisualizerName VisualizerPath))
+getVisualizersForType tpe = do
     mayPrefVis  <- HashMap.lookup tpe <$> use preferedVisualizers
     visualizers' <- use visualizers >>= applyType tpe
     let mayDefVis = case mayPrefVis of
@@ -325,11 +327,11 @@ addVisualizationForNode nl = withJustM (maybe def (view ExpressionNode.defaultVi
                                                                nl
                                                                (Visualization.NodeVisualizations def [newVis] def)
 
-updateDefaultVisualizer :: NodeLoc -> Maybe Visualizer -> Bool -> Bool -> Command State ()
-updateDefaultVisualizer nl vis localUpdate sendAsRequest = withJustM (getExpressionNode nl) $ \n ->
+updateDefaultVisualizer :: NodeLoc -> Maybe Visualizer -> Bool -> Command State ()
+updateDefaultVisualizer nl vis sendAsRequest = withJustM (getExpressionNode nl) $ \n ->
     when (n ^. ExpressionNode.defaultVisualizer /= vis) $ do
         modifyExpressionNode nl $ ExpressionNode.defaultVisualizer .= vis
-        unless localUpdate $ withJustM (getNodeMeta nl) $ \nm -> if sendAsRequest
+        withJustM (getNodeMeta nl) $ \nm -> if sendAsRequest
             then Batch.setNodesMeta [(nl, nm)]
             else Batch.sendNodesMetaUpdate [(nl, nm)]
 
@@ -347,10 +349,18 @@ recoverVisualizations nl = getNodeVisualizations nl >>= \case
             NE.nodeVisualizations . ix nl . Visualization.idleVisualizations .= outdated
         maybe def (Map.keys . view Visualization.visualizations) <$> getNodeVisualizations nl
 
-updateVisualizationsForNode :: NodeLoc -> Maybe TypeRep -> Command State ()
-updateVisualizationsForNode nl mayTpe = do
-    mayVisInfo <- maybe (return def) getVisualizers mayTpe
-    updateDefaultVisualizer nl (fst <$> mayVisInfo) (mayTpe == Just errorTypeRep) False
+getErrorVisualizer :: Command State (Maybe Visualizer)
+getErrorVisualizer = fmap (errorVisName, ) . Map.lookup errorVisName <$> use internalVisualizers
+
+getVisualizersForNode :: ExpressionNode -> Command State (Maybe (Visualizer, Map VisualizerName VisualizerPath))
+getVisualizersForNode n = if ExpressionNode.returnsError n
+    then (id &&& uncurry Map.singleton) `fmap2` getErrorVisualizer
+    else maybe (return def) getVisualizersForType $ n ^. ExpressionNode.nodeType
+
+updateVisualizationsForNode :: NodeLoc -> Command State ()
+updateVisualizationsForNode nl = withJustM (getExpressionNode nl) $ \n -> do
+    mayVisInfo <- getVisualizersForNode n
+    updateDefaultVisualizer nl (fst <$> mayVisInfo) False
     case mayVisInfo of
         Nothing -> modifyNodeEditor $ withJustM (preuse $ NE.nodeVisualizations . ix nl) $ \nodeVis -> do
             let idleVis = map (& Visualization.visualizationStatus .~ Visualization.Outdated) (nodeVis ^. Visualization.idleVisualizations)

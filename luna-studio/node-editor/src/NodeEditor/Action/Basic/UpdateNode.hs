@@ -70,7 +70,7 @@ localUpdateExpressionNode' preventPorts node = NodeEditor.getExpressionNode (nod
             updatePortSelfMode n' selfPid m = n' & inPortAt selfPid . mode .~ m
         updatedNode <- maybe (return n) (\sPid -> updatePortSelfMode n sPid <$> calculatePortSelfMode n) mayPortSelfId
         NodeEditor.addExpressionNode updatedNode
-        NodeEditor.updateVisualizationsForNode (updatedNode ^. nodeLoc) (updatedNode ^. nodeType)
+        NodeEditor.updateVisualizationsForNode (updatedNode ^. nodeLoc)
         updateSearcherClassName updatedNode
         return True
 
