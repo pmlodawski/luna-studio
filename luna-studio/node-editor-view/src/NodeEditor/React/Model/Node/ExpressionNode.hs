@@ -28,7 +28,7 @@ import qualified LunaStudio.Data.NodeMeta                 as NodeMeta
 import           LunaStudio.Data.NodeValue                (ShortValue, Visualizer)
 import qualified LunaStudio.Data.PortRef                  as PortRef
 import           LunaStudio.Data.Position                 (Position, move)
-import           LunaStudio.Data.TypeRep                  (TypeRep, errorTypeRep)
+import           LunaStudio.Data.TypeRep                  (TypeRep)
 import           LunaStudio.Data.Vector2                  (Vector2 (Vector2))
 import           NodeEditor.Data.Color                    (Color)
 import           NodeEditor.React.Model.Constants         (nodeRadius)
@@ -189,15 +189,12 @@ findSuccessorPosition :: ExpressionNode -> [ExpressionNode] -> Position
 findSuccessorPosition n nodes = Empire.findSuccessorPosition (convert n) $ map convert nodes
 
 nodeType :: Getter ExpressionNode (Maybe TypeRep)
-nodeType = to nodeType' where
-    nodeType' n = if has (value . _Just . _Error) n
-        then Just errorTypeRep
-        else (n ^? outPortAt [] . Port.valueType)
+nodeType = to (^? outPortAt [] . Port.valueType) where
 
 visualizationsEnabled :: Lens' ExpressionNode Bool
 visualizationsEnabled = lens getVisualizationEnabled setVisualizationEnabled where
-    getVisualizationEnabled n   = if n ^. nodeType == Just errorTypeRep then n ^. errorVisEnabled else n ^. visEnabled
-    setVisualizationEnabled n v = if n ^. nodeType == Just errorTypeRep then n & errorVisEnabled .~ v else n & visEnabled .~ v
+    getVisualizationEnabled n   = if returnsError n then n ^. errorVisEnabled     else n ^. visEnabled
+    setVisualizationEnabled n v = if returnsError n then n & errorVisEnabled .~ v else n & visEnabled .~ v
 
 nodeMeta :: Lens' ExpressionNode NodeMeta
 nodeMeta = lens getNodeMeta setNodeMeta where
