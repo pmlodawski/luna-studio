@@ -89,7 +89,7 @@ module.exports =
                 @target ?= {}
                 @target.action ?= 'proceed'
 
-                tooltipDefaultOffset = 20
+                tooltipDefaultOffset = 10
                 @tooltipOffset = @currentStep.offset
                 @tooltipOffset ?= {}
                 @tooltipOffset.left   ?= tooltipDefaultOffset
@@ -225,7 +225,6 @@ module.exports =
                         tooltipTop = highlightedRect.top - tooltipRect.height - @tooltipOffset.top
                     else if highlightedRect.bottom + tooltipRect.height + @tooltipOffset.bottom < windowRect.height
                         tooltipTop = highlightedRect.bottom + @tooltipOffset.bottom
-
 
             @tooltip[0].style.top = tooltipTop + 'px'
             @tooltip[0].style.left = tooltipLeft + 'px'
