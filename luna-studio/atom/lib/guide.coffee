@@ -25,14 +25,15 @@ module.exports =
         @content: ->
             @div =>
                 @div class: 'luna-guide__pointer', outlet: 'pointer'
-                @div class: 'luna-guide__message-positioner', =>
-                    @div class: 'luna-guide__message', outlet: 'messageBox', =>
+                @div class: 'luna-guide__tooltip', outlet: 'tooltip', =>
+                    @p
+                        class: 'luna-guide__description'
+                        outlet: 'guideDescription'
+                @div class: 'luna-guide__navbar-positioner', =>
+                    @div class: 'luna-guide__navbar', =>
                         @div
                             class: 'luna-guide__title'
                             outlet: 'guideTitle'
-                        @div
-                            class: 'luna-guide__description'
-                            outlet: 'guideDescription'
                         @button
                             outlet: 'buttonHide'
                             class: 'luna-guide__close-icon close icon icon-x'
@@ -88,13 +89,13 @@ module.exports =
                 @target ?= {}
                 @target.action ?= 'proceed'
 
-                # msgBoxDefaultOffset = 20
-                # @msgBoxOffset = @currentStep.offset
-                # @msgBoxOffset ?= {}
-                # @msgBoxOffset.left   ?= msgBoxDefaultOffset
-                # @msgBoxOffset.right  ?= msgBoxDefaultOffset
-                # @msgBoxOffset.top    ?= msgBoxDefaultOffset
-                # @msgBoxOffset.bottom ?= msgBoxDefaultOffset
+                tooltipDefaultOffset = 20
+                @tooltipOffset = @currentStep.offset
+                @tooltipOffset ?= {}
+                @tooltipOffset.left   ?= tooltipDefaultOffset
+                @tooltipOffset.right  ?= tooltipDefaultOffset
+                @tooltipOffset.top    ?= tooltipDefaultOffset
+                @tooltipOffset.bottom ?= tooltipDefaultOffset
                 @displayStep()
             else
                 @detach()
@@ -194,11 +195,11 @@ module.exports =
                 unless retry
                     @guideTitle[0].innerText = @currentStep.title
                     @guideDescription[0].innerText = 'Please wait...'
-                    msgBoxRect = @messageBox[0].getBoundingClientRect()
-                    # msgBoxLeft = (windowRect.width - msgBoxRect.width)/2
-                    # msgBoxTop  = (windowRect.height - msgBoxRect.height)/2
-                    # @messageBox[0].style.top = msgBoxTop + 'px'
-                    # @messageBox[0].style.left = msgBoxLeft + 'px'
+                    tooltipRect = @tooltip[0].getBoundingClientRect()
+                    tooltipLeft = (windowRect.width - tooltipRect.width)/2
+                    tooltipTop  = (windowRect.height - tooltipRect.height)/2
+                    @tooltip[0].style.top = tooltipTop + 'px'
+                    @tooltip[0].style.left = tooltipLeft + 'px'
 
                 setTimeout (=> @displayStep(true)), 300
                 return
@@ -207,27 +208,27 @@ module.exports =
 
             @guideTitle[0].innerText = @currentStep.title
             @guideDescription[0].innerText = @currentStep.description
-            msgBoxRect = @messageBox[0].getBoundingClientRect()
-            # msgBoxLeft = (windowRect.width - msgBoxRect.width)/2
-            # msgBoxTop  = (windowRect.height - msgBoxRect.height)/2
+            tooltipRect = @tooltip[0].getBoundingClientRect()
+            tooltipLeft = (windowRect.width - tooltipRect.width)/2
+            tooltipTop  = (windowRect.height - tooltipRect.height)/2
 
             if @highlightedElem?
                 highlightedRect = @highlightedElem.getBoundingClientRect()
-                # if highlightedRect.width != 0 and highlightedRect.height != 0
-                #     if highlightedRect.left > msgBoxRect.width + @msgBoxOffset.left
-                #         msgBoxLeft = highlightedRect.left - msgBoxRect.width - @msgBoxOffset.left
-                #         msgBoxTop = highlightedRect.top + highlightedRect.height/2 - msgBoxRect.height/2
-                #     else if highlightedRect.right + msgBoxRect.width + @msgBoxOffset.right < windowRect.width
-                #         msgBoxLeft = highlightedRect.right + @msgBoxOffset.right
-                #         msgBoxTop = highlightedRect.top + highlightedRect.height/2 - msgBoxRect.height/2
-                #     else if highlightedRect.top > msgBoxRect.height + @msgBoxOffset.top
-                #         msgBoxTop = highlightedRect.top - msgBoxRect.height - @msgBoxOffset.top
-                #     else if highlightedRect.bottom + msgBoxRect.height + @msgBoxOffset.bottom < windowRect.height
-                #         msgBoxTop = highlightedRect.bottom + @msgBoxOffset.bottom
+                if highlightedRect.width != 0 and highlightedRect.height != 0
+                    if highlightedRect.left > tooltipRect.width + @tooltipOffset.left
+                        tooltipLeft = highlightedRect.left - tooltipRect.width - @tooltipOffset.left
+                        tooltipTop = highlightedRect.top + highlightedRect.height/2 - tooltipRect.height/2
+                    else if highlightedRect.right + tooltipRect.width + @tooltipOffset.right < windowRect.width
+                        tooltipLeft = highlightedRect.right + @tooltipOffset.right
+                        tooltipTop = highlightedRect.top + highlightedRect.height/2 - tooltipRect.height/2
+                    else if highlightedRect.top > tooltipRect.height + @tooltipOffset.top
+                        tooltipTop = highlightedRect.top - tooltipRect.height - @tooltipOffset.top
+                    else if highlightedRect.bottom + tooltipRect.height + @tooltipOffset.bottom < windowRect.height
+                        tooltipTop = highlightedRect.bottom + @tooltipOffset.bottom
 
 
-            # @messageBox[0].style.top = msgBoxTop + 'px'
-            # @messageBox[0].style.left = msgBoxLeft + 'px'
+            @tooltip[0].style.top = tooltipTop + 'px'
+            @tooltip[0].style.left = tooltipLeft + 'px'
 
             if @highlightedElem?
                 @retryWhenHighlightedElementIsGone()

@@ -1,48 +1,53 @@
-@gridSize: 16px;
-@borderRadius: 16px;
-@gutter: 2px;
-@accentColor: #573614;
+@gridSize:        16px;
+@borderRadius:    16px;
+@gutter:          2px;
+@accentColor:     #573614;
 @backgroundColor: @guideColor; //lighten(@accentColor,5%);
-@buttonColor: lighten(@accentColor,25%); //lighten(@accentColor,10%);
-@textColor: rgba(0,0,0,.7);
-@guideColor: lighten(@accentColor,10%); //darken(orange,10%);
+@buttonColor:     lighten(@accentColor,25%); //lighten(@accentColor,10%);
+@textColor:       rgba(0,0,0,.7);
+@guideColor:      lighten(@accentColor,10%); //darken(orange,10%);
 
-.luna-guide__message-positioner {
-	position: fixed;
-	bottom: 3.5*@gridSize;
-	width: 100%;
-	z-index: 10000;
-	display: flex;
+.luna-guide__navbar-positioner {
+	position:        fixed;
+	bottom:          3.5*@gridSize;
+	width:           100%;
+	z-index:         10000;
+	display:         flex;
 	justify-content: center;
-	pointer-events: none;
+	pointer-events:  none;
 }
 
-.luna-guide__message {
+.luna-guide__tooltip {
+	position:   fixed;
+	color:      @textColor;
+	width:      260px !important;
+	background: @backgroundColor;
+	padding:    @gridSize/1.25 
+			    @gridSize 
+			    @gridSize*2.2 - @gridSize*1.25;
+	box-sizing:    content-box;
+	border-radius: @borderRadius;
+	height:        auto !important;
+	z-index:       100000;
+
+}
+
+.luna-guide__navbar {
 	position: relative;
 	color: @textColor;
-	width: 260px !important;
+	width: 320px !important;
 	@a: 1px;
 	background: @backgroundColor;
-	padding: @gridSize/@a @gridSize @gridSize - @gridSize/@a + @gridSize;
+	padding: @gridSize/@a @gridSize @gridSize - @gridSize/@a + @gridSize 3.5*@gridSize;
 	box-sizing: content-box;
-	border-radius: @borderRadius;
-	height: auto !important;
-	min-height: 108px;
-
-	top: inherit !important;
-	left: inherit !important;
-
+	border-radius: 2*@borderRadius;
+	height: 24px !important;
 }
 
 .luna-guide__title {
-	padding-bottom: @gridSize/1.5;
 	font-size: 		1*@gridSize;
 	font-weight:    bold;
 	color:          @textColor;
-}
-
-.luna-guide__description {
-	padding-bottom: @gridSize/1;
 }
 
 .luna-guide__button {
@@ -107,13 +112,15 @@
 .luna-guide__close-icon {
 	background: none;
 	position: absolute;
-	top: @gridSize*0.95;
-	right: @gridSize*0.75;
+	top: @gridSize;
+	left: @gridSize*1.3;
 	cursor: pointer;
 	pointer-events: all;
 	text-shadow: none;
-	opacity: .7;
-
+	opacity: .25;
+	&:hover {
+		opacity: .5;
+	}
 }
 
 @keyframes pulsing {
