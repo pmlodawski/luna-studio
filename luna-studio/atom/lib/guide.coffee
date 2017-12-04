@@ -4,6 +4,8 @@ fs        = require 'fs-plus'
 path      = require 'path'
 yaml      = require 'js-yaml'
 {VM}      = require 'vm2'
+showdown  = require 'showdown'
+converter = new showdown.Converter()
 
 vm     = new VM
             timeout: 1000
@@ -112,8 +114,8 @@ module.exports =
                             targetedElem = targetedElem.getElementsByClassName(t)[0]
                         else
                             targetedElem = document.getElementsByClassName(t)[0]
-                            unless targetedElem?
-                                break
+                        unless targetedElem?
+                            break
             else if @target.id
                 targetedElem = document.getElementById(@target.id)
             else if @target.custom
@@ -144,13 +146,13 @@ module.exports =
                         hgElem.oninput = =>
                             if hgElem? and (hgElem.value is @target.value)
                                 hgElem.oninput = oldHandlers
-                                @nextStep nextStepNo
+                                setTimeout => @nextStep nextStepNo
                     else if @target.action.includes ':'
                         @buttonDoIt.show()
                         handler = {}
                         handler[@target.action] = =>
                             @disposable.dispose()
-                            @nextStep nextStepNo
+                            setTimeout => @nextStep nextStepNo
                         @disposable = atom.commands.add hgElem, handler
                     else if hgElem?
                         @buttonDoIt.show()
@@ -158,7 +160,7 @@ module.exports =
                         hgElem[@target.action] = =>
                             if hgElem?
                                 hgElem[@target.action] = oldHandlers
-                                @nextStep nextStepNo
+                                setTimeout => @nextStep nextStepNo
 
         doIt: =>
             mkEvent = (name) => new Event name,
@@ -173,7 +175,7 @@ module.exports =
                     @highlightedElem.dispatchEvent(event)
                 else if @target.action.includes ':'
                     view = atom.views.getView @highlightedElem
-                    atom.commands.dispatch view, @target.action
+                    atom.commands.dispatch view, @target.action, @target.payload
                 else if @highlightedElem?
                     if @target.action.startsWith 'on'
                         action = @target.action.slice 2
@@ -207,7 +209,7 @@ module.exports =
             @installHandlers()
 
             @guideTitle[0].innerText = @currentStep.title
-            @guideDescription[0].innerText = @currentStep.description
+            @guideDescription[0].innerHTML = converter.makeHtml @currentStep.description # @guideDescription[0].innerText = @currentStep.description
             tooltipRect = @tooltip[0].getBoundingClientRect()
             tooltipLeft = (windowRect.width - tooltipRect.width)/2
             tooltipTop  = (windowRect.height - tooltipRect.height)/2
