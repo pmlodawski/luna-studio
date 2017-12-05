@@ -56,11 +56,14 @@ module.exports =
         initialize: =>
             @buttonHide.on 'click', @detach
             # @buttonDisable.on 'click', @disable
-            @buttonContinue.on 'click', =>
-                @nextStep @nextStepNo
-                @buttonContinue.hide()
+            @buttonContinue.on 'click', (e) =>
+                if e.ctrlKey and e.shiftKey
+                    @fastForward()
+                @proceed()
             @buttonContinue.hide()
-            @buttonDoIt.on 'click', =>
+            @buttonDoIt.on 'click', (e) =>
+                if e.ctrlKey and e.shiftKey
+                    @fastForward()
                 @buttonDoIt.hide()
                 @doIt()
             @buttonDoIt.hide()
@@ -162,12 +165,18 @@ module.exports =
                                 hgElem[@target.action] = oldHandlers
                                 setTimeout => @nextStep nextStepNo
 
+        proceed: =>
+            @buttonContinue.hide()
+            @nextStep @nextStepNo
+
         doIt: =>
             mkEvent = (name) => new Event name,
                                     view: window
                                     bubbles: true
                                     cancelable: true
-            if @highlightedElem?
+            if @target.action is 'proceed'
+                @proceed()
+            else if @highlightedElem?
                 if @target.action is 'value'
                     event = mkEvent 'input',
                     @highlightedElem.value = @target.value
@@ -248,16 +257,16 @@ module.exports =
                     @pointer[0].classList.add pointerWindowClass
                 else
                     @pointer[0].classList.remove pointerWindowClass
-                highlightedRect = @highlightedElem.getBoundingClientRect()
-                unless highlightedRect.width is 0 or highlightedRect.height is 0
+                if @isVisible()
+                    highlightedRect = @highlightedElem.getBoundingClientRect()
                     @pointer.show()
                     @pointer[0].style.width  = highlightedRect.width + 'px'
                     @pointer[0].style.height = highlightedRect.height + 'px'
                     @pointer[0].style.top  = highlightedRect.top + 'px'
                     @pointer[0].style.left = highlightedRect.left + 'px'
-                    window.requestAnimationFrame @updatePointer
                 else
                     @pointer.hide()
+                window.requestAnimationFrame @updatePointer
             else
                 @pointer.hide()
 
@@ -299,3 +308,28 @@ module.exports =
             @nextStepNo = 0
             @attach()
             @nextStep 0
+
+        isVisible: =>
+            elem = @highlightedElem
+            style = getComputedStyle elem
+            if style.display is 'none' then return false
+            if style.visibility isnt 'visible' then return false
+            if style.opacity < 0.1 then return false
+            if (elem.offsetWidth + elem.offsetHeight + elem.getBoundingClientRect().height + elem.getBoundingClientRect().width is 0)
+                return false
+            elemCenter =
+                x: elem.getBoundingClientRect().left + elem.offsetWidth / 2
+                y: elem.getBoundingClientRect().top  + elem.offsetHeight / 2
+            if elemCenter.x < 0 then return false
+            if elemCenter.x > (document.documentElement.clientWidth || window.innerWidth) then return false
+            if elemCenter.y < 0 then return false
+            if elemCenter.y > (document.documentElement.clientHeight || window.innerHeight) then return false
+            pointContainer = document.elementFromPoint elemCenter.x, elemCenter.y
+            while true
+                if pointContainer is elem then return true
+                break unless pointContainer = pointContainer.parentNode
+            return false
+
+        fastForward: =>
+            @doIt()
+            setTimeout @fastForward, 100
