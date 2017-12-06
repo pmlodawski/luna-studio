@@ -2,10 +2,11 @@
 @borderRadius:    16px;
 @gutter:          2px;
 @accentColor:     #573614;
+@guideColor:      lighten(@accentColor,19%); //darken(orange,10%); #A56827
 @backgroundColor: @guideColor; //lighten(@accentColor,5%);
-@buttonColor:     lighten(@accentColor,25%); //lighten(@accentColor,10%);
-@textColor:       rgba(0,0,0,.7);
-@guideColor:      lighten(@accentColor,10%); //darken(orange,10%);
+@navbarColor:     lighten(@accentColor,10%);
+@buttonColor:     @guideColor; //lighten(@accentColor,10%);
+@textColor:       #000;
 
 .luna-guide__navbar-positioner {
 	position:        fixed;
@@ -49,7 +50,7 @@
 	position: relative;
 	color: @textColor;
 	width: 320px !important;
-	background: darken(@backgroundColor,8%);
+	background: @navbarColor;
 	padding: @gridSize/@a @gridSize @gridSize - @gridSize/@a + @gridSize 3.5*@gridSize;
 	box-sizing: content-box;
 	border-radius: 2*@borderRadius;
@@ -146,6 +147,10 @@
 }
 
 .luna-guide__pointer.luna-guide__pointer--window {
+	@tabbarHeight: 48px;
 	border-radius: 0;
 	animation-name: pulsing--window;
+	box-sizing: content-box;
+	padding-bottom: @tabbarHeight;
+	transform: translateY(-@tabbarHeight);
 }
