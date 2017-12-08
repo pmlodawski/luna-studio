@@ -45,7 +45,7 @@
 /////////////////////////////
 
 @fontDefault:             'hasklig-regular', 'hasklig', monospace;
-@syntax-background-color: #282c34; // default
+@syntax-background-color: #171615; // default #282c34
 @syntax-text-color:       #abb2bf; // default
 
 @luna-font-size:          12px;
@@ -56,8 +56,10 @@
 //         colors          //
 /////////////////////////////
 
-@luna-syntax-background-color:   @syntax-background-color;
-@luna-graph-background-color:    darken(@luna-syntax-background-color,0%); //#181b1f;
+
+
+@luna-syntax-background-color:   @syntax-background-color; // #171615
+@luna-graph-background-color:    #070706; //darken(@luna-syntax-background-color,0%); //#181b1f;
 
 @luna-syntax-text-color:         @syntax-text-color;
 @luna-text-color:                @syntax-text-color;
@@ -76,9 +78,7 @@
 @colorTextNotEdited:             darken(@colorText, 50%);
 @colorTextNotSet:                darken(@colorText, 80%);
 
-@colorName:                      @colorText;
-
-@colorNodeBackground:            #21252a;
+@colorName:                      @colorText;         
 
 @luna-breadcrumbs-bg:            #070706;
 @luna-breadcrumbs-bg-active:     #573614;
@@ -90,8 +90,8 @@
 
 // node
 
-@luna-node-expression-background: lighten(@syntax-background-color, 2%);
-
+@luna-node-expression-background: @luna-syntax-background-color; // lighten(@syntax-background-color, 2%);
+@luna-node-body-background:       @luna-syntax-background-color; // #21252a;
 
 /////////////////////////////
 //           grid          //

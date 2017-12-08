@@ -110,7 +110,7 @@
     text-overflow: ellipsis;
     padding:       calc(@ui ~'*' @ph)
                    calc(@ui ~'*' @pv);
-    .background(0.5);
+    background:    @luna-node-expression-background;
     min-width:     calc(@ui ~'*' @a - 2 * @pv);
 }
 
@@ -303,7 +303,7 @@ svg.luna-node__ports {
 /////////////////////////////
 
 .luna-node__controls {
-    .background(1);
+    background:     @luna-node-body-background;
     padding:        @luna-expanded-node-padding * 1rem;
     overflow:       hidden;
     border-radius:  @luna-border-radius-expanded-node * 1rem;
