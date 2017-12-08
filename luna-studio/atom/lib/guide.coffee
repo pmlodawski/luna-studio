@@ -19,6 +19,10 @@ welcomeGuide = steps: []
 encoding = 'utf8'
 highlightClass = 'luna-guide__highlight'
 pointerWindowClass = 'luna-guide__pointer--window'
+pointerTopClass    = 'luna-guide__tooltip--arrow-top'
+pointerBottomClass = 'luna-guide__tooltip--arrow-bottom'
+pointerLeftClass   = 'luna-guide__tooltip--arrow-left'
+pointerRightClass  = 'luna-guide__tooltip--arrow-right'
 
 module.exports =
     class VisualGuide extends View
@@ -227,16 +231,24 @@ module.exports =
             if @highlightedElem?
                 highlightedRect = @highlightedElem.getBoundingClientRect()
                 if highlightedRect.width != 0 and highlightedRect.height != 0
+                    @tooltip[0].classList.remove pointerLeftClass
+                    @tooltip[0].classList.remove pointerRightClass
+                    @tooltip[0].classList.remove pointerTopClass
+                    @tooltip[0].classList.remove pointerBottomClass
                     if highlightedRect.left > tooltipRect.width + @tooltipOffset.left
                         tooltipLeft = highlightedRect.left - tooltipRect.width - @tooltipOffset.left
                         tooltipTop = highlightedRect.top + highlightedRect.height/2 - tooltipRect.height/2
+                        @tooltip[0].classList.add pointerRightClass
                     else if highlightedRect.right + tooltipRect.width + @tooltipOffset.right < windowRect.width
                         tooltipLeft = highlightedRect.right + @tooltipOffset.right
                         tooltipTop = highlightedRect.top + highlightedRect.height/2 - tooltipRect.height/2
+                        @tooltip[0].classList.add pointerLeftClass
                     else if highlightedRect.top > tooltipRect.height + @tooltipOffset.top
                         tooltipTop = highlightedRect.top - tooltipRect.height - @tooltipOffset.top
+                        @tooltip[0].classList.add pointerBottomClass
                     else if highlightedRect.bottom + tooltipRect.height + @tooltipOffset.bottom < windowRect.height
                         tooltipTop = highlightedRect.bottom + @tooltipOffset.bottom
+                        @tooltip[0].classList.add pointerTopClass
 
             @tooltip[0].style.top = tooltipTop + 'px'
             @tooltip[0].style.left = tooltipLeft + 'px'
