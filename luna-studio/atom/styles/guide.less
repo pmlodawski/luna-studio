@@ -30,19 +30,28 @@
 	border-radius: @borderRadius;
 	height:        auto !important;
 	z-index:       100000;
-	p { margin: 0}
+	p { margin: 0 }
 	&::before {
 		content: " ";
 		display: block;
 		width:  0px;
 		height: 0px;
 		position: absolute;
-		right: -16px;
 		top: 50%;
-		transform: translateY(-8px);
 		border: 8px solid transparent;
-		border-left-color: @backgroundColor;
 	}
+}
+
+.luna-guide__tooltip--arrow-right::before {
+	right:            -16px;
+	transform: 		   translateY(-8px);
+	border-left-color: @backgroundColor;
+}
+
+.luna-guide__tooltip--arrow-left::before {
+	left:              -16px;
+	transform: 		    translateY(8px);
+	border-right-color: @backgroundColor;
 }
 
 .luna-guide__navbar {
