@@ -22,7 +22,7 @@ import           LunaStudio.Data.NodeMeta                    (NodeMeta)
 import           LunaStudio.Data.NodeSearcher                (ImportName, ModuleHints)
 import qualified LunaStudio.Data.NodeSearcher                as NS
 import           LunaStudio.Data.NodeValue                   (VisualizationId, Visualizer, VisualizerName, VisualizerPath, applyType,
-                                                              errorVisName)
+                                                              errorVisName, placeholderVisName)
 import           LunaStudio.Data.Port                        (_WithDefault)
 import           LunaStudio.Data.PortDefault                 (PortDefault)
 import           LunaStudio.Data.PortRef                     (AnyPortRef (..), InPortRef (..), OutPortRef (..))
@@ -320,12 +320,16 @@ getVisualizersForType tpe = do
         else (, visualizers') <$> mayDefVis
 
 addVisualizationForNode :: NodeLoc -> Command State ()
-addVisualizationForNode nl = withJustM (maybe def (view ExpressionNode.defaultVisualizer) <$> getExpressionNode nl) $ \visualizer' -> do
-    let newVis = Visualization.IdleVisualization Visualization.Ready visualizer'
-        updateNodeVisualizations _ nodeVis = nodeVis & Visualization.idleVisualizations %~ (newVis :)
-    modifyNodeEditor $ NE.nodeVisualizations %= Map.insertWith updateNodeVisualizations
-                                                               nl
-                                                               (Visualization.NodeVisualizations def [newVis] def)
+addVisualizationForNode nl = withJustM (getExpressionNode nl) $ \n -> do
+    mayVisualizer <- if ExpressionNode.returnsError n then getErrorVisualizer
+                else if ExpressionNode.hasData n && isJust (n ^. ExpressionNode.defaultVisualizer) then return $ n ^. ExpressionNode.defaultVisualizer
+                else getPlaceholderVisualizer
+    withJust mayVisualizer $ \visualizer' -> do
+        let newVis = Visualization.IdleVisualization Visualization.Ready visualizer'
+            updateNodeVisualizations _ nodeVis = nodeVis & Visualization.idleVisualizations %~ (newVis :)
+        modifyNodeEditor $ NE.nodeVisualizations %= Map.insertWith updateNodeVisualizations
+                                                                   nl
+                                                                   (Visualization.NodeVisualizations def [newVis] def)
 
 updateDefaultVisualizer :: NodeLoc -> Maybe Visualizer -> Bool -> Command State ()
 updateDefaultVisualizer nl vis sendAsRequest = withJustM (getExpressionNode nl) $ \n ->
@@ -337,7 +341,7 @@ updateDefaultVisualizer nl vis sendAsRequest = withJustM (getExpressionNode nl) 
 
 recoverVisualizations :: NodeLoc -> Command State [VisualizationId]
 recoverVisualizations nl = getNodeVisualizations nl >>= \case
-    Nothing      -> return def
+    Nothing -> return def
     Just nodeVis -> do
         let (ready, outdated) = partition ((== Visualization.Ready) . view Visualization.visualizationStatus) $ nodeVis ^. Visualization.idleVisualizations
         running <- fmap Map.fromList . forM ready $ \vis -> do
@@ -349,36 +353,61 @@ recoverVisualizations nl = getNodeVisualizations nl >>= \case
             NE.nodeVisualizations . ix nl . Visualization.idleVisualizations .= outdated
         maybe def (Map.keys . view Visualization.visualizations) <$> getNodeVisualizations nl
 
+getPlaceholderVisualizer :: Command State (Maybe Visualizer)
+getPlaceholderVisualizer = fmap (placeholderVisName, ) . Map.lookup placeholderVisName <$> use internalVisualizers
+
 getErrorVisualizer :: Command State (Maybe Visualizer)
 getErrorVisualizer = fmap (errorVisName, ) . Map.lookup errorVisName <$> use internalVisualizers
 
-getVisualizersForNode :: ExpressionNode -> Command State (Maybe (Visualizer, Map VisualizerName VisualizerPath))
-getVisualizersForNode n = if ExpressionNode.returnsError n
-    then (id &&& uncurry Map.singleton) `fmap2` getErrorVisualizer
-    else maybe (return def) getVisualizersForType $ n ^. ExpressionNode.nodeType
+setPlaceholderVisualization :: NodeLoc -> Command State [VisualizationId]
+setPlaceholderVisualization nl = getExpressionNode nl >>= \mayN -> do
+    case mayN of
+        Nothing -> modifyNodeEditor $ NE.nodeVisualizations . ix nl .= def
+        Just n  -> getPlaceholderVisualizer >>= \case
+            Nothing             -> modifyNodeEditor $ NE.nodeVisualizations . ix nl .= def
+            Just placeholderVis -> do
+                mayVis <- maybe (return def) getVisualizersForType $ n ^. ExpressionNode.nodeType
+                modifyNodeEditor $ NE.nodeVisualizations %= \visMap -> do
+                    let prevVis     = maybe def (^. Visualization.visualizations) $ Map.lookup nl visMap
+                        running     = Map.filter ((placeholderVis ==) . view Visualization.runningVisualizer) prevVis
+                        idle        = if Map.null running then [Visualization.IdleVisualization Visualization.Ready placeholderVis] else []
+                        visualizers = maybe def snd mayVis
+                    Map.insert nl (Visualization.NodeVisualizations running idle visualizers) visMap
+    recoverVisualizations nl
 
-updateVisualizationsForNode :: NodeLoc -> Command State ()
-updateVisualizationsForNode nl = withJustM (getExpressionNode nl) $ \n -> do
-    mayVisInfo <- getVisualizersForNode n
-    updateDefaultVisualizer nl (fst <$> mayVisInfo) False
-    case mayVisInfo of
-        Nothing -> modifyNodeEditor $ withJustM (preuse $ NE.nodeVisualizations . ix nl) $ \nodeVis -> do
-            let idleVis = map (& Visualization.visualizationStatus .~ Visualization.Outdated) (nodeVis ^. Visualization.idleVisualizations)
-                       <> map (Visualization.toIdleVisualization Visualization.Outdated) (Map.elems $ nodeVis ^. Visualization.visualizations)
-            NE.nodeVisualizations . at nl ?= Visualization.NodeVisualizations def idleVis def
-        Just (defVisualizer, visualizers') -> do
-            whenM (maybe True (\vis -> Map.null (vis ^. Visualization.visualizations) && null (vis ^. Visualization.idleVisualizations) ). (^? NE.nodeVisualizations . ix nl) <$> getNodeEditor) $
-                addVisualizationForNode nl
-            modifyNodeEditor $ withJustM (preuse $ NE.nodeVisualizations . ix nl) $ \nodeVis -> do
-                let updateRunningFoldFunction (running', ready') vis = if Map.lookup (vis ^. Visualization.runningVisualizer . _1) visualizers' == Just (vis ^. Visualization.runningVisualizer . _2)
-                        then (Map.insert (vis ^. Visualization.visualizationId) vis running', ready')
-                        else (running', (Visualization.toIdleVisualization Visualization.Ready vis) : ready')
-                    (running, ready'') = foldl updateRunningFoldFunction (def, def) . Map.elems $ nodeVis ^. Visualization.visualizations
-                    makeVisReady vis = if Map.lookup (vis ^. Visualization.idleVisualizer . _1) visualizers' == Just (vis ^. Visualization.idleVisualizer . _2)
-                        then vis & Visualization.visualizationStatus .~ Visualization.Ready
-                        else Visualization.IdleVisualization Visualization.Ready defVisualizer
-                    ready            = ready'' <> map makeVisReady (nodeVis ^. Visualization.idleVisualizations)
-                NE.nodeVisualizations . at nl ?= Visualization.NodeVisualizations running ready visualizers'
+setErrorVisualization :: NodeLoc -> Command State [VisualizationId]
+setErrorVisualization nl = getExpressionNode nl >>= \mayN -> do
+    case mayN of
+        Nothing -> modifyNodeEditor $ NE.nodeVisualizations . ix nl .= def
+        Just n  -> getErrorVisualizer >>= \case
+            Nothing       -> modifyNodeEditor $ NE.nodeVisualizations . ix nl .= def
+            Just errorVis -> modifyNodeEditor $ NE.nodeVisualizations %= \visMap -> do
+                let prevVis     = maybe def (^. Visualization.visualizations) $ Map.lookup nl visMap
+                    running     = Map.filter ((errorVis ==) . view Visualization.runningVisualizer) prevVis
+                    idle        = if Map.null running then [Visualization.IdleVisualization Visualization.Ready errorVis] else []
+                Map.insert nl (Visualization.NodeVisualizations running idle def) visMap
+    recoverVisualizations nl
+
+updateVisualizationsForNode :: NodeLoc -> Command State [VisualizationId]
+updateVisualizationsForNode nl = do
+    mayN <- getExpressionNode nl
+    case mayN of
+        Nothing -> do
+            modifyNodeEditor $ NE.nodeVisualizations . ix nl .= def
+            return def
+        Just n -> do
+            if ExpressionNode.returnsError n then setErrorVisualization nl
+            else do
+                mayVis <- maybe (return def) getVisualizersForType $ n ^. ExpressionNode.nodeType
+                if not (ExpressionNode.hasData n) || isNothing mayVis then setPlaceholderVisualization nl
+                else withJust mayVis $ \vis -> do
+                    modifyNodeEditor $ NE.nodeVisualizations %= \visMap -> do
+                        let prevVis     = maybe def (^. Visualization.visualizations) $ Map.lookup nl visMap
+                            running     = Map.filter (not . flip elem [placeholderVisName, errorVisName] . fst . view Visualization.runningVisualizer) prevVis
+                            idle        = if Map.null running then [Visualization.IdleVisualization Visualization.Ready $ fst vis] else []
+                        Map.insert nl (Visualization.NodeVisualizations running idle $ snd vis) visMap
+                    updateDefaultVisualizer nl (Just $ fst vis) False
+                    recoverVisualizations nl
 
 updatePreferedVisualizer :: TypeRep -> Visualizer -> Command State ()
 updatePreferedVisualizer tpe vis = preferedVisualizers . at tpe ?= vis

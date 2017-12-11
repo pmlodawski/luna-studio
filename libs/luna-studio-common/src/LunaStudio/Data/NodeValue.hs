@@ -32,9 +32,10 @@ instance NFData   VisualizerEntry
 instance FromJSON VisualizerEntry
 instance ToJSON   VisualizerEntry
 
-mdVisName, errorVisName :: Text
-mdVisName    = "base: markdown"
-errorVisName = "error"
+mdVisName, errorVisName, placeholderVisName :: Text
+mdVisName          = "base: markdown"
+errorVisName       = "error"
+placeholderVisName = "placeholder"
 
 transformJSVisualizerMatcher :: MonadIO m => (String -> m String) -> TypeRep -> m [VisualizerEntry]
 transformJSVisualizerMatcher f r = case toConstructorRep r of

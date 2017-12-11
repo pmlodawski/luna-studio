@@ -1,7 +1,9 @@
+{-# LANGUAGE OverloadedStrings #-}
 module NodeEditor.Action.Basic.UpdateNode where
 
 import           Common.Action.Command                       (Command)
 import           Common.Prelude
+import           JS.Visualizers                              (sendInternalData)
 import           LunaStudio.Data.Node                        (NodeTypecheckerUpdate, tcNodeId)
 import qualified LunaStudio.Data.Node                        as Empire
 import           NodeEditor.Action.Basic.AddNode             (localAddExpressionNode, localAddInputNode, localAddOutputNode)
@@ -16,6 +18,7 @@ import qualified NodeEditor.React.Model.Node.SidebarNode     as SidebarNode
 import           NodeEditor.React.Model.Port                 (isSelf, mode, portId)
 import qualified NodeEditor.React.Model.Searcher             as Searcher
 import           NodeEditor.State.Global                     (State)
+
 
 
 localUpdateExpressionNodes :: [ExpressionNode] -> Command State ()
@@ -60,7 +63,6 @@ localUpdateExpressionNode' preventPorts node = NodeEditor.getExpressionNode (nod
             errVis        = prevNode ^. ExpressionNode.errorVisEnabled
             inPorts       = if preventPorts then prevNode ^. ExpressionNode.inPorts  else node ^. ExpressionNode.inPorts
             outPorts      = if preventPorts then prevNode ^. ExpressionNode.outPorts else node ^. ExpressionNode.outPorts
-            errorValue    = has (value . _Just . _Error) node
             n             = node & isSelected                     .~ selected
                                  & ExpressionNode.mode            .~ mode'
                                  & ExpressionNode.inPorts         .~ inPorts
@@ -72,6 +74,9 @@ localUpdateExpressionNode' preventPorts node = NodeEditor.getExpressionNode (nod
         NodeEditor.addExpressionNode updatedNode
         NodeEditor.updateVisualizationsForNode (updatedNode ^. nodeLoc)
         updateSearcherClassName updatedNode
+        unless (preventPorts) $ do
+            visIds <- NodeEditor.updateVisualizationsForNode (node ^. nodeLoc)
+            liftIO . forM_ visIds $ \visId -> sendInternalData visId "AWAITING DATA"
         return True
 
 localUpdateOrAddExpressionNode :: ExpressionNode -> Command State ()
@@ -84,10 +89,15 @@ localUpdateNodeTypecheck :: NodePath -> NodeTypecheckerUpdate -> Command State (
 localUpdateNodeTypecheck path update = do
     let nl = convert (path, update ^. tcNodeId)
     case update of
-        Empire.ExpressionUpdate _ inPorts outPorts ->
+        Empire.ExpressionUpdate _ inPorts outPorts -> do
             withJustM (NodeEditor.getExpressionNode nl) $ \node -> void . localUpdateExpressionNode $
                 node & ExpressionNode.inPorts  .~ convert `fmap` inPorts
                      & ExpressionNode.outPorts .~ convert `fmap` outPorts
+                     & ExpressionNode.value    .~ ExpressionNode.AwaitingData
+            hasVisualizers <- maybe (return False) (fmap isJust . NodeEditor.getVisualizersForType) =<< NodeEditor.getExpressionNodeType nl
+            let msg = if hasVisualizers then "AWAITING DATA" else "NO VIS FOR TYPE"
+            visIds <- NodeEditor.updateVisualizationsForNode nl
+            liftIO . forM_ visIds $ \visId -> sendInternalData visId msg
         Empire.OutputSidebarUpdate _ inPorts -> NodeEditor.modifyOutputNode nl $
             SidebarNode.outputSidebarPorts .= convert `fmap` inPorts
         Empire.InputSidebarUpdate _ outPorts -> NodeEditor.modifyInputNode nl $
