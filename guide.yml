@@ -1,0 +1,151 @@
+steps:
+  - title: Introduction
+    description: In this `tutorial` you will learn how to do some basic node operations
+  - title: Introduction 1
+    description: In this `tutorial` you will learn how to do some basic node operations
+  - title: Introduction 2
+    description: In this `tutorial` you will learn how to do some basic node operations
+  - title: Step 0
+    description: Click on node editor
+    target:
+      className: luna-studio-window
+      action: onclick
+  - title: Step 6
+    description: Press tab to open searcher
+    target:
+      className: luna-studio-mount
+      action: 'luna-studio:searcher-open'
+      payload: '(100,100)'
+  - title: Step 1
+    description: Double click on background to exit main
+    target:
+      className: luna-studio-window
+      action: ondblclick
+  - title: Step 2
+    description: Press tab to open searcher
+    target:
+      className: luna-studio-mount
+      action: 'luna-studio:searcher-open'
+  - title: Step 3
+    description: Type "def increment"
+    target:
+      className: luna-searcher__input
+      action: value
+      value: def increment
+  - title: Step 4
+    description: Press enter
+    target:
+      className: luna-searcher__input
+      action: 'luna-studio:searcher-accept'
+  - title: Step 5
+    description: Double click on newly created node to enter it
+    target:
+      className:
+        - luna-node-name-increment
+        - luna-node__body
+      action: ondblclick
+  - title: Step 6
+    description: Press tab to open searcher
+    target:
+      className: luna-studio-mount
+      action: 'luna-studio:searcher-open'
+  - title: Step 7
+    description: Type "+1"
+    target:
+      className: luna-searcher__input
+      action: value
+      value: '+1'
+  - title: Step 8
+    description: Press enter
+    target:
+      className: luna-searcher__input
+      action: 'luna-studio:searcher-accept'
+  - title: Step 9
+    description: Click on + to add new connection
+    target:
+      className: luna-port-sidebar__port__svg--addbutton
+      action: onmousedown
+  - title: Step 10
+    description: Connect it to port constructor
+    target:
+      className:
+        - luna-node-name-sum1
+        - luna-port--i--constructor
+      action: onmouseup
+  - title: Step 10
+    description: Click on node output
+    target:
+      className:
+        - luna-node-name-sum1
+        - luna-port--o--1
+      action: onmousedown
+  - title: Step 11
+    description: Click on function output
+    target:
+      className: luna-port-sidebar__port--o--1
+      action: onmouseup
+  - title: Step 12
+    description: 'Double click on background, to exit function'
+    target:
+      className: luna-studio-window
+      action: ondblclick
+  - title: Step 13
+    description: Double click on main node to enter it
+    target:
+      className:
+        - luna-node-name-main
+        - luna-node__body
+      action: ondblclick
+  - title: Step 14
+    description: Press tab to open searcher
+    target:
+      className: luna-studio-mount
+      action: 'luna-studio:searcher-open'
+  - title: Step 15
+    description: Type "10"
+    target:
+      className: luna-searcher__input
+      action: value
+      value: '10'
+  - title: Step 16
+    description: Press enter
+    target:
+      className: luna-searcher__input
+      action: 'luna-studio:searcher-accept'
+  - title: Step 17
+    description: Press tab again to open searcher
+    target:
+      className: luna-studio-mount
+      action: 'luna-studio:searcher-open'
+  - title: Step 18
+    description: Type "increment"
+    target:
+      className: luna-searcher__input
+      action: value
+      value: increment
+  - title: Step 19
+    description: Press enter
+    target:
+      className: luna-searcher__input
+      action: 'luna-studio:searcher-accept'
+  - title: Step 20
+    description: Click on parameter node
+    target:
+      className:
+        - luna-node-name-number1
+        - luna-node__body
+      action: onclick
+  - title: Step 21
+    description: Press enter to expand it
+    target:
+      className: luna-studio-mount
+      action: 'luna-studio:expand-selected-nodes'
+  - title: Step 22
+    description: Move slider to change value
+    target:
+      className:
+        - luna-node-name-number1
+        - luna-node__control--alias
+        - luna-ctrl--slider--int
+      action: onmousedown
+disabled: false

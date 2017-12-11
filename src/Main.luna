@@ -1,0 +1,5 @@
+def main:
+    «0»number1 = 12
+    None
+
+### META {"metas":[{"marker":0,"meta":{"_displayResult":false,"_selectedVisualizer":null,"_position":{"fromPosition":{"_vector2_y":96,"_vector2_x":96}}}}]}
