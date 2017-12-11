@@ -108,6 +108,7 @@
     document.body.innerHTML = table;
   };
   window.addEventListener("message", function (evt) {
+    console.log(evt)
     render(evt.data.data);
   });
 }());

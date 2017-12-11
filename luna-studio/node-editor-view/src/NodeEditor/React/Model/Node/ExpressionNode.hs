@@ -52,7 +52,7 @@ data ExpressionNode = ExpressionNode { _nodeLoc'                  :: NodeLoc
                                      , _visEnabled                :: Bool
                                      , _errorVisEnabled           :: Bool
                                      , _code                      :: Text
-                                     , _value                     :: Maybe Value
+                                     , _value                     :: Value
                                      , _zPos                      :: Int
                                      , _isSelected                :: Bool
                                      , _isMouseOver               :: Bool
@@ -77,9 +77,13 @@ data Subgraph = Subgraph { _expressionNodes :: ExpressionNodesMap
                          , _monads          :: [MonadPath]
                          } deriving (Default, Eq, Generic, NFData, Show)
 
-data Value = ShortValue ShortValue
+data Value = AwaitingTypecheck
+           | AwaitingData
+           | ShortValue ShortValue
            | Error      (Error NodeError)
            deriving (Eq, Generic, NFData, Show)
+
+instance Default Value where def = AwaitingTypecheck
 
 data Collaboration = Collaboration { _touch  :: Map ClientId (UTCTime, Color)
                                    , _modify :: Map ClientId  UTCTime
@@ -160,8 +164,14 @@ subgraphs = mode . _Expanded . _Function
 
 returnsError :: ExpressionNode -> Bool
 returnsError node = case node ^. value of
-    Just (Error _) -> True
-    _              -> False
+    Error _ -> True
+    _       -> False
+
+hasData :: ExpressionNode -> Bool
+hasData node = case node ^. value of
+    ShortValue {} -> True
+    Error      {} -> True
+    _             -> False
 
 isMode :: Mode -> ExpressionNode -> Bool
 isMode mode' node = node ^. mode == mode'

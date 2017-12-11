@@ -1,10 +1,11 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE OverloadedStrings #-}
 module NodeEditor.Action.Visualization where
 
 import           Common.Action.Command                      (Command)
 import           Common.Prelude
 import qualified Data.Map                                   as Map
-import           JS.Visualizers                             (notifyStreamRestart, registerVisualizerFrame, sendErrorData,
+import           JS.Visualizers                             (notifyStreamRestart, registerVisualizerFrame, sendInternalData,
                                                              sendVisualizationData)
 import           LunaStudio.Data.NodeLoc                    (NodeLoc)
 import           LunaStudio.Data.NodeValue                  (VisualizerName)
@@ -13,11 +14,11 @@ import           NodeEditor.Action.Basic                    (selectNode, setNode
 import           NodeEditor.Action.State.Action             (beginActionWithKey, checkAction, checkIfActionPerfoming, continueActionWithKey,
                                                              removeActionFromState, updateActionWithKey)
 import           NodeEditor.Action.State.NodeEditor         (getExpressionNode, getExpressionNodeType, getNodeMeta, getNodeVisualizations,
-                                                             getSelectedNodes, getVisualizationsBackupMap, modifyExpressionNode,
-                                                             modifyNodeEditor, modifySearcher, updateDefaultVisualizer,
-                                                             updatePreferedVisualizer)
+                                                             getSelectedNodes, getVisualizationsBackupMap, getVisualizersForType,
+                                                             modifyExpressionNode, modifyNodeEditor, modifySearcher,
+                                                             updateDefaultVisualizer, updatePreferedVisualizer)
 import           NodeEditor.Action.UUID                     (getUUID)
-import           NodeEditor.React.Model.Node.ExpressionNode (nodeLoc, returnsError, visualizationsEnabled)
+import           NodeEditor.React.Model.Node.ExpressionNode (hasData, nodeLoc, returnsError, visualizationsEnabled)
 import           NodeEditor.React.Model.NodeEditor          (VisualizationBackup (ErrorBackup, StreamBackup, ValueBackup),
                                                              nodeVisualizations)
 import qualified NodeEditor.React.Model.Searcher            as Searcher
@@ -111,12 +112,7 @@ selectVisualizer (Node nl) visId visName = withJustM (getNodeVisualizations nl) 
                         liftIO $ do
                             registerVisualizerFrame uuid
                             sendVisualizationData   uuid cRep backup
-                _ -> do
-                    modifyNodeEditor $ do
-                        nodeVisualizations . ix nl . visualizations . at (prevVis ^. visualizationId) .= def
-                        nodeVisualizations . ix nl . idleVisualizations %= (IdleVisualization Ready visualizer' :)
-                    withJustM (getExpressionNodeType nl) $ \tpe ->
-                        updatePreferedVisualizer tpe visualizer'
+                _ -> withJustM (getExpressionNodeType nl) $ flip updatePreferedVisualizer visualizer'
 selectVisualizer Searcher _ _ = $notImplemented
 
 
@@ -177,28 +173,25 @@ startReadyVisualizations nl = do
     mayNodeVis   <- getNodeVisualizations nl
     mayCRep      <- maybe def toConstructorRep <$> getExpressionNodeType nl
     ent          <- getExpressionNodeType nl
-    withJust ((,) <$> mayVisBackup <*> mayNodeVis) $ \(visBackup, nodeVis) -> case visBackup of
-        StreamBackup backup -> withJust mayCRep $ \cRep -> do
-            let activateWithStreamStart newNodeVis vis = if vis ^. visualizationStatus == Outdated then return $ newNodeVis & idleVisualizations %~ (vis:) else do
-                    uuid <- getUUID
-                    liftIO $ registerVisualizerFrame uuid >> notifyStreamRestart uuid cRep (reverse backup)
-                    return $ newNodeVis & visualizations %~ Map.insert uuid (RunningVisualization uuid def $ vis ^. idleVisualizer)
-            nVis <- foldlM activateWithStreamStart (nodeVis & idleVisualizations .~ def) $ nodeVis ^. idleVisualizations
+    let activateWith sendDataFunction newNodeVis vis =
+            if vis ^. visualizationStatus == Outdated then return $ newNodeVis & idleVisualizations %~ (vis:) else do
+                uuid <- getUUID
+                liftIO $ registerVisualizerFrame uuid >> sendDataFunction uuid
+                return $ newNodeVis & visualizations %~ Map.insert uuid (RunningVisualization uuid def $ vis ^. idleVisualizer)
+        updateVis nodeVis sendDataFunction = do
+            nVis <- foldlM sendDataFunction (nodeVis & idleVisualizations .~ def) $ nodeVis ^. idleVisualizations
             modifyNodeEditor $ nodeVisualizations . at nl ?= nVis
-        ValueBackup backup -> withJust mayCRep $ \cRep -> do
-            let activateWithValue newNodeVis vis = if vis ^. visualizationStatus == Outdated then return $ newNodeVis & idleVisualizations %~ (vis:) else do
-                    uuid <- getUUID
-                    liftIO $ registerVisualizerFrame uuid >> sendVisualizationData uuid cRep backup
-                    return $ newNodeVis & visualizations %~ Map.insert uuid (RunningVisualization uuid def $ vis ^. idleVisualizer)
-            nVis <- foldlM activateWithValue (nodeVis & idleVisualizations .~ def) $ nodeVis ^. idleVisualizations
-            modifyNodeEditor $ nodeVisualizations . at nl ?= nVis
-        ErrorBackup backup -> whenM (maybe False returnsError <$> getExpressionNode nl) $ do
-            let activateWithError newNodeVis vis = if vis ^. visualizationStatus == Outdated then return $ newNodeVis & idleVisualizations %~ (vis:) else do
-                    uuid <- getUUID
-                    liftIO $ registerVisualizerFrame uuid >> sendErrorData uuid backup
-                    return $ newNodeVis & visualizations %~ Map.insert uuid (RunningVisualization uuid def $ vis ^. idleVisualizer)
-            nVis <- foldlM activateWithError (nodeVis & idleVisualizations .~ def) $ nodeVis ^. idleVisualizations
-            modifyNodeEditor $ nodeVisualizations . at nl ?= nVis
+        updateVisWithPlaceholder nodeVis = do
+            hasVisualizers <- maybe (return False) (fmap isJust . getVisualizersForType) =<< getExpressionNodeType nl
+            let msg = if hasVisualizers then "AWAITING DATA" else "NO VIS FOR TYPE"
+            updateVis nodeVis $ activateWith (\uuid -> sendInternalData uuid msg)
+    withJust mayNodeVis $ \nodeVis -> case (mayVisBackup, mayCRep) of
+        (Nothing,                    _)         -> updateVisWithPlaceholder nodeVis
+        (Just (ErrorBackup backup),  _)         -> updateVis nodeVis $ activateWith (\uuid -> sendInternalData uuid backup)
+        (_,                          Nothing)   -> updateVisWithPlaceholder nodeVis
+        (Just (StreamBackup backup), Just cRep) -> updateVis nodeVis $ activateWith (\uuid -> notifyStreamRestart uuid cRep (reverse backup))
+        (Just (ValueBackup backup),  Just cRep) -> updateVis nodeVis $ activateWith (\uuid -> sendVisualizationData uuid cRep backup)
+
 
 -- instance Action (Command State) VisualizationDrag where
 --     begin    = beginActionWithKey    visualizationDragAction

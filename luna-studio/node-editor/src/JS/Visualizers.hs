@@ -35,8 +35,8 @@ getVisualizersLibraryPath = convert <$> getVisualizersLibraryPath'
 foreign import javascript safe "visualizerFramesManager.sendData($1, $2, $3);"
     sendVisualizationData' :: JSString -> JSString -> JSString -> IO ()
 
-foreign import javascript safe "visualizerFramesManager.sendErrorData($1, $2);"
-    sendErrorData' :: JSString -> JSString -> IO ()
+foreign import javascript safe "visualizerFramesManager.sendInternalData($1, $2);"
+    sendInternalData' :: JSString -> JSString -> IO ()
 
 foreign import javascript safe "visualizerFramesManager.sendDatapoint($1, $2);"
     sendStreamDatapoint' :: JSString -> JSString -> IO ()
@@ -59,9 +59,8 @@ registerVisualizerFrame = registerVisualizerFrame' . convert . show
 sendVisualizationData :: UUID -> ConstructorRep -> Text -> IO ()
 sendVisualizationData uid rep d = sendVisualizationData' (convert $ show uid) (convert . BS.unpack $ Aeson.encode rep) (convert d)
 
-sendErrorData :: UUID -> Text -> IO ()
-sendErrorData uid d = sendErrorData' (convert $ show uid) (convert d)
-
+sendInternalData :: UUID -> Text -> IO ()
+sendInternalData uid d = sendInternalData' (convert $ show uid) (convert d)
 
 foreign import javascript safe "window.visualizers[$1]($2)"
     checkVisualizer' :: JSString -> JSString -> IO JSString

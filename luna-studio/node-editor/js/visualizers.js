@@ -35,8 +35,8 @@ var sendData = function (id, type, data) {
   send(id, { event: "data", type: type, data: data });
 };
 
-var sendErrorData = function (id, data) {
-  send(id, { event: "errorData", data: data });
+var sendInternalData = function (id, data) {
+  send(id, { event: "internalData", data: data });
 };
 
 var sendDatapoint = function (id, data) {
@@ -52,5 +52,5 @@ module.exports = {
   register: register,
   notifyStreamRestart: notifyStreamRestart,
   sendDatapoint: sendDatapoint,
-  sendErrorData: sendErrorData
+  sendInternalData: sendInternalData
 };
