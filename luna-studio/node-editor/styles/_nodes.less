@@ -345,7 +345,7 @@ svg.luna-node__ports {
 .luna-ctrl--text,
 .luna-ctrl--slider,
 .luna-ctrl--set {
-    .background(2);
+    .background(1);
     border-radius: 100rem;
     box-sizing:    border-box;
     .color(5);
@@ -367,7 +367,7 @@ svg.luna-node__ports {
     display: block;
     &:hover {
         color: #fff;
-        .background(3);
+        .background(2);
     }
 }
 
@@ -415,20 +415,20 @@ svg.luna-node__ports {
         content:  " ";
         width:   (@luna-node-control-line-height - 2*@luna-node-control-padding) * 1rem;
         height:  (@luna-node-control-line-height - 2*@luna-node-control-padding) * 1rem;
-        .background(1);
+        .background(0);
         .roundCorners;
     }
 }
 
 .luna-ctrl--bool--True {
-    .background(7);
+    .background(6);
     &::after {
         left: 16rem; // TODO: make it relative
     }
 }
 
 .luna-ctrl--bool--False {
-    .background(3);
+    .background(2);
     &::after {
         left: @luna-node-control-padding * 1rem;
     }
