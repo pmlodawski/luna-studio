@@ -359,12 +359,15 @@ getPlaceholderVisualizer = fmap (placeholderVisName, ) . Map.lookup placeholderV
 getErrorVisualizer :: Command State (Maybe Visualizer)
 getErrorVisualizer = fmap (errorVisName, ) . Map.lookup errorVisName <$> use internalVisualizers
 
+clearVisualizationsForNode :: NodeLoc -> Command State ()
+clearVisualizationsForNode nl = modifyNodeEditor $ NE.nodeVisualizations . ix nl .= def
+
 setPlaceholderVisualization :: NodeLoc -> Command State [VisualizationId]
 setPlaceholderVisualization nl = getExpressionNode nl >>= \mayN -> do
     case mayN of
-        Nothing -> modifyNodeEditor $ NE.nodeVisualizations . ix nl .= def
+        Nothing -> clearVisualizationsForNode nl
         Just n  -> getPlaceholderVisualizer >>= \case
-            Nothing             -> modifyNodeEditor $ NE.nodeVisualizations . ix nl .= def
+            Nothing             -> clearVisualizationsForNode nl
             Just placeholderVis -> do
                 mayVis <- maybe (return def) getVisualizersForType $ n ^. ExpressionNode.nodeType
                 modifyNodeEditor $ NE.nodeVisualizations %= \visMap -> do
@@ -378,9 +381,9 @@ setPlaceholderVisualization nl = getExpressionNode nl >>= \mayN -> do
 setErrorVisualization :: NodeLoc -> Command State [VisualizationId]
 setErrorVisualization nl = getExpressionNode nl >>= \mayN -> do
     case mayN of
-        Nothing -> modifyNodeEditor $ NE.nodeVisualizations . ix nl .= def
+        Nothing -> clearVisualizationsForNode nl
         Just n  -> getErrorVisualizer >>= \case
-            Nothing       -> modifyNodeEditor $ NE.nodeVisualizations . ix nl .= def
+            Nothing       -> clearVisualizationsForNode nl
             Just errorVis -> modifyNodeEditor $ NE.nodeVisualizations %= \visMap -> do
                 let prevVis     = maybe def (^. Visualization.visualizations) $ Map.lookup nl visMap
                     running     = Map.filter ((errorVis ==) . view Visualization.runningVisualizer) prevVis
@@ -392,9 +395,7 @@ updateVisualizationsForNode :: NodeLoc -> Command State [VisualizationId]
 updateVisualizationsForNode nl = do
     mayN <- getExpressionNode nl
     case mayN of
-        Nothing -> do
-            modifyNodeEditor $ NE.nodeVisualizations . ix nl .= def
-            return def
+        Nothing -> clearVisualizationsForNode nl >> return def
         Just n -> do
             if ExpressionNode.returnsError n then setErrorVisualization nl
             else do

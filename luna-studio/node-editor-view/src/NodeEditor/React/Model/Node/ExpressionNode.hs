@@ -199,7 +199,7 @@ findSuccessorPosition :: ExpressionNode -> [ExpressionNode] -> Position
 findSuccessorPosition n nodes = Empire.findSuccessorPosition (convert n) $ map convert nodes
 
 nodeType :: Getter ExpressionNode (Maybe TypeRep)
-nodeType = to (^? outPortAt [] . Port.valueType) where
+nodeType = to (^? outPortAt [] . Port.valueType)
 
 visualizationsEnabled :: Lens' ExpressionNode Bool
 visualizationsEnabled = lens getVisualizationEnabled setVisualizationEnabled where

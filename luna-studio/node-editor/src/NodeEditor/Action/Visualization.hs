@@ -10,7 +10,7 @@ import           JS.Visualizers                             (notifyStreamRestart
 import           LunaStudio.Data.NodeLoc                    (NodeLoc)
 import           LunaStudio.Data.NodeValue                  (VisualizerName)
 import           LunaStudio.Data.TypeRep                    (toConstructorRep)
-import           NodeEditor.Action.Basic                    (selectNode, setNodeMeta)
+import           NodeEditor.Action.Basic                    (selectNode, setNodeMeta, setVisualizationData)
 import           NodeEditor.Action.State.Action             (beginActionWithKey, checkAction, checkIfActionPerfoming, continueActionWithKey,
                                                              removeActionFromState, updateActionWithKey)
 import           NodeEditor.Action.State.NodeEditor         (getExpressionNode, getExpressionNodeType, getNodeMeta, getNodeVisualizations,
@@ -19,16 +19,16 @@ import           NodeEditor.Action.State.NodeEditor         (getExpressionNode, 
                                                              updateDefaultVisualizer, updatePreferedVisualizer)
 import           NodeEditor.Action.UUID                     (getUUID)
 import           NodeEditor.React.Model.Node.ExpressionNode (hasData, nodeLoc, returnsError, visualizationsEnabled)
-import           NodeEditor.React.Model.NodeEditor          (VisualizationBackup (ErrorBackup, StreamBackup, ValueBackup),
+import           NodeEditor.React.Model.NodeEditor          (VisualizationBackup (ErrorBackup, MessageBackup, StreamBackup, ValueBackup),
                                                              nodeVisualizations)
 import qualified NodeEditor.React.Model.Searcher            as Searcher
 import           NodeEditor.React.Model.Visualization       (IdleVisualization (IdleVisualization),
                                                              RunningVisualization (RunningVisualization), VisualizationId,
                                                              VisualizationMode (Focused, FullScreen, Preview),
                                                              VisualizationParent (Node, Searcher), VisualizationStatus (Outdated, Ready),
-                                                             idleVisualizations, idleVisualizer, runningVisualizer, stopVisualizations,
-                                                             visualizationId, visualizationMode, visualizationStatus, visualizations,
-                                                             visualizers)
+                                                             awaitingDataMsg, idleVisualizations, idleVisualizer, noVisMsg,
+                                                             runningVisualizer, stopVisualizations, visualizationId, visualizationMode,
+                                                             visualizationStatus, visualizations, visualizers)
 import           NodeEditor.State.Action                    (Action (begin, continue, end, update),
                                                              DocVisualizationActive (DocVisualizationActive),
                                                              VisualizationActive (VisualizationActive), docVisualizationActiveAction,
@@ -171,27 +171,21 @@ startReadyVisualizations :: NodeLoc -> Command State ()
 startReadyVisualizations nl = do
     mayVisBackup <- Map.lookup nl <$> getVisualizationsBackupMap
     mayNodeVis   <- getNodeVisualizations nl
-    mayCRep      <- maybe def toConstructorRep <$> getExpressionNodeType nl
     ent          <- getExpressionNodeType nl
-    let activateWith sendDataFunction newNodeVis vis =
+    let activateWith newNodeVis vis =
             if vis ^. visualizationStatus == Outdated then return $ newNodeVis & idleVisualizations %~ (vis:) else do
                 uuid <- getUUID
-                liftIO $ registerVisualizerFrame uuid >> sendDataFunction uuid
+                liftIO $ registerVisualizerFrame uuid
                 return $ newNodeVis & visualizations %~ Map.insert uuid (RunningVisualization uuid def $ vis ^. idleVisualizer)
-        updateVis nodeVis sendDataFunction = do
-            nVis <- foldlM sendDataFunction (nodeVis & idleVisualizations .~ def) $ nodeVis ^. idleVisualizations
+        updateVis nodeVis (Just backup) = do
+            nVis <- foldlM activateWith (nodeVis & idleVisualizations .~ def) $ nodeVis ^. idleVisualizations
             modifyNodeEditor $ nodeVisualizations . at nl ?= nVis
-        updateVisWithPlaceholder nodeVis = do
+            setVisualizationData nl backup True
+        updateVis nodeVis Nothing = do
             hasVisualizers <- maybe (return False) (fmap isJust . getVisualizersForType) =<< getExpressionNodeType nl
-            let msg = if hasVisualizers then "AWAITING DATA" else "NO VIS FOR TYPE"
-            updateVis nodeVis $ activateWith (\uuid -> sendInternalData uuid msg)
-    withJust mayNodeVis $ \nodeVis -> case (mayVisBackup, mayCRep) of
-        (Nothing,                    _)         -> updateVisWithPlaceholder nodeVis
-        (Just (ErrorBackup backup),  _)         -> updateVis nodeVis $ activateWith (\uuid -> sendInternalData uuid backup)
-        (_,                          Nothing)   -> updateVisWithPlaceholder nodeVis
-        (Just (StreamBackup backup), Just cRep) -> updateVis nodeVis $ activateWith (\uuid -> notifyStreamRestart uuid cRep (reverse backup))
-        (Just (ValueBackup backup),  Just cRep) -> updateVis nodeVis $ activateWith (\uuid -> sendVisualizationData uuid cRep backup)
-
+            let msg = if hasVisualizers then awaitingDataMsg else noVisMsg
+            updateVis nodeVis $ Just $ MessageBackup msg
+    withJust mayNodeVis $ flip updateVis mayVisBackup
 
 -- instance Action (Command State) VisualizationDrag where
 --     begin    = beginActionWithKey    visualizationDragAction

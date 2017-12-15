@@ -8,6 +8,7 @@ import           LunaStudio.Data.Node                        (NodeTypecheckerUpd
 import qualified LunaStudio.Data.Node                        as Empire
 import           NodeEditor.Action.Basic.AddNode             (localAddExpressionNode, localAddInputNode, localAddOutputNode)
 import           NodeEditor.Action.Basic.Scene               (updateScene)
+import           NodeEditor.Action.Basic.UpdateNodeValue     (setVisualizationData)
 import           NodeEditor.Action.Basic.UpdateSearcherHints (localUpdateSearcherHintsPreservingSelection)
 import           NodeEditor.Action.State.Model               (calculatePortSelfMode)
 import qualified NodeEditor.Action.State.NodeEditor          as NodeEditor
@@ -15,8 +16,10 @@ import           NodeEditor.React.Model.Node                 (ExpressionNode, In
 import           NodeEditor.React.Model.Node.ExpressionNode  (inPortsList, isSelected, nodeType, value, _Error)
 import qualified NodeEditor.React.Model.Node.ExpressionNode  as ExpressionNode
 import qualified NodeEditor.React.Model.Node.SidebarNode     as SidebarNode
+import           NodeEditor.React.Model.NodeEditor           (VisualizationBackup (MessageBackup))
 import           NodeEditor.React.Model.Port                 (isSelf, mode, portId)
 import qualified NodeEditor.React.Model.Searcher             as Searcher
+import           NodeEditor.React.Model.Visualization        (awaitingDataMsg, noVisMsg)
 import           NodeEditor.State.Global                     (State)
 
 
@@ -76,7 +79,7 @@ localUpdateExpressionNode' preventPorts node = NodeEditor.getExpressionNode (nod
         updateSearcherClassName updatedNode
         unless (preventPorts) $ do
             visIds <- NodeEditor.updateVisualizationsForNode (node ^. nodeLoc)
-            liftIO . forM_ visIds $ \visId -> sendInternalData visId "AWAITING DATA"
+            liftIO . forM_ visIds $ \visId -> sendInternalData visId awaitingDataMsg
         return True
 
 localUpdateOrAddExpressionNode :: ExpressionNode -> Command State ()
@@ -95,9 +98,8 @@ localUpdateNodeTypecheck path update = do
                      & ExpressionNode.outPorts .~ convert `fmap` outPorts
                      & ExpressionNode.value    .~ ExpressionNode.AwaitingData
             hasVisualizers <- maybe (return False) (fmap isJust . NodeEditor.getVisualizersForType) =<< NodeEditor.getExpressionNodeType nl
-            let msg = if hasVisualizers then "AWAITING DATA" else "NO VIS FOR TYPE"
-            visIds <- NodeEditor.updateVisualizationsForNode nl
-            liftIO . forM_ visIds $ \visId -> sendInternalData visId msg
+            let msg = if hasVisualizers then awaitingDataMsg else noVisMsg
+            setVisualizationData nl (MessageBackup msg) True
         Empire.OutputSidebarUpdate _ inPorts -> NodeEditor.modifyOutputNode nl $
             SidebarNode.outputSidebarPorts .= convert `fmap` inPorts
         Empire.InputSidebarUpdate _ outPorts -> NodeEditor.modifyInputNode nl $

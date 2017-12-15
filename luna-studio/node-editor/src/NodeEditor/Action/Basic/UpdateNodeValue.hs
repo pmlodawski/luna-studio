@@ -16,48 +16,60 @@ import           NodeEditor.Action.State.NodeEditor         (getExpressionNodeTy
                                                              setErrorVisualization, setPlaceholderVisualization,
                                                              updateVisualizationsForNode)
 import           NodeEditor.React.Model.Node.ExpressionNode (NodeLoc, Value (Error, ShortValue), execTime, value)
-import           NodeEditor.React.Model.NodeEditor          (VisualizationBackup (ErrorBackup, StreamBackup, ValueBackup), backupMap,
-                                                             visualizationsBackup)
-import           NodeEditor.React.Model.Visualization       (visualizations)
+import           NodeEditor.React.Model.NodeEditor          (VisualizationBackup (ErrorBackup, MessageBackup, StreamBackup, ValueBackup),
+                                                             backupMap, visualizationsBackup, _StreamBackup)
+import           NodeEditor.React.Model.Visualization       (noDataMsg, noVisMsg, visualizations)
 import           NodeEditor.State.Global                    (State)
 
 import           NodeEditor.Action.State.NodeEditor         (getExpressionNode)
 import qualified NodeEditor.React.Model.Node.ExpressionNode as Node
 
+
 updateNodeValueAndVisualization :: NodeLoc -> NodeValue -> Command State ()
 updateNodeValueAndVisualization nl = \case
     NodeValue sv (Just (StreamDataPoint visVal)) -> do
         modifyExpressionNode nl $ value .= ShortValue (Text.take 100 sv)
-        let updateBackup (StreamBackup backup) = Just . StreamBackup $ visVal : backup
-            updateBackup _                     = Nothing
-        modifyNodeEditor $ visualizationsBackup . backupMap %= Map.update updateBackup nl
-        visIds <- maybe def (Map.keys . view visualizations) <$> getNodeVisualizations nl
-        liftIO . forM_ visIds $ flip sendStreamDatapoint visVal
+        setVisualizationData nl (StreamBackup [visVal]) False
     NodeValue sv (Just (Value visVal)) -> do
         modifyExpressionNode nl $ value .= ShortValue (Text.take 100 sv)
-        modifyNodeEditor $ visualizationsBackup . backupMap . at nl ?= ValueBackup visVal
-        visIds <- updateVisualizationsForNode nl
-        withJustM (maybe def toConstructorRep <$> getExpressionNodeType nl) $ \cRep ->
-            liftIO . forM_ visIds $ \visId -> sendVisualizationData visId cRep visVal
+        setVisualizationData nl (ValueBackup visVal) True
     NodeValue sv (Just StreamStart) -> do
         modifyExpressionNode nl $ value .= ShortValue (Text.take 100 sv)
-        modifyNodeEditor $ visualizationsBackup . backupMap . at nl ?= StreamBackup []
-        visIds <- updateVisualizationsForNode nl
-        withJustM (maybe def toConstructorRep <$> getExpressionNodeType nl) $ \cRep ->
-            liftIO . forM_ visIds $ \visId -> notifyStreamRestart visId cRep def
+        setVisualizationData nl (StreamBackup []) True
     NodeValue sv Nothing -> do
         modifyExpressionNode nl $ value .= ShortValue (Text.take 100 sv)
-        modifyNodeEditor $ visualizationsBackup . backupMap . at nl .= def
         hasVisualizers <- maybe (return False) (fmap isJust . getVisualizersForType) =<< getExpressionNodeType nl
-        let msg = if hasVisualizers then "NO DATA" else "NO VIS FOR TYPE"
-        visIds <- setPlaceholderVisualization nl
-        liftIO . forM_ visIds $ \visId -> sendInternalData visId msg
+        let msg = if hasVisualizers then noDataMsg else noVisMsg
+        setVisualizationData nl (MessageBackup msg) True
     NodeError e -> do
         modifyExpressionNode nl $ value .= Error e
-        modifyNodeEditor $ visualizationsBackup . backupMap . at nl ?= ErrorBackup (e ^. errorContent)
-        visIds <- setErrorVisualization nl
-        liftIO . forM_ visIds $ \visId -> sendInternalData visId $ e ^. errorContent
+        setVisualizationData nl (ErrorBackup $ e ^. errorContent) True
 
 
 setNodeProfilingData :: NodeLoc -> Integer -> Command State ()
 setNodeProfilingData nl t = modifyExpressionNode nl $ execTime ?= t
+
+setVisualizationData :: NodeLoc -> VisualizationBackup -> Bool -> Command State ()
+setVisualizationData nl backup@(ValueBackup val) _ = do
+    modifyNodeEditor $ visualizationsBackup . backupMap . at nl ?= backup
+    visIds <- updateVisualizationsForNode nl
+    withJustM (maybe def toConstructorRep <$> getExpressionNodeType nl) $ \cRep ->
+        liftIO . forM_ visIds $ \visId -> sendVisualizationData visId cRep val
+setVisualizationData nl backup@(StreamBackup values) override@True = do
+    modifyNodeEditor $ visualizationsBackup . backupMap . at nl ?= backup
+    visIds <- updateVisualizationsForNode nl
+    withJustM (maybe def toConstructorRep <$> getExpressionNodeType nl) $ \cRep ->
+        liftIO . forM_ visIds $ \visId -> notifyStreamRestart visId cRep $ reverse values
+setVisualizationData nl backup@(StreamBackup values) override@False = do
+    modifyNodeEditor $ visualizationsBackup . backupMap . ix nl . _StreamBackup %= (values <>)
+    visIds <- maybe def (Map.keys . view visualizations) <$> getNodeVisualizations nl
+    liftIO . forM_ visIds $ forM_ values . sendStreamDatapoint
+setVisualizationData nl backup@(MessageBackup msg) _ = do
+    modifyNodeEditor $ visualizationsBackup . backupMap . at nl ?= backup
+    visIds <- setPlaceholderVisualization nl
+    liftIO . forM_ visIds $ flip sendInternalData msg
+setVisualizationData nl backup@(ErrorBackup msg) _ = do
+    modifyNodeEditor $ visualizationsBackup . backupMap . at nl ?= backup
+    visIds <- setErrorVisualization nl
+    liftIO . forM_ visIds $ flip sendInternalData msg
+

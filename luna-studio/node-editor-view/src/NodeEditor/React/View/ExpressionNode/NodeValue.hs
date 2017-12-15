@@ -35,7 +35,7 @@ nodeValue = React.defineView nodeValueName $ \(ref, n) ->
 strValue :: ExpressionNode -> String
 strValue n = case n ^. Node.value of
     ShortValue value -> Text.unpack value
-    Error      msg   -> showError msg --limitString errorLen (convert $ showError msg)
+    Error      msg   -> showError msg
     _ -> ""
 
 
