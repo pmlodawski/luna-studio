@@ -23,6 +23,7 @@ import           NodeEditor.Action.UUID                     (getUUID)
 import           NodeEditor.React.Model.Node                (ExpressionNode, InputNode, NodeLoc (NodeLoc), NodePath, OutputNode, inPortAt,
                                                              inPortsList, nodeLoc)
 import           NodeEditor.React.Model.Port                (isSelf, mode, portId)
+import           NodeEditor.React.Model.Visualization       (awaitingDataMsg)
 import           NodeEditor.State.Global                    (State)
 
 
@@ -58,7 +59,7 @@ localAddExpressionNode node = do
     node' <- maybe (return node) (\selfPid -> updatePortSelf selfPid <$> calculatePortSelfMode node) mayPortSelfId
     NodeEditor.addExpressionNode node'
     visIds <- updateVisualizationsForNode $ node ^. nodeLoc
-    liftIO . forM_ visIds $ \visId -> sendInternalData visId "AWAITING DATA"
+    liftIO . forM_ visIds $ \visId -> sendInternalData visId awaitingDataMsg
     focusNode $ node ^. nodeLoc
 
 localAddInputNode :: InputNode -> Command State ()

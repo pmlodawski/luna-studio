@@ -26,9 +26,9 @@ import           NodeEditor.React.Model.Visualization       (IdleVisualization (
                                                              RunningVisualization (RunningVisualization), VisualizationId,
                                                              VisualizationMode (Focused, FullScreen, Preview),
                                                              VisualizationParent (Node, Searcher), VisualizationStatus (Outdated, Ready),
-                                                             idleVisualizations, idleVisualizer, runningVisualizer, stopVisualizations,
-                                                             visualizationId, visualizationMode, visualizationStatus, visualizations,
-                                                             visualizers)
+                                                             awaitingDataMsg, idleVisualizations, idleVisualizer, noVisMsg,
+                                                             runningVisualizer, stopVisualizations, visualizationId, visualizationMode,
+                                                             visualizationStatus, visualizations, visualizers)
 import           NodeEditor.State.Action                    (Action (begin, continue, end, update),
                                                              DocVisualizationActive (DocVisualizationActive),
                                                              VisualizationActive (VisualizationActive), docVisualizationActiveAction,
@@ -183,7 +183,7 @@ startReadyVisualizations nl = do
             modifyNodeEditor $ nodeVisualizations . at nl ?= nVis
         updateVisWithPlaceholder nodeVis = do
             hasVisualizers <- maybe (return False) (fmap isJust . getVisualizersForType) =<< getExpressionNodeType nl
-            let msg = if hasVisualizers then "AWAITING DATA" else "NO VIS FOR TYPE"
+            let msg = if hasVisualizers then awaitingDataMsg else noVisMsg
             updateVis nodeVis $ activateWith (\uuid -> sendInternalData uuid msg)
     withJust mayNodeVis $ \nodeVis -> case (mayVisBackup, mayCRep) of
         (Nothing,                    _)         -> updateVisWithPlaceholder nodeVis

@@ -17,6 +17,7 @@ import qualified NodeEditor.React.Model.Node.ExpressionNode  as ExpressionNode
 import qualified NodeEditor.React.Model.Node.SidebarNode     as SidebarNode
 import           NodeEditor.React.Model.Port                 (isSelf, mode, portId)
 import qualified NodeEditor.React.Model.Searcher             as Searcher
+import           NodeEditor.React.Model.Visualization        (awaitingDataMsg, noVisMsg)
 import           NodeEditor.State.Global                     (State)
 
 
@@ -76,7 +77,7 @@ localUpdateExpressionNode' preventPorts node = NodeEditor.getExpressionNode (nod
         updateSearcherClassName updatedNode
         unless (preventPorts) $ do
             visIds <- NodeEditor.updateVisualizationsForNode (node ^. nodeLoc)
-            liftIO . forM_ visIds $ \visId -> sendInternalData visId "AWAITING DATA"
+            liftIO . forM_ visIds $ \visId -> sendInternalData visId awaitingDataMsg
         return True
 
 localUpdateOrAddExpressionNode :: ExpressionNode -> Command State ()
@@ -95,7 +96,7 @@ localUpdateNodeTypecheck path update = do
                      & ExpressionNode.outPorts .~ convert `fmap` outPorts
                      & ExpressionNode.value    .~ ExpressionNode.AwaitingData
             hasVisualizers <- maybe (return False) (fmap isJust . NodeEditor.getVisualizersForType) =<< NodeEditor.getExpressionNodeType nl
-            let msg = if hasVisualizers then "AWAITING DATA" else "NO VIS FOR TYPE"
+            let msg = if hasVisualizers then awaitingDataMsg else noVisMsg
             visIds <- NodeEditor.updateVisualizationsForNode nl
             liftIO . forM_ visIds $ \visId -> sendInternalData visId msg
         Empire.OutputSidebarUpdate _ inPorts -> NodeEditor.modifyOutputNode nl $
