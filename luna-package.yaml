@@ -44,7 +44,7 @@ packages:
           path: https://s3-us-west-2.amazonaws.com/packages-luna/windows/zmq/zmq1.zip
           deps: []
         darwin.x64:
-          path: https://s3-us-west-2.amazonaws.com/packages-luna/darwin/zmq/zmq.zip
+          path: https://s3-us-west-2.amazonaws.com/packages-luna/darwin/zmq/zmq.tar.gz
           deps: []
         linux.x64:
           path: https://s3-us-west-2.amazonaws.com/packages-luna/linux/zmq/lib.tar.gz
@@ -61,7 +61,7 @@ packages:
     appType: BatchApp
   luna-studio:
     versions:
-      0.9.9.1:
+      0.9.9.5:
         windows.x64:
           path: ./
           deps:
