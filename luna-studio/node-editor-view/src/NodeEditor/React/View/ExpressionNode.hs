@@ -237,7 +237,7 @@ nodePorts = React.defineView objNamePorts $ \(ref, n, hasAlias, hasSelf, isTopLe
                     [ "className" $= Style.prefix "port-io-shape-mask"
                     ] mempty
             clipPath_
-                [ "id"  $= fromString ("port-io-shape-mask-" <> show nodeId)
+                [ "id"  $= fromString ("port-io-select-mask-" <> show nodeId)
                 , "key" $= "portIoSelectMask"
                 ] $
                 circle_
