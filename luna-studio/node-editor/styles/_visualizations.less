@@ -10,7 +10,6 @@
 /////////////////////////////
 
 .luna-node__short-value-positioner {
-    pointer-events: none;
     display:        flex;
     flex-direction: column;
     align-items:    center;
@@ -25,14 +24,13 @@
     max-height:         45rem;
     text-align:         center;
     width:              200rem;
-
-    display:           -webkit-box; //---------------
-    -webkit-line-clamp: 3;          // 3-line text
-    -webkit-box-orient: vertical;   // with ellipsis
-    overflow-y:         hidden;     //---------------
+    &::before {
+        display:    inline-block;
+        transition: transform 100ms ease-in;
+        content:    "\23F5";
+        //transform: rotate(90deg);
+    }
 }
-
-
 
 /////////////////////////////
 //      visualization      //
@@ -43,8 +41,11 @@
 
     .luna-node-translate {
         position: absolute;
-        top:      32rem;
+        top:      42rem;
     }
+}
+.luna-node--expanded ~ .luna-visualization {
+    .luna-node-translate { top: 26rem; }
 }
 
 .luna-visualization-container {
