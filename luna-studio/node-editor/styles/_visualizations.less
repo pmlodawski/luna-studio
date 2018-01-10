@@ -35,9 +35,13 @@
         position:    relative;
         opacity:     0.5;
     }
-    &.luna-arrow-expanded::before {
-        opacity:   1 !important;
-        transform: rotate(90deg) translateY(2rem) translateX(0rem);
+    &.luna-arrow-expanded {
+        height: 16rem;
+        overflow: hidden;
+        &::before {
+            opacity:   1 !important;
+            transform: rotate(90deg) translateY(2rem) translateX(0rem);
+        }
     }
 }
 
@@ -60,9 +64,10 @@
 .luna-visualization-container {
     position:      relative;
     width:         @luna-visualization-width * 1px;
-    background:    transparent;
+    //background:    transparent;
     border-radius: @luna-border-radius * 1px;
-    overflow:      hidden;
+    //overflow:      hidden;
+    .luna-visualization-container-hover;
 }
 
 .luna-visualization-cover {
