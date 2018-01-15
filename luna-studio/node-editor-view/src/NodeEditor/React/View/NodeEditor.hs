@@ -15,7 +15,7 @@ import           LunaStudio.Data.NodeLoc                    (NodePath)
 import           LunaStudio.Data.PortRef                    (InPortRef (InPortRef))
 import           NodeEditor.React.IsRef                     (IsRef)
 import qualified NodeEditor.React.Model.Connection          as Connection
-import           NodeEditor.React.Model.Constants           (nodeRadius)
+import           NodeEditor.React.Model.Constants           (nodeRadius, selectionPadding)
 import qualified NodeEditor.React.Model.Node                as Node
 import           NodeEditor.React.Model.Node.ExpressionNode (ExpressionNode)
 import qualified NodeEditor.React.Model.Node.ExpressionNode as ExpressionNode
@@ -63,12 +63,12 @@ show4 a = showFFloat (Just 4) a "" -- limit Double to two decimal numbers TODO: 
 applySearcherHints :: NodeEditor -> NodeEditor
 applySearcherHints ne = maybe ne replaceNode $ ne ^. NodeEditor.searcher where
     connect srcPortRef dstPortRef ne' = ne' & NodeEditor.connections . at dstPortRef ?~ Connection.Connection srcPortRef dstPortRef False Connection.Normal
-    tryConnect    nl nn ne'           = maybe ne' (\srcPortRef -> connect srcPortRef (InPortRef nl [Self]) ne') $ nn ^. Searcher.predPortRef
-    toModel       n  nl pos           = moveNodeToTop $ (convert (def :: NodePath, n)) & ExpressionNode.nodeLoc  .~ nl
-                                                                                       & ExpressionNode.position .~ pos
-    updateNode    nl n ne'            = maybe ne' (flip NodeEditor.updateExpressionNode ne . Searcher.applyExpressionHint n) $ NodeEditor.getExpressionNode nl ne'
-    moveNodeToTop n                   = n & ExpressionNode.zPos .~ (ne ^. NodeEditor.topZIndex) + 1
-    replaceNode   s                   = case (s ^. Searcher.mode, s ^. Searcher.selectedNode) of
+    tryConnect    nl nn ne' = maybe ne' (\srcPortRef -> connect srcPortRef (InPortRef nl [Self]) ne') $ nn ^. Searcher.predPortRef
+    toModel       n nl pos  = moveNodeToTop $ (convert (def :: NodePath, n)) & ExpressionNode.nodeLoc  .~ nl
+                                                                             & ExpressionNode.position .~ pos
+    updateNode    nl n ne'  = maybe ne' (flip NodeEditor.updateExpressionNode ne . Searcher.applyExpressionHint n) $ NodeEditor.getExpressionNode nl ne'
+    moveNodeToTop n         = n & ExpressionNode.zPos .~ (ne ^. NodeEditor.topZIndex) + 1
+    replaceNode   s         = case (s ^. Searcher.mode, s ^. Searcher.selectedNode) of
         (Searcher.Node nl (Searcher.NodeModeInfo _ Nothing   _ _) _, Just n) -> updateNode nl n ne
         (Searcher.Node nl (Searcher.NodeModeInfo _ (Just nn) _ _) _, Just n) -> tryConnect nl nn $ NodeEditor.updateExpressionNode (toModel n nl (nn ^. Searcher.position)) ne
         (Searcher.Node nl (Searcher.NodeModeInfo _ (Just nn) _ _) _, _)      -> tryConnect nl nn $ NodeEditor.updateExpressionNode (moveNodeToTop $ ExpressionNode.mkExprNode nl (s ^. Searcher.inputText) (nn ^. Searcher.position)) ne
@@ -86,7 +86,7 @@ nodeEditor = React.defineView name $ \(ref, ne, isTopLevel) -> do
         GraphError e -> div_ ["className" $= Style.prefixFromList [ "graph-container", "graph-container--error" ] ] $ do
             graph_ ref ne isTopLevel
             div_ ["className" $= Style.prefix "graph-error"] $ div_ ["className" $= Style.prefix "graph-error__message"] $ elemString $ convert $ e ^. errorContent
-            
+
 
 graph_ :: IsRef r => r -> NodeEditor -> Bool -> ReactElementM ViewEventHandler ()
 graph_ ref ne isTopLevel = React.viewWithSKey graph name (ref, ne, isTopLevel) mempty
@@ -193,7 +193,7 @@ dynamicScale = React.defineView objDynStyle $ \cameraScale -> do
 
           --collapsed nodes
           elemString $ ".luna-port-io-shape-mask  { r: " <> show (nodeRadius - opticalCorrection + (opticalCorrection / scale)) <> "px }"
-          elemString $ ".luna-port-io-select-mask { r: " <> show (nodeRadius - opticalCorrection + (opticalCorrection / scale)) <> "px }"
+          elemString $ ".luna-port-io-select-mask { r: " <> show (nodeRadius + selectionPadding - opticalCorrection + (opticalCorrection / scale)) <> "px }"
 
           --expanded nodes
           elemString $ "circle.luna-port__shape { r: " <> show (3 + (1 / scale)) <> "px }"

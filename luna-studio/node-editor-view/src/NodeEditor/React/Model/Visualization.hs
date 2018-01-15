@@ -70,6 +70,7 @@ stopVisualizations nodeVis = nodeVis & visualizations     .~ def
                                      & idleVisualizations .~ (nodeVis ^. idleVisualizations) <> (map (toIdleVisualization Ready) . Map.elems $ nodeVis ^. visualizations)
 
 
-awaitingDataMsg, noVisMsg :: Text
+awaitingDataMsg, noVisMsg, noDataMsg :: Text
 awaitingDataMsg = "AWAITING DATA"
 noVisMsg        = "NO VIS FOR TYPE"
+noDataMsg       = "NO DATA"

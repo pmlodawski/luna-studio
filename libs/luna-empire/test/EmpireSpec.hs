@@ -13,10 +13,10 @@ import qualified Empire.ASTOps.Parse             as Parser
 import           Empire.ASTOps.Print             (printExpression)
 import qualified Empire.ASTOps.Read              as ASTRead
 import qualified Empire.Commands.AST             as AST (dumpGraphViz, isTrivialLambda)
-import qualified Empire.Commands.Graph           as Graph (addNode, addPort, connect, disconnect, getConnections, getGraph,
-                                                           getNodeIdForMarker, getNodes, loadCode, movePort, removeNodes, removePort,
-                                                           renameNode, renamePort, setNodeExpression, setNodeMeta, withGraph,
-                                                           addPortWithConnections)
+import qualified Empire.Commands.Graph           as Graph (addNode, addPort, addPortWithConnections, connect, disconnect, filterPrimMethods,
+                                                           getConnections, getGraph, getNodeIdForMarker, getNodes, importsToHints, loadCode,
+                                                           movePort, removeNodes, removePort, renameNode, renamePort, setNodeExpression,
+                                                           setNodeMeta, withGraph)
 import qualified Empire.Commands.GraphBuilder    as GraphBuilder
 import           Empire.Commands.Library         (createLibrary, withLibrary)
 import qualified Empire.Commands.Typecheck       as Typecheck (run)
@@ -27,6 +27,10 @@ import qualified Empire.Data.Graph               as Graph (code)
 import qualified Empire.Data.Library             as Library (body)
 import qualified Empire.Data.Library             as Library (body)
 import           Empire.Empire                   (InterpreterEnv (..))
+import           Empire.Prelude                  hiding (mapping, toList, (|>))
+import qualified Luna.Builtin.Data.Class         as Class
+import qualified Luna.Builtin.Data.Function      as Function
+import qualified Luna.Builtin.Data.Module        as Module
 import           LunaStudio.Data.Breadcrumb      (Breadcrumb (..), BreadcrumbItem (Definition))
 import qualified LunaStudio.Data.Graph           as Graph
 import           LunaStudio.Data.GraphLocation   (GraphLocation (..))
@@ -35,6 +39,7 @@ import           LunaStudio.Data.Node            (NodeId)
 import qualified LunaStudio.Data.Node            as Node
 import           LunaStudio.Data.NodeLoc         (NodeLoc (..))
 import           LunaStudio.Data.NodeMeta        (NodeMeta (..), position)
+import qualified LunaStudio.Data.NodeSearcher    as NodeSearcher
 import           LunaStudio.Data.Port            (InPorts (..), OutPorts (..))
 import qualified LunaStudio.Data.Port            as Port
 import           LunaStudio.Data.PortDefault     (PortDefault (Expression))
@@ -42,16 +47,33 @@ import           LunaStudio.Data.PortRef         (AnyPortRef (..), InPortRef (..
 import qualified LunaStudio.Data.Position        as Position
 import           LunaStudio.Data.TypeRep         (TypeRep (TCons, TLam, TStar, TVar))
 import           OCI.IR.Class                    (exprs, links)
-import           Empire.Prelude                  hiding (mapping, toList, (|>))
 
 import           Test.Hspec                      (Selector, Spec, around, describe, expectationFailure, it, parallel, shouldBe,
-                                                  shouldContain, shouldMatchList, shouldSatisfy, shouldStartWith, shouldThrow, xdescribe,
-                                                  xit)
+                                                  shouldContain, shouldMatchList, shouldNotBe, shouldSatisfy, shouldStartWith, shouldThrow,
+                                                  xdescribe, xit)
 
 import           EmpireUtils
 
 spec :: Spec
 spec = around withChannels $ parallel $ do
+    describe "imports" $ do
+        it "filters private methods" $ \_ -> do
+            let wd = Function.WithDocumentation Nothing
+            let imports = Module.Imports (Map.fromList [("Klass1", wd $ Class.Class def (Map.fromList [("someMethod", undefined), ("_privateMethod", undefined)]))])
+                                         (Map.fromList [("function", wd undefined), ("_privateFunction", wd undefined)])
+                hints = Graph.importsToHints imports
+            hints ^? NodeSearcher.classes . ix "Klass1" . NodeSearcher.methods . to Map.fromList . ix "_privateMethod" `shouldBe` Nothing
+            hints ^? NodeSearcher.classes . ix "Klass1" . NodeSearcher.methods . to Map.fromList . ix "someMethod" `shouldNotBe` Nothing
+            hints ^? NodeSearcher.functions . to Map.fromList . ix "_privateFunction" `shouldBe` Nothing
+            hints ^? NodeSearcher.functions . to Map.fromList . ix "function" `shouldNotBe` Nothing
+        it "filters private native functions" $ \_ -> do
+            let wd = Function.WithDocumentation Nothing
+            let imports = Module.Imports def
+                                         (Map.fromList [("primFunction", wd undefined), ("#uminus#", wd undefined), ("function", wd undefined)])
+                hints = Graph.importsToHints $ Graph.filterPrimMethods imports
+            hints ^? NodeSearcher.functions . to Map.fromList . ix "primFunction" `shouldBe` Nothing
+            hints ^? NodeSearcher.functions . to Map.fromList . ix "#uminus#" `shouldBe` Nothing
+            hints ^? NodeSearcher.functions . to Map.fromList . ix "function" `shouldNotBe` Nothing
     describe "luna-empire" $ do
         it "descends into `foo = a: a` and asserts two edges inside" $ \env -> do
             u1 <- mkUUID

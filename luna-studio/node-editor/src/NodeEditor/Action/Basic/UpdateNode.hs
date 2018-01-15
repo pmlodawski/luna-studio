@@ -8,6 +8,7 @@ import           LunaStudio.Data.Node                        (NodeTypecheckerUpd
 import qualified LunaStudio.Data.Node                        as Empire
 import           NodeEditor.Action.Basic.AddNode             (localAddExpressionNode, localAddInputNode, localAddOutputNode)
 import           NodeEditor.Action.Basic.Scene               (updateScene)
+import           NodeEditor.Action.Basic.UpdateNodeValue     (setVisualizationData)
 import           NodeEditor.Action.Basic.UpdateSearcherHints (localUpdateSearcherHintsPreservingSelection)
 import           NodeEditor.Action.State.Model               (calculatePortSelfMode)
 import qualified NodeEditor.Action.State.NodeEditor          as NodeEditor
@@ -15,6 +16,7 @@ import           NodeEditor.React.Model.Node                 (ExpressionNode, In
 import           NodeEditor.React.Model.Node.ExpressionNode  (inPortsList, isSelected, nodeType, value, _Error)
 import qualified NodeEditor.React.Model.Node.ExpressionNode  as ExpressionNode
 import qualified NodeEditor.React.Model.Node.SidebarNode     as SidebarNode
+import           NodeEditor.React.Model.NodeEditor           (VisualizationBackup (MessageBackup))
 import           NodeEditor.React.Model.Port                 (isSelf, mode, portId)
 import qualified NodeEditor.React.Model.Searcher             as Searcher
 import           NodeEditor.React.Model.Visualization        (awaitingDataMsg, noVisMsg)
@@ -97,8 +99,7 @@ localUpdateNodeTypecheck path update = do
                      & ExpressionNode.value    .~ ExpressionNode.AwaitingData
             hasVisualizers <- maybe (return False) (fmap isJust . NodeEditor.getVisualizersForType) =<< NodeEditor.getExpressionNodeType nl
             let msg = if hasVisualizers then awaitingDataMsg else noVisMsg
-            visIds <- NodeEditor.updateVisualizationsForNode nl
-            liftIO . forM_ visIds $ \visId -> sendInternalData visId msg
+            setVisualizationData nl (MessageBackup msg) True
         Empire.OutputSidebarUpdate _ inPorts -> NodeEditor.modifyOutputNode nl $
             SidebarNode.outputSidebarPorts .= convert `fmap` inPorts
         Empire.InputSidebarUpdate _ outPorts -> NodeEditor.modifyInputNode nl $
