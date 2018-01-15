@@ -3,6 +3,7 @@
 module Empire.Server.Atom where
 
 import           Control.Exception.Safe         (try, catchAny)
+import qualified Control.Monad.Catch            as MC
 import           Control.Monad.State            (StateT)
 import           Data.List                      (stripPrefix)
 import qualified Data.Map                       as Map
@@ -35,6 +36,7 @@ import qualified LunaStudio.Data.GraphLocation  as GraphLocation
 
 import           Debug
 import qualified Empire.Commands.Graph          as Graph
+import qualified Empire.Commands.Publisher      as Publisher
 import           Empire.Data.AST                (SomeASTException)
 import qualified Empire.Data.Graph              as Graph
 import qualified Empire.Data.Library            as Library
@@ -94,6 +96,15 @@ handleOpenFile req@(Request _ _ (OpenFile.Request path)) = timeIt "handleOpenFil
             Env.empireEnv .= newEmpireEnv
             replyOk req ()
 
+withClosedTempFile :: (MonadIO m, MC.MonadMask m) => FilePath -> String -> (FilePath -> m a) -> m a
+withClosedTempFile dir template action = MC.bracket (liftIO mkFile)
+                                                    (\name -> liftIO $ MC.catch (Dir.removeFile name) (\(e :: IOError) -> return ()))
+                                                    action
+   where
+       mkFile = MC.bracket (IO.openTempFile dir template)
+                           (IO.hClose . snd)
+                           (return . fst)
+
 handleSaveFile :: Request SaveFile.Request -> StateT Env BusT ()
 handleSaveFile req@(Request _ _ (SaveFile.Request inPath)) = do
     currentEmpireEnv <- use Env.empireEnv
@@ -113,8 +124,8 @@ handleSaveFile req@(Request _ _ (SaveFile.Request inPath)) = do
             path <- Path.parseAbsFile inPath
             let dir  = Path.toFilePath $ Path.parent path
                 file = Path.toFilePath $ Path.filename path
-            liftIO $ Temp.withTempFile dir (file <> ".tmp") $ \tmpFile handle -> do
-                Text.hPutStr handle source
+            liftIO $ withClosedTempFile dir (file <> ".tmp") $ \tmpFile -> do
+                Text.writeFile tmpFile source
                 let backupFile = Path.toFilePath path <> ".backup"
                 Dir.renameFile (Path.toFilePath path) backupFile
                 Dir.renameFile tmpFile (Path.toFilePath path)
@@ -124,6 +135,9 @@ handleSaveFile req@(Request _ _ (SaveFile.Request inPath)) = do
 handleCloseFile :: Request CloseFile.Request -> StateT Env BusT ()
 handleCloseFile (Request _ _ (CloseFile.Request path)) = do
     Env.empireEnv . Empire.activeFiles . at path .= Nothing
+    empireNotifEnv   <- use Env.empireNotif
+    currentEmpireEnv <- use Env.empireEnv
+    void $ liftIO $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Publisher.stopTC
 
 handleIsSaved :: Request IsSaved.Request -> StateT Env BusT ()
 handleIsSaved (Request _ _ _) = $_NOT_IMPLEMENTED

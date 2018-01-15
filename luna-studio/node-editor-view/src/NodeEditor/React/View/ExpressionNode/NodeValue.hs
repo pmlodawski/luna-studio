@@ -33,7 +33,7 @@ nodeValue = React.defineView nodeValueName $ \(ref, n, nl) -> do
             [ "key"         $= "shortValue"
             , "className"   $= Style.prefixFromList (["node__short-value", "noselect" ] <> (withJust mayVisVisible $ \isVisualization -> [ if isVisualization then "arrow-expanded" else "arrow-collapsed" ]))
             , onDoubleClick $ \e _ -> [stopPropagation e]
-            , onClick       $ \_ _ -> dispatch ref $ UI.VisualizationEvent $ Visualization.ToggleVisualizations (Vis.Node nl)
+            , onClick       $ \_ _ -> dispatch ref . UI.VisualizationEvent $ Visualization.Event (Vis.Node nl) Visualization.ToggleVisualizations
             ] $ elemString $ strValue n
 
 strValue :: ExpressionNode -> String

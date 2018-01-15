@@ -65,6 +65,7 @@ setVisualizationData nl backup@(StreamBackup values) override@False = do
     visIds <- maybe def (Map.keys . view visualizations) <$> getNodeVisualizations nl
     liftIO . forM_ visIds $ forM_ values . sendStreamDatapoint
 setVisualizationData nl backup@(MessageBackup msg) _ = do
+    print ("SET VIS DATA", backup)
     modifyNodeEditor $ visualizationsBackup . backupMap . at nl ?= backup
     visIds <- setPlaceholderVisualization nl
     liftIO . forM_ visIds $ flip sendInternalData msg
