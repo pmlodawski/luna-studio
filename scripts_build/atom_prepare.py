@@ -17,7 +17,7 @@ def prepare_holder(output, content_start, content_end, input1, input2, placehold
         modified.write(content_end)
 
 def put_ghcjs(output, content, str_to_change):
-    with open(content, 'r') as code:
+    with open(content, 'r', encoding='utf8') as code:
         code = code.read()
         for line in fileinput.input(output, inplace=True):
             print(line.replace(str_to_change, code))
@@ -68,7 +68,7 @@ def cp_helper(input_path, output_path):
 def cp_files():
     cp_helper('../luna-studio/node-editor/js', '../luna-studio/atom/lib/gen')
     paths = [
-        '../luna-studio/text-editor/js/atom-callback-text-editor.js',
+        '../luna-studio/text-editor/js/atom-callback-text-editor.coffee',
         '../luna-studio/text-editor/js/app-text-editor.coffee',
         '../luna-studio/node-editor/config.release.js',
         '../luna-studio/node-editor/config.debug.js',

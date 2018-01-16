@@ -19,6 +19,7 @@ import stack_build
 import atom_prepare
 import re, tempfile
 
+
 #########################################################
 #                     PATHS                             #
 #########################################################
@@ -33,22 +34,28 @@ dist_package_folder = ap.prep_path('../dist-package')
 gui_package_path = ap.prep_path('../dist-package/gui.zip')
 studio_folder = ap.prep_path('../luna-studio/atom')
 version_file =ap.prep_path('../dist/config/version.txt')
+logo_ico =ap.prep_path('../resources/logo.ico')
+logo_png =ap.prep_path('../resources/logo.png')
+atom_logo=ap.prep_path('../dist/third-party/atom/usr/share/atom/resources/app/resources/atom.png')
 
 paths = {
     system.systems.WINDOWS: {
         'apm': '/Atom/resources/app/apm/bin/apm.cmd',
         'oniguruma': '/Atom/resources/app/node_modules/oniguruma',
         'package_json': '/Atom/resources/app/package.json',
+        'atom_app' : '/Atom/atom.exe',
     },
     system.systems.LINUX: {
         'apm': '/atom/usr/share/atom/resources/app/apm/bin/apm',
         'oniguruma': '/atom/usr/share/atom/resources/app/node_modules/oniguruma',
         'package_json': '/atom/usr/share/atom/resources/app/package.json',
+        'atom_app' : '', #check
     },
     system.systems.DARWIN: {
         'apm': '/Atom.app/Contents/Resources/app/apm/bin/apm',
         'oniguruma': '/Atom.app/Contents/Resources/app/node_modules/oniguruma',
         'package_json': '/Atom.app/Contents/Resources/app/package.json',
+        'atom_app' : '', #check
     },
 }
 
@@ -98,6 +105,7 @@ def run_apm(command, *args):
 def copy_studio (package_path, gui_url, frontend_args):
     if gui_url:
         try:
+            print ("copy studio from url")
             r = requests.get(gui_url)
             z = zipfile.ZipFile(io.BytesIO(r.content))
             z.extractall(package_path)
@@ -223,6 +231,17 @@ def modify_atom_package_json():
     sed_inplace(json, r'\"productName\":\"Atom\"','\"productName\":\"{}\"'.format("LunaStudio" + v))
 
 
+def modify_atom_icon():
+    if system.windows():
+        atom = get_path('atom_app')
+        appdata = os.environ.get('APPDATA')
+        winresourcer = os.path.join(appdata,'npm','node_modules','winresourcer','lib','WinResourcer')
+        proc=run_process('node', winresourcer, '--operation=Update', '--exeFile='+atom, '--resourceType=Icongroup', '--resourceName=1', '--resourceFile='+logo_ico)
+        print(proc)
+    elif system.linux():
+        shutil.copyfile(logo_png, atom_logo)
+
+
 def run(gui_url, frontend_args, link=False):
     print("Installing Atom packages")
     init_apm(gui_url, frontend_args, link)
@@ -230,6 +249,7 @@ def run(gui_url, frontend_args, link=False):
         apm_luna_atom_package(pkg_name, pkg_url)
     apm_packages()
     modify_atom_package_json()
+    modify_atom_icon()
 
 
 # if __name__ == '__main__':

@@ -196,11 +196,21 @@ module.exports =
                     @highlightedElem.dispatchEvent mkEvent action
 
         setEventFilter: =>
+            prepareRestriction = (entry) ->
+                regexp = if entry.regexp? then entry.regexp else entry
+                result =
+                    regexp:   new RegExp regexp
+                    nodeName: entry.nodeName
+                    portId:   entry.portId
+                return result;
+
             @currentStep.allow ?= []
-            filters = []
-            for r in @currentStep.allow
-                filters.push new RegExp r
-            @nodeEditor.setEventFilter filters
+            allowed = @currentStep.allow.map prepareRestriction
+
+            @currentStep.block ?= []
+            blocked = @currentStep.block.map prepareRestriction
+
+            @nodeEditor.setEventFilter blocked, allowed
 
         displayStep: (retry = false) =>
             @setHighlightedElem()
@@ -288,7 +298,7 @@ module.exports =
                             @pointer[0].style.height = highlightedRect.height + 'px'
                             @pointer[0].style.top    = highlightedRect.top + 'px'
                             @pointer[0].style.left   = highlightedRect.left + 'px'
-                    else 
+                    else
                         @pointer.show()
                         @pointer[0].style.width  = highlightedRect.width + 'px'
                         @pointer[0].style.height = highlightedRect.height + 'px'
@@ -306,7 +316,7 @@ module.exports =
 
         detach: =>
             if @panel.isVisible()
-                @nodeEditor.setEventFilter []
+                @nodeEditor.setEventFilter [], []
                 @panel.hide()
 
         disable: =>
@@ -322,6 +332,8 @@ module.exports =
                         parsed = yaml.safeLoad data
                         if parsed? && not parsed.disabled
                             @start parsed, guidePath
+                            return
+                    @detach()
 
         disableGuide: =>
             if @guidePath?

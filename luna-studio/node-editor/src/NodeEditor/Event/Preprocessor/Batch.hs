@@ -22,6 +22,7 @@ handle cons = (Topic.topic (undefined :: a), cons . decode . GZip.decompress)
 
 handlers :: Map.Map String (ByteString -> Batch.Event)
 handlers = Map.fromList [ handle AddConnectionResponse
+                        , handle AddImportsResponse
                         , handle AddNodeResponse
                         , handle AddPortResponse
                         , handle AddSubgraphResponse
@@ -47,6 +48,7 @@ handlers = Map.fromList [ handle AddConnectionResponse
                         , handle RenameNodeResponse
                         , handle RenamePortResponse
                         , handle SearchNodesResponse
+                        , handle SetCodeResponse
                         , handle SetNodeExpressionResponse
                         , handle SetNodesMetaResponse
                         , handle SetPortDefaultResponse

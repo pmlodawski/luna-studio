@@ -5,12 +5,12 @@ import           Control.Concurrent.STM.TChan               (writeTChan)
 import           Control.Monad.Reader                       hiding (liftIO)
 import           Control.Monad.STM                          (atomically)
 import           Data.Text                                  (Text)
-import           Empire.Data.Graph                          (Graph, ClsGraph)
+import           Empire.Data.Graph                          (Graph, ClsGraph, defaultClsGraph)
 import           Empire.Empire
 import           Empire.Prelude
 import           LunaStudio.API.AsyncUpdate                 (AsyncUpdate (..))
 import           LunaStudio.Data.Diff                       (Diff(..))
-import           LunaStudio.Data.GraphLocation              (GraphLocation)
+import           LunaStudio.Data.GraphLocation              (GraphLocation (..))
 import           LunaStudio.Data.MonadPath                  (MonadPath)
 import           LunaStudio.Data.Node                       (NodeId, NodeTypecheckerUpdate)
 import           LunaStudio.Data.NodeValue                  (NodeValue)
@@ -48,9 +48,20 @@ sendUpdate upd = do
     chan <- asks $ view updatesChan
     liftIO $ atomically $ writeTChan chan upd
 
-requestTC :: GraphLocation -> ClsGraph -> Bool -> Bool -> Command s ()
-requestTC loc g flush runInterpreter = do
+requestTC :: GraphLocation -> ClsGraph -> Bool -> Bool -> Bool -> Command s ()
+requestTC loc g flush runInterpreter recompute = do
     chan <- view typecheckChan
     liftIO $ do
+        a <- tryTakeMVar chan
+        let recompute' = case a of
+                Just h -> if h ^. tcRecompute then True else recompute
+                _      -> recompute
+        putMVar chan $ TCRequest loc g flush runInterpreter recompute' False
+
+stopTC :: Command s ()
+stopTC = do
+    chan <- view typecheckChan
+    liftIO $ do
+        g <- defaultClsGraph
         tryTakeMVar chan
-        putMVar chan $ TCRequest loc g flush runInterpreter
+        putMVar chan $ TCRequest (GraphLocation "" def) g False False False True

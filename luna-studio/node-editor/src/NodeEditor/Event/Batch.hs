@@ -10,6 +10,7 @@ import qualified LunaStudio.API.Atom.Paste                  as AtomPaste
 import qualified LunaStudio.API.Atom.Substitute             as Substitute
 import qualified LunaStudio.API.Control.EmpireStarted       as EmpireStarted
 import qualified LunaStudio.API.Graph.AddConnection         as AddConnection
+import qualified LunaStudio.API.Graph.AddImports            as AddImports
 import qualified LunaStudio.API.Graph.AddNode               as AddNode
 import qualified LunaStudio.API.Graph.AddPort               as AddPort
 import qualified LunaStudio.API.Graph.AddSubgraph           as AddSubgraph
@@ -32,6 +33,7 @@ import qualified LunaStudio.API.Graph.RemovePort            as RemovePort
 import qualified LunaStudio.API.Graph.RenameNode            as RenameNode
 import qualified LunaStudio.API.Graph.RenamePort            as RenamePort
 import qualified LunaStudio.API.Graph.SearchNodes           as SearchNodes
+import qualified LunaStudio.API.Graph.SetCode               as SetCode
 import qualified LunaStudio.API.Graph.SetNodeExpression     as SetNodeExpression
 import qualified LunaStudio.API.Graph.SetNodesMeta          as SetNodesMeta
 import qualified LunaStudio.API.Graph.SetPortDefault        as SetPortDefault
@@ -41,6 +43,7 @@ import qualified LunaStudio.API.Graph.Undo                  as Undo
 
 data Event = UnknownEvent                             String
            | AddConnectionResponse             AddConnection.Response
+           | AddImportsResponse                   AddImports.Response
            | AddNodeResponse                         AddNode.Response
            | AddPortResponse                         AddPort.Response
            | AddSubgraphResponse                 AddSubgraph.Response
@@ -68,13 +71,14 @@ data Event = UnknownEvent                             String
            | RenameNodeResponse                   RenameNode.Response
            | RenamePortResponse                   RenamePort.Response
            | SearchNodesResponse                 SearchNodes.Response
+           | SetCodeResponse                         SetCode.Response
            | SetNodeExpressionResponse     SetNodeExpression.Response
            | SetNodesMetaResponse               SetNodesMeta.Response
            | SetPortDefaultResponse           SetPortDefault.Response
            | SubstituteResponse                   Substitute.Response
            | TypeCheckResponse                     TypeCheck.Response
            | UndoResponse                               Undo.Response
-           deriving (Eq, Show, Generic, NFData)
+           deriving (Show, Generic, NFData)
 
 instance EventName Event
 
