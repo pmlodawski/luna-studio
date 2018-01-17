@@ -25,17 +25,13 @@ temporaryMainFilePath = path.join temporaryProject.path, temporaryProject.srcDir
 
 encoding = 'utf8'
 
-tokenUser = 'luna-studio'
-token = '01665947e42b84759406bc56a72ec141575653d1'
-accessToken = '?access_token=' + token
-
 tutorialRequestOpts =
-    url: 'https://api.github.com/orgs/luna-packages/repos' + accessToken
+    url: 'https://api.github.com/orgs/luna-packages/repos'
     headers:
         'User-Agent': 'luna-studio'
 
 thumbnailRequestOpts = (name) ->
-    url: 'https://api.github.com/repos/luna-packages/' + name + '/contents/thumb.png' + accessToken
+    url: 'https://api.github.com/repos/luna-packages/' + name + '/contents/thumb.png'
     headers:
         'User-Agent': 'luna-studio'
 
@@ -156,7 +152,10 @@ module.exports =
             try
                 request.get tutorialRequestOpts, (err, response, body) =>
                     parsed = yaml.safeLoad(body)
-                    if body?
+                    unless parsed.forEach?
+                        callback
+                            error: 'Cannot download tutorial list: ' + parsed.message
+                    else if body?
                         parsed.forEach (repo) =>
                             callback
                                 name: repo.name
@@ -168,7 +167,7 @@ module.exports =
                                     callback
                                         name: repo.name
                                         description: repo.description
-                                        uri: repo.html_url
+                                        uri: repo.clone_url
                                         thumb: 'data:image/png;base64,' + parsed.content
                     else
                         callback
@@ -178,16 +177,12 @@ module.exports =
 
         open: (tutorial, progress, finalize) ->
             dstPath = tutorialsDownloadPath + '/' + tutorial.name
-            cloneAttempts = 0
             cloneOpts =
                 fetchOpts:
                     callbacks:
                         certificateCheck: => 1
                         credentials: (url, userName) =>
-                            if cloneAttempts > 0
-                                return Git.Cred.sshKeyFromAgent(userName)
-                            cloneAttempts++
-                            return Git.Cred.userpassPlaintextNew(tokenUser, token)
+                            return Git.Cred.sshKeyFromAgent(userName)
                         transferProgress: (stats) =>
                             p = (stats.receivedObjects() + stats.indexedObjects()) / (stats.totalObjects() * 2)
                             try
@@ -206,5 +201,4 @@ module.exports =
                         cloneError err.toString()
                     else
                         clone().catch (error) =>
-                            clone().catch (error) =>
-                                cloneError error
+                            cloneError error
