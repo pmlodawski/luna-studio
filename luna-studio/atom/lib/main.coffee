@@ -49,7 +49,7 @@ module.exports = LunaStudio =
                 when 'ProjectSet'
                     projects.openMainIfExists()
                 when 'FileOpened'
-                    codeEditor.pushInternalEvent(tag: "GetBuffer", _path: arg1)
+                    codeEditor.pushInternalEvent(tag: "GetBuffer", _path: arg1, _editorId: parseInt(arg2))
                 when 'ProjectMove'
                     moveUri = (oldUri) -> if oldUri? and oldUri.startsWith arg2
                         return arg1 + oldUri.slice arg2.length
@@ -112,7 +112,9 @@ module.exports = LunaStudio =
         if uri is LUNA_STUDIO_URI
             new LunaNodeEditorTab null, nodeEditor, codeEditor
         else if path.extname(uri) is '.luna'
-            new LunaCodeEditorTab uri, codeEditor
+            @newEditorId ?= 0
+            @newEditorId++
+            new LunaCodeEditorTab uri, @newEditorId, codeEditor
 
     deactivate: ->
         stats.finalize()

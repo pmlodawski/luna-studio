@@ -11,6 +11,7 @@ import           Prologue
 
 
 data Request = Request { _filePath :: FilePath
+                       , _editorId :: Int
                        } deriving (Eq, Generic, Show)
 
 data Result  = Result { _code             :: Text

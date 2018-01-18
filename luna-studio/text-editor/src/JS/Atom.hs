@@ -28,8 +28,8 @@ import qualified TextEditor.Event.Text         as TextEvent
 foreign import javascript safe "atomCallbackTextEditor.insertCode($1, $2)"
     insertCode' :: JSString -> JSVal -> IO ()
 
-foreign import javascript safe "atomCallbackTextEditor.setBuffer($1, $2)"
-    setBuffer :: JSString -> JSString -> IO ()
+foreign import javascript safe "atomCallbackTextEditor.setBuffer($1, $2, $3)"
+    setBuffer :: JSString -> Int -> JSString -> IO ()
 
 foreign import javascript safe "atomCallbackTextEditor.setClipboard($1, $2)"
     setClipboard :: JSString -> JSString -> IO ()

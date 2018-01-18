@@ -64,15 +64,16 @@ subscribe = null
 module.exports =
     class LunaCodeEditorTab extends TextEditor
 
-        constructor: (@uri, @codeEditor) ->
+        constructor: (@uri, @editorId, @codeEditor) ->
             super
             @setModified(false)
             @setUri(@uri)
             @diffToOmit = new Set()
             @setPlaceholderText 'Please wait'
-            @codeEditor.pushInternalEvent(tag: 'OpenFile', _path: @uri)
+            @codeEditor.pushInternalEvent(tag: 'OpenFile', _path: @uri, _editorId: @editorId)
 
-            @codeEditor.onSetBuffer @setBuffer
+            @codeEditor.onSetBuffer (uri, editorId, text) =>
+                @setBuffer uri, editorId, text
             @codeEditor.onSetClipboard @setClipboard
             @codeEditor.onInsertCode @insertCode
             @handleEvents()
@@ -107,8 +108,8 @@ module.exports =
         isLunaEditor: -> true
 
         setUri: (uri) =>
-            @getBuffer().setPath(uri)
-            @getBuffer().subscribeToFileOverride(@codeEditor)
+            @getBuffer().setPath uri
+            @getBuffer().subscribeToFileOverride @codeEditor
             @uri = uri
         deactivate: -> @subscribe.dispose()
 
@@ -178,8 +179,8 @@ module.exports =
             if @uri == uri
                 atom.clipboard.write(text)
 
-        setBuffer: (uri, text) =>
-            if @uri == uri
+        setBuffer: (uri, editorId, text) =>
+            if @uri == uri and @editorId == editorId
                 if @getPlaceholderText() != ''
                     @setPlaceholderText ''
                 for child in @element.childNodes
@@ -191,7 +192,6 @@ module.exports =
                     selections = @getSelectedBufferRanges()
                     @getBuffer().setText(text)
                     @setSelectedBufferRanges(selections)
-                    console.log "setBuffer"
 
         setModified: (modified) =>
             @getBuffer().setModified(modified)

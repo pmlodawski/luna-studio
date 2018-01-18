@@ -85,7 +85,7 @@ handleMoveProject req@(Request _ _ (MoveProject.Request oldPath newPath)) = do
             replyOk req ()
 
 handleOpenFile :: Request OpenFile.Request -> StateT Env BusT ()
-handleOpenFile req@(Request _ _ (OpenFile.Request path)) = timeIt "handleOpenFile" $ do
+handleOpenFile req@(Request _ _ (OpenFile.Request path _)) = timeIt "handleOpenFile" $ do
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
     result <- liftIO $ try $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.openFile path

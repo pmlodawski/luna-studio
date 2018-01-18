@@ -21,7 +21,7 @@ import           TextEditor.State.Global           (State)
 
 handle :: Event -> Maybe (Command State ())
 handle (Text (TextEvent location diffs)) = Just $ ActBatch.substitute location diffs
-handle (Atom (GetBuffer filepath)) = Just $ ActBatch.getBuffer filepath
+handle (Atom (GetBuffer filepath editorId)) = Just $ ActBatch.getBuffer filepath editorId
 handle (Atom (FileChanged filepath)) = Just $ ActBatch.fileChanged filepath
 handle (Atom (Copy filepath selections)) = Just $ ActBatch.copy filepath $ convert selections
 handle (Atom (Paste selections content)) = Just $
@@ -31,9 +31,10 @@ handle (Atom (Paste selections content)) = Just $
 handle (Batch (SubstituteResponse response)) = Just $ handleResponse response doNothing doNothing2
 handle (Batch (BufferGetResponse  response)) = Just $ handleResponse response success doNothing2 where
     success result = do
-        let uri  = response ^. Response.request . GetBuffer.filePath
-            code = result ^. GetBuffer.code
-        liftIO $ JS.setBuffer (convert uri) (convert code)
+        let uri      = response ^. Response.request . GetBuffer.filePath
+            editorId = response ^. Response.request . GetBuffer.editorId
+            code     = result ^. GetBuffer.code
+        liftIO $ JS.setBuffer (convert uri) editorId (convert code)
 handle (Batch (CopyResponse  response)) = Just $ handleResponse response success doNothing2 where
     success result = do
         let uri  = response ^. Response.request . Copy.filePath

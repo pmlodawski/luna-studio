@@ -460,8 +460,8 @@ handleTypecheck req@(Request _ _ request) = do
 
 instance G.GraphRequest GetBuffer.Request where
     location = lens getter setter where
-        getter (GetBuffer.Request file) = GraphLocation.GraphLocation file (Breadcrumb [])
-        setter (GetBuffer.Request _   ) (GraphLocation.GraphLocation file _) = GetBuffer.Request file
+        getter (GetBuffer.Request file _) = GraphLocation.GraphLocation file (Breadcrumb [])
+        setter (GetBuffer.Request _    i) (GraphLocation.GraphLocation file _) = GetBuffer.Request file i
 
 handleSubstitute :: Request Substitute.Request -> StateT Env BusT ()
 handleSubstitute = modifyGraph defInverse action replyResult where
@@ -475,7 +475,7 @@ handleSubstitute = modifyGraph defInverse action replyResult where
 
 handleGetBuffer :: Request GetBuffer.Request -> StateT Env BusT ()
 handleGetBuffer = modifyGraph defInverse action replyResult where
-    action (GetBuffer.Request file) = do
+    action (GetBuffer.Request file _) = do
         code <- Graph.getBuffer file
         return $ GetBuffer.Result code
 

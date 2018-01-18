@@ -21,7 +21,7 @@ import           TextEditor.State.Global           (State)
 handle :: Event -> Maybe (Command State ())
 handle (Atom (CloseFile  path)) = Just $ BatchCmd.closeFile  path
 handle (Atom (IsSaved    path)) = Just $ BatchCmd.isSaved    path
-handle (Atom (OpenFile   path)) = Just $ BatchCmd.openFile   path
+handle (Atom (OpenFile path editorId)) = Just $ BatchCmd.openFile path editorId
 handle (Atom (SaveFile   path)) = Just $ BatchCmd.saveFile   path
 handle (Atom (SetProject path)) = Just $ BatchCmd.setProject path
 handle (Atom (MoveProject oldPath newPath)) = Just $ BatchCmd.moveProject oldPath newPath
@@ -29,8 +29,8 @@ handle (Atom (MoveProject oldPath newPath)) = Just $ BatchCmd.moveProject oldPat
 handle (Batch (Batch.FileOpened  response))   = Just $ handleResponse response success doNothing2 where
     success _ = do
         let uri  = response ^. Response.request . OpenFile.filePath
-            status = "ok"
-        liftIO $ pushStatus (convert "FileOpened") (convert uri) (convert status)
+            editorId = response ^. Response.request . OpenFile.editorId
+        liftIO $ pushStatus (convert "FileOpened") (convert uri) (jsShow editorId)
 
 handle (Batch (Batch.ProjectSet  response))   = Just $ handleResponse response success doNothing2 where
     success _ = liftIO $ pushStatus (convert "ProjectSet") def def
@@ -38,7 +38,7 @@ handle (Batch (Batch.ProjectSet  response))   = Just $ handleResponse response s
 handle (Batch (Batch.ProjectMove response))   = Just $ handleResponse response success doNothing2 where
     success _ = do
         let newUri = response ^. Response.request . MoveProject.newPath
-        let oldUri = response ^. Response.request . MoveProject.oldPath
+            oldUri = response ^. Response.request . MoveProject.oldPath
         liftIO $ pushStatus (convert "ProjectMove") (convert newUri) (convert oldUri)
 handle (Batch (Batch.FileClosed  response))   = Just $ handleResponse response doNothing doNothing2
 handle (Batch (Batch.FileSaved   response))   = Just $ handleResponse response doNothing doNothing2

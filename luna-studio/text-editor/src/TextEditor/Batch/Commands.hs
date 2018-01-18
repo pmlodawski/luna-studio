@@ -28,14 +28,14 @@ closeFile path uuid guiID = sendRequest $ Message uuid guiID $ CloseFile.Request
 fileChanged :: FilePath -> UUID -> Maybe UUID -> IO ()
 fileChanged path uuid guiID = sendRequest $ Message uuid guiID $ FileChanged.Request path
 
-getBuffer :: FilePath -> UUID -> Maybe UUID -> IO ()
-getBuffer path uuid guiID = sendRequest $ Message uuid guiID $ GetBuffer.Request path
+getBuffer :: FilePath -> Int -> UUID -> Maybe UUID -> IO ()
+getBuffer path editorId uuid guiID = sendRequest $ Message uuid guiID $ GetBuffer.Request path editorId
 
 isSaved :: FilePath -> UUID -> Maybe UUID -> IO ()
 isSaved path uuid guiID = sendRequest $ Message uuid guiID $ IsSaved.Request path
 
-openFile :: FilePath -> UUID -> Maybe UUID -> IO ()
-openFile path uuid guiID = sendRequest $ Message uuid guiID $ OpenFile.Request path
+openFile :: FilePath -> Int -> UUID -> Maybe UUID -> IO ()
+openFile path editorId uuid guiID = sendRequest $ Message uuid guiID $ OpenFile.Request path editorId
 
 saveFile :: FilePath -> UUID -> Maybe UUID -> IO ()
 saveFile path uuid guiID = sendRequest $ Message uuid guiID $ SaveFile.Request path

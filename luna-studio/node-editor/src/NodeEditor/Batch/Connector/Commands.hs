@@ -61,9 +61,6 @@ createLibrary name path _workspace uuid guiID = sendRequest $ Message uuid guiID
 listLibraries :: ProjectId -> UUID -> Maybe UUID -> IO ()
 listLibraries pid uuid guiID = sendRequest $ Message uuid guiID $ ListLibraries.Request pid
 
-openFile :: FilePath -> UUID -> Maybe UUID -> IO ()
-openFile path uuid guiID = sendRequest $ Message uuid guiID $ OpenFile.Request path
-
 dumpGraphViz :: Workspace -> UUID -> Maybe UUID -> IO ()
 dumpGraphViz workspace uuid guiID = sendRequest $ Message uuid guiID $ withLibrary workspace DumpGraphViz.Request
 

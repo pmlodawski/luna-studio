@@ -20,9 +20,9 @@ module.exports =
             listener uri, diffs
 
     onSetBuffer: (listener) -> listeners.setBufferListener.push listener
-    setBuffer: (data1, data2) ->
+    setBuffer: (uri, editorId, code) ->
         for listener in listeners.setBufferListener
-            listener data1, data2
+            listener uri, editorId, code
 
     onSetClipboard: (listener) -> listeners.setClipboardListener.push listener
     setClipboard: (data1, data2) ->

@@ -20,14 +20,14 @@ withUUID act = do
 closeFile :: FilePath -> Command State ()
 closeFile = withUUID . BatchCmd.closeFile
 
-getBuffer :: FilePath -> Command State ()
-getBuffer = withUUID . BatchCmd.getBuffer
+getBuffer :: FilePath -> Int -> Command State ()
+getBuffer = withUUID .: BatchCmd.getBuffer
 
 fileChanged :: FilePath -> Command State ()
 fileChanged = withUUID . BatchCmd.fileChanged
 
-openFile :: FilePath -> Command State ()
-openFile = withUUID . BatchCmd.openFile
+openFile :: FilePath -> Int -> Command State ()
+openFile = withUUID .: BatchCmd.openFile
 
 saveFile :: FilePath -> Command State ()
 saveFile = withUUID . BatchCmd.saveFile

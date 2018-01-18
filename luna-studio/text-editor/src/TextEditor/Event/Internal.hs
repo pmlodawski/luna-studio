@@ -9,13 +9,13 @@ import           Data.Aeson        (FromJSON, ToJSON)
 data InternalEvent = Copy        { _path :: FilePath , _selections :: [(Int, Int)]}
                    | CloseFile   { _path :: FilePath }
                    | FileChanged { _path :: FilePath }
-                   | GetBuffer   { _path :: FilePath }
+                   | GetBuffer   { _path :: FilePath, _editorId :: Int }
                    | InterpreterPause
                    | InterpreterReload
                    | InterpreterStart
                    | IsSaved     { _path :: FilePath }
                    | MoveProject { _oldPath :: FilePath, _newPath :: FilePath }
-                   | OpenFile    { _path :: FilePath }
+                   | OpenFile    { _path :: FilePath, _editorId :: Int }
                    | Paste       { _selections :: [(Int, Int)], _content :: [Text] }
                    | SaveFile    { _path :: FilePath }
                    | SetProject  { _path :: FilePath }
