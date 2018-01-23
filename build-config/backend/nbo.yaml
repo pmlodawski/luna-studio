@@ -11,7 +11,7 @@ packages:
 - shelly-1.6.8.4
 - serialport-0.4.7
 - git: git@github.com:luna/luna.git
-  commit: 7c90463025246b0b16f4e3081de57040be9a5d5e
+  commit: 505f64644baf3319642aad5ea5866596bc73d15f
   subdirs:
   - core
   - passes
@@ -46,7 +46,7 @@ packages:
 - git: git@github.com:luna/functor-utils.git
   commit: 1c6a4fd165e4b15cad114b0a554e0974fd119223
 - git: git@github.com:luna/fuzzy-text.git
-  commit: 0b492788263c799b142f3f5e8c27f2ec800ea80c
+  commit: 758f81a9914f46efa9137562b0a5ca3df9ce0661
 - git: git@github.com:luna/impossible.git
   commit: a1606cccc12cb521acbc598e52c481b9054b42a7
 - git: git@github.com:luna/layouting
