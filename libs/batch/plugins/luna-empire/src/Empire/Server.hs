@@ -55,7 +55,6 @@ import           System.Environment                   (getEnv)
 import qualified System.Log.MLogger                   as Logger
 import           System.Mem                           (performGC)
 
-import           System.Remote.Monitoring
 import           ZMQ.Bus.Bus                          (Bus)
 import qualified ZMQ.Bus.Bus                          as Bus
 import qualified ZMQ.Bus.Data.Flag                    as Flag
@@ -82,7 +81,6 @@ tcCapability      = 1
 run :: BusEndPoints -> [Topic] -> Bool -> FilePath -> IO ()
 run endPoints topics formatted projectRoot = do
     sendStarted endPoints
-    forkServer "localhost" 1234
     logger Logger.info $ "Subscribing to topics: " <> show topics
     logger Logger.info $ (Utils.display formatted) endPoints
     scope            <- newEmptyMVar

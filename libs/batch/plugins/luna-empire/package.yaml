@@ -10,7 +10,6 @@ dependencies:
   - containers
   - directory
   - either
-  - ekg
   - errors
   - exceptions
   - filemanip
