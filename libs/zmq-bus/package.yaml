@@ -7,7 +7,6 @@ default-extensions:
     
 ghc-options:
     - -Wall
-    - -O2
 
 dependencies:
     - base
@@ -36,11 +35,3 @@ library:
   - template-haskell
   - zeromq4-haskell >=0.6
   - zmq-bus-config
-
-executables:
-  bus-test:
-    main: Main.hs
-    source-dirs: test
-    dependencies:
-    - zeromq4-haskell
-    - zmq-bus
