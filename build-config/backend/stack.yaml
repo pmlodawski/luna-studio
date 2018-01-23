@@ -8,7 +8,6 @@ local-bin-path:
 
 packages:
 - ../../libs/batch/plugins/luna-empire
-- ../../libs/batch/plugins/request-monitor
 - ../../libs/luna-empire
 - ../../libs/luna-studio-common
 - ../../libs/m-logger
@@ -18,7 +17,5 @@ packages:
 - ../../libs/zmq-bus-config
 - ../../libs/zmq-rpc
 - ../../tools/batch/plugins/broker
-- ../../tools/batch/plugins/bus-logger
 - ../../tools/batch/plugins/luna-empire
-- ../../tools/batch/plugins/request-monitor
 - ../../tools/batch/plugins/ws-connector
