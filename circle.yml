@@ -41,5 +41,7 @@ compile:
 
 test:
     override:
-        - stack build --stack-yaml build-config/backend/stack.yaml --fast --test -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS:
+        - stack build luna-empire:spec --stack-yaml build-config/backend/stack.yaml --fast --test -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS:
+                timeout: 1800
+        - stack build undo-redo:spec --stack-yaml build-config/backend/stack.yaml --fast --test -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS:
                 timeout: 1800
