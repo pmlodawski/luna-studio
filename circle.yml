@@ -16,6 +16,10 @@ dependencies:
                 timeout: 1800
         - stack build --stack-yaml=luna-studio/stack.yaml --only-dependencies --install-ghc --fast -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS
         - stack build --stack-yaml=runner/stack.yaml --only-dependencies --install-ghc --fast -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS
+        - stack build --stack-yaml build-config/backend/stack.yaml --fast --copy-bins --no-run-tests --no-run-benchmarks -j1 --ghc-options=-j2 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS:
+                timeout: 1800
+        - stack build --stack-yaml luna-studio/stack.yaml --fast -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS
+        - stack build --stack-yaml runner/stack.yaml --copy-bins --fast -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS
 
     cache_directories:
         - "~/.stack"
@@ -23,13 +27,6 @@ dependencies:
         - "build-config/backend/.stack-work"
         - "luna-studio/.stack-work"
         - "runner/.stack-work"
-
-compile:
-    override:
-        - stack build --stack-yaml build-config/backend/stack.yaml --fast --copy-bins --no-run-tests --no-run-benchmarks -j1 --ghc-options=-j2 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS:
-                timeout: 1800
-        - stack build --stack-yaml luna-studio/stack.yaml --fast -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS
-        - stack build --stack-yaml runner/stack.yaml --copy-bins --fast -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS
 
 test:
     override:
