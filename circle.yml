@@ -9,6 +9,7 @@ dependencies:
         - sudo apt-get update && sudo apt-get install openssh-client libzmq3-dev rpm2cpio
         - curl -L https://github.com/commercialhaskell/stack/releases/download/v1.6.3/stack-1.6.3-linux-x86_64-static.tar.gz | tar zx -C /tmp
         - sudo mv /tmp/stack-1.6.3-linux-x86_64-static/stack /usr/bin
+        - stack --version
         - curl -o /tmp/luna-manager http://packages.luna-lang.org/linux/luna-manager
         - sudo mv /tmp/luna-manager /usr/bin
         - chmod +x /usr/bin/luna-manager
