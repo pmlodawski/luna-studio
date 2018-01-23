@@ -14,15 +14,15 @@ packages:
     appType: BatchApp
   atom:
     versions:
-      1.18.0:
+      1.23.3:
         windows.x64:
-          path: https://s3-us-west-2.amazonaws.com/packages-luna/windows/atom/atom-windows.tar.gz
+          path: https://s3-us-west-2.amazonaws.com/packages-luna/windows/atom/1.23.3/atom-windows.tar.gz
           deps: []
         darwin.x64:
-          path: https://github.com/atom/atom/releases/download/v1.18.0/atom-mac.zip
+          path: https://github.com/atom/atom/releases/download/v1.23.3/atom-mac.zip
           deps: []
         linux.x64:
-          path: https://s3-us-west-2.amazonaws.com/packages-luna/linux/atom/1.18.0/atom-linux.tar.gz
+          path: https://s3-us-west-2.amazonaws.com/packages-luna/linux/atom/1.23.3/atom-linux.tar.gz
           deps: []
     synopsis: studio synopsis
     appType: BatchApp
@@ -66,21 +66,21 @@ packages:
           path: ./
           deps:
           - zmq-1.0.0
-          - atom-1.18.0
+          - atom-1.23.3
           - winSW-1.0.0
         darwin.x64:
           path: ./
           deps:
           - zmq-1.0.0
           - supervisord-4.0.0
-          - atom-1.18.0
+          - atom-1.23.3
           - kill-1.0.0
         linux.x64:
           path: ./
           deps:
           - zmq-1.0.0
           - supervisord-4.0.0
-          - atom-1.18.0
+          - atom-1.23.3
           - kill-1.0.0
     synopsis: studio synopsis
     appType: GuiApp
