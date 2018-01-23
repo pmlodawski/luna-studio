@@ -6,17 +6,9 @@ machine:
 
 dependencies:
     pre:
-        - sudo apt-get update && sudo apt-get install openssh-client libzmq3-dev rpm2cpio
+        - sudo apt-get update && sudo apt-get install libzmq3-dev
         - curl -L https://github.com/commercialhaskell/stack/releases/download/v1.6.3/stack-1.6.3-linux-x86_64-static.tar.gz | tar zx -C /tmp
         - sudo mv /tmp/stack-1.6.3-linux-x86_64-static/stack /usr/local/bin
-        - which stack
-        - stack --version
-        - curl -o /tmp/luna-manager http://packages.luna-lang.org/linux/luna-manager
-        - sudo mv /tmp/luna-manager /usr/bin
-        - chmod +x /usr/bin/luna-manager
-        - curl -o /tmp/luna-package.yaml http://packages.luna-lang.org/linux/studio/packageConfig.yaml
-        - sudo mv /tmp/luna-package.yaml /home/ubuntu/luna-package.yaml
-        - pip install requests
     override:
         - stack setup --stack-yaml=build-config/backend/stack.yaml
         - stack setup --stack-yaml=luna-studio/stack.yaml --ghcjs-boot-options --no-prof
@@ -41,7 +33,7 @@ compile:
 
 test:
     override:
-        - stack build luna-empire:spec --stack-yaml build-config/backend/stack.yaml --fast --test -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS:
+        - stack build luna-empire:spec --stack-yaml build-config/backend/stack.yaml --fast --test -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS":
                 timeout: 1800
-        - stack build undo-redo:spec --stack-yaml build-config/backend/stack.yaml --fast --test -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS:
+        - stack build undo-redo:spec --stack-yaml build-config/backend/stack.yaml --fast --test -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS":
                 timeout: 1800
