@@ -37,6 +37,6 @@ compile:
         - stack build --stack-yaml luna-studio/stack.yaml --fast -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS
         - stack build --stack-yaml runner/stack.yaml --copy-bins --fast -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS
 
-test:
-    override:
-        - stack build --stack-yaml build-config/backend/stack.yaml --fast --test -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS
+#test:
+#    override:
+#        - stack build --stack-yaml build-config/backend/stack.yaml --fast --test -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS
