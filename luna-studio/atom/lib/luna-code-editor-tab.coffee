@@ -9,55 +9,48 @@ projects = require './projects'
 TextBuffer::setModified = (@modified) ->
 
 TextBuffer::isModified = ->
-    if @modified?
-        return @modified
-    if @file # This is implementation for version 1.18
-        return false unless @loaded
-
-        if @file.existsSync()
-            return @getText() isnt @cachedDiskContents
-    not @isEmpty()
+    if @modified? then return @modified
+    # This is implementation for version 1.23.3
+    if @file?
+        not @file.existsSync() or @buffer.isModified()
+    else
+        @buffer.getLength() > 0
 
 TextBuffer::isInConflict = ->
-    if @modified?
-        return false
+    if @modified? then return false
+    # This is implementation for version 1.23.3
     @isModified() and @fileHasChangedSinceLastLoad
 
 TextBuffer::subscribeToFileOverride = (codeEditor) ->
     @fileSubscriptions?.dispose()
     @fileSubscriptions = new CompositeDisposable
 
-    @fileSubscriptions.add @file.onDidChange =>
-        @setModified(false)
-        # @conflict = true if @isModified()
-        codeEditor.pushInternalEvent(tag: "FileChanged", _path: @getPath())
-      #   previousContents = @cachedDiskContents
-      #
-      #   # Synchrounously update the disk contents because the {File} has already cached them. If the
-      #   # contents updated asynchrounously multiple `conlict` events could trigger for the same disk
-      #   # contents.
-      #   @updateCachedDiskContentsSync()
-      #   return if previousContents == @cachedDiskContents
-      #
-      #   if @conflict
-      #     @emitter.emit 'did-conflict'
-      #   else
-      #     @reload()
+    if @file.onDidChange?
+        @fileSubscriptions.add @file.onDidChange debounce(=>
+            @setModified(false)
+            codeEditor.pushInternalEvent(tag: "FileChanged", _path: @getPath())
+        , @fileChangeDelay)
 
-    @fileSubscriptions.add @file.onDidDelete =>
-        modified = @getText() != @cachedDiskContents
-        @wasModifiedBeforeRemove = modified
-        @emitter.emit 'did-delete'
-        if modified
-            @updateCachedDiskContents()
-        else
-            @destroy()
+    if @file.onDidDelete?
+        @fileSubscriptions.add @file.onDidDelete =>
+            modified = @buffer.isModified()
+            @emitter.emit 'did-delete'
+            if not modified and @shouldDestroyOnFileDelete()
+                @destroy()
+            else
+                @emitModifiedStatusChanged(true)
 
-    @fileSubscriptions.add @file.onDidRename =>
-        @emitter.emit 'did-change-path', @getPath()
+    if @file.onDidRename?
+        @fileSubscriptions.add @file.onDidRename =>
+            @emitter.emit 'did-change-path', @getPath()
 
-    @fileSubscriptions.add @file.onWillThrowWatchError (errorObject) =>
-        @emitter.emit 'will-throw-watch-error', errorObject
+    if @file.onWillThrowWatchError?
+        @fileSubscriptions.add @file.onWillThrowWatchError (error) =>
+            @emitter.emit 'will-throw-watch-error', error
+
+    @fileSubscriptions?.dispose()
+    @fileSubscriptions = new CompositeDisposable
+
 
 subscribe = null
 
@@ -65,7 +58,7 @@ module.exports =
     class LunaCodeEditorTab extends TextEditor
 
         constructor: (@uri, @codeEditor) ->
-            super
+            super()
             @initialized = false
             @setModified false
             @setUri @uri

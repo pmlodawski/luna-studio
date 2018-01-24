@@ -248,8 +248,8 @@ def run(gui_url, frontend_args, link=False):
     for pkg_name, pkg_url in atom_packages.items():
         apm_luna_atom_package(pkg_name, pkg_url)
     apm_packages()
-    modify_atom_package_json()
-    modify_atom_icon()
+    # modify_atom_package_json() #TODO @sylwiab
+    # modify_atom_icon()         #TODO @sylwiab
 
 
 # if __name__ == '__main__':
