@@ -1,7 +1,7 @@
 resolver: nbo.yaml
 ghc-options:
   $locals: -threaded -O0
-  $everything: -fconstraint-solver-iterations=100 -O0
+  $everything: -fconstraint-solver-iterations=100 -O
   matrix: -O0
 local-bin-path:
   ../../dist/bin/private
