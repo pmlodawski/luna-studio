@@ -12,7 +12,7 @@ dependencies:
     override:
         - stack setup --stack-yaml=build-config/backend/stack.yaml
         - stack setup --stack-yaml=luna-studio/stack.yaml --ghcjs-boot-options --no-prof
-        - stack build --stack-yaml=build-config/backend/stack.yaml --only-dependencies --install-ghc --test --fast -j1 --ghc-options=-j2 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS:
+        - stack build --stack-yaml=build-config/backend/stack.yaml --only-dependencies --test -j1 --ghc-options=-j2 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS:
                 timeout: 1800
         - stack build --stack-yaml=luna-studio/stack.yaml --only-dependencies --install-ghc --fast -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS
         - stack build --stack-yaml=runner/stack.yaml --only-dependencies --install-ghc --fast -j1 --ghc-options=-j1 --ghc-options="+RTS -M3G -RTS" +RTS -N1 -RTS
