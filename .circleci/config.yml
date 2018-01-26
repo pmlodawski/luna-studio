@@ -1,7 +1,29 @@
 version: 2
 jobs:
-  build:
+  systemdeps:
     machine: true
     steps:
-      - checkout
-      - run: echo "A first hello"
+      - sudo apt-get update && sudo apt-get install libzmq3-dev
+  stack:
+    machine: true
+    steps:
+      - curl -L https://github.com/commercialhaskell/stack/releases/download/v1.6.3/stack-1.6.3-linux-x86_64-static.tar.gz | tar zx -C /tmp
+      - sudo mv /tmp/stack-1.6.3-linux-x86_64-static/stack /usr/local/bin
+  ghc:
+    machine: true
+    steps:
+      - stack setup --stack-yaml=build-config/backend/stack.yaml
+  ghcjs:
+    machine: true
+    steps:
+      - stack setup --stack-yaml=luna-studio/stack.yaml --ghcjs-boot-options --no-prof
+workflows:
+  jobs:
+    - systemdeps
+    - stack
+    - ghc:
+        requires:
+          - stack
+    - ghcjs:
+        requires:
+          - stack
