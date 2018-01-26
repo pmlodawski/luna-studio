@@ -19,12 +19,13 @@ jobs:
       - stack setup --stack-yaml=luna-studio/stack.yaml --ghcjs-boot-options --no-prof
 workflows:
   version: 2
-  jobs:
-    - systemdeps
-    - stack
-    - ghc:
-        requires:
-          - stack
-    - ghcjs:
-        requires:
-          - stack
+  percommit:
+    jobs:
+      - systemdeps
+      - stack
+      - ghc:
+          requires:
+            - stack
+      - ghcjs:
+          requires:
+            - stack
