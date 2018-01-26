@@ -13,9 +13,8 @@ jobs:
     machine: true
     steps:
       - run: curl -L https://github.com/commercialhaskell/stack/releases/download/v1.6.3/stack-1.6.3-linux-x86_64-static.tar.gz | tar zx -C /tmp
-      - run: sudo mv /tmp/stack-1.6.3-linux-x86_64-static/stack /usr/local/bin
       - persist_to_workspace:
-          root: /usr/local/bin
+          root: /tmp/stack-1.6.3-linux-x86_64-static
           paths:
             - stack
   ghc:
@@ -23,16 +22,16 @@ jobs:
     machine: true
     steps:
       - attach_workspace:
-          at: /usr/local/bin
+          at: .
 
-      - run: stack setup --stack-yaml=build-config/backend/stack.yaml
+      - run: ./stack setup --stack-yaml=build-config/backend/stack.yaml
   ghcjs:
     <<: *defaults
     machine: true
     steps:
       - attach_workspace:
-          at: /usr/local/bin
-      - run: stack setup --stack-yaml=luna-studio/stack.yaml --ghcjs-boot-options --no-prof
+          at: .
+      - run: ./stack setup --stack-yaml=luna-studio/stack.yaml --ghcjs-boot-options --no-prof
 workflows:
   version: 2
   percommit:
