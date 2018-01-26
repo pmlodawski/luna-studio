@@ -17,7 +17,7 @@ jobs:
           root: /tmp/stack-1.6.3-linux-x86_64-static
           paths:
             - stack
-  ghc:
+  backend:
     <<: *defaults
     machine: true
     steps:
@@ -26,23 +26,25 @@ jobs:
 
       - checkout
       - run: /tmp/stack/stack setup --stack-yaml=build-config/backend/stack.yaml
-  ghcjs:
+      - run: /tmp/stack/stack build --stack-yaml=build-config/backend/stack.yaml --fast
+  frontend:
     <<: *defaults
     machine: true
     steps:
       - attach_workspace:
-          at: .
+          at: /tmp/stack
       - checkout
-      - run: ./stack setup --stack-yaml=luna-studio/stack.yaml --ghcjs-boot-options --no-prof
+      - run: /tmp/stack/stack setup --stack-yaml=luna-studio/stack.yaml --ghcjs-boot-options --no-prof
+      - run: /tmp/stack/stack build --stack-yaml=luna-studio/stack.yaml --fast
 workflows:
   version: 2
   percommit:
     jobs:
       - systemdeps
       - stack
-      - ghc:
+      - backend:
           requires:
             - stack
-      - ghcjs:
+      - frontend:
           requires:
             - stack
