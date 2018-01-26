@@ -1,50 +1,22 @@
-defaults: &defaults
-  working_directory: /tmp/ws
-  machine: true
-
 version: 2
 jobs:
-  systemdeps:
-    machine: true
-    steps:
-      - run: sudo apt-get update && sudo apt-get install libzmq3-dev
-  stack:
-    <<: *defaults
-    machine: true
-    steps:
-      - run: curl -L https://github.com/commercialhaskell/stack/releases/download/v1.6.3/stack-1.6.3-linux-x86_64-static.tar.gz | tar zx -C /tmp
-      - persist_to_workspace:
-          root: /tmp/stack-1.6.3-linux-x86_64-static
-          paths:
-            - stack
   backend:
-    <<: *defaults
-    machine: true
+    docker:
+      - image: fpco/stack-build:lts-9
     steps:
-      - attach_workspace:
-          at: /tmp/stack
-
       - checkout
-      - run: /tmp/stack/stack setup --stack-yaml=build-config/backend/stack.yaml
-      - run: /tmp/stack/stack build --stack-yaml=build-config/backend/stack.yaml --fast
+      - run: stack setup --stack-yaml=build-config/backend/stack.yaml
+      - run: stack build --stack-yaml=build-config/backend/stack.yaml --fast
   frontend:
-    <<: *defaults
-    machine: true
+    docker:
+      - image: fpco/stack-build:lts-9
     steps:
-      - attach_workspace:
-          at: /tmp/stack
       - checkout
-      - run: /tmp/stack/stack setup --stack-yaml=luna-studio/stack.yaml --ghcjs-boot-options --no-prof
-      - run: /tmp/stack/stack build --stack-yaml=luna-studio/stack.yaml --fast
+      - run: stack setup --stack-yaml=luna-studio/stack.yaml --ghcjs-boot-options --no-prof
+      - run: stack build --stack-yaml=luna-studio/stack.yaml --fast
 workflows:
   version: 2
   percommit:
     jobs:
-      - systemdeps
-      - stack
-      - backend:
-          requires:
-            - stack
-      - frontend:
-          requires:
-            - stack
+      - backend
+      - frontend
