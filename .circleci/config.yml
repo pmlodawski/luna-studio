@@ -22,15 +22,17 @@ jobs:
     machine: true
     steps:
       - attach_workspace:
-          at: .
+          at: /tmp/stack
 
-      - run: ./stack setup --stack-yaml=build-config/backend/stack.yaml
+      - checkout
+      - run: /tmp/stack/stack setup --stack-yaml=build-config/backend/stack.yaml
   ghcjs:
     <<: *defaults
     machine: true
     steps:
       - attach_workspace:
           at: .
+      - checkout
       - run: ./stack setup --stack-yaml=luna-studio/stack.yaml --ghcjs-boot-options --no-prof
 workflows:
   version: 2
