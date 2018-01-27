@@ -12,11 +12,16 @@ jobs:
       - image: fpco/stack-build:lts-9
     steps:
       - checkout
-      - run: curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
-      - run: command -v nvm
-      - run: nvm use lts/*
-      - run: stack setup --stack-yaml=luna-studio/stack.yaml --ghcjs-boot-options --no-prof
-      - run: stack build --stack-yaml=luna-studio/stack.yaml --fast
+      - run: 
+          command: |
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+            command -v nvm
+            nvm use lts/*
+            stack setup --stack-yaml=luna-studio/stack.yaml --ghcjs-boot-options --no-prof
+            stack build --stack-yaml=luna-studio/stack.yaml --fast
 workflows:
   version: 2
   percommit:
