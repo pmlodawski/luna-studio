@@ -9,7 +9,7 @@ jobs:
       - run: stack build --stack-yaml=build-config/backend/stack.yaml --fast
   frontend:
     environment:
-      BASH_ENV: ~/.bashrc
+      BASH_ENV: "$HOME/.bashrc"
     docker:
       - image: fpco/stack-build:lts-9
     steps:
