@@ -8,8 +8,6 @@ jobs:
       - run: stack setup --stack-yaml=build-config/backend/stack.yaml
       - run: stack build --stack-yaml=build-config/backend/stack.yaml --fast
   frontend:
-    environment:
-      BASH_ENV: "$HOME/.bashrc"
     docker:
       - image: fpco/stack-build:lts-9
     steps:
@@ -26,11 +24,9 @@ jobs:
                 # Each step uses the same `$BASH_ENV`, so need to modify it
                 echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
                 echo "[ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"" >> $BASH_ENV
-      - run:
-          command: |
-            nvm use 8.9.4
-            stack setup --stack-yaml=luna-studio/stack.yaml --ghcjs-boot-options --no-prof
-            stack build --stack-yaml=luna-studio/stack.yaml --fast
+
+                stack setup --stack-yaml=luna-studio/stack.yaml --ghcjs-boot-options --no-prof
+                stack build --stack-yaml=luna-studio/stack.yaml --fast
 workflows:
   version: 2
   percommit:
