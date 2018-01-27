@@ -1,6 +1,8 @@
 version: 2
 jobs:
   backend:
+    environment:
+      GHC_RTS: -M3G
     docker:
       - image: fpco/stack-build:lts-9
     steps:
@@ -18,8 +20,8 @@ jobs:
                 curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
                 export NVM_DIR="$HOME/.nvm"
                 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-                nvm install v8.9.4
-                nvm alias default v8.9.4
+                nvm install lts/boron
+                nvm alias default lts/boron
                 touch $BASH_ENV
                 # Each step uses the same `$BASH_ENV`, so need to modify it
                 echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
