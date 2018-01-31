@@ -15,6 +15,8 @@ eventFilters =
 module.exports =
     connector: (otherGlobal) => globalRegistry = otherGlobal
     setActiveLocation: (location) =>  globalRegistry.activeLocation = location
+    setNodeEditorView: (@nodeEditorView) =>
+    getNodeEditorView: => @nodeEditorView
     pushNotification: (lvl, msg) =>
         if listeners.onNotification.length == 0
             switch lvl
