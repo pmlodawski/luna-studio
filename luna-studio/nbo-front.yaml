@@ -27,13 +27,13 @@ packages:
 - git: git@github.com:luna/functor-utils.git
   commit: 1c6a4fd165e4b15cad114b0a554e0974fd119223
 - git: git@github.com:luna/fuzzy-text.git
-  commit: 0b492788263c799b142f3f5e8c27f2ec800ea80c
+  commit: 758f81a9914f46efa9137562b0a5ca3df9ce0661
 - git: git@github.com:luna/impossible.git
   commit: a1606cccc12cb521acbc598e52c481b9054b42a7
 - git: git@github.com:luna/lens-utils.git
   commit: 3ba7d5da78aab023fc74c44fc7445ffab0bc18e0
 - git: git@github.com:luna/luna.git
-  commit: 9c5d7adce748594b0ba1d86fa30ba6f140901c13
+  commit: 47ca5bca98f45fc96124b789d122fb3553e6056f
   subdirs:
   - syntax/text/lexer
 - git: git@github.com:luna/monoid
