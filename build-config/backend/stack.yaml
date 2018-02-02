@@ -1,8 +1,8 @@
 resolver: nbo.yaml
 ghc-options:
-  $locals: -threaded -O0
-  $everything: -fconstraint-solver-iterations=100
-  matrix: -O0
+  $locals: -threaded -O2
+  $everything: -fconstraint-solver-iterations=100 -O2
+  matrix: -O0 # https://github.com/Daniel-Diaz/matrix/issues/43
 local-bin-path:
   ../../dist/bin/private
 
