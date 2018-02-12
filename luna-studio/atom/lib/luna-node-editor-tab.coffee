@@ -23,10 +23,56 @@ class LunaNodeEditorTab extends View
         window.install = => nodeEditorBaseGL.install mountPoint2
         window.nodeEditor = nodeEditorBaseGL
         nodeEditorBaseGL.onEvent (path, event) =>
-            console.log 'push view event', path, event
             @nodeEditor.pushViewEvent
                 path: path
-                base: event
+                base:
+                    tag: event.constructor.name
+
+                    altKey: event.altKey
+                    bubbles: event.bubbles
+                    button: event.button
+                    buttons: event.buttons
+                    cancelBubble: event.cancelBubble
+                    cancelable: event.cancelable
+                    clientX: event.clientX
+                    clientY: event.clientY
+                    ctrlKey: event.ctrlKey
+                    defaultPrevented: event.defaultPrevented
+                    detail: event.detail
+                    eventPhase: event.eventPhase
+                    isTrusted: event.isTrusted
+                    layerX: event.layerX
+                    layerY: event.layerY
+                    metaKey: event.metaKey
+                    movementX: event.movementX
+                    movementY: event.movementY
+                    offsetX: event.offsetX
+                    offsetY: event.offsetY
+                    pageX: event.pageX
+                    pageY: event.pageY
+                    returnValue: event.returnValue
+                    screenX: event.screenX
+                    screenY: event.screenY
+                    shiftKey: event.shiftKey
+                    sourceCapabilities: event.sourceCapabilities
+                    timeStamp: event.timeStamp
+                    type_: event.type
+                    which: event.which
+                    x: event.x
+                    y: event.y
+                    # currentTarget: event.currentTarget
+                    # fromElement: event.fromElement
+                    # path: event.path
+                    # relatedTarget: event.relatedTarget
+                    # shapeDef: event.shapeDef
+                    # srcElement: event.srcElement
+                    # stopImmediatePropagation: event.stopImmediatePropagation
+                    # stopPropagation: event.stopPropagation
+                    # symbol: event.symbol
+                    # target: event.target
+                    # toElement: event.toElement
+                    # view: event.view
+
         # try
         #     nodeEditorBaseGL.install mountPoint2
         # catch e
