@@ -22,6 +22,8 @@ data ExpressionNodeView = ExpressionNodeView
         , inPorts    :: [String]
         , outPorts   :: [String]
         , position   :: (Double, Double)
+        , expanded   :: Bool
+        , selected   :: Bool
         } deriving (Generic, Show)
 
 instance ToJSON ExpressionNodeView
@@ -33,6 +35,8 @@ instance Convertible ExpressionNode ExpressionNodeView where
         {- inPorts    -} def
         {- outPorts   -} def
         {- position   -} (n ^. ExpressionNode.position . to toTuple)
+        {- expanded   -} (n ^. ExpressionNode.mode == ExpressionNode.Expanded ExpressionNode.Controls)
+        {- selected   -} (n ^. ExpressionNode.isSelected)
 
 foreign import javascript safe "atomCallback.getNodeEditorView().setNodes($1)"
     setNodes' :: JSVal -> IO ()
