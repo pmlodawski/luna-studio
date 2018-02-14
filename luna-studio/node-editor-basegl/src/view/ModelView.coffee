@@ -9,13 +9,19 @@ export class ModelView
         for listener in eventListeners
             listener path, event
 
-    attach: (scene) =>
-        if scene.add?
-            @view = scene.add @def
+    attach: (@scene) =>
+        if @scene?
+            @view = @scene.add @def
             @set @
             @registerEvents()
             @updateView()
 
-    detach: (scene) =>
-        @scene.remove @ref
-        @view = null
+    detach: (@scene) =>
+        if @view?
+            # @scene.remove @view
+            @view = null
+
+    reatach: =>
+        if @scene?
+            @detach @scene
+            @attach @scene
