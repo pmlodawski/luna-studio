@@ -23,7 +23,6 @@ export nodeShape = basegl.expr ->
     bodyWidth    = 200
     bodyHeight   = 300
     slope        = 20
-    expanded = 'expanded'
     r1    = nodeRadius + border
 
     headerShape   = circle(r1)

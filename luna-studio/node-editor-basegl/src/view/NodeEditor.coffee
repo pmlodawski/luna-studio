@@ -16,16 +16,16 @@ export class NodeEditor
 
     unsetNode: (node) =>
         if @nodes[node.key]?
-            @nodes[node.key].detach @scene()
+            @nodes[node.key].detach()
             delete @nodes[node.key]
 
     setNode: (node) =>
         if @nodes[node.key]?
             @nodes[node.key].set node
         else
-            nodeView = new ExpressionNode node
+            nodeView = new ExpressionNode node, @scene()
             @nodes[node.key] = nodeView
-            nodeView.attach @scene()
+            nodeView.attach()
 
     setNodes: (nodes) =>
         for node in nodes
@@ -36,8 +36,8 @@ export class NodeEditor
         if @inputNode?
             @inputNode.set inputNode
         else
-            @inputNode = new SidebarNode inputNode
-            @inputNode.attach @scene()
+            @inputNode = new SidebarNode inputNode, @scene()
+            @inputNode.attach()
 
     unsetInputNode: =>
         if @inputNode?
@@ -48,26 +48,26 @@ export class NodeEditor
         if @outputNode?
             @outputNode.set outputNode
         else
-            @outputNode = new SidebarNode outputNode
-            @outputNode.attach @scene()
+            @outputNode = new SidebarNode outputNode, @scene()
+            @outputNode.attach()
 
     unsetOutputNode: =>
         if @outputNode?
-            @outputNode.detach @scene()
+            @outputNode.detach()
             @outputNode = null
 
     unsetConnection: (connection) =>
         if @connections[connection.key]?
-            @connections[connection.key].detach @scene()
+            @connections[connection.key].detach()
             delete @connections[connection.key]
 
     setConnection: (connection) =>
         if @connections[connection.key]?
             @connections[connection.key].set connection
         else
-            connectionView = new Connection connection
+            connectionView = new Connection connection, @scene()
             @connections[connection.key] = connectionView
-            connectionView.attach @scene()
+            connectionView.attach()
 
     setConnections: (connections) =>
         for connection in connections
@@ -78,12 +78,12 @@ export class NodeEditor
         if @breadcrumbs?
             @breadcrumbs.set breadcrumbs
         else
-            @breadcrumbs = new Breadcrumbs breadcrumbs
-            @breadcrumbs.attach @scene()
+            @breadcrumbs = new Breadcrumbs breadcrumbs, @scene()
+            @breadcrumbs.attach()
 
     unsetBreadcrumbs: =>
         if @breadcrumbs?
-            @breadcrumbs.detach @scene()
+            @breadcrumbs.detach()
             @breadcrumbs = null
 
 

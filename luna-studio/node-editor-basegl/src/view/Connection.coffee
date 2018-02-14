@@ -1,14 +1,9 @@
-export class Connection
-    constructor: (values) ->
-        @set values
+import {ModelView}    from 'view/ModelView'
 
-    set: ({key: @key}) =>
-        @updateView()
+export class Connection extends ModelView
+    constructor: (values, scene) ->
+        super values, scene
+
+    updateModel: ({key: @key}) =>
 
     updateView: =>
-
-    render: =>
-
-    attach: (scene) =>
-
-    detach: (scene) =>
