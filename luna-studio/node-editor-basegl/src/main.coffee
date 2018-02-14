@@ -25,15 +25,16 @@ debug = ->
         new ExpressionNode
             key: 1
             name: "foo"
-            position: [0, -200]
-            expanded: true
+            position: [0, -100]
+            expanded: false
             selected: false
         new ExpressionNode
             key: 2
             name: "bar"
-            position: [300, -400]
+            inPorts: [{key: 1}]
+            position: [300, -100]
             expanded: false
-            selected: true
+            selected: false
         ]
     subscribeEvents (path, event) =>
         console.warn {path: path, base: event}

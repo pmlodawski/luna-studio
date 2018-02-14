@@ -1,19 +1,12 @@
-export class SidebarNode
-    constructor: (values) ->
-        @set values
+import {ModelView}    from 'view/ModelView'
 
-    set: ({ports: @ports, mode: @mode}) =>
-        @updateView()
+export class SidebarNode extends ModelView
+    constructor: (values, scene) ->
+        super values, scene
+
+    updateModel: ({ports: @ports, mode: @mode}) =>
 
     updateView: =>
-
-    render: =>
-
-    attach: (scene) =>
-
-    detach: (scene) =>
-
-    render: =>
 
 # SidebarMode:
 #   AddRemove | MoveConnect
