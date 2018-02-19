@@ -25,7 +25,7 @@ export inPortShape = basegl.expr ->
     slope        = 20
     r1    = nodeRadius + border
 
-    headerShape   = circle(r1)
+    headerShape   = circle r1
     # header        = headerShape.move(nodeRadius,nodeRadius)
 
     # node          = header.move(nodeSelectionBorderMaxSize,nodeSelectionBorderMaxSize)
