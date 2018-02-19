@@ -7,9 +7,12 @@ import {ModelView}    from 'view/ModelView'
 import {circle, glslShape, union, grow, negate, rect, quadraticCurve, path, pie} from 'basegl/display/Shape'
 
 
-arrowLength    = 100
+angle = Math.PI/4
+
+export length    = 100
+export width     = length * Math.tan angle
 distanceFromCenter = 200
-arrowRadius    = arrowLength + distanceFromCenter
+arrowRadius    = length + distanceFromCenter
 
 
 
@@ -19,11 +22,9 @@ selectionColor = bg.mix (Color.hsl [50, 1, 0.6]), 0.8
 nodeBg         = bg.mix white, 0.04
 
 export inPortShape = basegl.expr ->
-    r1    = arrowLength
+    r1    = length
     c =  circle arrowRadius
-    angle = Math.PI/4
-    x = arrowLength * Math.tan angle / 2
-    c = c.move x, arrowRadius
+    c = c.move width/2, arrowRadius
     p = pie angle
-    p = p.move x, arrowLength
+    p = p.move width/2, length
     c * p
