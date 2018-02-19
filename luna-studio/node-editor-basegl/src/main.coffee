@@ -19,7 +19,7 @@ main = -> install 'basegl-root'
 
 window.run = main
 
-debug = ->
+runExample = ->
     main()
     nodeEditor.setNodes [
         new ExpressionNode
@@ -40,4 +40,4 @@ debug = ->
         console.warn {path: path, base: event}
     window.n = getNodeEditor()
 
-# debug()
+if NODE_EDITOR_EXAMPLE? then runExample()
