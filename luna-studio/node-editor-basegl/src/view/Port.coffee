@@ -5,6 +5,7 @@ import {ModelView}    from 'view/ModelView'
 import * as shape     from 'shape/Port'
 
 inPortShape = basegl.symbol shape.inPortShape
+inPortShape.bbox.xy = [shape.width,shape.length]
 
 export class InPort extends ModelView
     constructor: (values, scene) ->
