@@ -10,8 +10,10 @@ import {circle, glslShape, union, grow, negate, rect, quadraticCurve, path} from
 nodeRadius     = 30
 gridElemOffset = 18
 arrowOffset    = gridElemOffset + 2
-
 export nodeSelectionBorderMaxSize = 40
+
+export width = nodeRadius * 2 + nodeSelectionBorderMaxSize * 2
+export height = nodeRadius * 2 + nodeSelectionBorderMaxSize * 2
 
 white          = Color.rgb [1,1,1]
 bg             = (Color.hsl [40,0.08,0.09]).toRGB()
@@ -19,24 +21,19 @@ selectionColor = bg.mix (Color.hsl [50, 1, 0.6]), 0.8
 nodeBg         = bg.mix white, 0.04
 
 export nodeShape = basegl.expr ->
-    border       = 0
-    bodyWidth    = 200
-    bodyHeight   = 300
-    slope        = 20
-    r1    = nodeRadius + border
+    border = 0
+    slope  = 20
+    r1     = nodeRadius + border
+    node   = circle r1
+    node   = node.move width/2, height/2
+    node   = node.fill nodeBg
 
-    headerShape   = circle(r1)
-    header        = headerShape.move(nodeRadius,nodeRadius)
+    eye    = 'scaledEye.z'
+    border = node.grow(Math.pow(Math.clamp(eye*20.0, 0.0, 400.0),0.7)).grow(-1)
 
-    node          = header.move(nodeSelectionBorderMaxSize,nodeSelectionBorderMaxSize)
-    node          = node.fill nodeBg
-
-    eye           = 'scaledEye.z'
-    border        = node.grow(Math.pow(Math.clamp(eye*20.0, 0.0, 400.0),0.7)).grow(-1)
-
-    sc            = selectionColor.copy()
-    sc.a          = 'selected'
-    border        = border.fill sc
+    sc     = selectionColor.copy()
+    sc.a   = 'selected'
+    border = border.fill sc
 
     border + node
 
