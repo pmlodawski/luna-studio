@@ -64,7 +64,8 @@ import           NodeEditor.Action.Basic.UpdateCollaboration (bumpTime, modifyTi
 import           NodeEditor.Action.Batch                     (collaborativeModify, getProgram)
 import           NodeEditor.Action.State.App                 (getWorkspace, modifyApp, setBreadcrumbs)
 import           NodeEditor.Action.State.Graph               (inCurrentLocation, isCurrentLocation)
-import           NodeEditor.Action.State.NodeEditor          (modifyExpressionNode, setGraphStatus, setScreenTransform, updateMonads)
+import           NodeEditor.Action.State.NodeEditor          (modifyExpressionNode, setGraphStatus, setScreenTransform, updateMonads,
+                                                              updateVisualizers)
 import           NodeEditor.Action.UUID                      (isOwnRequest)
 import qualified NodeEditor.Batch.Workspace                  as Workspace
 import           NodeEditor.Event.Batch                      (Event (..))
@@ -143,11 +144,12 @@ handle (Event.Batch ev) = Just $ case ev of
                         output      = convert . (NodeLoc.empty,) <$> graph ^. Graph.outputSidebar
                         connections = graph ^. Graph.connections
                         monads      = graph ^. Graph.monads
+                    whenM (isOwnRequest requestId) $ do
+                        withJust (result ^. GetProgram.typeRepToVisMap) $ \visMap -> Global.preferedVisualizers .= visMap
+                        updateVisualizers $ result ^. GetProgram.projectVisualizersPath
                     updateGraph nodes input output connections monads
                     setGraphStatus GraphLoaded
                     setScreenTransform $ result ^. GetProgram.camera
-                    whenM (isOwnRequest requestId) $ withJust (result ^. GetProgram.typeRepToVisMap) $ \visMap ->
-                        Global.preferedVisualizers .= visMap
                     updateScene
         failure err _ = handleLunaError err
 

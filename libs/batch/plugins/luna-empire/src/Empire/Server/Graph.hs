@@ -65,7 +65,6 @@ import qualified LunaStudio.API.Graph.DumpGraphViz       as DumpGraphViz
 import qualified LunaStudio.API.Graph.GetProgram         as GetProgram
 import qualified LunaStudio.API.Graph.GetSubgraphs       as GetSubgraphs
 import qualified LunaStudio.API.Graph.MovePort           as MovePort
-import qualified LunaStudio.API.Graph.NodeResultUpdate   as NodeResultUpdate
 import qualified LunaStudio.API.Graph.Paste              as Paste
 import qualified LunaStudio.API.Graph.RemoveConnection   as RemoveConnection
 import qualified LunaStudio.API.Graph.RemoveNodes        as RemoveNodes
@@ -101,7 +100,7 @@ import qualified LunaStudio.Data.NodeLoc                 as NodeLoc
 import           LunaStudio.Data.NodeMeta                (NodeMeta)
 import qualified LunaStudio.Data.NodeMeta                as NodeMeta
 import qualified LunaStudio.Data.NodeSearcher            as NS
-import           LunaStudio.Data.NodeValue               (NodeValue (NodeValue), VisualizationValue (..))
+import           LunaStudio.Data.NodeValue               (NodeValue (NodeValue))
 import           LunaStudio.Data.Port                    (InPort (..), InPortIndex (..), OutPort (..), OutPortIndex (..), Port (..),
                                                           PortState (..), getPortNumber)
 import qualified LunaStudio.Data.Port                    as Port
@@ -113,12 +112,13 @@ import qualified LunaStudio.Data.Position                as Position
 import           LunaStudio.Data.Project                 (LocationSettings)
 import qualified LunaStudio.Data.Project                 as Project
 import           LunaStudio.Data.TypeRep                 (TypeRep (TStar))
+import           LunaStudio.Data.Visualization           (VisualizationValue (..))
 import           Path                                    (fromAbsFile, fromRelFile, parseAbsFile)
 import qualified Path                                    as Path
 import           Prologue                                hiding (Item, when)
 import qualified Safe                                    as Safe
 import           System.Environment                      (getEnv)
-import           System.FilePath                         (replaceFileName, (</>))
+import           System.FilePath                         (dropFileName, replaceFileName, (</>))
 import qualified System.Log.MLogger                      as Logger
 import qualified ZMQ.Bus.Bus                             as Bus
 import qualified ZMQ.Bus.Config                          as Config
@@ -127,10 +127,11 @@ import qualified ZMQ.Bus.EndPoint                        as EP
 import           ZMQ.Bus.Trans                           (BusT (..))
 import qualified ZMQ.Bus.Trans                           as BusT
 
-
 logger :: Logger.Logger
 logger = Logger.getLogger $(Logger.moduleName)
 
+logProjectPathNotFound :: MonadIO m => m ()
+logProjectPathNotFound = Project.logProjectSettingsError "Could not find project path."
 -- helpers
 
 
@@ -163,17 +164,19 @@ getDstPortByNodeLoc nl = InPortRef' $ InPortRef nl [Self]
 
 getProjectPathAndRelativeModulePath :: MonadIO m => FilePath -> m (Maybe (FilePath, FilePath))
 getProjectPathAndRelativeModulePath modulePath = do
-    let eitherToMaybe :: Either Path.PathException (Path.Path Path.Abs Path.File) -> Maybe (Path.Path Path.Abs Path.File)
-        eitherToMaybe (Left  e) = Nothing
-        eitherToMaybe (Right a) = Just a
-    liftIO . runMaybeT $ do
-        absModulePath  <- MaybeT . fmap eitherToMaybe . try $ parseAbsFile modulePath
+    let eitherToMaybe :: MonadIO m => Either Path.PathException (Path.Path Path.Abs Path.File) -> m (Maybe (Path.Path Path.Abs Path.File))
+        eitherToMaybe (Left  e) = Project.logProjectSettingsError e >> return def
+        eitherToMaybe (Right a) = return $ Just a
+    mayProjectPathAndRelModulePath <- liftIO . runMaybeT $ do
+        absModulePath  <- MaybeT $ eitherToMaybe =<< try (parseAbsFile modulePath)
         absProjectPath <- MaybeT $ findProjectFileForFile absModulePath
         relModulePath  <- MaybeT $ getRelativePathForModule absProjectPath absModulePath
         return (fromAbsFile absProjectPath, fromRelFile relModulePath)
+    when (isNothing mayProjectPathAndRelModulePath) logProjectPathNotFound
+    return mayProjectPathAndRelModulePath
 
 saveSettings :: GraphLocation -> LocationSettings -> GraphLocation -> Empire ()
-saveSettings gl settings newGl = handle (\(e :: SomeException) -> print e) $ do
+saveSettings gl settings newGl = handle (\(e :: SomeException) -> Project.logProjectSettingsError e) $ do
     bc    <- Breadcrumb.toNames <$> Graph.decodeLocation gl
     newBc <- Breadcrumb.toNames <$> Graph.decodeLocation newGl
     let filePath        = gl    ^. GraphLocation.filePath
@@ -204,8 +207,8 @@ handleGetProgram :: Request GetProgram.Request -> StateT Env BusT ()
 handleGetProgram = modifyGraph defInverse action replyResult where
     action (GetProgram.Request location' mayPrevSettings retrieveLocation) = do
         let moduleChanged = isNothing mayPrevSettings || isJust (maybe Nothing (view Project.visMap . snd) mayPrevSettings)
-        (graph, crumb, availableImports, typeRepToVisMap, camera, location) <- handle
-            (\(e :: SomeASTException) -> return (Left . Graph.prepareGraphError $ toException e, Breadcrumb [], def, mempty, def, location'))
+        (graph, crumb, availableImports, typeRepToVisMap, camera, location, mayVisPath) <- handle
+            (\(e :: SomeASTException) -> return (Left . Graph.prepareGraphError $ toException e, Breadcrumb [], def, mempty, def, location', def))
             $ do
                 let filePath = location' ^. GraphLocation.filePath
                     closestBc loc bc = getClosestBcLocation (GraphLocation.GraphLocation filePath def) bc
@@ -216,18 +219,20 @@ handleGetProgram = modifyGraph defInverse action replyResult where
                 graph            <- Graph.getGraph location
                 crumb            <- Graph.decodeLocation location
                 availableImports <- Graph.getAvailableImports location
-                let defaultCamera = maybe def (flip Camera.getCameraForRectangle def) . Position.minimumRectangle . map (view Node.position) $ graph ^. GraphAPI.nodes
+                let mayVisPath    = ((</> "visualizers") . dropFileName . fst) <$> mayProjectPathAndRelModulePath
+                    defaultCamera = maybe def (flip Camera.getCameraForRectangle def) . Position.minimumRectangle . map (view Node.position) $ graph ^. GraphAPI.nodes
                     (typeRepToVisMap, camera) = case mayModuleSettings of
                         Nothing -> (mempty, defaultCamera)
-                        Just ms -> let visMap = if moduleChanged then Just $ ms ^. Project.typeRepToVisMap else Nothing
-                                       bc     = Breadcrumb.toNames crumb
-                                       bs     = Map.lookup bc $ ms ^. Project.breadcrumbsSettings
-                                       cam    = maybe defaultCamera (view Project.breadcrumbCameraSettings) bs
+                        Just ms -> let visMap' = if moduleChanged then Just $ ms ^. Project.typeRepToVisMap else Nothing
+                                       visMap  = fmap2 Project.fromOldAPI $ visMap'
+                                       bc      = Breadcrumb.toNames crumb
+                                       bs      = Map.lookup bc $ ms ^. Project.breadcrumbsSettings
+                                       cam     = maybe defaultCamera (view Project.breadcrumbCameraSettings) bs
                             in (visMap, cam)
-                return (Right graph, crumb, availableImports, typeRepToVisMap, camera, location)
+                return (Right graph, crumb, availableImports, typeRepToVisMap, camera, location, mayVisPath)
         code <- Graph.getCode location
         withJust mayPrevSettings $ \(gl, locSettings) -> saveSettings gl locSettings location
-        return $ GetProgram.Result graph code crumb availableImports typeRepToVisMap camera location
+        return $ GetProgram.Result graph code crumb availableImports typeRepToVisMap camera location mayVisPath
 
 handleAddConnection :: Request AddConnection.Request -> StateT Env BusT ()
 handleAddConnection = modifyGraph inverse action replyResult where
@@ -395,8 +400,8 @@ handleSearchNodes origReq@(Request uuid guiID request'@(SearchNodes.Request loca
         result <- try $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ SearchNodes.Result <$> Graph.getImports location importsList
         case result of
             Left  (exc :: SomeException) -> do
-                let err = Graph.prepareLunaError exc
-                    msg = Response.error origReq invStatus err
+                err <- liftIO $ Graph.prepareLunaError exc
+                let msg = Response.error origReq invStatus err
                 atomically $ writeTChan toBusChan $ Message.Message (Topic.topic msg) $ Compress.pack $ Bin.encode msg
             Right (result, _) -> do
                 let msg = Response.result origReq () result
@@ -465,7 +470,9 @@ handleTypecheck req@(Request _ _ request) = do
     empireNotifEnv   <- use Env.empireNotif
     result           <- liftIO $ try $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.typecheck location
     case result of
-        Left (exc :: SomeASTException) -> let err = Graph.prepareLunaError $ toException exc in replyFail logger err req (Response.Error err)
+        Left (exc :: SomeASTException) -> do
+            err <- liftIO $ Graph.prepareLunaError $ toException exc
+            replyFail logger err req (Response.Error err)
         Right (_, newEmpireEnv) -> Env.empireEnv .= newEmpireEnv
     return ()
 
@@ -479,9 +486,14 @@ handleSubstitute = modifyGraph defInverse action replyResult where
     action req@(Substitute.Request location diffs) = do
         let file = location ^. GraphLocation.filePath
         prevImports <- Graph.getAvailableImports location
-        res         <- withDefaultResultTC location $ Graph.substituteCodeFromPoints file diffs
+        res         <- withDefaultResult location $ Graph.substituteCodeFromPoints file diffs
         newImports  <- Graph.getAvailableImports location
-        return $ Substitute.Result res $ if Set.fromList prevImports == Set.fromList newImports then def else return newImports
+        let importChange = if Set.fromList prevImports == Set.fromList newImports then Nothing else Just newImports
+        if isJust importChange then do
+            Graph.typecheckWithRecompute location
+        else do
+            Graph.withTC location False (return ())
+        return $ Substitute.Result res importChange
 
 
 handleGetBuffer :: Request GetBuffer.Request -> StateT Env BusT ()
