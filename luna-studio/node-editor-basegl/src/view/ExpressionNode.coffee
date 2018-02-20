@@ -16,12 +16,13 @@ nodeHeight = 350
 ### Utils ###
 
 makeDraggable = (a) ->
-    a.addEventListener 'mousedown', (e) ->
+    a.view.addEventListener 'mousedown', (e) ->
         if e.button != 0 then return
         s = basegl.world.activeScene
         fmove = (e) ->
-            a.position.x += e.movementX * s.camera.zoomFactor
-            a.position.y -= e.movementY * s.camera.zoomFactor
+            a.position[0] += e.movementX * s.camera.zoomFactor
+            a.position[1] += e.movementY * s.camera.zoomFactor
+            a?.updateView()
         window.addEventListener 'mousemove', fmove
         window.addEventListener 'mouseup', () =>
           window.removeEventListener 'mousemove', fmove
@@ -100,10 +101,12 @@ export class ExpressionNode extends ModelView
             @view.variables.selected = if @selected then 1 else 0
             for inPortKey in Object.keys @inPorts
                 inPort = @inPorts[inPortKey]
-                console.log inPort
-                inPort.view.position.xy = @view.position.xy
+                inPort.view.position.y = shape.height/2
+                inPort.group.position.xy = [@position[0] + shape.width/2, -@position[1] + shape.height/2]
+                inPort.view.rotation.z = Math.PI * 7/4
+
     registerEvents: =>
-        makeDraggable @view
+        makeDraggable @, => @updateView()
         makeSelectable @view
         window.view = @view
         window.push = @pushEvent

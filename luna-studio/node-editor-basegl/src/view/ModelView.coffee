@@ -1,3 +1,5 @@
+import {group}      from 'basegl/display/Symbol'
+
 eventListeners = []
 
 export subscribeEvents = (listener) =>
@@ -20,6 +22,7 @@ export class ModelView
     attach: =>
         if @scene? and @def?
             @view = @scene.add @def
+            @group = group [@view]
             @registerEvents()
             @updateView()
 
