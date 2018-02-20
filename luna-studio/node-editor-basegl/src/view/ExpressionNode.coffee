@@ -59,7 +59,7 @@ expandedNodeShape.bbox.xy = [nodeWidth + 2*shape.nodeSelectionBorderMaxSize, nod
 
 nodeShape = basegl.symbol shape.nodeShape
 nodeShape.variables.selected = 0
-nodeShape.bbox.xy = [nodeWidth + 2*shape.nodeSelectionBorderMaxSize, nodeHeight + 2*shape.nodeSelectionBorderMaxSize]
+nodeShape.bbox.xy = [shape.width, shape.height]
 
 
 export class ExpressionNode extends ModelView
@@ -98,7 +98,10 @@ export class ExpressionNode extends ModelView
         if @view?
             @view.position.xy = [@position[0], -@position[1]]
             @view.variables.selected = if @selected then 1 else 0
-
+            for inPortKey in Object.keys @inPorts
+                inPort = @inPorts[inPortKey]
+                console.log inPort
+                inPort.view.position.xy = @view.position.xy
     registerEvents: =>
         makeDraggable @view
         makeSelectable @view
