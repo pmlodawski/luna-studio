@@ -5,26 +5,18 @@ import * as Color     from 'basegl/display/Color'
 import {world}        from 'basegl/display/World'
 import {ModelView}    from 'view/ModelView'
 import {circle, glslShape, union, grow, negate, rect, quadraticCurve, path, pie} from 'basegl/display/Shape'
-
+import {nodeSelectionBorderMaxSize} from 'shape/Node'
 
 angle = Math.PI/4
-
-export length    = 100
+export length    = 10
 export width     = length * Math.tan angle
-distanceFromCenter = 200
+distanceFromCenter = nodeSelectionBorderMaxSize
 arrowRadius    = length + distanceFromCenter
 
-
-
-white          = Color.rgb [1,1,1]
-bg             = (Color.hsl [40,0.08,0.09]).toRGB()
-selectionColor = bg.mix (Color.hsl [50, 1, 0.6]), 0.8
-nodeBg         = bg.mix white, 0.04
-
 export inPortShape = basegl.expr ->
-    r1    = length
     c =  circle arrowRadius
-    c = c.move width/2, arrowRadius
+    c = c.move width/2, -distanceFromCenter
     p = pie angle
-    p = p.move width/2, length
-    c * p
+    p = p.rotate Math.PI
+    p = p.move width/2, 0
+    port = c * p
