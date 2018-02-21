@@ -8,8 +8,8 @@ import {SidebarNode}    from 'view/SidebarNode'
 
 export class NodeEditor
     constructor: (@scene) ->
-        @nodes ?= []
-        @connections ?= []
+        @nodes ?= {}
+        @connections ?= {}
 
     initialize: =>
         @controls = new Navigator @scene()

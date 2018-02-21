@@ -8,7 +8,7 @@ import qualified Data.HashMap.Strict                        as HashMap
 import           LunaStudio.Data.Position                   (toTuple)
 import           NodeEditor.React.Model.Node.ExpressionNode (ExpressionNode, ExpressionNodesMap)
 import qualified NodeEditor.React.Model.Node.ExpressionNode as ExpressionNode
-
+import           NodeEditor.View.Port                       (PortView(PortView))
 
 expressionNodesView :: MonadIO m => ExpressionNodesMap -> ExpressionNodesMap -> m ()
 expressionNodesView new old =
@@ -19,8 +19,8 @@ data ExpressionNodeView = ExpressionNodeView
         { key        :: String
         , name       :: String
         , expression :: String
-        , inPorts    :: [String]
-        , outPorts   :: [String]
+        , inPorts    :: [PortView]
+        , outPorts   :: [PortView]
         , position   :: (Double, Double)
         , expanded   :: Bool
         , selected   :: Bool
@@ -32,8 +32,8 @@ instance Convertible ExpressionNode ExpressionNodeView where
         {- key        -} (n ^. ExpressionNode.nodeId . to show)
         {- name       -} (n ^. ExpressionNode.name . to convert . to (fromMaybe def))
         {- expression -} (n ^. ExpressionNode.expression . to convert)
-        {- inPorts    -} def
-        {- outPorts   -} def
+        {- inPorts    -} (n ^. to ExpressionNode.inPortsList . to convert)
+        {- outPorts   -} (n ^. to ExpressionNode.outPortsList . to convert)
         {- position   -} (n ^. ExpressionNode.position . to toTuple)
         {- expanded   -} (n ^. ExpressionNode.mode == ExpressionNode.Expanded ExpressionNode.Controls)
         {- selected   -} (n ^. ExpressionNode.isSelected)
