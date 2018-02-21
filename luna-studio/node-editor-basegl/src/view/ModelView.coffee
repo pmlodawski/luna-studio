@@ -15,6 +15,8 @@ export class ModelView
         for listener in eventListeners
             listener path, event
 
+    redraw: => @set @
+
     set: (values) =>
         @updateModel values
         @updateView()

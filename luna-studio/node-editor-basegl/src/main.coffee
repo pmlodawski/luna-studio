@@ -25,14 +25,20 @@ runExample = ->
         new ExpressionNode
             key: 1
             name: "foo"
-            position: [0, -100]
+            inPorts: [{key: 1}]
+            position: [100, 200]
             expanded: false
             selected: false
         new ExpressionNode
             key: 2
             name: "bar"
-            inPorts: [{key: 1}]
-            position: [300, -100]
+            inPorts: [{key: 1}
+                     ,{key: 2}
+                     ,{key: 3}
+                     ,{key: 4}
+                     ]
+            outPorts: [{key: 1}]
+            position: [300, 100]
             expanded: false
             selected: false
         ]
