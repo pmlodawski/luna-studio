@@ -6,7 +6,7 @@ import {world}        from 'basegl/display/World'
 import {circle, glslShape, union, grow, negate, rect, quadraticCurve, path} from 'basegl/display/Shape'
 
 import {ModelView}    from 'view/ModelView'
-import {InPort}       from 'view/Port'
+import {InPort, OutPort} from 'view/Port'
 
 import * as shape     from 'shape/Node'
 
@@ -21,7 +21,7 @@ makeDraggable = (a) ->
         s = basegl.world.activeScene
         fmove = (e) ->
             a.position[0] += e.movementX * s.camera.zoomFactor
-            a.position[1] += e.movementY * s.camera.zoomFactor
+            a.position[1] -= e.movementY * s.camera.zoomFactor
             a?.updateView()
         window.addEventListener 'mousemove', fmove
         window.addEventListener 'mouseup', () =>
@@ -67,8 +67,9 @@ export class ExpressionNode extends ModelView
     constructor: (values, scene) ->
         super values, scene
 
-    updateModel: ({key: @key, name: @name, expression: @expression, inPorts: inPorts = {}, outPorts: @outPorts, position: @position, selected: @selected, expanded: expanded}) ->
+    updateModel: ({key: @key, name: @name, expression: @expression, inPorts: inPorts = {}, outPorts: outPorts = {}, position: @position, selected: @selected, expanded: expanded}) ->
         @setInPorts inPorts
+        @setOutPorts outPorts
         if @expanded != expanded
             if expanded
                 @def = expandedNodeShape
@@ -95,15 +96,59 @@ export class ExpressionNode extends ModelView
             @inPorts[inPort.key] = portView
             portView.attach()
 
+
+    setOutPorts: (outPorts) =>
+        @outPorts ?= {}
+        if outPorts.length?
+            for outPort in outPorts
+                @setOutPort outPort
+        else
+            for outPortKey in Object.keys outPorts
+                @setOutPort outPorts[outPortKey]
+
+    setOutPort: (outPort) =>
+        if @outPorts[outPort.key]?
+            @outPorts[outPort.key].set outPort
+        else
+            portView = new OutPort outPort, @scene
+            @outPorts[outPort.key] = portView
+            portView.attach()
+
     updateView: =>
         if @view?
-            @view.position.xy = [@position[0], -@position[1]]
+            @view.position.xy = @position
             @view.variables.selected = if @selected then 1 else 0
-            for inPortKey in Object.keys @inPorts
-                inPort = @inPorts[inPortKey]
-                inPort.view.position.y = shape.height/2
-                inPort.group.position.xy = [@position[0] + shape.width/2, -@position[1] + shape.height/2]
-                inPort.view.rotation.z = Math.PI * 7/4
+
+            @drawInPorts()
+            @drawOutPorts()
+
+    drawInPorts: =>
+        inPortNumber = 0
+        inPortKeys = Object.keys @inPorts
+        for inPortKey in inPortKeys
+            inPort = @inPorts[inPortKey]
+            inPort.nodePosition = [@view.position.x + shape.width/2, @view.position.y + shape.height/2]
+            inPort.radius = shape.height/2
+            if inPortKeys.length == 1
+                inPort.angle = Math.PI/2
+            else
+                inPort.angle = Math.PI * (0.25 + 0.5 * inPortNumber/(inPortKeys.length-1))
+            inPort.redraw()
+            inPortNumber++
+
+    drawOutPorts: =>
+        outPortNumber = 0
+        outPortKeys = Object.keys @outPorts
+        for outPortKey in outPortKeys
+            outPort = @outPorts[outPortKey]
+            outPort.nodePosition = [@view.position.x + shape.width/2, @view.position.y + shape.height/2]
+            outPort.radius = shape.height/2
+            if outPortKeys.length == 1
+                outPort.angle = Math.PI*3/2
+            else
+                outPort.angle = Math.PI * (1.25 + 0.5 * outPortNumber/(outPortKeys.length-1))
+            outPort.redraw()
+            outPortNumber++
 
     registerEvents: =>
         makeDraggable @, => @updateView()
