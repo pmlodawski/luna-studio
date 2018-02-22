@@ -24,8 +24,7 @@ export class Connection extends ModelView
             y = dstNode.group.position.y - srcNode.group.position.y
             length = Math.sqrt (x*x + y*y)
             @view.bbox.x = 2*length
-            @group.position.xy = [100,300]
+            @group.position.xy = srcNode.group.position.xy
             @view.rotation.z = Math.atan2 y, x
-            # @view.position.xy = srcNode.group.position.xy
 
     registerEvents: =>
