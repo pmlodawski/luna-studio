@@ -10,9 +10,6 @@ import {InPort, OutPort} from 'view/Port'
 
 import * as shape     from 'shape/Node'
 
-nodeWidth = 200
-nodeHeight = 350
-
 ### Utils ###
 
 makeDraggable = (a) ->
@@ -56,7 +53,7 @@ makeSelectable = (a) ->
 
 expandedNodeShape = basegl.symbol shape.expandedNodeShape
 expandedNodeShape.variables.selected = 0
-expandedNodeShape.bbox.xy = [nodeWidth + 2*shape.nodeSelectionBorderMaxSize, nodeHeight + 2*shape.nodeSelectionBorderMaxSize]
+expandedNodeShape.bbox.xy = [shape.width + 2*shape.nodeSelectionBorderMaxSize, shape.height + 2*shape.nodeSelectionBorderMaxSize]
 
 nodeShape = basegl.symbol shape.nodeShape
 nodeShape.variables.selected = 0
@@ -116,7 +113,8 @@ export class ExpressionNode extends ModelView
 
     updateView: =>
         if @view?
-            @view.position.xy = @position
+            @view.position.xy = [-shape.width/2, -shape.height/2]
+            @group.position.xy = @position
             @view.variables.selected = if @selected then 1 else 0
 
             @drawInPorts()
@@ -127,7 +125,7 @@ export class ExpressionNode extends ModelView
         inPortKeys = Object.keys @inPorts
         for inPortKey in inPortKeys
             inPort = @inPorts[inPortKey]
-            inPort.nodePosition = [@view.position.x + shape.width/2, @view.position.y + shape.height/2]
+            inPort.nodePosition = [@group.position.x, @group.position.y]
             inPort.radius = shape.height/2
             if inPortKeys.length == 1
                 inPort.angle = Math.PI/2
@@ -141,7 +139,7 @@ export class ExpressionNode extends ModelView
         outPortKeys = Object.keys @outPorts
         for outPortKey in outPortKeys
             outPort = @outPorts[outPortKey]
-            outPort.nodePosition = [@view.position.x + shape.width/2, @view.position.y + shape.height/2]
+            outPort.nodePosition = [@group.position.x, @group.position.y]
             outPort.radius = shape.height/2
             if outPortKeys.length == 1
                 outPort.angle = Math.PI*3/2

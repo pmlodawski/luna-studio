@@ -28,7 +28,7 @@ runExample = ->
             name: "foo"
             inPorts: [{key: 1}]
             outPorts: [{key: 1}]
-            position: [100, 200]
+            position: [100, 300]
             expanded: false
             selected: false
         new ExpressionNode
@@ -40,7 +40,7 @@ runExample = ->
                      ,{key: 4}
                      ]
             outPorts: [{key: 1}]
-            position: [300, 100]
+            position: [500, 100]
             expanded: false
             selected: false
         ]
