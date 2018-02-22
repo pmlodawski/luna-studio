@@ -65,7 +65,7 @@ export class NodeEditor
         if @connections[connection.key]?
             @connections[connection.key].set connection
         else
-            connectionView = new Connection connection, @scene()
+            connectionView = new Connection connection, @scene(), @
             @connections[connection.key] = connectionView
             connectionView.attach()
 
