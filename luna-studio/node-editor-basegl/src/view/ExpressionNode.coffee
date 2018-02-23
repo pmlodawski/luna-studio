@@ -17,9 +17,9 @@ makeDraggable = (a) ->
         if e.button != 0 then return
         s = basegl.world.activeScene
         fmove = (e) ->
-            a.position[0] += e.movementX * s.camera.zoomFactor
-            a.position[1] -= e.movementY * s.camera.zoomFactor
-            a?.updateView()
+            x = a.position[0] + e.movementX * s.camera.zoomFactor
+            y = a.position[1] - e.movementY * s.camera.zoomFactor
+            a.set position: [x, y]
         window.addEventListener 'mousemove', fmove
         window.addEventListener 'mouseup', () =>
           window.removeEventListener 'mousemove', fmove
@@ -64,7 +64,8 @@ export class ExpressionNode extends ModelView
     constructor: (values, scene) ->
         super values, scene
 
-    updateModel: ({key: @key, name: @name, expression: @expression, inPorts: inPorts = {}, outPorts: outPorts = {}, position: @position, selected: @selected, expanded: expanded}) ->
+    updateModel: ({key: @key = @key, name: @name = @name, expression: @expression = @expression, inPorts: inPorts = @inPorts, outPorts: outPorts = @outPorts, position: position = @position, selected: @selected = @selected, expanded: expanded = @expanded}) ->
+        @emitProperty 'position', position
         @setInPorts inPorts
         @setOutPorts outPorts
         if @expanded != expanded

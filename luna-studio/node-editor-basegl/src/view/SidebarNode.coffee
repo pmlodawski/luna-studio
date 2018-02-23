@@ -4,7 +4,7 @@ export class SidebarNode extends ModelView
     constructor: (values, scene) ->
         super values, scene
 
-    updateModel: ({ports: @ports, mode: @mode}) =>
+    updateModel: ({ports: @ports = @ports, mode: @mode = @mode}) =>
 
     updateView: =>
 
