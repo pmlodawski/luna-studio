@@ -8,6 +8,7 @@ export subscribeEvents = (listener) =>
 export class ModelView
 
     constructor: (values, @scene) ->
+        @propertyListeners = {}
         @set values
         # @attach()
 
@@ -36,3 +37,16 @@ export class ModelView
     reatach: =>
         @detach()
         @attach()
+
+    emitProperty: (name, property) =>
+        unless @[name] == property
+            @[name] = property
+            if @propertyListeners[name]?
+                listeners = @propertyListeners[name]
+                @propertyListeners[name] = null
+                for listener in listeners
+                    listener property
+
+    subscribeProperty: (name, listener) =>
+        @propertyListeners[name] ?= []
+        @propertyListeners[name].push listener

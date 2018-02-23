@@ -13,7 +13,7 @@ export class InPort extends ModelView
     constructor: (values, scene) ->
         super values, scene
 
-    updateModel: ({key: @key, nodePosition: @nodePosition, angle: @angle}) =>
+    updateModel: ({key: @key = @key, nodePosition: @nodePosition = @nodePosition, angle: @angle = @angle}) =>
         unless @def?
             @def = inPortShape
 
