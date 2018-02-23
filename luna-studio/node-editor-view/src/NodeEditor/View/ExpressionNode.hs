@@ -29,7 +29,7 @@ data ExpressionNodeView = ExpressionNodeView
 instance ToJSON ExpressionNodeView
 instance Convertible ExpressionNode ExpressionNodeView where
     convert n = ExpressionNodeView
-        {- key        -} (n ^. ExpressionNode.nodeId . to show)
+        {- key        -} (n ^. ExpressionNode.nodeLoc . to show)
         {- name       -} (n ^. ExpressionNode.name . to convert . to (fromMaybe def))
         {- expression -} (n ^. ExpressionNode.expression . to convert)
         {- inPorts    -} (n ^. to ExpressionNode.inPortsList . to convert)
