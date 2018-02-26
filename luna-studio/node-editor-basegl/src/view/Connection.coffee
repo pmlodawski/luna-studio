@@ -9,8 +9,8 @@ connectionShape = basegl.symbol shape.connectionShape
 connectionShape.bbox.y = shape.width
 
 export class Connection extends ModelView
-    constructor: (values, scene, @nodeEditor) ->
-        super values, scene
+    constructor: (values, parent) ->
+        super values, parent
         @srcNodeSubscirbed = false
         @dstNodeSubscribed = false
 
@@ -21,8 +21,8 @@ export class Connection extends ModelView
     updateView: =>
         if @view?
             @connectSources()
-            srcNode = @nodeEditor.nodes[@srcNode]
-            dstNode = @nodeEditor.nodes[@dstNode]
+            srcNode = @parent.nodes[@srcNode]
+            dstNode = @parent.nodes[@dstNode]
             x = dstNode.position[0] - srcNode.position[0]
             y = dstNode.position[1] - srcNode.position[1]
             length = Math.sqrt (x*x + y*y)
@@ -32,12 +32,12 @@ export class Connection extends ModelView
 
     connectSources: =>
         unless @srcNodeSubscirbed
-            @nodeEditor.nodes[@srcNode].subscribeProperty 'position', =>
+            @parent.nodes[@srcNode].subscribeProperty 'position', =>
                 @srcNodeSubscirbed = false
                 @updateView()
             @srcNodeSubscirbed = true
         unless @dstNodeSubscribed
-            @nodeEditor.nodes[@dstNode].subscribeProperty 'position', =>
+            @parent.nodes[@dstNode].subscribeProperty 'position', =>
                 @dstNodeSubscribed = false
                 @updateView()
             @dstNodeSubscribed = true

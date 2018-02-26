@@ -19,8 +19,7 @@ class LunaNodeEditorTab extends View
         pushShortcutEvent = (name, arg = null) => @nodeEditor.pushEvent({_shortcut: name, _arg : arg})
         pushSearcherEvent = (name, arg = null) => @nodeEditor.pushEvent(if arg == null then {tag: name} else {tag: name, contents : arg})
         @nodeEditor.start @uri, mountPoint
-        @nodeEditor.setView nodeEditorBaseGL.getNodeEditor()
-        window.install = => nodeEditorBaseGL.install mountPoint2
+        window.install = => nodeEditorBaseGL.install mountPoint2, @nodeEditor.setView
         window.nodeEditor = nodeEditorBaseGL
         nodeEditorBaseGL.onEvent (path, event) =>
             @nodeEditor.pushViewEvent

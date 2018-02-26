@@ -1,8 +1,8 @@
 import {ModelView}    from 'view/ModelView'
 
 export class SidebarNode extends ModelView
-    constructor: (values, scene) ->
-        super values, scene
+    constructor: (values, parent) ->
+        super values, parent
 
     updateModel: ({ports: @ports = @ports, mode: @mode = @mode}) =>
 

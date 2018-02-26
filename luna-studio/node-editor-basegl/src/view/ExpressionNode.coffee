@@ -5,7 +5,7 @@ import * as Color     from 'basegl/display/Color'
 import {world}        from 'basegl/display/World'
 import {circle, glslShape, union, grow, negate, rect, quadraticCurve, path} from 'basegl/display/Shape'
 
-import {ModelView}    from 'view/ModelView'
+import {ModelView, ModelViewX}    from 'view/ModelView'
 import {InPort, OutPort} from 'view/Port'
 
 import * as shape     from 'shape/Node'
@@ -61,8 +61,8 @@ nodeShape.bbox.xy = [shape.width, shape.height]
 
 
 export class ExpressionNode extends ModelView
-    constructor: (values, scene) ->
-        super values, scene
+    constructor: (values, parent) ->
+        super values, parent
 
     updateModel: ({key: @key = @key, name: @name = @name, expression: @expression = @expression, inPorts: inPorts = @inPorts, outPorts: outPorts = @outPorts, position: position = @position, selected: @selected = @selected, expanded: expanded = @expanded}) ->
         @emitProperty 'position', position
@@ -90,7 +90,7 @@ export class ExpressionNode extends ModelView
         if @inPorts[inPort.key]?
             @inPorts[inPort.key].set inPort
         else
-            portView = new InPort inPort, @scene
+            portView = new InPort inPort, @
             @inPorts[inPort.key] = portView
             portView.attach()
 
@@ -108,7 +108,7 @@ export class ExpressionNode extends ModelView
         if @outPorts[outPort.key]?
             @outPorts[outPort.key].set outPort
         else
-            portView = new OutPort outPort, @scene
+            portView = new OutPort outPort, @
             @outPorts[outPort.key] = portView
             portView.attach()
 

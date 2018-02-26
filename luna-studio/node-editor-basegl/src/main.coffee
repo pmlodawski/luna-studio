@@ -5,23 +5,19 @@ import {ExpressionNode}  from 'view/ExpressionNode'
 import {NodeEditor}      from 'view/NodeEditor'
 import {subscribeEvents} from 'view/ModelView'
 
-scene = null
-nodeEditor = new NodeEditor -> scene
-
-export getNodeEditor = -> nodeEditor
-
-export install = (name) ->
+export install = (name, f) ->
     scene = basegl.scene {domElement: name}
-    getNodeEditor().initialize()
+    nodeEditor = new NodeEditor scene
+    nodeEditor.initialize()
+    f nodeEditor
 
 export onEvent = subscribeEvents
 
-main = -> install 'basegl-root'
+main = (f) -> install 'basegl-root', f
 
 window.run = main
 
-runExample = ->
-    main()
+runExample = -> main (nodeEditor) ->
     nodeEditor.setNodes [
         new ExpressionNode
             key: 1
@@ -54,6 +50,6 @@ runExample = ->
         ]
     subscribeEvents (path, event) =>
         console.warn {path: path, base: event}
-    window.n = getNodeEditor()
+    window.n = nodeEditor
 
 if NODE_EDITOR_EXAMPLE? then runExample()
