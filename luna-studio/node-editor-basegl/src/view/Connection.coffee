@@ -1,20 +1,25 @@
 import * as basegl    from 'basegl'
 import {group}        from 'basegl/display/Symbol'
+import {Composable}   from "basegl/object/Property"
 
-import {ModelView}    from 'view/ModelView'
-import * as shape     from 'shape/Connection'
+import * as shape       from 'shape/Connection'
+import {Component} from 'view/Component'
 
 
 connectionShape = basegl.symbol shape.connectionShape
 connectionShape.bbox.y = shape.width
 
-export class Connection extends ModelView
+export class Connection extends Component
     constructor: (values, parent) ->
         super values, parent
         @srcNodeSubscirbed = false
         @dstNodeSubscribed = false
 
-    updateModel: ({key: @key = @key, srcNode: @srcNode = @srcNode, srcPort: @srcPort = @srcPort, dstNode: @dstNode = @dstNode, dstPort: @dstPort = @dstPort}) =>
+    updateModel: ({ key: @key = @key
+                  , srcNode: @srcNode = @srcNode
+                  , srcPort: @srcPort = @srcPort
+                  , dstNode: @dstNode = @dstNode
+                  , dstPort: @dstPort = @dstPort}) =>
         unless @def?
             @def = connectionShape
 

@@ -11,7 +11,8 @@ export class NodeEditor
         @nodes ?= {}
         @connections ?= {}
 
-    scene: -> @_scene
+    scene: => @_scene
+    
     initialize: =>
         @controls = new Navigator @scene()
 

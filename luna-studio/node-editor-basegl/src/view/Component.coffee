@@ -1,18 +1,19 @@
-import {group}      from 'basegl/display/Symbol'
+import {group}                  from 'basegl/display/Symbol'
+import {Composable, fieldMixin} from "basegl/object/Property"
 
 eventListeners = []
 
 export subscribeEvents = (listener) =>
     eventListeners.push listener
 
-export class ModelView
-    constructor: (values, @parent) ->
+export class Component extends Composable
+    cons: (values, @parent) ->
         @propertyListeners = {}
         @set values
         # @attach()
 
     scene: =>
-        console.log @parent
+        console.log @, @parent
         if @parent? then @parent.scene()
 
     pushEvent: (path, event) =>
@@ -26,7 +27,6 @@ export class ModelView
         @updateView()
 
     attach: =>
-        console.log 'attach', @
         if @scene()? and @def?
             @view = @scene().add @def
             @group = group [@view]

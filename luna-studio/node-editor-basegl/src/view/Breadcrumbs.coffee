@@ -1,6 +1,6 @@
-import {ModelView}    from 'view/ModelView'
+import {Component}    from 'view/Component'
 
-export class Breadcrumbs extends ModelView
+export class Breadcrumbs extends Component
     constructor: (values, scene) ->
         super values, scene
 

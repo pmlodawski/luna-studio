@@ -3,7 +3,7 @@ import * as basegl from 'basegl'
 import {Connection}  from 'view/Connection'
 import {ExpressionNode}  from 'view/ExpressionNode'
 import {NodeEditor}      from 'view/NodeEditor'
-import {subscribeEvents} from 'view/ModelView'
+import {subscribeEvents} from 'view/Component'
 
 export install = (name, f) ->
     scene = basegl.scene {domElement: name}
