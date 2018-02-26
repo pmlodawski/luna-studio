@@ -4,11 +4,11 @@ import * as Easing    from 'basegl/animation/Easing'
 import * as Color     from 'basegl/display/Color'
 import {world}        from 'basegl/display/World'
 import {circle, glslShape, union, grow, negate, rect, quadraticCurve, path} from 'basegl/display/Shape'
+import {Composable, fieldMixin} from "basegl/object/Property"
 
-import {ModelView, ModelViewX}    from 'view/ModelView'
 import {InPort, OutPort} from 'view/Port'
-
-import * as shape     from 'shape/Node'
+import {Component}  from 'view/Component'
+import * as shape        from 'shape/Node'
 
 ### Utils ###
 
@@ -60,11 +60,16 @@ nodeShape.variables.selected = 0
 nodeShape.bbox.xy = [shape.width, shape.height]
 
 
-export class ExpressionNode extends ModelView
-    constructor: (values, parent) ->
-        super values, parent
-
-    updateModel: ({key: @key = @key, name: @name = @name, expression: @expression = @expression, inPorts: inPorts = @inPorts, outPorts: outPorts = @outPorts, position: position = @position, selected: @selected = @selected, expanded: expanded = @expanded}) ->
+export class ExpressionNode extends Component
+    updateModel: ({ key:        @key        = @key
+                  , name:       @name       = @name
+                  , expression: @expression = @expression
+                  , inPorts:     inPorts    = @inPorts
+                  , outPorts:    outPorts   = @outPorts
+                  , position:    position   = @position
+                  , selected:   @selected   = @selected
+                  , expanded:    expanded   = @expanded}) =>
+        console.log @
         @emitProperty 'position', position
         @setInPorts inPorts
         @setOutPorts outPorts

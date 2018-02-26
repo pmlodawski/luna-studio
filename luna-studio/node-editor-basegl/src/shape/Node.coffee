@@ -3,7 +3,7 @@ import * as Animation from 'basegl/animation/Animation'
 import * as Easing    from 'basegl/animation/Easing'
 import * as Color     from 'basegl/display/Color'
 import {world}        from 'basegl/display/World'
-import {ModelView}    from 'view/ModelView'
+import {Component}    from 'view/Component'
 import {circle, glslShape, union, grow, negate, rect, quadraticCurve, path} from 'basegl/display/Shape'
 
 

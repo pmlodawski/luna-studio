@@ -1,20 +1,18 @@
-import * as basegl    from 'basegl'
-
-import {ModelView, modelViewMixin}    from 'view/ModelView'
-
-import * as shape     from 'shape/Port'
+import * as basegl  from 'basegl'
 import {group}      from 'basegl/display/Symbol'
-import {Composable, fieldMixin} from "basegl/object/Property"
+import {Composable} from "basegl/object/Property"
+
+import * as shape       from 'shape/Port'
+import {Component} from 'view/Component'
 
 inPortShape = basegl.symbol shape.inPortShape
 inPortShape.bbox.xy = [shape.width,shape.length]
 
 
-export class InPort extends ModelView
-    constructor: (values, parent) ->
-        super values, parent
-
-    updateModel: ({key: @key = @key, nodePosition: @nodePosition = @nodePosition, angle: @angle = @angle}) =>
+export class InPort extends Component
+    updateModel: ({ key:          @key          = @key
+                  , nodePosition: @nodePosition = @nodePosition
+                  , angle:        @angle        = @angle}) =>
         unless @def?
             @def = inPortShape
 
@@ -31,10 +29,7 @@ export class InPort extends ModelView
 outPortShape = basegl.symbol shape.outPortShape
 outPortShape.bbox.xy = [shape.width,shape.length]
 
-export class OutPort extends ModelView
-    constructor: (values, parent) ->
-        super values, parent
-
+export class OutPort extends Component
     updateModel: ({key: @key, nodePosition: @nodePosition, angle: @angle}) =>
         unless @def?
             @def = outPortShape
