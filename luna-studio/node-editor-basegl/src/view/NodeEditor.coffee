@@ -7,10 +7,11 @@ import {SidebarNode}    from 'view/SidebarNode'
 
 
 export class NodeEditor
-    constructor: (@scene) ->
+    constructor: (@_scene) ->
         @nodes ?= {}
         @connections ?= {}
 
+    scene: -> @_scene
     initialize: =>
         @controls = new Navigator @scene()
 
@@ -23,7 +24,7 @@ export class NodeEditor
         if @nodes[node.key]?
             @nodes[node.key].set node
         else
-            nodeView = new ExpressionNode node, @scene()
+            nodeView = new ExpressionNode node, @
             @nodes[node.key] = nodeView
             nodeView.attach()
 
@@ -36,19 +37,19 @@ export class NodeEditor
         if @inputNode?
             @inputNode.set inputNode
         else
-            @inputNode = new SidebarNode inputNode, @scene()
+            @inputNode = new SidebarNode inputNode, @
             @inputNode.attach()
 
     unsetInputNode: =>
         if @inputNode?
-            @inputNode.detach @scene()
+            @inputNode.detach()
             @inputNode = null
 
     setOutputNode: (outputNode) =>
         if @outputNode?
             @outputNode.set outputNode
         else
-            @outputNode = new SidebarNode outputNode, @scene()
+            @outputNode = new SidebarNode outputNode, @
             @outputNode.attach()
 
     unsetOutputNode: =>
@@ -65,7 +66,7 @@ export class NodeEditor
         if @connections[connection.key]?
             @connections[connection.key].set connection
         else
-            connectionView = new Connection connection, @scene(), @
+            connectionView = new Connection connection, @
             @connections[connection.key] = connectionView
             connectionView.attach()
 
@@ -78,7 +79,7 @@ export class NodeEditor
         if @breadcrumbs?
             @breadcrumbs.set breadcrumbs
         else
-            @breadcrumbs = new Breadcrumbs breadcrumbs, @scene()
+            @breadcrumbs = new Breadcrumbs breadcrumbs, @
             @breadcrumbs.attach()
 
     unsetBreadcrumbs: =>

@@ -6,11 +6,14 @@ export subscribeEvents = (listener) =>
     eventListeners.push listener
 
 export class ModelView
-
-    constructor: (values, @scene) ->
+    constructor: (values, @parent) ->
         @propertyListeners = {}
         @set values
         # @attach()
+
+    scene: =>
+        console.log @parent
+        if @parent? then @parent.scene()
 
     pushEvent: (path, event) =>
         for listener in eventListeners
@@ -23,8 +26,9 @@ export class ModelView
         @updateView()
 
     attach: =>
-        if @scene? and @def?
-            @view = @scene.add @def
+        console.log 'attach', @
+        if @scene()? and @def?
+            @view = @scene().add @def
             @group = group [@view]
             @registerEvents()
             @updateView()
