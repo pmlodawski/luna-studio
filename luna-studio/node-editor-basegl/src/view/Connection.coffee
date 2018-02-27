@@ -3,6 +3,8 @@ import {group}        from 'basegl/display/Symbol'
 import {Composable}   from "basegl/object/Property"
 
 import * as shape       from 'shape/Connection'
+import * as nodeShape   from 'shape/Node'
+import * as portShape   from 'shape/Port'
 import {Component} from 'view/Component'
 
 
@@ -30,8 +32,10 @@ export class Connection extends Component
             dstNode = @parent.nodes[@dstNode]
             x = dstNode.position[0] - srcNode.position[0]
             y = dstNode.position[1] - srcNode.position[1]
-            length = Math.sqrt (x*x + y*y)
-            @view.bbox.x = 2*length
+            length = Math.sqrt(x*x + y*y) - nodeShape.height - 3/4* portShape.length
+            @view.position.x = nodeShape.height/2 + portShape.length/2
+            @view.position.y = -shape.width/4
+            @view.bbox.x = 2 * length
             @group.position.xy = srcNode.position
             rotation = Math.atan2 y, x
             @view.rotation.z = rotation
