@@ -36,15 +36,9 @@ export class Connection extends Component
             @view.rotation.z = Math.atan2 y, x
 
     connectSources: =>
-        unless @srcNodeSubscirbed
-            @parent.nodes[@srcNode].subscribeProperty 'position', =>
-                @srcNodeSubscirbed = false
-                @updateView()
-            @srcNodeSubscirbed = true
-        unless @dstNodeSubscribed
-            @parent.nodes[@dstNode].subscribeProperty 'position', =>
-                @dstNodeSubscribed = false
-                @updateView()
-            @dstNodeSubscribed = true
+        unless @connected?
+            @connected = true
+            @parent.nodes[@srcNode].addEventListener 'position', @updateView
+            @parent.nodes[@dstNode].addEventListener 'position', @updateView
 
     registerEvents: =>

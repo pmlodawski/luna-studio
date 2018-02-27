@@ -69,7 +69,6 @@ export class ExpressionNode extends Component
                   , position:    position   = @position
                   , selected:   @selected   = @selected
                   , expanded:    expanded   = @expanded}) =>
-        console.log @
         @emitProperty 'position', position
         @setInPorts inPorts
         @setOutPorts outPorts
