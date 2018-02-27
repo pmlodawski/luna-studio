@@ -46,6 +46,7 @@ import           Prologue                  as X (FromList, IsList, Item, Mempty,
 import           System.FilePath           as X ((</>))
 
 foreign import javascript safe "console.log($1)" consoleLog :: JSString -> IO ()
+foreign import javascript safe "console.log($1)" consoleLog' :: JSVal -> IO ()
 
 print :: (MonadIO m, Show a) => a -> m ()
 print = putStrLn . show

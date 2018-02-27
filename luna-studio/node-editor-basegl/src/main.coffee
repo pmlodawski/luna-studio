@@ -1,8 +1,9 @@
 import * as basegl from 'basegl'
 
-import {Connection}  from 'view/Connection'
+import {Connection}      from 'view/Connection'
 import {ExpressionNode}  from 'view/ExpressionNode'
 import {NodeEditor}      from 'view/NodeEditor'
+import {SidebarNode}     from 'view/SidebarNode'
 import {subscribeEvents} from 'view/Component'
 
 export install = (name, f) ->
@@ -42,12 +43,19 @@ runExample = -> main (nodeEditor) ->
         new ExpressionNode
             key: 3
             name: "baz"
-            inPorts: [{key: 1}]
+            inPorts: [{key: 1}
+                     ,{key: 2}]
             outPorts: [{key: 1}]
             position: [500, 400]
             expanded: false
             selected: false
         ]
+
+    nodeEditor.setInputNode new SidebarNode
+        key: 8
+        outPorts: [{key: 1}
+                  ,{key: 2}]
+        position: [100, 100]
     nodeEditor.setConnections [
         new Connection
             key: 1
@@ -55,6 +63,12 @@ runExample = -> main (nodeEditor) ->
             srcPort: 1
             dstNode: 2
             dstPort: 4
+        new Connection
+            key: 2
+            srcNode: 8
+            srcPort: 2
+            dstNode: 3
+            dstPort: 2
         ]
     subscribeEvents (path, event) =>
         console.warn {path: path, base: event}
