@@ -1,3 +1,4 @@
+import {eventDispatcherMixin}   from 'basegl/event/EventDispatcher'
 import {group}                  from 'basegl/display/Symbol'
 import {Composable, fieldMixin} from "basegl/object/Property"
 
@@ -8,13 +9,12 @@ export subscribeEvents = (listener) =>
 
 export class Component extends Composable
     cons: (values, @parent) ->
+        @mixin eventDispatcherMixin, @
         @propertyListeners = {}
         @set values
         # @attach()
 
-    scene: =>
-        console.log @, @parent
-        if @parent? then @parent.scene()
+    scene: => @parent.scene() if @parent?
 
     pushEvent: (path, event) =>
         for listener in eventListeners
@@ -45,12 +45,5 @@ export class Component extends Composable
     emitProperty: (name, property) =>
         unless @[name] == property
             @[name] = property
-            if @propertyListeners[name]?
-                listeners = @propertyListeners[name]
-                @propertyListeners[name] = null
-                for listener in listeners
-                    listener property
-
-    subscribeProperty: (name, listener) =>
-        @propertyListeners[name] ?= []
-        @propertyListeners[name].push listener
+            propertyEvent = new CustomEvent name, value: property
+            @dispatchEvent propertyEvent if @dispatchEvent?

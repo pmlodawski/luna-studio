@@ -39,6 +39,14 @@ runExample = -> main (nodeEditor) ->
             position: [500, 100]
             expanded: false
             selected: false
+        new ExpressionNode
+            key: 3
+            name: "baz"
+            inPorts: [{key: 1}]
+            outPorts: [{key: 1}]
+            position: [500, 400]
+            expanded: false
+            selected: false
         ]
     nodeEditor.setConnections [
         new Connection
