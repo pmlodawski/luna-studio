@@ -33,12 +33,17 @@ export class Connection extends Component
             length = Math.sqrt (x*x + y*y)
             @view.bbox.x = 2*length
             @group.position.xy = srcNode.position
-            @view.rotation.z = Math.atan2 y, x
+            rotation = Math.atan2 y, x
+            @view.rotation.z = rotation
+            srcNode.outPorts[@srcPort].set angle: rotation - Math.PI/2
+            dstNode.inPorts[@dstPort].set angle: rotation + Math.PI/2
 
     connectSources: =>
         unless @connected?
             @connected = true
-            @parent.nodes[@srcNode].addEventListener 'position', @updateView
-            @parent.nodes[@dstNode].addEventListener 'position', @updateView
+            srcNode = @parent.nodes[@srcNode]
+            srcNode.addEventListener 'position', @updateView
+            dstNode = @parent.nodes[@dstNode]
+            dstNode.addEventListener 'position', @updateView
 
     registerEvents: =>

@@ -130,13 +130,12 @@ export class ExpressionNode extends Component
         inPortKeys = Object.keys @inPorts
         for inPortKey in inPortKeys
             inPort = @inPorts[inPortKey]
-            inPort.nodePosition = [@group.position.x, @group.position.y]
-            inPort.radius = shape.height/2
-            if inPortKeys.length == 1
-                inPort.angle = Math.PI/2
-            else
-                inPort.angle = Math.PI * (0.25 + 0.5 * inPortNumber/(inPortKeys.length-1))
-            inPort.redraw()
+            unless inPort.angle?
+                if inPortKeys.length == 1
+                    angle = Math.PI/2
+                else
+                    angle = Math.PI * (0.25 + 0.5 * inPortNumber/(inPortKeys.length-1))
+                inPort.set angle: angle
             inPortNumber++
 
     drawOutPorts: =>
@@ -144,13 +143,12 @@ export class ExpressionNode extends Component
         outPortKeys = Object.keys @outPorts
         for outPortKey in outPortKeys
             outPort = @outPorts[outPortKey]
-            outPort.nodePosition = [@group.position.x, @group.position.y]
-            outPort.radius = shape.height/2
-            if outPortKeys.length == 1
-                outPort.angle = Math.PI*3/2
-            else
-                outPort.angle = Math.PI * (1.25 + 0.5 * outPortNumber/(outPortKeys.length-1))
-            outPort.redraw()
+            unless outPort.angle?
+                if outPortKeys.length == 1
+                    angle = Math.PI*3/2
+                else
+                    angle = Math.PI * (1.25 + 0.5 * outPortNumber/(outPortKeys.length-1))
+                outPort.set angle: angle
             outPortNumber++
 
     registerEvents: =>
