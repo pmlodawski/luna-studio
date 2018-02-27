@@ -28,8 +28,8 @@ export class Connection extends Component
     updateView: =>
         if @view?
             @connectSources()
-            srcNode = @parent.nodes[@srcNode]
-            dstNode = @parent.nodes[@dstNode]
+            srcNode = @parent.node @srcNode
+            dstNode = @parent.node @dstNode
             x = dstNode.position[0] - srcNode.position[0]
             y = dstNode.position[1] - srcNode.position[1]
             length = Math.sqrt(x*x + y*y) - nodeShape.height - 3/4* portShape.length
@@ -39,15 +39,19 @@ export class Connection extends Component
             @group.position.xy = srcNode.position
             rotation = Math.atan2 y, x
             @view.rotation.z = rotation
-            srcNode.outPorts[@srcPort].set angle: rotation - Math.PI/2
-            dstNode.inPorts[@dstPort].set angle: rotation + Math.PI/2
+            srcNode.outPorts[@srcPort]?.set angle: rotation - Math.PI/2
+            dstNode.inPorts[@dstPort]?.set angle: rotation + Math.PI/2
 
     connectSources: =>
-        unless @connected?
-            @connected = true
-            srcNode = @parent.nodes[@srcNode]
-            srcNode.addEventListener 'position', @updateView
-            dstNode = @parent.nodes[@dstNode]
-            dstNode.addEventListener 'position', @updateView
+        unless @srcConnected?
+            srcNode = @parent.node @srcNode
+            if srcNode?
+                srcNode.addEventListener 'position', @updateView
+                @srcConnected = true
+        unless @dstConnected
+            dstNode = @parent.node @dstNode
+            if dstNode?
+                dstNode.addEventListener 'position', @updateView
+                @dstConnected = true
 
     registerEvents: =>

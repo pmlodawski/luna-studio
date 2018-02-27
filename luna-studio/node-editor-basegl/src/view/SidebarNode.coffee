@@ -1,8 +1,9 @@
 import {Component}    from 'view/Component'
 
 export class SidebarNode extends Component
-    updateModel: ({ ports: @ports = @ports
-                  , mode:  @mode  = @mode}) =>
+    updateModel: ({ key:      @key      = @key
+                  , outPorts: @outPorts = @outPorts
+                  , position: @position = @position}) =>
 
     updateView: =>
 

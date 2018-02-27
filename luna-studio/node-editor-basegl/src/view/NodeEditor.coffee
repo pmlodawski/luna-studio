@@ -16,6 +16,12 @@ export class NodeEditor
     initialize: =>
         @controls = new Navigator @scene()
 
+    node: (nodeKey) =>
+        node = @nodes[nodeKey]
+        if node? then node
+        else if @inputNode?  and (@inputNode.key  == nodeKey) then @inputNode
+        else if @outputNode? and (@outputNode.key == nodeKey) then @outputNode
+
     unsetNode: (node) =>
         if @nodes[node.key]?
             @nodes[node.key].detach()
@@ -35,28 +41,28 @@ export class NodeEditor
         undefined
 
     setInputNode: (inputNode) =>
-        if @inputNode?
-            @inputNode.set inputNode
+        if inputNode?
+            if @inputNode?
+                @inputNode.set inputNode
+            else
+                @inputNode = new SidebarNode inputNode, @
+                @inputNode.attach()
         else
-            @inputNode = new SidebarNode inputNode, @
-            @inputNode.attach()
-
-    unsetInputNode: =>
-        if @inputNode?
-            @inputNode.detach()
-            @inputNode = null
+            if @inputNode?
+                @inputNode.detach()
+                @inputNode = null
 
     setOutputNode: (outputNode) =>
-        if @outputNode?
-            @outputNode.set outputNode
+        if outputNode?
+            if @outputNode?
+                @outputNode.set outputNode
+            else
+                @outputNode = new SidebarNode outputNode, @
+                @outputNode.attach()
         else
-            @outputNode = new SidebarNode outputNode, @
-            @outputNode.attach()
-
-    unsetOutputNode: =>
-        if @outputNode?
-            @outputNode.detach()
-            @outputNode = null
+            if @outputNode?
+                @outputNode.detach()
+                @outputNode = null
 
     unsetConnection: (connection) =>
         if @connections[connection.key]?
