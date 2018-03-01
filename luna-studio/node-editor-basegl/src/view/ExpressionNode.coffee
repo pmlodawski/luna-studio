@@ -122,15 +122,14 @@ export class ExpressionNode extends Component
             portView.attach()
 
     updateView: =>
-        if @view?
-            @view.node.position.xy = [-shape.width/2, -shape.height/2]
-            textWidth = util.textWidth @view.name
-            @view.name.position.xy = [-textWidth/2, shape.width/2]
-            @group.position.xy = @position.slice()
-            @view.node.variables.selected = if @selected then 1 else 0
+        @view.node.position.xy = [-shape.width/2, -shape.height/2]
+        textWidth = util.textWidth @view.name
+        @view.name.position.xy = [-textWidth/2, shape.width/2]
+        @group.position.xy = @position.slice()
+        @view.node.variables.selected = if @selected then 1 else 0
 
-            @drawInPorts()
-            @drawOutPorts()
+        @drawInPorts()
+        @drawOutPorts()
 
     drawInPorts: =>
         inPortNumber = 0

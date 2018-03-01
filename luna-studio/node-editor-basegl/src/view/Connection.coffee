@@ -6,6 +6,7 @@ import * as shape       from 'shape/Connection'
 import * as nodeShape   from 'shape/Node'
 import * as portShape   from 'shape/Port'
 import {Component} from 'view/Component'
+import {SidebarNode} from 'view/SidebarNode'
 
 
 
@@ -26,21 +27,33 @@ export class Connection extends Component
             @def = connectionShape
 
     updateView: =>
-        if @view?
-            @connectSources()
-            srcNode = @parent.node @srcNode
-            dstNode = @parent.node @dstNode
-            x = dstNode.position[0] - srcNode.position[0]
-            y = dstNode.position[1] - srcNode.position[1]
-            length = Math.sqrt(x*x + y*y) - nodeShape.height - 3/4* portShape.length
-            @view.position.x = nodeShape.height/2 + portShape.length/2
-            @view.position.y = -shape.width/4
-            @view.bbox.x = 2 * length
-            @group.position.xy = srcNode.position.slice()
-            rotation = Math.atan2 y, x
-            @view.rotation.z = rotation
+        @connectSources()
+        srcNode = @parent.node @srcNode
+        dstNode = @parent.node @dstNode
+        if srcNode instanceof SidebarNode
+            srcPos = srcNode.outPorts[@srcPort].position
+            leftOffset = 0
+        else
+            srcPos = srcNode.position
+            leftOffset = nodeShape.height/2 + 1/4 * portShape.length
+        if dstNode instanceof SidebarNode
+            dstPos = srcNode.inPorts[@dstPort].position
+            rightOffset = 0
+        else
+            dstPos = dstNode.position
+            rightOffset = nodeShape.height/2 + 1/2 * portShape.length
+        x = dstPos[0] - srcPos[0]
+        y = dstPos[1] - srcPos[1]
+        length = Math.sqrt(x*x + y*y) - leftOffset - rightOffset
+        @view.position.x = leftOffset
+        @view.position.y = -shape.width/4
+        @view.bbox.x = 2 * length
+        @group.position.xy = srcPos.slice()
+        rotation = Math.atan2 y, x
+        @view.rotation.z = rotation
+        unless srcNode instanceof SidebarNode
             srcNode.outPorts[@srcPort]?.set angle: rotation - Math.PI/2
-            dstNode.inPorts[@dstPort]?.set angle: rotation + Math.PI/2
+        dstNode.inPorts[@dstPort]?.set angle: rotation + Math.PI/2
 
     connectSources: =>
         unless @srcConnected?

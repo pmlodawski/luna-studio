@@ -1,45 +1,39 @@
-import {Component}    from 'view/Component'
-import * as shape       from 'shape/Port'
-import * as basegl    from 'basegl'
+import {Component} from 'view/Component'
+import * as shape  from 'shape/Port'
+import * as basegl from 'basegl'
+import {FlatPort}  from 'view/Port'
 
-inPortShape = basegl.symbol shape.inPortShape
-inPortShape.bbox.xy = [shape.width,shape.length]
+
+height = 100
 
 export class SidebarNode extends Component
     updateModel: ({ key:      @key      = @key
                   , inPorts:  @inPorts  = @inPorts
-                  , outPorts: @outPorts = @outPorts
+                  , outPorts: outPorts = @outPorts
                   , position: @position = @position}) =>
-        unless @def?
-            @def = inPortShape
+        @setOutPorts outPorts
 
-    updateView: =>
-    registerEvents: =>
+        i = 0
+        keys = Object.keys @outPorts
+        portOffset = height / keys.length
+        for key in keys
+            outPort = @outPorts[key]
+            outPort.set position: [shape.length, i * portOffset]
+            i++
 
-# export class SidebarNode extends Composible
-#     cons: (args...) -> @mixin Component args... 
+    setOutPorts: (outPorts) =>
+        @outPorts ?= {}
+        if outPorts.length?
+            for outPort in outPorts
+                @setOutPort outPort
+        else
+            for outPortKey in Object.keys outPorts
+                @setOutPort outPorts[outPortKey]
 
-#     updateModel: ({ports: @ports = @ports, mode: @mode = @mode}) =>
-
-#     updateView: =>
-
-
-# export class Component extends Composible
-#     cons: (args...) -> @mixin X args...
-
-
-# a = new SidebarNode {foo : 7, xx:18}
-
-# SidebarMode:
-#   AddRemove | MoveConnect
-#
-# InputNode:
-#   inputNodeLoc      :: NodeLoc
-#   inputSidebarPorts :: [OutPortTree OutPort]
-#   inputIsDef        :: Bool
-#   inputMode         :: SidebarMode
-#
-# OutputNode:
-#   outputNodeLoc      :: NodeLoc
-#   outputSidebarPorts :: InPortTree InPort
-#   outputMode         :: SidebarMode
+    setOutPort: (outPort) =>
+        if @outPorts[outPort.key]?
+            @outPorts[outPort.key].set outPort
+        else
+            portView = new FlatPort outPort, @
+            @outPorts[outPort.key] = portView
+            portView.attach()
