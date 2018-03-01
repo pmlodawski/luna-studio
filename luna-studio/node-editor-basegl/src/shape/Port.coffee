@@ -30,3 +30,9 @@ export outPortShape = basegl.expr ->
     p = p.move width/2, h2 + r
     port = p - c
     port.move 0, -r+length-h2
+
+export flatPortShape = basegl.expr ->
+    r = outArrowRadius
+    p = pie -angle
+    p = p.rotate -Math.PI /2
+    p = p.move length + 1, width/2

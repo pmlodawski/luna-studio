@@ -24,7 +24,8 @@ export class Component extends Composable
 
     set: (values) =>
         @updateModel values
-        @updateView()
+        if @view?
+            @updateView()
 
     attach: => @withScene (scene) =>
         if @def?
@@ -38,7 +39,7 @@ export class Component extends Composable
             else
                 @view = scene.add @def
                 @group = group [@view]
-            @registerEvents()
+            @registerEvents?()
             @updateView()
 
     detach: => withScene (scene) =>

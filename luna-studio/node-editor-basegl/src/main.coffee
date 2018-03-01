@@ -67,10 +67,16 @@ runExample = -> main (nodeEditor) ->
 
     nodeEditor.setInputNode new SidebarNode
         key: 8
-        outPorts: [{key: 1}
-                  ,{key: 2}]
-        position: [100, 100]
+        outPorts: [ {key: 1}
+                  , {key: 2}
+                  , {key: 3}]
     nodeEditor.setConnections [
+        new Connection
+            key: 0
+            srcNode: 8
+            srcPort: 2
+            dstNode: 1
+            dstPort: 1
         new Connection
             key: 1
             srcNode: 1

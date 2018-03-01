@@ -17,10 +17,9 @@ export class InPort extends Component
             @def = inPortShape
 
     updateView: =>
-        if @view?
-            @group.position.xy = @parent.position.slice()
-            @view.position.xy = [-shape.width/2, nodeShape.height/2]
-            @view.rotation.z = @angle
+        @group.position.xy = @parent.position.slice()
+        @view.position.xy = [-shape.width/2, nodeShape.height/2]
+        @view.rotation.z = @angle
 
     registerEvents: =>
 
@@ -35,9 +34,23 @@ export class OutPort extends Component
             @def = outPortShape
 
     updateView: =>
-        if @view?
-            @group.position.xy = @parent.position.slice()
-            @view.position.xy = [-shape.width/2, nodeShape.height/2]
-            @view.rotation.z = @angle
+        @group.position.xy = @parent.position.slice()
+        @view.position.xy = [-shape.width/2, nodeShape.height/2]
+        @view.rotation.z = @angle
 
     registerEvents: =>
+
+
+flatPortShape = basegl.symbol shape.flatPortShape
+flatPortShape.bbox.xy = [shape.length, shape.width]
+
+export class FlatPort extends Component
+    updateModel: ({ key:  @key  = @key
+                  , name: @name = @name
+                  , position: @position = @position}) =>
+        unless @def?
+            @def = flatPortShape
+
+    updateView: =>
+        if @position
+            @view.position.y = @position[1] - shape.width/2
