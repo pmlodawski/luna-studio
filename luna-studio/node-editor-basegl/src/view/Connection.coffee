@@ -5,8 +5,9 @@ import {Composable}   from "basegl/object/Property"
 import * as shape       from 'shape/Connection'
 import * as nodeShape   from 'shape/Node'
 import * as portShape   from 'shape/Port'
-import {Component} from 'view/Component'
-import {SidebarNode} from 'view/SidebarNode'
+import {Component}  from 'view/Component'
+import {InputNode}  from 'view/InputNode'
+import {OutputNode} from 'view/OutputNode'
 
 
 
@@ -30,14 +31,14 @@ export class Connection extends Component
         @connectSources()
         srcNode = @parent.node @srcNode
         dstNode = @parent.node @dstNode
-        if srcNode instanceof SidebarNode
+        if srcNode instanceof InputNode
             srcPos = srcNode.outPorts[@srcPort].position
             leftOffset = 0
         else
             srcPos = srcNode.position
             leftOffset = nodeShape.height/2 + 1/4 * portShape.length
-        if dstNode instanceof SidebarNode
-            dstPos = srcNode.inPorts[@dstPort].position
+        if dstNode instanceof OutputNode
+            dstPos = dstNode.inPorts[@dstPort].position
             rightOffset = 0
         else
             dstPos = dstNode.position
@@ -51,7 +52,7 @@ export class Connection extends Component
         @group.position.xy = srcPos.slice()
         rotation = Math.atan2 y, x
         @view.rotation.z = rotation
-        unless srcNode instanceof SidebarNode
+        unless srcNode instanceof InputNode
             srcNode.outPorts[@srcPort]?.set angle: rotation - Math.PI/2
         dstNode.inPorts[@dstPort]?.set angle: rotation + Math.PI/2
 

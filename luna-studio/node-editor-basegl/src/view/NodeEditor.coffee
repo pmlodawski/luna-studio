@@ -1,9 +1,11 @@
+import {Navigator}      from 'basegl/navigation/Navigator'
+
 import {Breadcrumbs}    from 'view/Breadcrumbs'
 import {Connection}     from 'view/Connection'
 import {ExpressionNode} from 'view/ExpressionNode'
-import {Navigator}      from 'basegl/navigation/Navigator'
+import {InputNode}      from 'view/InputNode'
+import {OutputNode}     from 'view/OutputNode'
 import {Port}           from 'view/Port'
-import {SidebarNode}    from 'view/SidebarNode'
 
 
 export class NodeEditor
@@ -46,7 +48,7 @@ export class NodeEditor
             if @inputNode?
                 @inputNode.set inputNode
             else
-                @inputNode = new SidebarNode inputNode, @
+                @inputNode = new InputNode inputNode, @
                 @inputNode.attach()
         else
             if @inputNode?
@@ -58,7 +60,7 @@ export class NodeEditor
             if @outputNode?
                 @outputNode.set outputNode
             else
-                @outputNode = new SidebarNode outputNode, @
+                @outputNode = new OutputNode outputNode, @
                 @outputNode.attach()
         else
             if @outputNode?

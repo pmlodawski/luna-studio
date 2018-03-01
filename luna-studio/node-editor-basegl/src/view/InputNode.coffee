@@ -6,9 +6,8 @@ import {FlatPort}  from 'view/Port'
 
 height = 100
 
-export class SidebarNode extends Component
+export class InputNode extends Component
     updateModel: ({ key:      @key      = @key
-                  , inPorts:  @inPorts  = @inPorts
                   , outPorts: outPorts = @outPorts
                   , position: @position = @position}) =>
         @setOutPorts outPorts

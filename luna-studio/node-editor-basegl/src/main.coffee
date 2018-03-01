@@ -2,8 +2,9 @@ import * as basegl from 'basegl'
 
 import {Connection}      from 'view/Connection'
 import {ExpressionNode}  from 'view/ExpressionNode'
+import {InputNode}       from 'view/InputNode'
 import {NodeEditor}      from 'view/NodeEditor'
-import {SidebarNode}     from 'view/SidebarNode'
+import {OutputNode}      from 'view/OutputNode'
 import {subscribeEvents} from 'view/Component'
 
 export install = (name, f) ->
@@ -65,15 +66,19 @@ runExample = -> main (nodeEditor) ->
             selected: false
         ]
 
-    nodeEditor.setInputNode new SidebarNode
-        key: 8
+    nodeEditor.setInputNode new InputNode
+        key: 'in'
         outPorts: [ {key: 1}
                   , {key: 2}
                   , {key: 3}]
+    nodeEditor.setOutputNode new OutputNode
+        key: 'out'
+        inPorts: [ {key: 1}
+                 , {key: 2}]
     nodeEditor.setConnections [
         new Connection
             key: 0
-            srcNode: 8
+            srcNode: 'in'
             srcPort: 2
             dstNode: 1
             dstPort: 1
@@ -95,6 +100,12 @@ runExample = -> main (nodeEditor) ->
             srcPort: 1
             dstNode: 4
             dstPort: 1
+        new Connection
+            key: 4
+            srcNode: 4
+            srcPort: 1
+            dstNode: 'out'
+            dstPort: 2
         ]
     subscribeEvents (path, event) =>
         console.warn {path: path, base: event}
