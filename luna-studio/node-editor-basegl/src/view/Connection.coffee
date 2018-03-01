@@ -36,7 +36,7 @@ export class Connection extends Component
             @view.position.x = nodeShape.height/2 + portShape.length/2
             @view.position.y = -shape.width/4
             @view.bbox.x = 2 * length
-            @group.position.xy = srcNode.position
+            @group.position.xy = srcNode.position.slice()
             rotation = Math.atan2 y, x
             @view.rotation.z = rotation
             srcNode.outPorts[@srcPort]?.set angle: rotation - Math.PI/2
@@ -46,12 +46,12 @@ export class Connection extends Component
         unless @srcConnected?
             srcNode = @parent.node @srcNode
             if srcNode?
-                srcNode.addEventListener 'position', @updateView
+                srcNode.addEventListener 'position', => @updateView()
                 @srcConnected = true
         unless @dstConnected
             dstNode = @parent.node @dstNode
             if dstNode?
-                dstNode.addEventListener 'position', @updateView
+                dstNode.addEventListener 'position', => @updateView()
                 @dstConnected = true
 
     registerEvents: =>

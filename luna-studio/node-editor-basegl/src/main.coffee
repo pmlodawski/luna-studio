@@ -24,8 +24,9 @@ runExample = -> main (nodeEditor) ->
             key: 1
             name: "foo"
             inPorts: [{key: 1}]
-            outPorts: [{key: 1}]
-            position: [100, 300]
+            outPorts: [{key: 1}
+                      ,{key: 2}]
+            position: [100, 100]
             expanded: false
             selected: false
         new ExpressionNode
@@ -37,7 +38,7 @@ runExample = -> main (nodeEditor) ->
                      ,{key: 4}
                      ]
             outPorts: [{key: 1}]
-            position: [500, 100]
+            position: [100, 400]
             expanded: false
             selected: false
         new ExpressionNode
@@ -46,7 +47,15 @@ runExample = -> main (nodeEditor) ->
             inPorts: [{key: 1}
                      ,{key: 2}]
             outPorts: [{key: 1}]
-            position: [500, 400]
+            position: [400, 100]
+            expanded: false
+            selected: false
+        new ExpressionNode
+            key: 4
+            name: "node1"
+            inPorts: [{key: 1}]
+            outPorts: [{key: 1}]
+            position: [400, 400]
             expanded: false
             selected: false
         ]
@@ -62,13 +71,19 @@ runExample = -> main (nodeEditor) ->
             srcNode: 1
             srcPort: 1
             dstNode: 2
-            dstPort: 4
+            dstPort: 1
         new Connection
             key: 2
-            srcNode: 8
-            srcPort: 2
+            srcNode: 2
+            srcPort: 1
             dstNode: 3
-            dstPort: 2
+            dstPort: 1
+        new Connection
+            key: 3
+            srcNode: 3
+            srcPort: 1
+            dstNode: 4
+            dstPort: 1
         ]
     subscribeEvents (path, event) =>
         console.warn {path: path, base: event}

@@ -11,10 +11,11 @@ export class NodeEditor
         @nodes ?= {}
         @connections ?= {}
 
-    scene: => @_scene
+    withScene: (fun) => fun @_scene if @_scene?
     
     initialize: =>
-        @controls = new Navigator @scene()
+        @withScene (scene) =>
+            @controls = new Navigator scene
 
     node: (nodeKey) =>
         node = @nodes[nodeKey]
@@ -83,16 +84,16 @@ export class NodeEditor
         undefined
 
     setBreadcrumbs: (breadcrumbs) =>
-        if @breadcrumbs?
-            @breadcrumbs.set breadcrumbs
+        if breadcrumbs?
+            if @breadcrumbs?
+                @breadcrumbs.set breadcrumbs
+            else
+                @breadcrumbs = new Breadcrumbs breadcrumbs, @
+                @breadcrumbs.attach()
         else
-            @breadcrumbs = new Breadcrumbs breadcrumbs, @
-            @breadcrumbs.attach()
-
-    unsetBreadcrumbs: =>
-        if @breadcrumbs?
-            @breadcrumbs.detach()
-            @breadcrumbs = null
+            if @breadcrumbs?
+                @breadcrumbs.detach()
+                @breadcrumbs = null
 
 
 # expressionNodes          :: ExpressionNodesMap
