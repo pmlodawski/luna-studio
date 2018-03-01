@@ -45,12 +45,18 @@ flatPortShape = basegl.symbol shape.flatPortShape
 flatPortShape.bbox.xy = [shape.length, shape.width]
 
 export class FlatPort extends Component
-    updateModel: ({ key:  @key  = @key
-                  , name: @name = @name
-                  , position: @position = @position}) =>
+    constructor: (args...) ->
+        super(args...)
+        @output ?= false
+
+    updateModel: ({ key:      @key      = @key
+                  , name:     @name     = @name
+                  , position: @position = @position
+                  , output:   @output   = @output}) =>
         unless @def?
             @def = flatPortShape
 
     updateView: =>
         if @position
-            @view.position.y = @position[1] - shape.width/2
+            x = if @output then @position[0] else @position[0] - shape.length
+            @view.position.xy = [x, @position[1] - shape.width/2]
