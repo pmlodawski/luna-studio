@@ -14,7 +14,7 @@ export class Component extends Composable
         @set values
         # @attach()
 
-    scene: => @parent.scene() if @parent?
+    withScene: (fun) => @parent.withScene fun if @parent?
 
     pushEvent: (path, event) =>
         for listener in eventListeners
@@ -26,14 +26,14 @@ export class Component extends Composable
         @updateModel values
         @updateView()
 
-    attach: =>
-        if @scene()? and @def?
-            @view = @scene().add @def
+    attach: => @withScene (scene) =>
+        if @def?
+            @view = scene.add @def
             @group = group [@view]
             @registerEvents()
             @updateView()
 
-    detach: =>
+    detach: => withScene (scene) =>
         if @view?
             # @scene.remove @view
             @view = null

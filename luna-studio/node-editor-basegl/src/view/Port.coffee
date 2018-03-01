@@ -18,7 +18,7 @@ export class InPort extends Component
 
     updateView: =>
         if @view?
-            @group.position.xy = @parent.position
+            @group.position.xy = @parent.position.slice()
             @view.position.xy = [-shape.width/2, nodeShape.height/2]
             @view.rotation.z = @angle
 
@@ -36,7 +36,7 @@ export class OutPort extends Component
 
     updateView: =>
         if @view?
-            @group.position.xy = @parent.position
+            @group.position.xy = @parent.position.slice()
             @view.position.xy = [-shape.width/2, nodeShape.height/2]
             @view.rotation.z = @angle
 

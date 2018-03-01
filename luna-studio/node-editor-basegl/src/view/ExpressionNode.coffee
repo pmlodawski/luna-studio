@@ -119,7 +119,7 @@ export class ExpressionNode extends Component
     updateView: =>
         if @view?
             @view.position.xy = [-shape.width/2, -shape.height/2]
-            @group.position.xy = @position
+            @group.position.xy = @position.slice()
             @view.variables.selected = if @selected then 1 else 0
 
             @drawInPorts()
