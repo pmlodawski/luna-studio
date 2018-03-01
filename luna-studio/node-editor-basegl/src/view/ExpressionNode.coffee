@@ -7,13 +7,14 @@ import {circle, glslShape, union, grow, negate, rect, quadraticCurve, path} from
 import {Composable, fieldMixin} from "basegl/object/Property"
 
 import {InPort, OutPort} from 'view/Port'
-import {Component}  from 'view/Component'
+import {Component}       from 'view/Component'
 import * as shape        from 'shape/Node'
+import * as util         from 'shape/util'
 
 ### Utils ###
 
 makeDraggable = (a) ->
-    a.view.addEventListener 'mousedown', (e) ->
+    a.group.addEventListener 'mousedown', (e) ->
         if e.button != 0 then return
         s = basegl.world.activeScene
         fmove = (e) ->
@@ -76,7 +77,11 @@ export class ExpressionNode extends Component
             if expanded
                 @def = expandedNodeShape
             else
-                @def = nodeShape
+                txtDef = basegl.text
+                    str: @name
+                    fontFamily: 'DejaVuSansMono'
+                @def = [{name: 'node', def: nodeShape}
+                       ,{name: 'name', def: txtDef}]
             @expanded = expanded
             if @view?
                 @reatach()
@@ -118,9 +123,11 @@ export class ExpressionNode extends Component
 
     updateView: =>
         if @view?
-            @view.position.xy = [-shape.width/2, -shape.height/2]
+            @view.node.position.xy = [-shape.width/2, -shape.height/2]
+            textWidth = util.textWidth @view.name
+            @view.name.position.xy = [-textWidth/2, shape.width/2]
             @group.position.xy = @position.slice()
-            @view.variables.selected = if @selected then 1 else 0
+            @view.node.variables.selected = if @selected then 1 else 0
 
             @drawInPorts()
             @drawOutPorts()
@@ -153,7 +160,7 @@ export class ExpressionNode extends Component
 
     registerEvents: =>
         makeDraggable @, => @updateView()
-        makeSelectable @view
+        makeSelectable @view.node
         window.view = @view
         window.push = @pushEvent
-        @view.addEventListener 'click', (e) => @pushEvent ['node-editor', 'node'], e
+        @group.addEventListener 'click', (e) => @pushEvent ['node-editor', 'node'], e

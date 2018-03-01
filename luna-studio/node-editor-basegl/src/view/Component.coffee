@@ -28,8 +28,16 @@ export class Component extends Composable
 
     attach: => @withScene (scene) =>
         if @def?
-            @view = scene.add @def
-            @group = group [@view]
+            if @def instanceof Array
+                @view = {}
+                views = []
+                for def in @def
+                    @view[def.name] = scene.add def.def
+                    views.push @view[def.name]
+                @group = group views
+            else
+                @view = scene.add @def
+                @group = group [@view]
             @registerEvents()
             @updateView()
 

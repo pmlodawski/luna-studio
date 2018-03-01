@@ -8,6 +8,11 @@ import {subscribeEvents} from 'view/Component'
 
 export install = (name, f) ->
     scene = basegl.scene {domElement: name}
+    basegl.fontManager.register 'DejaVuSansMono', 'rsc/DejaVuSansMono.ttf'
+    await basegl.fontManager.load 'DejaVuSansMono',
+        glyphSize: 20
+        spread: 32
+
     nodeEditor = new NodeEditor scene
     nodeEditor.initialize()
     f nodeEditor
@@ -43,7 +48,7 @@ runExample = -> main (nodeEditor) ->
             selected: false
         new ExpressionNode
             key: 3
-            name: "baz"
+            name: "foo bar baz"
             inPorts: [{key: 1}
                      ,{key: 2}]
             outPorts: [{key: 1}]
