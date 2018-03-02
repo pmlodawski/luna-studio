@@ -6,6 +6,7 @@ import {ExpressionNode} from 'view/ExpressionNode'
 import {InputNode}      from 'view/InputNode'
 import {OutputNode}     from 'view/OutputNode'
 import {Port}           from 'view/Port'
+import {Searcher}       from 'view/Searcher'
 
 
 export class NodeEditor
@@ -43,29 +44,10 @@ export class NodeEditor
             @setNode node
         undefined
 
-    setInputNode: (inputNode) =>
-        if inputNode?
-            if @inputNode?
-                @inputNode.set inputNode
-            else
-                @inputNode = new InputNode inputNode, @
-                @inputNode.attach()
-        else
-            if @inputNode?
-                @inputNode.detach()
-                @inputNode = null
-
-    setOutputNode: (outputNode) =>
-        if outputNode?
-            if @outputNode?
-                @outputNode.set outputNode
-            else
-                @outputNode = new OutputNode outputNode, @
-                @outputNode.attach()
-        else
-            if @outputNode?
-                @outputNode.detach()
-                @outputNode = null
+    setBreadcrumbs: (breadcrumbs) => @genericSetComponent 'breadcrumbs', Breadcrumbs, breadcrumbs
+    setInputNode:   (inputNode)   => @genericSetComponent 'inputNode',   InputNode,   inputNode
+    setOutputNode:  (outputNode)  => @genericSetComponent 'outputNode',  OutputNode,  outputNode
+    setSearcher:    (searcher)    => @genericSetComponent 'searcher',    Searcher,    searcher
 
     unsetConnection: (connection) =>
         if @connections[connection.key]?
@@ -85,32 +67,14 @@ export class NodeEditor
             @setConnection connection
         undefined
 
-    setBreadcrumbs: (breadcrumbs) =>
-        if breadcrumbs?
-            if @breadcrumbs?
-                @breadcrumbs.set breadcrumbs
+    genericSetComponent: (name, constructor, value) =>
+        if value?
+            if @[name]?
+                @[name].set value
             else
-                @breadcrumbs = new Breadcrumbs breadcrumbs, @
-                @breadcrumbs.attach()
+                @[name] = new constructor value, @
+                @[name].attach()
         else
-            if @breadcrumbs?
-                @breadcrumbs.detach()
-                @breadcrumbs = null
-
-
-# expressionNodes          :: ExpressionNodesMap
-# inputNode                :: Maybe InputNode
-# outputNode               :: Maybe OutputNode
-# monads                   :: [MonadPath]
-# connections              :: ConnectionsMap
-# visualizersLibPath       :: FilePath
-# nodeVisualizations       :: Map NodeLoc NodeVisualizations
-# visualizationsBackup     :: VisualizationsBackupMap
-# halfConnections          :: [HalfConnection]
-# connectionPen            :: Maybe ConnectionPen
-# selectionBox             :: Maybe SelectionBox
-# searcher                 :: Maybe Searcher
-# textControlEditedPortRef :: Maybe InPortRef
-# graphStatus              :: GraphStatus
-# layout                   :: Layout
-# topZIndex                :: Int
+            if @[name]?
+                @[name].detach()
+                @[name] = null
