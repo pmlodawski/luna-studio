@@ -9,7 +9,9 @@ height = 100
 export class InputNode extends Component
     updateModel: ({ key:      @key      = @key
                   , outPorts: outPorts = @outPorts
-                  , position: @position = @position}) =>
+                  , position: position = @position}) =>
+        position ?= [0,0]
+        @emitProperty 'position', position
         @setOutPorts outPorts
 
         i = 0
@@ -17,7 +19,7 @@ export class InputNode extends Component
         portOffset = height / keys.length
         for key in keys
             outPort = @outPorts[key]
-            outPort.set position: [shape.length, i * portOffset]
+            outPort.set position: [@position[0] + shape.length, @position[1] + i * portOffset]
             i++
 
     setOutPorts: (outPorts) =>
@@ -36,3 +38,10 @@ export class InputNode extends Component
             portView = new FlatPort outPort, @
             @outPorts[outPort.key] = portView
             portView.attach()
+
+    registerEvents: =>
+        @withScene (scene) =>
+            scene.domElement.addEventListener 'mousemove', (e) =>
+                campos = scene.camera.position
+                @set position: [ scene.width/2 + campos.x - scene.width/2*campos.z
+                               , scene.height/2 + campos.y - height/2]
