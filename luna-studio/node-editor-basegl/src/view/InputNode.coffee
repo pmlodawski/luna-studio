@@ -39,9 +39,12 @@ export class InputNode extends Component
             @outPorts[outPort.key] = portView
             portView.attach()
 
+    getPosition: (scene) =>
+        campos = scene.camera.position
+        return [ scene.width/2 + campos.x - scene.width/2*campos.z
+               , scene.height/2 + campos.y - height/2]
+
     registerEvents: =>
         @withScene (scene) =>
             scene.domElement.addEventListener 'mousemove', (e) =>
-                campos = scene.camera.position
-                @set position: [ scene.width/2 + campos.x - scene.width/2*campos.z
-                               , scene.height/2 + campos.y - height/2]
+                @set position: @getPosition scene

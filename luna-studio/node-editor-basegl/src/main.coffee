@@ -5,6 +5,7 @@ import {ExpressionNode}  from 'view/ExpressionNode'
 import {InputNode}       from 'view/InputNode'
 import {NodeEditor}      from 'view/NodeEditor'
 import {OutputNode}      from 'view/OutputNode'
+import {Searcher}        from 'view/Searcher'
 import {subscribeEvents} from 'view/Component'
 
 export install = (name, f) ->
@@ -107,6 +108,9 @@ runExample = -> main (nodeEditor) ->
             dstNode: 'out'
             dstPort: 2
         ]
+    nodeEditor.setSearcher new Searcher
+        position: [200, 700]
+
     subscribeEvents (path, event) =>
         console.warn {path: path, base: event}
     window.n = nodeEditor
