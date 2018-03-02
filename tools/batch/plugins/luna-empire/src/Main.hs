@@ -1,54 +1,54 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections   #-}
 module Main where
 
-import qualified Data.List          as List
-import           GHC.IO.Encoding    (setLocaleEncoding, utf8)
-import           Prologue
+import qualified Data.Map as Map
+import qualified Data.List as List
+import qualified Data.ByteString.Lazy        as BS
+import Data.Map (Map)
+import Prologue
+import Data.Aeson
+import Empire.Commands.Autolayout (Connection)
+import           LunaStudio.Data.Position  (Position, x, y)
+import qualified Temp as Temp
+import Temp (VisNode (VisNode), VisEdge (VisEdge), VisGraph (VisGraph))
+import LunaStudio.Data.PortRef
+import LunaStudio.Data.Port
+import LunaStudio.Data.Node (NodeId)
+import LunaStudio.Data.NodeLoc (nodeId)
+import           Data.UUID                     (UUID)
+import           Data.UUID.V4                  (nextRandom)
 
-import           Empire.Cmd         (Cmd)
-import qualified Empire.Cmd         as Cmd
-import qualified Empire.Server      as Server
-import qualified Empire.Version     as Version
-import           System.Log.MLogger
-import           System.Log.Options (help, long, metavar, short)
-import qualified System.Log.Options as Opt
-import qualified ZMQ.Bus.Config     as Config
-import qualified ZMQ.Bus.EndPoint   as EP
 
-defaultTopics :: [String]
-defaultTopics = ["empire."]
+mkUUID :: MonadIO m => m UUID
+mkUUID = liftIO nextRandom
 
-rootLogger :: Logger
-rootLogger = getLogger ""
+mkVisNode :: Int -> Position -> VisNode
+mkVisNode id pos = VisNode id (round $ pos ^. x) (round $ pos ^. y) True
 
-logger :: Logger
-logger = getLogger $moduleName
+mkVisEdge :: Int -> Int -> Connection -> VisEdge
+mkVisEdge srcId dstId conn = VisEdge srcId dstId "to" $ toString conn where
+    toString (OutPortRef _ srcPid, InPortRef _ dstPid) = (show (getPortNumber srcPid)) <> " -> " <> (if isSelf dstPid then "self" else show $ getPortNumber dstPid)
 
-parser :: Opt.Parser Cmd
-parser = Opt.flag' Cmd.Version (short 'V' <> long "version" <> help "Version information")
-       <|> Cmd.Run
-           <$> Opt.many         (Opt.strOption (short 't' <> metavar "TOPIC" <> help "Topic to listen"))
-           <*> Opt.optIntFlag   (Just "verbose") 'v' 2 3 "Verbosity level (0-5, default 3)"
-           <*> (not <$> Opt.switch (long "unformatted" <> help "Unformatted output" ))
+mkVisGraph :: [(NodeId, Position)] -> [Connection] -> VisGraph
+mkVisGraph nodes conns = do
+    let nodesMap = foldl (\acc (nid, pos) -> if Map.member nid acc then acc else Map.insert nid (Map.size acc, pos) acc) mempty nodes
+        visNodes = (\(nid, pos) -> mkVisNode nid pos) <$> Map.elems nodesMap
+        fromConn conn@(src, dst) = (\(i1, _) (i2, _) -> mkVisEdge i1 i2 conn) <$> Map.lookup (src ^. srcNodeId) nodesMap <*> Map.lookup (dst ^. dstNodeId) nodesMap
+        visConns = catMaybes $ fromConn <$> conns
+    VisGraph visNodes $ visConns
 
-opts :: Opt.ParserInfo Cmd
-opts = Opt.info (Opt.helper <*> parser)
-                (Opt.fullDesc <> Opt.header Version.fullVersion)
+mkNodes :: Int -> IO [(NodeId, Position)]
+mkNodes 0    = return def
+mkNodes size = ((, def) <$> mkUUID) >>= \h -> (h:) <$> mkNodes (size - 1)
 
 main :: IO ()
 main = do
-    setLocaleEncoding utf8
-    Opt.execParser opts >>= run
+    nodes <- mkNodes 3
+    let nid1  = fst $ List.head nodes
+        nid2  = fst . List.head $ List.tail nodes
+    let conns = [(OutPortRef (convert nid1) def, InPortRef (convert nid2) def)]
+    print $ mkVisGraph nodes conns
+    print . encode $ mkVisGraph nodes conns
 
-run :: Cmd -> IO ()
-run cmd = case cmd of
-    Cmd.Version  -> putStrLn Version.fullVersion
-    Cmd.Run {} -> do
-        rootLogger setIntLevel $ Cmd.verbose cmd
-        endPoints <- EP.clientFromConfig <$> Config.load
-        projectRoot <- Config.projectRoot <$> Config.projects <$> Config.load
-        let topics = if List.null $ Cmd.topics cmd
-                        then defaultTopics
-                        else Cmd.topics cmd
-            formatted = Cmd.formatted cmd
-        Server.run endPoints topics formatted projectRoot
+    print "AUTOLAYOUT"
