@@ -10,7 +10,9 @@ windowLength = 1000
 export class OutputNode extends Component
     updateModel: ({ key:      @key      = @key
                   , inPorts:  inPorts   = @inPorts
-                  , position: @position = @position}) =>
+                  , position: position  = @position}) =>
+        position ?= [0,0]
+        @emitProperty 'position', position
         @setInPorts inPorts
 
         i = 0
@@ -18,7 +20,7 @@ export class OutputNode extends Component
         portOffset = height / keys.length
         for key in keys
             inPort = @inPorts[key]
-            inPort.set position: [windowLength - shape.length, i * portOffset]
+            inPort.set position: [@position[0] - shape.length, @position[1] + i * portOffset]
             i++
 
     setInPorts: (inPorts) =>
@@ -38,3 +40,10 @@ export class OutputNode extends Component
             portView = new FlatPort inPort, @
             @inPorts[inPort.key] = portView
             portView.attach()
+
+    registerEvents: =>
+        @withScene (scene) =>
+            scene.domElement.addEventListener 'mousemove', (e) =>
+                campos = scene.camera.position
+                @set position: [ scene.width/2 + campos.x + scene.width/2*campos.z
+                               , scene.height/2 + campos.y - height/2]

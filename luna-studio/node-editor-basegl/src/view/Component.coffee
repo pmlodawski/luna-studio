@@ -39,8 +39,8 @@ export class Component extends Composable
             else
                 @view = scene.add @def
                 @group = group [@view]
-            @registerEvents?()
             @updateView()
+        @registerEvents?()
 
     detach: => withScene (scene) =>
         if @view?
