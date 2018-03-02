@@ -33,7 +33,7 @@ runExample = -> main (nodeEditor) ->
             inPorts: [{key: 1}]
             outPorts: [{key: 1}
                       ,{key: 2}]
-            position: [100, 100]
+            position: [200, 300]
             expanded: false
             selected: false
         new ExpressionNode
@@ -45,7 +45,7 @@ runExample = -> main (nodeEditor) ->
                      ,{key: 4}
                      ]
             outPorts: [{key: 1}]
-            position: [100, 400]
+            position: [200, 600]
             expanded: false
             selected: false
         new ExpressionNode
@@ -54,7 +54,7 @@ runExample = -> main (nodeEditor) ->
             inPorts: [{key: 1}
                      ,{key: 2}]
             outPorts: [{key: 1}]
-            position: [400, 100]
+            position: [500, 300]
             expanded: false
             selected: false
         new ExpressionNode
@@ -62,7 +62,7 @@ runExample = -> main (nodeEditor) ->
             name: "node1"
             inPorts: [{key: 1}]
             outPorts: [{key: 1}]
-            position: [400, 400]
+            position: [500, 600]
             expanded: false
             selected: false
         ]
@@ -109,7 +109,18 @@ runExample = -> main (nodeEditor) ->
             dstPort: 2
         ]
     nodeEditor.setSearcher new Searcher
-        position: [200, 700]
+        key: 4
+        mode: 'node'
+        matches: [
+            name: 'bar'
+            doc:  'bar description'
+            mode: 'class'
+        ,
+            name: 'foo'
+            doc:  'foo multiline\ndescription'
+            mode: 'function'
+        ]
+
 
     subscribeEvents (path, event) =>
         console.warn {path: path, base: event}
