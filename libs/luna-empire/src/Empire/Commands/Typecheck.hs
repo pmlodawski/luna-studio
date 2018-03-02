@@ -13,7 +13,7 @@ import           Control.Concurrent.Async         (Async)
 import qualified Control.Concurrent.Async         as Async
 import           Control.Concurrent               (MVar, readMVar)
 import qualified Control.Concurrent.MVar.Lifted   as Lifted
-import           Control.Exception.Safe           (mask_)
+import           Control.Exception.Safe           (mask_, tryAny)
 import           Control.Monad                    (void)
 import           Control.Monad.Except             hiding (when)
 import           Control.Monad.Reader             (ask, runReaderT)
@@ -21,9 +21,9 @@ import           Control.Monad.State              (execStateT)
 import qualified Data.Map                         as Map
 import           Data.Maybe                       (catMaybes, maybeToList)
 import           Empire.Prelude                   hiding (mapping, toList)
-import           System.Directory                 (canonicalizePath, withCurrentDirectory)
+import           System.Directory                 (canonicalizePath, listDirectory, withCurrentDirectory)
 import           System.Environment               (getEnv)
-import           System.FilePath                  (takeDirectory)
+import           System.FilePath                  ((</>), takeDirectory)
 import qualified Path
 
 import           LunaStudio.Data.Breadcrumb       (Breadcrumb (..), BreadcrumbItem(Definition))
@@ -54,6 +54,8 @@ import           Luna.Pass.Data.ExprMapping
 import qualified Luna.Pass.Evaluation.Interpreter as Interpreter
 import qualified Luna.IR.Layer.Errors             as Errors
 import           OCI.IR.Name.Qualified            (QualName)
+import qualified System.IO as IO
+
 
 runTC :: Imports -> Command Graph ()
 runTC imports = do
@@ -149,12 +151,27 @@ filePathToQualName path = liftIO $ do
     file  <- Path.stripProperPrefix (root Path.</> $(Path.mkRelDir "src")) path'
     return $ Project.mkQualName file
 
+listDependencies :: Path.Path Path.Abs Path.Dir -> IO [(IR.Name, FilePath)]
+listDependencies projectSrc = do
+    let lunaModules = projectSrc Path.</> $(Path.mkRelDir "luna_modules")
+    dependencies <- liftIO $ tryAny $ listDirectory $ Path.toFilePath lunaModules
+    case dependencies of
+        Left exc -> return []
+        Right deps -> do
+            moarDeps <- mapM (\proj -> Path.parseRelDir proj >>= \p -> listDependencies (lunaModules Path.</> p)) deps
+            return $ map (\fp -> (convert fp, Path.toFilePath lunaModules </> fp)) deps <> concat moarDeps
+
 recomputeCurrentScope :: MVar CompiledModules -> FilePath -> Command InterpreterEnv Imports
 recomputeCurrentScope imports file = do
     Lifted.modifyMVar imports $ \imps -> do
         lunaroot    <- liftIO $ canonicalizePath =<< getEnv "LUNAROOT"
         currentProjPath <- liftIO $ Project.findProjectRootForFile =<< Path.parseAbsFile file
-        let importPaths = ("Std", lunaroot <> "/Std/") : ((Project.getProjectName &&& Path.toFilePath) <$> maybeToList currentProjPath)
+        dependencies <- liftIO $ listDependencies $ fromJust currentProjPath
+        liftIO $ print dependencies >> IO.hFlush IO.stdout
+        let importPaths = ("Std", lunaroot <> "/Std/")
+                        : ((Project.getProjectName &&& Path.toFilePath) $ fromJust currentProjPath)
+                        : dependencies
+        liftIO $ print importPaths >> IO.hFlush IO.stdout
         (f, nimps) <- zoom graph $ do
             t <- runModuleTypecheck (Map.fromList importPaths) imps
             case t of
