@@ -9,8 +9,7 @@ height = 100
 export class InputNode extends Component
     updateModel: ({ key:      @key      = @key
                   , outPorts: outPorts = @outPorts
-                  , position: position = @position}) =>
-        position ?= [0,0]
+                  , position: position = @position or [0,0]}) =>
         @emitProperty 'position', position
         @setOutPorts outPorts
 

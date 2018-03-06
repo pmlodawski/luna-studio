@@ -113,6 +113,7 @@ runExample = -> main (nodeEditor) ->
     nodeEditor.setSearcher new Searcher
         key: 4
         mode: 'node'
+        selected: 1
         matches: [
             name: 'bar'
             doc:  'bar description'
@@ -120,7 +121,11 @@ runExample = -> main (nodeEditor) ->
         ,
             name: 'foo'
             doc:  'foo multiline\ndescription'
-            mode: 'function'
+            mode: 'funcion'
+        ,
+            name: 'baz'
+            doc:  'baz description'
+            mode: 'funcion'
         ]
 
 
