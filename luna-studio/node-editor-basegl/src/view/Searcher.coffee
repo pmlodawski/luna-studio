@@ -8,8 +8,9 @@ searcherRoot = 'searcher-root'
 export class Searcher extends Component
     updateModel: ({ key: @key = @key
                   , mode: @mode = @mode
+                  , input: @input = @input
                   , selected: @selected = @selected or 0
-                  , matches: @matches = @matches}) =>
+                  , entries: @entries = @entries or []}) =>
         unless @def?
             root = document.createElement 'div'
             root.id = searcherRoot
@@ -18,7 +19,9 @@ export class Searcher extends Component
             @def = basegl.symbol root
 
     updateView: =>
-        @view.position.xy = @parent.node(@key).position
+        node = @parent.node(@key)
+        if node?
+            @view.position.xy = node.position
 
         @view.domElement.innerHTML = ''
 
@@ -31,24 +34,24 @@ export class Searcher extends Component
         input.className = style.luna inputClasses
         @view.domElement.appendChild input
 
-        if @matches.length > 0
-            @results = document.createElement 'div'
-            @results.className = style.luna ['searcher__results']
+        if @entries.length > 0
+            results = document.createElement 'div'
+            results.className = style.luna ['searcher__results']
 
-            @resultsList = document.createElement 'div'
-            @resultsList.className = style.luna ['searcher__results__list']
-            @results.appendChild @resultsList
+            resultsList = document.createElement 'div'
+            resultsList.className = style.luna ['searcher__results__list']
+            results.appendChild resultsList
 
-            @view.domElement.appendChild @results
+            @view.domElement.appendChild results
 
             i = 0
-            for match in @matches.slice @selected
+            for entry in @entries.slice @selected
                 resultName = document.createElement 'div'
                 resultName.className = style.luna ['searcher__results__item__name']
-                resultName.append match.name
+                resultName.innerHTML = entry.name
 
                 result = document.createElement 'div'
                 result.className = if i == 0 then style.luna ['searcher__results__item', 'searcher__results__item--selected'] else ['searcher__results__item']
                 result.appendChild resultName
-                @resultsList.appendChild result
+                resultsList.appendChild result
                 i++

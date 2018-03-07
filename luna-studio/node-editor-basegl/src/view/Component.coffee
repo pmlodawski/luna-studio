@@ -44,7 +44,7 @@ export class Component extends Composable
 
     detach: => @withScene (scene) =>
         if @view?
-            @scene.delete @view
+            scene.delete @view
             @view = null
 
     reatach: =>

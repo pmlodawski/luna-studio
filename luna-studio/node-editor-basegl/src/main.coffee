@@ -111,7 +111,7 @@ runExample = -> main (nodeEditor) ->
         key: 4
         mode: 'node'
         selected: 1
-        matches: [
+        entries: [
             name: 'bar'
             doc:  'bar description'
             mode: 'class'
