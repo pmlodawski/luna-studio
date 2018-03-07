@@ -10,20 +10,17 @@ import {OutputNode}      from 'view/OutputNode'
 import {Searcher}        from 'view/Searcher'
 import {subscribeEvents} from 'view/Component'
 
-export install = (name, f) ->
+export install = (name, fontRootPath = "", f) ->
     scene = basegl.scene {domElement: name}
-    basegl.fontManager.register 'DejaVuSansMono', 'rsc/DejaVuSansMono.ttf'
-    await basegl.fontManager.load 'DejaVuSansMono',
-        glyphSize: 20
-        spread: 32
-
-    nodeEditor = new NodeEditor scene
-    nodeEditor.initialize()
-    f nodeEditor
+    basegl.fontManager.register 'DejaVuSansMono', fontRootPath + 'DejaVuSansMono.ttf'
+    basegl.fontManager.load('DejaVuSansMono').then =>
+        nodeEditor = new NodeEditor scene
+        nodeEditor.initialize()
+        f nodeEditor
 
 export onEvent = subscribeEvents
 
-main = (f) -> install 'basegl-root', f
+main = (f) -> install 'basegl-root', 'rsc/', f
 
 window.run = main
 

@@ -42,9 +42,9 @@ export class Component extends Composable
             @updateView()
         @registerEvents?()
 
-    detach: => withScene (scene) =>
+    detach: => @withScene (scene) =>
         if @view?
-            # @scene.remove @view
+            @scene.delete @view
             @view = null
 
     reatach: =>

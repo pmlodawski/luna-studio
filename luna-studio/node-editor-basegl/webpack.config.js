@@ -39,7 +39,7 @@ module.exports =
       [ { test: /\.(coffee)$/
         , use:
           [ { loader: 'babel-loader'
-            , options: { presets: ['env'] }
+            // , options: { presets: ['env'] }
             }
           , { loader: path.resolve('./basegl-loader.js')}
           , 'coffee-loader'
