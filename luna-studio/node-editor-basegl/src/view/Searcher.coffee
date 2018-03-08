@@ -13,6 +13,7 @@ export class Searcher extends Component
                   , entries: @entries = @entries or []}) =>
         unless @def?
             root = document.createElement 'div'
+            root.className = ['native-key-bindings'].concat style.luna ['input', 'searcher', 'searcher--node']
             root.id = searcherRoot
             root.style.width = 100 + 'px'
             root.style.height = 200 + 'px'
@@ -48,10 +49,37 @@ export class Searcher extends Component
             for entry in @entries.slice @selected
                 resultName = document.createElement 'div'
                 resultName.className = style.luna ['searcher__results__item__name']
-                resultName.innerHTML = entry.name
+
+                prefixSpan = document.createElement 'span'
+                prefixSpan.className = style.luna ['searcher__pre']
+                prefixSpan.innerHTML = entry.className or ''
+                resultName.appendChild prefixSpan
+
+                nameSpan = document.createElement 'span'
+                resultName.appendChild nameSpan
+
+                name = entry.name
+                last = 0
+                if entry.highlights instanceof Array
+                    for highlight in entry.highlights
+                        normName = name.slice last, highlight.start
+                        highName = name.slice highlight.start, highlight.end
+                        last = highlight.end
+
+                        normSpan = document.createElement 'span'
+                        normSpan.innerHTML = normName
+                        nameSpan.appendChild normSpan
+
+                        highSpan = document.createElement 'span'
+                        highSpan.className = style.luna ['searcher__hl']
+                        highSpan.innerHTML = highName
+                        nameSpan.appendChild highSpan
+                normSpan = document.createElement 'span'
+                normSpan.innerHTML = name.slice last
+                nameSpan.appendChild normSpan
 
                 result = document.createElement 'div'
-                result.className = if i == 0 then style.luna ['searcher__results__item', 'searcher__results__item--selected'] else ['searcher__results__item']
+                result.className = style.luna if i == 0 then ['searcher__results__item', 'searcher__results__item--selected'] else ['searcher__results__item']
                 result.appendChild resultName
                 resultsList.appendChild result
                 i++

@@ -18,10 +18,16 @@ searcherView :: MonadIO m => Maybe Searcher -> Maybe Searcher -> m ()
 searcherView new old =
     when (new /= old) $ setSearcher $ convert new
 
+data HighlightView = HighlightView
+    { start :: Int
+    , end   :: Int
+    } deriving (Generic, Show)
+
 data EntryView = EntryView
-    { name :: String
-    , doc  :: String
-    , tpe  :: String
+    { name       :: String
+    , doc        :: String
+    , className  :: String
+    , highlights :: [HighlightView]
     } deriving (Generic, Show)
 
 data SearcherView = SearcherView
@@ -31,14 +37,21 @@ data SearcherView = SearcherView
     , input    :: String
     } deriving (Generic, Show)
 
+instance ToJSON HighlightView
 instance ToJSON EntryView
 instance ToJSON SearcherView
 
+instance Convertible (Int, Int) HighlightView where
+    convert (start, end) = HighlightView
+        {- start -} start
+        {- end   -} end
+
 instance Convertible Match EntryView where
     convert m = EntryView
-        {- name -} (m ^. Match.name . to convert)
-        {- doc  -} (m ^. Match.doc . to convert)
-        {- tpe  -} (m ^. Match.entryType . to show)
+        {- name       -} (m ^. Match.name . to convert)
+        {- doc        -} (m ^. Match.doc . to convert)
+        {- className  -} (m ^. Match.className . to convert)
+        {- highlights -} (m ^. Match.match . to convert)
 
 instance Convertible Searcher SearcherView where
     convert s = SearcherView

@@ -110,19 +110,29 @@ runExample = -> main (nodeEditor) ->
     nodeEditor.setSearcher new Searcher
         key: 4
         mode: 'node'
-        selected: 1
+        selected: 0
         entries: [
             name: 'bar'
             doc:  'bar description'
-            mode: 'class'
+            className: 'Bar'
+            highlights:
+                [
+                    start: 1
+                    end: 2
+                ]
         ,
             name: 'foo'
             doc:  'foo multiline\ndescription'
-            mode: 'funcion'
+            className: 'Foo'
         ,
             name: 'baz'
             doc:  'baz description'
-            mode: 'funcion'
+            className: 'Test'
+            highlights:
+                [
+                    start: 1
+                    end: 3
+                ]
         ]
 
 
