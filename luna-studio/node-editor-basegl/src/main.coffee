@@ -13,7 +13,10 @@ import {subscribeEvents} from 'view/Component'
 export install = (name, fontRootPath = "", f) ->
     scene = basegl.scene {domElement: name}
     basegl.fontManager.register 'DejaVuSansMono', fontRootPath + 'DejaVuSansMono.ttf'
-    basegl.fontManager.load('DejaVuSansMono').then =>
+    fontSettings =
+        glyphSize: 20
+        spread: 32
+    basegl.fontManager.load('DejaVuSansMono', fontSettings).then =>
         nodeEditor = new NodeEditor scene
         nodeEditor.initialize()
         f nodeEditor
