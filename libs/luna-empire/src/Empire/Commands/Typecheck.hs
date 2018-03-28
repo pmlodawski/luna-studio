@@ -151,18 +151,18 @@ createStdlib = fmap (id *** Scope) . Compilation.prepareStdlib . Map.singleton "
 filePathToQualName :: MonadIO m => FilePath -> m QualName
 filePathToQualName path = liftIO $ do
     path' <- Path.parseAbsFile path
-    root  <- fromMaybe (error (path <> " is not in a project")) <$> Project.findProjectRootForFile path'
+    root  <- Project.projectRootForFile path'
+    let projName = Project.getProjectName root
     file  <- Path.stripProperPrefix (root Path.</> $(Path.mkRelDir "src")) path'
-    return $ Project.mkQualName file
+    return $ Project.mkQualName projName file
 
 recomputeCurrentScope :: MVar CompiledModules -> FilePath -> Command InterpreterEnv Imports
 recomputeCurrentScope imports file = do
     Lifted.modifyMVar imports $ \imps -> do
-        lunaroot    <- liftIO $ canonicalizePath =<< getEnv "LUNAROOT"
-        currentProjPath <- liftIO $ Project.findProjectRootForFile =<< Path.parseAbsFile file
-        let importPaths = ("Std", lunaroot <> "/Std/") : ((Project.getProjectName &&& Path.toFilePath) <$> maybeToList currentProjPath)
-        qualName <- filePathToQualName file
-        (f, nimps) <- zoom graph $ do
+        currentProjPath <- liftIO $ Project.projectRootForFile =<< Path.parseAbsFile file
+        importPaths     <- liftIO $ Project.projectImportPaths currentProjPath
+        qualName        <- filePathToQualName file
+        (f, nimps)      <- zoom graph $ do
             t <- runModuleTypecheck qualName (Map.fromList importPaths) imps
             case t of
                 Right (a, b) -> return (a, b)
