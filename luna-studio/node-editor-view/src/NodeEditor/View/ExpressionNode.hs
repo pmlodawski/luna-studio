@@ -9,7 +9,7 @@ import qualified Data.HashMap.Strict                        as HashMap
 import           LunaStudio.Data.Position                   (toTuple)
 import           NodeEditor.React.Model.Node.ExpressionNode (ExpressionNode, ExpressionNodesMap)
 import qualified NodeEditor.React.Model.Node.ExpressionNode as ExpressionNode
-import           NodeEditor.View.Diff                       (DiffT, diffApply)
+import           NodeEditor.View.Diff                       (DiffT, diffApply, diffConvert, diffHashMap)
 import           NodeEditor.View.Port                       (PortView(PortView))
 
 
@@ -22,7 +22,7 @@ data ExpressionNodeView = ExpressionNodeView
         , _position   :: (Double, Double)
         , _expanded   :: Bool
         , _selected   :: Bool
-        } deriving (Generic, Show)
+        } deriving (Eq, Generic, Show)
 
 makeLenses ''ExpressionNodeView
 
@@ -41,11 +41,23 @@ instance Convertible ExpressionNode ExpressionNodeView where
         {- expanded   -} (n ^. ExpressionNode.mode == ExpressionNode.Expanded ExpressionNode.Controls)
         {- selected   -} (n ^. ExpressionNode.isSelected)
 
-foreign import javascript safe "atomCallback.getNodeEditorView().setNodes($1)"
-    setNodes__ :: JSVal -> IO ()
+foreign import javascript safe "atomCallback.getNodeEditorView().setNode($1)"
+    setNode__ :: JSVal -> IO ()
 
-setNodes :: MonadIO m => [ExpressionNodeView] -> m ()
-setNodes = liftIO . setNodes__ <=< toJSONVal
+foreign import javascript safe "atomCallback.getNodeEditorView().unsetNode($1)"
+    unsetNode__ :: JSVal -> IO ()
+
+setNode :: MonadIO m => ExpressionNodeView -> m ()
+setNode = liftIO . setNode__ <=< toJSONVal
+
+unsetNode :: MonadIO m => ExpressionNodeView -> m ()
+unsetNode = liftIO . unsetNode__ <=< toJSONVal
+
+expressionNodeView :: MonadIO m => DiffT ExpressionNodeView m ()
+expressionNodeView = diffApply setNode
 
 expressionNodesView :: MonadIO m => DiffT ExpressionNodesMap m ()
-expressionNodesView = diffApply $ setNodes . map convert . HashMap.elems
+expressionNodesView = diffHashMap
+    (diffConvert expressionNodeView)
+    (setNode . convert)
+    (unsetNode . convert)

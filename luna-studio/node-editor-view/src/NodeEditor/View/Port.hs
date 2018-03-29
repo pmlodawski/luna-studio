@@ -11,7 +11,7 @@ import qualified NodeEditor.React.Model.Port as Port
 
 data PortView = PortView
         { _key :: String
-        } deriving (Generic, Show)
+        } deriving (Eq, Generic, Show)
 
 makeLenses ''PortView
 

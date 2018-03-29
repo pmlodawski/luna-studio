@@ -9,7 +9,7 @@ import qualified Data.HashMap.Strict               as HashMap
 import qualified LunaStudio.Data.PortRef           as PortRef
 import           NodeEditor.React.Model.Connection (Connection, ConnectionsMap)
 import qualified NodeEditor.React.Model.Connection as Connection
-import           NodeEditor.View.Diff              (DiffT, diffApply)
+import           NodeEditor.View.Diff              (DiffT, diffApply, diffConvert, diffHashMap)
 
 
 data ConnectionView = ConnectionView
@@ -18,7 +18,7 @@ data ConnectionView = ConnectionView
     , _srcPort :: String
     , _dstNode :: String
     , _dstPort :: String
-    } deriving (Generic, Show)
+    } deriving (Eq, Generic, Show)
 
 makeLenses ''ConnectionView
 
@@ -34,11 +34,23 @@ instance Convertible Connection ConnectionView where
         {- dstNode    -} (c ^. Connection.dst . PortRef.dstNodeLoc . to show)
         {- dstPort    -} (c ^. Connection.dst . PortRef.dstNodeId  . to show)
 
-foreign import javascript safe "atomCallback.getNodeEditorView().setConnections($1)"
-    setConnections__ :: JSVal -> IO ()
+foreign import javascript safe "atomCallback.getNodeEditorView().setConnection($1)"
+    setConnection__ :: JSVal -> IO ()
 
-setConnections :: MonadIO m => [ConnectionView] -> m ()
-setConnections = liftIO . setConnections__ <=< toJSONVal
+foreign import javascript safe "atomCallback.getNodeEditorView().unsetConnection($1)"
+    unsetConnection__ :: JSVal -> IO ()
+
+setConnection :: MonadIO m => ConnectionView -> m ()
+setConnection = liftIO . setConnection__ <=< toJSONVal
+
+unsetConnection :: MonadIO m => ConnectionView -> m ()
+unsetConnection = liftIO . unsetConnection__ <=< toJSONVal
+
+connectionView :: MonadIO m => DiffT ConnectionView m ()
+connectionView = diffApply setConnection
 
 connectionsView :: MonadIO m => DiffT ConnectionsMap m ()
-connectionsView = diffApply $ setConnections . map convert . HashMap.elems
+connectionsView = diffHashMap
+    (diffConvert connectionView)
+    (setConnection . convert)
+    (unsetConnection . convert)
