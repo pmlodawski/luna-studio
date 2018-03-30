@@ -16,7 +16,7 @@ runDiffT fun = curry $ evalStateT fun
 diff :: Monad m => DiffT b m r -> Getting b a b -> DiffT a m r
 diff fun getting = do
     (old, new) <- get
-    lift $ runDiffT fun (new ^. getting) (old ^. getting)
+    lift $ runDiffT fun (old ^. getting) (new ^. getting)
 
 diffApply :: (Eq a, Monad m) => (a -> DiffT a m ()) -> DiffT a m ()
 diffApply apply = do
@@ -33,8 +33,8 @@ diffHashMap :: (Eq k, Eq v, Hashable k, Monad m)
             -> DiffT (HashMap k v) m ()
 diffHashMap update add remove = do
     (old, new) <- get
-    let removed = HashMap.elems $ HashMap.difference new old
-        added   = HashMap.elems $ HashMap.difference old new
+    let removed = HashMap.elems $ HashMap.difference old new
+        added   = HashMap.elems $ HashMap.difference new old
         updated = HashMap.elems $ HashMap.intersectionWith (,) old new
     mapM_ add    added
     mapM_ remove removed

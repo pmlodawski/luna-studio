@@ -47,5 +47,5 @@ renderBaseGL :: Command State ()
 renderBaseGL = do
     current <- get id
     old <- use $ ui . oldApp
-    appView current old
+    appView old current
     ui . oldApp .= current

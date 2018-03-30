@@ -48,7 +48,7 @@ setOutputNode :: MonadIO m => Maybe SidebarNodeView -> m ()
 setOutputNode = liftIO . setOutputNode__ <=< toJSONVal
 
 inputNodeView :: MonadIO m => DiffT (Maybe InputNode) m ()
-inputNodeView = diffApply $ setInputNode . convert
+inputNodeView = diffApply $ setInputNode . fmap convert
 
 outputNodeView :: MonadIO m => DiffT (Maybe OutputNode) m ()
-outputNodeView = diffApply $ setOutputNode . convert
+outputNodeView = diffApply $ setOutputNode . fmap convert
