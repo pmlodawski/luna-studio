@@ -32,7 +32,7 @@ instance Convertible Connection ConnectionView where
         {- srcNode    -} (c ^. Connection.src . PortRef.srcNodeLoc . to show)
         {- srcPort    -} (c ^. Connection.src . PortRef.srcPortId  . to show)
         {- dstNode    -} (c ^. Connection.dst . PortRef.dstNodeLoc . to show)
-        {- dstPort    -} (c ^. Connection.dst . PortRef.dstNodeId  . to show)
+        {- dstPort    -} (c ^. Connection.dst . PortRef.dstPortId  . to show)
 
 foreign import javascript safe "atomCallback.getNodeEditorView().setConnection($1)"
     setConnection__ :: JSVal -> IO ()
