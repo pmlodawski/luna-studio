@@ -60,6 +60,9 @@ buildLCH (Color i) = Color.LCH (colorL i) (colorC i) h' 255 where
     h'    = (colorH i + delta * (fromIntegral i - 1)) `mod'` 360
     delta = 256/pi
 
+instance Convertible Color Color.RGB where
+    convert = Color.lch2rgb . buildLCH
+
 instance Convertible Color.LCH JSString where
     convert = convert . Color.lch2rgb
 

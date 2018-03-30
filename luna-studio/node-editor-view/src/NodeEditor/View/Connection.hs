@@ -5,7 +5,6 @@ import           Common.Prelude
 import qualified Control.Lens.Aeson                as Lens
 import           Data.Aeson                        (ToJSON (toEncoding, toJSON))
 import           Data.Convert                      (Convertible (convert))
-import qualified Data.HashMap.Strict               as HashMap
 import qualified LunaStudio.Data.PortRef           as PortRef
 import           NodeEditor.React.Model.Connection (Connection, ConnectionsMap)
 import qualified NodeEditor.React.Model.Connection as Connection

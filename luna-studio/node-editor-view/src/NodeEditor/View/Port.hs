@@ -6,11 +6,12 @@ import           Data.Aeson                  (ToJSON (toEncoding, toJSON))
 import           Data.Convert                (Convertible (convert))
 import           NodeEditor.React.Model.Port (InPort, OutPort)
 import qualified NodeEditor.React.Model.Port as Port
-
+import           NodeEditor.View.Color       (RGB)
 
 
 data PortView = PortView
-        { _key :: String
+        { _key  :: String
+        , _color :: RGB
         } deriving (Eq, Generic, Show)
 
 makeLenses ''PortView
@@ -21,9 +22,11 @@ instance ToJSON PortView where
 
 instance Convertible InPort PortView where
     convert c = PortView
-        {- key        -} (c ^. Port.portId . to show)
+        {- key   -} (c ^. Port.portId . to show)
+        {- color -} (c ^. Port.color . to convert)
 
 instance Convertible OutPort PortView where
     convert c = PortView
-        {- key        -} (c ^. Port.portId . to show)
+        {- key   -} (c ^. Port.portId . to show)
+        {- color -} (c ^. Port.color . to convert)
         
