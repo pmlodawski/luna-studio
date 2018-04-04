@@ -8,6 +8,18 @@ import           NodeEditor.View.NodeEditor  (nodeEditorView)
 
 
 appView :: MonadIO m => App -> App -> m ()
-appView = runDiffT $ do
+appView = runDiffT $ transaction $ do
     diff breadcrumbsView $ to convert
     diff nodeEditorView  nodeEditor
+
+foreign import javascript safe "atomCallback.getNodeEditorView().beginTransaction()"
+    beginTransaction__ :: IO ()
+
+foreign import javascript safe "atomCallback.getNodeEditorView().commitTransaction()"
+    commitTransaction__ :: IO ()
+
+transaction :: MonadIO m => m () -> m ()
+transaction action = do
+    liftIO beginTransaction__
+    action
+    liftIO commitTransaction__
