@@ -10,8 +10,9 @@ import           NodeEditor.View.Color       (RGB)
 
 
 data PortView = PortView
-        { _key  :: String
+        { _key   :: String
         , _color :: RGB
+        , _name  :: String
         } deriving (Eq, Generic, Show)
 
 makeLenses ''PortView
@@ -24,9 +25,11 @@ instance Convertible InPort PortView where
     convert c = PortView
         {- key   -} (c ^. Port.portId . to show)
         {- color -} (c ^. Port.color . to convert)
+        {- name  -} (c ^. Port.name . to convert)
 
 instance Convertible OutPort PortView where
     convert c = PortView
         {- key   -} (c ^. Port.portId . to show)
         {- color -} (c ^. Port.color . to convert)
+        {- name  -} (c ^. Port.name . to convert)
         
