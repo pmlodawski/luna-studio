@@ -4,6 +4,7 @@
 module JS.Atom
     ( activeLocation
     , insertCode
+    , openedFiles
     , pushInterpreterUpdate
     , pushStatus
     , setBuffer
@@ -55,6 +56,9 @@ foreign import javascript safe "($1).unsubscribeDiffs()"
 foreign import javascript safe "globalRegistry.activeLocation"
     activeLocation' :: IO JSVal
 
+foreign import javascript safe "$r = atom.workspace.getPaneItems()"
+    openedFiles' :: IO JSVal
+
 
 instance ToJSVal Point where toJSVal = toJSONVal
 instance ToJSVal Diff  where toJSVal = toJSONVal
@@ -71,6 +75,9 @@ instance FromJSVal TextEvent where
 
 activeLocation :: MonadIO m => m (Maybe GraphLocation)
 activeLocation = liftIO $ fromJSVal =<< activeLocation'
+
+openedFiles :: MonadIO m => m (Maybe [String])
+openedFiles = liftIO $ fromJSVal =<< openedFiles'
 
 subscribeDiffs :: (TextEvent -> IO ()) -> IO (IO ())
 subscribeDiffs callback = do
