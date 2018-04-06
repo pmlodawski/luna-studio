@@ -11,6 +11,7 @@ import NodeEditor.React.Model.IsNode as X
 
 import Common.Prelude
 
+import qualified LunaStudio.Data.Error       as Error
 import qualified LunaStudio.Data.Node        as Empire
 import qualified LunaStudio.Data.NodeLoc     as NodeLoc
 import qualified LunaStudio.Data.NodeMeta    as NodeMeta
@@ -167,6 +168,17 @@ returnsError :: ExpressionNode -> Bool
 returnsError node = case node ^. value of
     Error _ -> True
     _       -> False
+
+getValue :: ExpressionNode -> Maybe Text
+getValue node = case node ^. value of
+    Error (Error.Error _ msg) -> Just msg
+    ShortValue shortValue     -> Just shortValue
+    _                         -> Nothing
+
+hasCompileError :: ExpressionNode -> Bool
+hasCompileError node = case node ^. value of
+    Error (Error.Error (Error.CompileError _) _) -> True
+    _                                            -> False
 
 hasData :: ExpressionNode -> Bool
 hasData node = case node ^. value of

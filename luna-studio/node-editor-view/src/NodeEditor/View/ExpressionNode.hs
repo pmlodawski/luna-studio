@@ -17,6 +17,8 @@ data ExpressionNodeView = ExpressionNodeView
         { _key        :: String
         , _name       :: String
         , _expression :: String
+        , _error      :: Bool
+        , _value      :: Maybe String
         , _inPorts    :: [PortView]
         , _outPorts   :: [PortView]
         , _position   :: (Double, Double)
@@ -35,6 +37,8 @@ instance Convertible ExpressionNode ExpressionNodeView where
         {- key        -} (n ^. ExpressionNode.nodeLoc . to show)
         {- name       -} (n ^. ExpressionNode.name . to convert . to (fromMaybe def))
         {- expression -} (n ^. ExpressionNode.expression . to convert)
+        {- error      -} (n ^. to ExpressionNode.hasCompileError)
+        {- value      -} (n ^. to ExpressionNode.getValue . to convert)
         {- inPorts    -} (n ^. to ExpressionNode.inPortsList . to convert)
         {- outPorts   -} (n ^. to ExpressionNode.outPortsList . to convert)
         {- position   -} (n ^. ExpressionNode.position . to toTuple)
