@@ -13,6 +13,7 @@ data PortView = PortView
         { _key   :: String
         , _color :: RGB
         , _name  :: String
+        , _mode  :: String
         } deriving (Eq, Generic, Show)
 
 makeLenses ''PortView
@@ -26,10 +27,12 @@ instance Convertible InPort PortView where
         {- key   -} (c ^. Port.portId . to show)
         {- color -} (c ^. Port.color . to convert)
         {- name  -} (c ^. Port.name . to convert)
+        {- mode  -} (if c ^. Port.portId == [Port.Self] then "self" else "in")
 
 instance Convertible OutPort PortView where
     convert c = PortView
         {- key   -} (c ^. Port.portId . to show)
         {- color -} (c ^. Port.color . to convert)
         {- name  -} (c ^. Port.name . to convert)
+        {- mode  -} def
         
