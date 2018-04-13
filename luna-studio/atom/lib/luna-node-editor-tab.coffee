@@ -22,9 +22,10 @@ class LunaNodeEditorTab extends View
         window.install = => nodeEditorBaseGL.install mountPoint2, 'atom://luna-studio/rsc/',  (ne) =>
             window.nodeEditor = ne
             @nodeEditor.setView ne
-        nodeEditorBaseGL.onEvent (path, event) =>
+        nodeEditorBaseGL.onEvent (path, event, target) =>
             @nodeEditor.pushViewEvent
                 path: path
+                target: target
                 base:
                     tag: event.constructor.name
 

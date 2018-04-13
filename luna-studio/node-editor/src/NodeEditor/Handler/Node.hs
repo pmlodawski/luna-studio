@@ -14,6 +14,9 @@ import           NodeEditor.Event.Event                     (Event (Shortcut, UI
 import qualified NodeEditor.Event.Mouse                     as Mouse
 import qualified NodeEditor.Event.Shortcut                  as Shortcut
 import           NodeEditor.Event.UI                        (UIEvent (AppEvent, NodeEvent, SidebarEvent))
+import           NodeEditor.Event.Event                     (Event (View))
+import qualified NodeEditor.Event.View                      as View
+import           NodeEditor.Event.View                      (ViewEvent (ViewEvent))
 import qualified NodeEditor.React.Event.App                 as App
 import qualified NodeEditor.React.Event.Node                as Node hiding (nodeLoc)
 import qualified NodeEditor.React.Event.Sidebar             as Sidebar
@@ -39,6 +42,13 @@ handle (UI (NodeEvent    (Node.Event nl (Node.Select        kevt))))    = Just $
 handle (UI (NodeEvent    (Node.Event nl (Node.SetExpression expr))))    = Just $ setNodeExpression nl expr
 handle (UI (NodeEvent    (Node.Event nl Node.MouseEnter)))              = Just $ Node.handleMouseEnter nl
 handle (UI (NodeEvent    (Node.Event nl Node.MouseLeave)))              = Just $ Node.handleMouseLeave nl
+handle (View (ViewEvent path target base)) = case (path, target) of
+    (["node-editor", "node"], Just nl) -> case base ^. View.type_ of
+        "click" -> Just $ when (View.mouseCtrlKey base || View.mouseMetaKey base) $ toggleSelect $ read nl
+        -- "mouseenter" -> Just $ Node.handleMouseEnter $ read nl
+        -- "mouseleave" -> Just $ Node.handleMouseLeave $ read nl
+        _ -> Nothing
+    _ -> Nothing
 handle _                                                                = Nothing
 
 handleCommand :: Shortcut.Command -> Command State ()

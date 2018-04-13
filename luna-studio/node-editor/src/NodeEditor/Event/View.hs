@@ -12,8 +12,9 @@ import           Data.Aeson                  (FromJSON (..), ToJSON (..))
 type Path = [String]
 
 data ViewEvent = ViewEvent
-    { _path :: Path
-    , _base :: BaseEvent
+    { _path   :: Path
+    , _target :: Maybe String
+    , _base   :: BaseEvent
     } deriving (Generic, Show, NFData)
 
 data BaseEvent
@@ -66,3 +67,23 @@ instance EventName ViewEvent where
     eventName = intercalate "." . view path
 instance IsTrackedEvent ViewEvent where
     isTracked = const False
+
+mouseAltKey :: BaseEvent -> Bool
+mouseAltKey = \case
+    MouseEvent { _altKey = key } -> key
+    _ -> False
+
+mouseCtrlKey :: BaseEvent -> Bool
+mouseCtrlKey = \case
+    MouseEvent { _ctrlKey = key } -> key
+    _ -> False
+
+mouseShiftKey :: BaseEvent -> Bool
+mouseShiftKey = \case
+    MouseEvent { _shiftKey = key } -> key
+    _ -> False
+
+mouseMetaKey :: BaseEvent -> Bool
+mouseMetaKey = \case
+    MouseEvent { _metaKey = key } -> key
+    _ -> False

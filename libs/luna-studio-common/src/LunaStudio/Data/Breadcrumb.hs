@@ -15,7 +15,7 @@ data BreadcrumbItem
     = Definition { _nodeId  :: NodeId }
     | Lambda     { _nodeId  :: NodeId }
     | Arg        { _nodeId  :: NodeId, _arg :: Int }
-    deriving (Eq, Generic, Ord, Show)
+    deriving (Eq, Generic, Ord, Read, Show)
 
 data Named a = Named
     { _name       :: Text
@@ -24,7 +24,7 @@ data Named a = Named
 
 newtype Breadcrumb a = Breadcrumb
     { _items :: [a]
-    } deriving (Eq, Generic, Ord, Show)
+    } deriving (Eq, Generic, Ord, Read, Show)
 
 makeLenses ''BreadcrumbItem
 makeLenses ''Breadcrumb

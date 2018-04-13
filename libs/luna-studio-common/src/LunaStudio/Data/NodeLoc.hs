@@ -14,12 +14,12 @@ import           Prologue
 
 data NodePath = NodePath
     { _localBc :: Breadcrumb BreadcrumbItem
-    } deriving (Eq, Generic, Ord, Show)
+    } deriving (Eq, Generic, Ord, Read, Show)
 
 data NodeLoc = NodeLoc
     { _path   :: NodePath
     , _nodeId :: NodeId
-    } deriving (Eq, Generic, Ord, Show)
+    } deriving (Eq, Generic, Ord, Read, Show)
 
 makeLenses ''NodePath
 makeLenses ''NodeLoc
