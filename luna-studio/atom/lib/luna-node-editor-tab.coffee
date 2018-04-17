@@ -88,7 +88,8 @@ class LunaNodeEditorTab extends View
                     @div
                         id: mountPoint2
                         style: 'flex-direction:row; width: 50%; height: inherit'
-                        class: 'luna-studio-mount'
+                        class: 'luna-studio-mount luna-studio luna-noselect'
+                        tabindex: -1
                         =>
                             @h1 "Loading ..."
                     @div

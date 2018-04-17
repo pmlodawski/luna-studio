@@ -19,43 +19,41 @@ data ViewEvent = ViewEvent
 
 data BaseEvent
     = MouseEvent
-        { _altKey       :: Bool
-        , _bubbles      :: Bool
-        , _button       :: Int
-        , _buttons      :: Double
-        , _cancelable   :: Bool
-        , _cancelBubble :: Bool
-        , _clientX      :: Double
-        , _clientY      :: Double
-        , _ctrlKey      :: Bool
-        , _defaultPrevented :: Bool
-        , _detail      :: Double
-        , _eventPhase  :: Double
-        , _isTrusted   :: Bool
-        , _layerY      :: Double
-        , _metaKey     :: Bool
-        , _movementY   :: Double
-        , _pageX       :: Double
-        , _screenX     :: Double
-        , _shiftKey    :: Bool
-        , _screenY     :: Double
-        , _layerX      :: Double
-        , _movementX   :: Double
-        , _timeStamp   :: Double
-        , _offsetY     :: Double
-        , _offsetX     :: Double
-        , _pageY       :: Double
-        , _returnValue :: Bool
-        , _type_       :: String
-        , _which       :: Double
-        , _x           :: Double
-        , _y           :: Double
+        { altKey       :: Bool
+        , bubbles      :: Bool
+        , button       :: Int
+        , buttons      :: Double
+        , cancelable   :: Bool
+        , cancelBubble :: Bool
+        , clientX      :: Double
+        , clientY      :: Double
+        , ctrlKey      :: Bool
+        , defaultPrevented :: Bool
+        , detail      :: Double
+        , eventPhase  :: Double
+        , isTrusted   :: Bool
+        , layerX      :: Double
+        , layerY      :: Double
+        , metaKey     :: Bool
+        , movementY   :: Double
+        , pageX       :: Double
+        , pageY       :: Double
+        , screenX     :: Double
+        , shiftKey    :: Bool
+        , screenY     :: Double
+        , movementX   :: Double
+        , timeStamp   :: Double
+        , offsetX     :: Double
+        , offsetY     :: Double
+        , returnValue :: Bool
+        , type_       :: String
+        , which       :: Double
+        , x           :: Double
+        , y           :: Double
         }
-    | Test
     deriving (Generic, Show, NFData)
 
 makeLenses ''ViewEvent
-makeLenses ''BaseEvent
 
 instance ToJSON ViewEvent where toEncoding = toEncodingDropUnary
 instance ToJSON BaseEvent where toEncoding = toEncodingDropUnary
@@ -70,20 +68,84 @@ instance IsTrackedEvent ViewEvent where
 
 mouseAltKey :: BaseEvent -> Bool
 mouseAltKey = \case
-    MouseEvent { _altKey = key } -> key
+    MouseEvent { altKey = key } -> key
     _ -> False
 
 mouseCtrlKey :: BaseEvent -> Bool
 mouseCtrlKey = \case
-    MouseEvent { _ctrlKey = key } -> key
+    MouseEvent { ctrlKey = key } -> key
     _ -> False
 
 mouseShiftKey :: BaseEvent -> Bool
 mouseShiftKey = \case
-    MouseEvent { _shiftKey = key } -> key
+    MouseEvent { shiftKey = key } -> key
     _ -> False
 
 mouseMetaKey :: BaseEvent -> Bool
 mouseMetaKey = \case
-    MouseEvent { _metaKey = key } -> key
+    MouseEvent { metaKey = key } -> key
     _ -> False
+
+mouseButton ::  Int -> BaseEvent -> Bool
+mouseButton btn = \case
+    MouseEvent { button = btn' } -> btn == btn'
+    _ -> False
+
+leftButton :: Int
+leftButton = 0
+
+middleButton :: Int
+middleButton = 1
+
+rightButton :: Int
+rightButton = 2
+
+withoutMods :: BaseEvent -> Int -> Bool
+withoutMods evt b = mouseButton b evt
+    && not (mouseAltKey   evt)
+    && not (mouseCtrlKey  evt)
+    && not (mouseShiftKey evt)
+    && not (mouseMetaKey  evt)
+
+withCtrl :: BaseEvent -> Int -> Bool
+withCtrl evt b = mouseButton b evt
+    && (mouseCtrlKey evt || mouseMetaKey evt)
+
+withAlt :: BaseEvent -> Int -> Bool
+withAlt evt b = mouseButton b evt
+    &&      mouseAltKey   evt
+    && not (mouseCtrlKey  evt)
+    && not (mouseShiftKey evt)
+    && not (mouseMetaKey  evt)
+
+withShift :: BaseEvent -> Int -> Bool
+withShift evt b = mouseButton b evt
+    && not (mouseAltKey   evt)
+    && not (mouseCtrlKey  evt)
+    &&      mouseShiftKey evt
+    && not (mouseMetaKey  evt)
+
+withCtrlAlt :: BaseEvent -> Int -> Bool
+withCtrlAlt evt b = mouseButton b evt
+    &&      mouseAltKey   evt
+    && not (mouseShiftKey evt)
+    && (mouseCtrlKey evt || not (mouseMetaKey  evt))
+
+withCtrlShift :: BaseEvent -> Int -> Bool
+withCtrlShift evt b = mouseButton b evt
+    && not (mouseAltKey   evt)
+    &&      mouseShiftKey evt
+    && (mouseCtrlKey evt || not (mouseMetaKey  evt))
+
+withAltShift :: BaseEvent -> Int -> Bool
+withAltShift evt b = mouseButton b evt
+    &&      mouseAltKey   evt
+    && not (mouseCtrlKey  evt)
+    &&      mouseShiftKey evt
+    && not (mouseMetaKey  evt)
+
+withCtrlAltShift :: BaseEvent -> Int -> Bool
+withCtrlAltShift evt b = mouseButton b evt
+    && mouseAltKey   evt
+    && mouseShiftKey evt
+    && (mouseCtrlKey evt || not (mouseMetaKey evt))

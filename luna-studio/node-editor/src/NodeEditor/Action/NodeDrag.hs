@@ -33,7 +33,6 @@ import           NodeEditor.State.Action                    (Action (begin, cont
                                                              nodeDragStartPos)
 import           NodeEditor.State.Global                    (State)
 import           NodeEditor.State.Mouse                     (workspacePosition)
-import           React.Flux                                 (MouseEvent)
 
 
 instance Action (Command State) NodeDrag where
@@ -61,9 +60,8 @@ startNodeDrag coord nl snapped = do
             void $ localMoveNodes snappedNodes
         else begin $ NodeDrag coord nl nodesPos Nothing
 
-nodesDrag :: MouseEvent -> Bool -> NodeDrag -> Command State ()
-nodesDrag evt snapped nodeDrag = do
-    coord <- workspacePosition evt
+nodesDrag :: Position -> Bool -> NodeDrag -> Command State ()
+nodesDrag coord snapped nodeDrag = do
     let mouseStartPos = view nodeDragStartPos      nodeDrag
         draggedNodeLoc = view nodeDragNodeLoc        nodeDrag
         nodesStartPos = view nodeDragNodesStartPos nodeDrag
@@ -136,9 +134,8 @@ snapConnectionsForNodes mousePos nodeLocs = when (length nodeLocs == 1)
                             modifyInPort (conn ^. dst)
                                 $ mode .= Port.Highlighted
 
-handleNodeDragMouseUp :: MouseEvent -> NodeDrag -> Command State ()
-handleNodeDragMouseUp evt nodeDrag = do
-    coord <- workspacePosition evt
+handleNodeDragMouseUp :: Position -> NodeDrag -> Command State ()
+handleNodeDragMouseUp coord nodeDrag = do
     let startPos = view nodeDragStartPos nodeDrag
         nl       = view nodeDragNodeLoc  nodeDrag
     if startPos == coord then
