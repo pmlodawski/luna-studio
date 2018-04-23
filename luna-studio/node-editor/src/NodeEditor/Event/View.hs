@@ -2,12 +2,12 @@
 
 module NodeEditor.Event.View where
 
-import           Common.Analytics            (IsTrackedEvent (isTracked))
-import           Common.Data.Event           (EventName (eventName), consName)
+import           Common.Analytics               (IsTrackedEvent (isTracked))
+import           Common.Data.Event              (EventName (eventName), consName)
 import           Common.Prelude
-import           Control.Lens.Aeson          (parseDropUnary, toEncodingDropUnary)
-import           Data.Aeson                  (FromJSON (..), ToJSON (..))
-
+import           Control.Lens.Aeson             (parseDropUnary, toEncodingDropUnary)
+import           Data.Aeson                     (FromJSON (..), ToJSON (..))
+import           NodeEditor.View.ExpressionNode (ExpressionNodeView)
 
 type Path = [String]
 
@@ -51,6 +51,8 @@ data BaseEvent
         , x           :: Double
         , y           :: Double
         }
+    | NodeMove
+        { position :: (Double, Double) }
     deriving (Generic, Show, NFData)
 
 makeLenses ''ViewEvent

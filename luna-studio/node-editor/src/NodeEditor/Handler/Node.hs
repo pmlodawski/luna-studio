@@ -3,9 +3,11 @@ module NodeEditor.Handler.Node where
 import           Common.Action.Command                      (Command)
 import           Common.Prelude
 import           LunaStudio.Data.ScreenPosition             (ScreenPosition)
+import           LunaStudio.Data.Position                   (fromTuple)
 import           NodeEditor.Action.Basic                    (collapseToFunction, enterNode, removeSelectedNodes, selectAll,
                                                              setNodeExpression, setPortDefault, toggleSelect, toggleSelectedNodesMode,
                                                              toggleSelectedNodesUnfold)
+import           NodeEditor.Action.Basic                    (moveNode)
 import           NodeEditor.Action.Batch                    (autolayoutNodes)
 import qualified NodeEditor.Action.Node                     as Node
 import qualified NodeEditor.Action.Port                     as PortControl
@@ -16,7 +18,7 @@ import qualified NodeEditor.Event.Shortcut                  as Shortcut
 import           NodeEditor.Event.UI                        (UIEvent (AppEvent, NodeEvent, SidebarEvent))
 import           NodeEditor.Event.Event                     (Event (View))
 import qualified NodeEditor.Event.View                      as View
-import           NodeEditor.Event.View                      (BaseEvent, ViewEvent (ViewEvent))
+import           NodeEditor.Event.View                      (BaseEvent (NodeMove), ViewEvent (ViewEvent))
 import qualified NodeEditor.React.Event.App                 as App
 import qualified NodeEditor.React.Event.Node                as Node hiding (nodeLoc)
 import qualified NodeEditor.React.Event.Sidebar             as Sidebar
@@ -26,7 +28,6 @@ import           NodeEditor.State.Action                    (Action (continue))
 import           NodeEditor.State.Global                    (State)
 import           NodeEditor.State.Mouse                     (mousePosition, mousePosition', workspacePosition, workspacePosition')
 import           React.Flux                                 (MouseEvent, mouseButton, mouseCtrlKey, mouseMetaKey)
-
 
 handle :: Event -> Maybe (Command State ())
 handle (Shortcut (Shortcut.Event command _))                            = Just $ handleCommand command
@@ -42,6 +43,7 @@ handle (UI (NodeEvent    (Node.Event nl (Node.Select        kevt))))    = Just $
 handle (UI (NodeEvent    (Node.Event nl (Node.SetExpression expr))))    = Just $ setNodeExpression nl expr
 handle (UI (NodeEvent    (Node.Event nl Node.MouseEnter)))              = Just $ Node.handleMouseEnter nl
 handle (UI (NodeEvent    (Node.Event nl Node.MouseLeave)))              = Just $ Node.handleMouseLeave nl
+handle (View (ViewEvent _  (Just nl) (NodeMove pos))) = Just $ moveNode (read nl) $ fromTuple pos
 handle (View (ViewEvent path target base)) = case (path, target) of
     (["node-editor"], _) -> case View.type_ base of
         "mouseup"   -> Just $ handleMouseUp base

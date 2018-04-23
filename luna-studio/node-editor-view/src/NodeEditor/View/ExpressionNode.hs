@@ -3,7 +3,7 @@ module NodeEditor.View.ExpressionNode where
 import           Common.Data.JSON                           (toJSONVal)
 import           Common.Prelude
 import qualified Control.Lens.Aeson                         as Lens
-import           Data.Aeson                                 (ToJSON (toEncoding, toJSON))
+import           Data.Aeson                                 (FromJSON, ToJSON (toEncoding, toJSON))
 import           Data.Convert                               (Convertible (convert))
 import qualified Data.HashMap.Strict                        as HashMap
 import           LunaStudio.Data.Position                   (toTuple)
@@ -29,7 +29,9 @@ data ExpressionNodeView = ExpressionNodeView
 
 makeLenses ''ExpressionNodeView
 
-instance ToJSON ExpressionNodeView where
+instance FromJSON ExpressionNodeView
+instance NFData   ExpressionNodeView
+instance ToJSON   ExpressionNodeView where
     toEncoding = Lens.toEncoding
     toJSON     = Lens.toJSON
 
@@ -44,8 +46,7 @@ instance Convertible ExpressionNode ExpressionNodeView where
         {- inPorts    -} (n ^. to ExpressionNode.inPortsList . to convert)
         {- outPorts   -} (n ^. to ExpressionNode.outPortsList . to convert)
         {- position   -} (n ^. ExpressionNode.position . to toTuple)
-        {- expanded   -} (n ^. ExpressionNode.mode
-            == ExpressionNode.Expanded ExpressionNode.Controls)
+        {- expanded   -} (n ^. ExpressionNode.mode == ExpressionNode.Expanded ExpressionNode.Controls)
         {- selected   -} (n ^. ExpressionNode.isSelected)
 
 foreign import javascript safe "atomCallback.getNodeEditorView().setNode($1)"

@@ -2,7 +2,7 @@ module NodeEditor.View.Port where
 
 import           Common.Prelude
 import qualified Control.Lens.Aeson          as Lens
-import           Data.Aeson                  (ToJSON (toEncoding, toJSON))
+import           Data.Aeson                  (FromJSON, ToJSON (toEncoding, toJSON))
 import           Data.Convert                (Convertible (convert))
 import           NodeEditor.React.Model.Port (InPort, OutPort)
 import qualified NodeEditor.React.Model.Port as Port
@@ -18,7 +18,9 @@ data PortView = PortView
 
 makeLenses ''PortView
 
-instance ToJSON PortView where
+instance FromJSON PortView
+instance NFData   PortView
+instance ToJSON   PortView where
     toEncoding = Lens.toEncoding
     toJSON     = Lens.toJSON
 

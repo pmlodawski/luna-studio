@@ -10,16 +10,18 @@ import qualified NodeEditor.Action.Batch        as Batch
 import qualified NodeEditor.Action.Port         as PortControl
 import           NodeEditor.Action.State.Action (checkIfActionPerfoming, endActions, endAllActions)
 import qualified NodeEditor.Event.Atom          as Atom
-import           NodeEditor.Event.Event         (Event (Atom, Init, Shortcut, UI))
+import           NodeEditor.Event.Event         (Event (Atom, Init, Shortcut, UI, View))
 import qualified NodeEditor.Event.Shortcut      as Shortcut
 import           NodeEditor.Event.UI            (UIEvent (AppEvent, SidebarEvent))
+import           NodeEditor.Event.View          (ViewEvent (ViewEvent))
+import qualified NodeEditor.Event.View          as View
 import qualified NodeEditor.React.Event.App     as App
 import qualified NodeEditor.React.Event.Sidebar as Sidebar
 import           NodeEditor.State.Action        (actionsClosingOnMouseLeave)
 import           NodeEditor.State.Action        (Action (continue), ActionRep, textPortControlEditAction)
 import           NodeEditor.State.Global        (State)
 import qualified NodeEditor.State.Global        as Global
-import           NodeEditor.State.Mouse         (mousePosition)
+import           NodeEditor.State.Mouse         (mousePosition, mousePosition')
 import qualified NodeEditor.State.UI            as UI
 
 
@@ -33,7 +35,13 @@ handle  Init                                           = Just $ Batch.getProgram
 handle (Atom (Atom.SetFile path))                      = Just $ setFile path
 handle (Atom (Atom.UpdateFilePath path))               = Just $ updateFilePath path
 handle (Atom  Atom.UnsetFile)                          = Just   unsetFile
-handle _                                               = Nothing
+handle (View (ViewEvent path target base)) = case path of
+    ["node-editor"] -> case View.type_ base of
+        "mousemove"  -> Just $ Global.ui . UI.mousePos <~ mousePosition' base
+        "mouseleave" -> Just $ endActions actionsClosingOnMouseLeave
+        _ -> Nothing
+    _ -> Nothing
+handle _                                                                = Nothing
 
 
 cancelAllActions :: Command State [ActionRep]
