@@ -14,7 +14,8 @@ import           NodeEditor.Action.State.Action             (beginActionWithKey,
 import           NodeEditor.Action.State.NodeEditor         (getExpressionNode, getExpressionNodeType, getNodeMeta, getNodeVisualizations,
                                                              getSelectedNodes, getVisualizationBackup, getVisualizersForType,
                                                              modifyExpressionNode, modifyNodeEditor, modifySearcher, setVisualizationData,
-                                                             updateDefaultVisualizer, updatePreferedVisualizer)
+                                                             startReadyVisualizations, stopVisualizationsForNode, updateDefaultVisualizer,
+                                                             updatePreferedVisualizer, updateVisualizationsForNode)
 import           NodeEditor.Action.UUID                     (getUUID)
 import           NodeEditor.React.Model.Node.ExpressionNode (nodeLoc, visualizationsEnabled)
 import           NodeEditor.React.Model.NodeEditor          (VisualizationBackup (MessageBackup, StreamBackup, ValueBackup),
@@ -224,39 +225,6 @@ toggleVisualizations (Node nl) = do
     showVis <- maybe False (view visualizationsEnabled) <$> getExpressionNode nl
     when showVis $ startReadyVisualizations nl
 toggleVisualizations Searcher = $notImplemented
-
-stopVisualizationsForNode :: NodeLoc -> Command State ()
-stopVisualizationsForNode nl
-    = modifyNodeEditor $ nodeVisualizations . ix nl %= stopVisualizations
-
-startReadyVisualizations :: NodeLoc -> Command State ()
-startReadyVisualizations nl = do
-    mayVisBackup <- getVisualizationBackup nl
-    mayNodeVis   <- getNodeVisualizations  nl
-    let activateWith newNodeVis vis =
-            if vis ^. visualizationStatus == Outdated
-                then return $ newNodeVis & idleVisualizations %~ (vis:)
-                else do
-                    uuid <- getUUID
-                    liftIO $ registerVisualizerFrame uuid
-                    return $ newNodeVis & visualizations
-                        %~ Map.insert uuid (RunningVisualization
-                            uuid
-                            def
-                            $ vis ^. idleVisualizerProperties)
-        updateVis nodeVis (Just backup) = do
-            nVis <- foldlM activateWith (nodeVis & idleVisualizations .~ def)
-                $ nodeVis ^. idleVisualizations
-            modifyNodeEditor $ nodeVisualizations . at nl ?= nVis
-            setVisualizationData nl backup True
-        updateVis nodeVis Nothing = do
-            noVisForType <- maybe
-                (return False)
-                (fmap isNothing . getVisualizersForType)
-                =<< getExpressionNodeType nl
-            let msg = if noVisForType then noVisMsg else awaitingDataMsg
-            updateVis nodeVis $ Just $ MessageBackup msg
-    withJust mayNodeVis $ flip updateVis mayVisBackup
 
 -- instance Action (Command State) VisualizationDrag where
 --     begin    = beginActionWithKey    visualizationDragAction

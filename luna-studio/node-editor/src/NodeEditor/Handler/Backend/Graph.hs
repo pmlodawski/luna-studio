@@ -187,7 +187,6 @@ handle (Event.Batch ev) = Just $ case ev of
         requestId       = response ^. Response.requestId
         success result  = whenM (isCurrentLocation location') $ do
             putStrLn "GetProgram"
-            print result
             let location = result ^. GetProgram.currentLocation
             unless (location' == location) $ do
                 modifyApp

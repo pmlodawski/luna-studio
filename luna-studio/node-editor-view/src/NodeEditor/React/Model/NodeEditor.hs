@@ -34,7 +34,8 @@ import           NodeEditor.React.Model.Port                (AnyPort, AnyPortId 
 import qualified NodeEditor.React.Model.Port                as Port
 import           NodeEditor.React.Model.Searcher            (Searcher)
 import           NodeEditor.React.Model.SelectionBox        (SelectionBox)
-import           NodeEditor.React.Model.Visualization       (NodeVisualizations, VisualizationProperties (VisualizationProperties))
+import           NodeEditor.React.Model.Visualization       (NodeVisualizations, VisualizationProperties (VisualizationProperties),
+                                                             visualizations)
 import qualified NodeEditor.React.Model.Visualization       as Visualization
 
 data GraphStatus = GraphLoaded
@@ -83,7 +84,7 @@ instance Default NodeEditor where
         {- monads                   -} def
         {- connections              -} def
         {- visualizersLibPath       -} def
-        {- visualizations           -} def
+        {- nodeVisualizations       -} def
         {- visualizationsBackup     -} def
         {- halfConnections          -} def
         {- connectionPen            -} def
@@ -105,6 +106,9 @@ isGraphLoaded = graphStatus . to (== GraphLoaded)
 returnsGraphError :: Getter NodeEditor Bool
 returnsGraphError = to (has (graphStatus . _GraphError))
 
+activeNodeVisualizations :: Getter NodeEditor (Map NodeLoc NodeVisualizations)
+activeNodeVisualizations = to (^. nodeVisualizations . to filterFunction) where
+    filterFunction = Map.filter (not . Map.null . view visualizations)
 
 screenTransform :: Lens' NodeEditor CameraTransformation
 screenTransform = layout . Layout.screenTransform
