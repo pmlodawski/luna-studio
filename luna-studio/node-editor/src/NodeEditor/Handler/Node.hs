@@ -46,17 +46,10 @@ handle (View (ViewEvent _  (Just nl) (NodeMove pos))) = Just $ moveNode (read nl
 handle (View (ViewEvent _  (Just nl) (NodeSelect select))) = Just $ if select then selectNode $ read nl else unselectAll
 
 handle (View (ViewEvent path target base)) = case (path, target) of
-    (["node-editor"], _) -> case View.type_ base of
-        "mouseup"   -> Just $ handleMouseUp base
-        "mousemove" -> Just $ handleMouseMove base
-        _ -> Nothing
     (["node-editor", "node"], Just nl) -> case View.type_ base of
-        "mousedown"  -> Just $ handleMouseDown base $ read nl
-        "click"      -> Just $ when (View.mouseCtrlKey base || View.mouseMetaKey base) $
-                                    toggleSelect $ read nl
         "dblclick"   -> Just $ withJustM (getExpressionNode $ read nl) enterNode
-        "mouseenter" -> Just $ Node.handleMouseEnter $ read nl
-        "mouseleave" -> Just $ Node.handleMouseLeave $ read nl
+        "mouseover"  -> Just $ Node.handleMouseEnter $ read nl
+        "mouseout"   -> Just $ Node.handleMouseLeave $ read nl
         _ -> Nothing
     _ -> Nothing
 handle _                                                                = Nothing
