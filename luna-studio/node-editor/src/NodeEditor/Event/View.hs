@@ -53,6 +53,8 @@ data BaseEvent
         }
     | NodeMove
         { position :: (Double, Double) }
+    | NodeSelect
+        { select :: Bool }
     deriving (Generic, Show, NFData)
 
 makeLenses ''ViewEvent
