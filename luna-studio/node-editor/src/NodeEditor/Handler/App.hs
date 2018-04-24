@@ -36,9 +36,8 @@ handle (Atom (Atom.SetFile path))                      = Just $ setFile path
 handle (Atom (Atom.UpdateFilePath path))               = Just $ updateFilePath path
 handle (Atom  Atom.UnsetFile)                          = Just   unsetFile
 handle (View (ViewEvent path target base)) = case path of
-    ["node-editor"] -> case View.type_ base of
-        "mousemove"  -> Just $ Global.ui . UI.mousePos <~ mousePosition' base
-        "mouseleave" -> Just $ endActions actionsClosingOnMouseLeave
+    ["NodeEditor"] -> case View.type_ base of
+        "mouseout" -> Just $ endActions actionsClosingOnMouseLeave
         _ -> Nothing
     _ -> Nothing
 handle _                                                                = Nothing
