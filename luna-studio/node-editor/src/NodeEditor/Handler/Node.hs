@@ -42,14 +42,14 @@ handle (UI (NodeEvent    (Node.Event nl (Node.Select        kevt))))    = Just $
 handle (UI (NodeEvent    (Node.Event nl (Node.SetExpression expr))))    = Just $ setNodeExpression nl expr
 handle (UI (NodeEvent    (Node.Event nl Node.MouseEnter)))              = Just $ Node.handleMouseEnter nl
 handle (UI (NodeEvent    (Node.Event nl Node.MouseLeave)))              = Just $ Node.handleMouseLeave nl
-handle (View (ViewEvent _  (Just nl) (NodeMove pos))) = Just $ moveNode (read nl) $ fromTuple pos
-handle (View (ViewEvent _  (Just nl) (NodeSelect select))) = Just $ if select then selectNode $ read nl else unselectAll
+handle (View (ViewEvent _  nl (NodeMove pos))) = Just $ moveNode (convert nl) $ fromTuple pos
+handle (View (ViewEvent _  nl (NodeSelect select))) = Just $ if select then selectNode $ convert nl else unselectAll
 
-handle (View (ViewEvent path target base)) = case (path, target) of
-    (["NodeEditor", "ExpressionNode"], Just nl) -> case View.type_ base of
-        "dblclick"   -> Just $ withJustM (getExpressionNode $ read nl) enterNode
-        "mouseover"  -> Just $ Node.handleMouseEnter $ read nl
-        "mouseout"   -> Just $ Node.handleMouseLeave $ read nl
+handle (View (ViewEvent path nl base)) = case path of
+    ["NodeEditor", "ExpressionNode"] -> case View.type_ base of
+        "dblclick"   -> Just $ withJustM (getExpressionNode $ convert nl) enterNode
+        "mouseover"  -> Just $ Node.handleMouseEnter $ convert nl
+        "mouseout"   -> Just $ Node.handleMouseLeave $ convert nl
         _ -> Nothing
     _ -> Nothing
 handle _                                                                = Nothing

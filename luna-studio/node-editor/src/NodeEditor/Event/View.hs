@@ -7,13 +7,20 @@ import           Common.Data.Event              (EventName (eventName), consName
 import           Common.Prelude
 import           Control.Lens.Aeson             (parseDropUnary, toEncodingDropUnary)
 import           Data.Aeson                     (FromJSON (..), ToJSON (..))
+import           Data.Convert                   (Convertible (convert))
+import           LunaStudio.Data.NodeLoc        (NodeLoc)
+import           LunaStudio.Data.PortRef        (InPortRef (InPortRef), OutPortRef (OutPortRef))
 import           NodeEditor.View.ExpressionNode (ExpressionNodeView)
+import           Prelude                        (error)
 
 type Path = [String]
 
+newtype Target = Target { unTarget :: [String] }
+    deriving (Generic, Show, NFData)
+
 data ViewEvent = ViewEvent
     { _path   :: Path
-    , _target :: Maybe String
+    , _target :: Target
     , _base   :: BaseEvent
     } deriving (Generic, Show, NFData)
 
@@ -59,9 +66,11 @@ data BaseEvent
 
 makeLenses ''ViewEvent
 
+instance ToJSON Target    where toEncoding = toEncodingDropUnary
 instance ToJSON ViewEvent where toEncoding = toEncodingDropUnary
 instance ToJSON BaseEvent where toEncoding = toEncodingDropUnary
 
+instance FromJSON Target    where parseJSON = parseDropUnary
 instance FromJSON ViewEvent where parseJSON = parseDropUnary
 instance FromJSON BaseEvent where parseJSON = parseDropUnary
 
@@ -153,3 +162,16 @@ withCtrlAltShift evt b = mouseButton b evt
     && mouseAltKey   evt
     && mouseShiftKey evt
     && (mouseCtrlKey evt || not (mouseMetaKey evt))
+
+
+instance Convertible Target InPortRef where
+    convert (Target [nodeLoc, portId]) = InPortRef (read nodeLoc) (read portId)
+    convert _ = error "Cannot parse Target to InPortRef"
+
+instance Convertible Target OutPortRef where
+    convert (Target [nodeLoc, portId]) = OutPortRef (read nodeLoc) (read portId)
+    convert _ = error "Cannot parse Target to OutPortRef"
+
+instance Convertible Target NodeLoc where
+    convert (Target [nodeLoc]) = read nodeLoc
+    convert _ = error "Cannot parse Target to NodeLoc"
