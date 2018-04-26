@@ -8,9 +8,9 @@ import           Empire.Data.Graph             (ClsGraph, Graph)
 import           Empire.Data.Library           (Library)
 import           Empire.Prelude                hiding (TypeRep)
 import           Empire.Prelude
-import           Luna.Builtin.Data.Function    (Function)
-import           Luna.Builtin.Data.Module      (Imports)
-import           Luna.Compilation              (CompiledModules)
+-- import           Luna.Builtin.Data.Function    (Function)
+-- import           Luna.Builtin.Data.Module      (Imports)
+-- import           Luna.Compilation              (CompiledModules)
 import           LunaStudio.API.AsyncUpdate    (AsyncUpdate)
 import qualified LunaStudio.Data.Error         as APIError
 import           LunaStudio.Data.GraphLocation (GraphLocation)
@@ -18,7 +18,7 @@ import           LunaStudio.Data.Node          (ExpressionNode, NodeId)
 import           LunaStudio.Data.PortDefault   (PortValue)
 import           LunaStudio.Data.Project       (ProjectId)
 import           LunaStudio.Data.TypeRep       (TypeRep)
-import           OCI.IR.Name                   (Name)
+-- import           OCI.IR.Name                   (Name)
 
 import           Control.Concurrent.Async      (Async)
 import           Control.Concurrent.MVar       (MVar)
@@ -61,7 +61,7 @@ makeLenses ''TCRequest
 data CommunicationEnv = CommunicationEnv { _updatesChan   :: TChan AsyncUpdate
                                          , _typecheckChan :: MVar TCRequest
                                          , _scopeVar      :: MVar SymbolMap
-                                         , _modules       :: MVar CompiledModules
+                                         -- , _modules       :: MVar CompiledModules
                                          } deriving Generic
 makeLenses ''CommunicationEnv
 

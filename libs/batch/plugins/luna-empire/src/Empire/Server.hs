@@ -86,7 +86,6 @@ tcCapability      = 1
 
 run :: BusEndPoints -> [Topic] -> Bool -> FilePath -> IO ()
 run endPoints topics formatted projectRoot = do
-    sendStarted endPoints
     forkServer "localhost" 1234
     logger Logger.info $ "Subscribing to topics: " <> show topics
     logger Logger.info $ (Utils.display formatted) endPoints
@@ -99,19 +98,20 @@ run endPoints topics formatted projectRoot = do
     let commEnv = env ^. Env.empireNotif
     forkIO $ void $ Bus.runBus endPoints $ BusT.runBusT $ evalStateT (startAsyncUpdateWorker fromEmpireChan) env
     forkIO $ void $ Bus.runBus endPoints $ startToBusWorker toBusChan
+    waiting <- newEmptyMVar
+    requestThread <- forkOn requestCapability $ void $ Bus.runBus endPoints $ do
+        mapM_ Bus.subscribe topics
+        BusT.runBusT $ evalStateT (runBus formatted projectRoot) env
+        liftIO $ putMVar waiting ()
     compiledStdlib <- newEmptyMVar
+    forkOn tcCapability $ void $ Bus.runBus endPoints $ startTCWorker compiledStdlib commEnv
+    sendStarted endPoints
     forkOn tcCapability $ do
         writeIORef minCapabilityNumber 1
         updateCapabilities
         (std, cleanup) <- prepareStdlib
         pmState <- Graph.defaultPMState
         putMVar compiledStdlib (std, cleanup, pmState)
-    forkOn tcCapability $ void $ Bus.runBus endPoints $ startTCWorker compiledStdlib commEnv
-    waiting <- newEmptyMVar
-    requestThread <- forkOn requestCapability $ void $ Bus.runBus endPoints $ do
-        mapM_ Bus.subscribe topics
-        BusT.runBusT $ evalStateT (runBus formatted projectRoot) env
-        liftIO $ putMVar waiting ()
     takeMVar waiting
 
 runBus :: Bool -> FilePath ->  StateT Env BusT ()

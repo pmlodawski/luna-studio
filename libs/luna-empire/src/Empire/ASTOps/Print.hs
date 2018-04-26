@@ -4,48 +4,49 @@
 
 module Empire.ASTOps.Print where
 
+import           Control.Lens                   (non)
 import           Control.Monad                  ((<=<))
 import           Data.List                      (delete)
 import qualified Data.Map                       as Map
 import qualified Data.Text                      as Text
-import           Empire.Prelude                 hiding (List)
+import           Empire.Prelude
 
 import           Empire.ASTOp                   (ASTOpReq, GraphOp, match)
 import qualified Empire.ASTOps.Read             as ASTRead
 import           Empire.Data.AST                (NodeRef)
 import           Empire.Data.Graph              (Graph)
 import qualified Luna.IR                        as IR
-import           Luna.IR.Term.Uni
+-- import           Luna.IR.Term.Uni
 import           LunaStudio.Data.TypeRep
 
 import           Luna.Syntax.Text.Lexer.Grammar (isOperator)
-import           Luna.Syntax.Text.Pretty.Pretty as CodeGen
+-- import           Luna.Syntax.Text.Pretty.Pretty as CodeGen
 
 getTypeRep :: GraphOp m => NodeRef -> m TypeRep
 getTypeRep tp = match tp $ \case
-    Monadic s _   -> getTypeRep =<< IR.source s
-    Cons   n args -> TCons (nameToString n) <$> mapM (getTypeRep <=< IR.source) args
-    Lam    a out  -> TLam <$> (getTypeRep =<< IR.source a) <*> (getTypeRep =<< IR.source out)
-    Acc    t n    -> TAcc (nameToString n) <$> (getTypeRep =<< IR.source t)
+    -- Monadic s _   -> getTypeRep =<< source s
+    Cons   n args -> TCons (nameToString n) <$> (mapM (getTypeRep <=< source) =<< ptrListToList args)
+    Lam    a out  -> TLam <$> (getTypeRep =<< source a) <*> (getTypeRep =<< source out)
+    Acc    t n    -> TAcc (nameToString n) <$> (getTypeRep =<< source t)
     Var    n      -> return $ TVar $ delete '#' $ nameToString n
-    Number _      -> return $ TCons "Number" []
+    IRNumber{}    -> return $ TCons "Number" []
     _             -> return TStar
 
-instance ASTOpReq Graph m => Compactible t CompactStyle m where
-    shouldBeCompact _ r = ASTRead.isGraphNode r
+-- instance ASTOpReq Graph m => Compactible t CompactStyle m where
+--     shouldBeCompact _ r = ASTRead.isGraphNode r
 
 printExpression :: GraphOp m => NodeRef -> m String
-printExpression = fmap convert . CodeGen.subpass CompactStyle . IR.unsafeGeneralize
+printExpression = const $ return "exp" -- fmap convert . CodeGen.subpass CompactStyle . generalize
 
 printFullExpression :: GraphOp m => NodeRef -> m Text
-printFullExpression = CodeGen.subpass SimpleStyle . IR.unsafeGeneralize
+printFullExpression = const $ return "fullExp" -- CodeGen.subpass SimpleStyle . generalize
 
 printName :: GraphOp m => NodeRef -> m String
-printName = fmap convert . CodeGen.subpass SimpleStyle . IR.unsafeGeneralize
+printName = const $ return "name" -- fmap convert . CodeGen.subpass SimpleStyle . generalize
 
 printNodeTarget :: GraphOp m => NodeRef -> m String
 printNodeTarget ref = match ref $ \case
-    Unify _ r -> printExpression =<< IR.source r
+    Unify _ r -> printExpression =<< source r
     _         -> printExpression ref
 
 genOperatorName :: IR.Name -> Text
@@ -59,19 +60,19 @@ genOperatorName op = operatorNamesMap ^. at op . non "operator" where
 
 genNodeBaseName :: GraphOp m => NodeRef -> m Text
 genNodeBaseName ref = match ref $ \case
-    App f a           -> recurOn f
-    Grouped g         -> recurOn g
-    LeftSection  op _ -> recurOn op
-    RightSection op _ -> recurOn op
-    Marked _ a        -> recurOn a
+    App f a           -> recurOn $ generalize f
+    Grouped g         -> recurOn $ generalize g
+    -- LeftSection  op _ -> recurOn $ generalize op
+    -- RightSection op _ -> recurOn $ generalize op
+    Marked _ a        -> recurOn $ generalize a
     Lam{}             -> return "lambda"
-    String{}          -> return "text"
-    Number{}          -> return "number"
+    IRString{}        -> return "text"
+    IRNumber{}        -> return "number"
     Tuple{}           -> return "tuple"
     List{}            -> return "list"
-    Cons n _          -> return $ Text.toLower $ convert n
+    Cons n _          -> return $ Text.toLower $ nameToText n
     Var n             -> return $ genOp n
     Acc t n           -> return $ genOp n
     _                 -> return $ "expr"
-    where recurOn a = genNodeBaseName =<< IR.source a
-          genOp   n = if isOperator n  || n == "#uminus#" then genOperatorName n else convert n
+    where recurOn a = genNodeBaseName =<< source a
+          genOp   n = if isOperator n  || n == "#uminus#" then genOperatorName n else nameToText n

@@ -4,8 +4,11 @@
 {-# LANGUAGE TypeFamilies      #-}
 module LunaStudio.Data.Vector2 where
 
+import Control.Lens ((*~))
 import           Data.Aeson.Types    (FromJSON, ToJSON)
 import           Data.Binary         (Binary)
+import           Foreign.Ptr         (castPtr, plusPtr)
+import           Foreign.Storable    (Storable(..))
 import           Prologue
 
 --TODO[react]: Consider change Vector2 -> V2: https://hackage.haskell.org/package/linear-1.20.5/docs/Linear-V2.html
@@ -18,8 +21,8 @@ type family VectorOf a
 
 class IsVector a where
     vector :: Lens' a (VectorOf a)
-    default vector :: (Wrapped a, Unwrapped a ~ VectorOf a) => Lens' a (VectorOf a)
-    vector = wrapped'
+    default vector :: (Rewrapped a a, Wrapped a, Unwrapped a ~ VectorOf a) => Lens' a (VectorOf a)
+    vector = wrapped
 
 
 -- === Dimensions === --
@@ -49,6 +52,15 @@ class Dim2 a => Dim3 a where
 
 data Vector2 a = Vector2 { _vector2_x, _vector2_y :: a } deriving (Eq, Show, Functor, Generic, Ord)
 makeLenses ''Vector2
+
+instance Storable a => Storable (Vector2 a) where
+    sizeOf _ = 2 * sizeOf (undefined :: a)
+    alignment _ = alignment (undefined :: a)
+    peek p = Vector2 <$> peek (castPtr p)
+                     <*> peek (p `plusPtr` sizeOf (undefined :: a))
+    poke p v = do
+        poke (castPtr p) (v ^. vector2_x)
+        poke (p `plusPtr` (sizeOf (undefined :: a))) (v ^. vector2_y)
 
 
 -- === Instances === --

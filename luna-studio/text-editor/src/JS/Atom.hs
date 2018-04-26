@@ -4,11 +4,15 @@
 module JS.Atom
     ( activeLocation
     , insertCode
+    , OpenedFile(OpenedFile)
     , openedFiles
+    , openedFileUri
+    , openedFileContents
     , pushInterpreterUpdate
     , pushStatus
     , setBuffer
     , setClipboard
+    , setFileBuffer
     , subscribeDiffs
     , subscribeEventListenerInternal
     ) where
@@ -16,6 +20,8 @@ module JS.Atom
 import           Common.Data.JSON              (fromJSONVal, toJSONVal)
 import           Common.Prelude                hiding (toList)
 import           Control.Monad.Trans.Maybe     (MaybeT (MaybeT), runMaybeT)
+import           Data.Aeson.Types              (FromJSON, ToJSON)
+import           Data.Map                      (Map)
 import           GHCJS.Foreign.Callback
 import           GHCJS.Marshal.Pure            (PToJSVal (pToJSVal))
 import           LunaStudio.Data.Diff          (Diff)
@@ -56,8 +62,11 @@ foreign import javascript safe "($1).unsubscribeDiffs()"
 foreign import javascript safe "globalRegistry.activeLocation"
     activeLocation' :: IO JSVal
 
-foreign import javascript safe "$r = atom.workspace.getPaneItems()"
+foreign import javascript safe "res = Array.from(new Set(atom.workspace.getPaneItems().filter(function (a) { return Object.getPrototypeOf(a).constructor.name.startsWith(\"LunaCodeEditor\"); }))); $r = res.map(function (a) { return {_openedFileUri: a.uri, _openedFileContents: a.getText() }; })"
     openedFiles' :: IO JSVal
+
+foreign import javascript safe "atom.workspace.getPaneItems().filter(function (a) { return Object.getPrototypeOf(a).constructor.name.startsWith(\"LunaCodeEditor\") && a.uri === $1; }).map(function (a) { a.setText($2); })"
+    setFileBuffer' :: JSString -> JSVal -> IO ()
 
 
 instance ToJSVal Point where toJSVal = toJSONVal
@@ -66,6 +75,16 @@ instance FromJSVal Diff where fromJSVal = fromJSONVal
 
 instance FromJSVal GraphLocation where fromJSVal = fromJSONVal
 instance FromJSVal InternalEvent where fromJSVal = fromJSONVal
+
+data OpenedFile = OpenedFile
+    { _openedFileUri      :: String
+    , _openedFileContents :: Text
+    } deriving (Show, Generic)
+
+makeLenses ''OpenedFile
+
+instance FromJSON OpenedFile
+instance FromJSVal OpenedFile where fromJSVal = fromJSONVal
 
 instance FromJSVal TextEvent where
     fromJSVal jsval = runMaybeT $ do
@@ -76,8 +95,11 @@ instance FromJSVal TextEvent where
 activeLocation :: MonadIO m => m (Maybe GraphLocation)
 activeLocation = liftIO $ fromJSVal =<< activeLocation'
 
-openedFiles :: MonadIO m => m (Maybe [String])
+openedFiles :: MonadIO m => m (Maybe [OpenedFile])
 openedFiles = liftIO $ fromJSVal =<< openedFiles'
+
+setFileBuffer :: MonadIO m => String -> Text -> m ()
+setFileBuffer file code = liftIO $ setFileBuffer' (convert file) (pToJSVal code)
 
 subscribeDiffs :: (TextEvent -> IO ()) -> IO (IO ())
 subscribeDiffs callback = do

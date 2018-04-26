@@ -4,6 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses  #-}
 module LunaStudio.API.Response where
 
+import Control.Lens (makePrisms)
 import           Data.Aeson.Types       (ToJSON)
 import           Data.Binary            (Binary)
 import           Data.UUID.Types        (UUID)

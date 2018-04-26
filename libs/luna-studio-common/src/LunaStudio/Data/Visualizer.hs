@@ -2,6 +2,7 @@
 {-# LANGUAGE TupleSections     #-}
 module LunaStudio.Data.Visualizer where
 
+import Control.Lens (makePrisms)
 import qualified Data.Aeson                 as Aeson
 import           Data.Aeson.Types           (FromJSON, ToJSON)
 import           Data.Binary                (Binary)

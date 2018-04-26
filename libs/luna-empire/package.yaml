@@ -50,12 +50,12 @@ dependencies:
     - lens
     - lifted-base
     - luna-core
-    - luna-passes
-    - luna-parser
-    - luna-lexer
+    - luna-cpp-containers
+    - luna-exception
+    - luna-syntax-text-parser
+    - luna-syntax-text-lexer
+    - luna-syntax-text-model
     - luna-studio-common
-    - luna-stdlib
-    - luna-project
     - m-logger
     - megaparsec
     - mtl
@@ -67,7 +67,7 @@ dependencies:
     - split
     - stm
     - text
-    - text-processing
+    - luna-text-processing
     - transformers
     - typelevel
     - uuid

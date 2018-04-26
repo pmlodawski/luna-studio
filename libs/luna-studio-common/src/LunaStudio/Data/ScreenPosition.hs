@@ -7,6 +7,7 @@ module LunaStudio.Data.ScreenPosition
     , y
     ) where
 
+import Control.Lens ((+~), makeWrapped)
 import           LunaStudio.Data.Vector2
 import           Prologue
 

@@ -3,9 +3,13 @@ module LunaStudio.Data.PortRef
     , nodeLoc
     ) where
 
+import Control.Lens (makePrisms)
 import           Control.DeepSeq         (NFData)
 import           Data.Aeson.Types        (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import           Data.Binary             (Binary)
+import qualified Data.Vector.Storable.Foreign as Foreign
+import           Foreign.Ptr             (castPtr, plusPtr)
+import           Foreign.Storable        (Storable(..))
 import           LunaStudio.Data.Node    (NodeId)
 import           LunaStudio.Data.NodeLoc (HasNodeLoc (..), NodeLoc)
 import qualified LunaStudio.Data.NodeLoc as NodeLoc
@@ -17,16 +21,20 @@ data InPortRef  = InPortRef  { _dstNodeLoc :: NodeLoc
                              , _dstPortId :: InPortId
                              } deriving (Eq, Generic, Ord, Show)
 
-data OutPortRef = OutPortRef { _srcNodeLoc :: NodeLoc
-                             , _srcPortId :: OutPortId
-                             } deriving (Eq, Generic, Ord, Show)
+data OutPortRefTemplate a b = OutPortRef { _srcNodeLoc :: a
+                                         , _srcPortId  :: b
+                                         } deriving (Eq, Generic, Ord, Show)
+
+type OutPortRef = OutPortRefTemplate NodeLoc OutPortId
+type OutPortRefS = OutPortRefTemplate NodeId (Foreign.Vector Int)
+
 
 data AnyPortRef = OutPortRef' OutPortRef | InPortRef' InPortRef deriving (Eq, Generic, Show)
 
 makeLenses ''AnyPortRef
 makePrisms ''AnyPortRef
-makeLenses ''OutPortRef
-makePrisms ''OutPortRef
+makeLenses ''OutPortRefTemplate
+makePrisms ''OutPortRefTemplate
 makeLenses ''InPortRef
 makePrisms ''InPortRef
 
@@ -82,3 +90,12 @@ dstNodeId = dstNodeLoc . NodeLoc.nodeId
 
 srcNodeId :: Lens' OutPortRef NodeId
 srcNodeId = srcNodeLoc . NodeLoc.nodeId
+
+instance (Storable a, Storable b) => Storable (OutPortRefTemplate a b) where
+    sizeOf _ = sizeOf (undefined :: a) + sizeOf (undefined :: b)
+    alignment _ = alignment (undefined :: Int)
+    peek p = OutPortRef <$> peek (castPtr p)
+                        <*> peek (p `plusPtr` sizeOf (undefined :: a))
+    poke p op = do
+        poke (castPtr p) (op ^. srcNodeLoc)
+        poke (p `plusPtr` sizeOf (undefined :: Int)) (op ^. srcPortId)

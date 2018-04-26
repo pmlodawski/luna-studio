@@ -3,6 +3,7 @@ module LunaStudio.Data.Project where
 
 import Prologue hiding (TypeRep)
 
+import Control.Lens ((?~), to)
 import qualified Control.Lens.Aeson  as Lens
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Map            as Map

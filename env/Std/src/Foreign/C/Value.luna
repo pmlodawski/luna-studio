@@ -234,6 +234,8 @@ native class CInt:
     def toInt: primCIntToInt self
     def fromInt i: primCIntFromInt i
 
+    def toBool: (self.toInt == 0) . not
+
 native class CInt8:
     CInt8
 

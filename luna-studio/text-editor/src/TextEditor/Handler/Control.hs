@@ -5,11 +5,12 @@ module TextEditor.Handler.Control
 import           Common.Action.Command              (Command)
 import           Common.Prelude
 import           Control.Concurrent                 (threadDelay)
-import           JS.Atom                            (activeLocation, openedFiles, pushInterpreterUpdate)
+import           JS.Atom                            (activeLocation, openedFiles, openedFileUri, openedFileContents, pushInterpreterUpdate, setFileBuffer)
 import qualified LunaStudio.API.Control.Interpreter as Interpreter
 import qualified LunaStudio.API.Response            as Response
+import           LunaStudio.Data.Diff               (Diff(Diff))
 import qualified LunaStudio.Data.GraphLocation      as GraphLocation
-import           TextEditor.Action.Batch            (interpreterPause, interpreterReload, interpreterStart, openFile)
+import           TextEditor.Action.Batch            (interpreterPause, interpreterReload, interpreterStart, openFile, substitute)
 import           TextEditor.Event.Batch             (BatchEvent (EmpireStarted, InterpreterResponse, InterpreterUpdate))
 import           TextEditor.Event.Event             (Event (Atom, Batch))
 import           TextEditor.Event.Internal          (InternalEvent (InterpreterPause, InterpreterReload, InterpreterStart))
@@ -25,11 +26,15 @@ handle (Batch (EmpireStarted _)) = Just $ do
     openedFile <- activeLocation
     files <- openedFiles
     liftIO $ print files
-    liftIO $ threadDelay 5000000
     liftIO $ putStrLn "textedit"
-    withJust openedFile $ \gl -> do
+    withJust files $ \opened -> forM_ opened $ \gl -> do
         liftIO $ putStrLn "textedit" >> print gl
-        openFile $ gl ^. GraphLocation.filePath
+        let file = gl ^. openedFileUri
+        openFile file
+        liftIO $ putStrLn "substitute"
+        -- substitute (GraphLocation.GraphLocation file def) [Diff Nothing (gl ^. openedFileContents) Nothing]
+        liftIO $ putStrLn "setBuffer"
+        setFileBuffer file (gl ^. openedFileContents)
 handle (Atom InterpreterStart ) = Just $ interpreterStart
 handle (Atom InterpreterPause ) = Just $ interpreterPause
 handle (Atom InterpreterReload) = Just $ interpreterReload

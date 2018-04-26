@@ -10,8 +10,7 @@
 
 module Empire.Data.Parser where
 
-import           Empire.Prelude       hiding (mempty)
-import           Prologue             (Text, mempty)
+import           Empire.Prelude       hiding (Type, mempty)
 
 import           Control.Monad.Catch  (MonadCatch(..))
 import           Control.Monad.State  (StateT, runStateT, get, put)
@@ -21,57 +20,30 @@ import           Data.Foldable        (toList)
 import           Empire.Data.Graph    (AST(..), Graph, withVis)
 import qualified Empire.Data.Graph    as Graph (ast, breadcrumbHierarchy)
 import qualified Empire.Data.BreadcrumbHierarchy as BH
-import           Empire.Data.Layers   (Marker, Meta, TypeLayer)
+import           Empire.Data.Layers   (Marker, Meta, TypeLayer, SpanOffset, SpanLength)
 import           Empire.Empire        (Command)
 
-import           Data.Event           (Emitters, type (//))
-import           Data.Graph.Class     (MonadRefLookup(..), Net)
-import           Data.TypeDesc        (getTypeDesc)
 import           Luna.IR              hiding (Marker, get, put, match)
-import           Luna.IR.Layer.Succs  (Succs)
-import           OCI.Pass.Class       (Inputs, Outputs, Preserves, KnownPass)
-import           OCI.IR.Class         (Import)
-import qualified OCI.Pass.Class       as Pass (SubPass, eval')
-import qualified OCI.Pass.Manager     as Pass (PassManager, Cache, setAttr, State)
+import qualified Luna.Pass        as Pass
 
-import           System.Log                                   (Logger, DropLogger, dropLogs)
-import           Luna.Pass.Data.ExprRoots                     (ExprRoots(..))
-import           Luna.Pass.Resolution.Data.UnresolvedVars     (UnresolvedVars(..))
-import           Luna.Pass.Resolution.Data.UnresolvedConses   (UnresolvedConses(..), NegativeConses(..))
-import qualified Luna.Pass.Resolution.AliasAnalysis           as AliasAnalysis
-import           Luna.Syntax.Text.Parser.Errors               (Invalids)
+-- import           Luna.Pass.Data.ExprRoots                     (ExprRoots(..))
+import           Luna.Syntax.Text.Parser.Data.Invalid               (Invalids)
 
-import qualified Luna.Syntax.Text.Parser.Parser               as Parser
-import qualified Luna.Syntax.Text.Parser.Parsing              as Parsing
-import qualified Luna.Syntax.Text.Parser.CodeSpan             as CodeSpan
-import           Luna.Syntax.Text.Parser.Marker               (MarkedExprMap)
-import           Luna.Syntax.Text.Source                      (Source)
+-- import qualified Luna.Syntax.Text.Parser.Parser               as Parser
+-- import qualified Luna.Syntax.Text.Parser.Parsing              as Parsing
+import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan)
+-- import           Luna.Syntax.Text.Parser.Marker               (MarkedExprMap)
+-- import           Luna.Syntax.Text.Source                      (Source)
 
-import qualified OCI.IR.Repr.Vis                   as Vis
-import qualified Control.Monad.State.Dependent.Old as DepOld
 
-type ParserLayers = '[AnyExpr // Model, AnyExprLink // Model,
-                      AnyExpr // Marker,
-                      AnyExpr // Meta,
-                      AnyExpr // Succs,
-                      AnyExpr // TypeLayer,
-                      AnyExpr // UID, AnyExprLink // UID,
-                      AnyExpr // CodeSpan.CodeSpan]
-
-type ParserEmitters = '[New // AnyExpr, New // AnyExprLink,
-                        Import // AnyExpr, Import // AnyExprLink,
-                        Delete // AnyExpr, Delete // AnyExprLink]
 
 data ParserPass
-type instance Abstract   ParserPass = ParserPass
-type instance Inputs     Net   ParserPass = '[AnyExpr, AnyExprLink]
-type instance Inputs     Layer ParserPass = ParserLayers
-type instance Inputs     Attr  ParserPass = '[Invalids, Source, Parser.ParsedExpr, MarkedExprMap, Parser.ReparsingStatus]
-type instance Inputs     Event ParserPass = '[]
-
-type instance Outputs    Net   ParserPass = '[AnyExpr, AnyExprLink]
-type instance Outputs    Layer ParserPass = ParserLayers
-type instance Outputs    Attr  ParserPass = '[Invalids, Source, Parser.ParsedExpr, MarkedExprMap, Parser.ReparsingStatus]
-type instance Outputs    Event ParserPass = ParserEmitters
-
-type instance Preserves        ParserPass = '[]
+type instance Pass.Spec ParserPass t = ParserPassSpec t
+type family ParserPassSpec t where
+    ParserPassSpec (Pass.In  Pass.Attrs)  = '[Invalids, Source {-, Parser.ParsedExpr, MarkedExprMap, Parser.ReparsingStatus -}]
+    ParserPassSpec (Pass.Out Pass.Attrs)  = '[Invalids, Source {-, Parser.ParsedExpr, MarkedExprMap, Parser.ReparsingStatus -}]
+    ParserPassSpec (Pass.In  AnyExpr)     = '[Model, Type, Users, SpanLength, CodeSpan]
+    ParserPassSpec (Pass.Out AnyExpr)     = '[Model, Type, Users, SpanLength]
+    ParserPassSpec (Pass.In  AnyExprLink) = '[SpanOffset, Source, Target]
+    ParserPassSpec (Pass.Out AnyExprLink) = '[SpanOffset, Source, Target]
+    ParserPassSpec t                      = Pass.BasicPassSpec t

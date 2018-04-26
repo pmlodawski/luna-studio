@@ -23,9 +23,13 @@ dependencies:
   - hashable
   - lens
   - lens-utils
+  - luna-core
+  - luna-cpp-containers
+  - luna-foreign-utils
   - matrix
   - pretty-show
   - prologue
+  - storable-tuple
   - text
   - time
   - unordered-containers

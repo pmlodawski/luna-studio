@@ -2,6 +2,7 @@
 {-# LANGUAGE RankNTypes     #-}
 module LunaStudio.Data.NodeLoc where
 
+import Control.Lens (to)
 import           Data.Aeson.Types              (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import           Data.Binary                   (Binary)
 import           Data.Convert                  (Convertible (convert))

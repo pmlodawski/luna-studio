@@ -14,10 +14,6 @@ data NodeCache = NodeCache { _nodeIdMap      :: Map Word64 NodeId
                            } deriving (Generic, Show)
 
 makeLenses ''NodeCache
-instance Binary   NodeCache
-instance NFData   NodeCache
-instance FromJSON NodeCache
-instance ToJSON   NodeCache
 
 instance Default NodeCache where
     def = NodeCache def def def

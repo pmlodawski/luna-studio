@@ -20,7 +20,7 @@ data Request = Request { _location :: GraphLocation
                        } deriving (Generic, Show)
 
 data Inverse = Inverse { _prevCode  :: Text
-					   , _nodeCache :: NodeCache
+					   -- , _nodeCache :: NodeCache
                        } deriving (Generic, Show)
 
 makeLenses ''Request

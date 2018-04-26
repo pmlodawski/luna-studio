@@ -17,7 +17,6 @@ import           NodeEditor.State.Global       (State)
 
 handle :: Event -> Maybe (Command State ())
 handle (Batch (Batch.EmpireStarted _)) = Just $ do
-    liftIO $ threadDelay 5000000
     workspace <- getWorkspace
     withJust workspace $ \ws -> do
         let gl = ws ^. currentLocation

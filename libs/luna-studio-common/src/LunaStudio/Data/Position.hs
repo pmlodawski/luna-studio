@@ -6,8 +6,10 @@ module LunaStudio.Data.Position
     , y
     ) where
 
+import Control.Lens ((+~), makeWrapped)
 import           Data.Aeson.Types        (FromJSON, ToJSON)
 import           Data.Binary             (Binary)
+import           Foreign.Storable        (Storable)
 import           LunaStudio.Data.Vector2 hiding (fromTuple, toTuple)
 import           Prologue
 
@@ -18,7 +20,7 @@ import           Prologue
 
 -- === Definition === --
 
-newtype Position = Position { fromPosition :: Vector2 Double } deriving (Eq, Show, Generic, Default, NFData, Num, Ord)
+newtype Position = Position { fromPosition :: Vector2 Double } deriving (Eq, Show, Generic, Default, NFData, Num, Ord, Storable)
 makeWrapped ''Position
 
 
