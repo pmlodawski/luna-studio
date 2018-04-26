@@ -6,6 +6,7 @@ module NodeEditor.Action.Port.Actions
 import           Common.Action.Command              (Command)
 import           Common.Prelude
 import           LunaStudio.Data.PortRef            (AnyPortRef (OutPortRef'), OutPortRef, nodeLoc, srcPortId)
+import           LunaStudio.Data.ScreenPosition     (ScreenPosition)
 import           NodeEditor.Action.Basic            (localAddPort)
 import           NodeEditor.Action.Connect          (connectToPort, startConnecting)
 import           NodeEditor.Action.Sidebar          (startPortDrag)
@@ -13,33 +14,29 @@ import           NodeEditor.React.Model.Node        (countProjectionPorts, hasPo
 import           NodeEditor.React.Model.Port        (getPortNumber)
 import           NodeEditor.State.Action            (Action (continue), Mode (Click, Drag), connectAction, connectMode, portDragAction,
                                                      portDragMode)
-
 import           NodeEditor.Action.State.Action     (checkAction, checkIfActionPerfoming)
 import           NodeEditor.Action.State.NodeEditor (getInputNode)
 import           NodeEditor.State.Global            (State)
-import           NodeEditor.State.Mouse             (mousePosition)
-import           React.Flux                         (MouseEvent)
 
 
-handleMouseDown :: MouseEvent -> AnyPortRef -> Command State ()
-handleMouseDown evt portRef = do
+handleMouseDown :: ScreenPosition -> AnyPortRef -> Command State ()
+handleMouseDown mousePos portRef = do
     mayConnect  <- checkAction connectAction
     mayPortDrag <- checkAction portDragAction
     when ( Just Click /= (view connectMode  <$> mayConnect)
         && Just Click /= (view portDragMode <$> mayPortDrag) ) $
-        startPortDragOrConnect evt portRef Drag
+        startPortDragOrConnect mousePos portRef Drag
 
-handleClick :: MouseEvent -> AnyPortRef -> Command State ()
-handleClick evt portRef = do
+handleClick :: ScreenPosition -> AnyPortRef -> Command State ()
+handleClick mosuePos portRef = do
     mayConnect <- checkAction connectAction
     newAction  <- not <$> checkIfActionPerfoming portDragAction
     if Just Click == (view connectMode <$> mayConnect) then continue $ connectToPort portRef
-    else if newAction                                  then startPortDragOrConnect evt portRef Click
+    else if newAction                                  then startPortDragOrConnect mosuePos portRef Click
     else return ()
 
-startPortDragOrConnect :: MouseEvent -> AnyPortRef -> Mode -> Command State ()
-startPortDragOrConnect evt portRef mode = do
-    mousePos     <- mousePosition evt
+startPortDragOrConnect :: ScreenPosition -> AnyPortRef -> Mode -> Command State ()
+startPortDragOrConnect mousePos portRef mode = do
     mayInputNode <- getInputNode (portRef ^. nodeLoc)
     case (mayInputNode, portRef) of
         (Just _, OutPortRef' inPortRef) -> do

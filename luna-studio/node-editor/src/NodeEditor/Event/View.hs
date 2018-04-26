@@ -10,8 +10,10 @@ import           Data.Aeson                     (FromJSON (..), ToJSON (..))
 import           Data.Convert                   (Convertible (convert))
 import           LunaStudio.Data.NodeLoc        (NodeLoc)
 import           LunaStudio.Data.PortRef        (InPortRef (InPortRef), OutPortRef (OutPortRef))
+import           LunaStudio.Data.ScreenPosition (fromDoubles, ScreenPosition)
 import           NodeEditor.View.ExpressionNode (ExpressionNodeView)
 import           Prelude                        (error)
+
 
 type Path = [String]
 
@@ -163,6 +165,10 @@ withCtrlAltShift evt b = mouseButton b evt
     && mouseShiftKey evt
     && (mouseCtrlKey evt || not (mouseMetaKey evt))
 
+mousePosition :: BaseEvent -> ScreenPosition
+mousePosition = \case
+    MouseEvent { pageX = x, pageY = y } -> fromDoubles x y
+    _ -> def
 
 instance Convertible Target InPortRef where
     convert (Target [nodeLoc, portId]) = InPortRef (read nodeLoc) (read portId)
