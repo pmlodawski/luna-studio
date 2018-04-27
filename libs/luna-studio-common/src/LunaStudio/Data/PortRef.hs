@@ -92,3 +92,11 @@ dstNodeId = dstNodeLoc . NodeLoc.nodeId
 
 srcNodeId :: Lens' OutPortRef NodeId
 srcNodeId = srcNodeLoc . NodeLoc.nodeId
+
+isInPortRef :: AnyPortRef -> Bool
+isInPortRef (InPortRef' {}) = True
+isInPortRef _ = False
+
+isOutPortRef :: AnyPortRef -> Bool
+isOutPortRef (OutPortRef' {}) = True
+isOutPortRef _ = False

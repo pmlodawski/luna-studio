@@ -62,7 +62,7 @@ data PosConnection = PosConnection
 
 data HalfConnection = HalfConnection
         { _from           :: AnyPortRef
-        , _hDst           :: Position
+        , _hDstPos        :: Position
         , _hIsSidebarConn :: Bool
         , _hMode          :: Mode
         } deriving (Eq, Show, Typeable, Generic)
@@ -101,7 +101,7 @@ instance HasDstPos     PosConnection     where dstPos      = pDstPos
 instance IsSidebarConn PosConnection     where sidebarConn = pIsSidebarConn
 instance HasMode       PosConnection     where mode        = pMode
 instance HasColor      PosConnection     where color       = pColor
-instance HasDstPos     HalfConnection    where dstPos      = hDst
+instance HasDstPos     HalfConnection    where dstPos      = hDstPos
 instance IsSidebarConn HalfConnection    where sidebarConn = hIsSidebarConn
 instance HasMode       HalfConnection    where mode        = hMode
 instance HasSrcPos     PosHalfConnection where srcPos      = phSrc
