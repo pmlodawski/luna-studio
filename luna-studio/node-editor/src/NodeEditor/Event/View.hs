@@ -64,6 +64,8 @@ data BaseEvent
         { position :: (Double, Double) }
     | NodeSelect
         { select :: Bool }
+    | Disconnect
+        { src :: Bool }
     deriving (Generic, Show, NFData)
 
 makeLenses ''ViewEvent
@@ -172,6 +174,7 @@ mousePosition = \case
 
 instance Convertible Target InPortRef where
     convert (Target [nodeLoc, portId]) = InPortRef (read nodeLoc) (read portId)
+    convert (Target [inPortRef])       = read inPortRef
     convert _ = error "Cannot parse Target to InPortRef"
 
 instance Convertible Target OutPortRef where

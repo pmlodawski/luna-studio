@@ -16,17 +16,17 @@ import           Prologue
 data InPortRef = InPortRef
     { _dstNodeLoc :: NodeLoc
     , _dstPortId :: InPortId
-    } deriving (Eq, Generic, Ord, Show)
+    } deriving (Eq, Generic, Ord, Read, Show)
 
 data OutPortRef = OutPortRef
     { _srcNodeLoc :: NodeLoc
     , _srcPortId :: OutPortId
-    } deriving (Eq, Generic, Ord, Show)
+    } deriving (Eq, Generic, Ord, Read, Show)
 
 data AnyPortRef
     = OutPortRef' OutPortRef
     | InPortRef'  InPortRef
-    deriving (Eq, Generic, Show)
+    deriving (Eq, Generic, Read, Show)
 
 makeLenses ''AnyPortRef
 makePrisms ''AnyPortRef

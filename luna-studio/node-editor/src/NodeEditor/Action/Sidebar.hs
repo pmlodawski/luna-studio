@@ -27,7 +27,7 @@ import           NodeEditor.State.Action                 (Action (begin, continu
                                                           portDragPortStartPosInSidebar, portDragStartPortRef, portDragStartPos,
                                                           sidebarAddRemoveModeAction, sidebarAddRemoveModeNodeLoc)
 import           NodeEditor.State.Global                 (State)
-import           NodeEditor.State.Mouse                  (mousePosition)
+import           NodeEditor.State.Mouse                  (mousePosition, workspacePosition)
 import           React.Flux                              (MouseEvent)
 
 
@@ -82,7 +82,7 @@ handleSidebarMove evt nodeLoc = do
 handleAppMove :: MouseEvent -> Command State ()
 handleAppMove evt = do
     continue restoreConnect
-    continue $ Connect.handleMove evt
+    continue . Connect.handleMove =<< workspacePosition evt
 
 startPortDrag :: ScreenPosition -> OutPortRef -> Bool -> Mode -> Command State ()
 startPortDrag mousePos portRef isArgumentConstructor mode' = do

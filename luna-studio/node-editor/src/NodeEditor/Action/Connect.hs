@@ -19,6 +19,7 @@ import qualified LunaStudio.Data.Connection                 as ConnectionAPI
 import           LunaStudio.Data.PortRef                    (AnyPortRef (InPortRef', OutPortRef'))
 import qualified LunaStudio.Data.PortRef                    as PortRef
 import           LunaStudio.Data.ScreenPosition             (ScreenPosition)
+import           LunaStudio.Data.Position                   (Position)
 import           NodeEditor.Action.Basic                    (connect, localAddConnection, localRemovePort, removeConnection,
                                                              updateAllPortsMode)
 import qualified NodeEditor.Action.Batch                    as Batch
@@ -39,7 +40,7 @@ import           NodeEditor.State.Action                    (Action (begin, cont
                                                              connectAction, connectIsArgumentConstructor, connectMode, connectSnappedPort,
                                                              connectSourcePort, connectStartPos)
 import           NodeEditor.State.Global                    (State, actions, currentConnectAction)
-import           NodeEditor.State.Mouse                     (mousePosition, workspacePosition)
+import           NodeEditor.State.Mouse                     (workspacePosition)
 import           React.Flux                                 (MouseEvent)
 
 
@@ -57,14 +58,13 @@ instance Action (Command State) Connect where
                 OutPortRef' outPortRef -> void $ localRemovePort outPortRef
                 _                      -> return ()
 
-handleConnectionMouseDown :: MouseEvent -> ConnectionId -> ModifiedEnd
+handleConnectionMouseDown :: ScreenPosition -> ConnectionId -> ModifiedEnd
     -> Command State ()
-handleConnectionMouseDown evt connId modifiedEnd = do
+handleConnectionMouseDown mousePos connId modifiedEnd = do
     withJustM (getConnection connId) $ \connection -> do
         let portRef = case modifiedEnd of
                 Destination -> OutPortRef' (connection ^. Connection.src)
                 Source      -> InPortRef'  (connection ^. Connection.dst)
-        mousePos <- mousePosition evt
         startConnecting mousePos portRef (Just connId) False Drag
 
 startConnecting :: ScreenPosition -> AnyPortRef -> Maybe ConnectionId -> Bool
@@ -106,11 +106,10 @@ startConnecting screenMousePos anyPortRef mayModifiedConnId
                 OutPortRef' outPortRef -> void $ localRemovePort outPortRef
                 _                      -> return ()
 
-handleMove :: MouseEvent -> Connect -> Command State ()
-handleMove evt action = when (isNothing $ action ^. connectSnappedPort) $ do
-    mousePos               <- workspacePosition evt
+handleMove :: Position -> Connect -> Command State ()
+handleMove workspacePos action = when (isNothing $ action ^. connectSnappedPort) $ do
     mayHalfConnectionModel <-
-        createHalfConnectionModel (action ^. connectSourcePort) mousePos
+        createHalfConnectionModel (action ^. connectSourcePort) workspacePos
     modifyNodeEditor
         $ NodeEditor.halfConnections .= maybeToList mayHalfConnectionModel
     when (isNothing mayHalfConnectionModel) $ end action
@@ -135,9 +134,8 @@ cancelSnapToPort portRef action
     = when (Just portRef == action ^. connectSnappedPort) $
         update $ action & connectSnappedPort .~ Nothing
 
-handleMouseUp :: MouseEvent -> Connect -> Command State ()
-handleMouseUp evt action = when (action ^. connectMode == Drag) $ do
-    mousePos <- mousePosition evt
+handleMouseUp :: ScreenPosition -> Connect -> Command State ()
+handleMouseUp mousePos action = when (action ^. connectMode == Drag) $ do
     if (mousePos == action ^. connectStartPos) then
         update $ action & connectMode .~ Click
     else end action
