@@ -48,8 +48,8 @@ handle (View (ViewEvent _  nl (NodeSelect select))) = Just $ if select then sele
 handle (View (ViewEvent path nl base)) = case path of
     ["NodeEditor", "ExpressionNode"] -> case View.type_ base of
         "dblclick"   -> Just $ withJustM (getExpressionNode $ convert nl) enterNode
-        "mouseover"  -> Just $ Node.handleMouseEnter $ convert nl
-        "mouseout"   -> Just $ Node.handleMouseLeave $ convert nl
+        "mouseenter" -> Just $ Node.handleMouseEnter $ convert nl
+        "mouseleave" -> Just $ Node.handleMouseLeave $ convert nl
         _ -> Nothing
     _ -> Nothing
 handle _                                                                = Nothing

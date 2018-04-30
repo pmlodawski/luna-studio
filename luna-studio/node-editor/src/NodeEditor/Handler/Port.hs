@@ -2,6 +2,7 @@ module NodeEditor.Handler.Port where
 
 import           Common.Action.Command       (Command)
 import           Common.Prelude
+import           LunaStudio.Data.PortRef     (AnyPortRef (InPortRef', OutPortRef'))
 import           NodeEditor.Action.Basic     (setPortDefault)
 import           NodeEditor.Action.Port      (acceptEditTextPortControl, editTextPortControl, handleClick, handleMouseDown,
                                               handleMouseEnter, handleMouseLeave, startMoveSlider)
@@ -13,7 +14,7 @@ import qualified NodeEditor.React.Event.Port as Port
 import           NodeEditor.State.Action     (Action (continue))
 import           NodeEditor.State.Global     (State)
 import qualified NodeEditor.State.Mouse      as State
-import           LunaStudio.Data.PortRef     (AnyPortRef (InPortRef', OutPortRef'))
+
 
 handle :: Event -> Maybe (Command State ())
 handle (UI (PortEvent (Port.MouseDown           evt portRef)))            = Just $ State.mousePosition evt >>= flip handleMouseDown portRef
@@ -33,7 +34,6 @@ handle (View (ViewEvent path portRef evt@(MouseEvent { View.type_ = type_ }))) =
     if isInPort || isOutPort then case type_ of
         "click"     -> Just $ handleClick     (mousePosition evt) anyPortRef
         "mousedown" -> Just $ handleMouseDown (mousePosition evt) anyPortRef
-        "mouseup"   -> Just $ print "Port mouseup"
         _ -> Nothing
     else Nothing
 handle _ = Nothing
