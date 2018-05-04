@@ -5,12 +5,13 @@ import           NodeEditor.React.Model.App  (App, breadcrumbs, nodeEditor)
 import           NodeEditor.View.Breadcrumbs (breadcrumbsView)
 import           NodeEditor.View.Diff        (diff, runDiffT)
 import           NodeEditor.View.NodeEditor  (nodeEditorView)
+import           NodeEditor.React.View.NodeEditor (applySearcherHints)
 
 
 appView :: MonadIO m => App -> App -> m ()
 appView = runDiffT $ transaction $ do
     diff breadcrumbsView $ to convert
-    diff nodeEditorView  nodeEditor
+    diff nodeEditorView  $ nodeEditor . to applySearcherHints
 
 foreign import javascript safe "atomCallback.getNodeEditorView().beginTransaction()"
     beginTransaction__ :: IO ()

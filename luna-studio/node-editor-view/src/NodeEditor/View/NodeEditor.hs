@@ -1,6 +1,8 @@
 module NodeEditor.View.NodeEditor where
 
 import           Common.Prelude
+import           Common.Data.JSON                  (fromJSONVal)
+import           LunaStudio.Data.Position          (Position, fromTuple)
 import           NodeEditor.React.Model.NodeEditor (NodeEditor, activeNodeVisualizations, connections,
                                                     expressionNodes, halfConnections, inputNode,
                                                     outputNode, searcher)
@@ -22,3 +24,9 @@ nodeEditorView = do
     diff connectionsView        connections
     diff halfConnectionsView    halfConnections
     diff nodeVisualizationsView activeNodeVisualizations
+
+getMousePosition :: MonadIO m => m Position
+getMousePosition = fmap (maybe def fromTuple) . fromJSONVal =<< liftIO getMousePosition'
+
+foreign import javascript safe "atomCallback.getNodeEditorView().getMousePosition()"
+    getMousePosition' :: IO JSVal

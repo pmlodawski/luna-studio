@@ -32,7 +32,6 @@ import           NodeEditor.State.Action                    (Action (begin, cont
                                                              nodeDragNodeLoc, nodeDragNodesStartPos, nodeDragSnappedConnId,
                                                              nodeDragStartPos)
 import           NodeEditor.State.Global                    (State)
-import           NodeEditor.State.Mouse                     (workspacePosition)
 
 
 instance Action (Command State) NodeDrag where

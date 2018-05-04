@@ -21,13 +21,10 @@ import           NodeEditor.State.Action        (actionsClosingOnMouseLeave)
 import           NodeEditor.State.Action        (Action (continue), ActionRep, textPortControlEditAction)
 import           NodeEditor.State.Global        (State)
 import qualified NodeEditor.State.Global        as Global
-import           NodeEditor.State.Mouse         (mousePosition, mousePosition')
-import qualified NodeEditor.State.UI            as UI
+import           NodeEditor.State.Mouse         (mousePosition)
 
 
 handle :: Event -> Maybe (Command Global.State ())
-handle (UI (AppEvent     (App.MouseMove evt _)))       = Just $ Global.ui . UI.mousePos <~ mousePosition evt
-handle (UI (SidebarEvent (Sidebar.MouseMove evt _ _))) = Just $ Global.ui . UI.mousePos <~ mousePosition evt
 handle (UI (AppEvent     App.Resize          ))        = Just   updateScene
 handle (UI (AppEvent     App.MouseLeave      ))        = Just $ endActions actionsClosingOnMouseLeave
 handle (Shortcut         (Shortcut.Event command _))   = Just $ handleCommand command
@@ -35,7 +32,7 @@ handle  Init                                           = Just $ Batch.getProgram
 handle (Atom (Atom.SetFile path))                      = Just $ setFile path
 handle (Atom (Atom.UpdateFilePath path))               = Just $ updateFilePath path
 handle (Atom  Atom.UnsetFile)                          = Just   unsetFile
-handle (View (ViewEvent path target base)) = case path of
+handle (View (ViewEvent path _ base)) = case path of
     ["NodeEditor"] -> case View.type_ base of
         "mouseout" -> Just $ endActions actionsClosingOnMouseLeave
         _ -> Nothing

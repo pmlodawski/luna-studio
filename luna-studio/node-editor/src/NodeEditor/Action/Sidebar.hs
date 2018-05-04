@@ -8,6 +8,7 @@ import           Common.Prelude
 import           Control.Monad.Trans.Maybe               (MaybeT (MaybeT), runMaybeT)
 import qualified LunaStudio.Data.PortRef                 as PortRef
 import           LunaStudio.Data.ScreenPosition          (ScreenPosition, y)
+import           LunaStudio.Data.Position                (Position)
 import           NodeEditor.Action.Basic                 (localMovePort, localRemovePort, setInputSidebarPortMode)
 import qualified NodeEditor.Action.Batch                 as Batch
 import qualified NodeEditor.Action.Connect               as Connect
@@ -27,8 +28,6 @@ import           NodeEditor.State.Action                 (Action (begin, continu
                                                           portDragPortStartPosInSidebar, portDragStartPortRef, portDragStartPos,
                                                           sidebarAddRemoveModeAction, sidebarAddRemoveModeNodeLoc)
 import           NodeEditor.State.Global                 (State)
-import           NodeEditor.State.Mouse                  (mousePosition, workspacePosition)
-import           React.Flux                              (MouseEvent)
 
 
 instance Action (Command State) PortDrag where
@@ -65,24 +64,23 @@ toggleSidebarMode nl = do
         toggleAction = maybe (begin $ SidebarAddRemoveMode nl) end
     checkAction sidebarAddRemoveModeAction >>= toggleAction
 
-handleMouseUp :: MouseEvent -> PortDrag -> Command State ()
-handleMouseUp evt portDrag = do
-    mousePos <- mousePosition evt
+handleMouseUp :: ScreenPosition -> PortDrag -> Command State ()
+handleMouseUp mousePos portDrag = do
     if portDrag ^. portDragMode == Click || mousePos /= portDrag ^. portDragStartPos
         then finishPortDrag portDrag
     else if portDrag ^. portDragMode == Drag && mousePos == portDrag ^. portDragStartPos
         then update $ portDrag & portDragMode .~ Click
     else return ()
 
-handleSidebarMove :: MouseEvent -> NodeLoc -> Command State ()
-handleSidebarMove evt nodeLoc = do
+handleSidebarMove :: ScreenPosition -> NodeLoc -> Command State ()
+handleSidebarMove mousePos nodeLoc = do
     continue $ restorePortDrag nodeLoc
-    continue $ handleMove evt
+    continue $ handleMove mousePos
 
-handleAppMove :: MouseEvent -> Command State ()
-handleAppMove evt = do
+handleAppMove :: Position -> Command State ()
+handleAppMove pos = do
     continue restoreConnect
-    continue . Connect.handleMove =<< workspacePosition evt
+    continue $ Connect.handleMove pos
 
 startPortDrag :: ScreenPosition -> OutPortRef -> Bool -> Mode -> Command State ()
 startPortDrag mousePos portRef isArgumentConstructor mode' = do
@@ -93,9 +91,8 @@ startPortDrag mousePos portRef isArgumentConstructor mode' = do
         lift . begin $ PortDrag mousePos portPos portRef portRef isArgumentConstructor mode'
     when (isNothing maySuccess && isArgumentConstructor) $ void $ localRemovePort portRef
 
-handleMove :: MouseEvent -> PortDrag -> Command State ()
-handleMove evt portDrag = do
-    mousePos <- mousePosition evt
+handleMove :: ScreenPosition -> PortDrag -> Command State ()
+handleMove mousePos portDrag = do
     let portRef       = portDrag ^. portDragActPortRef
         nodeLoc       = portRef  ^. PortRef.nodeLoc
         portId        = portRef  ^. PortRef.srcPortId

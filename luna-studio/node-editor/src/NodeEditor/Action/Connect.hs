@@ -40,8 +40,6 @@ import           NodeEditor.State.Action                    (Action (begin, cont
                                                              connectAction, connectIsArgumentConstructor, connectMode, connectSnappedPort,
                                                              connectSourcePort, connectStartPos)
 import           NodeEditor.State.Global                    (State, actions, currentConnectAction)
-import           NodeEditor.State.Mouse                     (workspacePosition)
-import           React.Flux                                 (MouseEvent)
 
 
 instance Action (Command State) Connect where

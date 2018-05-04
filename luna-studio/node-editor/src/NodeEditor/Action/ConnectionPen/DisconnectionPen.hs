@@ -27,8 +27,6 @@ import           NodeEditor.State.Action                    (Action (begin, cont
                                                              penDisconnectAction, penDisconnectCurve, penDisconnectLastVisitedNode,
                                                              penDisconnectNextNodeRestriction)
 import           NodeEditor.State.Global                    (State)
-import           NodeEditor.State.Mouse                     (workspacePosition)
-import           React.Flux                                 (MouseEvent)
 
 
 instance Action (Command State) PenDisconnect where
@@ -38,9 +36,8 @@ instance Action (Command State) PenDisconnect where
     end      = stopDisconnecting
 
 
-startDisconnecting :: MouseEvent -> Timestamp -> Command State ()
-startDisconnecting evt timestamp = unlessM inTopLevelBreadcrumb $ do
-    pos <- workspacePosition evt
+startDisconnecting :: Position -> Timestamp -> Command State ()
+startDisconnecting pos timestamp = unlessM inTopLevelBreadcrumb $ do
     let curve = beginCurve pos timestamp
     begin $ PenDisconnect curve Nothing Nothing
     modifyNodeEditor $ NodeEditor.connectionPen ?= ConnectionPen (curveToSvgPath curve) (Color 2)
@@ -86,9 +83,8 @@ disconnectProcessSegment seg = do
         points = getPointsOnCurveSegment seg numOfPoints
     mapM_ handleSegment $ zip (segBeg:points) (points <> [segEnd])
 
-disconnectMove :: MouseEvent -> Timestamp -> PenDisconnect -> Command State ()
-disconnectMove evt timestamp state = do
-    pos <- workspacePosition evt
+disconnectMove :: Position -> Timestamp -> PenDisconnect -> Command State ()
+disconnectMove pos timestamp state = do
     let curve = addPointToCurve pos timestamp $ state ^. penDisconnectCurve
         state'   = state & penDisconnectCurve .~ curve
     update state'

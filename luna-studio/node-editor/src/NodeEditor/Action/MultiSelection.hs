@@ -18,9 +18,7 @@ import           NodeEditor.React.Model.SelectionBox        (SelectionBox (Selec
 import           NodeEditor.State.Action                    (Action (begin, continue, end, update), MultiSelection (MultiSelection),
                                                              multiSelecectionStartPos, multiSelectionAction)
 import           NodeEditor.React.Model.NodeEditor          (selectionBox)
-import           NodeEditor.State.Mouse                     (workspacePosition)
 import           NodeEditor.State.Global                    (State)
-import           React.Flux                                 (MouseEvent)
 
 
 instance Action (Command State) MultiSelection where
@@ -29,16 +27,14 @@ instance Action (Command State) MultiSelection where
     update   = updateActionWithKey   multiSelectionAction
     end      = stopMultiSelection
 
-startMultiSelection :: MouseEvent -> Command State ()
-startMultiSelection evt = do
+startMultiSelection :: Position -> Command State ()
+startMultiSelection coord = do
     unselectAll
-    coord <- workspacePosition evt
     begin $ MultiSelection coord
 
-updateMultiSelection :: MouseEvent -> MultiSelection -> Command State ()
-updateMultiSelection evt state = do
+updateMultiSelection :: Position -> MultiSelection -> Command State ()
+updateMultiSelection coord state = do
     let startPos = view multiSelecectionStartPos state
-    coord <- workspacePosition evt
     modifyNodeEditor $ selectionBox .= Just (SelectionBox startPos coord)
     updateSelection startPos coord
 

@@ -47,8 +47,8 @@ import           NodeEditor.State.Action                    (Action (begin, cont
 import           NodeEditor.State.Global                    (State)
 import           NodeEditor.State.Global                    (visualizers)
 import qualified NodeEditor.State.Global                    as Global
-import qualified NodeEditor.State.UI                        as UI
 import           Text.Read                                  (readMaybe)
+import qualified NodeEditor.View.NodeEditor                 as NodeEditor
 
 
 instance Action (Command State) Searcher where
@@ -111,7 +111,7 @@ open mayPosition = do
             let (className, predPortRef) = Searcher.getPredInfo n
             return $ (className, Searcher.NewNode (snap pos) predPortRef)
         _   -> do
-            pos <- maybe (translateToWorkspace =<< use (Global.ui . UI.mousePos)) return mayPosition
+            pos <- maybe NodeEditor.getMousePosition return mayPosition
             return $ (def, Searcher.NewNode (snap pos) def)
     nl <- convert . ((def :: NodePath), ) <$> getUUID
     mayDocVis <- mkDocVis

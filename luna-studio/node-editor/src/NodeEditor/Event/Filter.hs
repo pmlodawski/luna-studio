@@ -22,7 +22,6 @@ import qualified NodeEditor.React.Model.NodeEditor          as NE
 import qualified NodeEditor.React.Store.Ref                 as Ref
 import           NodeEditor.State.Global                    (State, getNodeEditor)
 import qualified NodeEditor.State.Global                    as Global
-import qualified NodeEditor.State.UI                        as UI
 
 
 toJSEvent :: Event -> State -> IO JS.Event

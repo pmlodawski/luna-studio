@@ -15,6 +15,7 @@ import qualified NodeEditor.React.Event.Sidebar    as Sidebar
 import           NodeEditor.React.Model.Port       (AnyPortRef (OutPortRef'))
 import           NodeEditor.State.Action           (Action (continue))
 import           NodeEditor.State.Global           (State)
+import           NodeEditor.State.Mouse            (mousePosition, workspacePosition)
 
 
 handle :: Event -> Maybe (Command State ())
@@ -28,8 +29,9 @@ handle (UI (SearcherEvent      {}))                                           = 
 handle (UI (VisualizationEvent {}))                                           = Just $ continue escapeAddRemoveMode
 handle (UI (SidebarEvent       (Sidebar.RemovePort   (OutPortRef' portRef)))) = Just $ Batch.removePort portRef
 handle (UI (SidebarEvent       (Sidebar.AddPort      (OutPortRef' portRef)))) = Just $ Batch.addPort portRef Nothing def
-handle (UI (AppEvent           (App.MouseMove        evt _)))                 = Just $ handleAppMove evt
-handle (UI (SidebarEvent       (Sidebar.MouseMove    evt nodeLoc _)))         = Just $ handleSidebarMove evt nodeLoc
-handle (UI (AppEvent           (App.MouseUp          evt)))                   = Just $ continue $ handleMouseUp evt
+handle (UI (AppEvent           (App.MouseMove        evt _)))                 = Just $ handleAppMove =<< workspacePosition evt
+handle (UI (SidebarEvent       (Sidebar.MouseMove    evt nodeLoc _)))         = Just $ flip handleSidebarMove nodeLoc =<< mousePosition evt
+handle (UI (AppEvent           (App.MouseUp          evt)))                   = Just $ do
+    continue . handleMouseUp =<< mousePosition evt
 handle (UI (SidebarEvent       (Sidebar.EditPortName portRef)))               = Just $ editPortName portRef
 handle _                                                                      = Nothing

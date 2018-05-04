@@ -10,7 +10,7 @@ import           Common.Prelude
 import           Data.Curve                                 (CurveSegment, getPointsOnCurveSegment)
 import qualified Data.Curve                                 as Curve
 import           Data.Timestamp                             (Timestamp)
-import           LunaStudio.Data.Position                   (distance)
+import           LunaStudio.Data.Position                   (Position, distance)
 import           NodeEditor.Action.Basic                    (connect, updateAllPortsMode)
 import           NodeEditor.Action.ConnectionPen.SmoothLine (addPointToCurve, beginCurve, curveToSvgPath)
 import           NodeEditor.Action.State.Action             (beginActionWithKey, continueActionWithKey, removeActionFromState,
@@ -24,8 +24,6 @@ import qualified NodeEditor.React.Model.NodeEditor          as NodeEditor
 import           NodeEditor.State.Action                    (Action (begin, continue, end, update), PenConnect (PenConnect),
                                                              penConnectAction, penConnectCurve, penConnectLastVisitedNode)
 import           NodeEditor.State.Global                    (State)
-import           NodeEditor.State.Mouse                     (workspacePosition)
-import           React.Flux                                 (MouseEvent)
 
 
 instance Action (Command State) PenConnect where
@@ -35,9 +33,8 @@ instance Action (Command State) PenConnect where
     end      = stopConnecting
 
 
-startConnecting :: MouseEvent -> Timestamp -> Command State ()
-startConnecting evt timestamp = unlessM inTopLevelBreadcrumb $ do
-    pos <- workspacePosition evt
+startConnecting :: Position -> Timestamp -> Command State ()
+startConnecting pos timestamp = unlessM inTopLevelBreadcrumb $ do
     let curve = beginCurve pos timestamp
     begin $ PenConnect curve Nothing
     updateAllPortsMode
@@ -58,9 +55,8 @@ connectProcessSegment seg state = do
         mapM_ (\(id1, id2) -> when (id1 /= id2) $ connect (Right id1) (Right id2)) nodesToConnect
         update $ state & penConnectLastVisitedNode ?~ last uniqueIntersectedNodes
 
-connectMove :: MouseEvent -> Timestamp -> PenConnect -> Command State ()
-connectMove evt timestamp state = do
-    pos <- workspacePosition evt
+connectMove :: Position -> Timestamp -> PenConnect -> Command State ()
+connectMove pos timestamp state = do
     let curve  = addPointToCurve pos timestamp $ state ^. penConnectCurve
         state' = state & penConnectCurve .~ curve
     update state'

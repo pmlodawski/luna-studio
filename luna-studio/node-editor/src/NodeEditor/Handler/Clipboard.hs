@@ -12,7 +12,7 @@ import qualified NodeEditor.Event.Shortcut                  as Shortcut
 import           NodeEditor.React.Model.Node.ExpressionNode (nodeLoc)
 import           NodeEditor.State.Global                    (State)
 import qualified NodeEditor.State.Global                    as Global
-import qualified NodeEditor.State.UI                        as UI
+import qualified NodeEditor.View.NodeEditor                 as NodeEditor
 
 
 handle :: Event -> Maybe (Command State ())
@@ -22,7 +22,7 @@ handle (Shortcut (Shortcut.Event Shortcut.Cut    _        )) = Just cutSelection
 handle _ = Nothing
 
 sendPasteRequest :: String -> Command State ()
-sendPasteRequest cbd = flip paste cbd =<< Scene.translateToWorkspace =<< use (Global.ui . UI.mousePos)
+sendPasteRequest cbd = flip paste cbd =<< NodeEditor.getMousePosition
 
 sendCopyRequest :: Command State ()
 sendCopyRequest = copy =<< view nodeLoc `fmap2` getSelectedNodes
