@@ -17,7 +17,7 @@ import qualified LunaStudio.API.Graph.SetNodeExpression    as SetNodeExpression
 import qualified LunaStudio.API.Graph.SetNodesMeta         as SetNodesMeta
 import qualified LunaStudio.API.Graph.SetPortDefault       as SetPortDefault
 import qualified LunaStudio.API.Response                   as Response
-import           LunaStudio.Data.Connection                (Connection (Connection), dst, src)
+import           LunaStudio.Data.Connection                (Connection (Connection))
 import qualified LunaStudio.Data.Connection                as Connection
 import           LunaStudio.Data.Node                      (nodeId)
 import           LunaStudio.Data.NodeLoc                   (prependPath)
@@ -44,9 +44,9 @@ panic :: Command State ()
 panic = Batch.getProgram def False
 
 revertAddConnection :: AddConnection.Request -> Command State ()
-revertAddConnection (AddConnection.Request loc _ (Left (InPortRef' dst'))) =
+revertAddConnection (AddConnection.Request loc _ (Left (InPortRef' dst))) =
     inCurrentLocation loc
-        $ \path -> void $ localRemoveConnection $ prependPath path dst'
+        $ \path -> void $ localRemoveConnection $ prependPath path dst
 revertAddConnection (AddConnection.Request _ _ (Left _)) = return ()
 revertAddConnection _ = panic
 
@@ -75,10 +75,10 @@ revertMovePort (MovePort.Request loc oldPortRef newPos) =
 revertRemoveConnection :: RemoveConnection.Request
     -> Response.Status RemoveConnection.Inverse -> Command State ()
 revertRemoveConnection
-    (RemoveConnection.Request loc dst')
-    (Response.Ok (RemoveConnection.Inverse src')) = inCurrentLocation loc
+    (RemoveConnection.Request loc dst)
+    (Response.Ok (RemoveConnection.Inverse src)) = inCurrentLocation loc
         $ \path -> void . localAddConnection
-            $ Connection (prependPath path src') (prependPath path dst')
+            $ Connection (prependPath path src) (prependPath path dst)
 revertRemoveConnection
     (RemoveConnection.Request _loc _dst)
     (Response.Error _msg) = panic

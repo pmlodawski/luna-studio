@@ -8,6 +8,7 @@ import           Common.Prelude
 import qualified Control.Lens.Aeson              as Lens
 import           Data.Aeson                      (ToJSON (toEncoding, toJSON))
 import           Data.Convert                    (Convertible (convert))
+import           JS.Searcher                     (searcherId)
 import           NodeEditor.React.Model.Searcher (Searcher)
 import qualified NodeEditor.React.Model.Searcher as Searcher
 import           NodeEditor.View.Diff            (DiffT, diffApply)
@@ -29,10 +30,11 @@ data EntryView = EntryView
     } deriving (Generic, Show)
 
 data SearcherView = SearcherView
-    { _key      :: Maybe String
-    , _selected :: Int
-    , _entries  :: [EntryView]
-    , _input    :: String
+    { _key            :: Maybe String
+    , _selected       :: Int
+    , _entries        :: [EntryView]
+    , _input          :: String
+    , _inputSelection :: Maybe (Int, Int)
     } deriving (Generic, Show)
 
 makeLenses ''HighlightView
@@ -63,10 +65,11 @@ instance Convertible Match EntryView where
 
 instance Convertible Searcher SearcherView where
     convert s = SearcherView
-        {- key      -} (s ^. Searcher.mode . to nodeKey')
-        {- selected -} (s ^. Searcher.selected)
-        {- entries  -} (s ^. Searcher.hints . to convert)
-        {- input    -} "test"
+        {- key            -} (s ^. Searcher.mode . to nodeKey')
+        {- selected       -} (s ^. Searcher.selected)
+        {- entries        -} (s ^. Searcher.hints . to convert)
+        {- input          -} "test"
+        {- inputSelection -} (s ^. Searcher.inputSelection)
 
 nodeKey' :: Searcher.Mode -> Maybe String
 nodeKey' = \case

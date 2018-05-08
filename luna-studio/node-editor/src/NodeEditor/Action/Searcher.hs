@@ -30,7 +30,6 @@ import           NodeEditor.Action.State.Action             (beginActionWithKey,
 import           NodeEditor.Action.State.App                (renderIfNeeded)
 import           NodeEditor.Action.State.NodeEditor         (findSuccessorPosition, getExpressionNode, getPort, getSearcher,
                                                              getSelectedNodes, getSelectedNodes, modifyNodeEditor, modifySearcher)
-import           NodeEditor.Action.State.Scene              (translateToWorkspace)
 import           NodeEditor.Action.State.Scene              (getScreenSize, translateToScreen)
 import           NodeEditor.Action.UUID                     (getUUID)
 import           NodeEditor.Event.Event                     (Event (Shortcut))
@@ -40,7 +39,7 @@ import qualified NodeEditor.React.Model.Node.ExpressionNode as ExpressionNode
 import qualified NodeEditor.React.Model.NodeEditor          as NodeEditor
 import qualified NodeEditor.React.Model.Port                as Port
 import qualified NodeEditor.React.Model.Searcher            as Searcher
-import           NodeEditor.React.Model.Visualization       (RunningVisualization (RunningVisualization), VisualizerProperties,
+import           NodeEditor.React.Model.Visualization       (RunningVisualization (RunningVisualization),
                                                              VisualizerProperties (VisualizerProperties), getMdVisualizer, visualizerId)
 import qualified NodeEditor.React.View.App                  as App
 import           NodeEditor.State.Action                    (Action (begin, continue, end, update), Searcher (Searcher), searcherAction)
@@ -151,10 +150,10 @@ openWith input mode = do
         inputLen = Text.length input
     begin action
     waitingForTc <- use Global.waitingForTc
-    modifyNodeEditor $ NodeEditor.searcher ?= Searcher.Searcher 0 mode def False False waitingForTc def
+    modifyNodeEditor $ NodeEditor.searcher ?= Searcher.Searcher 0 mode def False def False waitingForTc def
     modifyInput input inputLen inputLen action
-    renderIfNeeded
-    Searcher.focus
+    renderIfNeeded --TODO[basegl] Remove
+    -- Searcher.focus --TODO[basegl] Remove
 
 updateInput :: Text -> Int -> Int -> Searcher -> Command State ()
 updateInput input selectionStart selectionEnd action = do
@@ -181,10 +180,12 @@ updateInput input selectionStart selectionEnd action = do
 modifyInput :: Text -> Int -> Int -> Searcher -> Command State ()
 modifyInput input selectionStart selectionEnd action = do
     updateInput input selectionStart selectionEnd action
-    modifySearcher $ Searcher.replaceInput .= True
-    renderIfNeeded
-    Searcher.setSelection selectionStart selectionEnd
-    modifySearcher $ Searcher.replaceInput .= False
+    modifySearcher $ Searcher.replaceInput   .= True --TODO[basegl] Remove
+    modifySearcher $ Searcher.inputSelection .= Just (selectionStart, selectionEnd)
+    renderIfNeeded --TODO[basegl] Remove
+    modifySearcher $ Searcher.inputSelection .= Nothing
+    Searcher.setSelection selectionStart selectionEnd --TODO[basegl] Remove
+    modifySearcher $ Searcher.replaceInput .= False --TODO[basegl] Remove
 
 updateHints :: Searcher -> Command State ()
 updateHints _ = localUpdateSearcherHints

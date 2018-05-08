@@ -6,7 +6,6 @@ module NodeEditor.React.Model.Searcher
     ) where
 
 import           Common.Prelude
-import qualified Data.Map.Lazy                              as Map
 import qualified Data.Text                                  as Text
 import           Data.Text32                                (Text32)
 import qualified Data.UUID.Types                            as UUID
@@ -16,10 +15,9 @@ import qualified Luna.Syntax.Text.Lexer                     as Lexer
 import           LunaStudio.Data.Node                       (ExpressionNode, mkExprNode)
 import qualified LunaStudio.Data.Node                       as Node
 import           LunaStudio.Data.NodeLoc                    (NodeLoc)
-import qualified LunaStudio.Data.NodeLoc                    as NodeLoc
 import           LunaStudio.Data.NodeSearcher               (Match)
 import qualified LunaStudio.Data.NodeSearcher               as NS
-import           LunaStudio.Data.PortRef                    (OutPortRef (OutPortRef), srcNodeLoc)
+import           LunaStudio.Data.PortRef                    (OutPortRef (OutPortRef))
 import qualified LunaStudio.Data.PortRef                    as PortRef
 import           LunaStudio.Data.Position                   (Position)
 import           LunaStudio.Data.TypeRep                    (TypeRep (TCons))
@@ -59,13 +57,14 @@ data Mode = Command                       [Match]
           deriving (Eq, Generic, Show)
 
 data Searcher = Searcher
-              { _selected      :: Int
-              , _mode          :: Mode
-              , _input         :: Input
-              , _replaceInput  :: Bool
-              , _rollbackReady :: Bool
-              , _waitingForTc  :: Bool
-              , _searcherError :: Maybe Text
+              { _selected       :: Int
+              , _mode           :: Mode
+              , _input          :: Input
+              , _replaceInput   :: Bool
+              , _inputSelection :: Maybe (Int, Int)
+              , _rollbackReady  :: Bool
+              , _waitingForTc   :: Bool
+              , _searcherError  :: Maybe Text
               } deriving (Eq, Generic, Show)
 
 makeLenses ''Searcher
@@ -148,7 +147,7 @@ findLambdaArgsAndEndOfLambdaArgs input' tokens = findRecursive tokens (0 :: Int)
         _             -> findRecursive t openParanthesisNumber        (endPos + tokenLength h) args res
 
 mkDef :: Mode -> Searcher
-mkDef mode' = Searcher def mode' (Divided $ DividedInput def def def) False False False def
+mkDef mode' = Searcher def mode' (Divided $ DividedInput def def def) False def False False def
 
 defCommand :: Searcher
 defCommand = mkDef $ Command def
@@ -161,10 +160,10 @@ hints = lens getHints setHints where
     NodeName _ results -> results
     PortName _ results -> results
   setHints s h = case s ^. mode of
-    Command     results -> s & mode .~ Command h
-    Node nl nmi results -> s & mode .~ Node nl nmi h
-    NodeName nl results -> s & mode .~ NodeName nl h
-    PortName pr results -> s & mode .~ PortName pr h
+    Command     _ -> s & mode .~ Command h
+    Node nl nmi _ -> s & mode .~ Node nl nmi h
+    NodeName nl _ -> s & mode .~ NodeName nl h
+    PortName pr _ -> s & mode .~ PortName pr h
 
 isValidSelection :: Int -> Searcher -> Bool
 isValidSelection i s = i < 0 || i > length (s ^. hints)

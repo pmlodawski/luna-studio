@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module JS.Searcher where
+module JS.Searcher where --TODO[basegl] Remove
 
 import           Common.Prelude
 import qualified JS.Mount       as Mount

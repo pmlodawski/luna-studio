@@ -6,12 +6,10 @@ import           Common.Prelude
 import           NodeEditor.Action.Basic                    (removeSelectedNodes)
 import           NodeEditor.Action.Batch                    (copy, paste)
 import           NodeEditor.Action.State.NodeEditor         (getSelectedNodes)
-import qualified NodeEditor.Action.State.Scene              as Scene
 import           NodeEditor.Event.Event                     (Event (Shortcut))
 import qualified NodeEditor.Event.Shortcut                  as Shortcut
 import           NodeEditor.React.Model.Node.ExpressionNode (nodeLoc)
 import           NodeEditor.State.Global                    (State)
-import qualified NodeEditor.State.Global                    as Global
 import qualified NodeEditor.View.NodeEditor                 as NodeEditor
 
 

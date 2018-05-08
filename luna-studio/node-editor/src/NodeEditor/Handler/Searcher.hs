@@ -8,14 +8,16 @@ import           Common.Action.Command              (Command)
 import           LunaStudio.Data.Position           (fromTuple)
 import qualified NodeEditor.Action.Searcher         as Searcher
 import           NodeEditor.Action.State.NodeEditor (whenGraphLoaded)
-import           NodeEditor.Event.Event             (Event (Shortcut, UI))
+import           NodeEditor.Event.Event             (Event (Shortcut, UI, View))
 import qualified NodeEditor.Event.Shortcut          as Shortcut
 import           NodeEditor.Event.UI                (UIEvent (AppEvent, SearcherEvent))
+import           NodeEditor.Event.View              (BaseEvent (SearcherAccept, SearcherEdit), ViewEvent(ViewEvent))
 import qualified NodeEditor.React.Event.App         as App
 import qualified NodeEditor.React.Event.Searcher    as Searcher
 import           NodeEditor.State.Action            (Action (continue))
 import           NodeEditor.State.Global            (State)
 import           Text.Read                          (readMaybe)
+
 
 handle :: (Event -> IO ()) -> Event -> Maybe (Command State ())
 handle _ (Shortcut (Shortcut.Event Shortcut.SearcherEditExpression _)) = Just $ whenGraphLoaded Searcher.editSelectedNodeExpression
@@ -23,6 +25,8 @@ handle _ (Shortcut (Shortcut.Event Shortcut.SearcherOpen         arg)) = Just $ 
 handle _ (UI (AppEvent App.ContextMenu))                               = Just $ whenGraphLoaded $ Searcher.open def
 handle scheduleEvent (UI (SearcherEvent evt))                          = Just $ handleEvent scheduleEvent evt
 handle _ (UI (AppEvent (App.MouseDown _ _)))                           = Just $ continue Searcher.close
+handle scheduleEvent (View (ViewEvent _ _ (SearcherAccept {})))        = Just $ continue $ Searcher.accept scheduleEvent
+handle _             (View (ViewEvent _ _ (SearcherEdit ss se input))) = Just $ continue $ Searcher.updateInput input ss se
 handle _ _                                                             = Nothing
 
 handleEvent :: (Event -> IO ()) -> Searcher.Event -> Command State ()

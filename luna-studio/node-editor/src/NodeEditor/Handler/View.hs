@@ -4,7 +4,6 @@ import           Common.Prelude
 
 import           Common.Action.Command   (Command)
 import           NodeEditor.Event.Event  (Event (View))
-import qualified NodeEditor.Event.View    as View
 import           NodeEditor.State.Global (State)
 
 

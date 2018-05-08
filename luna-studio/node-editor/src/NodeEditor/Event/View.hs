@@ -66,6 +66,16 @@ data BaseEvent
         { select :: Bool }
     | Disconnect
         { src :: Bool }
+    | SearcherAccept
+        { selectionStart :: Int
+        , selectionEnd   :: Int
+        , value          :: Text
+        }
+    | SearcherEdit
+        { selectionStart :: Int
+        , selectionEnd   :: Int
+        , value          :: Text
+        }
     deriving (Generic, Show, NFData)
 
 makeLenses ''ViewEvent

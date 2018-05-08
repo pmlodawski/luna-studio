@@ -12,16 +12,14 @@ import           NodeEditor.Action.State.Action (checkIfActionPerfoming, endActi
 import qualified NodeEditor.Event.Atom          as Atom
 import           NodeEditor.Event.Event         (Event (Atom, Init, Shortcut, UI, View))
 import qualified NodeEditor.Event.Shortcut      as Shortcut
-import           NodeEditor.Event.UI            (UIEvent (AppEvent, SidebarEvent))
+import           NodeEditor.Event.UI            (UIEvent (AppEvent))
 import           NodeEditor.Event.View          (ViewEvent (ViewEvent))
 import qualified NodeEditor.Event.View          as View
 import qualified NodeEditor.React.Event.App     as App
-import qualified NodeEditor.React.Event.Sidebar as Sidebar
 import           NodeEditor.State.Action        (actionsClosingOnMouseLeave)
 import           NodeEditor.State.Action        (Action (continue), ActionRep, textPortControlEditAction)
 import           NodeEditor.State.Global        (State)
 import qualified NodeEditor.State.Global        as Global
-import           NodeEditor.State.Mouse         (mousePosition)
 
 
 handle :: Event -> Maybe (Command Global.State ())
