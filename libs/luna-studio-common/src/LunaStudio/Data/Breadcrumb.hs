@@ -6,6 +6,7 @@ import           Data.Aeson.Types       (FromJSON (..), FromJSONKey, ToJSON (..)
 import           Data.Binary            (Binary)
 import           Data.Monoid            (Monoid (..))
 import           Data.Semigroup         (Semigroup (..))
+import qualified Data.List              as List
 import qualified Data.Text              as Text
 import           LunaStudio.Data.NodeId (NodeId)
 import           Prologue               hiding (Monoid, mappend, mconcat, mempty, (<>))
@@ -54,27 +55,32 @@ toNames :: Breadcrumb (Named BreadcrumbItem) -> Breadcrumb Text
 toNames = Breadcrumb . toListOf (items . traversed . name)
 
 instance FromJSON a => FromJSONKey (Breadcrumb a)
-instance {-# OVERLAPPABLE #-} FromJSON a => FromJSON (Breadcrumb a) where
-    parseJSON = Lens.parse
-instance FromJSON a => FromJSON (Named a) where parseJSON = Lens.parse
-instance ToJSON a => ToJSONKey (Breadcrumb a)
-instance {-# OVERLAPPABLE #-} ToJSON a => ToJSON (Breadcrumb a) where
-    toJSON     = Lens.toJSON
-    toEncoding = Lens.toEncoding
+instance ToJSON   a => ToJSONKey   (Breadcrumb a)
+instance FromJSONKey BreadcrumbItem
+instance ToJSONKey  BreadcrumbItem
 
-instance ToJSON (Breadcrumb Text) where
-    toJSON     = toJSON . intercalate "." . unwrap
+instance {-# OVERLAPPABLE #-} FromJSON a => FromJSON (Breadcrumb a) where parseJSON = Lens.parse
+instance {-# OVERLAPPABLE #-} ToJSON a => ToJSON (Breadcrumb a) where
+    toEncoding = Lens.toEncoding
+    toJSON = Lens.toJSON
+
+instance FromJSON a => FromJSON (Named a) where parseJSON = Lens.parse
+instance ToJSON   a => ToJSON   (Named a) where
+    toEncoding = Lens.toEncoding
+    toJSON = Lens.toJSON
 
 instance FromJSON (Breadcrumb Text) where
     parseJSON = fmap (Breadcrumb . Text.split (== '.')) . parseJSON
-
-instance ToJSON a => ToJSON (Named a) where
-    toJSON     = Lens.toJSON
-    toEncoding = Lens.toEncoding
+instance ToJSON (Breadcrumb Text) where
+    toJSON = toJSON . intercalate "." . unwrap
 
 instance FromJSON BreadcrumbItem where parseJSON = Lens.parse
-instance FromJSONKey BreadcrumbItem
-instance ToJSON BreadcrumbItem where
-    toJSON     = Lens.toJSON
+instance ToJSON   BreadcrumbItem where
     toEncoding = Lens.toEncoding
-instance ToJSONKey BreadcrumbItem
+    toJSON = Lens.toJSON
+
+namedInits :: Breadcrumb (Named a) -> [Named (Breadcrumb a)]
+namedInits bc = zipWith Named names (Breadcrumb <$> List.inits unnamed) where
+    items'  = bc ^. items
+    names   = "" : (_name <$> items')
+    unnamed = _breadcrumb <$> items'
