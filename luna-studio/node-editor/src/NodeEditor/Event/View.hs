@@ -1,30 +1,28 @@
-{-# LANGUAGE DeriveAnyClass #-}
-
 module NodeEditor.Event.View where
 
-import           Common.Analytics               (IsTrackedEvent (isTracked))
-import           Common.Data.Event              (EventName (eventName), consName)
+import           Common.Analytics                   (IsTrackedEvent (isTracked))
+import           Common.Data.Event                  (EventName (eventName))
 import           Common.Prelude
-import           Control.Lens.Aeson             (parseDropUnary, toEncodingDropUnary)
-import           Data.Aeson                     (FromJSON (..), ToJSON (..))
-import           Data.Convert                   (Convertible (convert))
-import           LunaStudio.Data.NodeLoc        (NodeLoc)
-import           LunaStudio.Data.PortRef        (InPortRef (InPortRef), OutPortRef (OutPortRef))
-import           LunaStudio.Data.ScreenPosition (fromDoubles, ScreenPosition)
-import           NodeEditor.View.ExpressionNode (ExpressionNodeView)
-import           Prelude                        (error)
+import           Control.Lens.Aeson                 (parseDropUnary, toEncodingDropUnary)
+import           Data.Aeson                         (FromJSON (..), ToJSON (..))
+import           Data.Convert                       (Convertible (convert))
+import           LunaStudio.Data.NodeLoc            (NodeLoc)
+import           LunaStudio.Data.PortRef            (InPortRef (InPortRef), OutPortRef (OutPortRef))
+import           LunaStudio.Data.ScreenPosition     (fromDoubles, ScreenPosition)
+import           NodeEditor.React.Model.Breadcrumbs (Breadcrumb, BreadcrumbItem)
+import           Prelude                            (error)
 
 
 type Path = [String]
 
 newtype Target = Target { unTarget :: [String] }
-    deriving (Generic, Show, NFData)
+    deriving (Generic, Show)
 
 data ViewEvent = ViewEvent
     { _path   :: Path
     , _target :: Target
     , _base   :: BaseEvent
-    } deriving (Generic, Show, NFData)
+    } deriving (Generic, Show)
 
 data BaseEvent
     = MouseEvent
@@ -60,6 +58,8 @@ data BaseEvent
         , x           :: Double
         , y           :: Double
         }
+    | Navigate
+        { to :: Breadcrumb BreadcrumbItem }
     | NodeMove
         { position :: (Double, Double) }
     | NodeSelect
@@ -76,17 +76,21 @@ data BaseEvent
         , selectionEnd   :: Int
         , value          :: Text
         }
-    deriving (Generic, Show, NFData)
+    deriving (Generic, Show)
 
 makeLenses ''ViewEvent
 
-instance ToJSON Target    where toEncoding = toEncodingDropUnary
-instance ToJSON ViewEvent where toEncoding = toEncodingDropUnary
-instance ToJSON BaseEvent where toEncoding = toEncodingDropUnary
+instance NFData Target
+instance NFData ViewEvent
+instance NFData BaseEvent
 
 instance FromJSON Target    where parseJSON = parseDropUnary
 instance FromJSON ViewEvent where parseJSON = parseDropUnary
 instance FromJSON BaseEvent where parseJSON = parseDropUnary
+
+instance ToJSON Target    where toEncoding = toEncodingDropUnary
+instance ToJSON ViewEvent where toEncoding = toEncodingDropUnary
+instance ToJSON BaseEvent where toEncoding = toEncodingDropUnary
 
 instance EventName ViewEvent where
     eventName = intercalate "." . view path

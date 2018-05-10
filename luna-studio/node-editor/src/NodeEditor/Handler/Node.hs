@@ -5,7 +5,7 @@ import           Common.Prelude
 import           LunaStudio.Data.ScreenPosition             (ScreenPosition)
 import           LunaStudio.Data.Position                   (fromTuple)
 import           NodeEditor.Action.Basic                    (collapseToFunction, enterNode, moveNode, removeSelectedNodes, selectAll,
-                                                             selectNode, setNodeExpression, setPortDefault, toggleSelect, toggleSelectedNodesMode,
+                                                             selectNode, setNodeExpression, toggleSelect, toggleSelectedNodesMode,
                                                              toggleSelectedNodesUnfold, unselectAll)
 import           NodeEditor.Action.Batch                    (autolayoutNodes)
 import qualified NodeEditor.Action.Node                     as Node
@@ -27,6 +27,7 @@ import           NodeEditor.State.Action                    (Action (continue))
 import           NodeEditor.State.Global                    (State)
 import           NodeEditor.State.Mouse                     (mousePosition, mousePosition', workspacePosition, workspacePosition')
 import           React.Flux                                 (MouseEvent, mouseButton, mouseCtrlKey, mouseMetaKey)
+
 
 handle :: Event -> Maybe (Command State ())
 handle (Shortcut (Shortcut.Event command _))                            = Just $ handleCommand command

@@ -1,6 +1,5 @@
 module NodeEditor.View.NodeLoc
-    ( module NodeEditor.View.NodeLoc
-    , module X
+    ( module X
     ) where
 
 import           Common.Prelude

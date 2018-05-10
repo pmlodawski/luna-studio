@@ -8,7 +8,7 @@ import           Data.Convert                      (Convertible (convert))
 import qualified LunaStudio.Data.PortRef           as PortRef
 import           NodeEditor.React.Model.Connection (HalfConnection)
 import qualified NodeEditor.React.Model.Connection as HalfConnection
-import           NodeEditor.View.Diff              (DiffT, diffApply, diffConvert, diffHashMap)
+import           NodeEditor.View.Diff              (DiffT, diffApply, diffConvert)
 import           LunaStudio.Data.Port              (AnyPortId (InPortId', OutPortId'))
 
 
@@ -22,7 +22,7 @@ makeLenses ''HalfConnectionView
 
 instance ToJSON HalfConnectionView where
     toEncoding = Lens.toEncoding
-    toJSON     = Lens.toJSON
+    toJSON = Lens.toJSON
 
 instance Convertible HalfConnection HalfConnectionView where
     convert c = HalfConnectionView

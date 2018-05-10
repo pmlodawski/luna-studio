@@ -8,7 +8,7 @@ import           LunaStudio.Data.NodeLoc              (NodeLoc)
 import qualified LunaStudio.Data.NodeLoc              as NodeLoc
 import qualified LunaStudio.Data.PortRef              as PortRef
 import           NodeEditor.React.Model.NodeEditor    (VisualizersPaths, lunaVisualizersPath)
-import           NodeEditor.React.Model.Searcher      (Match, Mode (..), Searcher, docVisInfo, selectedMatch)
+import           NodeEditor.React.Model.Searcher      (Match, Mode (..), Searcher, docVisInfo)
 import qualified NodeEditor.React.Model.Searcher      as Searcher
 import           NodeEditor.React.Model.Visualization (RunningVisualization)
 

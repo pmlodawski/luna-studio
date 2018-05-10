@@ -28,8 +28,8 @@ import           NodeEditor.React.Model.Node.ExpressionNode (countVisibleArgPort
                                                              visibleOutPortNumber)
 import qualified NodeEditor.React.Model.Node.ExpressionNode as ExpressionNode
 import           NodeEditor.React.Model.Port                (EitherPort, InPort, InPortId, IsAlias, IsOnly, IsSelf, OutPort, OutPortId,
-                                                             argumentConstructorNumber, argumentConstructorOffsetY, isSelf, portAngleStart,
-                                                             portAngleStop, portGap, portId)
+                                                             argumentConstructorNumber, isSelf, portAngleStart,
+                                                             portAngleStop, portId)
 import qualified NodeEditor.React.Model.Port                as Port
 
 
@@ -236,7 +236,6 @@ connectionPositions srcNode' srcPort dstNode' dstPort layout
                     srcPorts
                     (srcPorts + srcArgs == 1)
                     (if isDstExp then dstPortNum else dstArgNum)
-                    (if isDstExp then dstPorts   else dstArgs)
 
                 dstConnPos = connectionDst
                     srcPos'
@@ -251,7 +250,6 @@ connectionPositions srcNode' srcPort dstNode' dstPort layout
                         dstNode
                     )
                     srcPortNum
-                    srcPorts
             return (srcConnPos, dstConnPos)
         _ -> return def
 
@@ -300,7 +298,6 @@ halfConnectionSrcPosition (Expression node) eport mousePos _ =
             allPorts
             (countVisibleOutPorts node + countVisibleArgPorts node == 1)
             1
-            1
         Left port -> connectionDst
             mousePos
             pos
@@ -313,7 +310,6 @@ halfConnectionSrcPosition (Expression node) eport mousePos _ =
             allPorts
             (isSelf $ port ^. portId)
             (has (inPorts . LT.value . Port.state . Port._Connected) node)
-            1
             1
     where
         pos      = node ^. position
@@ -328,9 +324,9 @@ halfConnectionSrcPosition _ _ _ _ = def
 
 
 connectionSrc :: Position -> Position -> Bool -> Bool -> Int -> Int -> IsOnly
-    -> Int -> Int -> Position
+    -> Int -> Position
 connectionSrc srcNode dstNode srcExpanded _dstExpanded srcPortNum srcPorts
-    isSingle dstPortNum dstPorts =
+    isSingle dstPortNum =
         if srcExpanded
             then expandedOutputPosition srcNode srcPortNum
             else if isSingle then moveToOutputRadius portRadius t  srcNode
@@ -348,9 +344,9 @@ connectionSrc srcNode dstNode srcExpanded _dstExpanded srcPortNum srcPorts
                 else srcNode
 
 connectionDst :: Position -> Position -> Bool -> Bool -> Int -> Int -> IsSelf
-    -> IsAlias -> Int -> Int -> Position
+    -> IsAlias -> Int -> Position
 connectionDst srcNode dstNode srcExpanded dstExpanded dstPortNum dstPorts
-    isSelf' isAlias srcPortNum srcPorts =
+    isSelf' isAlias srcPortNum =
         if dstExpanded || isSelf'
             then trueDst
             else if isAlias then moveToInputRadius portAliasRadius t  dstNode

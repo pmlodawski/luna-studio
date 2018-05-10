@@ -20,7 +20,6 @@ import           NodeEditor.React.IsRef                    (IsRef, dispatch)
 import           NodeEditor.React.Model.Node.SidebarNode   (NodeLoc, SidebarMode (AddRemove, MoveConnect), SidebarNode,
                                                             countProjectionPorts, isInputSidebar, minimalNumberOfPorts)
 import qualified NodeEditor.React.Model.Node.SidebarNode   as SidebarNode
-import           NodeEditor.React.Model.NodeEditor         (VisualizersPaths)
 import           NodeEditor.React.Model.Port               (AnyPort, OutPortIndex (Projection), getPortNumber, getPositionInSidebar,
                                                             isHighlighted, isInMovedMode, isInNameEditMode, isInPort, isOutPort)
 import qualified NodeEditor.React.Model.Port               as Port

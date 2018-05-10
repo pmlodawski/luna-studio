@@ -23,7 +23,7 @@ import           LunaStudio.Data.Position         (Position)
 import           LunaStudio.Data.TypeRep          (TypeRep (..))
 import           NodeEditor.Data.Color            (Color)
 import qualified NodeEditor.Data.Color            as Color
-import           NodeEditor.React.Model.Constants (lineHeight, nodeRadius)
+import           NodeEditor.React.Model.Constants (nodeRadius)
 
 type IsAlias = Bool
 type IsSelf  = Bool

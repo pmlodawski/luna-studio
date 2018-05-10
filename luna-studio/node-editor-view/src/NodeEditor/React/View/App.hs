@@ -10,13 +10,11 @@ import           Data.Timestamp                     (Timestamp (Timestamp))
 import           JS.Scene                           (appId)
 import qualified JS.UI                              as UI
 import           NodeEditor.Event.KeyMap            (isEventHandled)
-import qualified NodeEditor.Event.Shortcut          as Shortcut
 import qualified NodeEditor.Event.UI                as UI
 import qualified NodeEditor.React.Event.App         as App
 import qualified NodeEditor.React.Event.Breadcrumbs as Breadcrumbs
 import           NodeEditor.React.IsRef             (HasApp, IsRef, dispatch)
 import qualified NodeEditor.React.IsRef             as Ref
-import           NodeEditor.React.Model.App         (App)
 import qualified NodeEditor.React.Model.App         as App
 import           NodeEditor.React.Model.Breadcrumbs (isTopLevel)
 import           NodeEditor.React.View.Breadcrumbs  (breadcrumbs_)

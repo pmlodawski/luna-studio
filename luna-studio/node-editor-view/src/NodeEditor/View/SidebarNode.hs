@@ -21,7 +21,7 @@ makeLenses ''SidebarNodeView
 
 instance ToJSON SidebarNodeView where
     toEncoding = Lens.toEncoding
-    toJSON     = Lens.toJSON
+    toJSON = Lens.toJSON
 
 instance Convertible InputNode SidebarNodeView where
     convert n = SidebarNodeView

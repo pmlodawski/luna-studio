@@ -11,7 +11,7 @@ import           NodeEditor.React.Model.Visualization (NodeVisualizations, Runni
                                                        VisualizationMode (Default, Focused, FullScreen, Preview), Visualizer,
                                                        VisualizerType (InternalVisualizer, LunaVisualizer, ProjectVisualizer))
 import qualified NodeEditor.React.Model.Visualization as Vis
-import           NodeEditor.View.Diff                 (DiffT, diffApply, diffConvert, diffMap, diffMapWithKey)
+import           NodeEditor.View.Diff                 (DiffT, diffApply, diffConvert, diffMapWithKey)
 import           NodeEditor.View.NodeLoc              (NodeLoc)
 
 type VisualizerName = String
@@ -41,15 +41,15 @@ data NodeVisualizationsView = NodeVisualizationsView
 
 instance ToJSON VisualizerView where
     toEncoding = Lens.toEncoding
-    toJSON     = Lens.toJSON
+    toJSON = Lens.toJSON
 
 instance ToJSON VisualizationView where
     toEncoding = Lens.toEncoding
-    toJSON     = Lens.toJSON
+    toJSON = Lens.toJSON
 
 instance ToJSON NodeVisualizationsView where
     toEncoding = Lens.toEncoding
-    toJSON     = Lens.toJSON
+    toJSON = Lens.toJSON
 
 instance Convertible VisualizationId String where
     convert = show

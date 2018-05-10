@@ -12,13 +12,12 @@ import qualified NodeEditor.Event.UI                        as UI
 import qualified NodeEditor.React.Event.Visualization       as Visualization
 import           NodeEditor.React.IsRef                     (IsRef, dispatch)
 import           NodeEditor.React.Model.Constants           (lineHeight)
-import           NodeEditor.React.Model.Node.ExpressionNode (NodeLoc)
 import           NodeEditor.React.Model.NodeEditor          (VisualizersPaths)
 import qualified NodeEditor.React.Model.NodeEditor          as NE
 import           NodeEditor.React.Model.Visualization       (RunningVisualization, VisualizationId,
                                                              VisualizationMode (Default, Focused, FullScreen, Preview),
                                                              VisualizationParent (Node, Searcher), VisualizationProperties, Visualizer,
-                                                             VisualizerId, VisualizerName, VisualizerPath, VisualizerType (..),
+                                                             VisualizerId, VisualizerPath, VisualizerType (..),
                                                              runningVisualizer, selectedVisualizerId, visPropArgPortsNumber,
                                                              visPropIsNodeExpanded, visPropNodeLoc, visPropVisualization,
                                                              visPropVisualizers, visualizationId, visualizationMode, visualizerId,

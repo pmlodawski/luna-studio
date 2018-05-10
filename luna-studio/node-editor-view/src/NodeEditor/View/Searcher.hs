@@ -8,7 +8,6 @@ import           Common.Prelude
 import qualified Control.Lens.Aeson              as Lens
 import           Data.Aeson                      (ToJSON (toEncoding, toJSON))
 import           Data.Convert                    (Convertible (convert))
-import           JS.Searcher                     (searcherId)
 import           NodeEditor.React.Model.Searcher (Searcher)
 import qualified NodeEditor.React.Model.Searcher as Searcher
 import           NodeEditor.View.Diff            (DiffT, diffApply)
@@ -43,15 +42,15 @@ makeLenses ''SearcherView
 
 instance ToJSON HighlightView where
     toEncoding = Lens.toEncoding
-    toJSON     = Lens.toJSON
+    toJSON = Lens.toJSON
 
 instance ToJSON EntryView     where
     toEncoding = Lens.toEncoding
-    toJSON     = Lens.toJSON
+    toJSON = Lens.toJSON
 
 instance ToJSON SearcherView  where
     toEncoding = Lens.toEncoding
-    toJSON     = Lens.toJSON
+    toJSON = Lens.toJSON
 
 instance Convertible (Int, Int) HighlightView where
     convert = uncurry HighlightView

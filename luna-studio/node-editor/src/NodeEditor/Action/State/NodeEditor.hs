@@ -631,8 +631,8 @@ updateVisualizationsForNode nl
                         $ n ^. ExpressionNode.nodeType
                     if not (ExpressionNode.hasData n) || isNothing mayVis
                         then setPlaceholderVisualization nl
-                        else withJust mayVis $ updateWithVis n
-        updateWithVis n vis = do
+                        else withJust mayVis updateWithVis
+        updateWithVis vis = do
             modifyNodeEditor $ NE.nodeVisualizations %= \visMap -> do
                 let prevVis = maybe
                         def

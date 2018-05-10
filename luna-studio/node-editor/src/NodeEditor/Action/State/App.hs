@@ -2,7 +2,6 @@ module NodeEditor.Action.State.App where
 
 import           Common.Action.Command              (Command)
 import           Common.Prelude                     hiding (get, lens)
-import qualified Common.Prelude                     as P
 import           Control.Lens.Internal.Zoom         (Focusing)
 import qualified Control.Monad.State                as M
 import           NodeEditor.Batch.Workspace         (Workspace)

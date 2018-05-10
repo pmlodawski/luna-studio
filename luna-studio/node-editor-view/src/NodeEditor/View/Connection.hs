@@ -23,7 +23,7 @@ makeLenses ''ConnectionView
 
 instance ToJSON ConnectionView where
     toEncoding = Lens.toEncoding
-    toJSON     = Lens.toJSON
+    toJSON = Lens.toJSON
 
 instance Convertible Connection ConnectionView where
     convert c = ConnectionView

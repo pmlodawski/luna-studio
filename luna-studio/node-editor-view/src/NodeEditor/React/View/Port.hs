@@ -13,8 +13,8 @@ import qualified NodeEditor.React.Event.Port      as Port
 import           NodeEditor.React.IsRef           (IsRef, dispatch)
 import           NodeEditor.React.Model.Constants (connectionWidth, lineHeight, nodeRadius, nodeRadius', portAliasRadius, portRadius)
 import           NodeEditor.React.Model.Node      (NodeLoc)
-import           NodeEditor.React.Model.Port      (AnyPort, AnyPortId (InPortId', OutPortId'), InPortIndex (Arg, Self), IsOnly, Mode (..),
-                                                   argumentConstructorOffsetY, getPortNumber, isInPort, isInvisible, isSelf, portAngleStart,
+import           NodeEditor.React.Model.Port      (AnyPort, AnyPortId (InPortId', OutPortId'), InPortIndex (Self), IsOnly, Mode (..),
+                                                   argumentConstructorOffsetY, isInPort, isInvisible, portAngleStart,
                                                    portAngleStop)
 import qualified NodeEditor.React.Model.Port      as Port
 import qualified NodeEditor.React.View.Style      as Style

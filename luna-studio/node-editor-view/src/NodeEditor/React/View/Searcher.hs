@@ -11,8 +11,6 @@ import qualified NodeEditor.Event.UI                       as UI
 import qualified NodeEditor.React.Event.App                as App
 import           NodeEditor.React.Event.Searcher
 import           NodeEditor.React.IsRef                    (IsRef, dispatch)
-import           NodeEditor.React.Model.NodeEditor         (VisualizersPaths)
-import qualified NodeEditor.React.Model.NodeEditor         as NE
 import           NodeEditor.React.Model.SearcherProperties (SearcherProperties)
 import qualified NodeEditor.React.Model.SearcherProperties as Searcher
 import qualified NodeEditor.React.View.Style               as Style

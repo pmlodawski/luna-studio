@@ -31,7 +31,6 @@ import           NodeEditor.React.Model.Port                (isSelf, mode, portI
 import           NodeEditor.React.Model.Visualization       (awaitingDataMsg)
 import           NodeEditor.State.Global                    (State)
 
-import           NodeEditor.React.Model.Node.ExpressionNode (name)
 
 createNode :: NodePath -> Position -> Text -> Bool -> Command State ()
 createNode parentPath nodePos expr isDefinition = do
