@@ -22,7 +22,7 @@ data InPorts s   = InPorts { _self :: Maybe s, _head :: Maybe s, _args :: [s] } 
 type InPortId    = [InPortIndex]
 makeLenses ''InPorts
 
-data    OutPortIndex  = Projection Int deriving (Eq, Generic, Ord, Read, Show)
+newtype OutPortIndex  = Projection Int deriving (Eq, Generic, Ord, Read, Show)
 newtype OutPorts s    = OutPorts [s]   deriving (Default, Eq, Foldable, Functor, Generic, NFData, Show, Traversable)
 type    OutPortId     = [OutPortIndex]
 makeWrapped ''OutPorts

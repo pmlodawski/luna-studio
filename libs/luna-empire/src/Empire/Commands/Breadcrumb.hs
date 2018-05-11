@@ -17,7 +17,7 @@ import           Data.Maybe                      (listToMaybe, maybe)
 import qualified Data.Map                        as Map
 import qualified Data.UUID.V4                    as UUID
 
-import           Empire.ASTOp                      (GraphOp, putNewIR, putNewIRCls, runAliasAnalysis, runASTOp)
+import           Empire.ASTOp                      (GraphOp, runASTOp)
 import           Empire.ASTOps.BreadcrumbHierarchy as ASTBreadcrumb
 import           Empire.ASTOps.Parse               as ASTParse
 import           Empire.ASTOps.Read                as ASTRead
@@ -37,14 +37,14 @@ import           LunaStudio.Data.Node            (NodeId)
 import           LunaStudio.Data.NodeCache       (portMappingMap)
 import           LunaStudio.Data.PortRef         (OutPortRef(..))
 import           LunaStudio.Data.Project         (ProjectId)
-import qualified Luna.Syntax.Text.Parser.CodeSpan as CodeSpan
-import           Data.Text.Span                  (LeftSpacedSpan(..), SpacedSpan(..))
+import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
+import           Data.Text.Span                  (SpacedSpan(..))
 
 import           Empire.Commands.Library         (withLibrary)
 import           Empire.Empire                   (Command, CommunicationEnv, Empire, runEmpire)
 
 import qualified Luna.IR              as IR
-import qualified OCI.IR.Combinators   as IR
+-- import qualified OCI.IR.Combinators   as IR
 
 withBreadcrumb :: FilePath -> Breadcrumb BreadcrumbItem -> Command Graph.Graph a -> Command Graph.ClsGraph a -> Empire a
 withBreadcrumb file breadcrumb actG actC = withLibrary file $ zoomBreadcrumb breadcrumb actG actC
@@ -54,48 +54,48 @@ makeGraph fun lastUUID = zoom Library.body $ makeGraphCls fun lastUUID
 
 extractMarkers :: GraphOp m => NodeRef -> m [Word64]
 extractMarkers root = do
-    IR.matchExpr root $ \case
-        IR.Marked m e -> do
-            marker <- ASTBreadcrumb.getMarker =<< IR.source m
+    matchExpr root $ \case
+        Marked m e -> do
+            marker <- ASTBreadcrumb.getMarker =<< source m
             return [marker]
         _ -> do
             ins <- IR.inputs root
-            markers <- mapM (\i -> IR.source i >>= extractMarkers) ins
+            markers <- mapM (\i -> source i >>= extractMarkers) ins
             return $ concat markers
 
 makeGraphCls :: NodeRef -> Maybe NodeId -> Command Graph.ClsGraph (NodeId, Graph.Graph)
-makeGraphCls fun lastUUID = do
-    pmState   <- liftIO Graph.defaultPMState
-    nodeCache <- use Graph.clsNodeCache
-    uuid      <- maybe (liftIO UUID.nextRandom) return lastUUID
-    (funName, IR.Rooted ir ref, fileOffset) <- runASTOp $ do
-        IR.putLayer @Marker fun $ Just $ OutPortRef (NodeLoc def uuid) []
-        asgFun    <- ASTRead.cutThroughDocAndMarked fun
-        IR.matchExpr asgFun $ \case
-            IR.ASGRootedFunction n root -> do
-                offset <- functionBlockStartRef asgFun
-                name   <- ASTRead.getVarName' =<< IR.source n
-                return (nameToString name, root, offset)
-    let ast   = Graph.AST ir pmState
-    let oldPortMapping = nodeCache ^. portMappingMap . at (uuid, Nothing)
-    portMapping <- fromJustM (liftIO $ (,) <$> UUID.nextRandom <*> UUID.nextRandom) oldPortMapping
-    globalMarkers <- use Graph.clsCodeMarkers
-    let bh    = BH.LamItem portMapping ref def
-        graph = Graph.Graph ast bh def globalMarkers def def fileOffset nodeCache
-    Graph.clsFuns . at uuid ?= Graph.FunctionGraph funName graph Map.empty
-    updatedCache <- withRootedFunction uuid $ do
-        runASTOp $ do
-            markers <- extractMarkers ref
-            let localMarkers = Map.filterWithKey (\k _ -> k `elem` markers) globalMarkers
-            Graph.codeMarkers .= localMarkers
-            propagateLengths ref
-        runAliasAnalysis
-        runASTOp $ do
-            ASTBreadcrumb.makeTopBreadcrumbHierarchy ref
-            restorePortMappings (nodeCache ^. portMappingMap)
-            use Graph.graphNodeCache
-    Graph.clsNodeCache .= updatedCache
-    return (uuid, graph)
+makeGraphCls fun lastUUID = error "makeGraphCls" -- do
+    -- pmState   <- liftIO Graph.defaultPMState
+    -- nodeCache <- use Graph.clsNodeCache
+    -- uuid      <- maybe (liftIO UUID.nextRandom) return lastUUID
+    -- (funName, IR.Rooted ir ref, fileOffset) <- runASTOp $ do
+    --     putLayer @Marker fun $ Just $ OutPortRef (NodeLoc def uuid) []
+    --     asgFun    <- ASTRead.cutThroughDocAndMarked fun
+    --     matchExpr asgFun $ \case
+    --         IR.ASGRootedFunction n root -> do
+    --             offset <- functionBlockStartRef asgFun
+    --             name   <- ASTRead.getVarName' =<< source n
+    --             return (nameToString name, root, offset)
+    -- let ast   = Graph.AST ir pmState
+    -- let oldPortMapping = nodeCache ^. portMappingMap . at (uuid, Nothing)
+    -- portMapping <- fromJustM (liftIO $ (,) <$> UUID.nextRandom <*> UUID.nextRandom) oldPortMapping
+    -- globalMarkers <- use Graph.clsCodeMarkers
+    -- let bh    = BH.LamItem portMapping ref def
+    --     graph = Graph.Graph ast bh def globalMarkers def def fileOffset nodeCache
+    -- Graph.clsFuns . at uuid ?= Graph.FunctionGraph funName graph Map.empty
+    -- updatedCache <- withRootedFunction uuid $ do
+    --     runASTOp $ do
+    --         markers <- extractMarkers ref
+    --         let localMarkers = Map.filterWithKey (\k _ -> k `elem` markers) globalMarkers
+    --         Graph.codeMarkers .= localMarkers
+    --         propagateLengths ref
+    --     runAliasAnalysis
+    --     runASTOp $ do
+    --         ASTBreadcrumb.makeTopBreadcrumbHierarchy ref
+    --         restorePortMappings (nodeCache ^. portMappingMap)
+    --         use Graph.graphNodeCache
+    -- Graph.clsNodeCache .= updatedCache
+    -- return (uuid, graph)
 
 runInternalBreadcrumb :: Breadcrumb BreadcrumbItem -> Command Graph.Graph a -> Command Graph.Graph a
 runInternalBreadcrumb breadcrumb act = do
@@ -118,56 +118,57 @@ zoomInternalBreadcrumb (Breadcrumb (Definition _ : rest)) act = zoomInternalBrea
 zoomInternalBreadcrumb breadcrumb act = runInternalBreadcrumb breadcrumb act
 
 withRootedFunction :: NodeId -> Command Graph.Graph a -> Command Graph.ClsGraph a
-withRootedFunction uuid act = do
-    graph    <- preuse (Graph.clsFuns . ix uuid . Graph.funGraph) <?!> BH.BreadcrumbDoesNotExistException (Breadcrumb [Definition uuid])
-    env      <- ask
-    clsGraph <- get
-    functionMarkers <- use $ Graph.clsFuns . ix uuid . Graph.funMarkers
-    let properGraph = let clsCode        = clsGraph ^. Graph.code
-                          clsCodeMarkers = clsGraph ^. Graph.clsCodeMarkers
-                          clsParseError  = clsGraph ^. Graph.clsParseError
-                      in graph & Graph.code .~ clsCode
-                               & Graph.codeMarkers .~ functionMarkers
-                               & Graph.globalMarkers .~ clsCodeMarkers
-                               & Graph.parseError .~ clsParseError
-    ((res, len), newGraph) <- liftIO $ runEmpire env properGraph $ do
-        a <- act
-        len <- runASTOp $ do
-            ref <- ASTRead.getCurrentASTRef
-            IR.getLayer @SpanLength ref
-        return (a, len)
-    Graph.clsFuns . ix uuid . Graph.funGraph .= newGraph
-    diffs <- runASTOp $ do
-        cls <- use Graph.clsClass
-        funs <- ASTRead.classFunctions cls
-        forM funs $ \fun -> ASTRead.cutThroughDocAndMarked fun >>= \f -> IR.matchExpr f $ \case
-            IR.ASGRootedFunction n _ -> do
-                nodeId <- ASTRead.getNodeId fun
-                if (nodeId == Just uuid) then do
-                    lenDiff <- if fun == f then do
-                        LeftSpacedSpan (SpacedSpan off prevLen) <- view CodeSpan.realSpan <$> IR.getLayer @CodeSpan.CodeSpan f
-                        IR.putLayer @CodeSpan.CodeSpan fun $ CodeSpan.mkRealSpan (LeftSpacedSpan (SpacedSpan off len))
-                        return $ len - prevLen
-                    else do
-                        LeftSpacedSpan (SpacedSpan off funLen) <- view CodeSpan.realSpan <$> IR.getLayer @CodeSpan.CodeSpan f
-                        IR.putLayer @CodeSpan.CodeSpan f $ CodeSpan.mkRealSpan (LeftSpacedSpan (SpacedSpan off len))
-                        let diff = len - funLen
-                        LeftSpacedSpan (SpacedSpan off markedLen) <- view CodeSpan.realSpan <$> IR.getLayer @CodeSpan.CodeSpan fun
-                        IR.putLayer @CodeSpan.CodeSpan fun $ CodeSpan.mkRealSpan (LeftSpacedSpan (SpacedSpan off (markedLen + diff)))
-                        return diff
-                    Just (funExpr :: IR.Expr IR.ASGRootedFunction) <- IR.narrow f
-                    let newRooted = IR.Rooted (newGraph ^. Graph.ast . Graph.ir) (newGraph ^. Graph.breadcrumbHierarchy . BH.self)
-                    IR.modifyExprTerm funExpr $ wrapped . IR.termASGRootedFunction_body .~ newRooted
-                    return $ Just lenDiff
-                    else return Nothing
-    let diff = fromMaybe (error "function not in AST?") $ listToMaybe $ catMaybes diffs
-        funOffset = properGraph ^. Graph.fileOffset
-    Graph.clsFuns . traverse . Graph.funGraph . Graph.fileOffset %= (\a -> if a > funOffset then a + diff else a)
-    Graph.clsFuns . ix uuid . Graph.funMarkers .= newGraph ^. Graph.codeMarkers
-    Graph.clsCodeMarkers %= \m -> Map.union m (newGraph ^. Graph.codeMarkers)
-    Graph.code           .= newGraph ^. Graph.code
-    Graph.clsParseError  .= newGraph ^. Graph.parseError
-    return res
+withRootedFunction uuid act = error "withRootedFunction" -- do
+    -- graph    <- preuse (Graph.clsFuns . ix uuid . Graph.funGraph) <?!> BH.BreadcrumbDoesNotExistException (Breadcrumb [Definition uuid])
+    -- env      <- ask
+    -- clsGraph <- get
+    -- functionMarkers <- use $ Graph.clsFuns . ix uuid . Graph.funMarkers
+    -- let properGraph = let clsCode        = clsGraph ^. Graph.code
+    --                       clsCodeMarkers = clsGraph ^. Graph.clsCodeMarkers
+    --                       clsParseError  = clsGraph ^. Graph.clsParseError
+    --                   in graph & Graph.code .~ clsCode
+    --                            & Graph.codeMarkers .~ functionMarkers
+    --                            & Graph.globalMarkers .~ clsCodeMarkers
+    --                            & Graph.parseError .~ clsParseError
+    -- ((res, len), newGraph) <- liftIO $ runEmpire env properGraph $ do
+    --     a <- act
+    --     len <- runASTOp $ do
+    --         ref <- ASTRead.getCurrentASTRef
+    --         getLayer @SpanLength ref
+    --     return (a, len)
+    -- Graph.clsFuns . ix uuid . Graph.funGraph .= newGraph
+    -- diffs <- runASTOp $ do
+    --     cls <- use Graph.clsClass
+    --     funs <- ASTRead.classFunctions cls
+    --     forM funs $ \fun -> ASTRead.cutThroughDocAndMarked fun >>= \f -> matchExpr f $ \case
+    --         _ -> return Nothing
+            -- IR.ASGRootedFunction n _ -> do
+            --     nodeId <- ASTRead.getNodeId fun
+            --     if (nodeId == Just uuid) then do
+            --         lenDiff <- if fun == f then do
+            --             LeftSpacedSpan (SpacedSpan off prevLen) <- view CodeSpan.realSpan <$> getLayer @CodeSpan.CodeSpan f
+            --             putLayer @CodeSpan.CodeSpan fun $ CodeSpan.mkRealSpan (LeftSpacedSpan (SpacedSpan off len))
+            --             return $ len - prevLen
+            --         else do
+            --             LeftSpacedSpan (SpacedSpan off funLen) <- view CodeSpan.realSpan <$> getLayer @CodeSpan.CodeSpan f
+            --             putLayer @CodeSpan.CodeSpan f $ CodeSpan.mkRealSpan (LeftSpacedSpan (SpacedSpan off len))
+            --             let diff = len - funLen
+            --             LeftSpacedSpan (SpacedSpan off markedLen) <- view CodeSpan.realSpan <$> getLayer @CodeSpan.CodeSpan fun
+            --             putLayer @CodeSpan.CodeSpan fun $ CodeSpan.mkRealSpan (LeftSpacedSpan (SpacedSpan off (markedLen + diff)))
+            --             return diff
+            --         Just (funExpr :: Expr IR.ASGRootedFunction) <- narrowTerm f
+            --         let newRooted = IR.Rooted (newGraph ^. Graph.ast . Graph.ir) (newGraph ^. Graph.breadcrumbHierarchy . BH.self)
+            --         -- IR.modifyExprTerm funExpr $ wrapped . IR.termASGRootedFunction_body .~ newRooted
+            --         return $ Just lenDiff
+            --         else return Nothing
+    -- let diff = fromMaybe (error "function not in AST?") $ listToMaybe $ catMaybes diffs
+    --     funOffset = properGraph ^. Graph.fileOffset
+    -- Graph.clsFuns . traverse . Graph.funGraph . Graph.fileOffset %= (\a -> if a > funOffset then a + diff else a)
+    -- Graph.clsFuns . ix uuid . Graph.funMarkers .= newGraph ^. Graph.codeMarkers
+    -- Graph.clsCodeMarkers %= \m -> Map.union m (newGraph ^. Graph.codeMarkers)
+    -- Graph.code           .= newGraph ^. Graph.code
+    -- Graph.clsParseError  .= newGraph ^. Graph.parseError
+    -- return res
 
 zoomBreadcrumb' :: Breadcrumb BreadcrumbItem -> Command Graph.Graph a -> Command Graph.ClsGraph a -> Command Graph.ClsGraph a
 zoomBreadcrumb' (Breadcrumb []) _actG actC = actC

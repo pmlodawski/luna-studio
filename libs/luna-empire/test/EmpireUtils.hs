@@ -39,7 +39,8 @@ import           LunaStudio.Data.Port          (Port)
 import qualified LunaStudio.Data.Port          as Port
 import qualified LunaStudio.Data.Node          as Node
 import           LunaStudio.Data.NodeLoc       (NodeLoc(..))
-import           LunaStudio.Data.PortRef       (AnyPortRef(InPortRef'), InPortRef(..), OutPortRef(..))
+import qualified LunaStudio.Data.PortRef       as PortRef
+import           LunaStudio.Data.PortRef       (AnyPortRef(InPortRef'), InPortRef(..), OutPortRef, OutPortRefTemplate(..))
 import           LunaStudio.Data.Node          (ExpressionNode, NodeId, nodeId)
 import qualified Empire.Commands.Graph         as Graph (connect, getNodes, loadCode)
 import           Empire.Commands.Library       (createLibrary, listLibraries, withLibrary)
@@ -47,7 +48,7 @@ import           Empire.Data.AST               ()
 import           Empire.Data.Graph             (AST (..), Graph, ClsGraph)
 import qualified Empire.Data.Library           as Library (body, path)
 import           Empire.Empire                 (CommunicationEnv (..), Empire, Env, Error, InterpreterEnv (..), runEmpire)
-import           Luna.IR                       (AnyExpr, Link')
+-- import           Luna.IR                       (AnyExpr, Link')
 import           Empire.Prelude                hiding (mapping, toList, (|>))
 
 import           Test.Hspec                    (expectationFailure)
@@ -103,7 +104,7 @@ infixl 5 |>=
 withChannels :: (CommunicationEnv -> IO a) -> IO a
 withChannels = bracket createChannels (const $ return ())
     where
-        createChannels = CommunicationEnv <$> atomically newTChan <*> newEmptyMVar <*> newEmptyMVar <*> newEmptyMVar
+        createChannels = CommunicationEnv <$> atomically newTChan <*> newEmptyMVar <*> newEmptyMVar -- <*> newEmptyMVar
 
 emptyGraphLocation :: GraphLocation
 emptyGraphLocation = GraphLocation "" $ Breadcrumb []
@@ -112,7 +113,7 @@ mkUUID :: MonadIO m => m UUID
 mkUUID = liftIO nextRandom
 
 connectToInput :: GraphLocation -> OutPortRef -> InPortRef -> Empire Connection
-connectToInput loc outPort inPort = Graph.connect loc outPort (InPortRef' inPort)
+connectToInput loc outPort inPort = Graph.connect loc (PortRef.toPortRefS outPort) (InPortRef' inPort)
 
 outPortRef :: NodeId -> Port.OutPortId -> OutPortRef
 outPortRef = OutPortRef . NodeLoc def

@@ -3,6 +3,7 @@
 
 module CaseSpec (spec) where
 
+import           Control.Lens                  ((^..))
 import           Data.Foldable                 (toList)
 import           Data.List                     (find, stripPrefix)
 import qualified Data.Map                      as Map
@@ -16,14 +17,14 @@ import           LunaStudio.Data.Port          (OutPortTree (..))
 import           LunaStudio.Data.NodeLoc       (NodeLoc (..))
 import           LunaStudio.Data.PortDefault   (PortDefault (Constant, Expression))
 import           LunaStudio.Data.LabeledTree   (LabeledTree (..))
-import           LunaStudio.Data.PortRef       (InPortRef (..), OutPortRef (..), AnyPortRef(..))
+import           LunaStudio.Data.PortRef       (InPortRef (..), OutPortRef, OutPortRefTemplate (..), AnyPortRef(..))
 import           LunaStudio.Data.TypeRep       (TypeRep(TCons, TStar, TLam, TVar))
 import           Empire.ASTOp                  (runASTOp)
 import qualified Empire.ASTOps.Deconstruct     as ASTDeconstruct
 import qualified Empire.ASTOps.Parse           as Parser
 import           Empire.ASTOps.Print           (printExpression)
 import qualified Empire.ASTOps.Read            as ASTRead
-import qualified Empire.Commands.AST           as AST (isTrivialLambda, dumpGraphViz)
+import qualified Empire.Commands.AST           as AST (isTrivialLambda)
 import           Empire.Data.BreadcrumbHierarchy (BreadcrumbDoesNotExistException)
 import qualified Empire.Commands.Graph         as Graph (addNode, connect, getGraph, getNodes,
                                                          getConnections, removeNodes, withGraph,
@@ -37,7 +38,7 @@ import qualified Empire.Data.Library             as Library (body)
 import qualified Empire.Data.BreadcrumbHierarchy as BH
 import           Empire.Empire                   (InterpreterEnv(..))
 import           Prologue                        hiding (mapping, toList, (|>))
-import           OCI.IR.Class                    (exprs, links)
+-- import           OCI.IR.Class                    (exprs, links)
 
 import           Test.Hspec (Spec, Selector, around, describe, expectationFailure, it, parallel,
                              shouldBe, shouldContain, shouldSatisfy, shouldMatchList,

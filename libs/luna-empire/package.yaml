@@ -43,7 +43,7 @@ dependencies:
     - containers
     - convert
     - data-default
-    - dependent-state
+    - layered-state
     - directory
     - exceptions
     - filepath
@@ -52,6 +52,8 @@ dependencies:
     - luna-core
     - luna-cpp-containers
     - luna-exception
+    - luna-foreign-utils
+    - luna-memory-pool
     - luna-syntax-text-parser
     - luna-syntax-text-lexer
     - luna-syntax-text-model

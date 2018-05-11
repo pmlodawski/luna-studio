@@ -14,7 +14,7 @@ import           Empire.Prelude       hiding (Type, mempty)
 
 import           Control.Monad.Catch  (MonadCatch(..))
 import           Control.Monad.State  (StateT, runStateT, get, put)
-import qualified Control.Monad.State.Dependent as DepState
+-- import qualified Control.Monad.State.Dependent as DepState
 import qualified Data.Map             as Map
 import           Data.Foldable        (toList)
 import           Empire.Data.Graph    (AST(..), Graph, withVis)

@@ -1,19 +1,21 @@
+{-# LANGUAGE ConstraintKinds           #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE LambdaCase                #-}
 {-# LANGUAGE OverloadedStrings         #-}
 {-# LANGUAGE TypeApplications          #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE StandaloneDeriving        #-}
+{-# LANGUAGE TupleSections             #-}
 
 module Empire.ASTOps.Parse (
     SomeParserException
   , FunctionParsing(..)
   , parseExpr
-  , parsePattern
+  -- , parsePattern
   , parsePortDefault
   , runParser
   , runFunHackParser
-  , runReparser
+  -- , runReparser
   , runProperParser
   , runProperVarParser
   , runProperPatternParser
@@ -34,21 +36,33 @@ import qualified Empire.Data.Graph               as Graph (codeMarkers)
 import           Empire.Data.Layers              (attachEmpireLayers, SpanLength)
 import           Empire.Data.Parser              (ParserPass)
 import qualified Empire.Commands.Code            as Code
+import qualified Control.Monad.State.Layered as State
 
 import           LunaStudio.Data.PortDefault     (PortDefault (..), PortValue (..))
 
 import qualified Data.Text.Position              as Pos
 -- import qualified Luna.Builtin.Data.Function      as Function (compile)
+import qualified Luna.IR.Layer as Layer
 import qualified Luna.IR                         as IR
+import qualified Luna.Pass                         as Pass
+import qualified Luna.Pass.Scheduler as Scheduler
+import qualified Luna.Runner as Runner
 -- import qualified Luna.Syntax.Text.Layer.Loc      as Loc
+import qualified Luna.Syntax.Text.Parser.IR.Class as Token
+import Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan)
+import qualified Luna.Syntax.Text.Parser.Pass as Parser
 import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
--- import           Luna.Syntax.Text.Parser.Errors  (Invalids)
+import           Luna.Syntax.Text.Parser.Data.Invalid  (Invalids)
 import qualified Luna.Syntax.Text.Parser.Data.Name.Special as Parser (uminus)
+import qualified Luna.Pass.Attr as Attr
 -- import qualified Luna.Syntax.Text.Parser.Marker  as Parser (MarkedExprMap(..))
 -- import qualified Luna.Syntax.Text.Parser.Parser  as Parser
--- import qualified Luna.Syntax.Text.Parser.Parsing as Parsing
+import qualified Luna.Syntax.Text.Parser.IR.Term as Parsing
+import Luna.Syntax.Text.Scope (Scope)
 import qualified Luna.Syntax.Text.Source         as Source
 import qualified Luna.IR.Term.Literal            as Lit
+import Luna.Syntax.Text.Parser.Pass.Class (IRBS, Parser)
+import Luna.Syntax.Text.Parser.Data.Result (Result (Result))
 -- import qualified OCI.Pass                        as Pass
 
 data SomeParserException = forall e. Exception e => SomeParserException e
@@ -88,63 +102,125 @@ instance Exception SomeParserException where
 --     IR.setAttr (getTypeDesc @Parser.ReparsingStatus) $ (error "Data not provided: ReparsingStatus")
 --     IR.setAttr (getTypeDesc @Invalids) $ (mempty :: Invalids)
 
+type OnDemandPass pass = (Typeable pass, Pass.Compile pass IO)
+
+runPass' :: forall pass. OnDemandPass pass => Pass.Pass pass () -> IO (Maybe Result)
+runPass' = runPasses . pure
+
+newtype ParsedExpr = ParsedExpr (NodeRef, MarkedExprMap)
+type instance Attr.Type ParsedExpr = Attr.Atomic
+instance Default ParsedExpr where def = error "empty parsedexpr"
+
+runPasses :: forall pass. OnDemandPass pass => [Pass.Pass pass ()] -> IO (Maybe Result)
+runPasses passes = Scheduler.runManual reg sched where
+    reg = do
+        Runner.registerAll
+        Parser.registerStatic
+    sched = do
+        Parser.registerDynamic
+        Scheduler.registerAttr @ParsedExpr
+        Scheduler.enableAttrByType @ParsedExpr
+        for_ passes $ \pass -> do
+            Scheduler.registerPassFromFunction__ pass -- ONLY FOR TEST SPEC
+            Scheduler.runPassByType @pass
+        Scheduler.lookupAttr @Result
+
+-- shouldParseAs :: Token.Parser (IRBS IR.SomeTerm) -> Text -> Text
+--               {- -> (Delta, Delta)-} -> IO ()
+-- shouldParseAs parser input output {-desiredSpan-} = runPass' $ do
+--     (((ir,cs),scope), _) <- flip Parser.runParser__ (convert input) $ do
+--         irb   <- parser
+--         scope <- State.get @Scope
+--         let Parser.IRBS irx = irb
+--             irb' = Parser.IRBS $ do
+--                 ir <- irx
+--                 cs <- Layer.read @CodeSpan ir
+--                 pure (ir,cs)
+--         pure $ (,scope) <$> irb'
+    -- genCode <- Prettyprint.run @Prettyprint.Simple scope ir
+
+    -- let span = convert $ view CodeSpan.realSpan cs :: (Delta,Delta)
+    -- genCode `shouldBe` output
+    -- span `shouldBe` desiredSpan
+
+parseExpr s = fst <$> runParser Parsing.expr s
+
+
+runParser :: Token.Parser (IRBS IR.SomeTerm) -> Text -> IO (NodeRef, MarkedExprMap)
+runParser parser input = do
+    ref <- runPass' $ do
+        (((ir,cs),scope), m) <- flip Parser.runParser__ (convert input) $ do
+            irb   <- parser
+            scope <- State.get @Scope
+            let Parser.IRBS irx = irb
+                irb' = Parser.IRBS $ do
+                    ir <- irx
+                    cs <- Layer.read @CodeSpan ir
+                    pure (ir,cs)
+            pure $ (,scope) <$> irb'
+        return ()
+    case ref of
+        Just (Result ref') -> return (generalize ref', def)
+        _                  -> error "runParser"
+
 instance Convertible Text Source.Source where
     convert t = Source.Source (convertVia @String t)
 
-runProperParser :: Text.Text -> IO (NodeRef, IR.Rooted NodeRef, MarkedExprMap)
-runProperParser code = do
-    runPM $ do
-        -- parserBoilerplate
-        attachEmpireLayers
-        IR.setAttr (getTypeDesc @Source.Source) $ (convert code :: Source.Source)
-        (unit, root) <- Pass.eval' @ParserPass $ do
-            Parsing.parsingPassM Parsing.unit' `catchAll` (\e -> throwM $ SomeParserException e)
-            res  <- getAttr @Parser.ParsedExpr
-            root <- Function.compile (unwrap' res)
-            return (unwrap' res, root)
-        Just exprMap <- unsafeCoerce <$> IR.unsafeGetAttr (getTypeDesc @MarkedExprMap)
-        return (unit, root, exprMap)
+-- runProperParser :: Text.Text -> IO (NodeRef, IR.Rooted NodeRef, MarkedExprMap)
+runProperParser :: Text.Text -> IO (NodeRef, MarkedExprMap)
+runProperParser code = error "properparser" -- do
+    -- runPM $ do
+    --     parserBoilerplate
+    --     attachEmpireLayers
+    --     IR.setAttr (getTypeDesc @Source.Source) $ (convert code :: Source.Source)
+    --     (unit, root) <- Pass.eval' @ParserPass $ do
+    --         Parsing.parsingPassM Parsing.unit' `catchAll` (\e -> throwM $ SomeParserException e)
+    --         res  <- getAttr @Parser.ParsedExpr
+    --         root <- Function.compile (unwrap' res)
+    --         return (unwrap' res, root)
+    --     Just exprMap <- unsafeCoerce <$> IR.unsafeGetAttr (getTypeDesc @MarkedExprMap)
+    --     return (unit, root, exprMap)
 
 runProperVarParser :: Text.Text -> IO NodeRef
-runProperVarParser code = do
-    runPM $ do
-        parserBoilerplate
-        attachEmpireLayers
-        IR.setAttr (getTypeDesc @Source.Source) $ (convert code :: Source.Source)
-        var <- Pass.eval' @ParserPass $ do
-            Parsing.parsingPassM Parsing.var `catchAll` (\e -> throwM $ SomeParserException e)
-            res  <- getAttr @Parser.ParsedExpr
-            return (unwrap' res)
-        return var
+runProperVarParser code = error "propervarparser" -- do
+    -- runPM $ do
+    --     parserBoilerplate
+    --     attachEmpireLayers
+    --     IR.setAttr (getTypeDesc @Source.Source) $ (convert code :: Source.Source)
+    --     var <- Pass.eval' @ParserPass $ do
+    --         Parsing.parsingPassM Parsing.var `catchAll` (\e -> throwM $ SomeParserException e)
+    --         res  <- getAttr @Parser.ParsedExpr
+    --         return (unwrap' res)
+    --     return var
 
 runProperPatternParser :: Text.Text -> IO NodeRef
-runProperPatternParser code = do
-    runPM $ do
-        parserBoilerplate
-        attachEmpireLayers
-        IR.setAttr (getTypeDesc @Source.Source) $ (convert code :: Source.Source)
-        pattern <- Pass.eval' @ParserPass $ do
-            Parsing.parsingPassM Parsing.pattern `catchAll` (\e -> throwM $ SomeParserException e)
-            res  <- getAttr @Parser.ParsedExpr
-            return (unwrap' res)
-        return pattern
+runProperPatternParser code = error "properpatternparser" -- do
+    -- runPM $ do
+    --     parserBoilerplate
+    --     attachEmpireLayers
+    --     IR.setAttr (getTypeDesc @Source.Source) $ (convert code :: Source.Source)
+    --     pattern <- Pass.eval' @ParserPass $ do
+    --         Parsing.parsingPassM Parsing.pattern `catchAll` (\e -> throwM $ SomeParserException e)
+    --         res  <- getAttr @Parser.ParsedExpr
+    --         return (unwrap' res)
+    --     return pattern
 
-runParser :: Text.Text -> Command Graph (NodeRef, MarkedExprMap)
-runParser expr = do
-    let inits = do
-            return ()
-            -- IR.setAttr (getTypeDesc @Invalids)               $ (mempty :: Invalids)
+-- runParser :: Text.Text -> Command Graph (NodeRef, MarkedExprMap)
+-- runParser expr = do
+--     let inits = do
+--             return ()
+--             -- IR.setAttr (getTypeDesc @Invalids)               $ (mempty :: Invalids)
 
-            -- IR.setAttr (getTypeDesc @MarkedExprMap)   $ (mempty :: MarkedExprMap)
-            -- IR.setAttr (getTypeDesc @Source.Source)          $ (convert expr :: Source.Source)
-            -- IR.setAttr (getTypeDesc @Parser.ParsedExpr)      $ (error "Data not provided: ParsedExpr")
-            -- IR.setAttr (getTypeDesc @Parser.ReparsingStatus) $ (error "Data not provided: ReparsingStatus")
-        run = runPass @Graph @ParserPass inits
-    run $ do
-        Parsing.parsingPassM Parsing.expr `catchAll` (\e -> throwM $ SomeParserException e)
-        res     <- getAttr @Parser.ParsedExpr
-        exprMap <- getAttr @MarkedExprMap
-        return (unwrap' res, exprMap)
+--             -- IR.setAttr (getTypeDesc @MarkedExprMap)   $ (mempty :: MarkedExprMap)
+--             -- IR.setAttr (getTypeDesc @Source.Source)          $ (convert expr :: Source.Source)
+--             -- IR.setAttr (getTypeDesc @Parser.ParsedExpr)      $ (error "Data not provided: ParsedExpr")
+--             -- IR.setAttr (getTypeDesc @Parser.ReparsingStatus) $ (error "Data not provided: ReparsingStatus")
+--         run = runPass @Graph @ParserPass inits
+--     run $ do
+--         Parsing.parsingPassM Parsing.expr `catchAll` (\e -> throwM $ SomeParserException e)
+--         res     <- getAttr @Parser.ParsedExpr
+--         exprMap <- getAttr @MarkedExprMap
+--         return (unwrap' res, exprMap)
 
 prepareInput :: Text.Text -> FunctionParsing -> Text.Text
 prepareInput expr parsing = Text.concat $ header : case parsing of
@@ -166,48 +242,49 @@ runFunHackParser expr parsing = do
     return (fst parse, input)
 
 runFunParser :: Text.Text -> Command ClsGraph (NodeRef, MarkedExprMap)
-runFunParser expr = do
-    let inits = do
-            return ()
+runFunParser expr = error "runFunParser" -- do
+    -- let inits = do
+    --         return ()
             -- IR.setAttr (getTypeDesc @Invalids)               $ (mempty :: Invalids)
 
             -- IR.setAttr (getTypeDesc @MarkedExprMap)   $ (mempty :: MarkedExprMap)
             -- IR.setAttr (getTypeDesc @Source.Source)          $ (convert expr :: Source.Source)
             -- IR.setAttr (getTypeDesc @Parser.ParsedExpr)      $ (error "Data not provided: ParsedExpr")
             -- IR.setAttr (getTypeDesc @Parser.ReparsingStatus) $ (error "Data not provided: ReparsingStatus")
-        run = runPass @ClsGraph @ParserPass inits
-    run $ do
-        Parsing.parsingPassM (Parsing.possiblyDocumented $ (Parsing.rootedRawFunc <|> Parsing.func)) `catchAll` (\e -> throwM $ SomeParserException e)
-        res     <- getAttr @Parser.ParsedExpr
-        exprMap <- getAttr @MarkedExprMap
-        return (unwrap' res, exprMap)
+    --     run = runPass @ClsGraph @ParserPass inits
+    -- run $ do
+    --     Parsing.parsingPassM (Parsing.possiblyDocumented $ (Parsing.rootedRawFunc <|> Parsing.func)) `catchAll` (\e -> throwM $ SomeParserException e)
+    --     res     <- getAttr @Parser.ParsedExpr
+    --     exprMap <- getAttr @MarkedExprMap
+    --     return (unwrap' res, exprMap)
 
-runReparser :: Text.Text -> NodeRef -> Command Graph (NodeRef, MarkedExprMap, Parser.ReparsingStatus)
-runReparser expr oldExpr = do
-    let inits = do
-            IR.setAttr (getTypeDesc @Invalids)               $ (mempty :: Invalids)
+-- runReparser :: Text.Text -> NodeRef -> Command Graph (NodeRef, MarkedExprMap, Parser.ReparsingStatus)
+-- runReparser expr oldExpr = do
+--     let inits = do
+--             return ()
+--             -- IR.setAttr (getTypeDesc @Invalids)               $ (mempty :: Invalids)
 
-            IR.setAttr (getTypeDesc @MarkedExprMap)   $ (mempty :: MarkedExprMap)
-            IR.setAttr (getTypeDesc @Source.Source)          $ (convert expr :: Source.Source)
-            IR.setAttr (getTypeDesc @Parser.ParsedExpr)      $ (wrap' oldExpr :: Parser.ParsedExpr)
-            IR.setAttr (getTypeDesc @Parser.ReparsingStatus) $ (error "Data not provided: ReparsingStatus")
-        run = runPass @Graph @ParserPass inits
-    run $ do
-        do
-            gidMapOld <- use Graph.codeMarkers
+--             -- IR.setAttr (getTypeDesc @MarkedExprMap)   $ (mempty :: MarkedExprMap)
+--             -- IR.setAttr (getTypeDesc @Source.Source)          $ (convert expr :: Source.Source)
+--             -- IR.setAttr (getTypeDesc @Parser.ParsedExpr)      $ (wrap' oldExpr :: Parser.ParsedExpr)
+--             -- IR.setAttr (getTypeDesc @Parser.ReparsingStatus) $ (error "Data not provided: ReparsingStatus")
+--         run = runPass @Graph @ParserPass inits
+--     run $ do
+--         do
+--             gidMapOld <- use Graph.codeMarkers
 
-            -- parsing new file and updating updated analysis
-            Parsing.parsingPassM Parsing.valExpr `catchAll` (\e -> throwM $ SomeParserException e)
-            gidMap    <- getAttr @MarkedExprMap
+--             -- parsing new file and updating updated analysis
+--             Parsing.parsingPassM Parsing.valExpr `catchAll` (\e -> throwM $ SomeParserException e)
+--             gidMap    <- getAttr @MarkedExprMap
 
-            -- Preparing reparsing status
-            rs        <- Parsing.cmpMarkedExprMaps (wrap' gidMapOld) gidMap
-            putAttr @Parser.ReparsingStatus (wrap rs)
+--             -- Preparing reparsing status
+--             rs        <- Parsing.cmpMarkedExprMaps (wrap' gidMapOld) gidMap
+--             putAttr @Parser.ReparsingStatus (wrap rs)
 
-        res     <- getAttr @Parser.ParsedExpr
-        exprMap <- getAttr @MarkedExprMap
-        status  <- getAttr @Parser.ReparsingStatus
-        return (unwrap' res, exprMap, status)
+--         res     <- getAttr @Parser.ParsedExpr
+--         exprMap <- getAttr @MarkedExprMap
+--         status  <- getAttr @Parser.ReparsingStatus
+--         return (unwrap' res, exprMap, status)
 
 data PortDefaultNotConstructibleException = PortDefaultNotConstructibleException PortDefault
     deriving Show
@@ -225,17 +302,17 @@ withLength act len = do
 
 parsePortDefault :: GraphOp m => PortDefault -> m NodeRef
 parsePortDefault (Expression expr)          = do
-    ref <- parseExpr expr
+    ref <- liftIO $ parseExpr (convert expr)
     Code.propagateLengths ref
     return ref
 parsePortDefault (Constant (IntValue  i))
-    | i >= 0     = generalize <$> IR.number (fromIntegral i) `withLength` (length $ show i)
+    | i >= 0     = generalize <$> IR.number (error "parsePortDefault") (error "parsePortDefault") (error "parsePortDefault") `withLength` (length $ show i)
     | otherwise = do
-        number <- generalize <$> IR.number (fromIntegral (abs i)) `withLength` (length $ show $ abs i)
+        number <- generalize <$> IR.number (error "parsePortDefault") (error "parsePortDefault") (error "parsePortDefault") `withLength` (length $ show $ abs i)
         minus  <- generalize <$> IR.var Parser.uminus `withLength` 1
         app    <- generalize <$> IR.app minus number `withLength` (1 + length (show (abs i)))
         return app
-parsePortDefault (Constant (TextValue s)) = generalize <$> IR.string s                  `withLength` (length s)
-parsePortDefault (Constant (RealValue d)) = generalize <$> IR.number (error "Lit.fromDouble" $ d) `withLength` (length $ show d)
-parsePortDefault (Constant (BoolValue b)) = generalize <$> IR.cons (convert $ show b)  `withLength` (length $ show b)
+parsePortDefault (Constant (TextValue s)) = generalize <$> IR.string (convert s)                  `withLength` (length s)
+parsePortDefault (Constant (RealValue d)) = generalize <$> IR.number (error "parsePortDefault") (error "parsePortDefault") (error "parsePortDefault") `withLength` (length $ show d)
+parsePortDefault (Constant (BoolValue b)) = generalize <$> IR.cons (convert $ show b) []  `withLength` (length $ show b)
 parsePortDefault d = throwM $ PortDefaultNotConstructibleException d

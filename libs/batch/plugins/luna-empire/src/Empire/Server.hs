@@ -199,12 +199,12 @@ loadAllProjects = do
           Env.empireEnv .= newEmpireEnv
           return $ Just ()
 
-  when ((catMaybes loadedProjects) == []) $ do
-    currentEmpireEnv <- use Env.empireEnv
-    result <- liftIO $ Exception.try $ Empire.runEmpire empireNotifEnv currentEmpireEnv $  Persistence.createDefaultProject
-    case result of
-        Right (_, newEmpireEnv) -> Env.empireEnv .= newEmpireEnv
-        Left (exc :: SomeASTException) -> return ()
+  -- when ((catMaybes loadedProjects) == []) $ do
+  --   currentEmpireEnv <- use Env.empireEnv
+  --   result <- liftIO $ Exception.try $ Empire.runEmpire empireNotifEnv currentEmpireEnv $  Persistence.createDefaultProject
+  --   case result of
+  --       Right (_, newEmpireEnv) -> Env.empireEnv .= newEmpireEnv
+  --       Left (exc :: SomeASTException) -> return ()
 
 
 

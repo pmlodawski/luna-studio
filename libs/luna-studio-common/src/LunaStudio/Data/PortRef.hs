@@ -13,7 +13,8 @@ import           Foreign.Storable        (Storable(..))
 import           LunaStudio.Data.Node    (NodeId)
 import           LunaStudio.Data.NodeLoc (HasNodeLoc (..), NodeLoc)
 import qualified LunaStudio.Data.NodeLoc as NodeLoc
-import           LunaStudio.Data.Port    (AnyPortId (..), InPortId, OutPortId)
+import           LunaStudio.Data.Port    (AnyPortId (..), InPortId, OutPortId, OutPortIndex(Projection))
+import           System.IO.Unsafe        (unsafePerformIO)
 import           Prologue
 
 
@@ -90,6 +91,12 @@ dstNodeId = dstNodeLoc . NodeLoc.nodeId
 
 srcNodeId :: Lens' OutPortRef NodeId
 srcNodeId = srcNodeLoc . NodeLoc.nodeId
+
+toPortRefS :: OutPortRef -> OutPortRefS
+toPortRefS (OutPortRef a b) = OutPortRef (convert a) (convert (coerce b :: [Int]))
+
+toPortRef :: OutPortRefS -> OutPortRef
+toPortRef (OutPortRef a b) = OutPortRef (convert a) (coerce (unsafePerformIO (Foreign.toList b)) :: OutPortId)
 
 instance (Storable a, Storable b) => Storable (OutPortRefTemplate a b) where
     sizeOf _ = sizeOf (undefined :: a) + sizeOf (undefined :: b)

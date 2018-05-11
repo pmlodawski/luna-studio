@@ -17,7 +17,7 @@ import qualified Prologue as P hiding (List)
 -- import OCI.IR.Combinators
 import qualified Luna.Pass.Attr         as Attr
 import Luna.IR (Draft, Type, Users, Terms, Model, Name, Source, Target, list, cons, tuple)
-import Luna.IR.Component.Term.Layer.Model (inputs)
+import OCI.IR.Term.Layer.Model (inputs)
 -- import Luna.Pass.Data.ExprRoots
 -- import OCI.Pass.Manager
 import           Empire.Data.Layers   (Marker, Meta, TypeLayer, attachEmpireLayers, SpanLength, SpanOffset)

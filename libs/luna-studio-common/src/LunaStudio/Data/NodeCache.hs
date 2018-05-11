@@ -4,12 +4,12 @@ import           Data.Aeson.Types          (FromJSON, ToJSON)
 import           Data.Binary               (Binary)
 import           Data.Map                  (Map)
 import           LunaStudio.Data.Node      (NodeId)
-import           LunaStudio.Data.NodeMeta  (NodeMeta)
+import           LunaStudio.Data.NodeMeta  (NodeMetaS)
 import           Prologue
 
 
 data NodeCache = NodeCache { _nodeIdMap      :: Map Word64 NodeId
-                           , _nodeMetaMap    :: Map Word64 NodeMeta
+                           , _nodeMetaMap    :: Map Word64 NodeMetaS
                            , _portMappingMap :: Map (NodeId, Maybe Int) (NodeId, NodeId)
                            } deriving (Generic, Show)
 

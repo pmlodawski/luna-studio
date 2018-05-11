@@ -37,7 +37,8 @@ import           Prologue             (mempty)
 import           Control.Monad.Catch  (MonadCatch(..))
 -- import           Control.Monad.Raise  (MonadException)
 import           Control.Monad.State  (MonadState, StateT, runStateT, get, put)
-import qualified Control.Monad.State.Dependent as DepState
+-- import qualified Control.Monad.State.Dependent as DepState
+import qualified Control.Monad.State.Layered as Layered
 import qualified Data.Map             as Map
 import qualified Data.Set             as Set
 import           Empire.Data.Graph    (AST(..), ClsGraph, Graph, runPass, withVis)
@@ -45,18 +46,26 @@ import qualified Empire.Data.Graph    as Graph
 import qualified Empire.Data.BreadcrumbHierarchy as BH
 import           Empire.Data.Layers   (Marker, Meta, TypeLayer, SpanLength, SpanOffset)
 import           Empire.Empire        (Command)
+import           GHC.Exts             (Any)
+import           Unsafe.Coerce        (unsafeCoerce)
 
 import qualified Luna.Pass        as Pass
 import           Luna.IR              as IR hiding (Marker, match)
 -- import qualified Luna.IR.Term.Unit    as Term
 -- import           OCI.IR.Layout.Typed  (type (>>))
-import qualified OCI.IR.Layer   as Layer
+import Foreign.Info.ByteSize (ByteSize)
+import Foreign.Memory.Pool (MemPool)
+import           Data.Graph.Component   (Component, SomeComponent)
+import qualified Data.Graph.Component.Layer   as Layer
 -- import           OCI.IR.Name.Qualified (QualName)
-import           OCI.Pass.Definition       (DataGetter, ComponentSize, LayerMemManager, ComponentMemPool)
+import           OCI.Pass.Definition       (DataGetter, Pass(..)) --, ComponentSize, LayerMemManager, ComponentMemPool)
 -- import           OCI.Pass.Class       (Inputs, Outputs, Preserves, KnownPass)
 -- import           OCI.IR.Class         (Import)
 -- import qualified OCI.Pass.Class       as Pass (SubPass, eval')
 -- import qualified OCI.Pass.Manager     as Pass (PassManager, setAttr, State)
+import qualified Luna.Runner as Runner
+import qualified Luna.Pass.Scheduler as Scheduler
+import qualified Luna.Pass.Attr as Attr
 
 -- import           System.Log                                   (DropLogger(..), dropLogs)
 -- import           System.Log.Logger.Class                      (Logger(..), IdentityLogger(..))
@@ -108,28 +117,38 @@ type ASTOpReq a m = (MonadThrow m,
                      -- MonadPassManager m,
                      MonadIO m,
                      MonadState a m,
-                     DataGetter (LayerMemManager IR.Links) m,
-                     DataGetter (LayerMemManager IR.Terms) m,
-                     DataGetter (ComponentMemPool IR.Links) m,
-                     DataGetter (ComponentMemPool IR.Terms) m,
-                     DataGetter (ComponentSize IR.Links) m,
-                     DataGetter (ComponentSize IR.Terms) m,
-                     Layer.Reader IR.Terms IR.Model m,
-                     Layer.Writer IR.Terms IR.Model m,
-                     Layer.Reader IR.Terms Marker m,
-                     Layer.Reader IR.Terms IR.Users m,
-                     Layer.Reader IR.Terms CodeSpan m,
-                     Layer.Reader IR.Terms SpanLength m,
-                     Layer.Writer IR.Terms IR.Type m,
-                     Layer.Writer IR.Terms IR.Users m,
-                     Layer.Writer IR.Terms SpanLength m,
-                     Layer.Writer IR.Terms CodeSpan m,
-                     Layer.Reader IR.Links IR.Source m,
-                     Layer.Writer IR.Links IR.Source m,
-                     Layer.Reader IR.Links IR.Target m,
-                     Layer.Writer IR.Links IR.Target m,
-                     Layer.Reader IR.Links SpanOffset m,
-                     Layer.Writer IR.Links SpanOffset m)
+                     Layered.Getter (ByteSize (Component IR.Links)) m,
+                     Layered.Getter (ByteSize (Component IR.Terms)) m,
+                     Layered.Getter (Layer.DynamicManager IR.Links) m,
+                     Layered.Getter (Layer.DynamicManager IR.Terms) m,
+                     Layered.Getter (MemPool (SomeComponent IR.Links)) m,
+                     Layered.Getter (MemPool (SomeComponent IR.Terms)) m,
+                     -- DataGetter (LayerMemManager IR.Links) m,
+                     -- DataGetter (LayerMemManager IR.Terms) m,
+                     -- DataGetter (ComponentMemPool IR.Links) m,
+                     -- DataGetter (ComponentMemPool IR.Terms) m,
+                     -- DataGetter (ComponentSize IR.Links) m,
+                     -- DataGetter (ComponentSize IR.Terms) m,
+                     Layer.Reader IR.Term IR.Model m,
+                     Layer.Writer IR.Term IR.Model m,
+                     Layer.Reader IR.Term Marker m,
+                     Layer.Reader IR.Term TypeLayer m,
+                     Layer.Reader IR.Term IR.Users m,
+                     Layer.Reader IR.Term CodeSpan m,
+                     Layer.Reader IR.Term SpanLength m,
+                     Layer.Reader IR.Term Meta m,
+                     Layer.Writer IR.Term Meta m,
+                     Layer.Writer IR.Term Marker m,
+                     Layer.Writer IR.Term IR.Type m,
+                     Layer.Writer IR.Term IR.Users m,
+                     Layer.Writer IR.Term SpanLength m,
+                     Layer.Writer IR.Term CodeSpan m,
+                     Layer.Reader IR.Link IR.Source m,
+                     Layer.Writer IR.Link IR.Source m,
+                     Layer.Reader IR.Link IR.Target m,
+                     Layer.Writer IR.Link IR.Target m,
+                     Layer.Reader IR.Link SpanOffset m,
+                     Layer.Writer IR.Link SpanOffset m)
                      -- Emitters EmpireEmitters m,
                      -- Editors Net  '[AnyExpr, AnyExprLink] m,
                      -- Editors Attr '[Source, Parser.ParsedExpr, MarkedExprMap, Invalids] m,
@@ -158,16 +177,24 @@ type ClassOp m = ASTOp ClsGraph m
 --                         Delete // AnyExpr, Delete // AnyExprLink,
 --                         OnDeepDelete // AnyExpr]
 
+newtype PassReturnValue = PassReturnValue Any
+type instance Attr.Type PassReturnValue = Attr.Atomic
+instance Default PassReturnValue where def = PassReturnValue (error "empty PassReturnValue")
+
 data EmpirePass
 type instance Pass.Spec EmpirePass t = EmpirePassSpec t
 type family EmpirePassSpec t where
-    EmpirePassSpec (Pass.In  Pass.Attrs)  = '[Source, Invalids]  -- Parser attrs temporarily - probably need to call it as a separate Pass
-    EmpirePassSpec (Pass.Out Pass.Attrs)  = '[Source, Invalids]
+    EmpirePassSpec (Pass.In  Pass.Attrs)  = '[]  -- Parser attrs temporarily - probably need to call it as a separate Pass
+    EmpirePassSpec (Pass.Out Pass.Attrs)  = '[PassReturnValue]
     EmpirePassSpec (Pass.In  AnyExpr)     = '[Model, Type, Users, Meta, Marker, SpanLength, CodeSpan]
     EmpirePassSpec (Pass.Out AnyExpr)     = '[Model, Type, Users, Meta, Marker, SpanLength, CodeSpan]
     EmpirePassSpec (Pass.In  AnyExprLink) = '[SpanOffset, Source, Target]
     EmpirePassSpec (Pass.Out AnyExprLink) = '[SpanOffset, Source, Target]
     EmpirePassSpec t                      = Pass.BasicPassSpec t
+
+
+Pass.cache_phase1 ''EmpirePass
+Pass.cache_phase2 ''EmpirePass
 
 -- deriving instance MonadMask m => MonadMask (Pass.PassManager m)
 -- deriving instance MonadMask m => MonadMask (DepState.StateT t m)
@@ -186,9 +213,9 @@ type family EmpirePassSpec t where
 --     uncheckedLookupRef = lift . uncheckedLookupRef
 
 match = matchExpr
-
+deriving instance MonadCatch (Pass t)
+deriving instance MonadCatch m => MonadCatch (Layered.StateT s m)
 -- deriving instance MonadCatch m => MonadCatch (Pass.PassManager m)
-deriving instance MonadCatch m => MonadCatch (DepState.StateT s m)
 
 -- class GraphRunner g where
 --     runPass :: forall pass b a. KnownPass pass
@@ -244,10 +271,24 @@ deriving instance MonadCatch m => MonadCatch (DepState.StateT s m)
 
 --         return a
 
-runASTOp :: _
-         => _
-         -> Command g ()
-runASTOp pass = liftIO $ runPass pass where
+runASTOp :: forall a g. ()
+         => StateT g (Pass.Pass EmpirePass) a
+         -> Command g a
+runASTOp p = do
+    g <- get
+    (g', a) <- Runner.runManual $ do
+        Scheduler.registerAttr     @PassReturnValue
+        Scheduler.enableAttrByType @PassReturnValue
+        Scheduler.registerPassFromFunction__ $ do
+            (g', a) <- runStateT p g
+            Attr.put $ PassReturnValue $ unsafeCoerce (g', a)
+        ret <- Scheduler.lookupAttr @PassReturnValue
+        case ret of
+            Nothing -> error "runASTOp: pass didn't register return value"
+            Just (PassReturnValue a) -> return $ unsafeCoerce a
+    put g'
+    return a
+
     -- inits = do
     --     setAttr @MarkedExprMap $ (mempty :: MarkedExprMap)
     --     setAttr @Invalids      $ (mempty :: Invalids)

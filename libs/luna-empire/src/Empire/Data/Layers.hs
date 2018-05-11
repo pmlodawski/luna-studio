@@ -31,10 +31,11 @@ import           Luna.IR                        hiding (Import, Marker, String)
 -- import           Luna.Syntax.Text.Parser.State.Marker (MarkedExprMap)
 -- import           OCI.IR.Class                   (Import)
 import           Luna.Pass
-import           OCI.IR.Layer                 (Layer)
-import qualified OCI.IR.Layer                 as Layer
-import qualified Luna.IR.Component.Term.Layer as Layer
-import qualified OCI.IR.Layout                as Layout
+import           Data.Graph.Component.Provider   (DynamicProvider1)
+import           Data.Graph.Component.Layer   (Layer)
+import qualified Data.Graph.Component.Layer   as Layer
+import qualified OCI.IR.Term.Layer as Layer
+import qualified Data.Graph.Component.Layout                as Layout
 -- import           OCI.Pass.Definition            (makePass)
 import           Type.Any
 import           Data.Text.Position             (Delta(..))
@@ -42,6 +43,8 @@ import qualified Prologue                       as Prologue (mempty)
 
 
 type TypeLayer = Layer.Type
+
+instance DynamicProvider1 Maybe
 
 data Marker
 instance Layer Marker where

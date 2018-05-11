@@ -14,8 +14,6 @@ import           Empire.ASTOps.Read        (isBlank)
 import           Empire.Data.AST           (NodeRef, NotAppException (..))
 
 import qualified Luna.IR                   as IR
-import           Luna.IR.Term.Uni
-import           OCI.IR.Combinators        (deleteSubtree)
 
 removeSubtree :: GraphOp m => NodeRef -> m ()
 removeSubtree ref = deleteSubtree ref
@@ -24,23 +22,23 @@ removeSubtree ref = deleteSubtree ref
 removeArg :: GraphOp m => NodeRef -> Int -> m NodeRef
 removeArg expr i = do
     (fun, args) <- deconstructApp expr
-    b <- IR.generalize <$> IR.blank
+    b <- generalize <$> IR.blank
     let args' = args & ix i .~ b
     a <- apps fun args'
     removeTrailingBlanks a
 
-apps :: GraphOp m => IR.Expr f -> [NodeRef] -> m NodeRef
-apps fun exprs = IR.unsafeRelayout <$> foldM f (IR.unsafeRelayout fun) (IR.unsafeRelayout <$> exprs)
+apps :: GraphOp m => Expr f -> [NodeRef] -> m NodeRef
+apps fun exprs = coerce <$> foldM f (coerce fun) (coerce <$> exprs)
     where
         f fun' arg' = appAny fun' arg'
 
 appAny :: GraphOp m => NodeRef -> NodeRef -> m NodeRef
-appAny = fmap IR.generalize .: IR.app
+appAny = fmap generalize .: IR.app
 
 removeTrailingBlanks :: GraphOp m => NodeRef -> m NodeRef
 removeTrailingBlanks expr = match expr $ \case
     App a c -> do
-        argBlank <- isBlank =<< IR.source c
-        if argBlank then removeTrailingBlanks =<< IR.source a
+        argBlank <- isBlank =<< source c
+        if argBlank then removeTrailingBlanks =<< source a
                     else return expr
     _ -> return expr
