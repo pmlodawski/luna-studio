@@ -13,14 +13,14 @@ import           LunaStudio.Data.Error                (Error, GraphError)
 import           LunaStudio.Data.Graph                (Graph)
 import           LunaStudio.Data.NodeSearcher         (ImportName)
 import           LunaStudio.Data.TypeRep              (TypeRep)
-import           LunaStudio.Data.Visualizer           (Visualizer)
+import           LunaStudio.Data.Visualizer           (VisualizerId)
 import           Prologue                             hiding (TypeRep)
 
 
 data GUIState = GUIState
     { _breadcrumb             :: Breadcrumb (Named BreadcrumbItem)
     , _imports                :: Set ImportName
-    , _defaultVisualizers     :: HashMap TypeRep Visualizer
+    , _defaultVisualizers     :: HashMap TypeRep VisualizerId
     , _camera                 :: CameraTransformation
     , _projectVisualizersPath :: Maybe FilePath
     , _code                   :: Code

@@ -14,14 +14,13 @@ import           NodeEditor.Action.Basic.Scene               (updateScene)
 import           NodeEditor.Action.Basic.UpdateSearcherHints (localUpdateSearcherHintsPreservingSelection)
 import           NodeEditor.Action.State.Model               (calculatePortSelfMode)
 import qualified NodeEditor.Action.State.NodeEditor          as NodeEditor
+import           NodeEditor.Action.State.Visualization       (adjustToType)
 import           NodeEditor.React.Model.Node                 (ExpressionNode, InputNode, NodePath, OutputNode, inPortAt, nodeLoc)
 import           NodeEditor.React.Model.Node.ExpressionNode  (inPortsList, isSelected)
 import qualified NodeEditor.React.Model.Node.ExpressionNode  as ExpressionNode
 import qualified NodeEditor.React.Model.Node.SidebarNode     as SidebarNode
-import           NodeEditor.React.Model.NodeEditor           (VisualizationBackup (MessageBackup))
 import           NodeEditor.React.Model.Port                 (InPort, InPortTree, OutPort, OutPortTree, isSelf, mode, portId)
 import qualified NodeEditor.React.Model.Searcher             as Searcher
-import           NodeEditor.React.Model.Visualization        (awaitingDataMsg, noVisMsg, visualizers)
 import           NodeEditor.State.Global                     (State)
 
 
@@ -132,28 +131,16 @@ localUpdateExpressionNode mods node
             let typeMatch
                     =  prevNode ^. ExpressionNode.nodeType
                     == updatedNode ^. ExpressionNode.nodeType
-            unless typeMatch $ do
-                let nl = updatedNode ^. ExpressionNode.nodeLoc
-                NodeEditor.updateNodeVisualizers nl
-                hasType       <- isJust <$> NodeEditor.getExpressionNodeType nl
-                noVisualizers <- maybe
-                    True
-                    (Map.null . view visualizers)
-                    <$> NodeEditor.getNodeVisualizations nl
-                let msg = if hasType && noVisualizers
-                        then noVisMsg
-                        else awaitingDataMsg
-                NodeEditor.setVisualizationData
-                    (node ^. ExpressionNode.nodeLoc)
-                    (MessageBackup msg)
-                    True
+            unless typeMatch
+                . adjustToType $ updatedNode ^. ExpressionNode.nodeLoc
             return True
 
 localUpdateCanEnterExpressionNode :: NodeLoc -> Bool -> Command State ()
 localUpdateCanEnterExpressionNode nl update = NodeEditor.modifyExpressionNode nl
     $ ExpressionNode.canEnter .= update
 
-localUpdateNodeTypecheck :: NodePath -> NodeTypecheckerUpdate -> Command State ()
+localUpdateNodeTypecheck :: NodePath -> NodeTypecheckerUpdate
+    -> Command State ()
 localUpdateNodeTypecheck path update = do
     let nl = convert (path, update ^. tcNodeId)
     case update of

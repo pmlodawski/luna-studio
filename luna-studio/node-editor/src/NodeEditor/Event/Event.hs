@@ -11,6 +11,7 @@ import qualified NodeEditor.Event.Connection as Connection
 import           NodeEditor.Event.Shortcut   (ShortcutEvent)
 import           NodeEditor.Event.UI         (UIEvent)
 import           NodeEditor.Event.View       (ViewEvent)
+import LunaStudio.Data.Project ()
 
 data Event = Init
            | Atom              Atom.Event

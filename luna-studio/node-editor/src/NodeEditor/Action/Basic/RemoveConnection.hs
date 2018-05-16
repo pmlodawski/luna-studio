@@ -10,8 +10,10 @@ import           NodeEditor.Action.State.Model      (updatePortMode)
 import           NodeEditor.Action.State.NodeEditor (getConnection, getConnectionsBetweenNodes, getConnectionsContainingNode,
                                                      getConnectionsContainingNodes)
 import qualified NodeEditor.Action.State.NodeEditor as NodeEditor
-import           NodeEditor.React.Model.Connection  (ConnectionId, connectionId, dst, src, dstNodeLoc)
+import           NodeEditor.Action.State.ResetNode  (resetSuccessors)
+import           NodeEditor.React.Model.Connection  (ConnectionId, connectionId, dst, dstNodeLoc, src)
 import           NodeEditor.State.Global            (State)
+
 
 
 removeConnections :: [ConnectionId] -> Command State ()
@@ -30,7 +32,7 @@ localRemoveConnection connId = do
     mayConn <- getConnection connId
     NodeEditor.removeConnection connId
     withJust mayConn $ \conn -> do
-        NodeEditor.resetSuccessors $ conn ^. dstNodeLoc
+        resetSuccessors $ conn ^. dstNodeLoc
         updatePortMode . OutPortRef' $ conn ^. src
         updatePortMode . InPortRef'  $ conn ^. dst
     return $ isJust mayConn

@@ -271,16 +271,14 @@ handleGetProgram = modifyGraph defInverse action replyResult where
                 (typeRepToVisMap, camera) = case mayModuleSettings of
                     Nothing -> (mempty, defaultCamera)
                     Just ms ->
-                        let visMap = Project.fromOldAPI
-                                <$> ms ^. Project.typeRepToVisMap
-                            bc = Breadcrumb.toNames crumb
+                        let bc = Breadcrumb.toNames crumb
                             bs = Map.lookup bc
                                 $ ms ^. Project.breadcrumbsSettings
                             cam = maybe
                                 defaultCamera
                                 (view Project.breadcrumbCameraSettings)
                                 bs
-                        in (visMap, cam)
+                        in (ms ^. Project.typeRepToVisMap, cam)
             pure $ (location, GUIState
                 crumb
                 availableImports

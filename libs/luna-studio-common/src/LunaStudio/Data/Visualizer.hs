@@ -83,6 +83,9 @@ errorVisId       = VisualizerId "internal: error"       InternalVisualizer
 mdVisId          = VisualizerId "base: markdown"        LunaVisualizer
 placeholderVisId = VisualizerId "internal: placeholder" InternalVisualizer
 
+isInternal :: Visualizer -> Bool
+isInternal = has (visualizerId . visualizerType . _InternalVisualizer)
+
 transformJSVisualizerMatcher :: MonadIO m
     => (String -> m String) -> TypeRep -> m [VisualizerEntry]
 transformJSVisualizerMatcher f r = case toConstructorRep r of
@@ -90,7 +93,8 @@ transformJSVisualizerMatcher f r = case toConstructorRep r of
     Just r' -> fromJust def . Aeson.decode . BS.pack
         <$> f (BS.unpack $ Aeson.encode r')
 
-convertEntry :: VisualizerId -> VisualizerEntry -> (VisualizerId, VisualizerPath)
+convertEntry :: VisualizerId -> VisualizerEntry
+    -> (VisualizerId, VisualizerPath)
 convertEntry k (VisualizerEntry Nothing  p) = (k, p)
 convertEntry k (VisualizerEntry (Just n) p)
     = (k & visualizerName %~ Text.concat . (:[": ", n]), p)
@@ -106,7 +110,8 @@ applyType tpe = fmap toMap . liftIO . mapM applyToEntry . toList where
     toMap = fromList . concat
     applyToEntry (k, f) = fmap2 (convertEntry k) $ f tpe
 
-fromJSInternalVisualizersMap :: Map String String -> Map VisualizerId VisualizerPath
+fromJSInternalVisualizersMap :: Map String String
+    -> Map VisualizerId VisualizerPath
 fromJSInternalVisualizersMap = fromList . concatMap convertJSON . toList where
     convertJSON (k, v)
         =   convertEntry (VisualizerId (convert k) InternalVisualizer)

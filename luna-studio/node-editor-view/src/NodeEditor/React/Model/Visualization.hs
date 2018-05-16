@@ -9,85 +9,127 @@ module NodeEditor.React.Model.Visualization
 import           Common.Prelude
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
+import           Data.UUID.Types               (UUID)
 import           LunaStudio.Data.NodeLoc       (NodeLoc)
-import           LunaStudio.Data.Visualization as X (VisualizationId, VisualizationValue (..))
+import           LunaStudio.Data.Visualization as X (VisualizationId)
 import           LunaStudio.Data.Visualizer    as X (Visualizer (Visualizer), VisualizerId (VisualizerId), VisualizerMatcher,
                                                      VisualizerName, VisualizerPath, VisualizerType (..), errorVisId, getMdVisualizer,
-                                                     placeholderVisId, visualizerId, visualizerName, visualizerRelPath, visualizerType,
-                                                     _InternalVisualizer, _LunaVisualizer, _ProjectVisualizer)
+                                                     isInternal, placeholderVisId, visualizerId, visualizerName, visualizerRelPath,
+                                                     visualizerType, _InternalVisualizer, _LunaVisualizer, _ProjectVisualizer)
+
+data Data
+    = Value  Text
+    | Stream [Text]
+    deriving (Eq, Generic, Show)
+
+data Content
+    = Data    Data
+    | Message Text
+    | Error   Text
+    deriving (Eq, Generic, Show)
+
+type IframeId = UUID
+
+data Mode
+    = Default
+    | Focused
+    | Preview
+    | FullScreen
+    | Hidden
+    deriving (Eq, Generic, Show)
+
+instance Default Mode where def = Default
+
+data Parent
+    = Node NodeLoc
+    | Searcher
+    deriving (Eq, Generic, Show)
+
+data Visualization = Visualization
+    { _visualizationId      :: VisualizationId
+    , _iframeId             :: UUID
+    , _mode                 :: Mode
+    , _visualizer           :: Visualizer
+    , _selectedVisualizerId :: Maybe VisualizerId
+    } deriving (Eq, Generic, Show)
+
+data NodeVisualizations = NodeVisualizations
+    { _visualizations             :: Map VisualizationId Visualization
+    , _visualizers                :: Map VisualizerId VisualizerPath
+    , _content                    :: Content
+    , _visualizationsEnabled      :: Bool
+    , _errorVisualizationsEnabled :: Bool
+    } deriving (Eq, Generic, Show)
 
 
-data VisualizationMode = Default
-                       | Focused
-                       | Preview
-                       | FullScreen
-                       deriving (Eq, Generic, Show)
+data VisualizationProperties = VisualizationProperties
+    { _visPropNodeLoc        :: NodeLoc
+    , _visPropIsNodeExpanded :: Bool
+    , _visPropArgPortsNumber :: Int
+    , _visPropVisualizers    :: Map VisualizerId VisualizerPath
+    , _visPropVisualization  :: Visualization
+    } deriving (Eq, Generic, Show)
 
-instance Default VisualizationMode where def = Default
-
-data VisualizationStatus = Ready
-                         | Outdated
-                         deriving (Eq, Generic, Show)
-
-data VisualizationParent = Node NodeLoc
-                         | Searcher
-                         deriving (Eq, Generic, Show)
-
-data VisualizerProperties = VisualizerProperties { _runningVisualizer    :: Visualizer
-                                                 , _selectedVisualizerId :: Maybe VisualizerId
-                                                 } deriving (Eq, Generic, Show)
-
-data RunningVisualization = RunningVisualization { _visualizationId      :: VisualizationId
-                                                 , _visualizationMode    :: VisualizationMode
-                                                 , _visualizerProperties :: VisualizerProperties
-                                                 } deriving (Eq, Generic, Show)
-
-data IdleVisualization = IdleVisualization { _visualizationStatus      :: VisualizationStatus
-                                           , _idleVisualizerProperties :: VisualizerProperties
-                                           } deriving (Eq, Generic, Show)
-
-data NodeVisualizations = NodeVisualizations { _visualizations     :: Map VisualizationId RunningVisualization
-                                             , _idleVisualizations :: [IdleVisualization]
-                                             , _visualizers        :: Map VisualizerId VisualizerPath
-                                             } deriving (Eq, Generic, Show)
-
-
-data VisualizationProperties = VisualizationProperties { _visPropNodeLoc        :: NodeLoc
-                                                       , _visPropIsNodeExpanded :: Bool
-                                                       , _visPropArgPortsNumber :: Int
-                                                       , _visPropVisualizers    :: Map VisualizerId VisualizerPath
-                                                       , _visPropVisualization  :: RunningVisualization
-                                                       } deriving (Eq, Generic, Show)
-
-makePrisms ''VisualizationStatus
-makePrisms ''VisualizationMode
-makePrisms ''VisualizationParent
-makeLenses ''VisualizerProperties
-makeLenses ''RunningVisualization
-makeLenses ''IdleVisualization
+makePrisms ''Data
+makePrisms ''Content
+makePrisms ''Mode
+makePrisms ''Parent
+makeLenses ''Visualization
 makeLenses ''NodeVisualizations
 makeLenses ''VisualizationProperties
 
-
-instance Default NodeVisualizations where def = NodeVisualizations def def def
-instance NFData VisualizationMode
-instance NFData VisualizationStatus
-instance NFData VisualizationParent
-instance NFData VisualizerProperties
-instance NFData RunningVisualization
-instance NFData IdleVisualization
+instance NFData Data
+instance NFData Content
+instance NFData Mode
+instance NFData Parent
+instance NFData Visualization
 instance NFData NodeVisualizations
 instance NFData VisualizationProperties
 
+currentInternalVisualizer :: Getter NodeVisualizations (Maybe VisualizerId)
+currentInternalVisualizer = to getter where
+    getter nv = case nv ^. content of
+        Message {} -> Just placeholderVisId
+        Error   {} -> Just errorVisId
+        _          -> Nothing
 
+-- isActive :: visualizationsEnabled -> errorVisualizationEnabled -> ...
+isActive :: Bool -> Bool -> Content -> Visualization -> Bool
+isActive _ True (Error {}) v 
+  = not (has (mode . _Hidden) v) && isErrorVisualization v
+isActive _ False (Error {}) _ = False
+isActive False _ _ _          = False
+isActive True  _ _ v
+  = not $ has (mode . _Hidden) v || isErrorVisualization v
 
-toIdleVisualization :: VisualizationStatus -> RunningVisualization -> IdleVisualization
-toIdleVisualization vs = IdleVisualization vs . view visualizerProperties
+isErrorVisualization :: Visualization -> Bool
+isErrorVisualization
+    = (errorVisId ==) . view (visualizer . visualizerId)
 
-stopVisualizations :: NodeVisualizations -> NodeVisualizations
-stopVisualizations nodeVis = nodeVis & visualizations     .~ def
-                                     & idleVisualizations .~ (nodeVis ^. idleVisualizations) <> (map (toIdleVisualization Ready) . Map.elems $ nodeVis ^. visualizations)
+isPlaceholderVisualization :: Visualization -> Bool
+isPlaceholderVisualization
+    = (placeholderVisId ==) . view (visualizer . visualizerId)
 
+dataVisualizations
+    :: Getter NodeVisualizations (Map VisualizationId Visualization)
+dataVisualizations = to getter where
+    getter = Map.filter (not . isErrorVisualization) . view visualizations
+
+errorVisualizations
+    :: Getter NodeVisualizations (Map VisualizationId Visualization)
+errorVisualizations = to getter where
+    getter = Map.filter isErrorVisualization . view visualizations
+
+activeVisualizations
+    :: Getter NodeVisualizations (Map VisualizationId Visualization)
+activeVisualizations = to getter where
+    getter nv = let
+            errVisEnabled = nv ^. errorVisualizationsEnabled
+            visEnabled    = nv ^. visualizationsEnabled
+            c             = nv ^. content
+        in Map.filter
+            (isActive visEnabled errVisEnabled c)
+            $ nv ^. visualizations
 
 awaitingDataMsg, noVisMsg, noDataMsg :: Text
 awaitingDataMsg = "AWAITING_DATA"

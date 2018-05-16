@@ -52,15 +52,17 @@
   }
 
   window.addEventListener("message", function (evt) {
-    var data = JSON.parse(evt.data.data);
-    if (evt.data.event == "data") {
-        currentData = [];
-        labels = [];
-        data.forEach(function (entry) {
-            labels.push(entry[0]);
-            currentData.push(entry[1]);
-        });
+    if (evt.data.data) {
+      var data = JSON.parse(evt.data.data);
+      if (evt.data.event == "data") {
+          currentData = [];
+          labels = [];
+          data.forEach(function (entry) {
+              labels.push(entry[0]);
+              currentData.push(entry[1]);
+          });
+      }
+      display();
     }
-    display();
   });
 }());

@@ -20,15 +20,14 @@ import           LunaStudio.Data.TypeRep                    (TypeRep (TStar))
 import           NodeEditor.Action.Basic.FocusNode          (focusNode)
 import           NodeEditor.Action.Basic.SelectNode         (selectNode)
 import           NodeEditor.Action.State.Model              (calculatePortSelfMode)
-import           NodeEditor.Action.State.NodeEditor         (addInputNode, addOutputNode, getSelectedNodes, modifyNodeEditor,
-                                                             setVisualizationData, startReadyVisualizations, updateNodeVisualizers)
+import           NodeEditor.Action.State.NodeEditor         (addInputNode, addOutputNode, getNodeEditor, getSelectedNodes, modifyNodeEditor)
+import           NodeEditor.Action.State.Visualization      (addNodeVisualizations)
 import           NodeEditor.Action.UUID                     (getUUID)
 import           NodeEditor.React.Model.Node                (ExpressionNode, InputNode, NodeLoc (NodeLoc), NodePath, OutputNode, inPortAt,
                                                              inPortsList, nodeLoc)
-import           NodeEditor.React.Model.NodeEditor          (VisualizationBackup (MessageBackup))
 import qualified NodeEditor.React.Model.NodeEditor          as NE
 import           NodeEditor.React.Model.Port                (isSelf, mode, portId)
-import           NodeEditor.React.Model.Visualization       (awaitingDataMsg)
+import           NodeEditor.React.Model.Visualization       (Content (Message), awaitingDataMsg)
 import           NodeEditor.State.Global                    (State)
 
 
@@ -66,9 +65,7 @@ localAddExpressionNode node = do
         (\selfPid -> updatePortSelf selfPid <$> calculatePortSelfMode node)
         mayPortSelfId
     NodeEditor.addExpressionNode node'
-    setVisualizationData     nl (MessageBackup awaitingDataMsg) True
-    updateNodeVisualizers    nl
-    startReadyVisualizations nl
+    addNodeVisualizations nl $ Message awaitingDataMsg
     focusNode $ node ^. nodeLoc
 
 localSetInputSidebar :: NodePath -> Maybe API.InputSidebar -> Command State ()

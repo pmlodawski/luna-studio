@@ -69,46 +69,48 @@
     });
 
     window.addEventListener("message", function (evt) {
-        var data = JSON.parse(evt.data.data);
-        if (evt.data.event == "data") {
-            markers.clearLayers();
-            if (data[0] && Array.isArray(data[0]) && Array.isArray(data[0][0])) {
-                data.forEach(function (entry) {
-                    var marker = L.marker(entry[0]);
-                        clicked = false;
-                        processingClick = false;
-                    marker.on('mouseover', function () {
-                        if (!clicked) {
+        if (evt.data.data) {
+            var data = JSON.parse(evt.data.data);
+            if (evt.data.event == "data") {
+                markers.clearLayers();
+                if (data[0] && Array.isArray(data[0]) && Array.isArray(data[0][0])) {
+                    data.forEach(function (entry) {
+                        var marker = L.marker(entry[0]);
+                            clicked = false;
+                            processingClick = false;
+                        marker.on('mouseover', function () {
+                            if (!clicked) {
+                                marker.unbindPopup();
+                                marker.bindPopup(entry[1], hoverPopupOptions);
+                                this.openPopup();
+                            }
+                        });
+                        marker.on('mouseout', function () { if (!clicked) this.closePopup(); });
+                        marker.on('click', function () {
+                            processingClick = true;
                             marker.unbindPopup();
-                            marker.bindPopup(entry[1], hoverPopupOptions);
+                            marker.bindPopup(entry[1], popupOptions);
                             this.openPopup();
-                        }
+                            clicked = true;
+                            processingClick = false;
+                        });
+                        marker.on('popupclose', function () { clicked = false; });
+                        marker.on('popupopen', function(e) {
+                            if (processingClick) {
+                                var px = map.project(e.popup._latlng);
+                                px.y -= e.popup._container.clientHeight/2;
+                                map.panTo(map.unproject(px),{animate: true});
+                            }
+                        });
+                        marker.addTo(markers);
                     });
-                    marker.on('mouseout', function () { if (!clicked) this.closePopup(); });
-                    marker.on('click', function () {
-                        processingClick = true;
-                        marker.unbindPopup();
-                        marker.bindPopup(entry[1], popupOptions);
-                        this.openPopup();
-                        clicked = true;
-                        processingClick = false;
+                } else {
+                    data.forEach(function (entry) {
+                        L.marker(entry).addTo(markers);
                     });
-                    marker.on('popupclose', function () { clicked = false; });
-                    marker.on('popupopen', function(e) {
-                        if (processingClick) {
-                            var px = map.project(e.popup._latlng);
-                            px.y -= e.popup._container.clientHeight/2;
-                            map.panTo(map.unproject(px),{animate: true});
-                        }
-                    });
-                    marker.addTo(markers);
-                });
-            } else {
-                data.forEach(function (entry) {
-                    L.marker(entry).addTo(markers);
-                });
+                }
             }
+            map.fitBounds(markers.getBounds());
         }
-        map.fitBounds(markers.getBounds());
     });
 }());

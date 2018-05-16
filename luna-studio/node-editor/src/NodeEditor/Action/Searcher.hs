@@ -39,8 +39,7 @@ import qualified NodeEditor.React.Model.Node.ExpressionNode as ExpressionNode
 import qualified NodeEditor.React.Model.NodeEditor          as NodeEditor
 import qualified NodeEditor.React.Model.Port                as Port
 import qualified NodeEditor.React.Model.Searcher            as Searcher
-import           NodeEditor.React.Model.Visualization       (RunningVisualization (RunningVisualization),
-                                                             VisualizerProperties (VisualizerProperties), getMdVisualizer, visualizerId)
+import           NodeEditor.React.Model.Visualization       (Visualization (Visualization), getMdVisualizer, visualizerId)
 import qualified NodeEditor.React.View.App                  as App
 import           NodeEditor.State.Action                    (Action (begin, continue, end, update), Searcher (Searcher), searcherAction)
 import           NodeEditor.State.Global                    (State)
@@ -56,12 +55,15 @@ instance Action (Command State) Searcher where
     update   = updateActionWithKey   searcherAction
     end      = close
 
-mkDocVis :: Command State (Maybe RunningVisualization)
-mkDocVis = getUUID >>= \uuid -> do
-    mayVis <- use visualizers >>= getMdVisualizer
+mkDocVis :: Command State (Maybe Visualization)
+mkDocVis = do
+    visId    <- getUUID
+    iframeId <- getUUID
+    mayVis   <- use visualizers >>= getMdVisualizer
     when (isNothing mayVis) $ warning "Documentation unavailable. Cannot find markdown visualizer."
-    liftIO $ registerVisualizerFrame uuid
-    return $ RunningVisualization uuid def . uncurry VisualizerProperties . (id &&& Just . view visualizerId) <$> mayVis
+    liftIO $ registerVisualizerFrame iframeId
+    pure $ uncurry (Visualization visId iframeId def)
+        . (id &&& Just . view visualizerId) <$> mayVis
 
 
 emptyInputError :: Searcher.Mode -> Text

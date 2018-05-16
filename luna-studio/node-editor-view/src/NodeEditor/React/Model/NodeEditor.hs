@@ -52,7 +52,6 @@ data NodeEditor = NodeEditor { _expressionNodes          :: ExpressionNodesMap
                              , _connections              :: ConnectionsMap
                              , _visualizersLibPaths      :: VisualizersPaths
                              , _nodeVisualizations       :: Map NodeLoc NodeVisualizations
-                             , _visualizationsBackup     :: VisualizationsBackupMap
 
                              , _halfConnections          :: [HalfConnection]
                              , _connectionPen            :: Maybe ConnectionPen
@@ -70,11 +69,6 @@ data VisualizersPaths    = VisualizersPaths { _internalVisualizersPath :: FilePa
                                             , _projectVisualizersPath  :: Maybe FilePath
                                             } deriving (Default, Eq, Generic)
 
-data VisualizationBackup     = ValueBackup Text | StreamBackup [Text] | MessageBackup Text | ErrorBackup Text deriving (Generic, Eq, Show)
-data VisualizationsBackupMap = VisualizationsBackupMap { _backupMap :: Map NodeLoc VisualizationBackup
-                                                       } deriving (Generic, Default)
-instance Eq VisualizationsBackupMap where _ == _ = True
-
 instance Default NodeEditor where
     def = NodeEditor
         {- expressionNodes          -} def
@@ -84,7 +78,6 @@ instance Default NodeEditor where
         {- connections              -} def
         {- visualizersLibPath       -} def
         {- nodeVisualizations       -} def
-        {- visualizationsBackup     -} def
         {- halfConnections          -} def
         {- connectionPen            -} def
         {- selectionBox             -} def
@@ -95,19 +88,13 @@ instance Default NodeEditor where
         {- topZIndex                -} def
 
 makeLenses ''VisualizersPaths
-makeLenses ''VisualizationsBackupMap
 makeLenses ''NodeEditor
-makePrisms ''VisualizationBackup
 
 isGraphLoaded :: Getter NodeEditor Bool
 isGraphLoaded = graphStatus . to (== GraphLoaded)
 
 returnsGraphError :: Getter NodeEditor Bool
 returnsGraphError = to (has (graphStatus . _GraphError))
-
-activeNodeVisualizations :: Getter NodeEditor (Map NodeLoc NodeVisualizations)
-activeNodeVisualizations = to (^. nodeVisualizations . to filterFunction) where
-    filterFunction = Map.filter (not . Map.null . view visualizations)
 
 screenTransform :: Lens' NodeEditor CameraTransformation
 screenTransform = layout . Layout.screenTransform

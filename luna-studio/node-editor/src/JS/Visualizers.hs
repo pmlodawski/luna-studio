@@ -16,60 +16,71 @@ import           LunaStudio.Data.TypeRep    (ConstructorRep)
 foreign import javascript safe "window.getInternalVisualizersPath()"
     getInternalVisualizersLibraryPath' :: IO JSString
 
-getInternalVisualizersLibraryPath :: IO FilePath
-getInternalVisualizersLibraryPath = convert <$> getInternalVisualizersLibraryPath'
+getInternalVisualizersLibraryPath :: MonadIO m => m FilePath
+getInternalVisualizersLibraryPath 
+    = liftIO $ convert <$> getInternalVisualizersLibraryPath'
 
 foreign import javascript safe "window.getLunaVisualizersPath()"
     getLunaVisualizersLibraryPath' :: IO JSString
 
-getLunaVisualizersLibraryPath :: IO FilePath
-getLunaVisualizersLibraryPath = convert <$> getLunaVisualizersLibraryPath'
-
+getLunaVisualizersLibraryPath :: MonadIO m => m FilePath
+getLunaVisualizersLibraryPath 
+    = liftIO $ convert <$> getLunaVisualizersLibraryPath'
 
 foreign import javascript safe "res = window.getInternalVisualizers(); $r = Object.keys(typeof res == 'object' ? res : {});"
     getInternalVisualizers' :: IO JSArray
 
-getInternalVisualizers :: IO [String]
-getInternalVisualizers = fmap pFromJSVal . toList <$> getInternalVisualizers'
+getInternalVisualizers :: MonadIO m => m [String]
+getInternalVisualizers 
+    = liftIO $ fmap pFromJSVal . toList <$> getInternalVisualizers'
 
 foreign import javascript safe "res = window.getLunaVisualizers(); $r = Object.keys(typeof res == 'object' ? res : {});"
     getLunaVisualizers' :: IO JSArray
 
-getLunaVisualizers :: IO [String]
-getLunaVisualizers = fmap pFromJSVal . toList <$> getLunaVisualizers'
+getLunaVisualizers :: MonadIO m => m [String]
+getLunaVisualizers 
+    = liftIO $ fmap pFromJSVal . toList <$> getLunaVisualizers'
 
 foreign import javascript safe "res = window.getProjectVisualizers($1); $r = Object.keys(typeof res == 'object' ? res : {});"
     getProjectVisualizers' :: JSString -> IO JSArray
 
-getProjectVisualizers :: FilePath -> IO [String]
-getProjectVisualizers fp = fmap pFromJSVal . toList <$> getProjectVisualizers' (convert fp)
+getProjectVisualizers :: MonadIO m => FilePath -> m [String]
+getProjectVisualizers fp
+    = liftIO $ fmap pFromJSVal . toList <$> getProjectVisualizers' (convert fp)
 
 foreign import javascript safe "window.checkInternalVisualizer($1)"
     checkInternalVisualizer' :: JSString -> IO JSString
 
-checkInternalVisualizer :: String -> IO String
-checkInternalVisualizer name = convert <$> checkInternalVisualizer' (convert name)
+checkInternalVisualizer :: MonadIO m => String -> m String
+checkInternalVisualizer name 
+    = liftIO $ convert <$> checkInternalVisualizer' (convert name)
 
 foreign import javascript safe "window.checkLunaVisualizer($1, $2)"
     checkLunaVisualizer' :: JSString -> JSString -> IO JSString
 
-checkLunaVisualizer :: String -> String -> IO String
-checkLunaVisualizer name rep = convert <$> checkLunaVisualizer' (convert name) (convert rep)
+checkLunaVisualizer :: MonadIO m => String -> String -> m String
+checkLunaVisualizer name rep 
+    = liftIO $  convert <$> checkLunaVisualizer' (convert name) (convert rep)
 
 foreign import javascript safe "window.checkProjectVisualizer($1, $2)"
     checkProjectVisualizer' :: JSString -> JSString -> IO JSString
 
-checkProjectVisualizer :: String -> String -> IO String
-checkProjectVisualizer name rep = convert <$> checkProjectVisualizer' (convert name) (convert rep)
+checkProjectVisualizer :: MonadIO m => String -> String -> m String
+checkProjectVisualizer name rep 
+    = liftIO $ convert <$> checkProjectVisualizer' (convert name) (convert rep)
 
-mkInternalVisualizersMap :: IO (Map String String)
-mkInternalVisualizersMap = getInternalVisualizers >>= fmap Map.fromList . mapM (\name -> (name,) <$> checkInternalVisualizer name)
+mkInternalVisualizersMap :: MonadIO m => m (Map String String)
+mkInternalVisualizersMap = liftIO $ getInternalVisualizers >>= fmap Map.fromList
+    . mapM (\name -> (name,) <$> checkInternalVisualizer name)
 
-mkLunaVisualizersMap :: IO (Map String (String -> IO String))
-mkLunaVisualizersMap = Map.fromList . fmap (id &&& checkLunaVisualizer) <$> getLunaVisualizers
+mkLunaVisualizersMap :: MonadIO m => m (Map String (String -> m String))
+mkLunaVisualizersMap = liftIO
+    $ Map.fromList . fmap (id &&& checkLunaVisualizer) <$> getLunaVisualizers
 
-mkProjectVisualizersMap :: FilePath -> IO (Map String (String -> IO String))
-mkProjectVisualizersMap fp = Map.fromList . fmap (id &&& checkProjectVisualizer) <$> getProjectVisualizers fp
+mkProjectVisualizersMap :: MonadIO m
+    => FilePath -> m (Map String (String -> IO String))
+mkProjectVisualizersMap fp = liftIO $ Map.fromList
+    . fmap (id &&& checkProjectVisualizer) <$> getProjectVisualizers fp
 
 
 foreign import javascript safe "visualizerFramesManager.sendData($1, $2, $3);"
@@ -87,17 +98,26 @@ foreign import javascript safe "visualizerFramesManager.register($1);"
 foreign import javascript safe "visualizerFramesManager.notifyStreamRestart($1, $2, $3)"
     notifyStreamRestart' :: JSString -> JSString -> JSVal -> IO ()
 
-notifyStreamRestart :: UUID -> ConstructorRep -> [Text] -> IO ()
-notifyStreamRestart uid rep backup = notifyStreamRestart' (convert $ show uid) (convert . BS.unpack $ Aeson.encode rep) =<< toJSValListOf backup
+notifyStreamRestart :: MonadIO m => UUID -> ConstructorRep -> [Text] -> m ()
+notifyStreamRestart uid rep backup = liftIO $ notifyStreamRestart'
+    (convert $ show uid)
+    (convert . BS.unpack $ Aeson.encode rep)
+    =<< toJSValListOf backup
 
-sendStreamDatapoint :: UUID -> Text -> IO ()
-sendStreamDatapoint uid d = sendStreamDatapoint' (convert $ show uid) (convert d)
+sendStreamDatapoint :: MonadIO m => UUID -> Text -> m ()
+sendStreamDatapoint uid d
+    = liftIO $ sendStreamDatapoint' (convert $ show uid) (convert d)
 
-registerVisualizerFrame :: UUID -> IO ()
-registerVisualizerFrame = registerVisualizerFrame' . convert . show
+registerVisualizerFrame :: MonadIO m => UUID -> m ()
+registerVisualizerFrame uuid
+    = liftIO $ registerVisualizerFrame' (convert $ show uuid)
 
-sendVisualizationData :: UUID -> ConstructorRep -> Text -> IO ()
-sendVisualizationData uid rep d = sendVisualizationData' (convert $ show uid) (convert . BS.unpack $ Aeson.encode rep) (convert d)
+sendVisualizationData :: MonadIO m => UUID -> ConstructorRep -> Text -> m ()
+sendVisualizationData uid rep d = liftIO $ sendVisualizationData'
+    (convert $ show uid)
+    (convert . BS.unpack $ Aeson.encode rep)
+    (convert d)
 
-sendInternalData :: UUID -> Text -> IO ()
-sendInternalData uid d = sendInternalData' (convert $ show uid) (convert d)
+sendInternalData :: MonadIO m => UUID -> Text -> m ()
+sendInternalData uid d
+    = liftIO $ sendInternalData' (convert $ show uid) (convert d)

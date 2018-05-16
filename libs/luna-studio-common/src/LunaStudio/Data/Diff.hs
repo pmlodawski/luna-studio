@@ -23,7 +23,7 @@ import           LunaStudio.Data.NodeMeta             (NodeMeta)
 import           LunaStudio.Data.NodeSearcher         (ImportName)
 import           LunaStudio.Data.Port                 (InPort, InPortTree, OutPort, OutPortTree)
 import           LunaStudio.Data.TypeRep              (TypeRep)
-import           LunaStudio.Data.Visualizer           (Visualizer)
+import           LunaStudio.Data.Visualizer           (VisualizerId)
 import           Prologue                             hiding (TypeRep, mod)
 
 
@@ -92,7 +92,7 @@ data ModificationSetCode = ModificationSetCode
     } deriving (Eq, Generic, Show)
 
 data ModificationSetDefaultVisualizers = ModificationSetDefaultVisualizers
-    { _newDefaultVisualizers :: HashMap TypeRep Visualizer
+    { _newDefaultVisualizers :: HashMap TypeRep VisualizerId
     } deriving (Eq, Generic, Show)
 
 data ModificationSetExpression = ModificationSetExpression
@@ -506,7 +506,7 @@ instance Diffable (Breadcrumb (Named BreadcrumbItem)) where
         then mempty
         else Diff . pure . toModification $ ModificationSetBreadcrumb bc2
 
-instance Diffable (HashMap TypeRep Visualizer) where
+instance Diffable (HashMap TypeRep VisualizerId) where
     patch (SetDefaultVisualizers m) = const $ m ^. newDefaultVisualizers
     patch _                         = id
     diff defVis1 defVis2 = if defVis1 == defVis2

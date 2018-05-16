@@ -69,7 +69,8 @@ import           NodeEditor.Action.Batch                     (collaborativeModif
 import           NodeEditor.Action.State.App                 (getWorkspace, modifyApp, setBreadcrumbs)
 import           NodeEditor.Action.State.Graph               (inCurrentLocation, isCurrentLocation)
 import           NodeEditor.Action.State.NodeEditor          (modifyExpressionNode, setGraphStatus, setNodeProfilingData,
-                                                              setScreenTransform, updateMonads, updateVisualizers)
+                                                              setScreenTransform, updateMonads)
+import           NodeEditor.Action.State.Visualization       (updateVisualizers)
 import           NodeEditor.Action.UUID                      (isOwnRequest)
 import qualified NodeEditor.Batch.Workspace                  as Workspace
 import           NodeEditor.Event.Batch                      (Event (..))

@@ -49,7 +49,7 @@ data BreadcrumbSettings = BreadcrumbSettings
 --TODO: Replace (VisualizerName, VisualizerPath) with VisualizerId but manage conflicts between versions
 data ModuleSettings = ModuleSettings
     { _currentBreadcrumb   :: Breadcrumb Text
-    , _typeRepToVisMap     :: HashMap TypeRep (VisualizerName, VisualizerPath)
+    , _typeRepToVisMap     :: HashMap TypeRep VisualizerId
     , _breadcrumbsSettings :: Map (Breadcrumb Text) BreadcrumbSettings
     } deriving (Eq, Generic, Show)
 
@@ -60,7 +60,7 @@ data ProjectSettings = ProjectSettings
 
 --TODO: Replace (VisualizerName, VisualizerPath) with VisualizerId but manage conflicts between versions
 data LocationSettings = LocationSettings
-    { _visMap   :: Maybe (HashMap TypeRep (VisualizerName, VisualizerPath))
+    { _visMap   :: Maybe (HashMap TypeRep VisualizerId)
     , _camera   :: CameraTransformation
     } deriving (Eq, Generic, Show)
 
@@ -154,24 +154,24 @@ updateLocationSettings configPath filePath' bc settings currentBc = updateSettin
     createBreadcrumbSettings = BreadcrumbSettings $ settings ^. camera
 
 
---TODO: Provide some version system to fix version problem
-toOldAPI :: Visualizer -> (VisualizerName, VisualizerPath)
-toOldAPI v = (prefixedName, visPath) where
-    getPrefix InternalVisualizer = "InternalVisualizer: "
-    getPrefix LunaVisualizer     = "LunaVisualizer: "
-    getPrefix ProjectVisualizer  = "ProjectVisualizer: "
-    visId        = v ^. visualizerId
-    visType      = visId ^. visualizerType
-    visName      = visId ^. visualizerName
-    visPath      = v ^. visualizerRelPath
-    prefixedName = getPrefix visType <> visName
+-- --TODO: Provide some version system to fix version problem
+-- toOldAPI :: Visualizer -> (VisualizerName, VisualizerPath)
+-- toOldAPI v = (prefixedName, visPath) where
+--     getPrefix InternalVisualizer = "InternalVisualizer: "
+--     getPrefix LunaVisualizer     = "LunaVisualizer: "
+--     getPrefix ProjectVisualizer  = "ProjectVisualizer: "
+--     visId        = v ^. visualizerId
+--     visType      = visId ^. visualizerType
+--     visName      = visId ^. visualizerName
+--     visPath      = v ^. visualizerRelPath
+--     prefixedName = getPrefix visType <> visName
 
-fromOldAPI :: (VisualizerName, VisualizerPath) -> Visualizer
-fromOldAPI (visName, visPath) = Visualizer visId visPath where
-    visId          = uncurry VisualizerId nameAndType
-    stripPref p    = Text.stripPrefix p visName
-    mayInternalVis = (, InternalVisualizer) <$> stripPref "InternalVisualizer: "
-    mayLunaVis     = (, LunaVisualizer)     <$> stripPref "LunaVisualizer: "
-    mayProjectVis  = (, ProjectVisualizer)  <$> stripPref "ProjectVisualizer: "
-    nameAndType    = fromJust (visName, LunaVisualizer) . listToMaybe
-        $ catMaybes [mayInternalVis, mayLunaVis, mayProjectVis]
+-- fromOldAPI :: (VisualizerName, VisualizerPath) -> Visualizer
+-- fromOldAPI (visName, visPath) = Visualizer visId visPath where
+--     visId          = uncurry VisualizerId nameAndType
+--     stripPref p    = Text.stripPrefix p visName
+--     mayInternalVis = (, InternalVisualizer) <$> stripPref "InternalVisualizer: "
+--     mayLunaVis     = (, LunaVisualizer)     <$> stripPref "LunaVisualizer: "
+--     mayProjectVis  = (, ProjectVisualizer)  <$> stripPref "ProjectVisualizer: "
+--     nameAndType    = fromJust (visName, LunaVisualizer) . listToMaybe
+--         $ catMaybes [mayInternalVis, mayLunaVis, mayProjectVis]

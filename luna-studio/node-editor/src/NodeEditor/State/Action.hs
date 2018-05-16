@@ -14,7 +14,8 @@ import           LunaStudio.Data.Position             (Position)
 import           LunaStudio.Data.ScreenPosition       (ScreenPosition)
 import           NodeEditor.Data.Slider               (InitValue)
 import           NodeEditor.React.Model.Connection    (ConnectionId)
-import           NodeEditor.React.Model.Visualization (VisualizationId, VisualizationMode)
+import           NodeEditor.React.Model.Visualization (VisualizationId)
+import qualified NodeEditor.React.Model.Visualization as Visualization
 
 data NodeDrag = NodeDrag { _nodeDragStartPos      :: Position
                          , _nodeDragNodeLoc       :: NodeLoc
@@ -97,13 +98,13 @@ makeLenses ''VisualizationDrag
 
 data VisualizationActive = VisualizationActive { _visualizationActiveNodeLoc         :: NodeLoc
                                                , _visualizationActiveVisualizationId :: VisualizationId
-                                               , _visualizationActiveSelectedMode    :: VisualizationMode
+                                               , _visualizationActiveSelectedMode    :: Visualization.Mode
                                                , _visualizationActiveTriggeredByVis  :: Bool
                                                } deriving (Eq, Show, Generic, Typeable)
 
 makeLenses ''VisualizationActive
 
-data DocVisualizationActive = DocVisualizationActive { _docVisualizationActiveSelectedMode    :: VisualizationMode
+data DocVisualizationActive = DocVisualizationActive { _docVisualizationActiveSelectedMode    :: Visualization.Mode
                                                      , _docVisualizationActiveTriggeredByVis  :: Bool
                                                      } deriving (Eq, Show, Generic, Typeable)
 

@@ -9,7 +9,7 @@ import qualified NodeEditor.Event.Shortcut            as Shortcut
 import           NodeEditor.Event.UI                  (UIEvent (AppEvent, VisualizationEvent))
 import qualified NodeEditor.React.Event.App           as App
 import qualified NodeEditor.React.Event.Visualization as Visualization
-import           NodeEditor.React.Model.Visualization (VisualizationMode (Preview))
+import           NodeEditor.React.Model.Visualization (Mode (Preview))
 import           NodeEditor.State.Action              (continue)
 import           NodeEditor.State.Global              (State)
 

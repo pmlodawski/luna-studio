@@ -75,11 +75,13 @@
   }
 
   window.addEventListener("message", function (evt) {
-    var data = JSON.parse(evt.data.data);
-    if (evt.data.event == "data") {
-        currentData = data;
-        labels = [];
+    if(evt.data.data) {
+      var data = JSON.parse(evt.data.data);
+      if (evt.data.event == "data") {
+          currentData = data;
+          labels = [];
+      }
+      display();
     }
-    display();
   });
 }());

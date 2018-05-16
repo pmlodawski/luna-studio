@@ -9,6 +9,7 @@ import           LunaStudio.Data.PortRef            (AnyPortRef (InPortRef', Out
 import qualified NodeEditor.Action.Batch            as Batch
 import           NodeEditor.Action.State.Model      (createConnectionModel, updatePortMode)
 import qualified NodeEditor.Action.State.NodeEditor as NodeEditor
+import           NodeEditor.Action.State.ResetNode  (resetSuccessors)
 import           NodeEditor.React.Model.Connection  (ConnectionId)
 import           NodeEditor.React.Model.Node        (NodeLoc, nodeLoc)
 import           NodeEditor.State.Global            (State)
@@ -34,7 +35,7 @@ localAddConnection c = do
     mayConn <- createConnectionModel src dst
     withJust mayConn $ \conn -> do
         NodeEditor.addConnection conn
-        NodeEditor.resetSuccessors $ dst ^. nodeLoc
+        resetSuccessors $ dst ^. nodeLoc
         updatePortMode $ OutPortRef' src
         updatePortMode $ InPortRef'  dst
     return $ isJust mayConn
