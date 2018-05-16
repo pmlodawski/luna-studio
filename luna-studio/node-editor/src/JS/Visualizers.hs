@@ -93,8 +93,8 @@ notifyStreamRestart uid rep backup = notifyStreamRestart' (convert $ show uid) (
 sendStreamDatapoint :: UUID -> Text -> IO ()
 sendStreamDatapoint uid d = sendStreamDatapoint' (convert $ show uid) (convert d)
 
-registerVisualizerFrame :: UUID -> IO ()
-registerVisualizerFrame = registerVisualizerFrame' . convert . show
+registerVisualizerFrame :: MonadIO m => UUID -> m ()
+registerVisualizerFrame uuid = liftIO $ print "REGISTER KURWA" >> registerVisualizerFrame' (convert $ show uuid)
 
 sendVisualizationData :: UUID -> ConstructorRep -> Text -> IO ()
 sendVisualizationData uid rep d = sendVisualizationData' (convert $ show uid) (convert . BS.unpack $ Aeson.encode rep) (convert d)

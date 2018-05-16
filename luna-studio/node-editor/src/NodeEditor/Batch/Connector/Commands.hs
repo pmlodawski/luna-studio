@@ -54,6 +54,7 @@ import           NodeEditor.Batch.Workspace               (currentLocation)
 import           NodeEditor.React.Model.Connection        (ConnectionId)
 
 
+
 withLibrary :: Workspace -> (GraphLocation -> a) -> a
 withLibrary w f = f $ w ^. currentLocation
 

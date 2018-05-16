@@ -11,11 +11,11 @@ import qualified Data.Text.Lazy                             as Text.Lazy
 import qualified Data.Text.Lazy.Encoding                    as Text.Lazy
 import           LunaStudio.Data.Error                      (errorContent)
 import           LunaStudio.Data.NodeValue                  (NodeValue (NodeError, NodeValue))
-import           NodeEditor.Action.State.NodeEditor         (getExpressionNodeType, getVisualizersForType, modifyExpressionNode,
+import           NodeEditor.Action.State.NodeEditor         (getNodeVisualizations, modifyExpressionNode,
                                                              setVisualizationData)
 import           NodeEditor.React.Model.Node.ExpressionNode (NodeLoc, Value (Error, ShortValue), value)
 import           NodeEditor.React.Model.NodeEditor          (VisualizationBackup (ErrorBackup, MessageBackup, StreamBackup, ValueBackup))
-import           NodeEditor.React.Model.Visualization       (VisualizationValue (StreamDataPoint, StreamStart, Value), noDataMsg, noVisMsg)
+import           NodeEditor.React.Model.Visualization       (VisualizationValue (StreamDataPoint, StreamStart, Value), noDataMsg, noVisMsg, visualizers)
 import           NodeEditor.State.Global                    (State)
 
 
@@ -35,8 +35,8 @@ updateNodeValueAndVisualization nl = \case
         setVisualizationData nl (StreamBackup []) True
     NodeValue sv Nothing -> do
         modifyExpressionNode nl $ value .= ShortValue (Text.take 100 sv)
-        noVisualizers <- maybe (return False) (fmap isNothing . getVisualizersForType) =<< getExpressionNodeType nl
-        let msg = if noVisualizers then noVisMsg else noDataMsg
+        visMap <- maybe mempty (view visualizers) <$> getNodeVisualizations nl
+        let msg = if Map.null visMap then noVisMsg else noDataMsg
         setVisualizationData nl (MessageBackup msg) True
     NodeError e -> do
         modifyExpressionNode nl $ value .= Error e

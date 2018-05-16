@@ -38,7 +38,7 @@ import NodeEditor.Data.Color                    (Color)
 import NodeEditor.React.Model.Constants         (nodeRadius)
 import NodeEditor.React.Model.Node.SidebarNode  (InputNode, OutputNode)
 import NodeEditor.React.Model.Port              (AnyPortId (InPortId', OutPortId'), InPort, InPortId, InPortTree, OutPort, OutPortId, OutPortTree)
-import NodeEditor.React.Model.Visualization     (Visualizer)
+import NodeEditor.React.Model.Visualization     (VisualizerId)
 
 
 data ExpressionNode = ExpressionNode { _nodeLoc'                  :: NodeLoc
@@ -50,7 +50,7 @@ data ExpressionNode = ExpressionNode { _nodeLoc'                  :: NodeLoc
                                      , _argConstructorMode        :: Port.Mode
                                      , _canEnter                  :: Bool
                                      , _position                  :: Position
-                                     , _defaultVisualizer         :: Maybe Visualizer
+                                     , _defaultVisualizer         :: Maybe VisualizerId
                                      , _visEnabled                :: Bool
                                      , _errorVisEnabled           :: Bool
                                      , _code                      :: Text
@@ -111,7 +111,7 @@ instance Convertible (NodePath, Empire.ExpressionNode) ExpressionNode where
         {- argConstructorHighlighted -} Port.Invisible
         {- canEnter                  -} (n ^. Empire.canEnter)
         {- position                  -} (n ^. Empire.position)
-        {- defaultVisualizer         -} (Project.fromOldAPI <$> n ^. Empire.nodeMeta . NodeMeta.selectedVisualizer)
+        {- defaultVisualizer         -} (n ^. Empire.nodeMeta . NodeMeta.selectedVisualizer)
         {- visEnabled                -} (n ^. Empire.nodeMeta . NodeMeta.displayResult)
         {- errorVisEnabled           -} False
         {- code                      -} (n ^. Empire.code)
@@ -132,7 +132,7 @@ instance Convertible ExpressionNode Empire.ExpressionNode where
         {- code         -} (n ^. code)
         {- inPorts      -} (convert <$> n ^. inPorts)
         {- outPorts     -} (convert <$> n ^. outPorts)
-        {- nodeMeta     -} (NodeMeta.NodeMeta (n ^. position) (n ^. visEnabled) (Project.toOldAPI <$> n ^. defaultVisualizer))
+        {- nodeMeta     -} (NodeMeta.NodeMeta (n ^. position) (n ^. visEnabled) (n ^. defaultVisualizer))
         {- canEnter     -} (n ^. canEnter)
 
 instance Default Mode where def = Collapsed
@@ -221,10 +221,10 @@ visualizationsEnabled = lens getVisualizationEnabled setVisualizationEnabled whe
 
 nodeMeta :: Lens' ExpressionNode NodeMeta
 nodeMeta = lens getNodeMeta setNodeMeta where
-    getNodeMeta n    = NodeMeta (n ^. position) (n ^. visEnabled) (Project.toOldAPI <$> n ^. defaultVisualizer)
+    getNodeMeta n    = NodeMeta (n ^. position) (n ^. visEnabled) (n ^. defaultVisualizer)
     setNodeMeta n nm = n & position              .~ nm ^. NodeMeta.position
                          & visEnabled            .~ nm ^. NodeMeta.displayResult
-                         & defaultVisualizer     .~ (Project.fromOldAPI <$> nm ^. NodeMeta.selectedVisualizer)
+                         & defaultVisualizer     .~ nm ^. NodeMeta.selectedVisualizer
 
 containsNode :: NodeLoc -> NodeLoc -> Bool
 containsNode nl nlToCheck = inSubgraph False $ NodeLoc.toNodeIdList nl where

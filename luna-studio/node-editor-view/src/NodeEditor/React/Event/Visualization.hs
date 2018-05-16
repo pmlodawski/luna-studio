@@ -6,10 +6,10 @@ module NodeEditor.React.Event.Visualization where
 import           Common.Data.Event                    (EventName, eventName)
 import           Common.Prelude
 import           LunaStudio.Data.NodeLoc              (NodeLoc)
-import           NodeEditor.React.Model.Visualization (VisualizationId, VisualizationParent, VisualizerId, _Node)
+import           NodeEditor.React.Model.Visualization (VisualizationId, Parent, VisualizerId, _Node)
 
 
-data Event = Event { _visParent :: VisualizationParent
+data Event = Event { _visParent :: Parent
                    , _evtType   :: EventType
                    } deriving (Show, Generic, NFData, Typeable)
 

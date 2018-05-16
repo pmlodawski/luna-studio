@@ -7,8 +7,8 @@ import           Data.Aeson                           (ToJSON (toEncoding, toJSO
 import           Data.Convert                         (Convertible (convert))
 import           Data.Map                             (Map)
 import qualified Data.Map                             as Map
-import           NodeEditor.React.Model.Visualization (NodeVisualizations, RunningVisualization, VisualizationId, VisualizationMode,
-                                                       VisualizationMode (Default, Focused, FullScreen, Preview), Visualizer,
+import           NodeEditor.React.Model.Visualization (NodeVisualizations, Visualization, VisualizationId, Mode,
+                                                       Mode (Default, Focused, FullScreen, Preview, Hidden), Visualizer,
                                                        VisualizerType (InternalVisualizer, LunaVisualizer, ProjectVisualizer))
 import qualified NodeEditor.React.Model.Visualization as Vis
 import           NodeEditor.View.Diff                 (DiffT, diffApply, diffConvert, diffMap, diffMapWithKey)
@@ -26,6 +26,7 @@ makeLenses ''VisualizerView
 
 data VisualizationView = VisualizationView
     { _key                  :: String
+    , _iframeId             :: String
     , _mode                 :: String
     , _currentVisualizer    :: VisualizerView
     , _selectedVisualizer   :: Maybe VisualizerName
@@ -54,11 +55,11 @@ instance ToJSON NodeVisualizationsView where
 instance Convertible VisualizationId String where
     convert = show
 
-instance Convertible VisualizationMode String where
-    convert Default    = "Default"
+instance Convertible Mode String where
     convert Focused    = "Focused"
     convert Preview    = "Preview"
     convert FullScreen = "FullScreen"
+    convert _          = "Default"
 
 instance Convertible VisualizerType String where
     convert InternalVisualizer = "InternalVisualizer"
@@ -73,19 +74,19 @@ instance Convertible Visualizer VisualizerView where
             $ v ^. Vis.visualizerId . Vis.visualizerType)
         {- visualizerPath -} (convert $ v ^. Vis.visualizerRelPath)
 
-instance Convertible RunningVisualization VisualizationView where
+instance Convertible Visualization VisualizationView where
     convert v = VisualizationView
         {- key                -} (convert $ v ^. Vis.visualizationId)
-        {- mode               -} (convert $ v ^. Vis.visualizationMode)
-        {- currentVisualizer  -} (convert
-            $ v ^. Vis.visualizerProperties . Vis.runningVisualizer)
-        {- selectedVisualizer -} (convert <$> v ^? Vis.visualizerProperties
-            . Vis.selectedVisualizerId . _Just . Vis.visualizerName)
+        {- iframeId           -} (convert $ v ^. Vis.iframeId)
+        {- mode               -} (convert $ v ^. Vis.mode)
+        {- currentVisualizer  -} (convert $ v ^. Vis.visualizer)
+        {- selectedVisualizer -} (convert
+            <$> v ^? Vis.selectedVisualizerId . _Just . Vis.visualizerName)
 
 instance Convertible (NodeLoc, NodeVisualizations) NodeVisualizationsView where
     convert (nl, nv) = NodeVisualizationsView
         {- nodeKey        -} (convert nl)
-        {- visualizations -} (convert <$> Map.elems (nv ^. Vis.visualizations))
+        {- visualizations -} (Map.elems $ convert <$> nv ^. Vis.visualizations)
         {- visualizations -} (convert . uncurry Vis.Visualizer
             <$> Map.toList (nv ^. Vis.visualizers))
 

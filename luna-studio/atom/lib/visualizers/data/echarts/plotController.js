@@ -347,34 +347,36 @@
   };
 
   window.addEventListener("message", function (evt) {
-    mayOptions = chart.getOption();
-    newOptions = mayOptions ? mayOptions : defaultOptions;
-    var data;
-    if (Array.isArray(evt.data.data)) {
-      data = evt.data.data.map( function (x) { return JSON.parse(x); });
-    } else {
-      data = JSON.parse(evt.data.data);
-    }
-    if (evt.data.event == "restart") {
-      currentData = [];
-      data.forEach (function (datapoint) {
-        datapoint.forEach(function (x, i) {
+    if(evt.data.data) {
+      mayOptions = chart.getOption();
+      newOptions = mayOptions ? mayOptions : defaultOptions;
+      var data;
+      if (Array.isArray(evt.data.data)) {
+        data = evt.data.data.map( function (x) { return JSON.parse(x); });
+      } else {
+        data = JSON.parse(evt.data.data);
+      }
+      if (evt.data.event == "restart") {
+        currentData = [];
+        data.forEach (function (datapoint) {
+          datapoint.forEach(function (x, i) {
+            currentData[i] = currentData[i] ? currentData[i] : [];
+            currentData[i].push(x);
+          });
+        })
+      } else if (evt.data.event == "datapoint") {
+        if (!currentData) currentData = [];
+        if (!Array.isArray(data)) data = [data];
+        data.forEach(function (x, i) {
           currentData[i] = currentData[i] ? currentData[i] : [];
           currentData[i].push(x);
         });
-      })
-    } else if (evt.data.event == "datapoint") {
-      if (!currentData) currentData = [];
-      if (!Array.isArray(data)) data = [data];
-      data.forEach(function (x, i) {
-        currentData[i] = currentData[i] ? currentData[i] : [];
-        currentData[i].push(x);
-      });
-    } else {
-      if (!(data[0] && Array.isArray(data[0]))) data = [data];
-      newOptions.series = []
-      currentData = data;
+      } else {
+        if (!(data[0] && Array.isArray(data[0]))) data = [data];
+        newOptions.series = []
+        currentData = data;
+      }
+      chart.setOption(applyData(newOptions, currentData.map( function (s) { return s.slice(-500)})));
     }
-    chart.setOption(applyData(newOptions, currentData.map( function (s) { return s.slice(-500)})));
   });
 }());

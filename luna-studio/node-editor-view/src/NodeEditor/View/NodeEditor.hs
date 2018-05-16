@@ -3,7 +3,7 @@ module NodeEditor.View.NodeEditor where
 import           Common.Prelude
 import           Common.Data.JSON                  (fromJSONVal)
 import           LunaStudio.Data.Position          (Position, fromTuple)
-import           NodeEditor.React.Model.NodeEditor (visualizersLibPaths, NodeEditor, activeNodeVisualizations, connections,
+import           NodeEditor.React.Model.NodeEditor (visualizersLibPaths, NodeEditor, nodeVisualizations, connections,
                                                     expressionNodes, halfConnections, inputNode,
                                                     outputNode, searcher)
 import           NodeEditor.View.Connection        (connectionsView)
@@ -24,7 +24,7 @@ nodeEditorView = do
     diff searcherView            searcher
     diff connectionsView         connections
     diff halfConnectionsView     halfConnections
-    diff nodeVisualizationsView  activeNodeVisualizations
+    diff nodeVisualizationsView  nodeVisualizations
     diff visualizerLibrariesView visualizersLibPaths
 
 getMousePosition :: MonadIO m => m Position

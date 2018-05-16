@@ -12,4 +12,11 @@
             e.preventDefault();
             window.frameElement.parentNode.dispatchEvent(new e.constructor(e.type, e))
     });
+
+    window.addEventListener("message", function(evt) {
+        console.log("PING", evt, window.parent);
+        if (evt.data.ping)
+            window.parent.window.postMessage(evt.data, "*");
+            console.log("READY", window);
+    });
 }());

@@ -39,7 +39,7 @@ navigateToGraph location = do
         loadGraph location ((, settings) <$> mayCurrentLoc) False
 
 getSettings :: Command State LocationSettings
-getSettings = LocationSettings <$> (Just . fmap Project.toOldAPI <$> use Global.preferedVisualizers) <*> getScreenTransform
+getSettings = LocationSettings <$> (Just <$> use Global.preferedVisualizers) <*> getScreenTransform
 
 saveSettings :: Command State ()
 saveSettings = getSettings >>= Batch.saveSettings

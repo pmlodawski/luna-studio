@@ -9,6 +9,7 @@
   };
 
   window.addEventListener("message", function (evt) {
+    console.log("JSON", evt);
     if (evt.data.data) render(evt.data.data);
   });
 }());

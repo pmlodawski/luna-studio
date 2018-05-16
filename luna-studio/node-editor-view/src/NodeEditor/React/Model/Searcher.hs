@@ -24,7 +24,7 @@ import           LunaStudio.Data.TypeRep                    (TypeRep (TCons))
 import qualified NodeEditor.Event.Shortcut                  as Shortcut
 import qualified NodeEditor.React.Model.Node.ExpressionNode as Model
 import qualified NodeEditor.React.Model.Port                as Port
-import           NodeEditor.React.Model.Visualization       (RunningVisualization)
+import           NodeEditor.React.Model.Visualization       (Visualization)
 import           Prologue                                   (unsafeFromJust)
 
 
@@ -35,7 +35,7 @@ data NewNode = NewNode { _position    :: Position
 data NodeModeInfo = NodeModeInfo { _className   :: Maybe Text
                                  , _newNodeData :: Maybe NewNode
                                  , _argNames    :: [Text]
-                                 , _docVisInfo  :: Maybe RunningVisualization
+                                 , _docVisInfo  :: Maybe Visualization
                                  } deriving (Eq, Generic, Show)
 makeLenses ''NewNode
 makeLenses ''NodeModeInfo
@@ -78,7 +78,7 @@ predNl :: Getter Searcher (Maybe NodeLoc)
 predNl = to predNl' where
     predNl' s = s ^? mode . _Node . _2 . newNodeData . _Just . predPortRef . _Just . PortRef.nodeLoc
 
-docVis :: Getter Searcher (Maybe RunningVisualization)
+docVis :: Getter Searcher (Maybe Visualization)
 docVis = to docVis' where
     docVis' s = case s ^. mode of
       Node _ nmi _ -> nmi ^. docVisInfo

@@ -42,27 +42,29 @@
     }
 
     window.addEventListener("message", function (evt) {
-        var data = JSON.parse(evt.data.data);
-        if (evt.data.event == "data") {
-            if (layer) layer.clearLayers();
-            layer = L.geoJSON(data, {
-                style: function (f) { return f.properties.style; },
-                onEachFeature: function (f, l) {
-                    if (f.properties && f.properties.popupContent)
-                        l.bindPopup(f.properties.popupContent);
-                },
-                pointToLayer: function (f, l) {
-                    return L.circleMarker(l, { radius: 6, fillColor: "#e74c3c", color: "white", fillOpacity: 1, weight: 1 });
-                }
-            })
-            layer.addTo(map);
-        } else if (evt.data.event == "restart") {
-            initRealtime();
-        } else if (evt.data.event == "datapoint") {
-            var oldData = currentData;
-            currentData = data;
-            if (!layer) initRealtime();
-            if (!oldData) layer.start();
+        if(event.data.data) {
+            var data = JSON.parse(evt.data.data);
+            if (evt.data.event == "data") {
+                if (layer) layer.clearLayers();
+                layer = L.geoJSON(data, {
+                    style: function (f) { return f.properties.style; },
+                    onEachFeature: function (f, l) {
+                        if (f.properties && f.properties.popupContent)
+                            l.bindPopup(f.properties.popupContent);
+                    },
+                    pointToLayer: function (f, l) {
+                        return L.circleMarker(l, { radius: 6, fillColor: "#e74c3c", color: "white", fillOpacity: 1, weight: 1 });
+                    }
+                })
+                layer.addTo(map);
+            } else if (evt.data.event == "restart") {
+                initRealtime();
+            } else if (evt.data.event == "datapoint") {
+                var oldData = currentData;
+                currentData = data;
+                if (!layer) initRealtime();
+                if (!oldData) layer.start();
+            }
         }
     });
 }());

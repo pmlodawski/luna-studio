@@ -25,8 +25,8 @@ import qualified NodeEditor.React.Model.NodeEditor          as NodeEditor
 import           NodeEditor.React.Model.Port                (InPortIndex (Self))
 import qualified NodeEditor.React.Model.Searcher            as Searcher
 import           NodeEditor.React.Model.SearcherProperties  (toSearcherProperties)
-import           NodeEditor.React.Model.Visualization       (VisualizationMode (Focused, FullScreen, Preview), visPropNodeLoc,
-                                                             visPropVisualization, visualizationMode)
+import           NodeEditor.React.Model.Visualization       (Mode (Focused, FullScreen, Preview), visPropNodeLoc,
+                                                             visPropVisualization, mode)
 import           NodeEditor.React.View.Connection           (connection_, halfConnection_)
 import           NodeEditor.React.View.ConnectionPen        (connectionPen_)
 import           NodeEditor.React.View.ExpressionNode       (filterOutEditedTextControlIfNotRelated, filterOutSearcherIfNotRelated,
@@ -106,8 +106,8 @@ graph = React.defineView name $ \(ref, ne', isTopLevel) -> do
         visLibPaths      = ne ^. NodeEditor.visualizersLibPaths
         maySearcher      = maybe def (Just . flip toSearcherProperties visLibPaths) $ ne ^. NodeEditor.searcher
         visualizations   = NodeEditor.getVisualizations ne
-        isAnyVisActive   = any (\visProp -> elem (visProp ^. visPropVisualization . visualizationMode) [Preview, FullScreen, Focused]) visualizations
-        isAnyFullscreen  = any (\visProp -> elem (visProp ^. visPropVisualization . visualizationMode) [Preview, FullScreen]) visualizations
+        isAnyVisActive   = any (\visProp -> elem (visProp ^. visPropVisualization . mode) [Preview, FullScreen, Focused]) visualizations
+        isAnyFullscreen  = any (\visProp -> elem (visProp ^. visPropVisualization . mode) [Preview, FullScreen]) visualizations
         nodesWithVis     = Set.fromList $ map (^. visPropNodeLoc) visualizations
         visWithSelection = map (\vis -> (vis, NodeEditor.isVisualizationNodeSelected vis ne)) visualizations
         mayEditedTextPortControlPortRef = ne ^. NodeEditor.textControlEditedPortRef

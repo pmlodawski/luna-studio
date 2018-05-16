@@ -29,7 +29,7 @@ toMetaUpdate
         newMeta pos n = NodeMeta
             pos
             (n ^. visEnabled)
-            (Project.toOldAPI <$> n ^. defaultVisualizer)
+            (n ^. defaultVisualizer)
         toMeta nl pos = fmap ((nl,) . newMeta pos)
             <$> NodeEditor.getExpressionNode nl
 

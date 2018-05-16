@@ -10,7 +10,7 @@ import qualified LunaStudio.Data.PortRef              as PortRef
 import           NodeEditor.React.Model.NodeEditor    (VisualizersPaths, lunaVisualizersPath)
 import           NodeEditor.React.Model.Searcher      (Match, Mode (..), Searcher, docVisInfo, selectedMatch)
 import qualified NodeEditor.React.Model.Searcher      as Searcher
-import           NodeEditor.React.Model.Visualization (RunningVisualization)
+import           NodeEditor.React.Model.Visualization (Visualization)
 
 
 data SearcherProperties = SearcherProperties { _selected      :: Int
@@ -31,7 +31,7 @@ toSearcherProperties s vp = SearcherProperties (s  ^. Searcher.selected)
                                                (s  ^. Searcher.replaceInput)
                                                (vp ^. lunaVisualizersPath)
 
-docVis :: Getter SearcherProperties (Maybe RunningVisualization)
+docVis :: Getter SearcherProperties (Maybe Visualization)
 docVis = to docVis' where
     docVis' s = case s ^. mode of
       Node _ nmi _ -> nmi ^. docVisInfo

@@ -106,10 +106,6 @@ isGraphLoaded = graphStatus . to (== GraphLoaded)
 returnsGraphError :: Getter NodeEditor Bool
 returnsGraphError = to (has (graphStatus . _GraphError))
 
-activeNodeVisualizations :: Getter NodeEditor (Map NodeLoc NodeVisualizations)
-activeNodeVisualizations = to (^. nodeVisualizations . to filterFunction) where
-    filterFunction = Map.filter (not . Map.null . view visualizations)
-
 screenTransform :: Lens' NodeEditor CameraTransformation
 screenTransform = layout . Layout.screenTransform
 

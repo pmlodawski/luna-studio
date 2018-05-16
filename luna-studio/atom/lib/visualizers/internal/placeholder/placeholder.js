@@ -61,6 +61,9 @@
   };
 
   window.addEventListener("message", function (evt) {
-    render(evt.data.data);
+    if(evt.data.data) {
+      console.log("PLACEHOLDER GOT YOUR MESSAGE, PLEASE HOLD");
+      render(evt.data.data);
+    }
   });
 }());

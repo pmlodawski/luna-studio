@@ -1,34 +1,55 @@
 "use strict";
 var knownFrames = {};
+var framesToLoad = [];
+var retriesLimit = 100;
 
 var sendToFrame = function (id, data) {
   document.getElementsByName(id)[0].contentWindow.postMessage(data, "*");
 };
 
 var flushAll = function (id) {
-  var queue = knownFrames[id];
-  delete knownFrames[id];
-  if (queue) queue.forEach(function (data) { sendToFrame(id, data); });
+  if(knownFrames[id]) {
+    var queue = knownFrames[id].data;
+    delete knownFrames[id];
+    console.log("FLUSH", queue)
+    if (queue) queue.forEach(function (data) { sendToFrame(id, data); });
+  }
 };
 
-var queueMsg = function (id, data) {
-  if (!knownFrames.hasOwnProperty(id)) knownFrames[id] = [];
-  knownFrames[id].push(data);
+var askIfLoaded = function (id) {
+  console.log("CHECK ID", id, knownFrames[id]);
+  if(knownFrames[id] && knownFrames[id].data!=[]) {
+    var frame = document.getElementsByName(id)[0];
+    console.log("FRAME", frame);
+    if (frame)
+      frame.contentWindow.postMessage({ping: true, id: id}, "*");
+    if(knownFrames[id].retries < retriesLimit) {
+      knownFrames[id].retries++;
+      setTimeout(function() {askIfLoaded(id)}, 100);
+    } else knownFrames[id].retries=0;
+  }
 };
 
-var loaded = function (id) {
-  var frame = document.getElementsByName(id)[0];
-  return (frame && frame.contentWindow.document.readyState === "complete");
-};
+window.addEventListener("message", function(evt) {
+  console.log("GOT EVENT", evt);
+  if(evt.data.ping)
+    flushAll(evt.data.id);
+});
+
 
 var register = function (id) {
-  if (loaded(id)) flushAll(id);
-  else setTimeout(function () { register(id); }, 100);
+  knownFrames[id] = {data: [], retries: 0};
+  console.log("ID REGISTERED", id)
+  askIfLoaded(id);
 };
 
 var send = function (id, data) {
-  if (loaded(id)) sendToFrame(id, data);
-  else queueMsg(id, data);
+  console.log("SEND MESSAGE", id, data);
+  if (knownFrames[id] && knownFrames[id].data) {
+    knownFrames[id].data.push(data);
+    console.log("MESSAGE QUEUED", knownFrames[id]);
+    askIfLoaded(id);
+  } else sendToFrame(id, data);
 };
 
 var sendData = function (id, type, data) {
