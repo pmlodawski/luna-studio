@@ -13,27 +13,61 @@ import           NodeEditor.View.Diff                       (DiffT, diffApply, d
 import           NodeEditor.View.NodeLoc                    ()
 import           NodeEditor.View.Port                       (PortView (PortView))
 
+data ValueContent
+    = Visualization
+    | ShortValue (Maybe String)
+    deriving (Eq, Generic, Show)
+
+data ValueView
+    = Error ValueContent
+    | Value ValueContent
+    deriving (Eq, Generic, Show)
 
 data ExpressionNodeView = ExpressionNodeView
-        { _key        :: String
-        , _name       :: String
-        , _expression :: String
-        , _error      :: Bool
-        , _value      :: Maybe String
-        , _inPorts    :: [PortView]
-        , _outPorts   :: [PortView]
-        , _position   :: (Double, Double)
-        , _expanded   :: Bool
-        , _selected   :: Bool
-        } deriving (Eq, Generic, Show)
+    { _key        :: String
+    , _name       :: String
+    , _expression :: String
+    , _value      :: ValueView
+    , _inPorts    :: [PortView]
+    , _outPorts   :: [PortView]
+    , _position   :: (Double, Double)
+    , _expanded   :: Bool
+    , _selected   :: Bool
+    } deriving (Eq, Generic, Show)
 
 makeLenses ''ExpressionNodeView
+makePrisms ''ValueContent
+makePrisms ''ValueView
 
+
+instance FromJSON ValueView
+instance FromJSON ValueContent
 instance FromJSON ExpressionNodeView
+instance NFData   ValueView
+instance NFData   ValueContent
 instance NFData   ExpressionNodeView
+instance ToJSON   ValueView where
+    toEncoding = Lens.toEncoding
+    toJSON     = Lens.toJSON
+instance ToJSON   ValueContent where
+    toEncoding = Lens.toEncoding
+    toJSON     = Lens.toJSON
 instance ToJSON   ExpressionNodeView where
     toEncoding = Lens.toEncoding
     toJSON     = Lens.toJSON
+
+instance Convertible ExpressionNode ValueView where
+    convert n = let
+            visActive = if ExpressionNode.returnsError n
+                then n ^. ExpressionNode.errorVisEnabled
+                else n ^. ExpressionNode.visEnabled
+            valContent = if visActive
+                then Visualization
+                else ShortValue $ convert <$> ExpressionNode.getValue n
+        in if ExpressionNode.returnsError n
+            then Error valContent
+            else Value valContent
+
 
 instance Convertible ExpressionNode ExpressionNodeView where
     convert n = ExpressionNodeView
@@ -41,8 +75,7 @@ instance Convertible ExpressionNode ExpressionNodeView where
         {- name       -}
             (n ^. ExpressionNode.name . to convert . to (fromMaybe def))
         {- expression -} (n ^. ExpressionNode.expression . to convert)
-        {- error      -} (n ^. to ExpressionNode.hasCompileError)
-        {- value      -} (n ^. to ExpressionNode.getValue . to convert)
+        {- value      -} (convert n)
         {- inPorts    -} (n ^. to ExpressionNode.inPortsList . to convert)
         {- outPorts   -} (n ^. to ExpressionNode.outPortsList . to convert)
         {- position   -} (n ^. ExpressionNode.position . to toTuple)
