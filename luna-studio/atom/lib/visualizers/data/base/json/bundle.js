@@ -78,7 +78,7 @@
   };
 
   window.addEventListener("message", function (evt) {
-    render(evt.data.data);
+    if (evt.data.data) render(evt.data.data);
   });
 }());
 
