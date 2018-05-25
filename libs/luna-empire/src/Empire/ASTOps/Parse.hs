@@ -22,6 +22,7 @@ module Empire.ASTOps.Parse (
   ) where
 
 import           Data.Convert
+import           Data.IORef
 import           Empire.Empire
 import           Empire.Prelude hiding (mempty)
 import           Prologue (convert, convertVia, mempty, wrap)
@@ -29,12 +30,12 @@ import           Prologue (convert, convertVia, mempty, wrap)
 import           Control.Monad.Catch          (catchAll)
 import qualified Data.Text                    as Text
 
-import           Empire.ASTOp                    (GraphOp, runPass)
+import           Empire.ASTOp                    (EmpirePass, GraphOp)
 import           Empire.Data.AST                 (NodeRef, astExceptionFromException, astExceptionToException)
 import           Empire.Data.Graph               (ClsGraph, Graph)
 import qualified Empire.Data.Graph               as Graph (codeMarkers)
 import           Empire.Data.Layers              (attachEmpireLayers, SpanLength)
-import           Empire.Data.Parser              (ParserPass)
+-- import           Empire.Data.Parser              (ParserPass)
 import qualified Empire.Commands.Code            as Code
 import qualified Control.Monad.State.Layered as State
 
@@ -44,25 +45,29 @@ import qualified Data.Text.Position              as Pos
 -- import qualified Luna.Builtin.Data.Function      as Function (compile)
 import qualified Luna.IR.Layer as Layer
 import qualified Luna.IR                         as IR
+import qualified OCI.Pass.Definition.Declaration      as Pass
 import qualified Luna.Pass                         as Pass
 import qualified Luna.Pass.Scheduler as Scheduler
-import qualified Luna.Runner as Runner
+-- import qualified Luna.Runner as Runner
 -- import qualified Luna.Syntax.Text.Layer.Loc      as Loc
-import qualified Luna.Syntax.Text.Parser.IR.Class as Token
-import Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan)
-import qualified Luna.Syntax.Text.Parser.Pass as Parser
-import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
-import           Luna.Syntax.Text.Parser.Data.Invalid  (Invalids)
-import qualified Luna.Syntax.Text.Parser.Data.Name.Special as Parser (uminus)
+import           Parser.Data.CodeSpan (CodeSpan)
+import qualified Parser.IR.Class as Token
+import qualified Parser.Pass as Parser
+import qualified Parser.Data.CodeSpan as CodeSpan
+import           Parser.Data.Invalid  (Invalids)
+import qualified Parser.Data.Name.Special as Parser (uminus)
+import qualified Data.Graph.Data.Graph.Class as LunaGraph
+import qualified Empire.Pass.PatternTransformation            as PT
 import qualified Luna.Pass.Attr as Attr
 -- import qualified Luna.Syntax.Text.Parser.Marker  as Parser (MarkedExprMap(..))
 -- import qualified Luna.Syntax.Text.Parser.Parser  as Parser
-import qualified Luna.Syntax.Text.Parser.IR.Term as Parsing
+import qualified Luna.Syntax.Prettyprint as Prettyprint
+import qualified Parser.IR.Term as Parsing
 import Luna.Syntax.Text.Scope (Scope)
 import qualified Luna.Syntax.Text.Source         as Source
 import qualified Luna.IR.Term.Literal            as Lit
-import Luna.Syntax.Text.Parser.Pass.Class (IRBS, Parser)
-import Luna.Syntax.Text.Parser.Data.Result (Result (Result))
+import Parser.Pass.Class (IRBS, Parser)
+import Parser.Data.Result (Result (Result))
 -- import qualified OCI.Pass                        as Pass
 
 data SomeParserException = forall e. Exception e => SomeParserException e
@@ -102,28 +107,28 @@ instance Exception SomeParserException where
 --     IR.setAttr (getTypeDesc @Parser.ReparsingStatus) $ (error "Data not provided: ReparsingStatus")
 --     IR.setAttr (getTypeDesc @Invalids) $ (mempty :: Invalids)
 
-type OnDemandPass pass = (Typeable pass, Pass.Compile pass IO)
+-- type OnDemandPass pass = (Typeable pass, Pass.Compile pass IO)
 
-runPass' :: forall pass. OnDemandPass pass => Pass.Pass pass () -> IO (Maybe Result)
-runPass' = runPasses . pure
+-- runPass' :: forall pass. OnDemandPass pass => Pass.Pass pass () -> IO (Scheduler.State)
+-- runPass' = runPasses . pure
 
-newtype ParsedExpr = ParsedExpr (NodeRef, MarkedExprMap)
-type instance Attr.Type ParsedExpr = Attr.Atomic
-instance Default ParsedExpr where def = error "empty parsedexpr"
+-- newtype ParsedExpr = ParsedExpr (NodeRef, MarkedExprMap)
+-- type instance Attr.Type ParsedExpr = Attr.Atomic
+-- instance Default ParsedExpr where def = error "empty parsedexpr"
 
-runPasses :: forall pass. OnDemandPass pass => [Pass.Pass pass ()] -> IO (Maybe Result)
-runPasses passes = Scheduler.runManual reg sched where
-    reg = do
-        Runner.registerAll
-        Parser.registerStatic
-    sched = do
-        Parser.registerDynamic
-        Scheduler.registerAttr @ParsedExpr
-        Scheduler.enableAttrByType @ParsedExpr
-        for_ passes $ \pass -> do
-            Scheduler.registerPassFromFunction__ pass -- ONLY FOR TEST SPEC
-            Scheduler.runPassByType @pass
-        Scheduler.lookupAttr @Result
+-- runPasses :: forall pass. OnDemandPass pass => [Pass.Pass pass ()] -> IO (Scheduler.State)
+-- runPasses passes = Scheduler.runManual reg sched where
+--     reg = do
+--         Runner.registerAll
+--         Parser.registerStatic
+--     sched = do
+--         Parser.registerDynamic
+--         Scheduler.registerAttr @ParsedExpr
+--         Scheduler.enableAttrByType @ParsedExpr
+--         for_ passes $ \pass -> do
+--             Scheduler.registerPassFromFunction__ pass -- ONLY FOR TEST SPEC
+--             Scheduler.runPassByType @pass
+--         State.get @Scheduler.State
 
 -- shouldParseAs :: Token.Parser (IRBS IR.SomeTerm) -> Text -> Text
 --               {- -> (Delta, Delta)-} -> IO ()
@@ -143,32 +148,89 @@ runPasses passes = Scheduler.runManual reg sched where
     -- genCode `shouldBe` output
     -- span `shouldBe` desiredSpan
 
-parseExpr s = fst <$> runParser Parsing.expr s
+parseExpr s = view _1 <$> runParser Parsing.expr s `catchAll` (\e -> throwM $ SomeParserException e)
+
+passConverter :: (Pass.Spec pass1 Pass.Stage ~ Pass.Spec pass2 Pass.Stage) => Pass.Pass pass1 a -> Pass.Pass pass2 a
+passConverter = unsafeCoerce
 
 
-runParser :: Token.Parser (IRBS IR.SomeTerm) -> Text -> IO (NodeRef, MarkedExprMap)
+runParser :: Token.Parser (IRBS IR.SomeTerm) -> Text -> IO (NodeRef, LunaGraph.State PT.EmpireStage, Scheduler.State, MarkedExprMap)
 runParser parser input = do
-    ref <- runPass' $ do
-        (((ir,cs),scope), m) <- flip Parser.runParser__ (convert input) $ do
-            irb   <- parser
-            scope <- State.get @Scope
-            let Parser.IRBS irx = irb
-                irb' = Parser.IRBS $ do
-                    ir <- irx
-                    cs <- Layer.read @CodeSpan ir
-                    pure (ir,cs)
-            pure $ (,scope) <$> irb'
-        return ()
-    case ref of
-        Just (Result ref') -> return (generalize ref', def)
-        _                  -> error "runParser"
+    -- r <- newIORef (error "empty runParser")
+    -- st <- runPass' $ do
+    --     (((ir,cs),scope), m) <- flip Parser.runParser__ (convert input) $ do
+    --         irb   <- parser
+    --         scope <- State.get @Scope
+    --         let Parser.IRBS irx = irb
+    --             irb' = Parser.IRBS $ do
+    --                 ir <- irx
+    --                 cs <- Layer.read @CodeSpan ir
+    --                 pure (ir,cs)
+    --         pure $ (,scope) <$> irb'
+    --     marker <- IR.marker 666
+    --     markedNode <- IR.marked marker ir
+    --     matchExpr markedNode print
+    --     liftIO $ writeIORef r (ir, m)
+    --     genCode <- Prettyprint.run @Prettyprint.Simple scope ir
+    --     print "generated:" >> print genCode
+    --     return ()
+    -- -- case ref of
+    -- --     Just (Result ref') -> return (generalize ref', def)
+    -- --     _                  -> error "runParser"
+    -- (ref, cs) <- readIORef r
+    -- return (generalize ref, st, cs)
+    putStrLn "foo"
+    (((ir, m), scState), grState) <- LunaGraph.encodeAndEval @PT.EmpireStage $ do
+        foo <- Scheduler.runT $ do
+            ref <- liftIO $ newIORef (error "emptyreturn")
+            Scheduler.registerPassFromFunction__ @EmpirePass $ do
+                (((ir,cs),scope), m) <- passConverter $ flip Parser.runParser__ (convert input) $ do
+                    irb   <- parser
+                    scope <- State.get @Scope
+                    let Parser.IRBS irx = irb
+                        irb' = Parser.IRBS $ do
+                            ir <- irx
+                            cs <- Layer.read @CodeSpan ir
+                            pure (ir,cs)
+                    pure $ (,scope) <$> irb'
+                liftIO $ writeIORef ref $ generalize (ir, m)
+                putStrLn "bar"
+                -- Attr.put $ PassReturnValue $ unsafeCoerce $ Just a
+                -- b <- Attr.get @PassReturnValue
+                b <- liftIO $ readIORef ref
+                -- print a
+                print ir
+                matchExpr ir $ \case
+                    Unit _ _ c -> print =<< source c
+                    a -> print a
+            Scheduler.runPassByType @EmpirePass
+            -- st <- Layered.get @Scheduler.State
+            -- let [a] = Map.elems (st ^. Scheduler.attrs)
+            -- putStrLn "BOOM"
+            -- let Just (PassReturnValue foo) = unsafeCoerce a
+            -- putStrLn "BOOMBOX"
+            -- let p = (unsafeCoerce foo :: IR.SomeTerm)
+            -- print p
+            -- ret <- Scheduler.lookupAttr @PassReturnValue
+            -- case ret of
+            --     Nothing -> error "runASTOp: pass didn't register return value"
+            --     Just (PassReturnValue foo) -> case unsafeCoerce foo of
+            --         Just a -> return a
+            --         _      -> error "default: empty return"
+            foo <- liftIO $ readIORef ref
+            -- st <- Layered.get @Scheduler.State
+            return foo
+        st <- LunaGraph.getState
+        return (foo, st)
+    print "returnedparser"
+    return (ir, grState, scState, m)
 
 instance Convertible Text Source.Source where
     convert t = Source.Source (convertVia @String t)
 
 -- runProperParser :: Text.Text -> IO (NodeRef, IR.Rooted NodeRef, MarkedExprMap)
-runProperParser :: Text.Text -> IO (NodeRef, MarkedExprMap)
-runProperParser code = error "properparser" -- do
+runProperParser :: Text.Text -> IO (NodeRef, LunaGraph.State PT.EmpireStage, Scheduler.State, MarkedExprMap)
+runProperParser code = runParser Parsing.unit' code `catchAll` (\e -> throwM $ SomeParserException e) -- do
     -- runPM $ do
     --     parserBoilerplate
     --     attachEmpireLayers
@@ -239,10 +301,12 @@ runFunHackParser :: Text.Text -> FunctionParsing -> Command ClsGraph (NodeRef, T
 runFunHackParser expr parsing = do
     let input = prepareInput expr parsing
     parse <- runFunParser input
-    return (fst parse, input)
+    return (view _1 parse, input)
 
-runFunParser :: Text.Text -> Command ClsGraph (NodeRef, MarkedExprMap)
-runFunParser expr = error "runFunParser" -- do
+runFunParser :: Text.Text -> Command ClsGraph (NodeRef, LunaGraph.State PT.EmpireStage, Scheduler.State, MarkedExprMap)
+runFunParser expr = liftIO $
+    runParser (Parsing.possiblyDocumented Parsing.func) expr
+        `catchAll` (\e -> throwM $ SomeParserException e)
     -- let inits = do
     --         return ()
             -- IR.setAttr (getTypeDesc @Invalids)               $ (mempty :: Invalids)
@@ -312,7 +376,7 @@ parsePortDefault (Constant (IntValue  i))
         minus  <- generalize <$> IR.var Parser.uminus `withLength` 1
         app    <- generalize <$> IR.app minus number `withLength` (1 + length (show (abs i)))
         return app
-parsePortDefault (Constant (TextValue s)) = generalize <$> IR.string (convert s)                  `withLength` (length s)
+parsePortDefault (Constant (TextValue s)) = generalize <$> IR.rawString (convert s)                  `withLength` (length s)
 parsePortDefault (Constant (RealValue d)) = generalize <$> IR.number (error "parsePortDefault") (error "parsePortDefault") (error "parsePortDefault") `withLength` (length $ show d)
 parsePortDefault (Constant (BoolValue b)) = generalize <$> IR.cons (convert $ show b) []  `withLength` (length $ show b)
 parsePortDefault d = throwM $ PortDefaultNotConstructibleException d

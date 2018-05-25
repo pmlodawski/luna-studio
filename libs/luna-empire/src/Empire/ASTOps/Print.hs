@@ -20,6 +20,7 @@ import qualified Luna.IR                        as IR
 import           LunaStudio.Data.TypeRep
 
 import           Luna.Syntax.Text.Lexer.Grammar (isOperator)
+import qualified Luna.Syntax.Prettyprint as Prettyprint
 -- import           Luna.Syntax.Text.Pretty.Pretty as CodeGen
 
 getTypeRep :: GraphOp m => NodeRef -> m TypeRep
@@ -39,10 +40,10 @@ printExpression :: GraphOp m => NodeRef -> m String
 printExpression = const $ return "exp" -- fmap convert . CodeGen.subpass CompactStyle . generalize
 
 printFullExpression :: GraphOp m => NodeRef -> m Text
-printFullExpression = const $ return "fullExp" -- CodeGen.subpass SimpleStyle . generalize
+printFullExpression = Prettyprint.run @Prettyprint.Simple def
 
 printName :: GraphOp m => NodeRef -> m String
-printName = const $ return "name" -- fmap convert . CodeGen.subpass SimpleStyle . generalize
+printName node = convert <$> Prettyprint.run @Prettyprint.Simple def node
 
 printNodeTarget :: GraphOp m => NodeRef -> m String
 printNodeTarget ref = match ref $ \case

@@ -23,34 +23,45 @@ module Empire.Prelude (module X, nameToString, pathNameToString, stringToName,
                       type ASGFunction, pattern LeftSection, zoom,
                       pattern RightSection, pattern Missing, pattern Marker,
                       type IRSuccs, deepDelete, deepDeleteWithWhitelist,
-                      pattern ClsASG, type ClsASG, pattern Metadata) where
+                      pattern ClsASG, type ClsASG, pattern Metadata, inputs,
+                      pattern ImportHub, pattern Import, pattern ImportSrc
+                      ) where
 
 import qualified Data.Convert              as Convert
 import qualified Data.Typeable as Typeable
 import qualified Data.PtrList.Mutable as PtrList
 import qualified Data.PtrSet.Mutable as PtrSet
-import qualified Data.Graph.Component.Container as PtrSet
+import qualified Data.Graph.Data.Component.Set as PtrSet
+-- import qualified Data.Graph.Component.Container as PtrSet
 import qualified Data.Text.Span as Span
-import qualified Data.Graph.Component as Component
-import qualified Data.Graph.Component.Layer as Layer
-import qualified Data.Graph.Component.Layout as Layout
-import qualified OCI.Pass.Registry as Registry
+-- import qualified Data.Graph.Component as Component
+import qualified Data.Graph.Component.Node.Class    as Node
+import qualified Data.Graph.Data.Layer.Class as Layer
+import qualified Data.Graph.Component.Node.Layer as Layer
+import qualified Data.Graph.Data.Layer.Layout as Layout
+-- import qualified OCI.Pass.Registry as Registry
 import qualified Luna.IR as IR
 import OCI.IR.Link.Class (type (*-*), Links)
 import OCI.IR.Term.Class (Term, Terms)
 import qualified Luna.IR.Term.Core as Ast
+import qualified Data.Set.Mutable.Class     as Set
 import qualified Luna.IR.Term.Literal as Ast
 import qualified Luna.IR.Term.Ast.Class as Ast
-import qualified OCI.IR.Link.Construction as Construction
-import Luna.Syntax.Text.Parser.State.Marker (TermMap(..))
+import Data.Graph.Data.Component.Class (Component)
+import qualified Data.Graph.Data.Component.Class as Component
+import qualified Data.Graph.Data.Component.List as List (List(..))
+import qualified Data.Graph.Component.Edge as Edge
+import qualified Data.Graph.Component.Edge.Construction as Construction
+import qualified Data.Graph.Traversal.SubComponents as Traversal
+import Parser.State.Marker (TermMap(..))
 import Luna.Pass (Pass)
 import qualified Luna.Pass.Attr as Attr
 import Control.Lens ((?=), (.=), (%=), to, makeWrapped, makePrisms, use, preuse,
                      _Just, (?~), zoom)
-import Prologue as X hiding (TypeRep, head, tail, init, last, p, r, s, (|>), return, liftIO, fromMaybe, fromJust, when, mapM, mapM_)
+import Prologue as X hiding (TypeRep, head, tail, init, last, p, r, s, (|>), return, liftIO, fromMaybe, fromJust, when, mapM, mapM_, minimum)
 import Control.Monad       as X (return, when, mapM, mapM_, forM)
 import Control.Monad.Trans as X (liftIO)
-import Data.List           as X (head, tail, init, last, sort)
+import Data.List           as X (head, tail, init, last, sort, minimum)
 import Data.Maybe          as X (fromJust, fromMaybe)
 
 infixr 0 <?!>
@@ -58,8 +69,8 @@ infixr 0 <?!>
 m <?!> e = m >>= maybe (throwM e) pure
 
 
--- nameToString :: IR.Name -> String
-nameToString = error "nameToString"
+nameToString :: IR.Name -> String
+nameToString = convertTo @String
 
 nameToText :: IR.Name -> Text
 nameToText = convert . convertTo @String
@@ -84,13 +95,13 @@ getTypeDesc_ :: forall a. (KnownType a, Typeable a) => Typeable.TypeRep
 getTypeDesc_ = Typeable.typeRep (Proxy @a)
 
 attachLayer :: forall comp layer m. _ => m ()
-attachLayer = Registry.registerPrimLayer @layer @comp
+attachLayer = error "attachLayer" -- Registry.registerPrimLayer @layer @comp
 
 type AnyExpr = Terms
 type AnyExprLink = Links
 type Expr = Term
 type SubPass = Pass
-type Link a b = IR.Link (a *-* b)
+type Link a b = Edge.Edge (a *-* b)
 type SomeExpr = IR.SomeTerm
 type LeftSpacedSpan a = Span.LeftSpacedSpan
 type IRSuccs = IR.Users
@@ -124,10 +135,13 @@ pattern Seq l r <- IR.UniTermSeq (Ast.Seq l r)
 pattern Blank <- IR.UniTermBlank (Ast.Blank)
 pattern Acc n e <- IR.UniTermAcc (Ast.Acc n e)
 pattern Documented doc e <- IR.UniTermDocumented (Ast.Documented doc e)
-pattern IRString s <- IR.UniTermString (Ast.String s)
+pattern IRString s <- IR.UniTermRawString (Ast.RawString s)
 pattern IRNumber a b c <- IR.UniTermNumber (Ast.Number a b c)
 pattern ClsASG a b c d e <- IR.UniTermRecord (Ast.Record a b c d e)
 pattern Metadata a <- IR.UniTermMetadata (Ast.Metadata a)
+pattern ImportHub a <- IR.UniTermImportHub (Ast.ImportHub a)
+pattern Import doc e <- IR.UniTermImp (Ast.Imp doc e)
+pattern ImportSrc a <- IR.UniTermImportSource (Ast.ImportSource a)
 
 getAttr :: forall attr m. (Monad m, Attr.Getter attr m) => m attr
 putAttr :: forall attr m. (Monad m, Attr.Setter attr m) => attr -> m ()
@@ -155,28 +169,62 @@ ociSetToList = PtrSet.toList . (coerce :: PtrSet.Set c l -> PtrSet.UnmanagedPtrS
 generalize :: Coercible a b => a -> b
 generalize = coerce
 
-replace :: Monad m => Expr l -> Expr l' -> m ()
+replace :: ( Monad m
+           , Layer.Reader (Component Edge.Edges) Edge.Source m
+           , Layer.Writer (Component Edge.Edges) Edge.Source m
+           , Layer.Reader (Component Node.Nodes) IRSuccs m
+           ) => Expr l -> Expr l' -> m ()
 replace = error "replace"
 
-irDelete = error "delete"
+irDelete e = return () -- error "delete"
 
-substitute = error "substitute"
+substitute :: ( MonadIO m
+              , Layer.Reader (Component Node.Nodes) IRSuccs m
+              , Layer.Reader (Component Edge.Edges) Edge.Source m
+              , Layer.Writer (Component Edge.Edges) Edge.Source m
+              ) => IR.SomeTerm -> IR.SomeTerm -> m ()
+substitute new old = do
+    succs <- getLayer @IRSuccs old
+    list <- Set.toList succs
+    mapM_ (replaceSource new) $ map generalize list
 
 unsafeRelayout :: Coercible a b => a -> b
 unsafeRelayout = coerce
 
-replaceSource :: Monad m => Expr l -> Link l t -> m ()
-replaceSource = error "replaceSource"
+replaceSource :: ( Monad m
+                 , Layer.Reader (Component Edge.Edges) Edge.Source m
+                 , Layer.Writer (Component Edge.Edges) Edge.Source m
+                 , Layer.Reader (Component Node.Nodes) IRSuccs m
+                 , MonadIO m
+                 )  => IR.SomeTerm -> Edge.SomeEdge -> m ()
+replaceSource newSource link = do
+    src <- getLayer @IR.Source link
+    srcSuccs <- getLayer @IRSuccs src
+    Set.delete srcSuccs $ generalize link
+    newSrcSuccs <- getLayer @IRSuccs newSource
+    Set.insert newSrcSuccs $ generalize link
+    putLayer @IR.Source link $ generalize newSource
 
 narrowTerm :: forall b m a. Monad m => Expr a -> m (Maybe (Expr b))
-narrowTerm e = error "narrowTerm"
+narrowTerm e = return $ Just (coerce e)
 
-deleteSubtree = error "deleteSubtree"
+deleteSubtree e = return () -- error "deleteSubtree"
 deepDelete = error "deepDelete"
-deepDeleteWithWhitelist = error "deepDeleteWithWhitelist"
+deepDeleteWithWhitelist e set = return () -- error "deepDeleteWithWhitelist"
 
 
-link :: Construction.Creator m => Term src -> Term tgt -> m (IR.Link (src *-* tgt))
+link :: Construction.Creator m => Term src -> Term tgt -> m (Link src tgt)
 link = Construction.new
 
 modifyExprTerm = error "modifyExprTerm"
+
+compListToList :: List.List a -> [Component.Some a]
+compListToList List.Nil = []
+compListToList (List.Cons a l) = a : compListToList l 
+
+inputs :: ( Layer.Reader Node.Node IR.Model m
+          , Layer.IsUnwrapped Node.Uni
+          , Traversal.SubComponents Edge.Edges m (Node.Uni layout)
+          , MonadIO m
+          ) => Node.Node layout -> m [Edge.SomeEdge]
+inputs n = compListToList <$> IR.inputs n

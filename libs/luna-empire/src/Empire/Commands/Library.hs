@@ -17,7 +17,7 @@ import           Data.Text.IO            as Text
 import           Empire.Prelude
 
 import           Empire.Data.AST         (astExceptionFromException, astExceptionToException)
-import           Empire.Data.Graph       as Graph
+import           Empire.ASTOp            (defaultClsGraph)
 import           Empire.Data.Library     (Library)
 import qualified Empire.Data.Library     as Library
 import           Empire.Data.Project     (Project)
@@ -38,7 +38,7 @@ createLibrary name path = do
 
 make :: Maybe String -> FilePath -> IO Library
 make name path = do
-    clsGraph <- Graph.defaultClsGraph
+    clsGraph <- defaultClsGraph
     pure $ Library.Library name path clsGraph
 
 

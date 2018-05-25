@@ -27,23 +27,23 @@ import           Luna.IR              hiding (Marker, get, put, match)
 import qualified Luna.Pass        as Pass
 
 -- import           Luna.Pass.Data.ExprRoots                     (ExprRoots(..))
-import           Luna.Syntax.Text.Parser.Data.Invalid               (Invalids)
+import           Parser.Data.Invalid               (Invalids)
 
--- import qualified Luna.Syntax.Text.Parser.Parser               as Parser
--- import qualified Luna.Syntax.Text.Parser.Parsing              as Parsing
-import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan)
+-- import qualified Parser.Parser               as Parser
+-- import qualified Parser.Parsing              as Parsing
+import           Parser.Data.CodeSpan (CodeSpan)
 -- import           Luna.Syntax.Text.Parser.Marker               (MarkedExprMap)
 -- import           Luna.Syntax.Text.Source                      (Source)
 
 
 
-data ParserPass
-type instance Pass.Spec ParserPass t = ParserPassSpec t
-type family ParserPassSpec t where
-    ParserPassSpec (Pass.In  Pass.Attrs)  = '[Invalids, Source {-, Parser.ParsedExpr, MarkedExprMap, Parser.ReparsingStatus -}]
-    ParserPassSpec (Pass.Out Pass.Attrs)  = '[Invalids, Source {-, Parser.ParsedExpr, MarkedExprMap, Parser.ReparsingStatus -}]
-    ParserPassSpec (Pass.In  AnyExpr)     = '[Model, Type, Users, SpanLength, CodeSpan]
-    ParserPassSpec (Pass.Out AnyExpr)     = '[Model, Type, Users, SpanLength]
-    ParserPassSpec (Pass.In  AnyExprLink) = '[SpanOffset, Source, Target]
-    ParserPassSpec (Pass.Out AnyExprLink) = '[SpanOffset, Source, Target]
-    ParserPassSpec t                      = Pass.BasicPassSpec t
+-- data ParserPass
+-- type instance Pass.Spec ParserPass t = ParserPassSpec t
+-- type family ParserPassSpec t where
+--     ParserPassSpec (Pass.In  Pass.Attrs)  = '[Invalids, Source {-, Parser.ParsedExpr, MarkedExprMap, Parser.ReparsingStatus -}]
+--     ParserPassSpec (Pass.Out Pass.Attrs)  = '[Invalids, Source {-, Parser.ParsedExpr, MarkedExprMap, Parser.ReparsingStatus -}]
+--     ParserPassSpec (Pass.In  AnyExpr)     = '[Model, Type, Users, SpanLength, CodeSpan]
+--     ParserPassSpec (Pass.Out AnyExpr)     = '[Model, Type, Users, SpanLength]
+--     ParserPassSpec (Pass.In  AnyExprLink) = '[SpanOffset, Source, Target]
+--     ParserPassSpec (Pass.Out AnyExprLink) = '[SpanOffset, Source, Target]
+--     ParserPassSpec t                      = Pass.BasicPassSpec t

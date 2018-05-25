@@ -117,6 +117,9 @@ getNodeId node = do
     varsInside <- (getVarsInside =<< getVarNode node) `catch` (\(_e :: NotUnifyException) -> return [])
     varsNodeIds <- mapM getNodeId varsInside
     let leavesNodeId = foldl' (<|>) Nothing varsNodeIds
+    print "rootNodeId" >> print rootNodeId
+    print "varNodeId" >> print varNodeId
+    print "leavesNodeId" >> print leavesNodeId
     return $ rootNodeId <|> varNodeId <|> leavesNodeId
 
 getPatternNames :: GraphOp m => NodeRef -> m [String]
@@ -149,7 +152,7 @@ getVarName = fmap nameToString . getVarName'
 getVarsInside :: ASTOp g m => NodeRef -> m [NodeRef]
 getVarsInside e = do
     isVar <- isJust <$> narrowTerm @IR.Var e
-    if isVar then return [e] else concat <$> (mapM (getVarsInside <=< source) =<< IR.inputs e)
+    if isVar then return [e] else concat <$> (mapM (getVarsInside <=< source) =<< inputs e)
 
 rightMatchOperand :: GraphOp m => NodeRef -> m EdgeRef
 rightMatchOperand node = match node $ \case
@@ -401,12 +404,12 @@ classFunctions :: ClassOp m => NodeRef -> m [NodeRef]
 classFunctions unit = do
     klass' <- classFromUnit unit
     match klass' $ \case
-        -- IR.ClsASG _ _ _ _ funs -> do
-        --     funs' <- mapM source funs
-        --     catMaybes <$> forM funs' (\f -> cutThroughDocAndMarked f >>= \fun -> match fun $ \case
-                -- IR.ASGRootedFunction{} -> return (Just f)
-                -- _                      -> return Nothing)
-        _ -> return []
+        ClsASG _ _ _ _ funs'' -> do
+            funs <- ptrListToList funs''
+            funs' <- mapM source funs
+            catMaybes <$> forM funs' (\f -> cutThroughDocAndMarked f >>= \fun -> match fun $ \case
+                ASGFunction{} -> return (Just f)
+                _             -> return Nothing)
 
 classFromUnit :: ClassOp m => NodeRef -> m NodeRef
 classFromUnit unit = match unit $ \case
@@ -414,7 +417,12 @@ classFromUnit unit = match unit $ \case
 
 getMetadataRef :: ClassOp m => NodeRef -> m (Maybe NodeRef)
 getMetadataRef unit = do
+    putStrLn "getMetadataRef"
+    print unit
+    m <- getLayer @IR.Model unit
+    print m
     klass' <- classFromUnit unit
+    putStrLn "getMetadataRef2"
     match klass' $ \case
         -- IR.ClsASG _ _ _ _ funs -> do
         --     funs' <- mapM source funs
@@ -427,9 +435,12 @@ getFunByNodeId :: ClassOp m => NodeId -> m NodeRef
 getFunByNodeId nodeId = do
     cls  <- use Graph.clsClass
     funs <- classFunctions cls
+    print "funs" >> print funs
     fs   <- forM funs $ \fun -> do
         nid <- getNodeId fun
+        print "nid" >> print nid
         return $ if nid == Just nodeId then Just fun else Nothing
+    print fs
     case catMaybes fs of
         []  -> throwM $ NodeDoesNotExistException nodeId
         [f] -> return f

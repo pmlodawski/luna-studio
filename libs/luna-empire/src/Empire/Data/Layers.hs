@@ -31,11 +31,12 @@ import           Luna.IR                        hiding (Import, Marker, String)
 -- import           Luna.Syntax.Text.Parser.State.Marker (MarkedExprMap)
 -- import           OCI.IR.Class                   (Import)
 import           Luna.Pass
-import           Data.Graph.Component.Provider   (DynamicProvider1)
-import           Data.Graph.Component.Layer   (Layer)
-import qualified Data.Graph.Component.Layer   as Layer
-import qualified OCI.IR.Term.Layer as Layer
-import qualified Data.Graph.Component.Layout                as Layout
+import qualified Parser.Data.CodeSpan as CodeSpan
+-- import           Data.Graph.Component.Provider   (DynamicProvider1)
+import           Data.Graph.Data.Layer.Class   (Layer)
+import qualified Data.Graph.Component.Node.Layer   as Layer
+import qualified Data.Graph.Data.Layer.Class as Layer
+import qualified Data.Graph.Data.Layer.Layout                as Layout
 -- import           OCI.Pass.Definition            (makePass)
 import           Type.Any
 import           Data.Text.Position             (Delta(..))
@@ -44,7 +45,7 @@ import qualified Prologue                       as Prologue (mempty)
 
 type TypeLayer = Layer.Type
 
-instance DynamicProvider1 Maybe
+-- instance DynamicProvider1 Maybe
 
 data Marker
 instance Layer Marker where
@@ -74,8 +75,9 @@ instance Layer SpanLength where
 --     encode1 _ _ = pure ()
 
 attachEmpireLayers :: _ => m ()
-attachEmpireLayers = do
-    attachLayer @Meta       @AnyExpr
-    attachLayer @Marker     @AnyExpr
-    attachLayer @SpanLength @AnyExpr
-    attachLayer @SpanOffset @AnyExprLink
+attachEmpireLayers = return ()
+    -- attachLayer @Meta       @AnyExpr
+    -- attachLayer @Marker     @AnyExpr
+    -- attachLayer @SpanLength @AnyExpr
+    -- attachLayer @SpanOffset @AnyExprLink
+    -- attachLayer @CodeSpan.CodeSpan   @AnyExpr

@@ -15,16 +15,19 @@ import Empire.Prelude hiding (Type, String, s, new, cons)
 import qualified Prologue as P hiding (List)
 -- import qualified OCI.IR.Repr.Vis as Vis
 -- import OCI.IR.Combinators
+import qualified Data.Graph.Data.Graph.Class as Graph
 import qualified Luna.Pass.Attr         as Attr
 import Luna.IR (Draft, Type, Users, Terms, Model, Name, Source, Target, list, cons, tuple)
-import OCI.IR.Term.Layer.Model (inputs)
+-- import Data.Graph.Component.Node.Layer.Model (inputs)
 -- import Luna.Pass.Data.ExprRoots
 -- import OCI.Pass.Manager
+import qualified OCI.Pass.State.Cache as Pass
+import qualified OCI.Pass.Definition.Declaration as Pass
 import           Empire.Data.Layers   (Marker, Meta, TypeLayer, attachEmpireLayers, SpanLength, SpanOffset)
 import           Data.Text.Position      (Delta)
 import           Data.Text.Span          (SpacedSpan(..), leftSpacedSpan)
-import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
-import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan, realSpan)
+import qualified Parser.Data.CodeSpan as CodeSpan
+import           Parser.Data.CodeSpan (CodeSpan, realSpan)
 -- import Data.TypeDesc
 
 import qualified Data.Map   as Map
@@ -36,20 +39,27 @@ newtype ExprRoots = ExprRoots [Expr Draft]
 makeWrapped ''ExprRoots
 type instance Attr.Type ExprRoots = Attr.Atomic
 
+data EmpireStage
+
+type instance Graph.Components      EmpireStage          = '[AnyExpr, AnyExprLink]
+type instance Graph.ComponentLayers EmpireStage AnyExprLink = '[SpanOffset, Source, Target]
+type instance Graph.ComponentLayers EmpireStage AnyExpr
+    = '[Model, Type, Users, SpanLength, CodeSpan, Meta, Marker]
 
 data PatternTransformation
 type instance Pass.Spec PatternTransformation t = PatternTransformationSpec t
 type family PatternTransformationSpec t where
-    PatternTransformationSpec (Pass.In  Pass.Attrs)  = '[ExprRoots]
-    PatternTransformationSpec (Pass.Out Pass.Attrs)  = '[]
-    PatternTransformationSpec (Pass.In  AnyExpr)     = '[Model, Type, Users, SpanLength, CodeSpan]
-    PatternTransformationSpec (Pass.Out AnyExpr)     = '[Model, Type, Users, SpanLength]
-    PatternTransformationSpec (Pass.In  AnyExprLink) = '[SpanOffset, Source, Target]
-    PatternTransformationSpec (Pass.Out AnyExprLink) = '[SpanOffset, Source, Target]
+    PatternTransformationSpec Pass.Stage             = EmpireStage
+    PatternTransformationSpec (Pass.In  Pass.Attrs)  = Pass.List '[ExprRoots]
+    PatternTransformationSpec (Pass.Out Pass.Attrs)  = Pass.List '[]
+    PatternTransformationSpec (Pass.In  AnyExpr)     = Pass.List '[Model, Type, Users, SpanLength, Meta, Marker, CodeSpan]
+    PatternTransformationSpec (Pass.Out AnyExpr)     = Pass.List '[Model, Type, Users, SpanLength, Meta, Marker]
+    PatternTransformationSpec (Pass.In  AnyExprLink) = Pass.List '[SpanOffset, Source, Target]
+    PatternTransformationSpec (Pass.Out AnyExprLink) = Pass.List '[SpanOffset, Source, Target]
     PatternTransformationSpec t                      = Pass.BasicPassSpec t
 
-Pass.cache_phase1 ''PatternTransformation
-Pass.cache_phase2 ''PatternTransformation
+-- Pass.cache_phase1 ''PatternTransformation
+-- Pass.cache_phase2 ''PatternTransformation
 
 runPatternTransformation :: _ => Pass PatternTransformation ()
 runPatternTransformation = do

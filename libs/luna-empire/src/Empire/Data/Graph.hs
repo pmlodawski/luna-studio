@@ -26,12 +26,15 @@ import qualified Control.Monad.State.Layered          as DepState
 -- import qualified Luna.Builtin.Data.Function             as Function
 import           Luna.IR.Term.Ast.Invalid (Symbol(FunctionBlock))
 import qualified Luna.IR                                as IR
-import qualified Luna.Runner                                as Runner
+-- import qualified Luna.Runner                                as Runner
 -- import qualified OCI.Pass.Class                         as Pass
 import qualified Luna.Pass        as Pass
 import qualified Luna.Pass.Attr         as Attr
 
-import qualified OCI.Pass.Scheduler                       as Scheduler
+import qualified OCI.Pass.Management.Scheduler                       as Scheduler
+import qualified Data.Graph.Data.Graph.Class                       as LunaGraph
+import qualified Empire.Pass.PatternTransformation            as PT
+
 -- import qualified OCI.Pass.Manager                       as PassManager (PassManager, State)
 import           LunaStudio.Data.Node                   (NodeId)
 import           LunaStudio.Data.NodeCache
@@ -40,8 +43,8 @@ import           LunaStudio.Data.NodeMeta               (NodeMeta)
 -- import qualified Luna.Syntax.Text.Parser.Marker         as Luna
 -- import qualified Luna.Syntax.Text.Parser.Parser         as Parser
 -- import qualified Luna.Syntax.Text.Parser.Parsing        as Parser ()
-import Luna.Syntax.Text.Parser.State.Marker (ID)
-import qualified Luna.Syntax.Text.Parser.Data.CodeSpan       as CodeSpan
+import Parser.State.Marker (ID)
+import qualified Parser.Data.CodeSpan       as CodeSpan
 import           Data.Text.Position                     (Delta)
 
 -- import           System.Log                             (Logger, DropLogger, dropLogs, MonadLogging)
@@ -57,7 +60,7 @@ import           Web.Browser                (openBrowser)
 type MarkerId = ID
 
 
-data Graph = Graph { _ast                   :: AST Graph
+data Graph = Graph { _graphAst              :: AST Graph
                    , _breadcrumbHierarchy   :: LamItem
                    , _codeMarkers           :: Map MarkerId NodeRef
                    , _globalMarkers         :: Map MarkerId NodeRef
@@ -81,7 +84,10 @@ data ClsGraph = ClsGraph { _clsAst         :: AST ClsGraph
                          , _clsNodeCache   :: NodeCache
                          } deriving Show
 
-data PMState g = PMState Scheduler.State g
+data PMState g = PMState { _pmScheduler :: Scheduler.State
+                         , _pmStage     :: LunaGraph.State PT.EmpireStage
+                         , _pmGraph     :: g
+                         }
 
 data AST g = AST { _ir      :: ()
                  , _pmState :: PMState g
@@ -121,35 +127,41 @@ instance MonadState s m => MonadState s (DepState.StateT b m) where
 --     return p
 withVis = id
 
-data InitPass
-type instance Pass.Spec InitPass t = InitPassSpec t
-type family InitPassSpec t where
-    InitPassSpec (Pass.In  Pass.Attrs)  = '[]
-    InitPassSpec (Pass.Out Pass.Attrs)  = '[RetAttr]
-    InitPassSpec (Pass.In  AnyExpr)     = '[IR.Model, IR.Users, IR.Type]
-    InitPassSpec (Pass.Out AnyExpr)     = '[IR.Model, IR.Users, IR.Type]
-    InitPassSpec (Pass.In  AnyExprLink) = '[IR.Model, IR.Users, IR.Type, IR.Source, IR.Target]
-    InitPassSpec (Pass.Out AnyExprLink) = '[IR.Model, IR.Users, IR.Type, IR.Source, IR.Target]
-    InitPassSpec t                    = Pass.BasicPassSpec t
+-- data InitPass
+-- type instance Pass.Spec InitPass t = InitPassSpec t
+-- type family InitPassSpec t where
+--     InitPassSpec (Pass.In  Pass.Attrs)  = '[]
+--     InitPassSpec (Pass.Out Pass.Attrs)  = '[RetAttr]
+--     InitPassSpec (Pass.In  AnyExpr)     = '[IR.Model, IR.Users, IR.Type]
+--     InitPassSpec (Pass.Out AnyExpr)     = '[IR.Model, IR.Users, IR.Type]
+--     InitPassSpec (Pass.In  AnyExprLink) = '[IR.Model, IR.Users, IR.Type, IR.Source, IR.Target]
+--     InitPassSpec (Pass.Out AnyExprLink) = '[IR.Model, IR.Users, IR.Type, IR.Source, IR.Target]
+--     InitPassSpec t                    = Pass.BasicPassSpec t
 
-newtype RetAttr = RetAttr Int deriving (Show, Eq, Num)
-type instance Attr.Type RetAttr = Attr.Atomic
-instance Default RetAttr where
-    def = RetAttr 0
+-- newtype RetAttr = RetAttr Int deriving (Show, Eq, Num)
+-- type instance Attr.Type RetAttr = Attr.Atomic
+-- instance Default RetAttr where
+--     def = RetAttr 0
 
-Pass.cache_phase1 ''InitPass
-Pass.cache_phase2 ''InitPass
+-- Pass.cache_phase1 ''InitPass
+-- Pass.cache_phase2 ''InitPass
 
 
 
 type OnDemandPass pass = (Typeable pass, Pass.Compile pass IO)
 
-runPass :: forall pass. OnDemandPass pass => Pass.Pass pass () -> IO ()
-runPass pass = Runner.runManual $ do
-    Scheduler.registerAttr     @RetAttr
-    Scheduler.enableAttrByType @RetAttr
-    Scheduler.registerPassFromFunction__ pass
-    Scheduler.runPassByType @pass
+-- runPass :: forall pass. OnDemandPass pass => Pass.Pass pass () -> IO ()
+-- runPass pass = Scheduler.runManual registers passes
+--     where
+--         registers = do
+--             -- Runner.registerAll
+--             attachEmpireLayers
+
+--         passes = do
+--             -- Scheduler.registerAttr     @RetAttr
+--             -- Scheduler.enableAttrByType @RetAttr
+--             Scheduler.registerPassFromFunction__ pass
+--             Scheduler.runPassByType @pass
 
 initExprMapping :: IO ()
 initExprMapping = return ()
@@ -205,9 +217,6 @@ snapshot = return ()
 --         return (AST st (PMState pass def), cls)
 --     return (ast, cls)
 
-defaultClsGraph :: IO ClsGraph
-defaultClsGraph = undefined
-
 
 defaultPMState :: IO (PMState a)
 defaultPMState = undefined
@@ -222,6 +231,7 @@ makeLenses ''Graph
 makeLenses ''FunctionGraph
 makeLenses ''ClsGraph
 makeLenses ''AST
+makeLenses ''PMState
 
 class HasCode g where
     code :: Lens' g Text
@@ -240,3 +250,12 @@ instance HasNodeCache Graph where
 
 instance HasNodeCache ClsGraph where
     nodeCache = clsNodeCache
+
+class HasAST g where
+    ast :: Lens' g (AST g)
+
+instance HasAST Graph where
+    ast = graphAst
+
+instance HasAST ClsGraph where
+    ast = clsAst

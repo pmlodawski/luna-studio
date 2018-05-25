@@ -6,7 +6,9 @@
 
 module FileModuleSpec (spec) where
 
-import           Data.List                       (find)
+import           Control.Lens                    (toListOf)
+import           Data.Char                       (isSpace)
+import           Data.List                       (dropWhileEnd, find)
 import qualified Data.Map                        as Map
 import qualified Data.Set                        as Set
 import qualified Data.Text                       as Text
@@ -32,13 +34,14 @@ import           LunaStudio.Data.Port            (Port (..), PortState (..))
 import qualified LunaStudio.Data.Port            as Port
 import           LunaStudio.Data.PortDefault     (PortDefault (..))
 import           LunaStudio.Data.PortRef         (AnyPortRef (..))
+import qualified LunaStudio.Data.PortRef         as PortRef
 import qualified LunaStudio.Data.Position        as Position
 import           LunaStudio.Data.Range           (Range (..))
 import           LunaStudio.Data.TypeRep         (TypeRep (TStar))
 
 import           Empire.Empire
-import           Empire.Prelude
-import           Luna.Prelude                    (forM, normalizeQQ)
+import           Empire.Prelude                  as P
+-- import           Luna.Prelude                    (forM, normalizeQQ)
 
 import           Test.Hspec                      (Expectation, Spec, around, describe, expectationFailure, it, parallel, shouldBe,
                                                   shouldMatchList, shouldNotBe, shouldSatisfy, shouldStartWith, shouldThrow, xit)
@@ -48,15 +51,15 @@ import           EmpireUtils
 import           Text.RawString.QQ               (r)
 
 
-multiFunCode = [r|## Docs
+multiFunCode = [r|# Docs
 def foo:
     5
 
-## Docs
+# Docs
 «0»def bar:
     "bar"
 
-## Docs
+# Docs
 def main:
     print bar
 |]
@@ -67,7 +70,7 @@ multiFunCodeWithoutMarkers = [r|def foo:
 def bar:
     "bar"
 
-## Docs
+# Docs
 def main:
     print bar
 |]
@@ -83,6 +86,11 @@ def bar:
 def main:
     print bar
 |]
+
+normalizeQQ :: String -> String
+normalizeQQ str = intercalate "\n" $ fmap (drop minWs) allLines where
+    allLines = filter (not . null) $ dropWhileEnd isSpace <$> lines str
+    minWs    = P.minimum $ length . takeWhile isSpace <$> allLines
 
 atXPos = ($ def) . (NodeMeta.position . Position.x .~)
 
@@ -684,7 +692,7 @@ spec = around withChannels $ parallel $ do
                 fooNodes <- Graph.getNodes (loc |>= foo)
                 let Just n1   = view Node.nodeId <$> find (\n -> n ^. Node.name == Just "n1") fooNodes
                     Just five = view Node.nodeId <$> find (\n -> n ^. Node.name == Nothing) fooNodes
-                Graph.connect (loc |>= foo) (outPortRef five []) (InPortRef' $ inPortRef n1 [Port.Arg 0])
+                Graph.connect (loc |>= foo) (PortRef.toPortRefS $ outPortRef five []) (InPortRef' $ inPortRef n1 [Port.Arg 0])
                 Graph.withUnit loc $ use Graph.code
             normalizeQQ (Text.unpack code) `shouldBe` normalizeQQ [r|
                 «0»def foo:
@@ -706,7 +714,7 @@ spec = around withChannels $ parallel $ do
                 u1 <- mkUUID
                 Graph.addNode (loc |>= bar) u1 "5" (atXPos 10)
                 APIGraph.Graph _ _ _ (Just output) _ <- Graph.getGraph (loc |>= bar)
-                Graph.connect (loc |>= bar) (outPortRef u1 []) (InPortRef' $ inPortRef (output ^. Node.nodeId) [])
+                Graph.connect (loc |>= bar) (PortRef.toPortRefS $ outPortRef u1 []) (InPortRef' $ inPortRef (output ^. Node.nodeId) [])
                 u2 <- mkUUID
                 Graph.addNode (loc |>= bar) u2 "1" (atXPos (-20))
                 Graph.withUnit loc $ use Graph.code
@@ -736,7 +744,7 @@ spec = around withChannels $ parallel $ do
                 u1 <- mkUUID
                 Graph.addNode (loc |>= bar) u1 "5" (atXPos 10)
                 APIGraph.Graph _ _ _ (Just output) _ <- Graph.getGraph (loc |>= bar)
-                Graph.connect (loc |>= bar) (outPortRef u1 []) (InPortRef' $ inPortRef (output ^. Node.nodeId) [])
+                Graph.connect (loc |>= bar) (PortRef.toPortRefS $ outPortRef u1 []) (InPortRef' $ inPortRef (output ^. Node.nodeId) [])
                 blockEnd <- Graph.withGraph (loc |>= bar) $ runASTOp $ Code.getCurrentBlockEnd
                 code <- Graph.withUnit loc $ use Graph.code
                 return (blockEnd, code)
@@ -935,8 +943,8 @@ spec = around withChannels $ parallel $ do
                 let Just foo = (view Node.nodeId) <$> find (\n -> n ^. Node.name == Just "foo") nodes
                     loc' = loc |>= foo
                 (input, _) <- Graph.withGraph loc' $ runASTOp GraphBuilder.getEdgePortMapping
-                Graph.renamePort loc' (outPortRef input [Port.Projection 0]) "bar"
-                Graph.renamePort loc' (outPortRef input [Port.Projection 1]) "baz"
+                Graph.renamePort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 0]) "bar"
+                Graph.renamePort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 1]) "baz"
         it "changes freshly added port name on a top-level def" $
             let initialCode = [r|
                     def foo a:
@@ -958,10 +966,10 @@ spec = around withChannels $ parallel $ do
                 let Just foo = (view Node.nodeId) <$> find (\n -> n ^. Node.name == Just "foo") nodes
                     loc' = loc |>= foo
                 (input, _) <- Graph.withGraph loc' $ runASTOp GraphBuilder.getEdgePortMapping
-                Graph.addPort loc' (outPortRef input [Port.Projection 1])
-                name <- Graph.getPortName loc' (outPortRef input [Port.Projection 1])
+                Graph.addPort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 1])
+                name <- Graph.getPortName loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 1])
                 liftIO $ name `shouldBe` "b"
-                Graph.renamePort loc' (outPortRef input [Port.Projection 1]) "bar"
+                Graph.renamePort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 1]) "bar"
         it "pastes code from text editor to node editor" $
             let initialCode = [r|
                     def main:
@@ -1008,9 +1016,9 @@ spec = around withChannels $ parallel $ do
                     |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 (input, _) <- Graph.withGraph loc $ runASTOp GraphBuilder.getEdgePortMapping
-                Graph.addPort loc (outPortRef input [Port.Projection 0])
-                Graph.addPort loc (outPortRef input [Port.Projection 1])
-                Graph.renamePort loc (outPortRef input [Port.Projection 0]) "foobar"
-                Graph.movePort loc (outPortRef input [Port.Projection 0]) 1
-                Graph.movePort loc (outPortRef input [Port.Projection 1]) 0
-                Graph.movePort loc (outPortRef input [Port.Projection 1]) 0
+                Graph.addPort loc (PortRef.toPortRefS $ outPortRef input [Port.Projection 0])
+                Graph.addPort loc (PortRef.toPortRefS $ outPortRef input [Port.Projection 1])
+                Graph.renamePort loc (PortRef.toPortRefS $ outPortRef input [Port.Projection 0]) "foobar"
+                Graph.movePort loc (PortRef.toPortRefS $ outPortRef input [Port.Projection 0]) 1
+                Graph.movePort loc (PortRef.toPortRefS $ outPortRef input [Port.Projection 1]) 0
+                Graph.movePort loc (PortRef.toPortRefS $ outPortRef input [Port.Projection 1]) 0

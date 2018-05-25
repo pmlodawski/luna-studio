@@ -5,7 +5,8 @@ import           Control.Concurrent.STM.TChan               (writeTChan)
 import           Control.Monad.Reader                       hiding (liftIO)
 import           Control.Monad.STM                          (atomically)
 import           Data.Text                                  (Text)
-import           Empire.Data.Graph                          (ClsGraph, Graph, defaultClsGraph)
+import           Empire.ASTOp                               (defaultClsGraph)
+import           Empire.Data.Graph                          (ClsGraph, Graph)
 import           Empire.Empire
 import           Empire.Prelude
 import           LunaStudio.API.AsyncUpdate                 (AsyncUpdate (..))

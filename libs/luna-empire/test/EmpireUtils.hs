@@ -42,7 +42,7 @@ import           LunaStudio.Data.NodeLoc       (NodeLoc(..))
 import qualified LunaStudio.Data.PortRef       as PortRef
 import           LunaStudio.Data.PortRef       (AnyPortRef(InPortRef'), InPortRef(..), OutPortRef, OutPortRefTemplate(..))
 import           LunaStudio.Data.Node          (ExpressionNode, NodeId, nodeId)
-import qualified Empire.Commands.Graph         as Graph (connect, getNodes, loadCode)
+import qualified Empire.Commands.Graph         as Graph (addNode, connect, getNodes, loadCode)
 import           Empire.Commands.Library       (createLibrary, listLibraries, withLibrary)
 import           Empire.Data.AST               ()
 import           Empire.Data.Graph             (AST (..), Graph, ClsGraph)
@@ -56,10 +56,17 @@ import           Test.Hspec                    (expectationFailure)
 
 runEmp :: CommunicationEnv -> (Given GraphLocation => Empire a) -> IO (a, Env)
 runEmp env act = runEmpire env def $ do
+    putStrLn "runEmp"
     _ <- createLibrary (Just "/TestFile") "/TestFile"
+    putStrLn "runEmp2"
     let toLoc = GraphLocation "/TestFile"
     Graph.loadCode (toLoc (Breadcrumb [])) "def main:\n    None"
+    putStrLn "runEmp3"
     [node] <- Graph.getNodes (toLoc (Breadcrumb []))
+    putStrLn "runEmp4"
+    -- uuid <- mkUUID
+    -- Graph.addNode (toLoc $ Breadcrumb []) uuid "def main" def
+    -- [node] <- Graph.getNodes (toLoc (Breadcrumb []))
     give (toLoc $ Breadcrumb [Definition (node ^. Node.nodeId)]) act
 
 evalEmp :: CommunicationEnv -> (Given GraphLocation => Empire a) -> IO a

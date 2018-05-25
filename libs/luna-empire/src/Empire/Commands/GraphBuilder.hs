@@ -48,9 +48,9 @@ import           LunaStudio.Data.PortDefault     (PortDefault (..), PortValue (.
 import           LunaStudio.Data.PortRef         (InPortRef (..), OutPortRefS, OutPortRef (..), srcNodeId, srcNodeLoc)
 import           LunaStudio.Data.Position        (Position)
 import           LunaStudio.Data.TypeRep         (TypeRep (TCons, TStar))
-import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan)
-import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
-import qualified Luna.Syntax.Text.Parser.Data.Name.Special as Parser (uminus)
+import           Parser.Data.CodeSpan (CodeSpan)
+import qualified Parser.Data.CodeSpan as CodeSpan
+import qualified Parser.Data.Name.Special as Parser (uminus)
 -- import qualified OCI.IR.Combinators              as IR
 import Data.Vector.Storable.Foreign ()
 
@@ -81,8 +81,9 @@ buildGraph = do
 
 buildClassGraph :: ClassOp m => m API.Graph
 buildClassGraph = do
+    putStrLn "buildClassGraph"
     funs <- use Graph.clsFuns
-
+    print funs
     nodes' <- mapM (\(uuid, funGraph) -> buildClassNode uuid (funGraph ^. Graph.funName)) $ Map.assocs funs
     pure $ API.Graph nodes' [] Nothing Nothing []
 

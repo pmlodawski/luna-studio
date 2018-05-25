@@ -105,4 +105,5 @@ instance (Storable a, Storable b) => Storable (OutPortRefTemplate a b) where
                         <*> peek (p `plusPtr` sizeOf (undefined :: a))
     poke p op = do
         poke (castPtr p) (op ^. srcNodeLoc)
-        poke (p `plusPtr` sizeOf (undefined :: Int)) (op ^. srcPortId)
+        poke (p `plusPtr` sizeOf (undefined :: a)) (op ^. srcPortId)
+

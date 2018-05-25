@@ -30,9 +30,9 @@ import qualified Luna.IR                 as IR
 import           Data.Text.Position      (Delta)
 import           Empire.Data.Layers      (SpanOffset, SpanLength)
 import           Data.Text.Span          (SpacedSpan(..), leftSpacedSpan)
-import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
-import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan, realSpan)
-import qualified Luna.Syntax.Text.Parser.State.Marker   as Luna
+import qualified Parser.Data.CodeSpan as CodeSpan
+import           Parser.Data.CodeSpan (CodeSpan, realSpan)
+import qualified Parser.State.Marker   as Luna
 
 import           Luna.Syntax.Text.Lexer.Grammar     (isOperator)
 import qualified Luna.Syntax.Text.Lexer             as Lexer
@@ -171,7 +171,7 @@ getOffsetRelativeToTarget :: GraphOp m => EdgeRef -> m Delta
 getOffsetRelativeToTarget edge = do
     ref  <- target edge
     let fallback = do
-            inps <- IR.inputs ref
+            inps <- inputs ref
             let before = takeWhile (/= edge) inps
             lens <- forM before $ \e -> do
                 off <- getLayer @SpanOffset e
@@ -281,7 +281,7 @@ replaceAllUses ref new = do
 
 computeLength :: GraphOp m => NodeRef -> m Delta
 computeLength ref = do
-    ins  <- IR.inputs ref
+    ins  <- inputs ref
     case ins of
         [] -> getLayer @SpanLength ref
         _  -> do
@@ -305,7 +305,7 @@ getOffset ref = do
     leftSpan <- case succs of
         []     -> return $ LeftSpacedSpan (SpacedSpan 0 0)
         [more] -> do
-            inputs         <- IR.inputs =<< target more
+            inputs         <- inputs =<< target more
             realInputs     <- mapM source inputs
             let leftInputs = takeWhile (/= ref) realInputs
             moreOffset     <- getOffset =<< target more
@@ -352,7 +352,7 @@ propagateLengths :: GraphOp m => NodeRef -> m ()
 propagateLengths node = do
     LeftSpacedSpan (SpacedSpan off len) <- fmap (view CodeSpan.realSpan) $ getLayer @CodeSpan node
     putLayer @SpanLength node len
-    mapM_ propagateOffsets =<< IR.inputs node
+    mapM_ propagateOffsets =<< inputs node
 
 propagateOffsets :: GraphOp m => EdgeRef -> m ()
 propagateOffsets edge = do

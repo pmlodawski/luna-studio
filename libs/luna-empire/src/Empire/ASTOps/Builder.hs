@@ -130,7 +130,7 @@ getOrCreateArgument currentFun codeBegin currentArgument neededArgument
                 arg    <- source a
                 ap     <- IR.app newFun arg
                 putLayer @SpanLength ap =<< getLayer @SpanLength fun
-                [f', a'] <- IR.inputs ap
+                [f', a'] <- inputs ap
                 putLayer @SpanOffset f' =<< getLayer @SpanOffset f
                 putLayer @SpanOffset a' =<< getLayer @SpanOffset a
                 replace ap fun
@@ -151,7 +151,7 @@ padArgs e beg argOffset i | i <= 0    = return ()
     funIsTuple <- ASTRead.isTuple fun
     when funIsTuple $ throwM $ TupleElementOutOfBoundsException fun i
     ap     <- generalize <$> IR.app fun bl
-    [f, a] <- IR.inputs ap
+    [f, a] <- inputs ap
     isOp   <- Code.isOperatorVar fun
     funLen <- getLayer @SpanLength fun
     let offset, blankLen :: Num a => a
@@ -228,7 +228,7 @@ unfoldM f a = do
         Left  b -> return b
         Right b -> unfoldM f b
 
-unfoldM' :: GraphOp m => (a -> m (Maybe a)) -> a -> m a
+unfoldM' :: Monad m => (a -> m (Maybe a)) -> a -> m a
 unfoldM' f a = do
     res <- f a
     case res of
@@ -338,7 +338,7 @@ detachNodeMarkers :: GraphOp m => NodeRef -> m ()
 detachNodeMarkers ref' = do
     ref <- ASTRead.cutThroughGroups ref'
     putLayer @Marker ref Nothing
-    inps <- IR.inputs ref
+    inps <- inputs ref
     mapM_ (source >=> detachNodeMarkers) inps
 
 attachNodeMarkers :: GraphOp m => NodeId -> Port.OutPortId -> NodeRef -> m ()
@@ -412,7 +412,7 @@ attachName node n = do
     var <- IR.var' $ convertVia @String n
     putLayer @SpanLength var (convert $ Text.length n)
     uni    <- IR.unify' var node
-    [l, r] <- IR.inputs uni
+    [l, r] <- inputs uni
     putLayer @SpanOffset l 0
     putLayer @SpanOffset r 3
     putLayer @SpanLength uni =<< Code.computeLength uni
