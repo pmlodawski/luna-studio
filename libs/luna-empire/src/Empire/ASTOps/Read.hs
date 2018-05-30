@@ -424,11 +424,12 @@ getMetadataRef unit = do
     klass' <- classFromUnit unit
     putStrLn "getMetadataRef2"
     match klass' $ \case
-        -- IR.ClsASG _ _ _ _ funs -> do
-        --     funs' <- mapM source funs
-        --     (Safe.headMay . catMaybes) <$> forM funs' (\f -> match f $ \case
-        --         IR.Metadata{} -> return (Just f)
-        --         _             -> return Nothing)
+        ClsASG _ _ _ _ funs'' -> do
+            funs <- ptrListToList funs''
+            funs' <- mapM source funs
+            (Safe.headMay . catMaybes) <$> forM funs' (\f -> match f $ \case
+                Metadata{} -> print "metadata"    >> return (Just f)
+                _          -> print "notmetadata" >> return Nothing)
         _ -> return Nothing
 
 getFunByNodeId :: ClassOp m => NodeId -> m NodeRef

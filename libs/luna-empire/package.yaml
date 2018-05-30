@@ -49,10 +49,13 @@ dependencies:
     - exceptions
     - filepath
     - lens
+    - lens-utils
     - lifted-base
     - luna-core
     - luna-cpp-containers
+    - luna-data-tag
     - luna-data-typemap
+    - luna-debug
     - luna-exception
     - luna-foreign-utils
     - luna-generic-traversable

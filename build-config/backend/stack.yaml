@@ -62,7 +62,7 @@ packages:
   subdirs: [project]
 - extra-dep: true
   location: ../../../luna-core
-  subdirs: [core, syntax/text/parser, syntax/text/lexer, syntax/text/model, lib]
+  subdirs: [core, syntax/text/parser, syntax/text/lexer, syntax/text/model, lib, debug]
 - extra-dep: true
   location: {commit: 1fac9aeec3a7f703908c50fd6cb229b4c8140fe3, git: 'git@github.com:luna/luna-core.git'}
   subdirs: [lib/autovector, lib/cpp-containers, lib/data-construction, lib/data-tag, lib/data-typemap, lib/exception, lib/foreign-utils, lib/generic-traversable, lib/memory-manager, lib/memory-pool, lib/nested-containers, lib/syntax-definition, lib/text-processing, lib/th-builder, lib/tuple-utils, lib/type-cache, lib/typelevel, syntax/text/prettyprint]

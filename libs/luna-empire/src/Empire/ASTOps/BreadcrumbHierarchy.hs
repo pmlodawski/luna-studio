@@ -64,7 +64,11 @@ childrenFromSeq tgtBeg edge = do
                     return expr'
             child    <- prepareChild ref childTarget
             nodeMeta <- use $ Graph.nodeCache . nodeMetaMap . at index
-            -- forM nodeMeta $ AST.writeMeta ref
+            putStrLn "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+            print uid
+            print index
+            print nodeMeta
+            forM nodeMeta $ AST.writeMeta ref
             return $ Map.singleton uid child
         _ -> do
             Code.addCodeMarker beg edge

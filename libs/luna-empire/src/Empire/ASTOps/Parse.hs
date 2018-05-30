@@ -191,17 +191,24 @@ runParser parser input = do
                         irb' = Parser.IRBS $ do
                             ir <- irx
                             cs <- Layer.read @CodeSpan ir
+                            putStrLn "CodeSpan" >> print cs
                             pure (ir,cs)
                     pure $ (,scope) <$> irb'
                 liftIO $ writeIORef ref $ generalize (ir, m)
                 putStrLn "bar"
                 -- Attr.put $ PassReturnValue $ unsafeCoerce $ Just a
                 -- b <- Attr.get @PassReturnValue
-                b <- liftIO $ readIORef ref
+                -- b <- liftIO $ readIORef ref
                 -- print a
-                print ir
+                -- print ir
                 matchExpr ir $ \case
-                    Unit _ _ c -> print =<< source c
+                    Unit _ _ c -> do
+                        c' <- source c
+                        matchExpr c' $ \case
+                            ClsASG _ _ _ _ funs'' -> do
+                                funs <- ptrListToList funs''
+                                spans <- mapM (Layer.read @CodeSpan <=< source) funs
+                                print spans
                     a -> print a
             Scheduler.runPassByType @EmpirePass
             -- st <- Layered.get @Scheduler.State

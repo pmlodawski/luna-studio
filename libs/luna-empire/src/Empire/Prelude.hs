@@ -220,11 +220,18 @@ modifyExprTerm = error "modifyExprTerm"
 
 compListToList :: List.List a -> [Component.Some a]
 compListToList List.Nil = []
-compListToList (List.Cons a l) = a : compListToList l 
+compListToList (List.Cons a l) = a : compListToList l
 
 inputs :: ( Layer.Reader Node.Node IR.Model m
           , Layer.IsUnwrapped Node.Uni
           , Traversal.SubComponents Edge.Edges m (Node.Uni layout)
           , MonadIO m
-          ) => Node.Node layout -> m [Edge.SomeEdge]
-inputs n = compListToList <$> IR.inputs n
+          ) => Node.Node layout -> m [Component.Some Edge.Edges]
+inputs ref = do
+    inp <- compListToList <$> IR.inputs ref
+    add <- Layer.read @IR.Model ref >>= \case
+        IR.UniTermRecord (IR.Record _ _ _ _ decls) -> do
+            links <- PtrList.toList decls
+            return $ map coerce links
+        _ -> return []
+    return $ inp <> add

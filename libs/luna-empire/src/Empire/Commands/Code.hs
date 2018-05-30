@@ -299,6 +299,7 @@ functionBlockStartRef ref = do
     LeftSpacedSpan (SpacedSpan off len) <- getOffset ref
     return $ off + len
 
+
 getOffset :: ClassOp m => NodeRef -> m (LeftSpacedSpan Delta)
 getOffset ref = do
     succs    <- ociSetToList =<< getLayer @IR.Users ref
@@ -308,10 +309,16 @@ getOffset ref = do
             inputs         <- inputs =<< target more
             realInputs     <- mapM source inputs
             let leftInputs = takeWhile (/= ref) realInputs
+            print "realInputs" >> print realInputs
+            print "leftInputs" >> print leftInputs
             moreOffset     <- getOffset =<< target more
-            lefts          <- mconcat <$> mapM (fmap (view CodeSpan.realSpan) . getLayer @CodeSpan) leftInputs
-            return $ moreOffset <> lefts
+            lefts          <- mapM (fmap (view CodeSpan.realSpan) . getLayer @CodeSpan) leftInputs
+            print "lefts" >> print lefts
+            return $ moreOffset <> (mconcat lefts)
     LeftSpacedSpan (SpacedSpan off _) <- view CodeSpan.realSpan <$> getLayer @CodeSpan ref
+    print "getOffset"
+    matchExpr ref $ print
+    print leftSpan >> print off
     return $ leftSpan <> LeftSpacedSpan (SpacedSpan off 0)
 
 getCurrentBlockBeginning :: GraphOp m => m Delta

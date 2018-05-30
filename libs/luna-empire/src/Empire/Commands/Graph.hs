@@ -154,6 +154,7 @@ import           Empire.Prelude                   hiding (head, toList)
 -- import qualified Luna.Compilation                 as Compilation
 import qualified Luna.IR                          as IR
 import qualified Luna.IR.Term.Ast.Class           as Term
+import           Empire.Visualizer                (displayVisualization)
 -- import qualified Luna.IR.Term.Unit                as Term
 -- import qualified Luna.Project                     as Project
 import           Luna.Syntax.Text.Analysis.SpanTree (Spanned(..))
@@ -1234,12 +1235,18 @@ markFunctions unit = do
                     markedFun <- IR.marked' marker (generalize f)
                     Graph.clsCodeMarkers . at newMarker ?= markedFun
                     LeftSpacedSpan (SpacedSpan off prevLen) <- view CodeSpan.realSpan <$> getLayer @CodeSpan f
+                    matchExpr f $ print
+                    print "????????????????????????" >> print off >> print prevLen
                     let markerLength = convert $ Text.length $ Code.makeMarker newMarker
                     putLayer @CodeSpan marker $ CodeSpan.mkRealSpan (LeftSpacedSpan (SpacedSpan 0 markerLength))
                     putLayer @CodeSpan markedFun $ CodeSpan.mkRealSpan (LeftSpacedSpan (SpacedSpan off prevLen))
+                    getLayer @CodeSpan markedFun >>= print
                     putLayer @CodeSpan f $ CodeSpan.mkRealSpan (LeftSpacedSpan (SpacedSpan 0 prevLen))
                     asgLink <- getASGRootedFunctionLink fun
                     replaceSource (coerce markedFun) (coerce asgLink)
+                    linkSrc <- source =<< getASGRootedFunctionLink fun
+                    matchExpr linkSrc $ print
+                    getLayer @CodeSpan linkSrc >>= print
                     Code.gossipLengthsChangedByCls markerLength markedFun
                 _ -> return ()
 
@@ -1262,9 +1269,10 @@ loadCode (GraphLocation file _) code = do
         -- putNewIRCls ir
         putStrLn "start"
         FileMetadata fileMetadata <- runASTOp readMetadata'
-        putStrLn "middle"
+        print fileMetadata
         let savedNodeMetas = Map.fromList $ map (\(MarkerNodeMeta m meta) -> (m, meta)) fileMetadata
-        -- Graph.nodeCache . nodeMetaMap %= (\cache -> Map.union cache savedNodeMetas)
+        Graph.nodeCache . nodeMetaMap %= (\cache -> Map.union cache $ Map.map NodeMeta.toNodeMetaS savedNodeMetas)
+        print savedNodeMetas
         putStrLn "end"
         runASTOp $ do
             let codeWithoutMeta = stripMetadata code
@@ -1277,15 +1285,26 @@ loadCode (GraphLocation file _) code = do
     functions <- withUnit loc $ do
         klass <- use Graph.clsClass
         runASTOp $ do
+            -- displayVisualization "dupa7" klass
             markFunctions klass
             funs <- ASTRead.classFunctions klass
             putStrLn "funs"
             print funs
             forM funs $ \f -> ASTRead.cutThroughDoc f >>= \fun -> matchExpr fun $ \case
                 Marked m _e -> do
+                    funCodeSpan <- getLayer @CodeSpan fun
+                    print "funCodeSpan" >> print funCodeSpan
+                    fCodeSpan <- getLayer @CodeSpan f
+                    print "fCodeSpan" >> print fCodeSpan
                     marker <- getMarker =<< source m
                     uuid   <- use $ Graph.nodeCache . nodeIdMap . at marker
                     return (uuid, f)
+                _ -> do
+                    funCodeSpan <- getLayer @CodeSpan fun
+                    print "funCodeSpan" >> print funCodeSpan
+                    fCodeSpan <- getLayer @CodeSpan f
+                    print "fCodeSpan" >> print fCodeSpan
+                    return (Nothing, f)
     for_ functions $ \(lastUUID, fun) -> do
         uuid <- Library.withLibrary file (fst <$> makeGraph fun lastUUID)
         -- let loc' = GraphLocation file $ Breadcrumb [Breadcrumb.Definition uuid]
@@ -1483,16 +1502,25 @@ readMetadata' = do
     putStrLn "readMetadata"
     metaRef  <- ASTRead.getMetadataRef unit
     putStrLn "readMetadata2"
+    putStrLn "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    putStrLn "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    putStrLn "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     case metaRef of
         Just meta -> do
+            matchExpr meta $ print
             metaStart <- Code.functionBlockStartRef meta
+            putStrLn "metaStart" >> print metaStart
             LeftSpacedSpan (SpacedSpan off len) <- view CodeSpan.realSpan <$> getLayer @CodeSpan meta
             code <- Code.getAt metaStart (metaStart + len)
+            putStrLn "meta" >> print code
+            putStrLn "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+            putStrLn "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+            putStrLn "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
             parseMetadata code
         _ -> return $ FileMetadata []
 
 readMetadata :: FilePath -> Empire FileMetadata
-readMetadata file = return (FileMetadata []) -- withUnit (GraphLocation file (Breadcrumb [])) $ runASTOp readMetadata'
+readMetadata file = withUnit (GraphLocation file (Breadcrumb [])) $ runASTOp readMetadata'
 
 unindent :: Int -> Text -> Text
 unindent offset code = Text.unlines $ map (Text.drop offset) $ Text.lines code

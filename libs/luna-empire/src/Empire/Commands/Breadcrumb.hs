@@ -77,6 +77,7 @@ makeGraphCls fun lastUUID = do
         matchExpr asgFun $ \case
             ASGFunction n _ _ -> do
                 offset <- functionBlockStartRef asgFun
+                print asgFun >> print offset
                 name   <- ASTRead.getVarName' =<< source n
                 return (nameToString name, asgFun, offset)
     let ast   = Graph.AST () pmState
