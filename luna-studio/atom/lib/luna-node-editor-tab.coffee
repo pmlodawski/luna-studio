@@ -23,7 +23,8 @@ class LunaNodeEditorTab extends View
             window.nodeEditor = ne
             @nodeEditor.setView ne
         nodeEditorBaseGL.onEvent (path, event, target) =>
-            base = if event.tag != 'MouseEvent' then event else
+            if event.tag.endsWith "Event"
+                evt = if event.tag != 'MouseEvent' then event else
                     tag: event.constructor.name
                     altKey: event.altKey
                     bubbles: event.bubbles
@@ -70,10 +71,15 @@ class LunaNodeEditorTab extends View
                     # toElement: event.toElement
                     # view: event.view
 
-            @nodeEditor.pushViewEvent
-                path: path
-                target: target
-                base: base
+                base =
+                    tag:      evt.tag.substring(0, evt.tag.length - 5)
+                    contents: evt
+
+                @nodeEditor.pushViewEvent
+                    path:   path
+                    target: target
+                    base:   base
+                    
         # try
         #     nodeEditorBaseGL.install mountPoint2
         # catch e

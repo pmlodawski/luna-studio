@@ -1,5 +1,6 @@
 module LunaStudio.Data.Visualizer where
 
+import qualified Control.Lens.Aeson         as Lens
 import qualified Data.Aeson                 as Aeson
 import           Data.Aeson.Types           (FromJSON, ToJSON)
 import           Data.Binary                (Binary)
@@ -26,7 +27,7 @@ data VisualizerType
     = InternalVisualizer
     | LunaVisualizer
     | ProjectVisualizer
-    deriving (Eq, Generic, Show)
+    deriving (Eq, Generic, Show, Read)
 
 makePrisms ''VisualizerType
 
@@ -34,7 +35,7 @@ makePrisms ''VisualizerType
 data VisualizerId = VisualizerId
     { _visualizerName :: VisualizerName
     , _visualizerType :: VisualizerType
-    } deriving (Eq, Generic, Show)
+    } deriving (Eq, Generic, Show, Read)
 
 makeLenses ''VisualizerId
 
@@ -64,18 +65,26 @@ makeLenses ''Visualizer
 instance Binary   Visualizer
 instance Binary   VisualizerId
 instance Binary   VisualizerType
-instance FromJSON Visualizer
-instance FromJSON VisualizerEntry
-instance FromJSON VisualizerId
-instance FromJSON VisualizerType
+instance FromJSON Visualizer      where parseJSON = Lens.parse
+instance FromJSON VisualizerEntry where parseJSON = Lens.parse
+instance FromJSON VisualizerId    where parseJSON = Lens.parse
+instance FromJSON VisualizerType  where parseJSON = Lens.parse
 instance NFData   Visualizer
 instance NFData   VisualizerEntry
 instance NFData   VisualizerId
 instance NFData   VisualizerType
-instance ToJSON   VisualizerType
-instance ToJSON   VisualizerId
-instance ToJSON   VisualizerEntry
-instance ToJSON   Visualizer
+instance ToJSON VisualizerType where
+    toEncoding = Lens.toEncoding
+    toJSON     = Lens.toJSON
+instance ToJSON VisualizerId where
+    toEncoding = Lens.toEncoding
+    toJSON     = Lens.toJSON
+instance ToJSON VisualizerEntry where
+    toEncoding = Lens.toEncoding
+    toJSON     = Lens.toJSON
+instance ToJSON Visualizer where
+    toEncoding = Lens.toEncoding
+    toJSON     = Lens.toJSON
 
 
 errorVisId, mdVisId, placeholderVisId :: VisualizerId

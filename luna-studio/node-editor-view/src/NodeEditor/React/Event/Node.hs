@@ -11,19 +11,21 @@ import           LunaStudio.Data.NodeLoc (HasNodeLoc (nodeLoc), NodeLoc)
 import           React.Flux              (MouseEvent)
 
 
-data Event = Event { _nodeLoc' :: NodeLoc
-                   , _evtType  :: EventType
-                   } deriving (Show, Generic, NFData, Typeable)
+data Event = Event
+    { _nodeLoc' :: NodeLoc
+    , _evtType  :: EventType
+    } deriving (Show, Generic, NFData, Typeable)
 
-data EventType = EditExpression
-               | EditName
-               | Enter
-               | MouseDown       MouseEvent
-               | Select          MouseEvent
-               | SetExpression   Text
-               | MouseEnter
-               | MouseLeave
-               deriving (Show, Generic, NFData, Typeable)
+data EventType
+    = MouseEnter
+    | MouseLeave
+    | MouseDown       MouseEvent
+    | Enter
+    | EditName
+    | EditExpression
+    | SetExpression   Text
+    | Select          MouseEvent
+    deriving (Show, Generic, NFData, Typeable)
 
 makeLenses ''Event
 instance EventName EventType

@@ -219,12 +219,12 @@ addErrorVisualization nl = withJustM getErrorVisualizer $ \errVisualizer -> do
 
 addDataVisualization :: NodeLoc -> Command State ()
 addDataVisualization nl = do
-    mayPrefVis <- maybe
-        getPlaceholderVisualizer
-        (pure . Just)
-        =<< getPreferedVisualizer nl
-    withJust mayPrefVis $ \visualizer' -> do
-        vis <- construct nl def visualizer' . Just $ visualizer' ^. visualizerId
+    mayPrefVis    <- getPreferedVisualizer nl
+    mayCurrentVis <- if isJust mayPrefVis
+        then pure mayPrefVis
+        else getPlaceholderVisualizer
+    withJust mayCurrentVis $ \visualizer' -> do
+        vis <- construct nl def visualizer' $ view visualizerId <$> mayPrefVis
         void $ insertVisualization nl vis
 
 addNodeVisualizations :: NodeLoc -> Content -> Command State ()
@@ -260,10 +260,16 @@ adjustToType nl = do
     contentChanged <- (Just msg /=)
         <$> (view content `fmap2` getNodeVisualizations nl)
     modifyNodeEditor $ NE.nodeVisualizations . ix nl %= updateNodeVis
+    mayPrefVis  <- view visualizerId `fmap2` getPreferedVisualizer nl
     prevVisList <- Map.elems . maybe mempty (view visualizations)
         <$> getNodeVisualizations nl
+    let updateSelected Nothing = mayPrefVis
+        updateSelected (Just prevSelected) = if Map.member prevSelected visMap
+            then Just prevSelected
+            else mayPrefVis
     iframesToUpdate <- fmap catMaybes . forM prevVisList $ \vis -> do
-        newVis <- insertVisualization nl vis
+        newVis <- insertVisualization nl
+            $ vis & selectedVisualizerId %~ updateSelected
         pure $ if (contentChanged && newVis ^. iframeId /= vis ^. iframeId)
             then Just $ newVis ^. iframeId
             else Nothing
@@ -292,6 +298,9 @@ setDefaultVisualizer :: NodeLoc -> Maybe VisualizerId -> Command State ()
 setDefaultVisualizer nl mayNewVis = withJustM (getExpressionNode nl) $ \n -> do
     when (n ^. ExpressionNode.defaultVisualizer /= mayNewVis) $ do
         modifyExpressionNode nl $ ExpressionNode.defaultVisualizer .= mayNewVis
+        withJust mayNewVis $ \newVis ->
+            withJustM (getExpressionNodeType nl) $ \tpe ->
+                preferedVisualizers . at tpe ?= newVis
         withJustM (getNodeMeta nl) $ \nm
             -> Batch.setNodesMeta $ Map.fromList [(nl, nm)]
 

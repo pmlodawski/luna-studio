@@ -8,5 +8,5 @@ import           NodeEditor.State.Global (State)
 
 
 handle :: Event -> Maybe (Command State ())
-handle (View v) = Just $ print v
 handle _ = Nothing
+-- handle (View v) = Just $ print v

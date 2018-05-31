@@ -11,16 +11,17 @@ import           LunaStudio.Data.ScreenPosition (ScreenPosition)
 import           React.Flux                     (KeyboardEvent, MouseEvent, WheelEvent)
 
 
-data Event = Click
-           | ContextMenu
-           | KeyDown       KeyboardEvent
-           | Movement      ScreenPosition
-           | MouseDown     MouseEvent Timestamp
-           | MouseLeave
-           | MouseMove     MouseEvent Timestamp
-           | MouseUp       MouseEvent
-           | Resize
-           | Wheel         MouseEvent WheelEvent
-           deriving (Show, Generic, NFData, Typeable)
+data Event
+    = Click
+    | ContextMenu
+    | KeyDown       KeyboardEvent
+    | Movement      ScreenPosition
+    | MouseDown     MouseEvent Timestamp
+    | MouseLeave
+    | MouseMove     MouseEvent Timestamp
+    | MouseUp       MouseEvent
+    | Resize
+    | Wheel         MouseEvent WheelEvent
+    deriving (Show, Generic, NFData, Typeable)
 
 instance EventName Event

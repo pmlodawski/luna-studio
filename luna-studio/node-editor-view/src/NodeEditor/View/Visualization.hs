@@ -8,7 +8,7 @@ import           Data.Convert                         (Convertible (convert))
 import           Data.Map                             (Map)
 import qualified Data.Map                             as Map
 import           NodeEditor.React.Model.Visualization (Mode, Mode (Default, Focused, FullScreen, Hidden, Preview), NodeVisualizations,
-                                                       Visualization, VisualizationId, Visualizer,
+                                                       Visualization, VisualizationId, Visualizer, VisualizerId,
                                                        VisualizerType (InternalVisualizer, LunaVisualizer, ProjectVisualizer))
 import qualified NodeEditor.React.Model.Visualization as Vis
 import           NodeEditor.View.Diff                 (DiffT, diffApply, diffConvert, diffMapWithKey)
@@ -16,9 +16,15 @@ import           NodeEditor.View.NodeLoc              (NodeLoc)
 
 type VisualizerName = String
 
-data VisualizerView = VisualizerView
+data VisualizerIdView = VisualizerIdView
     { _visualizerName :: String
     , _visualizerType :: String
+    } deriving (Eq, Generic, Show)
+
+makeLenses ''VisualizerIdView
+
+data VisualizerView = VisualizerView
+    { _visualizerId   :: VisualizerIdView
     , _visualizerPath :: String
     } deriving (Eq, Generic, Show)
 
@@ -29,7 +35,7 @@ data VisualizationView = VisualizationView
     , _iframeId             :: String
     , _mode                 :: String
     , _currentVisualizer    :: VisualizerView
-    , _selectedVisualizer   :: Maybe VisualizerName
+    , _selectedVisualizer   :: Maybe VisualizerIdView
     } deriving (Eq, Generic, Show)
 
 makeLenses ''VisualizationView
@@ -37,8 +43,12 @@ makeLenses ''VisualizationView
 data NodeVisualizationsView = NodeVisualizationsView
     { _nodeKey        :: String
     , _visualizations :: [VisualizationView]
-    , _visualizers    :: [VisualizerView]
+    , _visualizers    :: [VisualizerIdView]
     } deriving (Eq, Generic, Show)
+
+instance ToJSON VisualizerIdView where
+    toEncoding = Lens.toEncoding
+    toJSON = Lens.toJSON
 
 instance ToJSON VisualizerView where
     toEncoding = Lens.toEncoding
@@ -66,12 +76,14 @@ instance Convertible VisualizerType String where
     convert LunaVisualizer     = "LunaVisualizer"
     convert ProjectVisualizer  = "ProjectVisualizer"
 
+instance Convertible VisualizerId VisualizerIdView where
+    convert vid = VisualizerIdView
+        {- visualizerName -} (convert $ vid ^. Vis.visualizerName)
+        {- visualizerType -} (convert $ vid ^. Vis.visualizerType)
+
 instance Convertible Visualizer VisualizerView where
     convert v = VisualizerView
-        {- visualizerName -} (convert
-            $ v ^. Vis.visualizerId . Vis.visualizerName)
-        {- visualizerType -} (convert
-            $ v ^. Vis.visualizerId . Vis.visualizerType)
+        {- visualizerId   -} (convert $ v ^. Vis.visualizerId)
         {- visualizerPath -} (convert $ v ^. Vis.visualizerRelPath)
 
 instance Convertible Visualization VisualizationView where
@@ -80,16 +92,14 @@ instance Convertible Visualization VisualizationView where
         {- iframeId           -} (convert $ v ^. Vis.iframeId)
         {- mode               -} (convert $ v ^. Vis.mode)
         {- currentVisualizer  -} (convert $ v ^. Vis.visualizer)
-        {- selectedVisualizer -} (convert
-            <$> v ^? Vis.selectedVisualizerId . _Just . Vis.visualizerName)
+        {- selectedVisualizer -} (convert $ v ^. Vis.selectedVisualizerId)
 
 instance Convertible (NodeLoc, NodeVisualizations) NodeVisualizationsView where
     convert (nl, nv) = NodeVisualizationsView
         {- nodeKey        -} (convert nl)
-        {- visualizations -} (Map.elems $ convert
-            <$> nv ^. Vis.activeVisualizations)
-        {- visualizations -} (convert . uncurry Vis.Visualizer
-            <$> Map.toList (nv ^. Vis.visualizers))
+        {- visualizations -} (convert
+            <$> Map.elems (nv ^. Vis.activeVisualizations))
+        {- visualizers    -} (convert <$> Map.keys (nv ^. Vis.visualizers))
 
 
 foreign import javascript safe

@@ -1,7 +1,9 @@
-module NodeEditor.Event.Mouse where
+module NodeEditor.Event.Mouse
+    ( module NodeEditor.Event.Mouse
+    , module X ) where
 
 import           Common.Prelude
-import           React.Flux                     (MouseEvent (MouseEvent))
+import           React.Flux     as X (MouseEvent (MouseEvent))
 -- import           Data.Bits (setBit, testBit)
 -- import           Type.List (Index)
 -- import           Data.Typeable

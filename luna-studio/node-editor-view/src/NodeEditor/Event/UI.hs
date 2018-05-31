@@ -16,15 +16,18 @@ import qualified NodeEditor.React.Event.Sidebar       as Sidebar
 import qualified NodeEditor.React.Event.Visualization as Visualization
 
 
-data UIEvent = AppEvent           App.Event
-             | BreadcrumbsEvent   Breadcrumbs.Event
-             | ConnectionEvent    Connection.Event
-             | NodeEvent          Node.Event
-             | PortEvent          Port.Event
-             | SearcherEvent      Searcher.Event
-             | SidebarEvent       Sidebar.Event
-             | VisualizationEvent Visualization.Event
-             deriving (Generic, NFData, Show, Typeable)
+data UIEvent
+    = AppEvent           App.Event
+    | BreadcrumbsEvent   Breadcrumbs.Event
+    | ConnectionEvent    Connection.Event
+    | NodeEvent          Node.Event
+    | PortEvent          Port.Event
+    | SearcherEvent      Searcher.Event
+    | SidebarEvent       Sidebar.Event
+    | VisualizationEvent Visualization.Event
+    deriving (Generic, NFData, Show, Typeable)
+
+makePrisms ''UIEvent
 
 instance EventName UIEvent where
     eventName event = consName event <> "." <> case event of

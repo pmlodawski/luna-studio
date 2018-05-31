@@ -8,7 +8,8 @@ import           Data.Aeson                         (FromJSON (..), ToJSON (..))
 import           Data.Convert                       (Convertible (convert))
 import           LunaStudio.Data.NodeLoc            (NodeLoc)
 import           LunaStudio.Data.PortRef            (InPortRef (InPortRef), OutPortRef (OutPortRef))
-import           LunaStudio.Data.ScreenPosition     (fromDoubles, ScreenPosition)
+import           LunaStudio.Data.ScreenPosition     (ScreenPosition, fromDoubles)
+import           LunaStudio.Data.Visualizer         (VisualizerId (VisualizerId))
 import           NodeEditor.React.Model.Breadcrumbs (Breadcrumb, BreadcrumbItem)
 import           Prelude                            (error)
 
@@ -18,79 +19,150 @@ type Path = [String]
 newtype Target = Target { unTarget :: [String] }
     deriving (Generic, Show)
 
+data MouseEvent = MouseEvent
+    { _altKey           :: Bool
+    , _bubbles          :: Bool
+    , _button           :: Int
+    , _buttons          :: Double
+    , _cancelable       :: Bool
+    , _cancelBubble     :: Bool
+    , _clientX          :: Double
+    , _clientY          :: Double
+    , _ctrlKey          :: Bool
+    , _defaultPrevented :: Bool
+    , _detail           :: Double
+    , _eventPhase       :: Double
+    , _isTrusted        :: Bool
+    , _layerX           :: Double
+    , _layerY           :: Double
+    , _metaKey          :: Bool
+    , _movementY        :: Double
+    , _pageX            :: Double
+    , _pageY            :: Double
+    , _screenX          :: Double
+    , _shiftKey         :: Bool
+    , _screenY          :: Double
+    , _movementX        :: Double
+    , _timeStamp        :: Double
+    , _offsetX          :: Double
+    , _offsetY          :: Double
+    , _returnValue      :: Bool
+    , _type_            :: String
+    , _which            :: Double
+    , _x                :: Double
+    , _y                :: Double
+    } deriving (Generic, Show)
+
+makeLenses ''MouseEvent
+
+data NavigateEvent = NavigateEvent
+    { _to :: Breadcrumb BreadcrumbItem
+    , _aesonToOld1 :: Maybe () --FIXME: replace with tagSingleConstructors when Aeson bumped
+    } deriving (Generic, Show)
+
+makeLenses ''NavigateEvent
+
+data NodeMoveEvent = NodeMoveEvent
+    { _position :: (Double, Double)
+    , _aesonToOld2 :: Maybe () --FIXME: replace with tagSingleConstructors when Aeson bumped
+    } deriving (Generic, Show)
+
+makeLenses ''NodeMoveEvent
+
+data NodeSelectEvent = NodeSelectEvent
+    { _select :: Bool
+    , _aesonToOld3 :: Maybe () --FIXME: replace with tagSingleConstructors when Aeson bumped
+    } deriving (Generic, Show)
+
+makeLenses ''NodeSelectEvent
+
+data DisconnectEvent = DisconnectEvent
+    { _src :: Bool
+    , _aesonToOld4 :: Maybe () --FIXME: replace with tagSingleConstructors when Aeson bumped
+    } deriving (Generic, Show)
+
+makeLenses ''DisconnectEvent
+
+data SearcherAcceptEvent = SearcherAcceptEvent
+    { _acceptSelectionStart :: Int
+    , _acceptSelectionEnd   :: Int
+    , _acceptValue          :: Text
+    } deriving (Generic, Show)
+
+makeLenses ''SearcherAcceptEvent
+
+data SearcherEditEvent = SearcherEditEvent
+    { _editSelectionStart :: Int
+    , _editSelectionEnd   :: Int
+    , _editValue          :: Text
+    } deriving (Generic, Show)
+
+makeLenses ''SearcherEditEvent
+
+data SelectVisualizerEvent = SelectVisualizerEvent
+    { _visualizerId :: VisualizerId
+    , _aesonToOld5 :: Maybe () --FIXME: replace with tagSingleConstructors when Aeson bumped
+    } deriving (Generic, Show)
+
+makeLenses ''SelectVisualizerEvent
+
+data BaseEvent
+    = Mouse            MouseEvent
+    | Navigate         NavigateEvent
+    | NodeMove         NodeMoveEvent
+    | NodeSelect       NodeSelectEvent
+    | Disconnect       DisconnectEvent
+    | SearcherAccept   SearcherAcceptEvent
+    | SearcherEdit     SearcherEditEvent
+    | SelectVisualizer SelectVisualizerEvent
+    deriving (Generic, Show)
+
+makePrisms ''BaseEvent
+
 data ViewEvent = ViewEvent
     { _path   :: Path
     , _target :: Target
     , _base   :: BaseEvent
     } deriving (Generic, Show)
 
-data BaseEvent
-    = MouseEvent
-        { altKey       :: Bool
-        , bubbles      :: Bool
-        , button       :: Int
-        , buttons      :: Double
-        , cancelable   :: Bool
-        , cancelBubble :: Bool
-        , clientX      :: Double
-        , clientY      :: Double
-        , ctrlKey      :: Bool
-        , defaultPrevented :: Bool
-        , detail      :: Double
-        , eventPhase  :: Double
-        , isTrusted   :: Bool
-        , layerX      :: Double
-        , layerY      :: Double
-        , metaKey     :: Bool
-        , movementY   :: Double
-        , pageX       :: Double
-        , pageY       :: Double
-        , screenX     :: Double
-        , shiftKey    :: Bool
-        , screenY     :: Double
-        , movementX   :: Double
-        , timeStamp   :: Double
-        , offsetX     :: Double
-        , offsetY     :: Double
-        , returnValue :: Bool
-        , type_       :: String
-        , which       :: Double
-        , x           :: Double
-        , y           :: Double
-        }
-    | Navigate
-        { to :: Breadcrumb BreadcrumbItem }
-    | NodeMove
-        { position :: (Double, Double) }
-    | NodeSelect
-        { select :: Bool }
-    | Disconnect
-        { src :: Bool }
-    | SearcherAccept
-        { selectionStart :: Int
-        , selectionEnd   :: Int
-        , value          :: Text
-        }
-    | SearcherEdit
-        { selectionStart :: Int
-        , selectionEnd   :: Int
-        , value          :: Text
-        }
-    deriving (Generic, Show)
-
 makeLenses ''ViewEvent
 
+instance NFData MouseEvent
+instance NFData NavigateEvent
+instance NFData NodeMoveEvent
+instance NFData NodeSelectEvent
+instance NFData DisconnectEvent
+instance NFData SearcherAcceptEvent
+instance NFData SearcherEditEvent
+instance NFData SelectVisualizerEvent
 instance NFData Target
 instance NFData ViewEvent
 instance NFData BaseEvent
 
-instance FromJSON Target    where parseJSON = parseDropUnary
-instance FromJSON ViewEvent where parseJSON = parseDropUnary
-instance FromJSON BaseEvent where parseJSON = parseDropUnary
+instance FromJSON MouseEvent            where parseJSON = parseDropUnary
+instance FromJSON NavigateEvent         where parseJSON = parseDropUnary
+instance FromJSON NodeMoveEvent         where parseJSON = parseDropUnary
+instance FromJSON NodeSelectEvent       where parseJSON = parseDropUnary
+instance FromJSON DisconnectEvent       where parseJSON = parseDropUnary
+instance FromJSON SearcherAcceptEvent   where parseJSON = parseDropUnary
+instance FromJSON SearcherEditEvent     where parseJSON = parseDropUnary
+instance FromJSON SelectVisualizerEvent where parseJSON = parseDropUnary
+instance FromJSON Target                where parseJSON = parseDropUnary
+instance FromJSON ViewEvent             where parseJSON = parseDropUnary
+instance FromJSON BaseEvent             where parseJSON = parseDropUnary
 
-instance ToJSON Target    where toEncoding = toEncodingDropUnary
-instance ToJSON ViewEvent where toEncoding = toEncodingDropUnary
-instance ToJSON BaseEvent where toEncoding = toEncodingDropUnary
+
+instance ToJSON MouseEvent            where toEncoding = toEncodingDropUnary
+instance ToJSON NavigateEvent         where toEncoding = toEncodingDropUnary
+instance ToJSON NodeMoveEvent         where toEncoding = toEncodingDropUnary
+instance ToJSON NodeSelectEvent       where toEncoding = toEncodingDropUnary
+instance ToJSON DisconnectEvent       where toEncoding = toEncodingDropUnary
+instance ToJSON SearcherAcceptEvent   where toEncoding = toEncodingDropUnary
+instance ToJSON SearcherEditEvent     where toEncoding = toEncodingDropUnary
+instance ToJSON SelectVisualizerEvent where toEncoding = toEncodingDropUnary
+instance ToJSON Target                where toEncoding = toEncodingDropUnary
+instance ToJSON ViewEvent             where toEncoding = toEncodingDropUnary
+instance ToJSON BaseEvent             where toEncoding = toEncodingDropUnary
 
 instance EventName ViewEvent where
     eventName = intercalate "." . view path
@@ -99,28 +171,28 @@ instance IsTrackedEvent ViewEvent where
 
 mouseAltKey :: BaseEvent -> Bool
 mouseAltKey = \case
-    MouseEvent { altKey = key } -> key
-    _ -> False
+    Mouse evt -> evt ^. altKey
+    _         -> False
 
 mouseCtrlKey :: BaseEvent -> Bool
 mouseCtrlKey = \case
-    MouseEvent { ctrlKey = key } -> key
-    _ -> False
+    Mouse evt -> evt ^. ctrlKey
+    _         -> False
 
 mouseShiftKey :: BaseEvent -> Bool
 mouseShiftKey = \case
-    MouseEvent { shiftKey = key } -> key
-    _ -> False
+    Mouse evt -> evt ^. shiftKey
+    _         -> False
 
 mouseMetaKey :: BaseEvent -> Bool
 mouseMetaKey = \case
-    MouseEvent { metaKey = key } -> key
-    _ -> False
+    Mouse evt -> evt ^. metaKey
+    _         -> False
 
 mouseButton ::  Int -> BaseEvent -> Bool
 mouseButton btn = \case
-    MouseEvent { button = btn' } -> btn == btn'
-    _ -> False
+    Mouse evt -> evt ^. button == btn
+    _         -> False
 
 leftButton :: Int
 leftButton = 0
@@ -183,8 +255,8 @@ withCtrlAltShift evt b = mouseButton b evt
 
 mousePosition :: BaseEvent -> ScreenPosition
 mousePosition = \case
-    MouseEvent { pageX = x, pageY = y } -> fromDoubles x y
-    _ -> def
+    Mouse evt -> fromDoubles (evt ^. pageX) (evt ^. pageY)
+    _         -> def
 
 instance Convertible Target InPortRef where
     convert (Target [nodeLoc, portId]) = InPortRef (read nodeLoc) (read portId)
@@ -198,3 +270,7 @@ instance Convertible Target OutPortRef where
 instance Convertible Target NodeLoc where
     convert (Target [nodeLoc]) = read nodeLoc
     convert _ = error "Cannot parse Target to NodeLoc"
+
+instance Convertible Target VisualizerId where
+    convert (Target [visId]) = read visId
+    convert _ = error "Cannot parse Target to VisualizerId"

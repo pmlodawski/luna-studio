@@ -23,19 +23,20 @@ import qualified NodeEditor.State.Global        as Global
 
 
 handle :: Event -> Maybe (Command Global.State ())
-handle (UI (AppEvent     App.Resize          ))        = Just   updateScene
-handle (UI (AppEvent     App.MouseLeave      ))        = Just $ endActions actionsClosingOnMouseLeave
-handle (Shortcut         (Shortcut.Event command _))   = Just $ handleCommand command
-handle  Init                                           = Just $ Batch.getProgram def True
-handle (Atom (Atom.SetFile path))                      = Just $ setFile path
-handle (Atom (Atom.UpdateFilePath path))               = Just $ updateFilePath path
-handle (Atom  Atom.UnsetFile)                          = Just   unsetFile
-handle (View (ViewEvent path _ base)) = case path of
-    ["NodeEditor"] -> case View.type_ base of
-        "mouseout" -> Just $ endActions actionsClosingOnMouseLeave
-        _ -> Nothing
+handle (UI (AppEvent App.MouseLeave))        = Just
+    $ endActions actionsClosingOnMouseLeave
+handle (UI (AppEvent App.Resize))            = Just updateScene
+handle (Shortcut (Shortcut.Event command _)) = Just $ handleCommand command
+handle Init                                  = Just $ Batch.getProgram def True
+handle (Atom (Atom.SetFile path))            = Just $ setFile path
+handle (Atom (Atom.UpdateFilePath path))     = Just $ updateFilePath path
+handle (Atom  Atom.UnsetFile)                = Just unsetFile
+handle (View (ViewEvent path _ base))        = case path of
+    ["NodeEditor"] -> case base ^? View._Mouse . View.type_ of
+        Just "mouseout" -> Just $ endActions actionsClosingOnMouseLeave
+        _               -> Nothing
     _ -> Nothing
-handle _                                                                = Nothing
+handle _ = Nothing
 
 
 cancelAllActions :: Command State [ActionRep]
