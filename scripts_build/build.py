@@ -51,6 +51,16 @@ def build_frontend (frontend_args, gui_url, dev_mode):
         print("Status : FAIL")
         sys.exit(1)
 
+def build_js_only (frontend_args, gui_url, dev_mode):
+    try:
+        print("Building JS")
+        atom_prepare.run(dev_mode)
+        atom_apm.run(gui_url, frontend_args, dev_mode)
+        copy_configs.run()
+    except subprocess.CalledProcessError:
+        print("Status : FAIL")
+        sys.exit(1)
+
 def build_runner(runner_args):
     try:
         stack_build.create_bin_dirs()
@@ -65,6 +75,7 @@ def main ():
     parser.add_argument("--backend", help="Build backend only", action="store_true")
     parser.add_argument("--runner", help="Build runner only", action="store_true")
     parser.add_argument("--frontend", help="Build frontend only", action="store_true")
+    parser.add_argument("--js_only", action="store_true")
     parser.add_argument("--release", help="Build package in release mode", action="store_false")
     parser.add_argument("--gui_url", help="Path to uploaded gui")
     parser.add_argument("--backend-stack", help="Additional options passed to stack while building backend", action="append", dest="stack_backend_args", default=['--copy-bins', '--install-ghc', '--ghc-options=-fexternal-interpreter'])
@@ -78,6 +89,8 @@ def main ():
         build_runner (args.stack_runner_args)
     elif args.frontend:
         build_frontend (args.stack_frontend_args, args.gui_url, dev_mode=args.release)
+    elif args.js_only:
+        build_js_only (args.stack_frontend_args, args.gui_url, dev_mode=args.release)
     else: build_app (args.stack_backend_args, args.stack_frontend_args, args.stack_runner_args, args.gui_url, dev_mode=args.release)
 
 main()
