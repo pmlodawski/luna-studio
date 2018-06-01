@@ -162,6 +162,18 @@ class LunaNodeEditorTab extends View
             # searcher
             'luna-studio:searcher-open': (e)        -> pushShortcutEvent("SearcherOpen", e.detail)
             'luna-studio:searcher-edit-expression': -> pushShortcutEvent("SearcherEditExpression")
+            # debug
+            'luna-studio:debug-layer-0': -> pushShortcutEvent("EnableDebugLayer", "0")
+            'luna-studio:debug-layer-1': -> pushShortcutEvent("EnableDebugLayer", "1")
+            'luna-studio:debug-layer-2': -> pushShortcutEvent("EnableDebugLayer", "3")
+            'luna-studio:debug-layer-3': -> pushShortcutEvent("EnableDebugLayer", "2")
+            'luna-studio:debug-layer-4': -> pushShortcutEvent("EnableDebugLayer", "4")
+            'luna-studio:debug-layer-5': -> pushShortcutEvent("EnableDebugLayer", "5")
+            'luna-studio:debug-layer-6': -> pushShortcutEvent("EnableDebugLayer", "6")
+            'luna-studio:debug-layer-7': -> pushShortcutEvent("EnableDebugLayer", "7")
+            'luna-studio:debug-layer-8': -> pushShortcutEvent("EnableDebugLayer", "8")
+            'luna-studio:debug-layer-9': -> pushShortcutEvent("EnableDebugLayer", "9")
+
         atom.commands.add '.luna-searcher',
             # searcher
             'luna-studio:searcher-accept-0':     -> pushSearcherEvent("HintShortcut", 0)

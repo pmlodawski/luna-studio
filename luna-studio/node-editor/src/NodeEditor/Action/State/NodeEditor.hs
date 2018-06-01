@@ -360,3 +360,6 @@ setNodeProfilingData nl t
 getExpressionNodeType :: NodeLoc -> Command State (Maybe TypeRep)
 getExpressionNodeType
     = fmap (maybe def (view ExpressionNode.nodeType)) . getExpressionNode
+
+setDebugLayer :: Int -> Command State ()
+setDebugLayer l = modifyNodeEditor $ NE.debugLayer ?= l

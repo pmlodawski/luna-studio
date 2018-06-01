@@ -150,3 +150,15 @@
   'ctrl-m'            : 'luna-studio:mock-add-monad'
   'cmd-shift-m'       : 'luna-studio:mock-clear-monads'
   'ctrl-shift-m'      : 'luna-studio:mock-clear-monads'
+  # debug basegl
+  'ctrl-alt-0'        : 'luna-studio:debug-layer-0' # EnableDebugLayer
+  'ctrl-alt-1'        : 'luna-studio:debug-layer-1' # EnableDebugLayer
+  'ctrl-alt-2'        : 'luna-studio:debug-layer-2' # EnableDebugLayer
+  'ctrl-alt-3'        : 'luna-studio:debug-layer-3' # EnableDebugLayer
+  'ctrl-alt-4'        : 'luna-studio:debug-layer-4' # EnableDebugLayer
+  'ctrl-alt-5'        : 'luna-studio:debug-layer-5' # EnableDebugLayer
+  'ctrl-alt-6'        : 'luna-studio:debug-layer-6' # EnableDebugLayer
+  'ctrl-alt-7'        : 'luna-studio:debug-layer-7' # EnableDebugLayer
+  'ctrl-alt-8'        : 'luna-studio:debug-layer-8' # EnableDebugLayer
+  'ctrl-alt-9'        : 'luna-studio:debug-layer-9' # EnableDebugLayer
+

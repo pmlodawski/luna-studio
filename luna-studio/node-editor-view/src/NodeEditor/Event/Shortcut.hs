@@ -58,6 +58,8 @@ data Command = Cancel
              -- mock-monads
              | MockAddMonad
              | MockClearMonads
+             -- debug basegl
+             | EnableDebugLayer
              deriving (Bounded, Eq, Enum, FromJSON, Generic, NFData, Read, Show, Typeable)
 
 data ShortcutEvent = Event

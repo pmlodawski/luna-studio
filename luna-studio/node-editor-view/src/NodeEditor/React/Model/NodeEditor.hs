@@ -62,6 +62,7 @@ data NodeEditor = NodeEditor { _expressionNodes          :: ExpressionNodesMap
                              , _graphStatus              :: GraphStatus
                              , _layout                   :: Layout
                              , _topZIndex                :: Int
+                             , _debugLayer               :: Maybe Int --FIXME: This is used only to show different layers of basegl
                              } deriving (Eq, Generic)
 
 data VisualizersPaths    = VisualizersPaths { _internalVisualizersPath :: FilePath
@@ -86,6 +87,7 @@ instance Default NodeEditor where
         {- graphStatus              -} NoGraph
         {- layout                   -} def
         {- topZIndex                -} def
+        {- debugLayer               -} def
 
 makeLenses ''VisualizersPaths
 makeLenses ''NodeEditor
