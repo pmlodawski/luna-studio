@@ -40,7 +40,9 @@ printExpression :: GraphOp m => NodeRef -> m String
 printExpression = const $ return "exp" -- fmap convert . CodeGen.subpass CompactStyle . generalize
 
 printFullExpression :: GraphOp m => NodeRef -> m Text
-printFullExpression = Prettyprint.run @Prettyprint.Simple def
+printFullExpression n = match n $ \case
+    Marked m e -> return "markedExpr!!!!!!"
+    _          -> Prettyprint.run @Prettyprint.Simple def n
 
 printName :: GraphOp m => NodeRef -> m String
 printName node = convert <$> Prettyprint.run @Prettyprint.Simple def node

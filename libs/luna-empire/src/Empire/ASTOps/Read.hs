@@ -117,9 +117,9 @@ getNodeId node = do
     varsInside <- (getVarsInside =<< getVarNode node) `catch` (\(_e :: NotUnifyException) -> return [])
     varsNodeIds <- mapM getNodeId varsInside
     let leavesNodeId = foldl' (<|>) Nothing varsNodeIds
-    print "rootNodeId" >> print rootNodeId
-    print "varNodeId" >> print varNodeId
-    print "leavesNodeId" >> print leavesNodeId
+    -- print "rootNodeId" >> print rootNodeId
+    -- print "varNodeId" >> print varNodeId
+    -- print "leavesNodeId" >> print leavesNodeId
     return $ rootNodeId <|> varNodeId <|> leavesNodeId
 
 getPatternNames :: GraphOp m => NodeRef -> m [String]

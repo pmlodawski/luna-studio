@@ -37,7 +37,7 @@ import           LunaStudio.Data.Node            (NodeId)
 import           LunaStudio.Data.NodeCache       (portMappingMap)
 import           LunaStudio.Data.PortRef         (OutPortRefTemplate(..))
 import           LunaStudio.Data.Project         (ProjectId)
-import qualified Parser.Data.CodeSpan as CodeSpan
+import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
 import           Data.Text.Span                  (SpacedSpan(..))
 
 import           Empire.Commands.Library         (withLibrary)
@@ -145,10 +145,12 @@ withRootedFunction uuid act = do
     diffs <- runASTOp $ do
         cls <- use Graph.clsClass
         funs <- ASTRead.classFunctions cls
+        print "expected" >> print uuid
         forM funs $ \fun -> ASTRead.cutThroughDocAndMarked fun >>= \f -> matchExpr f $ \case
-            _ -> return Nothing
+            -- _ -> print "nuthin'" >> return Nothing
             ASGFunction n _ _ -> do
                 nodeId <- ASTRead.getNodeId fun
+                print "checking" >> print nodeId
                 if (nodeId == Just uuid) then do
                     lenDiff <- if fun == f then do
                         LeftSpacedSpan (SpacedSpan off prevLen) <- view CodeSpan.realSpan <$> getLayer @CodeSpan.CodeSpan f

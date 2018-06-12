@@ -43,8 +43,8 @@ import           LunaStudio.Data.NodeMeta               (NodeMeta)
 -- import qualified Luna.Syntax.Text.Parser.Marker         as Luna
 -- import qualified Luna.Syntax.Text.Parser.Parser         as Parser
 -- import qualified Luna.Syntax.Text.Parser.Parsing        as Parser ()
-import Parser.State.Marker (ID)
-import qualified Parser.Data.CodeSpan       as CodeSpan
+import Luna.Syntax.Text.Parser.State.Marker (ID)
+import qualified Luna.Syntax.Text.Parser.Data.CodeSpan       as CodeSpan
 import           Data.Text.Position                     (Delta)
 
 -- import           System.Log                             (Logger, DropLogger, dropLogs, MonadLogging)
@@ -148,7 +148,7 @@ withVis = id
 
 
 
-type OnDemandPass pass = (Typeable pass, Pass.Compile pass IO)
+-- type OnDemandPass pass = (Typeable pass, Pass.Compile pass IO)
 
 -- runPass :: forall pass. OnDemandPass pass => Pass.Pass pass () -> IO ()
 -- runPass pass = Scheduler.runManual registers passes

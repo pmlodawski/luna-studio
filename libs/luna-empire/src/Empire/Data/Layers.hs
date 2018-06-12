@@ -31,7 +31,7 @@ import           Luna.IR                        hiding (Import, Marker, String)
 -- import           Luna.Syntax.Text.Parser.State.Marker (MarkedExprMap)
 -- import           OCI.IR.Class                   (Import)
 import           Luna.Pass
-import qualified Parser.Data.CodeSpan as CodeSpan
+import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
 -- import           Data.Graph.Component.Provider   (DynamicProvider1)
 import           Data.Graph.Data.Layer.Class   (Layer)
 import qualified Data.Graph.Component.Node.Layer   as Layer

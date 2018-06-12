@@ -31,7 +31,7 @@ import           Empire.Data.AST                  (SomeASTException)
 import qualified Empire.Data.BreadcrumbHierarchy  as BH
 import qualified Empire.Data.Graph                as Graph (breadcrumbHierarchy, clsClass, clsFuns, code, codeMarkers, fileOffset)
 import           Empire.Empire                    (CommunicationEnv (..), Empire)
-import qualified Parser.Data.CodeSpan as CodeSpan
+import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
 -- import qualified Luna.Syntax.Text.Parser.Parser   as Parser (ReparsingChange (..), ReparsingStatus (..))
 import           LunaStudio.Data.Breadcrumb       (Breadcrumb (..), BreadcrumbItem (Definition))
 import           LunaStudio.Data.Diff             (Diff (..))

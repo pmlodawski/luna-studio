@@ -27,33 +27,38 @@ module Empire.Prelude (module X, nameToString, pathNameToString, stringToName,
                       pattern ImportHub, pattern Import, pattern ImportSrc
                       ) where
 
+import qualified Control.Monad.State.Layered as Layered
 import qualified Data.Convert              as Convert
 import qualified Data.Typeable as Typeable
-import qualified Data.PtrList.Mutable as PtrList
+-- import qualified Data.PtrList.Mutable as PtrList
 import qualified Data.PtrSet.Mutable as PtrSet
 import qualified Data.Graph.Data.Component.Set as PtrSet
 -- import qualified Data.Graph.Component.Container as PtrSet
+import qualified Data.Graph.Data.Component.Vector as PtrList
 import qualified Data.Text.Span as Span
 -- import qualified Data.Graph.Component as Component
 import qualified Data.Graph.Component.Node.Class    as Node
 import qualified Data.Graph.Data.Layer.Class as Layer
 import qualified Data.Graph.Component.Node.Layer as Layer
 import qualified Data.Graph.Data.Layer.Layout as Layout
+import qualified Data.Graph.Component.Node.Destruction as Destruct
 -- import qualified OCI.Pass.Registry as Registry
 import qualified Luna.IR as IR
 import OCI.IR.Link.Class (type (*-*), Links)
 import OCI.IR.Term.Class (Term, Terms)
+import Foreign.Info.ByteSize (ByteSize)
+import Foreign.Memory.Pool (MemPool)
 import qualified Luna.IR.Term.Core as Ast
 import qualified Data.Set.Mutable.Class     as Set
 import qualified Luna.IR.Term.Literal as Ast
 import qualified Luna.IR.Term.Ast.Class as Ast
 import Data.Graph.Data.Component.Class (Component)
 import qualified Data.Graph.Data.Component.Class as Component
-import qualified Data.Graph.Data.Component.List as List (List(..))
+import qualified Data.Graph.Data.Component.List as List (ComponentList(..))
 import qualified Data.Graph.Component.Edge as Edge
 import qualified Data.Graph.Component.Edge.Construction as Construction
-import qualified Data.Graph.Traversal.SubComponents as Traversal
-import Parser.State.Marker (TermMap(..))
+import qualified Data.Graph.Fold.SubComponents as Traversal
+import Luna.Syntax.Text.Parser.State.Marker (TermMap(..))
 import Luna.Pass (Pass)
 import qualified Luna.Pass.Attr as Attr
 import Control.Lens ((?=), (.=), (%=), to, makeWrapped, makePrisms, use, preuse,
@@ -78,8 +83,8 @@ nameToText = convert . convertTo @String
 -- pathNameToString :: IR.QualName -> String
 pathNameToString = error "pathNameToString"
 
--- stringToName :: String -> IR.Name
-stringToName = error "stringToName"
+stringToName :: String -> IR.Name
+stringToName = convert
 
 putLayer :: forall layer t layout m. Layer.Writer t layer m => t layout -> Layer.Data layer layout -> m ()
 putLayer = Layer.write @layer
@@ -160,11 +165,11 @@ target = \a -> IR.target a >>= \b -> return (coerce b)
 matchExpr :: forall t layout m. Layer.Reader t IR.Model m => t layout -> (IR.UniTerm layout -> _) -> m _
 matchExpr e f = Layer.read @IR.Model e >>= f
 
-ptrListToList :: (MonadIO m, PtrList.IsPtrList t, PtrList.IsPtr a) => t a -> m [a]
+ptrListToList :: MonadIO m => PtrList.ComponentVector comp layout -> m [Component comp layout]
 ptrListToList = PtrList.toList
 
-ociSetToList :: (MonadIO m, PtrSet.IsPtr a) => PtrSet.Set c l -> m [a]
-ociSetToList = PtrSet.toList . (coerce :: PtrSet.Set c l -> PtrSet.UnmanagedPtrSet a)
+ociSetToList :: (MonadIO m, PtrSet.IsPtr a) => PtrSet.ComponentSet c l -> m [a]
+ociSetToList = Set.toList . (coerce :: PtrSet.ComponentSet c l -> PtrSet.UnmanagedPtrSet a)
 
 generalize :: Coercible a b => a -> b
 generalize = coerce
@@ -176,7 +181,7 @@ replace :: ( Monad m
            ) => Expr l -> Expr l' -> m ()
 replace = error "replace"
 
-irDelete e = return () -- error "delete"
+irDelete e = error "delete"
 
 substitute :: ( MonadIO m
               , Layer.Reader (Component Node.Nodes) IRSuccs m
@@ -208,9 +213,25 @@ replaceSource newSource link = do
 narrowTerm :: forall b m a. Monad m => Expr a -> m (Maybe (Expr b))
 narrowTerm e = return $ Just (coerce e)
 
-deleteSubtree e = return () -- error "deleteSubtree"
-deepDelete = error "deepDelete"
-deepDeleteWithWhitelist e set = return () -- error "deepDeleteWithWhitelist"
+deleteSubtree :: ( Layer.Reader Node.Node IR.Model m
+          , Layer.IsUnwrapped Node.Uni
+          , Traversal.SubComponents Edge.Edges m (Node.Uni layout)
+          , MonadIO m
+          , Layered.Getter (ByteSize (Component Edge.Edges)) m
+          , Layered.Getter (Layer.DynamicManager Edge.Edges) m
+          , Layered.Getter (MemPool (Component.Some Edge.Edges)) m
+          ) => Node.Node layout -> m ()
+deleteSubtree e = Destruct.delete e
+deepDelete :: ( Layer.Reader Node.Node IR.Model m
+          , Layer.IsUnwrapped Node.Uni
+          , Traversal.SubComponents Edge.Edges m (Node.Uni layout)
+          , MonadIO m
+          , Layered.Getter (ByteSize (Component Edge.Edges)) m
+          , Layered.Getter (Layer.DynamicManager Edge.Edges) m
+          , Layered.Getter (MemPool (Component.Some Edge.Edges)) m
+          ) => Node.Node layout -> m ()
+deepDelete = Destruct.delete
+deepDeleteWithWhitelist e set = error "deepDeleteWithWhitelist"
 
 
 link :: Construction.Creator m => Term src -> Term tgt -> m (Link src tgt)
@@ -218,7 +239,7 @@ link = Construction.new
 
 modifyExprTerm = error "modifyExprTerm"
 
-compListToList :: List.List a -> [Component.Some a]
+compListToList :: List.ComponentList a -> [Component.Some a]
 compListToList List.Nil = []
 compListToList (List.Cons a l) = a : compListToList l
 

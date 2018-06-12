@@ -27,11 +27,11 @@ import           Luna.IR              hiding (Marker, get, put, match)
 import qualified Luna.Pass        as Pass
 
 -- import           Luna.Pass.Data.ExprRoots                     (ExprRoots(..))
-import           Parser.Data.Invalid               (Invalids)
+import           Luna.Syntax.Text.Parser.Data.Invalid               (Invalids)
 
 -- import qualified Parser.Parser               as Parser
 -- import qualified Parser.Parsing              as Parsing
-import           Parser.Data.CodeSpan (CodeSpan)
+import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan)
 -- import           Luna.Syntax.Text.Parser.Marker               (MarkedExprMap)
 -- import           Luna.Syntax.Text.Source                      (Source)
 

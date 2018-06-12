@@ -86,9 +86,9 @@ import qualified Empire.Pass.PatternTransformation            as PatternTransfor
 -- import           Luna.Pass.Resolution.Data.UnresolvedVars     (UnresolvedVars(..))
 -- import           Luna.Pass.Resolution.Data.UnresolvedConses   (UnresolvedConses(..), NegativeConses(..))
 -- import qualified Luna.Pass.Resolution.AliasAnalysis           as AliasAnalysis
-import           Parser.Data.Invalid (Invalids)
+import           Luna.Syntax.Text.Parser.Data.Invalid (Invalids)
 -- import qualified Parser.Parser               as Parser
-import           Parser.Data.CodeSpan        (CodeSpan)
+import           Luna.Syntax.Text.Parser.Data.CodeSpan        (CodeSpan)
 -- import           Luna.Syntax.Text.Parser.Marker               (MarkedExprMap)
 -- import           Luna.Syntax.Text.Source                      (Source)
 -- import qualified Luna.Pass.Typechecking.Typecheck             as Typecheck
@@ -183,10 +183,11 @@ type ASTOpReq a m = (MonadIO m,
                      Layer.Writer Node IR.Model m,
                      Layer.Writer Edge IR.Target m,
                      Layer.Writer Edge IR.Source m,
-                     Layered.Getter (LunaGraph.LayerByteOffset Nodes SpanLength) m,
-                     Layered.Getter (LunaGraph.LayerByteOffset Nodes Meta) m,
-                     Layered.Getter (LunaGraph.LayerByteOffset Nodes Marker) m,
-                     Layered.Getter (LunaGraph.LayerByteOffset Nodes CodeSpan) m,
+                     -- LunaGraph.ComputeLayerByteOffset Source (LunaGraph.ComponentLayers EmpirePass Edges),
+                     -- Layered.Getter (LunaGraph.LayerByteOffset Nodes SpanLength) m,
+                     -- Layered.Getter (LunaGraph.LayerByteOffset Nodes Meta) m,
+                     -- Layered.Getter (LunaGraph.LayerByteOffset Nodes Marker) m,
+                     -- Layered.Getter (LunaGraph.LayerByteOffset Nodes CodeSpan) m,
                      Layered.Getter (ByteSize (Component Nodes)) m,
                      Layered.Getter (ByteSize (Component Edges)) m,
                      Layered.Getter (Layer.DynamicManager Edges) m,
@@ -229,13 +230,12 @@ instance Default PassReturnValue where def = PassReturnValue Nothing
 data EmpirePass
 type instance Pass.Spec EmpirePass t = EmpirePassSpec t
 type family EmpirePassSpec t where
-    EmpirePassSpec Pass.Stage             = PatternTransformation.EmpireStage
-    EmpirePassSpec (Pass.In  Pass.Attrs)  = Pass.List '[]  -- Parser attrs temporarily - probably need to call it as a separate Pass
-    EmpirePassSpec (Pass.Out Pass.Attrs)  = Pass.List '[]
-    EmpirePassSpec (Pass.In  AnyExpr)     = Pass.List '[Model, Type, Users, SpanLength, CodeSpan, Meta, Marker]
-    EmpirePassSpec (Pass.Out AnyExpr)     = Pass.List '[Model, Type, Users, SpanLength, CodeSpan, Meta, Marker]
-    EmpirePassSpec (Pass.In  AnyExprLink) = Pass.List '[SpanOffset, Source, Target]
-    EmpirePassSpec (Pass.Out AnyExprLink) = Pass.List '[SpanOffset, Source, Target]
+    EmpirePassSpec (Pass.In  Pass.Attrs)  = '[]  -- Parser attrs temporarily - probably need to call it as a separate Pass
+    EmpirePassSpec (Pass.Out Pass.Attrs)  = '[]
+    EmpirePassSpec (Pass.In  AnyExpr)     = '[Model, Type, Users, SpanLength, CodeSpan, Meta, Marker]
+    EmpirePassSpec (Pass.Out AnyExpr)     = '[Model, Type, Users, SpanLength, CodeSpan, Meta, Marker]
+    EmpirePassSpec (Pass.In  AnyExprLink) = '[SpanOffset, Source, Target]
+    EmpirePassSpec (Pass.Out AnyExprLink) = '[SpanOffset, Source, Target]
     EmpirePassSpec t                      = Pass.BasicPassSpec t
 
 
@@ -260,7 +260,7 @@ type family EmpirePassSpec t where
 
 match :: (Monad m, Layer.Reader t Model m) => t layout -> (UniTerm layout -> m a) -> m a
 match = matchExpr
-deriving instance MonadCatch (Pass t)
+deriving instance MonadCatch (Pass stage t)
 deriving instance MonadCatch m => MonadCatch (MultiState.MultiStateT s m)
 deriving instance MonadCatch m => MonadCatch (LunaGraph.GraphT s m)
 deriving instance MonadCatch m => MonadCatch (Layered.StateT s m)
@@ -328,22 +328,19 @@ defaultClsAST = do
             -- Scheduler.registerAttr     @PassReturnValue
             -- Scheduler.enableAttrByType @PassReturnValue
             m <- liftIO $ newIORef (error "emptyreturn")
-            Scheduler.registerPassFromFunction__ @EmpirePass $ do
+            Scheduler.registerPassFromFunction__ @PatternTransformation.EmpireStage @EmpirePass $ do
                 a <- do
                     hub <- IR.importHub []
-                    n <- IR.cons "None" []
-                    name <- IR.rawString $ convert ("main" :: String)
-                    f <- IR.function name [] n
-                    c <- IR.record False "A" [] [] [f]
+                    c <- IR.record False "A" [] [] []
                     IR.unit hub [] c
                 liftIO $ writeIORef m $ generalize a
                 -- Attr.put $ PassReturnValue $ unsafeCoerce $ Just a
                 -- b <- Attr.get @PassReturnValue
-                b <- liftIO $ readIORef m
-                print a
-                print b
-                matchExpr b $ \case
-                    Unit _ _ c -> print =<< source c
+                -- b <- liftIO $ readIORef m
+                -- print a
+                -- print b
+                -- matchExpr b $ \case
+                --     Unit _ _ c -> print =<< source c
             Scheduler.runPassByType @EmpirePass
             -- st <- Layered.get @Scheduler.State
             -- let [a] = Map.elems (st ^. Scheduler.attrs)
@@ -363,7 +360,7 @@ defaultClsAST = do
             return foo
         st <- LunaGraph.getState
         return (foo, st)
-    print "returned"
+    -- print "returned"
     return (a, grState, scState)
 
 defaultPMState :: IO (Graph.PMState a)
@@ -383,7 +380,7 @@ defaultClsGraph = do
 
 
 runASTOp :: forall a g m. (Graph.HasAST g)
-         => (StateT g (Pass.Pass EmpirePass) a)
+         => (StateT g (Pass.Pass PatternTransformation.EmpireStage EmpirePass) a)
          -> Command g a
 runASTOp p = do
     g <- get
@@ -392,12 +389,12 @@ runASTOp p = do
     (((g', ret), scSt), grSt) <- flip LunaGraph.run (g ^. Graph.ast . Graph.pmState . Graph.pmStage) $ flip Layered.runT (g ^. Graph.ast . Graph.pmState . Graph.pmScheduler) $ unwrap $ Scheduler.SchedulerT $ do
         -- Scheduler.registerAttr     @PassReturnValue
         -- Scheduler.enableAttrByType @PassReturnValue
-        Scheduler.registerPassFromFunction__ $ do
+        Scheduler.registerPassFromFunction__ @PatternTransformation.EmpireStage @EmpirePass $ do
             (a, g') <- runStateT p g
-            liftIO $ print "put Ret1"
+            -- liftIO $ print "put Ret1"
             -- Attr.put $ PassReturnValue $ unsafeCoerce $ Just (g', a)
             liftIO $ writeIORef m (g', a)
-            liftIO $ print "put Ret2"
+            -- liftIO $ print "put Ret2"
         Scheduler.runPassByType @EmpirePass
         (g', a) <- liftIO $ readIORef m
         return (g', a)
@@ -407,11 +404,11 @@ runASTOp p = do
         --     Just (PassReturnValue foo) -> case unsafeCoerce foo of
         --         Just a -> return a
         --         _      -> error "runastop: empty return"
-    print "runned"
+    -- print "runned"
     -- put g'
     put $ g' & Graph.ast . Graph.pmState . Graph.pmScheduler .~ scSt
     put $ g' & Graph.ast . Graph.pmState . Graph.pmStage .~ grSt
-    print "putted"
+    -- print "putted"
     return ret
 
     -- inits = do

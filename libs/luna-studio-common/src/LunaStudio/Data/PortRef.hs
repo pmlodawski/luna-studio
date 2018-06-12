@@ -93,7 +93,7 @@ srcNodeId :: Lens' OutPortRef NodeId
 srcNodeId = srcNodeLoc . NodeLoc.nodeId
 
 toPortRefS :: OutPortRef -> OutPortRefS
-toPortRefS (OutPortRef a b) = OutPortRef (convert a) (convert (coerce b :: [Int]))
+toPortRefS (OutPortRef a b) = OutPortRef (convert a) (unsafePerformIO $ Foreign.fromList (coerce b :: [Int]))
 
 toPortRef :: OutPortRefS -> OutPortRef
 toPortRef (OutPortRef a b) = OutPortRef (convert a) (coerce (unsafePerformIO (Foreign.toList b)) :: OutPortId)

@@ -154,18 +154,18 @@ import           Empire.Prelude                   hiding (head, toList)
 -- import qualified Luna.Compilation                 as Compilation
 import qualified Luna.IR                          as IR
 import qualified Luna.IR.Term.Ast.Class           as Term
-import           Empire.Visualizer                (displayVisualization)
 -- import qualified Luna.IR.Term.Unit                as Term
 -- import qualified Luna.Project                     as Project
 import           Luna.Syntax.Text.Analysis.SpanTree (Spanned(..))
 import qualified Luna.Syntax.Text.Analysis.SpanTree as SpanTree
 import qualified Luna.Syntax.Text.Lexer           as Lexer
-import           Parser.Data.CodeSpan (CodeSpan)
-import qualified Data.PtrList.Mutable as PtrList
+import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan)
+import qualified Data.Graph.Data.Component.Vector as PtrList
+-- import qualified Data.PtrList.Mutable as PtrList
 import qualified Data.Set.Mutable.Class     as MutableSet
 import qualified Data.Vector.Storable.Foreign as Foreign
-import qualified Parser.Data.CodeSpan as CodeSpan
-import           Parser.State.Marker (TermMap(..))
+import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
+import           Luna.Syntax.Text.Parser.State.Marker (TermMap(..))
 -- import           Luna.Syntax.Text.Parser.Marker   (MarkedExprMap (..))
 -- import qualified Luna.Syntax.Text.Parser.Marker   as Luna
 import qualified LunaStudio.API.Control.Interpreter as Interpreter
@@ -325,13 +325,13 @@ addFunNode loc parsing uuid expr meta = withUnit loc $ do
         insertedCharacters <- insertFunAfter previousFunction markedFunction markedCode
         cls' <- ASTRead.classFromUnit unit
         Just (cls'' :: Expr (ClsASG)) <- narrowTerm cls'
-        l <- coerce <$> link markedFunction cls''
-        links <- matchExpr cls' $ \case
-            ClsASG _ _ _ _ decls -> do
-                links <- coerce <$> ptrListToList decls
-                newFuns <- putNewFunctionRef l previousFunction links
-                ASTBuilder.unfoldM' (\a -> PtrList.popFront a >>= \case Just _ -> return (Just a); Nothing -> return Nothing) decls
-                PtrList.insertMany decls (coerce newFuns)
+        -- l <- coerce <$> link markedFunction cls''
+        -- links <- matchExpr cls' $ \case
+        --     ClsASG _ _ _ _ decls -> do
+        --         links <- coerce <$> ptrListToList decls
+        --         newFuns <- putNewFunctionRef l previousFunction links
+        --         ASTBuilder.unfoldM' (\a -> PtrList.popFront a >>= \case Just _ -> return (Just a); Nothing -> return Nothing) decls
+        --         PtrList.insertMany decls (coerce newFuns)
 
         -- IR.modifyExprTerm cls'' $ wrapped . IR.termClsASG_decls .~ (map unsafeGeneralize newFuns :: [IR.Link (Expr IR.Draft) (Expr Term.ClsASG)])
         -- let a = cls'' ^. Term.recordCons

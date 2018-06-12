@@ -70,4 +70,4 @@ toNodeMeta :: NodeMetaS -> NodeMeta
 toNodeMeta (NodeMeta p d s) = NodeMeta p d (over both (convert . unsafePerformIO . Foreign.toList) <$> s)
 
 toNodeMetaS :: NodeMeta -> NodeMetaS
-toNodeMetaS (NodeMeta p d s) = NodeMeta p d (over both (convertVia @String) <$> s)
+toNodeMetaS (NodeMeta p d s) = NodeMeta p d (over both (unsafePerformIO . Foreign.fromList . convert) <$> s)

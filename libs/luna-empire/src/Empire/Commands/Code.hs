@@ -30,9 +30,9 @@ import qualified Luna.IR                 as IR
 import           Data.Text.Position      (Delta)
 import           Empire.Data.Layers      (SpanOffset, SpanLength)
 import           Data.Text.Span          (SpacedSpan(..), leftSpacedSpan)
-import qualified Parser.Data.CodeSpan as CodeSpan
-import           Parser.Data.CodeSpan (CodeSpan, realSpan)
-import qualified Parser.State.Marker   as Luna
+import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
+import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan, realSpan)
+import qualified Luna.Syntax.Text.Parser.State.Marker   as Luna
 
 import           Luna.Syntax.Text.Lexer.Grammar     (isOperator)
 import qualified Luna.Syntax.Text.Lexer             as Lexer
@@ -309,16 +309,16 @@ getOffset ref = do
             inputs         <- inputs =<< target more
             realInputs     <- mapM source inputs
             let leftInputs = takeWhile (/= ref) realInputs
-            print "realInputs" >> print realInputs
-            print "leftInputs" >> print leftInputs
+            -- print "realInputs" >> print realInputs
+            -- print "leftInputs" >> print leftInputs
             moreOffset     <- getOffset =<< target more
             lefts          <- mapM (fmap (view CodeSpan.realSpan) . getLayer @CodeSpan) leftInputs
-            print "lefts" >> print lefts
+            -- print "lefts" >> print lefts
             return $ moreOffset <> (mconcat lefts)
     LeftSpacedSpan (SpacedSpan off _) <- view CodeSpan.realSpan <$> getLayer @CodeSpan ref
-    print "getOffset"
-    matchExpr ref $ print
-    print leftSpan >> print off
+    -- print "getOffset"
+    -- matchExpr ref $ print
+    -- print leftSpan >> print off
     return $ leftSpan <> LeftSpacedSpan (SpacedSpan off 0)
 
 getCurrentBlockBeginning :: GraphOp m => m Delta

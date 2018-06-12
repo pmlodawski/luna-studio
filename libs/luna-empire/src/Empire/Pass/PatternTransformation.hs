@@ -26,8 +26,8 @@ import qualified OCI.Pass.Definition.Declaration as Pass
 import           Empire.Data.Layers   (Marker, Meta, TypeLayer, attachEmpireLayers, SpanLength, SpanOffset)
 import           Data.Text.Position      (Delta)
 import           Data.Text.Span          (SpacedSpan(..), leftSpacedSpan)
-import qualified Parser.Data.CodeSpan as CodeSpan
-import           Parser.Data.CodeSpan (CodeSpan, realSpan)
+import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
+import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan, realSpan)
 -- import Data.TypeDesc
 
 import qualified Data.Map   as Map
@@ -49,19 +49,18 @@ type instance Graph.ComponentLayers EmpireStage AnyExpr
 data PatternTransformation
 type instance Pass.Spec PatternTransformation t = PatternTransformationSpec t
 type family PatternTransformationSpec t where
-    PatternTransformationSpec Pass.Stage             = EmpireStage
-    PatternTransformationSpec (Pass.In  Pass.Attrs)  = Pass.List '[ExprRoots]
-    PatternTransformationSpec (Pass.Out Pass.Attrs)  = Pass.List '[]
-    PatternTransformationSpec (Pass.In  AnyExpr)     = Pass.List '[Model, Type, Users, SpanLength, Meta, Marker, CodeSpan]
-    PatternTransformationSpec (Pass.Out AnyExpr)     = Pass.List '[Model, Type, Users, SpanLength, Meta, Marker]
-    PatternTransformationSpec (Pass.In  AnyExprLink) = Pass.List '[SpanOffset, Source, Target]
-    PatternTransformationSpec (Pass.Out AnyExprLink) = Pass.List '[SpanOffset, Source, Target]
+    PatternTransformationSpec (Pass.In  Pass.Attrs)  = '[ExprRoots]
+    PatternTransformationSpec (Pass.Out Pass.Attrs)  = '[]
+    PatternTransformationSpec (Pass.In  AnyExpr)     = '[Model, Type, Users, SpanLength, Meta, Marker, CodeSpan]
+    PatternTransformationSpec (Pass.Out AnyExpr)     = '[Model, Type, Users, SpanLength, Meta, Marker]
+    PatternTransformationSpec (Pass.In  AnyExprLink) = '[SpanOffset, Source, Target]
+    PatternTransformationSpec (Pass.Out AnyExprLink) = '[SpanOffset, Source, Target]
     PatternTransformationSpec t                      = Pass.BasicPassSpec t
 
 -- Pass.cache_phase1 ''PatternTransformation
 -- Pass.cache_phase2 ''PatternTransformation
 
-runPatternTransformation :: _ => Pass PatternTransformation ()
+runPatternTransformation :: _ => Pass EmpireStage PatternTransformation ()
 runPatternTransformation = do
     roots <- unwrap <$> getAttr @ExprRoots
     mapM_ transformPatterns roots
@@ -72,7 +71,7 @@ data ParseError = ParseError P.String
 instance Exception ParseError where
     displayException (ParseError s) = "Parse error: " <> s
 
-dumpConsApplication :: _ => Expr Draft -> SubPass PatternTransformation (Name, [Expr Draft], [Link (Expr Draft) (Expr Draft)])
+dumpConsApplication :: _ => Expr Draft -> SubPass EmpireStage PatternTransformation (Name, [Expr Draft], [Link (Expr Draft) (Expr Draft)])
 dumpConsApplication expr = matchExpr expr $ \case
     Grouped g -> dumpConsApplication . coerce =<< source g
     Cons n _  -> return (n, [], [])
@@ -82,7 +81,7 @@ dumpConsApplication expr = matchExpr expr $ \case
         return (n, coerce arg : args, (coerce a):links)
     _         -> throwM $ ParseError "Invalid pattern match in code"
 
-flattenPattern :: Expr Draft -> SubPass PatternTransformation (Expr Draft)
+flattenPattern :: Expr Draft -> SubPass EmpireStage PatternTransformation (Expr Draft)
 flattenPattern expr = matchExpr expr $ \case
     Grouped g -> do
         a <- flattenPattern . coerce =<< source g
@@ -117,7 +116,7 @@ flattenPattern expr = matchExpr expr $ \case
         return res
     _         -> return expr
 
-transformPatterns :: _ => Expr Draft -> SubPass PatternTransformation ()
+transformPatterns :: _ => Expr Draft -> SubPass EmpireStage PatternTransformation ()
 transformPatterns expr = matchExpr expr $ \case
     Lam i o   -> do
         inp <- coerce <$> source i

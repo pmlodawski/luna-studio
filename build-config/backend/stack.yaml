@@ -10,16 +10,16 @@ local-bin-path:
 #     http: https://hackage.haskell.org/01-index.tar.gz
 
 extra-deps:
-- layered-state-1.1.2
+- layered-state-1.1.3
 - impossible-1.1.2
 - typelevel-1.2.2
-- container-0.3.4
+- container-1.1.0
 - layouting-1.1.3
 - monoid-0.1.8
 - terminal-text-1.1.1
 - lens-utils-1.4.5
-- convert-1.4.2
-- prologue-3.2.2
+- convert-1.5
+- prologue-3.2.3
 - vector-text-1.1.3
 - monad-branch-1.0.3
 - functor-utils-1.17.1
@@ -62,10 +62,10 @@ packages:
   subdirs: [project]
 - extra-dep: true
   location: ../../../luna-core
-  subdirs: [core, syntax/text/parser, syntax/text/lexer, syntax/text/model, lib, debug]
+  subdirs: [core, syntax/text/parser, syntax/text/lexer, syntax/text/model, syntax/text/prettyprint, lib, debug]
 - extra-dep: true
-  location: {commit: 1fac9aeec3a7f703908c50fd6cb229b4c8140fe3, git: 'git@github.com:luna/luna-core.git'}
-  subdirs: [lib/autovector, lib/cpp-containers, lib/data-construction, lib/data-tag, lib/data-typemap, lib/exception, lib/foreign-utils, lib/generic-traversable, lib/memory-manager, lib/memory-pool, lib/nested-containers, lib/syntax-definition, lib/text-processing, lib/th-builder, lib/tuple-utils, lib/type-cache, lib/typelevel, syntax/text/prettyprint]
+  location: {commit: ae1e4e18eb893adc2910a9c2a422d08a30e43ece, git: 'git@github.com:luna/luna-core.git'}
+  subdirs: [lib/autovector, lib/cpp-containers, lib/data-construction, lib/data-tag, lib/data-typemap, lib/data-property, lib/data-storable, lib/exception, lib/foreign-utils, lib/generic-traversable, lib/memory-manager, lib/memory-pool, lib/nested-containers, lib/syntax-definition, lib/text-processing, lib/th-builder, lib/tuple-utils, lib/type-cache, lib/typelevel]
 - extra-dep: true
   location: {commit: ddfcd1e0372b93e947b380b911c123fe67227b21, git: 'git@github.com:luna/visualization-api.git'}
 - extra-dep: true

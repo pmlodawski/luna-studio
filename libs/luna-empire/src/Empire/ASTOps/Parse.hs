@@ -42,6 +42,7 @@ import qualified Control.Monad.State.Layered as State
 import           LunaStudio.Data.PortDefault     (PortDefault (..), PortValue (..))
 
 import qualified Data.Text.Position              as Pos
+import qualified Data.Vector.Storable.Foreign    as Vector
 -- import qualified Luna.Builtin.Data.Function      as Function (compile)
 import qualified Luna.IR.Layer as Layer
 import qualified Luna.IR                         as IR
@@ -50,24 +51,24 @@ import qualified Luna.Pass                         as Pass
 import qualified Luna.Pass.Scheduler as Scheduler
 -- import qualified Luna.Runner as Runner
 -- import qualified Luna.Syntax.Text.Layer.Loc      as Loc
-import           Parser.Data.CodeSpan (CodeSpan)
-import qualified Parser.IR.Class as Token
-import qualified Parser.Pass as Parser
-import qualified Parser.Data.CodeSpan as CodeSpan
-import           Parser.Data.Invalid  (Invalids)
-import qualified Parser.Data.Name.Special as Parser (uminus)
+import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan)
+import qualified Luna.Syntax.Text.Parser.IR.Class as Token
+import qualified Luna.Syntax.Text.Parser.Pass as Parser
+import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
+import           Luna.Syntax.Text.Parser.Data.Invalid  (Invalids)
+import qualified Luna.Syntax.Text.Parser.Data.Name.Special as Parser (uminus)
 import qualified Data.Graph.Data.Graph.Class as LunaGraph
 import qualified Empire.Pass.PatternTransformation            as PT
 import qualified Luna.Pass.Attr as Attr
 -- import qualified Luna.Syntax.Text.Parser.Marker  as Parser (MarkedExprMap(..))
 -- import qualified Luna.Syntax.Text.Parser.Parser  as Parser
 import qualified Luna.Syntax.Prettyprint as Prettyprint
-import qualified Parser.IR.Term as Parsing
+import qualified Luna.Syntax.Text.Parser.IR.Term as Parsing
 import Luna.Syntax.Text.Scope (Scope)
 import qualified Luna.Syntax.Text.Source         as Source
 import qualified Luna.IR.Term.Literal            as Lit
-import Parser.Pass.Class (IRBS, Parser)
-import Parser.Data.Result (Result (Result))
+import Luna.Syntax.Text.Parser.Pass.Class (IRBS, Parser)
+import Luna.Syntax.Text.Parser.Data.Result (Result (Result))
 -- import qualified OCI.Pass                        as Pass
 
 data SomeParserException = forall e. Exception e => SomeParserException e
@@ -150,7 +151,7 @@ instance Exception SomeParserException where
 
 parseExpr s = view _1 <$> runParser Parsing.expr s `catchAll` (\e -> throwM $ SomeParserException e)
 
-passConverter :: (Pass.Spec pass1 Pass.Stage ~ Pass.Spec pass2 Pass.Stage) => Pass.Pass pass1 a -> Pass.Pass pass2 a
+passConverter :: (stage1 ~ stage2) => Pass.Pass stage1 pass1 a -> Pass.Pass stage2 pass2 a
 passConverter = unsafeCoerce
 
 
@@ -179,37 +180,37 @@ runParser parser input = do
     -- --     _                  -> error "runParser"
     -- (ref, cs) <- readIORef r
     -- return (generalize ref, st, cs)
-    putStrLn "foo"
+    -- putStrLn "foo"
     (((ir, m), scState), grState) <- LunaGraph.encodeAndEval @PT.EmpireStage $ do
         foo <- Scheduler.runT $ do
             ref <- liftIO $ newIORef (error "emptyreturn")
-            Scheduler.registerPassFromFunction__ @EmpirePass $ do
-                (((ir,cs),scope), m) <- passConverter $ flip Parser.runParser__ (convert input) $ do
+            Scheduler.registerPassFromFunction__ @PT.EmpireStage @EmpirePass $ do
+                ((ir,scope), m) <- passConverter $ flip Parser.runParser__ (convert input) $ do
                     irb   <- parser
                     scope <- State.get @Scope
                     let Parser.IRBS irx = irb
                         irb' = Parser.IRBS $ do
                             ir <- irx
-                            cs <- Layer.read @CodeSpan ir
-                            putStrLn "CodeSpan" >> print cs
-                            pure (ir,cs)
+                            -- cs <- Layer.read @CodeSpan ir
+                            -- putStrLn "CodeSpan" >> print cs
+                            pure ir
                     pure $ (,scope) <$> irb'
                 liftIO $ writeIORef ref $ generalize (ir, m)
-                putStrLn "bar"
+                -- putStrLn "bar"
                 -- Attr.put $ PassReturnValue $ unsafeCoerce $ Just a
                 -- b <- Attr.get @PassReturnValue
                 -- b <- liftIO $ readIORef ref
                 -- print a
                 -- print ir
-                matchExpr ir $ \case
-                    Unit _ _ c -> do
-                        c' <- source c
-                        matchExpr c' $ \case
-                            ClsASG _ _ _ _ funs'' -> do
-                                funs <- ptrListToList funs''
-                                spans <- mapM (Layer.read @CodeSpan <=< source) funs
-                                print spans
-                    a -> print a
+                -- matchExpr ir $ \case
+                --     Unit _ _ c -> do
+                --         c' <- source c
+                --         matchExpr c' $ \case
+                --             ClsASG _ _ _ _ funs'' -> do
+                --                 funs <- ptrListToList funs''
+                --                 spans <- mapM (Layer.read @CodeSpan <=< source) funs
+                --                 print spans
+                --     a -> print a
             Scheduler.runPassByType @EmpirePass
             -- st <- Layered.get @Scheduler.State
             -- let [a] = Map.elems (st ^. Scheduler.attrs)
@@ -229,7 +230,7 @@ runParser parser input = do
             return foo
         st <- LunaGraph.getState
         return (foo, st)
-    print "returnedparser"
+    -- print "returnedparser"
     return (ir, grState, scState, m)
 
 instance Convertible Text Source.Source where
@@ -250,8 +251,8 @@ runProperParser code = runParser Parsing.unit' code `catchAll` (\e -> throwM $ S
     --     Just exprMap <- unsafeCoerce <$> IR.unsafeGetAttr (getTypeDesc @MarkedExprMap)
     --     return (unit, root, exprMap)
 
-runProperVarParser :: Text.Text -> IO NodeRef
-runProperVarParser code = error "propervarparser" -- do
+runProperVarParser :: Text.Text -> IO ()
+runProperVarParser code = (void $ runParser Parsing.var code) `catchAll` (\e -> throwM $ SomeParserException e)
     -- runPM $ do
     --     parserBoilerplate
     --     attachEmpireLayers
@@ -383,7 +384,9 @@ parsePortDefault (Constant (IntValue  i))
         minus  <- generalize <$> IR.var Parser.uminus `withLength` 1
         app    <- generalize <$> IR.app minus number `withLength` (1 + length (show (abs i)))
         return app
-parsePortDefault (Constant (TextValue s)) = generalize <$> IR.rawString (convert s)                  `withLength` (length s)
+parsePortDefault (Constant (TextValue s)) = do
+    l <- Vector.fromList s
+    generalize <$> IR.rawString l `withLength` (length s)
 parsePortDefault (Constant (RealValue d)) = generalize <$> IR.number (error "parsePortDefault") (error "parsePortDefault") (error "parsePortDefault") `withLength` (length $ show d)
 parsePortDefault (Constant (BoolValue b)) = generalize <$> IR.cons (convert $ show b) []  `withLength` (length $ show b)
 parsePortDefault d = throwM $ PortDefaultNotConstructibleException d
