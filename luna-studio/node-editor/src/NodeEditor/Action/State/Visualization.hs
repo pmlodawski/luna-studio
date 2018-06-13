@@ -18,6 +18,7 @@ import qualified NodeEditor.State.Global                    as Global
 import           Common.Action.Command                      (Command)
 import           Control.Arrow                              ((&&&))
 import           Data.Map.Lazy                              (Map)
+import           IdentityString                             (IdentityString)
 import           LunaStudio.Data.TypeRep                    (TypeRep (TStar), toConstructorRep)
 import           LunaStudio.Data.Visualizer                 (applyType, fromJSInternalVisualizersMap, fromJSVisualizersMap)
 import           NodeEditor.Action.State.NodeEditor         (getExpressionNode, getExpressionNodeType, getNodeEditor, getNodeMeta,
@@ -25,15 +26,16 @@ import           NodeEditor.Action.State.NodeEditor         (getExpressionNode, 
 import           NodeEditor.Action.UUID                     (getUUID)
 import           NodeEditor.React.Model.Node                (NodeLoc)
 import           NodeEditor.React.Model.NodeEditor          (VisualizersPaths (VisualizersPaths))
-import           NodeEditor.React.Model.Visualization       (Content (Data, Error, Message), Data (Stream, Value), IframeId, Mode (Default, Hidden),
-                                                             NodeVisualizations (NodeVisualizations), Visualization (Visualization),
-                                                             VisualizationId, Visualizer (Visualizer), VisualizerId (VisualizerId),
-                                                             VisualizerPath, VisualizerType (LunaVisualizer, ProjectVisualizer),
-                                                             activeVisualizations, awaitingDataMsg, content, dataVisualizations, errorVisId,
-                                                             errorVisualizations, errorVisualizationsEnabled, iframeId, isActive,
-                                                             isErrorVisualization, mode, noVisMsg, placeholderVisId, selectedVisualizerId,
-                                                             visualizationId, visualizations, visualizationsEnabled, visualizer,
-                                                             visualizerId, visualizers, _Data, _Error, _Stream)
+import           NodeEditor.React.Model.Visualization       (Content (Data, Error, Message), Data (Stream, Value), IframeId,
+                                                             Mode (Default, Hidden), NodeVisualizations (NodeVisualizations),
+                                                             Visualization (Visualization), VisualizationId, Visualizer (Visualizer),
+                                                             VisualizerId (VisualizerId), VisualizerPath,
+                                                             VisualizerType (LunaVisualizer, ProjectVisualizer), activeVisualizations,
+                                                             awaitingDataMsg, content, dataVisualizations, errorVisId, errorVisualizations,
+                                                             errorVisualizationsEnabled, iframeId, isActive, isErrorVisualization, mode,
+                                                             noVisMsg, placeholderVisId, selectedVisualizerId, visualizationId,
+                                                             visualizations, visualizationsEnabled, visualizer, visualizerId, visualizers,
+                                                             _Data, _Error, _Stream)
 import           NodeEditor.State.Global                    (State, internalVisualizers, preferedVisualizers)
 
 
@@ -149,7 +151,7 @@ insertVisualization nl vis = getNodeVisualizations nl >>= \case
                 Default -> (view mode <$> mayPrevVis) /= Just Default
                 Hidden  -> False
                 _       -> prevModeDefault || prevModeHidden
-            needsRegister 
+            needsRegister
                 = isActive visEnabled errVisEnabled visContent adjustedVis
                     && ( not prevActive
                         || visualizerChanged
@@ -215,7 +217,7 @@ sendContent nl iframeIds = withJustM (getContent nl) $ \case
     Error msg ->
         forM_ iframeIds $ flip JS.sendInternalData msg
 
-appendStreamDataPoint :: NodeLoc -> Text -> Command State ()
+appendStreamDataPoint :: NodeLoc -> IdentityString -> Command State ()
 appendStreamDataPoint nl val = withJustM (getNodeVisualizations nl) $ \nv -> do
     when (has (content . _Data . _Stream) nv) $ do
         modifyNodeEditor

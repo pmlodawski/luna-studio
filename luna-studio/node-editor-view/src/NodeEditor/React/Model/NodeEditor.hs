@@ -1,5 +1,4 @@
 {-# LANGUAGE DataKinds              #-}
-{-# LANGUAGE DeriveAnyClass         #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE LambdaCase             #-}
 {-# LANGUAGE RankNTypes             #-}
@@ -65,10 +64,13 @@ data NodeEditor = NodeEditor { _expressionNodes          :: ExpressionNodesMap
                              , _debugLayer               :: Maybe Int --FIXME: This is used only to show different layers of basegl
                              } deriving (Eq, Generic)
 
-data VisualizersPaths    = VisualizersPaths { _internalVisualizersPath :: FilePath
-                                            , _lunaVisualizersPath     :: FilePath
-                                            , _projectVisualizersPath  :: Maybe FilePath
-                                            } deriving (Default, Eq, Generic)
+data VisualizersPaths = VisualizersPaths
+    { _internalVisualizersPath :: FilePath
+    , _lunaVisualizersPath     :: FilePath
+    , _projectVisualizersPath  :: Maybe FilePath
+    } deriving (Eq, Generic)
+    
+instance Default VisualizersPaths
 
 instance Default NodeEditor where
     def = NodeEditor

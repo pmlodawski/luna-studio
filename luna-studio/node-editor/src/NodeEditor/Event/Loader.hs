@@ -1,15 +1,15 @@
 module NodeEditor.Event.Loader where
 
-import           JS.Config                  (getBackendAddress)
 import           Common.Prelude
-import           Common.Report              (fatal)
-import           WebSocket                  (WebSocket)
-import qualified WebSocket                  as WS
+import           Common.Report  (fatal)
+import           JS.Config      (getBackendAddress)
+import           WebSocket      (WebSocket)
+import qualified WebSocket      as WS
 
 
 withActiveConnection :: (WebSocket -> IO ()) -> IO ()
 withActiveConnection action = do
-    addr   <- getBackendAddress
+    (listenAddr, sendAddr) <- getBackendAddress
     socket <- WS.getWebSocket
     isOpen <- WS.isOpen socket
     let onConnectionClosed = fatal "Connection closed."
@@ -18,4 +18,4 @@ withActiveConnection action = do
         void $ WS.onOpen  socket $ action socket
         void $ WS.onClose socket $ const onConnectionClosed
         void $ WS.onError socket onConnectionClosed
-        void $ WS.connect socket addr
+        void $ WS.connect socket listenAddr sendAddr

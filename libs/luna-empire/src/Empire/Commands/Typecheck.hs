@@ -17,7 +17,8 @@ import           Control.Exception.Safe           (mask_)
 import           Control.Monad                    (void)
 import           Control.Monad.Except             hiding (when)
 import           Control.Monad.Reader             (ask, runReaderT)
-import           Control.Monad.State              (execStateT)
+import           Control.Monad.State.Strict       (execStateT)
+import qualified Data.IORef                       as IORef
 import qualified Data.Map                         as Map
 import           Data.Maybe                       (catMaybes, maybeToList)
 import           Empire.Prelude                   hiding (mapping, toList)
@@ -65,19 +66,24 @@ runTC moduleName functionName imports = do
         Graph.breadcrumbHierarchy . BH.refs %= (\x -> Map.findWithDefault x x mapping)
     return ()
 
+withProjectCurrentDirectory :: FilePath -> IO a -> IO a
+withProjectCurrentDirectory currentFile act = do
+    rootPath <- liftIO $ Project.findProjectRootForFile =<< Path.parseAbsFile currentFile
+    let projectDirectory = maybe (takeDirectory currentFile) Path.toFilePath rootPath
+    withCurrentDirectory projectDirectory act
+
 runInterpreter :: FilePath -> Imports -> Command Graph (Maybe Interpreter.LocalScope)
 runInterpreter path imports = runASTOp $ do
-    rootPath <- liftIO $ Project.findProjectRootForFile =<< Path.parseAbsFile path
     selfRef  <- use $ Graph.breadcrumbHierarchy . BH.self
     IR.matchExpr selfRef $ \case
         IR.ASGFunction _ [] b -> do
             bodyRef <- IR.source b
             res     <- Interpreter.interpret' imports . IR.unsafeGeneralize $ bodyRef
-            mask_ $ do
-                result  <- liftIO $ withCurrentDirectory (maybe (takeDirectory path) Path.toFilePath rootPath) $ runIO $ runError $ execStateT res def
-                case result of
-                    Left e  -> return Nothing
-                    Right r -> return $ Just r
+            mask_ $ liftIO $ do
+                ref <- IORef.newIORef def
+                withProjectCurrentDirectory path
+                    $ runIO $ runError $ execStateT (Interpreter.unScopeT res) ref
+                Just <$> IORef.readIORef ref
         _ -> return Nothing
 
 updateNodes :: GraphLocation -> Command Graph ()
@@ -111,7 +117,7 @@ updateMonads loc@(GraphLocation _ br) = return ()
 updateValues :: GraphLocation
              -> Interpreter.LocalScope
              -> Command Graph [Async ()]
-updateValues loc scope = do
+updateValues loc@(GraphLocation path _) scope = do
     childrenMap <- use $ Graph.breadcrumbHierarchy . BH.children
     let allNodes = Map.assocs $ view BH.self <$> childrenMap
     env     <- ask
@@ -133,15 +139,16 @@ updateValues loc scope = do
         sendStreamRep nid (SuccessRep s l) = send nid
                                            $ NodeValue (convert s)
                                            $ StreamDataPoint . convert <$> l
-    asyncs <- forM allVars $ \(nid, ref) -> do
-        let resVal = Interpreter.localLookup (IR.unsafeGeneralize ref) scope
-        liftIO $ forM resVal $ \v -> do
-            value <- getReps v
-            case value of
-                OneTime r   -> Async.async $ sendRep nid r
-                Streaming f -> do
-                    send nid (NodeValue "Stream" $ Just StreamStart)
-                    Async.async (f (sendStreamRep nid))
+    asyncs <- liftIO $ withProjectCurrentDirectory path $
+        forM allVars $ \(nid, ref) -> do
+            let resVal = Interpreter.localLookup (IR.unsafeGeneralize ref) scope
+            forM resVal $ \v -> do
+                value <- getReps v
+                case value of
+                    OneTime r   -> Async.async $ sendRep nid r
+                    Streaming f -> do
+                        send nid (NodeValue "Stream" $ Just StreamStart)
+                        Async.async (f (sendStreamRep nid))
     return $ catMaybes asyncs
 
 flushCache :: Command InterpreterEnv ()

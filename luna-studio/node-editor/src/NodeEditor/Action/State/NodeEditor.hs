@@ -10,7 +10,6 @@ import qualified Control.Monad.State                         as M
 import qualified Data.HashMap.Strict                         as HashMap
 import qualified Data.Map.Lazy                               as Map
 import qualified Data.Set                                    as Set
-import qualified JS.Visualizers                              as JS
 import qualified LunaStudio.Data.NodeSearcher                as NS
 import qualified LunaStudio.Data.PortRef                     as PortRef
 import qualified NodeEditor.Action.Batch                     as Batch
@@ -20,7 +19,6 @@ import qualified NodeEditor.React.Model.Node.ExpressionNode  as ExpressionNode
 import qualified NodeEditor.React.Model.NodeEditor           as NE
 import qualified NodeEditor.React.Model.Port                 as Port
 import qualified NodeEditor.React.Model.Searcher             as Searcher
-import qualified NodeEditor.React.Model.Visualization        as Visualization
 import qualified NodeEditor.State.Global                     as Global
 
 import           Common.Action.Command                       (Command)
@@ -37,7 +35,6 @@ import           LunaStudio.Data.PortDefault                 (PortDefault)
 import           LunaStudio.Data.PortRef                     (AnyPortRef (..), InPortRef (..), OutPortRef (..))
 import           LunaStudio.Data.Position                    (Position)
 import           LunaStudio.Data.TypeRep                     (TypeRep (TStar), toConstructorRep)
-import           LunaStudio.Data.Visualizer                  (applyType, fromJSInternalVisualizersMap, fromJSVisualizersMap)
 import           NodeEditor.Action.State.App                 (get, getWorkspace, modify, modifyApp)
 import           NodeEditor.Action.UUID                      (getUUID)
 import           NodeEditor.Batch.Workspace                  (currentLocation)
@@ -52,11 +49,10 @@ import           NodeEditor.React.Model.Node                 (InputNode, Node (E
                                                               inPortsList, nodeLoc, outPortAt, outPortsList, toNodesMap)
 import           NodeEditor.React.Model.Node.ExpressionNode  (ExpressionNode, Value (AwaitingData, AwaitingTypecheck, Error, ShortValue),
                                                               isSelected, _Error, _ShortValue)
-import           NodeEditor.React.Model.NodeEditor           (GraphStatus, NodeEditor, VisualizersPaths (VisualizersPaths))
+import           NodeEditor.React.Model.NodeEditor           (GraphStatus, NodeEditor)
 import           NodeEditor.React.Model.Port                 (InPort, OutPort, state)
 import           NodeEditor.React.Model.Searcher             (Searcher)
-import           NodeEditor.State.Global                     (State, internalVisualizers, nodeSearcherData, preferedVisualizers,
-                                                              visualizers)
+import           NodeEditor.State.Global                     (State, nodeSearcherData)
 
 
 getNodeEditor :: Command State NodeEditor

@@ -10,6 +10,7 @@ import           Common.Prelude
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
 import           Data.UUID.Types               (UUID)
+import           IdentityString                (IdentityString)
 import           LunaStudio.Data.NodeLoc       (NodeLoc)
 import           LunaStudio.Data.Visualization as X (VisualizationId)
 import           LunaStudio.Data.Visualizer    as X (Visualizer (Visualizer), VisualizerId (VisualizerId), VisualizerMatcher,
@@ -18,9 +19,13 @@ import           LunaStudio.Data.Visualizer    as X (Visualizer (Visualizer), Vi
                                                      visualizerType, _InternalVisualizer, _LunaVisualizer, _ProjectVisualizer)
 
 data Data
-    = Value  Text
-    | Stream [Text]
-    deriving (Eq, Generic, Show)
+    = Value  IdentityString
+    | Stream [IdentityString]
+    deriving (Eq, Generic)
+
+instance Show Data where
+    show (Value _)  = "JSData Value"
+    show (Stream _) = "JSData Stream"
 
 data Content
     = Data    Data
@@ -95,7 +100,7 @@ currentInternalVisualizer = to getter where
 
 -- isActive :: visualizationsEnabled -> errorVisualizationEnabled -> ...
 isActive :: Bool -> Bool -> Content -> Visualization -> Bool
-isActive _ True (Error {}) v 
+isActive _ True (Error {}) v
   = not (has (mode . _Hidden) v) && isErrorVisualization v
 isActive _ False (Error {}) _ = False
 isActive False _ _ _          = False
