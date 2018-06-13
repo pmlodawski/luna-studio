@@ -52,8 +52,6 @@ handleViewEvent evt = let nl = convert $ evt ^. View.target
         View.Mouse e -> if nodeEventPath /= evt ^. View.path
             then Nothing
             else case e ^. View.type_ of
-                "mouseenter" -> Just $ Node.handleMouseEnter nl
-                "mouseleave" -> Just $ Node.handleMouseLeave nl
                 "dblclick"
                     -> Just $ withJustM (getExpressionNode nl) enterNode
                 _   -> Nothing

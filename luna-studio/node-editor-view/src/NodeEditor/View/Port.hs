@@ -10,10 +10,11 @@ import           NodeEditor.View.Color       (RGB)
 
 
 data PortView = PortView
-        { _key   :: String
-        , _color :: RGB
-        , _name  :: String
-        , _mode  :: String
+        { _key      :: String
+        , _color    :: RGB
+        , _name     :: String
+        , _typeName :: String
+        , _mode     :: String
         } deriving (Eq, Generic, Show)
 
 makeLenses ''PortView
@@ -25,16 +26,17 @@ instance ToJSON   PortView where
     toJSON     = Lens.toJSON
 
 instance Convertible InPort PortView where
-    convert c = PortView
-        {- key   -} (c ^. Port.portId . to show)
-        {- color -} (c ^. Port.color . to convert)
-        {- name  -} (c ^. Port.name . to convert)
-        {- mode  -} (if c ^. Port.portId == [Port.Self] then "self" else "in")
+    convert p = PortView
+        {- key      -} (p ^. Port.portId . to show)
+        {- color    -} (p ^. Port.color . to convert)
+        {- name     -} (p ^. Port.name . to convert)
+        {- typeName -} (p ^. Port.valueType . to toString)
+        {- mode     -} (if p ^. Port.portId == [Port.Self] then "self" else "in")
 
 instance Convertible OutPort PortView where
-    convert c = PortView
-        {- key   -} (c ^. Port.portId . to show)
-        {- color -} (c ^. Port.color . to convert)
-        {- name  -} (c ^. Port.name . to convert)
-        {- mode  -} def
-        
+    convert p = PortView
+        {- key      -} (p ^. Port.portId . to show)
+        {- color    -} (p ^. Port.color . to convert)
+        {- name     -} (p ^. Port.name . to convert)
+        {- typeName -} (p ^. Port.valueType . to toString)
+        {- mode     -} def
