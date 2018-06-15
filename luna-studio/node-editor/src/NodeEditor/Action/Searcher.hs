@@ -56,14 +56,14 @@ instance Action (Command State) Searcher where
     end      = close
 
 mkDocVis :: Command State (Maybe Visualization)
-mkDocVis = do
-    visId    <- getUUID
-    iframeId <- getUUID
-    mayVis   <- use visualizers >>= getMdVisualizer
-    when (isNothing mayVis) $ warning "Documentation unavailable. Cannot find markdown visualizer."
-    liftIO $ registerVisualizerFrame iframeId
-    pure $ uncurry (Visualization visId iframeId def)
-        . (id &&& Just . view visualizerId) <$> mayVis
+mkDocVis = pure Nothing
+    -- visId    <- getUUID
+    -- iframeId <- getUUID
+    -- mayVis   <- use visualizers >>= getMdVisualizer
+    -- when (isNothing mayVis) $ warning "Documentation unavailable. Cannot find markdown visualizer."
+    -- liftIO $ registerVisualizerFrame iframeId
+    -- pure $ uncurry (Visualization visId iframeId def)
+    --     . (id &&& Just . view visualizerId) <$> mayVis
 
 
 emptyInputError :: Searcher.Mode -> Text
