@@ -302,6 +302,7 @@ extractArgNames node = do
 extractAppArgNames :: GraphOp m => NodeRef -> m [Maybe String]
 extractAppArgNames node = go [] node
     where
+        go :: GraphOp m => [Maybe String] -> NodeRef -> m [Maybe String]
         go vars node = match node $ \case
             App f a -> do
                 varName <- safeGetVarName =<< source a

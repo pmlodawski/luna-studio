@@ -38,6 +38,8 @@ import           Data.Map   (Map)
 newtype ExprRoots = ExprRoots [Expr Draft]
 makeWrapped ''ExprRoots
 type instance Attr.Type ExprRoots = Attr.Atomic
+instance Default ExprRoots where
+    def = ExprRoots []
 
 data EmpireStage
 

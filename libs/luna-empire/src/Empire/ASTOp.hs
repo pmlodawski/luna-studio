@@ -24,7 +24,7 @@ module Empire.ASTOp (
   -- , getImportedModules
   -- , putNewIR
   -- , putNewIRCls
-  -- , runAliasAnalysis
+  , runAliasAnalysis
   , runASTOp
   -- , runPass
   -- , runPM
@@ -38,7 +38,7 @@ import           Prologue             (mempty)
 
 import           Control.Monad.Catch  (MonadCatch(..))
 -- import           Control.Monad.Raise  (MonadException)
-import           Control.Monad.State  (MonadState, StateT, runStateT, get, put)
+import           Control.Monad.State  (MonadState, StateT(..), runStateT, get, put)
 -- import qualified Control.Monad.State.Dependent as DepState
 import qualified Control.Monad.State.Layered as Layered
 import qualified Data.TypeMap.MultiState as MultiState
@@ -67,6 +67,7 @@ import qualified Data.Graph.Component.Node.Layer   as Layer
 import qualified Data.Graph.Data.Layer.Class   as Layer
 import           Data.Graph.Component.Edge.Class   (Edge, Edges)
 import qualified Data.Graph.Data.Graph.Class   as LunaGraph
+import qualified Data.Graph.Component.Node.Destruction as Destruct
 import           Data.Graph.Component.Node.Class (Node, Nodes)
 -- import           OCI.IR.Name.Qualified (QualName)
 import           OCI.Pass.Definition.Class       (Pass(..)) --, ComponentSize, LayerMemManager, ComponentMemPool)
@@ -81,11 +82,11 @@ import qualified Luna.Pass.Attr as Attr
 
 -- import           System.Log                                   (DropLogger(..), dropLogs)
 -- import           System.Log.Logger.Class                      (Logger(..), IdentityLogger(..))
--- import           Luna.Pass.Data.ExprRoots                     (ExprRoots(..))
 import qualified Empire.Pass.PatternTransformation            as PatternTransformation
--- import           Luna.Pass.Resolution.Data.UnresolvedVars     (UnresolvedVars(..))
 -- import           Luna.Pass.Resolution.Data.UnresolvedConses   (UnresolvedConses(..), NegativeConses(..))
--- import qualified Luna.Pass.Resolution.AliasAnalysis           as AliasAnalysis
+import           Luna.Pass.Resolve.Data.UnresolvedVariables     (UnresolvedVariables(..))
+import           Luna.Pass.Data.Root                     (Root(..))
+import qualified Luna.Pass.Resolve.AliasAnalysis           as AliasAnalysis
 import           Luna.Syntax.Text.Parser.Data.Invalid (Invalids)
 -- import qualified Parser.Parser               as Parser
 import           Luna.Syntax.Text.Parser.Data.CodeSpan        (CodeSpan)
@@ -183,6 +184,7 @@ type ASTOpReq a m = (MonadIO m,
                      Layer.Writer Node IR.Model m,
                      Layer.Writer Edge IR.Target m,
                      Layer.Writer Edge IR.Source m,
+                     Destruct.DeleteSubtree m,
                      -- LunaGraph.ComputeLayerByteOffset Source (LunaGraph.ComponentLayers EmpirePass Edges),
                      -- Layered.Getter (LunaGraph.LayerByteOffset Nodes SpanLength) m,
                      -- Layered.Getter (LunaGraph.LayerByteOffset Nodes Meta) m,
@@ -201,6 +203,9 @@ type ASTOpReq a m = (MonadIO m,
                      -- Editors Layer EmpireLayers m)
                      -- DepOld.MonadGet Vis.V Vis.Vis m,
                      -- DepOld.MonadPut Vis.V Vis.Vis m)
+
+type instance LunaGraph.Discover (StateT s m) = LunaGraph.Discover m
+
 
 type ASTOp a m = (ASTOpReq a m, HasCallStack)
 type GraphOp m = ASTOp Graph m
@@ -411,6 +416,40 @@ runASTOp p = do
     -- print "putted"
     return ret
 
+runPass :: forall pass a g. (Graph.HasAST g, Typeable pass, _)
+         => _
+         -> (StateT g (Pass.Pass PatternTransformation.EmpireStage pass) a)
+         -> Command g a
+runPass inits p = do
+    g <- get
+    m <- liftIO $ newIORef (error "emptyreturn")
+
+    (((g', ret), scSt), grSt) <- flip LunaGraph.run (g ^. Graph.ast . Graph.pmState . Graph.pmStage) $ flip Layered.runT (g ^. Graph.ast . Graph.pmState . Graph.pmScheduler) $ unwrap $ Scheduler.SchedulerT $ do
+        -- Scheduler.registerAttr     @PassReturnValue
+        -- Scheduler.enableAttrByType @PassReturnValue
+        inits
+        Scheduler.registerPassFromFunction__ @PatternTransformation.EmpireStage @pass $ do
+            (a, g') <- runStateT p g
+            -- liftIO $ print "put Ret1"
+            -- Attr.put $ PassReturnValue $ unsafeCoerce $ Just (g', a)
+            liftIO $ writeIORef m (g', a)
+            -- liftIO $ print "put Ret2"
+        Scheduler.runPassByType @pass
+        (g', a) <- liftIO $ readIORef m
+        return (g', a)
+        -- ret <- Scheduler.lookupAttr @PassReturnValue
+        -- case ret of
+        --     Nothing -> error "runASTOp: pass didn't register return value"
+        --     Just (PassReturnValue foo) -> case unsafeCoerce foo of
+        --         Just a -> return a
+        --         _      -> error "runastop: empty return"
+    -- print "runned"
+    -- put g'
+    put $ g' & Graph.ast . Graph.pmState . Graph.pmScheduler .~ scSt
+    put $ g' & Graph.ast . Graph.pmState . Graph.pmStage .~ grSt
+    -- print "putted"
+    return ret
+
     -- inits = do
     --     setAttr @MarkedExprMap $ (mempty :: MarkedExprMap)
     --     setAttr @Invalids      $ (mempty :: Invalids)
@@ -419,15 +458,26 @@ runASTOp p = do
 
 
 runAliasAnalysis :: Command Graph ()
-runAliasAnalysis = return () -- do
-    -- root <- use $ Graph.breadcrumbHierarchy . BH.self
-    -- let inits = do
-    --         Pass.setAttr (getTypeDesc @UnresolvedVars)   $ UnresolvedVars   []
-    --         Pass.setAttr (getTypeDesc @UnresolvedConses) $ UnresolvedConses []
-    --         Pass.setAttr (getTypeDesc @NegativeConses)   $ NegativeConses   []
-    --         Pass.setAttr (getTypeDesc @ExprRoots) $ ExprRoots [unsafeGeneralize root]
-    -- runPass inits PatternTransformation.runPatternTransformation
-    -- runPass inits AliasAnalysis.runAliasAnalysis
+runAliasAnalysis = do
+    root <- use $ Graph.breadcrumbHierarchy . BH.self
+    let inits = do
+            Scheduler.registerAttr @Root
+            Scheduler.enableAttrByType @Root
+            Scheduler.setAttr @Root $ Root root
+            Scheduler.registerAttr @PatternTransformation.ExprRoots
+            Scheduler.enableAttrByType @PatternTransformation.ExprRoots
+            Scheduler.setAttr @PatternTransformation.ExprRoots $ PatternTransformation.ExprRoots [coerce root]
+            Scheduler.registerAttr @UnresolvedVariables
+            Scheduler.enableAttrByType @UnresolvedVariables
+    runPass @PatternTransformation.PatternTransformation inits $ StateT $ \a -> PatternTransformation.runPatternTransformation >> return ((), a)
+    runPass @AliasAnalysis.AliasAnalysis inits $ StateT $ \a -> Pass.definition @PatternTransformation.EmpireStage @AliasAnalysis.AliasAnalysis >> return ((), a)
+      -- -- let inits = do
+      -- --         Pass.setAttr (getTypeDesc @UnresolvedVars)   $ UnresolvedVars   []
+      -- --         Pass.setAttr (getTypeDesc @UnresolvedConses) $ UnresolvedConses []
+      -- --         Pass.setAttr (getTypeDesc @NegativeConses)   $ NegativeConses   []
+      -- --         Pass.setAttr (getTypeDesc @ExprRoots) $ ExprRoots [unsafeGeneralize root]
+      -- -- runPass inits PatternTransformation.runPatternTransformation
+      -- -- runASTOp AliasAnalysis.runAliasAnalysis
 
 -- runTypecheck :: CurrentTarget -> Imports -> Command Graph ()
 -- runTypecheck currentTarget imports = do

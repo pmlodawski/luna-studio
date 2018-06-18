@@ -36,9 +36,7 @@ import qualified Luna.IR as IR
 
 
 apps :: GraphOp m => Expr f -> [NodeRef] -> m NodeRef
-apps fun exprs = unsafeRelayout <$> foldM f (unsafeRelayout fun) (unsafeRelayout <$> exprs)
-    where
-        f fun' arg' = appAny fun' arg'
+apps fun exprs = unsafeRelayout <$> foldM appAny (unsafeRelayout fun) (unsafeRelayout <$> exprs)
 
 appAny :: GraphOp m => NodeRef -> NodeRef -> m NodeRef
 appAny = fmap generalize .: IR.app
@@ -343,7 +341,9 @@ detachNodeMarkers ref' = do
 
 attachNodeMarkers :: GraphOp m => NodeId -> Port.OutPortId -> NodeRef -> m ()
 attachNodeMarkers marker port ref' = go port ref' where
+    goOn :: GraphOp m => Port.OutPortId -> [NodeRef] -> m ()
     goOn port args = zipWithM_ go ((port <>) . pure . Port.Projection <$> [0..]) args
+    go :: GraphOp m => Port.OutPortId -> NodeRef -> m ()
     go port ref' = do
         ref <- ASTRead.cutThroughGroups ref'
         match ref $ \case

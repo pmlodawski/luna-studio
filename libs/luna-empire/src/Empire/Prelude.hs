@@ -4,6 +4,7 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Empire.Prelude (module X, nameToString, pathNameToString, stringToName,
                       (<?!>), putLayer, attachLayer, AnyExpr, AnyExprLink,
                       makeWrapped, Expr, SubPass, pattern MarkedExprMap,
@@ -24,7 +25,8 @@ module Empire.Prelude (module X, nameToString, pathNameToString, stringToName,
                       pattern RightSection, pattern Missing, pattern Marker,
                       type IRSuccs, deepDelete, deepDeleteWithWhitelist,
                       pattern ClsASG, type ClsASG, pattern Metadata, inputs,
-                      pattern ImportHub, pattern Import, pattern ImportSrc
+                      pattern ImportHub, pattern Import, pattern ImportSrc,
+                      irDeleteLink
                       ) where
 
 import qualified Control.Monad.State.Layered as Layered
@@ -41,6 +43,7 @@ import qualified Data.Graph.Component.Node.Class    as Node
 import qualified Data.Graph.Data.Layer.Class as Layer
 import qualified Data.Graph.Component.Node.Layer as Layer
 import qualified Data.Graph.Data.Layer.Layout as Layout
+import qualified Data.Graph.Component.Edge.Destruction as DestructEdge
 import qualified Data.Graph.Component.Node.Destruction as Destruct
 -- import qualified OCI.Pass.Registry as Registry
 import qualified Luna.IR as IR
@@ -54,13 +57,22 @@ import qualified Luna.IR.Term.Literal as Ast
 import qualified Luna.IR.Term.Ast.Class as Ast
 import Data.Graph.Data.Component.Class (Component)
 import qualified Data.Graph.Data.Component.Class as Component
+import qualified Data.Graph.Transform.Substitute as Substitute
 import qualified Data.Graph.Data.Component.List as List (ComponentList(..))
 import qualified Data.Graph.Component.Edge as Edge
 import qualified Data.Graph.Component.Edge.Construction as Construction
+import qualified Data.Generics.Traversable.Deriving as GTraversable
 import qualified Data.Graph.Fold.SubComponents as Traversal
 import Luna.Syntax.Text.Parser.State.Marker (TermMap(..))
 import Luna.Pass (Pass)
 import qualified Luna.Pass.Attr as Attr
+
+import LunaStudio.Data.PortRef (OutPortRefTemplate(..))
+import LunaStudio.Data.NodeMeta (NodeMetaTemplate(..))
+import LunaStudio.Data.Position (Position(..))
+import LunaStudio.Data.Vector2 (Vector2(..))
+import Data.UUID (UUID(..))
+
 import Control.Lens ((?=), (.=), (%=), to, makeWrapped, makePrisms, use, preuse,
                      _Just, (?~), zoom)
 import Prologue as X hiding (TypeRep, head, tail, init, last, p, r, s, (|>), return, liftIO, fromMaybe, fromJust, when, mapM, mapM_, minimum)
@@ -174,14 +186,21 @@ ociSetToList = Set.toList . (coerce :: PtrSet.ComponentSet c l -> PtrSet.Unmanag
 generalize :: Coercible a b => a -> b
 generalize = coerce
 
-replace :: ( Monad m
-           , Layer.Reader (Component Edge.Edges) Edge.Source m
-           , Layer.Writer (Component Edge.Edges) Edge.Source m
-           , Layer.Reader (Component Node.Nodes) IRSuccs m
+-- replace :: ( Monad m
+--            , Layer.Reader (Component Edge.Edges) Edge.Source m
+--            , Layer.Writer (Component Edge.Edges) Edge.Source m
+--            , Layer.Reader (Component Node.Nodes) IRSuccs m
+--            ) => Expr l -> Expr l' -> m ()
+replace :: ( Substitute.Replace m
+           , Destruct.DeleteSubtree m
            ) => Expr l -> Expr l' -> m ()
-replace = error "replace"
+replace new old = Substitute.replace new old
 
-irDelete e = error "delete"
+irDelete :: (Destruct.Delete m) => Expr a -> m ()
+irDelete e = Destruct.delete e
+
+irDeleteLink :: (DestructEdge.Delete m) => Edge.Edge a -> m ()
+irDeleteLink e = DestructEdge.delete e
 
 substitute :: ( MonadIO m
               , Layer.Reader (Component Node.Nodes) IRSuccs m
@@ -213,25 +232,27 @@ replaceSource newSource link = do
 narrowTerm :: forall b m a. Monad m => Expr a -> m (Maybe (Expr b))
 narrowTerm e = return $ Just (coerce e)
 
-deleteSubtree :: ( Layer.Reader Node.Node IR.Model m
-          , Layer.IsUnwrapped Node.Uni
-          , Traversal.SubComponents Edge.Edges m (Node.Uni layout)
-          , MonadIO m
-          , Layered.Getter (ByteSize (Component Edge.Edges)) m
-          , Layered.Getter (Layer.DynamicManager Edge.Edges) m
-          , Layered.Getter (MemPool (Component.Some Edge.Edges)) m
-          ) => Node.Node layout -> m ()
-deleteSubtree e = Destruct.delete e
-deepDelete :: ( Layer.Reader Node.Node IR.Model m
-          , Layer.IsUnwrapped Node.Uni
-          , Traversal.SubComponents Edge.Edges m (Node.Uni layout)
-          , MonadIO m
-          , Layered.Getter (ByteSize (Component Edge.Edges)) m
-          , Layered.Getter (Layer.DynamicManager Edge.Edges) m
-          , Layered.Getter (MemPool (Component.Some Edge.Edges)) m
-          ) => Node.Node layout -> m ()
-deepDelete = Destruct.delete
-deepDeleteWithWhitelist e set = error "deepDeleteWithWhitelist"
+-- deleteSubtree :: ( Layer.Reader Node.Node IR.Model m
+--           , Layer.IsUnwrapped Node.Uni
+--           , Traversal.SubComponents Edge.Edges m (Node.Uni layout)
+--           , MonadIO m
+--           , Layered.Getter (ByteSize (Component Edge.Edges)) m
+--           , Layered.Getter (Layer.DynamicManager Edge.Edges) m
+--           , Layered.Getter (MemPool (Component.Some Edge.Edges)) m
+--           ) => Node.Node layout -> m ()
+deleteSubtree :: forall m layout. Destruct.DeleteSubtree m => Node.Node layout -> m ()
+deleteSubtree e = Destruct.deleteSubtree e
+-- deepDelete :: ( Layer.Reader Node.Node IR.Model m
+--           , Layer.IsUnwrapped Node.Uni
+--           , Traversal.SubComponents Edge.Edges m (Node.Uni layout)
+--           , MonadIO m
+--           , Layered.Getter (ByteSize (Component Edge.Edges)) m
+--           , Layered.Getter (Layer.DynamicManager Edge.Edges) m
+--           , Layered.Getter (MemPool (Component.Some Edge.Edges)) m
+--           ) => Node.Node layout -> m ()
+deepDelete e = Destruct.deleteSubtree e
+deepDeleteWithWhitelist :: forall m layout. Destruct.DeleteSubtree m => Node.Node layout -> _ -> m ()
+deepDeleteWithWhitelist e set = Destruct.deleteSubtreeWithWhitelist set e
 
 
 link :: Construction.Creator m => Term src -> Term tgt -> m (Link src tgt)
@@ -243,16 +264,16 @@ compListToList :: List.ComponentList a -> [Component.Some a]
 compListToList List.Nil = []
 compListToList (List.Cons a l) = a : compListToList l
 
-inputs :: ( Layer.Reader Node.Node IR.Model m
-          , Layer.IsUnwrapped Node.Uni
-          , Traversal.SubComponents Edge.Edges m (Node.Uni layout)
-          , MonadIO m
-          ) => Node.Node layout -> m [Component.Some Edge.Edges]
-inputs ref = do
-    inp <- compListToList <$> IR.inputs ref
-    add <- Layer.read @IR.Model ref >>= \case
-        IR.UniTermRecord (IR.Record _ _ _ _ decls) -> do
-            links <- PtrList.toList decls
-            return $ map coerce links
-        _ -> return []
-    return $ inp <> add
+-- inputs :: ( Layer.Reader Node.Node IR.Model m
+--           , Layer.IsUnwrapped Node.Uni
+--           , Traversal.SubComponents Edge.Edges m (Node.Uni layout)
+--           , MonadIO m
+--           ) => Node.Node layout -> m [Component.Some Edge.Edges]
+inputs ref = compListToList <$> IR.inputs ref
+
+
+GTraversable.derive ''OutPortRefTemplate
+GTraversable.derive ''NodeMetaTemplate
+GTraversable.derive ''Position
+GTraversable.derive ''Vector2
+GTraversable.derive ''UUID

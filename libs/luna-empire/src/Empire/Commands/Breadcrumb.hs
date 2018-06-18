@@ -17,7 +17,7 @@ import           Data.Maybe                      (listToMaybe, maybe)
 import qualified Data.Map                        as Map
 import qualified Data.UUID.V4                    as UUID
 
-import           Empire.ASTOp                      (GraphOp, runASTOp, defaultPMState)
+import           Empire.ASTOp                      (GraphOp, runASTOp, runAliasAnalysis, defaultPMState)
 import           Empire.ASTOps.BreadcrumbHierarchy as ASTBreadcrumb
 import           Empire.ASTOps.Parse               as ASTParse
 import           Empire.ASTOps.Read                as ASTRead
@@ -94,7 +94,7 @@ makeGraphCls fun lastUUID = do
             let localMarkers = Map.filterWithKey (\k _ -> k `elem` markers) globalMarkers
             Graph.codeMarkers .= localMarkers
             propagateLengths ref
-        -- runAliasAnalysis
+        runAliasAnalysis
         runASTOp $ do
             ASTBreadcrumb.makeTopBreadcrumbHierarchy ref
             restorePortMappings (nodeCache ^. portMappingMap)

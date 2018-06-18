@@ -61,6 +61,7 @@ dependencies:
     - luna-generic-traversable
     - luna-nested-containers
     - luna-memory-pool
+    - luna-passes
     - luna-syntax-definition
     - luna-syntax-text-parser
     - luna-syntax-text-lexer

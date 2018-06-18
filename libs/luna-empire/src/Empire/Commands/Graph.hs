@@ -119,7 +119,7 @@ import           Data.Text.Position               (Delta)
 import           Data.Text.Span                   (SpacedSpan (..), leftSpacedSpan)
 import qualified Data.UUID.V4                     as UUID (nextRandom)
 import           Debug
-import           Empire.ASTOp                     (ASTOp, ClassOp, GraphOp, runASTOp)
+import           Empire.ASTOp                     (ASTOp, ClassOp, GraphOp, runASTOp, runAliasAnalysis)
 -- import           Empire.ASTOp                     (ASTOp, ClassOp, GraphOp, putNewIR, putNewIRCls, runASTOp, runAliasAnalysis, runModuleTypecheck)
 import qualified Empire.ASTOps.Builder            as ASTBuilder
 import           Empire.ASTOps.BreadcrumbHierarchy (getMarker, prepareChild, isNone)
@@ -367,7 +367,7 @@ addNodeNoTC loc uuid input name meta = do
         putIntoHierarchy uuid markedNode
         putStrLn "end"
         return markedNode
-    -- runAliasAnalysis
+    runAliasAnalysis
     node <- runASTOp $ do
         putStrLn "end2"
         putChildrenIntoHierarchy uuid expr
@@ -526,7 +526,7 @@ setOutputTo out = do
     newSeq   <- reconnectOut oldSeq out blockEnd
     traverse_ (updateGraphSeq . Just) newSeq
 
-updateGraphSeqWithWhilelist :: GraphOp m => [NodeRef] -> Maybe NodeRef -> m ()
+updateGraphSeqWithWhilelist :: forall m. GraphOp m => [NodeRef] -> Maybe NodeRef -> m ()
 updateGraphSeqWithWhilelist whitelist newOut = do
     currentTgt   <- ASTRead.getCurrentASTTarget
     Just outLink <- ASTRead.getFirstNonLambdaLink currentTgt
@@ -545,7 +545,7 @@ updateGraphSeqWithWhilelist whitelist newOut = do
             blockEnd <- Code.getCurrentBlockEnd
             Code.insertAt (blockEnd - noneLen) "None"
             return ()
-    deepDeleteWithWhitelist oldSeq $ Set.union (Set.fromList whitelist) (Set.fromList (maybeToList newOut))
+    deepDeleteWithWhitelist @m oldSeq $ Set.union (Set.fromList whitelist) (Set.fromList (maybeToList newOut))
     oldRef <- use $ Graph.breadcrumbHierarchy . BH.self
     when (oldRef == oldSeq) $ for_ newOut (Graph.breadcrumbHierarchy . BH.self .=)
 
@@ -853,7 +853,8 @@ reorder dst src = do
         let srcIndex    = List.elemIndex srcAst nodes
             downIndices = sortOn snd $ map (\a -> (a, a `List.elemIndex` nodes)) dstDownAST
             leftToSrc   = map fst $ filter ((< srcIndex) . snd) downIndices
-        let f acc e = do
+        let f :: GraphOp m => NodeRef -> NodeRef -> m NodeRef
+            f acc e = do
                 oldSeq   <- ASTRead.getCurrentBody
                 code     <- Code.getCodeOf e
                 unpinFromSequence e
@@ -949,7 +950,7 @@ disconnect :: GraphLocation -> InPortRef -> Empire ()
 disconnect loc@(GraphLocation file _) port@(InPortRef (NodeLoc _ nid) _) = do
     withTC loc False $ do
         runASTOp $ disconnectPort port
-        -- runAliasAnalysis
+        runAliasAnalysis
     resendCode loc
 
 getNodeMeta :: GraphLocation -> NodeId -> Empire (Maybe NodeMetaS)
@@ -1277,9 +1278,9 @@ loadCode (GraphLocation file _) code = do
         runASTOp $ do
             let codeWithoutMeta = stripMetadata code
             Graph.code .= codeWithoutMeta
-            -- metaRef  <- ASTRead.getMetadataRef unit
+            metaRef  <- ASTRead.getMetadataRef unit
             removeMetadataNode
-            -- forM_ metaRef deepDelete
+            forM_ metaRef deepDelete
             return (codeWithoutMeta /= code, prevParseError)
     when (codeHadMeta && isJust prevParseError) $ resendCode loc
     functions <- withUnit loc $ do
@@ -1307,10 +1308,10 @@ loadCode (GraphLocation file _) code = do
                     return (Nothing, f)
     for_ functions $ \(lastUUID, fun) -> do
         uuid <- Library.withLibrary file (fst <$> makeGraph fun lastUUID)
-        -- let loc' = GraphLocation file $ Breadcrumb [Breadcrumb.Definition uuid]
-        -- autolayout loc'
+        let loc' = GraphLocation file $ Breadcrumb [Breadcrumb.Definition uuid]
+        autolayout loc'
         return ()
-    -- autolayoutTopLevel loc
+    autolayoutTopLevel loc
     return ()
 
 infixl 5 |>
@@ -1549,12 +1550,10 @@ findRefToInsertAfter beforeNodes afterNodes ref = do
 insertCodeBeforeFunction :: GraphLocation -> Text -> Empire Text
 insertCodeBeforeFunction loc@(GraphLocation file _) codeToInsert = do
     let nodeId = topLevelFunctionID loc
-    -- withUnit (GraphLocation file def) $ runASTOp $ do
-    --     ref <- ASTRead.getFunByNodeId nodeId
-    --     fo <- Code.functionBlockStartRef ref
-    --     Code.insertAt fo (Text.snoc (Text.snoc codeToInsert '\n') '\n')
-        -- return ""
-    return ""
+    withUnit (GraphLocation file def) $ runASTOp $ do
+        ref <- ASTRead.getFunByNodeId nodeId
+        fo <- Code.functionBlockStartRef ref
+        Code.insertAt fo (Text.snoc (Text.snoc codeToInsert '\n') '\n')
 
 insertCodeBetween :: GraphOp m => [NodeId] -> [NodeId] -> Text -> m Text
 insertCodeBetween beforeNodes afterNodes codeToInsert = do

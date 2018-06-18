@@ -13,7 +13,7 @@ import           Empire.Prelude
 
 import           Empire.ASTOp                   (ASTOpReq, GraphOp, match)
 import qualified Empire.ASTOps.Read             as ASTRead
-import           Empire.Data.AST                (NodeRef)
+import           Empire.Data.AST                (EdgeRef, NodeRef)
 import           Empire.Data.Graph              (Graph)
 import qualified Luna.IR                        as IR
 -- import           Luna.IR.Term.Uni
@@ -77,5 +77,6 @@ genNodeBaseName ref = match ref $ \case
     Var n             -> return $ genOp n
     Acc t n           -> return $ genOp n
     _                 -> return $ "expr"
-    where recurOn a = genNodeBaseName =<< source a
+    where recurOn :: GraphOp m => EdgeRef -> m Text
+          recurOn a = genNodeBaseName =<< source a
           genOp   n = if isOperator n  || n == "#uminus#" then genOperatorName n else nameToText n

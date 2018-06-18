@@ -194,7 +194,7 @@ removeLambdaArg p@(Port.Projection port : []) lambda = match lambda $ \case
             Just (lam' :: Expr (P.ASGFunction)) <- narrowTerm lambda
             -- IR.modifyExprTerm lam' $ wrapped . IR.termASGFunction_args .~ fmap coerce (argsBefore <> argsAfter)
             arg <- source alink
-            irDelete alink
+            -- irDeleteLink alink
             deleteSubtree arg
             Code.gossipLengthsChangedBy (-(ownOff + ownLen)) lambda
     _ -> throwM $ NotLambdaException lambda
