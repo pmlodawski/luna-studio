@@ -18,10 +18,10 @@ class LunaNodeEditorTab extends View
         @handleEvents()
         pushShortcutEvent = (name, arg = null) => @nodeEditor.pushEvent({_shortcut: name, _arg : arg})
         pushSearcherEvent = (name, arg = null) => @nodeEditor.pushEvent(if arg == null then {tag: name} else {tag: name, contents : arg})
-        @nodeEditor.start @uri, mountPoint
         window.install = => nodeEditorBaseGL.install mountPoint2, 'atom://luna-studio/rsc/',  (ne) =>
             window.nodeEditor = ne
             @nodeEditor.setView ne
+            @nodeEditor.start @uri, mountPoint
         nodeEditorBaseGL.onEvent (path, event, target) =>
             if event.tag.endsWith "Event"
                 evt = if event.tag != 'MouseEvent' then event else
