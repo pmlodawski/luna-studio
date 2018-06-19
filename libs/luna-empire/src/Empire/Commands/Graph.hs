@@ -935,12 +935,12 @@ getPortDefault loc (InPortRef (NodeLoc _ nodeId) [])          = withGraph loc $ 
 
 setPortDefault :: GraphLocation -> InPortRef -> Maybe PortDefault -> Empire ()
 setPortDefault loc (InPortRef (NodeLoc _ nodeId) port) (Just val) = do
-    -- withTC loc False $ do
-    --     parsed <- runASTOp $ ASTParse.parsePortDefault val
-        -- runAliasAnalysis
-        -- runASTOp $ case port of
-        --     [] -> makeWhole parsed nodeId
-        --     _  -> makeInternalConnection parsed nodeId port
+    withTC loc False $ do
+        parsed <- runASTOp $ ASTParse.parsePortDefault val
+        runAliasAnalysis
+        runASTOp $ case port of
+            [] -> makeWhole parsed nodeId
+            _  -> makeInternalConnection parsed nodeId port
     resendCode loc
 setPortDefault loc port Nothing = do
     withTC loc False $ runASTOp $ disconnectPort port
