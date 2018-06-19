@@ -45,6 +45,7 @@ import           LunaStudio.Data.Port            (InPort, InPortId, InPortIndex 
                                                   OutPortIndex (..), OutPortTree, OutPorts (..), Port (..), PortState (..))
 import qualified LunaStudio.Data.Port            as Port
 import           LunaStudio.Data.PortDefault     (PortDefault (..), PortValue (..), _Constant)
+import qualified LunaStudio.Data.PortRef         as PortRef
 import           LunaStudio.Data.PortRef         (InPortRef (..), OutPortRefS, OutPortRef (..), srcNodeId, srcNodeLoc)
 import           LunaStudio.Data.Position        (Position)
 import           LunaStudio.Data.TypeRep         (TypeRep (TCons, TStar))
@@ -74,7 +75,7 @@ instance Exception CannotEnterNodeException where
 
 buildGraph :: GraphOp m => m API.Graph
 buildGraph = do
-    connections <- return [] -- buildConnections
+    connections <- map (over _1 PortRef.toPortRef) <$> buildConnections
     nodes       <- buildNodes
     (inE, outE) <- buildEdgeNodes
     API.Graph nodes connections (Just inE) (Just outE) <$> buildMonads
@@ -91,12 +92,21 @@ buildClassGraph = do
 buildClassNode :: ClassOp m => NodeId -> String -> m API.ExpressionNode
 buildClassNode uuid name = do
     f    <- ASTRead.getFunByNodeId uuid
-    meta <- return def -- fromMaybe def <$> AST.readMeta f
+    meta <- fromMaybe def <$> AST.readMeta f
     codeStart <- Code.functionBlockStartRef f
     LeftSpacedSpan (SpacedSpan _ len) <- view CodeSpan.realSpan <$> getLayer @CodeSpan f
     fileCode <- use Graph.code
     let code = Code.removeMarkers $ Text.take (fromIntegral len) $ Text.drop (fromIntegral codeStart) fileCode
-    pure $ API.ExpressionNode uuid "" True (Just $ convert name) code (LabeledTree def (Port [] "base" TStar NotConnected)) (LabeledTree (OutPorts []) (Port [] "base" TStar NotConnected)) meta True
+    pure $ API.ExpressionNode
+            uuid
+            ""
+            True
+            (Just $ convert name)
+            code
+            (LabeledTree def (Port [] "base" TStar NotConnected))
+            (LabeledTree (OutPorts []) (Port [] "base" TStar NotConnected))
+            (NodeMeta.toNodeMeta meta)
+            True
 
 buildNodes :: GraphOp m => m [API.ExpressionNode]
 buildNodes = do
@@ -192,13 +202,13 @@ buildNode nid = do
     ref       <- GraphUtils.getASTTarget  nid
     expr      <- Text.pack <$> Print.printExpression ref
     marked    <- ASTRead.getASTRef nid
-    meta      <- return def -- fromMaybe def <$> AST.readMeta marked
+    meta      <- fromMaybe def <$> AST.readMeta marked
     name      <- getNodeName nid
     canEnter  <- ASTRead.isEnterable ref
     inports   <- buildInPorts nid ref [] aliasPortName
     outports  <- buildOutPorts root
     code      <- Code.removeMarkers <$> getNodeCode nid
-    pure $ API.ExpressionNode nid expr False name code inports outports meta canEnter
+    pure $ API.ExpressionNode nid expr False name code inports outports (NodeMeta.toNodeMeta meta) canEnter
 
 buildNodeTypecheckUpdate :: GraphOp m => NodeId -> m API.NodeTypecheckerUpdate
 buildNodeTypecheckUpdate nid = do
@@ -459,8 +469,10 @@ buildOutPorts ref = match ref $ \case
 buildConnections :: GraphOp m => m [(OutPortRefS, InPortRef)]
 buildConnections = do
     allNodes       <- uses Graph.breadcrumbHierarchy BH.topLevelIDs
+    print "allNodes" >> print allNodes
     (_, outEdge)   <- getEdgePortMapping
     connections    <- mapM getNodeInputs allNodes
+    print "connections" >> print connections
     outputEdgeConn <- getOutputSidebarInputs outEdge
     pure $ (maybeToList outputEdgeConn) <> concat connections
 

@@ -1848,8 +1848,8 @@ getImportsInFile = do
                                 matchExpr a' $ \case
                                     ImportSrc n -> case n of
                                         Term.Absolute n -> do
-                                            n' <- Foreign.toList n
-                                            return $ convert $ List.intercalate "." $ map nameToString n'
+                                            let n' = convert n
+                                            return $ convert $ nameToString n'
 
 getAvailableImports :: GraphLocation -> Empire [ImportName]
 getAvailableImports (GraphLocation file _) = withUnit (GraphLocation file (Breadcrumb [])) $ do
