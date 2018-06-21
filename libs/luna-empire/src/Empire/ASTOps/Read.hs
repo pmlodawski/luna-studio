@@ -117,9 +117,6 @@ getNodeId node = do
     varsInside <- (getVarsInside =<< getVarNode node) `catch` (\(_e :: NotUnifyException) -> return [])
     varsNodeIds <- mapM getNodeId varsInside
     let leavesNodeId = foldl' (<|>) Nothing varsNodeIds
-    -- print "rootNodeId" >> print rootNodeId
-    -- print "varNodeId" >> print varNodeId
-    -- print "leavesNodeId" >> print leavesNodeId
     return $ rootNodeId <|> varNodeId <|> leavesNodeId
 
 getPatternNames :: GraphOp m => NodeRef -> m [String]
@@ -151,8 +148,8 @@ getVarName = fmap nameToString . getVarName'
 
 getVarsInside :: ASTOp g m => NodeRef -> m [NodeRef]
 getVarsInside e = do
-    isVar <- isJust <$> narrowTerm @IR.Var e
-    if isVar then return [e] else concat <$> (mapM (getVarsInside <=< source) =<< inputs e)
+    var <- isVar e
+    if var then return [e] else concat <$> (mapM (getVarsInside <=< source) =<< inputs e)
 
 rightMatchOperand :: GraphOp m => NodeRef -> m EdgeRef
 rightMatchOperand node = match node $ \case
@@ -330,10 +327,16 @@ getFirstNonLambdaLink node = match node $ \case
     _         -> return Nothing
 
 isApp :: GraphOp m => NodeRef -> m Bool
-isApp expr = isJust <$> narrowTerm @IR.App expr
+-- isApp expr = isJust <$> narrowTerm @IR.App expr
+isApp expr = match expr $ \case
+    App{} -> return True
+    _     -> return False
 
 isBlank :: GraphOp m => NodeRef -> m Bool
-isBlank expr = isJust <$> narrowTerm @IR.Blank expr
+-- isBlank expr = isJust <$> narrowTerm @IR.Blank expr
+isBlank expr = match expr $ \case
+    Blank{} -> return True
+    _     -> return False
 
 isLambda :: GraphOp m => NodeRef -> m Bool
 isLambda expr = match expr $ \case
@@ -349,19 +352,34 @@ isEnterable expr = match expr $ \case
     _             -> return False
 
 isMatch :: GraphOp m => NodeRef -> m Bool
-isMatch expr = isJust <$> narrowTerm @IR.Unify expr
+-- isMatch expr = isJust <$> narrowTerm @IR.Unify expr
+isMatch expr = match expr $ \case
+    Unify{} -> return True
+    _     -> return False
 
 isCons :: GraphOp m => NodeRef -> m Bool
-isCons expr = isJust <$> narrowTerm @IR.Cons expr
+-- isCons expr = isJust <$> narrowTerm @IR.Cons expr
+isCons expr = match expr $ \case
+    Cons{} -> return True
+    _     -> return False
 
-isVar :: GraphOp m => NodeRef -> m Bool
-isVar expr = isJust <$> narrowTerm @IR.Var expr
+isVar :: ASTOp a m => NodeRef -> m Bool
+-- isVar expr = isJust <$> narrowTerm @IR.Var expr
+isVar expr = match expr $ \case
+    Var{} -> return True
+    _     -> return False
 
 isTuple :: GraphOp m => NodeRef -> m Bool
-isTuple expr = isJust <$> narrowTerm @IR.Tuple expr
+-- isTuple expr = isJust <$> narrowTerm @IR.Tuple expr
+isTuple expr = match expr $ \case
+    Tuple{} -> return True
+    _     -> return False
 
 isASGFunction :: GraphOp m => NodeRef -> m Bool
-isASGFunction expr = isJust <$> narrowTerm @IR.Function expr
+-- isASGFunction expr = isJust <$> narrowTerm @IR.Function expr
+isASGFunction expr = match expr $ \case
+    ASGFunction{} -> return True
+    _     -> return False
 
 isAnonymous :: GraphOp m => NodeRef -> m Bool
 isAnonymous expr = match expr $ \case
@@ -417,31 +435,23 @@ classFromUnit unit = match unit $ \case
 
 getMetadataRef :: ClassOp m => NodeRef -> m (Maybe NodeRef)
 getMetadataRef unit = do
-    putStrLn "getMetadataRef"
-    print unit
-    m <- getLayer @IR.Model unit
-    print m
     klass' <- classFromUnit unit
-    putStrLn "getMetadataRef2"
     match klass' $ \case
         ClsASG _ _ _ _ funs'' -> do
             funs <- ptrListToList funs''
             funs' <- mapM source funs
             (Safe.headMay . catMaybes) <$> forM funs' (\f -> match f $ \case
-                Metadata{} -> print "metadata"    >> return (Just f)
-                _          -> print "notmetadata" >> return Nothing)
+                Metadata{} -> return (Just f)
+                _          -> return Nothing)
         _ -> return Nothing
 
 getFunByNodeId :: ClassOp m => NodeId -> m NodeRef
 getFunByNodeId nodeId = do
     cls  <- use Graph.clsClass
     funs <- classFunctions cls
-    print "funs" >> print funs
     fs   <- forM funs $ \fun -> do
         nid <- getNodeId fun
-        print "nid" >> print nid
         return $ if nid == Just nodeId then Just fun else Nothing
-    print fs
     case catMaybes fs of
         []  -> throwM $ NodeDoesNotExistException nodeId
         [f] -> return f

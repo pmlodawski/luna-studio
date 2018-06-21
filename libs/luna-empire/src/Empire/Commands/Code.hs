@@ -248,9 +248,15 @@ getOffsetRelativeToFile ref = do
 getAllBeginningsOf :: GraphOp m => NodeRef -> m [Delta]
 getAllBeginningsOf ref = do
     succs <- ociSetToList =<< getLayer @IR.Users ref
-    case succs of
-        [] -> pure <$> use Graph.fileOffset
-        _  -> fmap concat $ forM succs $ \s -> do
+    isFun <- ASTRead.isASGFunction ref
+    -- FIXME[MM]: this looks fishy, did something change regarding
+    -- function successors?
+    let succs' = if isFun then [] else succs
+    case succs' of
+        [] -> do
+            off <- use Graph.fileOffset
+            return [off]
+        _  -> fmap concat $ forM succs' $ \s -> do
             off  <- getOffsetRelativeToTarget s
             begs <- getAllBeginningsOf =<< target s
             return $ (off <>) <$> begs
@@ -309,16 +315,10 @@ getOffset ref = do
             inputs         <- inputs =<< target more
             realInputs     <- mapM source inputs
             let leftInputs = takeWhile (/= ref) realInputs
-            -- print "realInputs" >> print realInputs
-            -- print "leftInputs" >> print leftInputs
             moreOffset     <- getOffset =<< target more
             lefts          <- mapM (fmap (view CodeSpan.realSpan) . getLayer @CodeSpan) leftInputs
-            -- print "lefts" >> print lefts
             return $ moreOffset <> (mconcat lefts)
     LeftSpacedSpan (SpacedSpan off _) <- view CodeSpan.realSpan <$> getLayer @CodeSpan ref
-    -- print "getOffset"
-    -- matchExpr ref $ print
-    -- print leftSpan >> print off
     return $ leftSpan <> LeftSpacedSpan (SpacedSpan off 0)
 
 getCurrentBlockBeginning :: GraphOp m => m Delta

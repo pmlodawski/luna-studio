@@ -82,9 +82,7 @@ buildGraph = do
 
 buildClassGraph :: ClassOp m => m API.Graph
 buildClassGraph = do
-    putStrLn "buildClassGraph"
     funs <- use Graph.clsFuns
-    print funs
     nodes' <- mapM (\(uuid, funGraph) -> buildClassNode uuid (funGraph ^. Graph.funName)) $ Map.assocs funs
     pure $ API.Graph nodes' [] Nothing Nothing []
 
@@ -469,10 +467,8 @@ buildOutPorts ref = match ref $ \case
 buildConnections :: GraphOp m => m [(OutPortRefS, InPortRef)]
 buildConnections = do
     allNodes       <- uses Graph.breadcrumbHierarchy BH.topLevelIDs
-    print "allNodes" >> print allNodes
     (_, outEdge)   <- getEdgePortMapping
     connections    <- mapM getNodeInputs allNodes
-    print "connections" >> print connections
     outputEdgeConn <- getOutputSidebarInputs outEdge
     pure $ (maybeToList outputEdgeConn) <> concat connections
 

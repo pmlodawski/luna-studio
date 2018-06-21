@@ -11,7 +11,7 @@ module Empire.ASTOps.Parse (
     SomeParserException
   , FunctionParsing(..)
   , parseExpr
-  -- , parsePattern
+  , parsePattern
   , parsePortDefault
   , runParser
   , runFunHackParser
@@ -151,6 +151,7 @@ instance Exception SomeParserException where
     -- span `shouldBe` desiredSpan
 
 parseExpr s = view _1 <$> runParser Parsing.expr s `catchAll` (\e -> throwM $ SomeParserException e)
+parsePattern s = view _1 <$> runParser Parsing.pat s `catchAll` (\e -> throwM $ SomeParserException e)
 
 passConverter :: (stage1 ~ stage2) => Pass.Pass stage1 pass1 a -> Pass.Pass stage2 pass2 a
 passConverter = unsafeCoerce
@@ -265,7 +266,7 @@ runProperVarParser code = (void $ runParser Parsing.var code) `catchAll` (\e -> 
     --     return var
 
 runProperPatternParser :: Text.Text -> IO NodeRef
-runProperPatternParser code = error "properpatternparser" -- do
+runProperPatternParser code = parsePattern code -- do
     -- runPM $ do
     --     parserBoilerplate
     --     attachEmpireLayers

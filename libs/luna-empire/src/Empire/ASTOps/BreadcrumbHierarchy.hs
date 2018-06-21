@@ -34,6 +34,7 @@ import qualified Luna.IR as IR
 
 makeTopBreadcrumbHierarchy :: GraphOp m => NodeRef -> m ()
 makeTopBreadcrumbHierarchy ref = do
+
     item <- prepareFunctionChild ref ref
     breadcrumbHierarchy .= item
 
@@ -64,10 +65,6 @@ childrenFromSeq tgtBeg edge = do
                     return expr'
             child    <- prepareChild ref childTarget
             nodeMeta <- use $ Graph.nodeCache . nodeMetaMap . at index
-            putStrLn "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-            print uid
-            print index
-            print nodeMeta
             forM nodeMeta $ AST.writeMeta ref
             return $ Map.singleton uid child
         _ -> do

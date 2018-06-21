@@ -344,8 +344,14 @@ rewireCurrentNode newTarget = do
 renameVar :: ASTOp a m => NodeRef -> String -> m ()
 renameVar vref name = do
     var <- narrowTerm @IR.Var vref
+    case var of
+        Just var' -> do
+            IR.UniTermVar a <- getLayer @IR.Model var'
+            let a' = a & IR.name_Var .~ stringToName name
+            putLayer @IR.Model var' $ IR.UniTermVar a'
+        _ -> return ()
     -- mapM_ (flip IR.modifyExprTerm $ IR.name .~ (stringToName name)) var
-    return ()
+    -- return ()
 
 replaceWhenBHSelf :: GraphOp m => NodeRef -> NodeRef -> m ()
 replaceWhenBHSelf to from = do

@@ -67,21 +67,16 @@ makeGraphCls :: NodeRef -> Maybe NodeId -> Command Graph.ClsGraph (NodeId, Graph
 makeGraphCls fun lastUUID = do
     pmState   <- liftIO defaultPMState
     nodeCache <- use Graph.clsNodeCache
-    print lastUUID
     uuid      <- maybe (liftIO UUID.nextRandom) return lastUUID
-    print uuid
     (funName, ref, fileOffset) <- runASTOp $ do
-        print "uuid" >> print uuid
         putLayer @Marker fun $ Just $ OutPortRef uuid mempty
         asgFun    <- ASTRead.cutThroughDocAndMarked fun
         matchExpr asgFun $ \case
             ASGFunction n _ _ -> do
                 offset <- functionBlockStartRef asgFun
-                print asgFun >> print offset
                 name   <- ASTRead.getVarName' =<< source n
                 return (nameToString name, asgFun, offset)
     let ast   = Graph.AST () pmState
-    -- ast <- use Graph.clsAst
     let oldPortMapping = nodeCache ^. portMappingMap . at (uuid, Nothing)
     portMapping <- fromJustM (liftIO $ (,) <$> UUID.nextRandom <*> UUID.nextRandom) oldPortMapping
     globalMarkers <- use Graph.clsCodeMarkers
@@ -145,12 +140,9 @@ withRootedFunction uuid act = do
     diffs <- runASTOp $ do
         cls <- use Graph.clsClass
         funs <- ASTRead.classFunctions cls
-        print "expected" >> print uuid
         forM funs $ \fun -> ASTRead.cutThroughDocAndMarked fun >>= \f -> matchExpr f $ \case
-            -- _ -> print "nuthin'" >> return Nothing
             ASGFunction n _ _ -> do
                 nodeId <- ASTRead.getNodeId fun
-                print "checking" >> print nodeId
                 if (nodeId == Just uuid) then do
                     lenDiff <- if fun == f then do
                         LeftSpacedSpan (SpacedSpan off prevLen) <- view CodeSpan.realSpan <$> getLayer @CodeSpan.CodeSpan f

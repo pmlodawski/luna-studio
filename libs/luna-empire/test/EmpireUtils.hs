@@ -56,14 +56,10 @@ import           Test.Hspec                    (expectationFailure)
 
 runEmp :: CommunicationEnv -> (Given GraphLocation => Empire a) -> IO (a, Env)
 runEmp env act = runEmpire env def $ do
-    putStrLn "runEmp"
     _ <- createLibrary (Just "/TestFile") "/TestFile"
-    putStrLn "runEmp2"
     let toLoc = GraphLocation "/TestFile"
     Graph.loadCode (toLoc (Breadcrumb [])) "def main:\n    None"
-    putStrLn "runEmp3"
     [node] <- Graph.getNodes (toLoc (Breadcrumb []))
-    putStrLn "runEmp4"
     -- uuid <- mkUUID
     -- Graph.addNode (toLoc $ Breadcrumb []) uuid "def main" def
     -- [node] <- Graph.getNodes (toLoc (Breadcrumb []))

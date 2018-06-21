@@ -202,32 +202,35 @@ irDelete e = Destruct.delete e
 irDeleteLink :: (DestructEdge.Delete m) => Edge.Edge a -> m ()
 irDeleteLink e = DestructEdge.delete e
 
-substitute :: ( MonadIO m
-              , Layer.Reader (Component Node.Nodes) IRSuccs m
-              , Layer.Reader (Component Edge.Edges) Edge.Source m
-              , Layer.Writer (Component Edge.Edges) Edge.Source m
-              ) => IR.SomeTerm -> IR.SomeTerm -> m ()
-substitute new old = do
-    succs <- getLayer @IRSuccs old
-    list <- Set.toList succs
-    mapM_ (replaceSource new) $ map generalize list
+-- substitute :: ( MonadIO m
+--               , Layer.Reader (Component Node.Nodes) IRSuccs m
+--               , Layer.Reader (Component Edge.Edges) Edge.Source m
+--               , Layer.Writer (Component Edge.Edges) Edge.Source m
+--               ) => IR.SomeTerm -> IR.SomeTerm -> m ()
+-- substitute new old = do
+--     succs <- getLayer @IRSuccs old
+--     list <- Set.toList succs
+--     mapM_ (replaceSource new) $ map generalize list
+substitute new old = Substitute.substitute new old
 
 unsafeRelayout :: Coercible a b => a -> b
 unsafeRelayout = coerce
 
-replaceSource :: ( Monad m
-                 , Layer.Reader (Component Edge.Edges) Edge.Source m
-                 , Layer.Writer (Component Edge.Edges) Edge.Source m
-                 , Layer.Reader (Component Node.Nodes) IRSuccs m
-                 , MonadIO m
-                 )  => IR.SomeTerm -> Edge.SomeEdge -> m ()
-replaceSource newSource link = do
-    src <- getLayer @IR.Source link
-    srcSuccs <- getLayer @IRSuccs src
-    Set.delete srcSuccs $ generalize link
-    newSrcSuccs <- getLayer @IRSuccs newSource
-    Set.insert newSrcSuccs $ generalize link
-    putLayer @IR.Source link $ generalize newSource
+-- replaceSource :: ( Monad m
+--                  , Layer.Reader (Component Edge.Edges) Edge.Source m
+--                  , Layer.Writer (Component Edge.Edges) Edge.Source m
+--                  , Layer.Reader (Component Node.Nodes) IRSuccs m
+--                  , MonadIO m
+--                  )  => IR.SomeTerm -> Edge.SomeEdge -> m ()
+-- replaceSource newSource link = do
+--     src <- getLayer @IR.Source link
+--     srcSuccs <- getLayer @IRSuccs src
+--     Set.delete srcSuccs $ generalize link
+--     newSrcSuccs <- getLayer @IRSuccs newSource
+--     Set.insert newSrcSuccs $ generalize link
+--     putLayer @IR.Source link $ generalize newSource
+replaceSource :: Substitute.Replace m => Node.Node a -> Edge.Edge (a *-* b) -> m ()
+replaceSource e l = Substitute.replaceSource e l
 
 narrowTerm :: forall b m a. Monad m => Expr a -> m (Maybe (Expr b))
 narrowTerm e = return $ Just (coerce e)
