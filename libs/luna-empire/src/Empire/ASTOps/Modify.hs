@@ -20,6 +20,7 @@ import qualified Safe
 import           Empire.Prelude hiding (substitute)
 import qualified Empire.Prelude as P
 
+import qualified Data.Graph.Data.Component.Vector   as PtrList
 import           Data.Text.Position                 (Delta)
 import           LunaStudio.Data.Node               (NodeId)
 import qualified LunaStudio.Data.Port               as Port
@@ -73,6 +74,10 @@ addLambdaArg position lambda name varNames = do
                 return $ funBeg + lastOff + lastLen
             Code.insertAt insertPosition (" " <> convert nameForNewArg)
             Just (lam' :: Expr (P.ASGFunction)) <- narrowTerm lambda
+            l <- PtrList.fromList $ coerce $ argsBefore <> (l : argsAfter)
+            IR.UniTermFunction a <- getLayer @IR.Model lam'
+            let a' = a & IR.args_Function .~ l
+            putLayer @IR.Model lam' $ IR.UniTermFunction a'
             -- IR.modifyExprTerm lam' $ wrapped . IR.termASGFunction_args .~ fmap coerce (argsBefore <> (l : argsAfter))
             Code.gossipUsesChangedBy (1 + fromIntegral (length nameForNewArg)) v
         _ -> throwM $ NotLambdaException lambda
@@ -192,9 +197,13 @@ removeLambdaArg p@(Port.Projection port : []) lambda = match lambda $ \case
             ownLen      <- getLayer @SpanLength =<< source alink
             Code.removeAt (funBeg + offToLam - ownOff) (funBeg + offToLam + ownLen)
             Just (lam' :: Expr (P.ASGFunction)) <- narrowTerm lambda
+            l <- PtrList.fromList $ coerce $ argsBefore <> argsAfter
+            IR.UniTermFunction a <- getLayer @IR.Model lam'
+            let a' = a & IR.args_Function .~ l
+            putLayer @IR.Model lam' $ IR.UniTermFunction a'
             -- IR.modifyExprTerm lam' $ wrapped . IR.termASGFunction_args .~ fmap coerce (argsBefore <> argsAfter)
             arg <- source alink
-            -- irDeleteLink alink
+            irDeleteLink alink
             deleteSubtree arg
             Code.gossipLengthsChangedBy (-(ownOff + ownLen)) lambda
     _ -> throwM $ NotLambdaException lambda
@@ -252,6 +261,10 @@ moveLambdaArg p@(Port.Projection port : []) newPosition lambda = match lambda $ 
             initialOffset <- (+funBeg) <$> Code.getOffsetRelativeToTarget (coerce alink)
             let newArgs = shiftPosition port newPosition as
             Just (lam' :: Expr (P.ASGFunction)) <- narrowTerm lambda
+            l <- PtrList.fromList $ coerce newArgs
+            IR.UniTermFunction a <- getLayer @IR.Model lam'
+            let a' = a & IR.args_Function .~ l
+            putLayer @IR.Model lam' $ IR.UniTermFunction a'
             -- IR.modifyExprTerm lam' $ wrapped . IR.termASGFunction_args .~ fmap coerce newArgs
             newOffset <- (+funBeg) <$> Code.getOffsetRelativeToTarget (coerce alink)
             ownOff    <- getLayer @SpanOffset alink
