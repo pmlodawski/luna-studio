@@ -284,20 +284,20 @@ mousePosition = \case
 instance Convertible Target InPortRef where
     convert (Target [nodeLoc, portId]) = InPortRef (read nodeLoc) (read portId)
     convert (Target [inPortRef])       = read inPortRef
-    convert _ = error "Cannot parse Target to InPortRef"
+    convert t = error $ "Cannot parse Target to InPortRef (target = " <> show t <> ")"
 
 instance Convertible Target OutPortRef where
     convert (Target [nodeLoc, portId]) = OutPortRef (read nodeLoc) (read portId)
-    convert _ = error "Cannot parse Target to OutPortRef"
+    convert t = error $ "Cannot parse Target to OutPortRef (target = " <> show t <> ")"
 
 instance Convertible Target NodeLoc where
     convert (Target [nodeLoc]) = read nodeLoc
-    convert _ = error "Cannot parse Target to NodeLoc"
+    convert t = error $ "Cannot parse Target to NodeLoc (target = " <> show t <> ")"
 
 instance Convertible Target VisualizerId where
     convert (Target [visId]) = read visId
-    convert _ = error "Cannot parse Target to VisualizerId"
+    convert t = error $ "Cannot parse Target to VisualizerId (target = " <> show t <> ")"
 
 instance Convertible Target VisualizationId where
     convert (Target [visId]) = read visId
-    convert _ = error "Cannot parse Target to VisualizationId"
+    convert t = error $ "Cannot parse Target to VisualizationId (target = " <> show t <> ")"
