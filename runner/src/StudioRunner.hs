@@ -205,9 +205,8 @@ lunaTutorialsPath = do
     lunaTmp   <- lunaTmpPath
     return $ lunaTmp </> (runnerCfg ^. tutorialsDirectory)
 backendLdLibraryPath = do
-    maybeLdLibPath <- Shelly.shelly $ Shelly.get_env "LD_LIBRARY_PATH"
-    let ldLibPath = fromText $ fromMaybe "\"\"" maybeLdLibPath
-    return $ ldLibPath </> "zeromq"
+    ldLibPath <- liftIO $ getCurrentDirectory
+    return $ (decodeString ldLibPath) </> "lib" </> "zeromq"
 
 
 
