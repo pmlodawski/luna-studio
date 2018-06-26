@@ -11,6 +11,8 @@ import atom_prepare
 import atom_apm
 import copy_configs
 import stack_build
+import new_gui
+from common import process_context
 
 app_dir      = atom_prepare.prep_path('..')
 backend_dir  = atom_prepare.prep_path('../build-config/backend')
@@ -18,69 +20,57 @@ frontend_dir = atom_prepare.prep_path('../luna-studio')
 
 
 def build_app (backend_args, frontend_args, runner_args, gui_url, dev_mode=False):
-    try:
+    with process_context('build_app'):
         build_runner(runner_args)
         build_backend (backend_args)
         build_frontend (frontend_args, gui_url, dev_mode)
 
-    except subprocess.CalledProcessError:
-        print("Status : FAIL")
-        sys.exit(1)
 
 def build_backend (backend_args):
-    try:
-        print ("Building backend")
+    with process_context('build_backend'):
+        print ('Building backend')
         stack_build.create_bin_dirs()
         stack_build.build_backend(backend_args)
         stack_build.copy_std_lib()
 
-    except subprocess.CalledProcessError:
-        print("Status : FAIL")
-        sys.exit(1)
 
 def build_frontend (frontend_args, gui_url, dev_mode):
-    try:
-        print("Building frontend")
+    with process_context('build_frontend'):
+        print('Building frontend')
         stack_build.create_bin_dirs()
         stack_build.build_ghcjs(frontend_args, dev_mode)
         atom_prepare.run(dev_mode)
         atom_apm.run(gui_url, frontend_args, dev_mode)
         copy_configs.run()
+        new_gui.install()
 
-    except subprocess.CalledProcessError:
-        print("Status : FAIL")
-        sys.exit(1)
 
 def build_js_only (frontend_args, gui_url, dev_mode):
-    try:
-        print("Building JS")
+    with process_context('build_js_only'):
+        print('Building JS')
         atom_prepare.run(dev_mode)
         atom_apm.run(gui_url, frontend_args, dev_mode)
         copy_configs.run()
-    except subprocess.CalledProcessError:
-        print("Status : FAIL")
-        sys.exit(1)
+
 
 def build_runner(runner_args):
-    try:
+    with process_context('build_runner'):
         stack_build.create_bin_dirs()
         stack_build.build_runner(runner_args)
         stack_build.link_main_bin()
-    except subprocess.CalledProcessError:
-        print("Status : FAIL")
-        sys.exit(1)
+
 
 def main ():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--backend", help="Build backend only", action="store_true")
-    parser.add_argument("--runner", help="Build runner only", action="store_true")
-    parser.add_argument("--frontend", help="Build frontend only", action="store_true")
-    parser.add_argument("--js_only", action="store_true")
-    parser.add_argument("--release", help="Build package in release mode", action="store_false")
-    parser.add_argument("--gui_url", help="Path to uploaded gui")
-    parser.add_argument("--backend-stack", help="Additional options passed to stack while building backend", action="append", dest="stack_backend_args", default=['--copy-bins', '--install-ghc', '--ghc-options=-fexternal-interpreter'])
-    parser.add_argument("--frontend-stack", help="Additional options passed to stack while building frontend", action="append", dest="stack_frontend_args", default=['--install-ghc'])
-    parser.add_argument("--runner-stack", help="Additional options passed to stack while building runner", action="append", dest="stack_runner_args", default=['--copy-bins', '--install-ghc'])
+    parser.add_argument('--backend', help='Build backend only', action='store_true')
+    parser.add_argument('--runner', help='Build runner only', action='store_true')
+    parser.add_argument('--frontend', help='Build frontend only', action='store_true')
+    parser.add_argument('--js_only', action='store_true')
+    parser.add_argument('--release', help='Build package in release mode', action='store_false')
+    parser.add_argument('--gui_url', help='Path to uploaded gui')
+    parser.add_argument('--backend-stack', help='Additional options passed to stack while building backend', action='append', dest='stack_backend_args', default=['--copy-bins', '--install-ghc', '--ghc-options=-fexternal-interpreter'])
+    parser.add_argument('--frontend-stack', help='Additional options passed to stack while building frontend', action='append', dest='stack_frontend_args', default=['--install-ghc'])
+    parser.add_argument('--runner-stack', help='Additional options passed to stack while building runner', action='append', dest='stack_runner_args', default=['--copy-bins', '--install-ghc'])
     args = parser.parse_args()
 
     if args.backend:
@@ -93,4 +83,5 @@ def main ():
         build_js_only (args.stack_frontend_args, args.gui_url, dev_mode=args.release)
     else: build_app (args.stack_backend_args, args.stack_frontend_args, args.stack_runner_args, args.gui_url, dev_mode=args.release)
 
-main()
+if __name__ == '__main__':
+    main()
