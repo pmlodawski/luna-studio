@@ -4,7 +4,7 @@ import subprocess
 import sys
 
 from scripts_build.atom_prepare import prep_path
-from scripts_build.common import process_context, working_directory
+from scripts_build.common import print_title, process_context, working_directory
 
 
 new_gui_dir = prep_path('../luna-studio/basegl-ui')
@@ -37,7 +37,7 @@ def copy_styles():
 
 
 def install():
-    print('Installing the new GUI...')
+    print_title('Installing the new GUI...')
     npm_install()
     run_webpack()
     copy_bundle()

@@ -33,3 +33,21 @@ def process_context(name: str):
         yield
     except subprocess.CalledProcessError:
         fail(msg='Error while running {}'.format(name))
+
+
+def print_title(txt: str):
+    """Print out a text surronded with lines like:
+
+    ----------
+    -- Text --
+    ----------
+    """
+    pre = "-- "
+    post = " --"
+    N = len(pre) + len(txt) + len(post)
+    line = N * "-"
+    print()
+    print(line)
+    print(pre + txt + post)
+    print(line)
+    print()

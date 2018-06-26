@@ -81,7 +81,7 @@ class LunaNodeEditorTab extends View
                     path:   path
                     target: target
                     base:   base
-                    
+
         # try
         #     nodeEditorBaseGL.install mountPoint2
         # catch e
@@ -208,3 +208,5 @@ class LunaNodeEditorTab extends View
             oldPath = atom.project.getPaths()[0]
             projects.temporaryProject.save (newPath) =>
                 @codeEditor.pushInternalEvent(tag: 'MoveProject', _oldPath : oldPath, _newPath: newPath)
+
+    attached: -> window.install()

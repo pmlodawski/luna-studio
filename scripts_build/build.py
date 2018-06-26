@@ -12,7 +12,8 @@ import atom_apm
 import copy_configs
 import stack_build
 import new_gui
-from common import process_context
+from common import print_title, process_context
+
 
 app_dir      = atom_prepare.prep_path('..')
 backend_dir  = atom_prepare.prep_path('../build-config/backend')
@@ -28,7 +29,7 @@ def build_app (backend_args, frontend_args, runner_args, gui_url, dev_mode=False
 
 def build_backend (backend_args):
     with process_context('build_backend'):
-        print ('Building backend')
+        print_title('Building backend')
         stack_build.create_bin_dirs()
         stack_build.build_backend(backend_args)
         stack_build.copy_std_lib()
@@ -36,7 +37,7 @@ def build_backend (backend_args):
 
 def build_frontend (frontend_args, gui_url, dev_mode):
     with process_context('build_frontend'):
-        print('Building frontend')
+        print_title('Building frontend')
         stack_build.create_bin_dirs()
         stack_build.build_ghcjs(frontend_args, dev_mode)
         atom_prepare.run(dev_mode)
@@ -47,7 +48,7 @@ def build_frontend (frontend_args, gui_url, dev_mode):
 
 def build_js_only (frontend_args, gui_url, dev_mode):
     with process_context('build_js_only'):
-        print('Building JS')
+        print_title('Building JS')
         atom_prepare.run(dev_mode)
         atom_apm.run(gui_url, frontend_args, dev_mode)
         copy_configs.run()
@@ -55,6 +56,7 @@ def build_js_only (frontend_args, gui_url, dev_mode):
 
 def build_runner(runner_args):
     with process_context('build_runner'):
+        print_title("Build runner")
         stack_build.create_bin_dirs()
         stack_build.build_runner(runner_args)
         stack_build.link_main_bin()
@@ -82,6 +84,9 @@ def main ():
     elif args.js_only:
         build_js_only (args.stack_frontend_args, args.gui_url, dev_mode=args.release)
     else: build_app (args.stack_backend_args, args.stack_frontend_args, args.stack_runner_args, args.gui_url, dev_mode=args.release)
+
+    print("Done!")
+
 
 if __name__ == '__main__':
     main()
