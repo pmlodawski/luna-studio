@@ -31,7 +31,6 @@
         "pako": "1.0.x",
         "react-dom": "15.6.x",
         "react": "15.6.x",
-        "resize-observer-polyfill": "1.3.x",
         "request": "2.83.x",
         "request-progress": "3.0.x",
         "showdown": "1.8.x",

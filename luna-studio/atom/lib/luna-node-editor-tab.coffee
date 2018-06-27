@@ -18,10 +18,11 @@ class LunaNodeEditorTab extends View
         @handleEvents()
         pushShortcutEvent = (name, arg = null) => @nodeEditor.pushEvent({_shortcut: name, _arg : arg})
         pushSearcherEvent = (name, arg = null) => @nodeEditor.pushEvent(if arg == null then {tag: name} else {tag: name, contents : arg})
-        window.install = => nodeEditorBaseGL.install mountPoint2, 'atom://luna-studio/rsc/',  (ne) =>
-            window.nodeEditor = ne
-            @nodeEditor.setView ne
-            @nodeEditor.start @uri, mountPoint
+        window.install = =>
+            nodeEditorBaseGL.install mountPoint2, 'atom://luna-studio/rsc/',  (ne) =>
+                window.nodeEditor = ne
+                @nodeEditor.setView ne
+                @nodeEditor.start @uri, mountPoint
         nodeEditorBaseGL.onEvent (path, event, target) =>
             if event.tag.endsWith "Event"
                 evt = if event.tag != 'MouseEvent' then event else
@@ -82,10 +83,6 @@ class LunaNodeEditorTab extends View
                     target: target
                     base:   base
 
-        # try
-        #     nodeEditorBaseGL.install mountPoint2
-        # catch e
-        #     console.error e
     @content: ->
         uniqueTabNo++
         mountPoint = "luna-studio-mount" + uniqueTabNo
@@ -95,19 +92,12 @@ class LunaNodeEditorTab extends View
                 =>
                     @div
                         id: mountPoint2
-                        style: 'flex-direction:row; width: 50%; height: inherit'
+                        style: 'flex-direction:row; width: 100%; height: inherit'
                         class: 'luna-studio-mount luna-studio luna-noselect'
                         tabindex: -1
                         =>
                             @h1 "Loading ..."
-                    @div
-                        id: mountPoint
-                        style: 'flex-direction:row; width: 50%; height: inherit'
-                        class: 'luna-studio-mount'
-                        =>
-                            @h1 "Loading ..."
 
-    # getTitle:     -> path.basename(@uri)
     getTitle:     -> 'Node editor'
 
     handleEvents: =>

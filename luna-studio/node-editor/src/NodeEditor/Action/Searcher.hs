@@ -154,7 +154,7 @@ openWith input mode = do
     waitingForTc <- use Global.waitingForTc
     modifyNodeEditor $ NodeEditor.searcher ?= Searcher.Searcher 0 mode def False def False waitingForTc def
     modifyInput input inputLen inputLen action
-    renderIfNeeded --TODO[basegl] Remove
+    -- renderIfNeeded --TODO[basegl] Remove
     -- Searcher.focus --TODO[basegl] Remove
 
 updateInput :: Text -> Int -> Int -> Searcher -> Command State ()
@@ -250,7 +250,6 @@ close :: Searcher -> Command State ()
 close _ = do
     modifyNodeEditor $ NodeEditor.searcher .= Nothing
     removeActionFromState searcherAction
-    App.focus
 
 selectNextHint :: Searcher -> Command State ()
 selectNextHint _ = do
