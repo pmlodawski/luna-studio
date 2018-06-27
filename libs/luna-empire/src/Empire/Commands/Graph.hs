@@ -382,7 +382,7 @@ addNodeWithConnection location nl@(NodeLoc _ nodeId) expression nodeMeta connect
                 selfs = filter (\a -> all (== Self) a && not (null a)) ports
                 longestSelfChain = Safe.headDef [Self] $ reverse $ sortBy (compare `on` length) selfs
                 port = if shouldConnectToArg firstWord then [Arg 0] else longestSelfChain
-            void $ connectCondTC False location (OutPortRef nid mempty) (InPortRef' $ InPortRef nl port)
+            void $ connectCondTC False location (OutPortRef (convert nid) mempty) (InPortRef' $ InPortRef nl port)
             withGraph location $ runASTOp $ autolayoutNodesAST [nodeId]
     typecheck location
     return node
@@ -563,11 +563,11 @@ updateCodeSpan ref = do
     fileOffset <- use Graph.fileOffset
     setCodeSpan ref (leftSpacedSpan fileOffset len)
 
-addPort :: GraphLocation -> OutPortRefS -> Empire ()
+addPort :: GraphLocation -> OutPortRef -> Empire ()
 addPort loc portRef = addPortWithConnections loc portRef Nothing []
 
-addPortNoTC :: GraphLocation -> OutPortRefS -> Maybe Text -> Command Graph ()
-addPortNoTC loc (PortRef.toPortRef -> OutPortRef nl pid) name = runASTOp $ do
+addPortNoTC :: GraphLocation -> OutPortRef -> Maybe Text -> Command Graph ()
+addPortNoTC loc (OutPortRef nl pid) name = runASTOp $ do
     let nid      = convert nl
         position = getPortNumber (pid)
     (inE, _) <- GraphBuilder.getEdgePortMapping
@@ -580,7 +580,7 @@ addPortNoTC loc (PortRef.toPortRef -> OutPortRef nl pid) name = runASTOp $ do
     newLam <- ASTRead.getCurrentASTTarget
     ASTBuilder.attachNodeMarkersForArgs nid [] newLam
 
-addPortWithConnections :: GraphLocation -> OutPortRefS -> Maybe Text -> [AnyPortRef] -> Empire ()
+addPortWithConnections :: GraphLocation -> OutPortRef -> Maybe Text -> [AnyPortRef] -> Empire ()
 addPortWithConnections loc portRef name connectTo = do
     withTC loc False $ do
         addPortNoTC loc portRef name
@@ -595,7 +595,7 @@ addSubgraph loc@(GraphLocation _ (Breadcrumb [])) nodes _ = do
 addSubgraph loc nodes conns = do
     newNodes <- withTC loc False $ do
         newNodes <- forM nodes $ \n -> addNodeNoTC loc (n ^. Node.nodeId) (n ^. Node.code) (n ^. Node.name) (n ^. Node.nodeMeta)
-        for_ conns $ \(Connection src dst) -> connectNoTC loc (PortRef.toPortRefS src) (InPortRef' dst)
+        for_ conns $ \(Connection src dst) -> connectNoTC loc src (InPortRef' dst)
         return newNodes
     resendCode loc
     return newNodes
@@ -712,8 +712,8 @@ removeFromSequence ref = do
     unpinFromSequence ref
     deleteSubtree ref
 
-removePort :: GraphLocation -> OutPortRefS -> Empire ()
-removePort loc (PortRef.toPortRef -> portRef) = do
+removePort :: GraphLocation -> OutPortRef -> Empire ()
+removePort loc portRef = do
     withTC loc False $ runASTOp $ do
         let nodeId = portRef ^. PortRef.srcNodeId
         ref <- ASTRead.getCurrentASTTarget
@@ -726,8 +726,8 @@ removePort loc (PortRef.toPortRef -> portRef) = do
         GraphBuilder.buildInputSidebar nodeId
     resendCode loc
 
-movePort :: GraphLocation -> OutPortRefS -> Int -> Empire ()
-movePort loc (PortRef.toPortRef -> portRef) newPosition = do
+movePort :: GraphLocation -> OutPortRef -> Int -> Empire ()
+movePort loc portRef newPosition = do
     withTC loc False $ runASTOp $ do
         let nodeId = portRef ^. PortRef.srcNodeId
         ref        <- ASTRead.getCurrentASTTarget
@@ -739,8 +739,8 @@ movePort loc (PortRef.toPortRef -> portRef) newPosition = do
         GraphBuilder.buildInputSidebar nodeId
     resendCode loc
 
-renamePort :: GraphLocation -> OutPortRefS -> Text -> Empire ()
-renamePort loc (PortRef.toPortRef -> portRef) newName = do
+renamePort :: GraphLocation -> OutPortRef -> Text -> Empire ()
+renamePort loc portRef newName = do
     withTC loc False $ runASTOp $ do
         let nodeId = portRef ^. PortRef.srcNodeId
         ref        <- ASTRead.getCurrentASTTarget
@@ -750,8 +750,8 @@ renamePort loc (PortRef.toPortRef -> portRef) newName = do
         GraphBuilder.buildInputSidebar nodeId
     resendCode loc
 
-getPortName :: GraphLocation -> OutPortRefS -> Empire Text
-getPortName loc (PortRef.toPortRef -> portRef) = do
+getPortName :: GraphLocation -> OutPortRef -> Empire Text
+getPortName loc portRef = do
     withGraph loc $ runASTOp $ do
         let nodeId = portRef ^. PortRef.srcNodeId
             portId = portRef ^. PortRef.srcPortId
@@ -792,26 +792,26 @@ resendCodeWithCursor loc@(GraphLocation file _) cursor = do
                                code
                                cursor
 
-setNodeMetaGraph :: GraphOp m => NodeId -> NodeMetaS -> m ()
+setNodeMetaGraph :: GraphOp m => NodeId -> NodeMeta -> m ()
 setNodeMetaGraph nodeId newMeta = do
     ref <- ASTRead.getASTRef nodeId
-    AST.writeMeta ref newMeta
+    AST.writeMeta ref $ NodeMeta.toNodeMetaS newMeta
     return ()
 
-setNodeMetaFun :: NodeId -> NodeMetaS -> Command ClsGraph ()
+setNodeMetaFun :: NodeId -> NodeMeta -> Command ClsGraph ()
 setNodeMetaFun nodeId newMeta = runASTOp $ do
     Just fun <- use $ Graph.clsFuns . at nodeId
     f        <- ASTRead.getFunByNodeId nodeId
-    AST.writeMeta f newMeta
+    AST.writeMeta f $ NodeMeta.toNodeMetaS newMeta
     return ()
 
-setNodeMeta :: GraphLocation -> NodeId -> NodeMetaS -> Empire ()
+setNodeMeta :: GraphLocation -> NodeId -> NodeMeta -> Empire ()
 setNodeMeta loc nodeId newMeta = withGraph' loc (runASTOp $ setNodeMetaGraph nodeId newMeta) (setNodeMetaFun nodeId newMeta)
 
 setNodePosition :: GraphLocation -> NodeId -> Position -> Empire ()
 setNodePosition loc nodeId newPos = do
     oldMeta <- fromMaybe def <$> getNodeMeta loc nodeId
-    setNodeMeta loc nodeId $ oldMeta & NodeMeta.position .~ newPos
+    setNodeMeta loc nodeId $ NodeMeta.toNodeMeta $ oldMeta & NodeMeta.position .~ newPos
     return ()
 
 setNodePositionAST :: GraphOp m => NodeId -> Position -> m ()
@@ -827,14 +827,14 @@ setNodePositionCls nodeId newPos = do
     oldMeta <- fromMaybe def <$> AST.readMeta f
     AST.writeMeta f $ oldMeta & NodeMeta.position .~ newPos
 
-connectCondTC :: Bool -> GraphLocation -> OutPortRefS -> AnyPortRef -> Empire Connection
+connectCondTC :: Bool -> GraphLocation -> OutPortRef -> AnyPortRef -> Empire Connection
 connectCondTC True  loc outPort anyPort = connect loc outPort anyPort
 connectCondTC False loc outPort anyPort = do
     connection <- withGraph loc $ connectNoTC loc outPort anyPort
     resendCode loc
     return connection
 
-connect :: GraphLocation -> OutPortRefS -> AnyPortRef -> Empire Connection
+connect :: GraphLocation -> OutPortRef -> AnyPortRef -> Empire Connection
 connect loc outPort anyPort = do
     connection <- withTC loc False $ connectNoTC loc outPort anyPort
     resendCode loc
@@ -867,13 +867,13 @@ getNodeDownstream :: GraphOp m => NodeId -> m [NodeId]
 getNodeDownstream nodeId = do
     conns <- map (\(a,b) -> (a^.PortRef.srcNodeLoc, b^.PortRef.dstNodeId)) <$> GraphBuilder.buildConnections
     (_, output) <- GraphBuilder.getEdgePortMapping
-    let connsWithoutOutput = filter ((/= output) . snd) conns
+    let connsWithoutOutput = map (over _1 convert) $ filter ((/= output) . snd) conns
         go c n             = let next = map snd $ filter ((== n) . fst) c
                              in next ++ concatMap (go c) next
     return $ nodeId : go connsWithoutOutput nodeId
 
-connectPersistent :: GraphOp m => OutPortRefS -> AnyPortRef -> m Connection
-connectPersistent src@(OutPortRef srcNodeId srcPort) (InPortRef' dst@(InPortRef (NodeLoc _ dstNodeId) dstPort)) = do
+connectPersistent :: GraphOp m => OutPortRef -> AnyPortRef -> m Connection
+connectPersistent src@(PortRef.toPortRefS -> OutPortRef srcNodeId srcPort) (InPortRef' dst@(InPortRef (NodeLoc _ dstNodeId) dstPort)) = do
     -- FIXME[MK]: passing the `generateNodeName` here is a hack arising from cyclic module deps. Need to remove together with modules refactoring.
     whenM (not <$> ASTRead.isInputSidebar srcNodeId) $ do
         ref   <- ASTRead.getASTRef srcNodeId
@@ -883,7 +883,7 @@ connectPersistent src@(OutPortRef srcNodeId srcPort) (InPortRef' dst@(InPortRef 
         when (unsafeLast nodes == ref) $ do
             var <- ASTRead.getASTVar srcNodeId
             setOutputTo var
-    srcAst <- ASTRead.getASTOutForPort srcNodeId (PortRef.toPortRef src ^. PortRef.srcPortId)
+    srcAst <- ASTRead.getASTOutForPort srcNodeId (src ^. PortRef.srcPortId)
     (input, output) <- GraphBuilder.getEdgePortMapping
     when (input /= srcNodeId && output /= dstNodeId) $ do
         src'   <- ASTRead.getASTRef srcNodeId
@@ -896,7 +896,7 @@ connectPersistent src@(OutPortRef srcNodeId srcPort) (InPortRef' dst@(InPortRef 
     case dstPort of
         [] -> makeWhole srcAst dstNodeId
         _  -> makeInternalConnection srcAst dstNodeId dstPort
-    return $ Connection (PortRef.toPortRef src) dst
+    return $ Connection src dst
 connectPersistent src@(OutPortRef srcNodeId srcPort) (OutPortRef' dst@(OutPortRef d@(NodeLoc _ dstNodeId) dstPort)) = do
     case dstPort of
         []    -> do
@@ -905,7 +905,7 @@ connectPersistent src@(OutPortRef srcNodeId srcPort) (OutPortRef' dst@(OutPortRe
         _ : _ -> throwM InvalidConnectionException
 
 
-connectNoTC :: GraphLocation -> OutPortRefS -> AnyPortRef -> Command Graph Connection
+connectNoTC :: GraphLocation -> OutPortRef -> AnyPortRef -> Command Graph Connection
 connectNoTC loc outPort anyPort = runASTOp $ do
     (inputSidebar, outputSidebar) <- GraphBuilder.getEdgePortMapping
     let OutPortRef outNodeId outPortId = outPort
@@ -914,10 +914,10 @@ connectNoTC loc outPort anyPort = runASTOp $ do
     let codeForId id | id == inputSidebar  = return "input sidebar"
                      | id == outputSidebar = return "output sidebar"
                      | otherwise           = ASTRead.getASTPointer id >>= Code.getCodeOf
-    outNodeCode <- codeForId outNodeId `catch` (\(_e::SomeASTException) -> return "unknown code")
+    outNodeCode <- codeForId (convert outNodeId) `catch` (\(_e::SomeASTException) -> return "unknown code")
     inNodeCode  <- codeForId inNodeId `catch` (\(_e::SomeASTException) -> return "unknown code")
     connectPersistent outPort anyPort `catch` (\(e::SomeASTException) ->
-        throwM $ ConnectionException outNodeId outNodeCode (PortRef.toPortRef outPort ^. PortRef.srcPortId) inNodeId inNodeCode inPortId e)
+        throwM $ ConnectionException (convert outNodeId) outNodeCode (outPort ^. PortRef.srcPortId) inNodeId inNodeCode inPortId e)
 
 data SelfPortDefaultException = SelfPortDefaultException InPortRef
     deriving (Show)
@@ -1048,7 +1048,7 @@ autolayoutNodesAST :: GraphOp m => [NodeId] -> m ()
 autolayoutNodesAST nids = timeIt "autolayoutNodes" $ do
     nodes <- GraphBuilder.buildNodesForAutolayout <!!> "buildNodesForAutolayout"
     conns <- GraphBuilder.buildConnections        <!!> "buildConnections"
-    let autolayout = Autolayout.autolayoutNodes nids nodes (over _1 PortRef.toPortRef <$> conns)
+    let autolayout = Autolayout.autolayoutNodes nids nodes conns
     traverse_ (uncurry setNodePositionAST) autolayout <!!> "setNodePositionsAST"
 
 autolayoutNodesCls :: ClassOp m => [NodeId] -> m ()
@@ -1119,7 +1119,7 @@ substituteCode path changes = do
 lamItemToMapping :: ((NodeId, Maybe Int), BH.LamItem) -> ((NodeId, Maybe Int), (NodeId, NodeId))
 lamItemToMapping (idArg, BH.LamItem portMapping _ _) = (idArg, portMapping)
 
-extractMarkedMetasAndIds :: ASTOp g m => NodeRef -> m [(Word64, (Maybe NodeMetaS, Maybe NodeId))]
+extractMarkedMetasAndIds :: ASTOp g m => NodeRef -> m [(Word64, (Maybe NodeMeta, Maybe NodeId))]
 extractMarkedMetasAndIds root = matchExpr root $ \case
     Marked m e -> do
         meta   <- AST.readMeta root
@@ -1128,7 +1128,7 @@ extractMarkedMetasAndIds root = matchExpr root $ \case
         rest   <- extractMarkedMetasAndIds expr
         nid    <- ASTRead.getNodeId  expr
         nid2   <- ASTRead.getNodeId  root
-        return $ (marker, (meta, nid <|> nid2)) : rest
+        return $ (marker, (NodeMeta.toNodeMeta <$> meta, nid <|> nid2)) : rest
     _ -> concat <$> (mapM (extractMarkedMetasAndIds <=< source) =<< inputs root)
 
 prepareNodeCache :: GraphLocation -> Empire NodeCache
@@ -1264,7 +1264,7 @@ loadCode (GraphLocation file _) code = do
         -- putNewIRCls ir
         FileMetadata fileMetadata <- runASTOp readMetadata'
         let savedNodeMetas = Map.fromList $ map (\(MarkerNodeMeta m meta) -> (m, meta)) fileMetadata
-        Graph.nodeCache . nodeMetaMap %= (\cache -> Map.union cache $ Map.map NodeMeta.toNodeMetaS savedNodeMetas)
+        Graph.nodeCache . nodeMetaMap %= (\cache -> Map.union cache savedNodeMetas)
         runASTOp $ do
             let codeWithoutMeta = stripMetadata code
             Graph.code .= codeWithoutMeta
@@ -1315,7 +1315,7 @@ autolayout loc = do
             BH.ExprChild (BH.ExprItem pc _) -> map (Breadcrumb.Arg k) (Map.keys pc)) $ Map.assocs kids
     traverse_ (\a -> autolayout (loc |> a)) next
 
-getNodeMetas :: GraphLocation -> [NodeLoc] -> Empire [Maybe (NodeLoc, NodeMetaS)]
+getNodeMetas :: GraphLocation -> [NodeLoc] -> Empire [Maybe (NodeLoc, NodeMeta)]
 getNodeMetas loc nids = return []
 -- getNodeMetas loc nids
     -- | GraphLocation f (Breadcrumb []) <- loc = withUnit loc $ runASTOp $ do
@@ -1453,7 +1453,7 @@ dumpMetadata file = do
     metas <- forM funs $ \fun -> withGraph (GraphLocation file (Breadcrumb [Breadcrumb.Definition fun])) $ runASTOp $ do
         root       <- ASTRead.getCurrentBody
         oldMetas   <- extractMarkedMetasAndIds root
-        return [ MarkerNodeMeta marker (NodeMeta.toNodeMeta meta) | (marker, (Just meta, _)) <- oldMetas ]
+        return [ MarkerNodeMeta marker meta | (marker, (Just meta, _)) <- oldMetas ]
     return $ concat metas
 
 addMetadataToCode :: FilePath -> Empire Text
@@ -1538,8 +1538,8 @@ insertCodeBetween beforeNodes afterNodes codeToInsert = do
             return $ beg + len
     Code.insertAt insertPos codeToInsert
 
-generateCollapsedDefCode :: GraphOp m => Text -> [OutPortRefS] -> [OutPortRefS] -> [NodeId] -> m (Text, Text, Maybe Text, Position)
-generateCollapsedDefCode defName (map PortRef.toPortRef -> inputs) (map PortRef.toPortRef -> outputs) bodyIds = do
+generateCollapsedDefCode :: GraphOp m => Text -> [OutPortRef] -> [OutPortRef] -> [NodeId] -> m (Text, Text, Maybe Text, Position)
+generateCollapsedDefCode defName (inputs) (outputs) bodyIds = do
     (inputSidebar, _) <- GraphBuilder.getEdgePortMapping
     inputNames <- fmap (map (view _2) . sortOn fst) $ forM inputs $ \(OutPortRef (convert -> nodeId) pid) -> do
         position <- if nodeId == inputSidebar then return def
@@ -1598,7 +1598,7 @@ collapseToFunction loc@(GraphLocation file _) nids = do
         let ids = Set.fromList nids
         connections       <- GraphBuilder.buildConnections
         (inputSidebar, _) <- GraphBuilder.getEdgePortMapping
-        let srcInIds = flip Set.member ids . view PortRef.srcNodeLoc . fst
+        let srcInIds = flip Set.member ids . view PortRef.srcNodeId . fst
             dstInIds = flip Set.member ids . view PortRef.dstNodeId . snd
             inConns  = filter (\x -> dstInIds x && not (srcInIds x)) connections
             inputs   = nub $ fst <$> inConns
@@ -1607,7 +1607,7 @@ collapseToFunction loc@(GraphLocation file _) nids = do
         let outputs  = nub $ fst <$> outConns'
             useSites = outConns' ^.. traverse . _2 . PortRef.dstNodeId
         (defCode, useCode, useVarName, outputPosition) <- generateCollapsedDefCode newName inputs outputs nids
-        let inputsNodeIds = List.delete inputSidebar $ map (view PortRef.srcNodeLoc) inputs
+        let inputsNodeIds = List.delete inputSidebar $ map (view PortRef.srcNodeId) inputs
         insertCodeBetween useSites inputsNodeIds useCode
         return (defCode, useVarName, outputPosition)
     code <- insertCodeBeforeFunction loc defCode
@@ -1647,7 +1647,7 @@ prepareCopy loc nodeIds = withGraph loc $ do
         metasWithMarkers   <- extractMarkedMetasAndIds ref
         return (unindentedCode, metasWithMarkers)
     let code  = Text.unlines $ map fst codesWithMeta
-        metas = [ MarkerNodeMeta marker (NodeMeta.toNodeMeta meta) | (marker, (Just meta, _)) <- concat (map snd codesWithMeta) ]
+        metas = [ MarkerNodeMeta marker meta | (marker, (Just meta, _)) <- concat (map snd codesWithMeta) ]
         meta  = FileMetadata metas
         metadataJSON           = (TL.toStrict . Aeson.encodeToLazyText . Aeson.toJSON) meta
         metadataJSONWithHeader = Lexer.mkMetadata (Text.cons ' ' metadataJSON)
@@ -1790,7 +1790,7 @@ pasteText loc@(GraphLocation file _) ranges (Text.concat -> text) = do
     forM funs $ \fun -> withGraph (GraphLocation file (Breadcrumb [Breadcrumb.Definition fun])) $ runASTOp $ do
         forM updatedMeta $ \(MarkerNodeMeta marker meta) -> do
             nodeid <- getNodeIdForMarker $ fromIntegral marker
-            forM nodeid $ \nid -> setNodeMetaGraph nid $ NodeMeta.toNodeMetaS meta
+            forM nodeid $ \nid -> setNodeMetaGraph nid meta
     resendCodeWithCursor (GraphLocation file (Breadcrumb [])) (Safe.lastMay cursors)
     return code
 
@@ -1964,7 +1964,7 @@ withGraph' (GraphLocation file breadcrumb) actG actC = withBreadcrumb file bread
 getOutEdges :: GraphOp m => NodeId -> m [InPortRef]
 getOutEdges nodeId = do
     edges <- GraphBuilder.buildConnections
-    let filtered = filter (\(opr, _) -> opr ^. PortRef.srcNodeLoc == nodeId) edges
+    let filtered = filter (\(opr, _) -> opr ^. PortRef.srcNodeLoc == convert nodeId) edges
     return $ view _2 <$> filtered
 
 disconnectPort :: GraphOp m => InPortRef -> m ()

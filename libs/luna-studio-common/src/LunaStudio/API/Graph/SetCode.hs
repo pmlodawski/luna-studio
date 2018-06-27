@@ -15,11 +15,11 @@ import           Prologue
 
 data Request = Request { _location :: GraphLocation
                        , _code     :: Text
-                       -- , _cache    :: NodeCache
+                       , _cache    :: NodeCache
                        } deriving (Generic, Show)
 
 data Inverse = Inverse { _prevCode  :: Text
-					   -- , _prevCache :: NodeCache
+					   , _prevCache :: NodeCache
                        } deriving (Generic, Show)
 
 makeLenses ''Request

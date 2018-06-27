@@ -436,8 +436,8 @@ spec = around withChannels $ parallel $ do
                 let loc' = loc |>= main ^. Node.nodeId
                 Just foo <- Graph.withGraph loc' $ runASTOp (Graph.getNodeIdForMarker 1)
                 before@(Graph.Graph _ _ (Just input) _ _) <- Graph.getGraph $ loc' |> foo
-                Graph.movePort (loc' |> foo) (PortRef.toPortRefS $ outPortRef (input ^. Node.nodeId) [Port.Projection 0]) 1
-                Graph.movePort (loc' |> foo) (PortRef.toPortRefS $ outPortRef (input ^. Node.nodeId) [Port.Projection 0]) 1
+                Graph.movePort (loc' |> foo) (outPortRef (input ^. Node.nodeId) [Port.Projection 0]) 1
+                Graph.movePort (loc' |> foo) (outPortRef (input ^. Node.nodeId) [Port.Projection 0]) 1
                 after <- Graph.getGraph $ loc' |> foo
                 return (before, after)
             before `shouldBe` after
@@ -450,7 +450,7 @@ spec = around withChannels $ parallel $ do
                 let loc' = loc |>= main ^. Node.nodeId
                 Just foo <- Graph.withGraph loc' $ runASTOp (Graph.getNodeIdForMarker 1)
                 before@(Graph.Graph _ _ (Just input) _ _) <- Graph.getGraph $ loc' |> foo
-                Graph.movePort (loc' |> foo) (PortRef.toPortRefS $ outPortRef (input ^. Node.nodeId) [Port.Projection 0]) 1
+                Graph.movePort (loc' |> foo) (outPortRef (input ^. Node.nodeId) [Port.Projection 0]) 1
                 code <- Graph.withUnit loc $ use Graph.code
                 return code
             normalizeQQ (Text.unpack code) `shouldBe` normalizeQQ [r|
@@ -609,7 +609,7 @@ spec = around withChannels $ parallel $ do
             in specifyCodeChange mainCondensed expectedCode $ \loc -> do
                 [Just pi, Just bar] <- Graph.withGraph loc $ runASTOp $ mapM (Graph.getNodeIdForMarker) [0,3]
                 Graph.disconnect loc (inPortRef bar [Port.Arg 1])
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef pi []) (InPortRef' $ inPortRef bar [Port.Arg 1])
+                Graph.connect loc (outPortRef pi []) (InPortRef' $ inPortRef bar [Port.Arg 1])
         it "adds one node to existing file via node editor" $ let
             expectedCode = [r|
                 def main:
@@ -903,7 +903,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just b, Just foo] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [2, 1]
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef foo []) (InPortRef' $ inPortRef b [Port.Self])
+                Graph.connect loc (outPortRef foo []) (InPortRef' $ inPortRef b [Port.Self])
         it "reconnects self port retaining formatting" $ let
             initialCode = [r|
                 def main:
@@ -919,7 +919,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just b, Just foo] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [2, 1]
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef foo []) (InPortRef' $ inPortRef b [Port.Self])
+                Graph.connect loc (outPortRef foo []) (InPortRef' $ inPortRef b [Port.Self])
         it "disconnects self port retaining formatting" $ let
             initialCode = [r|
                 def main:
@@ -947,9 +947,9 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just a, Just b] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0, 1]
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef a []) (InPortRef' $ inPortRef b [Port.Self])
+                Graph.connect loc (outPortRef a []) (InPortRef' $ inPortRef b [Port.Self])
                 Graph.disconnect loc (inPortRef b [Port.Self])
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef a []) (InPortRef' $ inPortRef b [Port.Self])
+                Graph.connect loc (outPortRef a []) (InPortRef' $ inPortRef b [Port.Self])
                 Graph.disconnect loc (inPortRef b [Port.Self])
         it "connects to application port" $ let
             initialCode = [r|
@@ -964,7 +964,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just a, Just b] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0, 1]
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef a []) (InPortRef' $ inPortRef b [Port.Arg 2])
+                Graph.connect loc (outPortRef a []) (InPortRef' $ inPortRef b [Port.Arg 2])
         it "connects to a deep self port" $ let
             initialCode = [r|
                 def main:
@@ -978,7 +978,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just a, Just b] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0, 1]
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef a []) (InPortRef' $ inPortRef b [Port.Self, Port.Self])
+                Graph.connect loc (outPortRef a []) (InPortRef' $ inPortRef b [Port.Self, Port.Self])
         it "connects to a deep application port" $ let
             initialCode = [r|
                 def main:
@@ -992,7 +992,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just a, Just b] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0, 1]
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef a []) (InPortRef' $ inPortRef b [Port.Self, Port.Arg 0])
+                Graph.connect loc (outPortRef a []) (InPortRef' $ inPortRef b [Port.Self, Port.Arg 0])
         it "disconnects an application port" $ let
             initialCode = [r|
                 def main:
@@ -1066,9 +1066,9 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just a, Just bb, Just ccc, Just dddd] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0..3]
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef ccc []) (InPortRef' $ inPortRef dddd [Port.Arg 2])
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef a   []) (InPortRef' $ inPortRef dddd [Port.Arg 0])
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef bb  []) (InPortRef' $ inPortRef dddd [Port.Arg 1])
+                Graph.connect loc (outPortRef ccc []) (InPortRef' $ inPortRef dddd [Port.Arg 2])
+                Graph.connect loc (outPortRef a   []) (InPortRef' $ inPortRef dddd [Port.Arg 0])
+                Graph.connect loc (outPortRef bb  []) (InPortRef' $ inPortRef dddd [Port.Arg 1])
 
         it "applies operators at first argument" $ let
             initialCode = [r|
@@ -1083,7 +1083,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just aa, Just b] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0..1]
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef aa []) (InPortRef' $ inPortRef b [Port.Arg 0])
+                Graph.connect loc (outPortRef aa []) (InPortRef' $ inPortRef b [Port.Arg 0])
 
         it "applies operators at both arguments" $ let
             initialCode = [r|
@@ -1100,8 +1100,8 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just aa, Just bar, Just c] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0..2]
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef bar []) (InPortRef' $ inPortRef c [Port.Arg 1])
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef aa [])  (InPortRef' $ inPortRef c [Port.Arg 0])
+                Graph.connect loc (outPortRef bar []) (InPortRef' $ inPortRef c [Port.Arg 1])
+                Graph.connect loc (outPortRef aa [])  (InPortRef' $ inPortRef c [Port.Arg 0])
 
         it "applies operators at second argument only" $ let
             initialCode = [r|
@@ -1116,7 +1116,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just aa, Just b] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0..1]
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef aa []) (InPortRef' $ inPortRef b [Port.Arg 1])
+                Graph.connect loc (outPortRef aa []) (InPortRef' $ inPortRef b [Port.Arg 1])
 
         it "applies operators at the first argument when the second is already applied " $ let
             initialCode = [r|
@@ -1131,7 +1131,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just aa, Just b] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0..1]
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef aa []) (InPortRef' $ inPortRef b [Port.Arg 0])
+                Graph.connect loc (outPortRef aa []) (InPortRef' $ inPortRef b [Port.Arg 0])
 
         it "updates code after connecting lambda output" $ let
             expectedCode = [r|
@@ -1148,7 +1148,7 @@ spec = around withChannels $ parallel $ do
                 (_, output) <- Graph.withGraph (loc |> foo) $ runASTOp $ GraphBuilder.getEdgePortMapping
                 u1 <- mkUUID
                 Graph.addNode (loc |> foo) u1 "baz = bar a b" $ atXPos (-10.0)
-                Graph.connect (loc |> foo) (PortRef.toPortRefS $ outPortRef u1 []) (InPortRef' $ inPortRef output [])
+                Graph.connect (loc |> foo) (outPortRef u1 []) (InPortRef' $ inPortRef output [])
 
         it "updates code after disconnecting lambda output" $ let
             expectedCode = [r|
@@ -1183,7 +1183,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange code code $ \loc -> do
                 (input, output) <- Graph.withGraph loc $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.connect    loc (PortRef.toPortRefS $ outPortRef input [Port.Projection 0]) (InPortRef' $ inPortRef output [])
+                Graph.connect    loc (outPortRef input [Port.Projection 0]) (InPortRef' $ inPortRef output [])
                 Graph.disconnect loc (inPortRef output [])
         it "handles collapsing nodes into functions" $ let
             initialCode = [r|
@@ -1468,9 +1468,9 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 (input, _) <- Graph.withGraph loc $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.addPort loc (PortRef.toPortRefS $ outPortRef input [Port.Projection 0])
-                Graph.addPort loc (PortRef.toPortRefS $ outPortRef input [Port.Projection 1])
-                Graph.addPort loc (PortRef.toPortRefS $ outPortRef input [Port.Projection 1])
+                Graph.addPort loc (outPortRef input [Port.Projection 0])
+                Graph.addPort loc (outPortRef input [Port.Projection 1])
+                Graph.addPort loc (outPortRef input [Port.Projection 1])
                 u1 <- mkUUID
                 Graph.addNode loc u1 "foo a b c" (atXPos 30.0)
         it "removes arguments in toplevel defs and adds a node" $ let
@@ -1488,9 +1488,9 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 (input, _) <- Graph.withGraph loc $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.removePort loc (PortRef.toPortRefS $ outPortRef input [Port.Projection 1])
-                Graph.removePort loc (PortRef.toPortRefS $ outPortRef input [Port.Projection 1])
-                Graph.removePort loc (PortRef.toPortRefS $ outPortRef input [Port.Projection 0])
+                Graph.removePort loc (outPortRef input [Port.Projection 1])
+                Graph.removePort loc (outPortRef input [Port.Projection 1])
+                Graph.removePort loc (outPortRef input [Port.Projection 0])
                 u1 <- mkUUID
                 Graph.addNode loc u1 "foo a b c" (atXPos 30.0)
 
@@ -1507,7 +1507,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 (input, _) <- Graph.withGraph loc $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.renamePort loc (PortRef.toPortRefS $ outPortRef input [Port.Projection 1]) "newName"
+                Graph.renamePort loc (outPortRef input [Port.Projection 1]) "newName"
         it "reorders function ports" $ let
             initialCode = [r|
                 import Std.Geo
@@ -1527,7 +1527,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 (input, _) <- Graph.withGraph loc $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.movePort loc (PortRef.toPortRefS $ outPortRef input [Port.Projection 1]) 0
+                Graph.movePort loc (outPortRef input [Port.Projection 1]) 0
         it "reorders function ports in a lambda" $ let
             initialCode = [r|
                 def main:
@@ -1547,7 +1547,8 @@ spec = around withChannels $ parallel $ do
                 Just foo <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 0
                 let loc' = loc |> foo
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.movePort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 1]) 0
+                Graph.movePort loc' (outPortRef input [Port.Projection 1]) 0
+                return ()
         it "reorders function ports in a lambda 2" $ let
             initialCode = [r|
                 def main:
@@ -1567,7 +1568,7 @@ spec = around withChannels $ parallel $ do
                 Just foo <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 0
                 let loc' = loc |> foo
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.movePort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 3]) 0
+                Graph.movePort loc' (outPortRef input [Port.Projection 3]) 0
         it "reorders function ports in a lambda 3" $ let
             initialCode = [r|
                 def main:
@@ -1587,7 +1588,7 @@ spec = around withChannels $ parallel $ do
                 Just foo <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 0
                 let loc' = loc |> foo
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.movePort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 0]) 3
+                Graph.movePort loc' (outPortRef input [Port.Projection 0]) 3
         it "reorders function ports in a lambda 4" $ let
             initialCode = [r|
                 def main:
@@ -1607,7 +1608,7 @@ spec = around withChannels $ parallel $ do
                 Just foo <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 0
                 let loc' = loc |> foo
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.movePort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 0]) 1
+                Graph.movePort loc' (outPortRef input [Port.Projection 0]) 1
         it "reorders function ports in a lambda 5" $ let
             initialCode = [r|
                 def main:
@@ -1627,7 +1628,7 @@ spec = around withChannels $ parallel $ do
                 Just foo <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 0
                 let loc' = loc |> foo
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.movePort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 0]) 2
+                Graph.movePort loc' (outPortRef input [Port.Projection 0]) 2
         it "reorders function ports in an inner def" $ let
             initialCode = [r|
                 def main:
@@ -1656,7 +1657,7 @@ spec = around withChannels $ parallel $ do
                 Just func1 <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 4
                 let loc' = loc |> func1
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.movePort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 0]) 1
+                Graph.movePort loc' (outPortRef input [Port.Projection 0]) 1
         it "removes last port in top-level def" $ \env -> do
             let initialCode = Text.pack $ normalizeQQ [r|
                     def foo aaaa:
@@ -1670,7 +1671,7 @@ spec = around withChannels $ parallel $ do
                 [foo] <- Graph.getNodes loc
                 let loc' = loc |>= foo ^. Node.nodeId
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.removePort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 0])
+                Graph.removePort loc' (outPortRef input [Port.Projection 0])
                 code <- Graph.withUnit loc $ use Graph.code
                 return code
             normalizeQQ (Text.unpack code) `shouldBe` normalizeQQ [r|
@@ -1697,7 +1698,7 @@ spec = around withChannels $ parallel $ do
                 let Just foo = find (\node -> node ^. Node.name == Just "foo") nodes
                     loc'' = loc' |> foo ^. Node.nodeId
                 (input, _) <- Graph.withGraph loc'' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.removePort loc'' (PortRef.toPortRefS $ outPortRef input [Port.Projection 0])
+                Graph.removePort loc'' (outPortRef input [Port.Projection 0])
                 code <- Graph.withUnit loc $ use Graph.code
                 inputSidebar <- Graph.withGraph loc'' $ runASTOp $ GraphBuilder.buildInputSidebar input
                 return (inputSidebar, code)
@@ -1730,7 +1731,7 @@ spec = around withChannels $ parallel $ do
                 Just c <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 1
                 let loc' = loc |> foo
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.removePort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 0])
+                Graph.removePort loc' (outPortRef input [Port.Projection 0])
                     `catch` (\(_e::ASTModify.CannotRemovePortException) -> return ())
                 Graph.setNodeExpression loc c "foo 3 3"
         it "removes port in a lambda" $ let
@@ -1753,7 +1754,7 @@ spec = around withChannels $ parallel $ do
                 Just c <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 1
                 let loc' = loc |> foo
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.removePort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 1])
+                Graph.removePort loc' (outPortRef input [Port.Projection 1])
                 Graph.setNodeExpression loc c "foo 3 3"
         it "removes port in a lambda 2" $ let
             initialCode = [r|
@@ -1775,7 +1776,7 @@ spec = around withChannels $ parallel $ do
                 Just c <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 1
                 let loc' = loc |> foo
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.removePort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 0])
+                Graph.removePort loc' (outPortRef input [Port.Projection 0])
                 Graph.setNodeExpression loc c "foo 3 3"
         it "removes and adds port" $ let
             initialCode = [r|
@@ -1795,8 +1796,8 @@ spec = around withChannels $ parallel $ do
                 Just c <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 1
                 let loc' = loc |> lambda
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.removePort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 1])
-                Graph.addPort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 1])
+                Graph.removePort loc' (outPortRef input [Port.Projection 1])
+                Graph.addPort loc' (outPortRef input [Port.Projection 1])
                 Graph.setNodeExpression loc c "lambda 3 3"
         it "removes and adds port 2" $ let
             initialCode = [r|
@@ -1816,8 +1817,8 @@ spec = around withChannels $ parallel $ do
                 Just c <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 1
                 let loc' = loc |> lambda
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.removePort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 0])
-                Graph.addPort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 0])
+                Graph.removePort loc' (outPortRef input [Port.Projection 0])
+                Graph.addPort loc' (outPortRef input [Port.Projection 0])
                 Graph.setNodeExpression loc c "lambda 3 3"
         it "adds port in a lambda" $ let
             initialCode = [r|
@@ -1839,7 +1840,7 @@ spec = around withChannels $ parallel $ do
                 Just c <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 1
                 let loc' = loc |> foo
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.addPort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 1])
+                Graph.addPort loc' (outPortRef input [Port.Projection 1])
                 Graph.setNodeExpression loc c "foo 3 3"
         it "adds port in a lambda 2" $ let
             initialCode = [r|
@@ -1861,7 +1862,7 @@ spec = around withChannels $ parallel $ do
                 Just c <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 1
                 let loc' = loc |> foo
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.addPort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 0])
+                Graph.addPort loc' (outPortRef input [Port.Projection 0])
                 Graph.setNodeExpression loc c "foo 3 3"
         it "adds port in a lambda 3" $ let
             initialCode = [r|
@@ -1883,7 +1884,7 @@ spec = around withChannels $ parallel $ do
                 Just c <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 1
                 let loc' = loc |> foo
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.addPort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 2])
+                Graph.addPort loc' (outPortRef input [Port.Projection 2])
                 Graph.setNodeExpression loc c "foo 3 3"
         it "connect to left section" $ let
             initialCode = [r|
@@ -1900,7 +1901,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just p1, Just n1] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0,1]
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef n1 []) (InPortRef' $ inPortRef p1 [Port.Arg 0])
+                Graph.connect loc (outPortRef n1 []) (InPortRef' $ inPortRef p1 [Port.Arg 0])
         it "connects to self of left section" $ let
             initialCode = [r|
                 def main:
@@ -1916,7 +1917,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just p1, Just n1] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0,1]
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef n1 []) (InPortRef' $ inPortRef p1 [Port.Self])
+                Graph.connect loc (outPortRef n1 []) (InPortRef' $ inPortRef p1 [Port.Self])
         it "connect to left section and disconnect" $ let
             initialCode = [r|
                 def main:
@@ -1932,7 +1933,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just p1, Just n1] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0,1]
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef n1 []) (InPortRef' $ inPortRef p1 [Port.Arg 0])
+                Graph.connect loc (outPortRef n1 []) (InPortRef' $ inPortRef p1 [Port.Arg 0])
                 Graph.disconnect loc (inPortRef p1 [Port.Arg 0])
         it "connect, disconnect and connect to second argument of left section" $ let
             initialCode = [r|
@@ -1949,9 +1950,9 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just p1, Just n1] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0,1]
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef n1 []) (InPortRef' $ inPortRef p1 [Port.Arg 0])
+                Graph.connect loc (outPortRef n1 []) (InPortRef' $ inPortRef p1 [Port.Arg 0])
                 Graph.disconnect loc (inPortRef p1 [Port.Arg 0])
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef n1 []) (InPortRef' $ inPortRef p1 [Port.Arg 1])
+                Graph.connect loc (outPortRef n1 []) (InPortRef' $ inPortRef p1 [Port.Arg 1])
         it "adds port that would be shadowed" $ let
             initialCode = [r|
                 def main:
@@ -1978,7 +1979,7 @@ spec = around withChannels $ parallel $ do
                     fooLoc = (top |>= foo ^. Node.nodeId)
                 Just s <- (find (\n -> n ^. Node.name == Just "s")) <$> Graph.getNodes fooLoc
                 (i, _) <- Graph.withGraph fooLoc $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.addPortWithConnections fooLoc (PortRef.toPortRefS $ outPortRef i [Port.Projection 0]) Nothing [InPortRef' $ inPortRef (s ^. Node.nodeId) [Port.Arg 1]]
+                Graph.addPortWithConnections fooLoc (outPortRef i [Port.Projection 0]) Nothing [InPortRef' $ inPortRef (s ^. Node.nodeId) [Port.Arg 1]]
                 return ()
         it "reorders nodes if required for connection" $ let
             initialCode = [r|
@@ -1999,7 +2000,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just bar, Just quux] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [1,3]
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef quux []) (InPortRef' $ inPortRef bar [Port.Arg 0])
+                Graph.connect loc (outPortRef quux []) (InPortRef' $ inPortRef bar [Port.Arg 0])
         it "reorders nodes if required for connection - cyclic case" $ let
             initialCode = [r|
                 def main:
@@ -2015,7 +2016,7 @@ spec = around withChannels $ parallel $ do
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just sum1, Just sum2] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [0,1]
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef sum2 []) (InPortRef' $ inPortRef sum1 [Port.Arg 0])
+                Graph.connect loc (outPortRef sum2 []) (InPortRef' $ inPortRef sum1 [Port.Arg 0])
         it "sets expression for lambdas with markers inside" $ let
             initialCode = testLuna
             expectedCode = [r|
@@ -2274,8 +2275,8 @@ spec = around withChannels $ parallel $ do
                 Just foo <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 0
                 let loc' = loc |> foo
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                portName0 <- Graph.getPortName loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 0])
-                portName1 <- Graph.getPortName loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 1])
+                portName0 <- Graph.getPortName loc' (outPortRef input [Port.Projection 0])
+                portName1 <- Graph.getPortName loc' (outPortRef input [Port.Projection 1])
                 liftIO $ portName0 `shouldBe` "a"
                 liftIO $ portName1 `shouldBe` "b"
         it "disconnects alias node" $ let
@@ -2314,7 +2315,7 @@ spec = around withChannels $ parallel $ do
                 Just y <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 1
                 Just c <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 2
                 connsBefore <- Graph.getConnections loc
-                Connection outRef inRef <- Graph.connect loc (PortRef.toPortRefS $ outPortRef c []) (InPortRef' $ inPortRef y [Port.Self])
+                Connection outRef inRef <- Graph.connect loc (outPortRef c []) (InPortRef' $ inPortRef y [Port.Self])
                 Graph.disconnect loc inRef
                 connsAfter <- Graph.getConnections loc
                 liftIO $ connsAfter `shouldBe` connsBefore
@@ -2335,7 +2336,7 @@ spec = around withChannels $ parallel $ do
                 nodes <- Graph.getNodes loc
                 let Just match = (view Node.nodeId) <$> find (\n -> n ^. Node.name == Just "[a, b, c]") nodes
                 (_, output) <- Graph.withGraph loc $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef match [Port.Projection 0]) (InPortRef' $ inPortRef output [])
+                Graph.connect loc (outPortRef match [Port.Projection 0]) (InPortRef' $ inPortRef output [])
         it "connects pattern-matched variable from tuple to output" $ let
             initialCode = [r|
                 def main:
@@ -2353,7 +2354,7 @@ spec = around withChannels $ parallel $ do
                 nodes <- Graph.getNodes loc
                 let Just match = (view Node.nodeId) <$> find (\n -> n ^. Node.name == Just "(a, b, c)") nodes
                 (_, output) <- Graph.withGraph loc $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef match [Port.Projection 0]) (InPortRef' $ inPortRef output [])
+                Graph.connect loc (outPortRef match [Port.Projection 0]) (InPortRef' $ inPortRef output [])
         it "names anonymous node" $ let
             initialCode = [r|
                 def main:
@@ -2384,7 +2385,7 @@ spec = around withChannels $ parallel $ do
                 u1 <- mkUUID
                 node <- Graph.addNode loc u1 "map +1 . map +2" (atXPos 300)
                 Just l <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 0
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef l []) (InPortRef' $ inPortRef u1 [Port.Self, Port.Self])
+                Graph.connect loc (outPortRef l []) (InPortRef' $ inPortRef u1 [Port.Self, Port.Self])
         it "undos add port with connections" $ let
             initialCode = [r|
                 def main:
@@ -2406,8 +2407,8 @@ spec = around withChannels $ parallel $ do
                 nodes <- Graph.getNodes loc'
                 let Just id1 = (view Node.nodeId) <$> find (\n -> n ^. Node.name == Just "id1") nodes
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.addPortWithConnections loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 1]) Nothing [InPortRef' $ inPortRef id1 [Port.Arg 0]]
-                Graph.removePort loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 1])
+                Graph.addPortWithConnections loc' (outPortRef input [Port.Projection 1]) Nothing [InPortRef' $ inPortRef id1 [Port.Arg 0]]
+                Graph.removePort loc' (outPortRef input [Port.Projection 1])
         xit "add port updates lambda length - core bug" $ let
             initialCode = [r|
                 def main:
@@ -2427,7 +2428,7 @@ spec = around withChannels $ parallel $ do
                 nodes <- Graph.getNodes loc'
                 let Just id1 = (view Node.nodeId) <$> find (\n -> n ^. Node.name == Just "id1") nodes
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.addPortWithConnections loc' (PortRef.toPortRefS $ outPortRef input [Port.Projection 1]) Nothing [InPortRef' $ inPortRef id1 [Port.Arg 0]]
+                Graph.addPortWithConnections loc' (outPortRef input [Port.Projection 1]) Nothing [InPortRef' $ inPortRef id1 [Port.Arg 0]]
                 Graph.removeNodes loc [lambda1]
                 -- uncommenting line below causes a crash, suggesting that something is broken
                 -- Graph.withGraph loc $ runASTOp $ AST.dumpGraphViz "a"
@@ -2589,7 +2590,7 @@ def main:
                 (_, output) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
                 nodes <- Graph.getNodes loc'
                 let Just c = (view Node.nodeId) <$> find (\n -> n ^. Node.name == Just "c") nodes
-                Graph.connect loc' (PortRef.toPortRefS $ outPortRef c []) (InPortRef' $ inPortRef output [])
+                Graph.connect loc' (outPortRef c []) (InPortRef' $ inPortRef output [])
                 Graph.renameNode loc bar "pppppp"
                 let top = GraphLocation file def
                 nodes <- Graph.getNodes top
@@ -2653,7 +2654,7 @@ def main:
                 Graph.addNode loc u1 "a=[((Just 1), \"foo\")]" def
                 node <- Graph.addNode loc u2 "[((Just i), j)]=a" def
                 (_, output) <- Graph.withGraph loc $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef u2 [Port.Projection 0, Port.Projection 0, Port.Projection 0]) (InPortRef' $ inPortRef output [])
+                Graph.connect loc (outPortRef u2 [Port.Projection 0, Port.Projection 0, Port.Projection 0]) (InPortRef' $ inPortRef output [])
         it "connects nested patternmatch to output 2" $ let
             initialCode = [r|
                 def main:
@@ -2671,7 +2672,7 @@ def main:
                 Graph.addNode loc u1 "a= Just [  (1  , Foo 9)]" def
                 node <- Graph.addNode loc u2 "Just [(i,  Foo  b) ] =a" def
                 (_, output) <- Graph.withGraph loc $ runASTOp $ GraphBuilder.getEdgePortMapping
-                Graph.connect loc (PortRef.toPortRefS $ outPortRef u2 [Port.Projection 0, Port.Projection 0, Port.Projection 1, Port.Projection 0]) (InPortRef' $ inPortRef output [])
+                Graph.connect loc (outPortRef u2 [Port.Projection 0, Port.Projection 0, Port.Projection 1, Port.Projection 0]) (InPortRef' $ inPortRef output [])
         xit "sets tuple port defaults" $ let
             initialCode = [r|
                 def main:

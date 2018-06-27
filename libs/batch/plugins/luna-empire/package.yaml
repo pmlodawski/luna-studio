@@ -17,7 +17,9 @@ dependencies:
   - filemanip
   - filepath
   - groom
+  - lens
   - luna-core
+  - luna-project
   - luna-empire
   - luna-studio-common
   - m-logger

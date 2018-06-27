@@ -18,6 +18,7 @@ module Empire.ASTOp (
   , GraphOp
   , ASTOpReq
   , EmpirePass
+  , Printer
   , defaultClsGraph
   , defaultPMState
   -- , PMStack
@@ -197,6 +198,42 @@ type ASTOpReq a m = (MonadIO m,
                      Layered.Getter (MemPool (Component.Some Nodes)) m,
                      Layered.Getter (MemPool (Component.Some Edges)) m,
                      MonadCatch m)
+
+type Printer a m = (MonadIO m,
+                     MonadState a m,
+                     MonadThrow m,
+                     Layer.Reader (Component Nodes) IR.Model m,
+                     Layer.Reader (Component Nodes) Marker m,
+                     Layer.Writer (Component Nodes) Marker m,
+                     Layer.Reader (Component Nodes) IR.Users m,
+                     Layer.Reader (Component Nodes) CodeSpan m,
+                     Layer.Writer (Component Nodes) CodeSpan m,
+                     Layer.Reader (Component Nodes) SpanLength m,
+                     Layer.Writer (Component Nodes) SpanLength m,
+                     Layer.Reader (Component Nodes) Meta m,
+                     Layer.Writer (Component Nodes) Meta m,
+                     Layer.Reader (Component Nodes) TypeLayer m,
+                     Layer.Reader (Component Edges) SpanOffset m,
+                     Layer.Writer (Component Edges) SpanOffset m,
+                     Layer.Reader IR.Link IR.Source m,
+                     Layer.Reader IR.Link IR.Target m,
+                     Layer.Writer Node IR.Type m,
+                     Layer.Writer Node IR.Users m,
+                     Layer.Writer Node IR.Model m,
+                     Layer.Writer Edge IR.Target m,
+                     Layer.Writer Edge IR.Source m,
+                     -- LunaGraph.ComputeLayerByteOffset Source (LunaGraph.ComponentLayers EmpirePass Edges),
+                     -- Layered.Getter (LunaGraph.LayerByteOffset Nodes SpanLength) m,
+                     -- Layered.Getter (LunaGraph.LayerByteOffset Nodes Meta) m,
+                     -- Layered.Getter (LunaGraph.LayerByteOffset Nodes Marker) m,
+                     -- Layered.Getter (LunaGraph.LayerByteOffset Nodes CodeSpan) m,
+                     Layered.Getter (ByteSize (Component Nodes)) m,
+                     Layered.Getter (ByteSize (Component Edges)) m,
+                     Layered.Getter (Layer.DynamicManager Edges) m,
+                     Layered.Getter (Layer.DynamicManager Nodes) m,
+                     Layered.Getter (MemPool (Component.Some Nodes)) m,
+                     Layered.Getter (MemPool (Component.Some Edges)) m,
+                     MonadCatch m)
                      -- Emitters EmpireEmitters m,
                      -- Editors Net  '[AnyExpr, AnyExprLink] m,
                      -- Editors Attr '[Source, Parser.ParsedExpr, MarkedExprMap, Invalids] m,
@@ -205,6 +242,7 @@ type ASTOpReq a m = (MonadIO m,
                      -- DepOld.MonadPut Vis.V Vis.Vis m)
 
 type instance LunaGraph.Discover (StateT s m) = LunaGraph.Discover m
+type instance LunaGraph.Discover (Layered.StateT s m) = LunaGraph.Discover m
 
 
 type ASTOp a m = (ASTOpReq a m, HasCallStack)

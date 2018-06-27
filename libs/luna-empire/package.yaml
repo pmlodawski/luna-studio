@@ -48,6 +48,7 @@ dependencies:
     - directory
     - exceptions
     - filepath
+    - layouting
     - lens
     - lens-utils
     - lifted-base

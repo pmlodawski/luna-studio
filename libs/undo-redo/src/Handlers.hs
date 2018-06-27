@@ -11,6 +11,7 @@ import           UndoState
 
 import           Control.Exception                      (Exception)
 import           Control.Exception.Safe                 (throwM)
+import           Control.Lens                           ((%=), (^..), _Right, to)
 import           Data.Binary                            (Binary, decode)
 import           Data.ByteString.Lazy                   (ByteString, fromStrict)
 import qualified Data.List                              as List
@@ -46,7 +47,7 @@ import           LunaStudio.Data.Connection              as Connection
 import qualified LunaStudio.Data.Graph                   as Graph
 import qualified LunaStudio.Data.Node                    as Node
 import           LunaStudio.Data.Port                    (OutPortIndex (Projection))
-import           LunaStudio.Data.PortRef                 (AnyPortRef (InPortRef'), OutPortRef (..))
+import           LunaStudio.Data.PortRef                 (AnyPortRef (InPortRef'), OutPortRef, OutPortRefTemplate (..))
 import           Prologue                                hiding (throwM)
 
 type Handler = ByteString -> UndoPure ()

@@ -57,15 +57,15 @@ packages:
 - {location: ../../tools/batch/plugins/request-monitor}
 - extra-dep: true
   location: ../../../dependent-state
-- extra-dep: true
-  location: ../../../luna
-  subdirs: [project]
+# - extra-dep: true
+#   location: ../../../luna
+#   subdirs: [project]
 - extra-dep: true
   location: ../../../luna-core
   subdirs: [core, syntax/text/parser, syntax/text/lexer, syntax/text/model, syntax/text/prettyprint, debug, passes]
 - extra-dep: true
-  location: {commit: 26851743393455c486b9b1bbf73796968d789af4, git: 'git@github.com:luna/luna-core.git'}
-  subdirs: [lib/autovector, lib/cpp-containers, lib/data-construction, lib/data-tag, lib/data-typemap, lib/data-property, lib/data-storable, lib/exception, lib/foreign-utils, lib/generic-traversable, lib/memory-manager, lib/memory-pool, lib/nested-containers, lib/syntax-definition, lib/text-processing, lib/th-builder, lib/tuple-utils, lib/type-cache, lib/typelevel]
+  location: {commit: f3c1046ef59d21f6dc12a2a822c536e2a814f31e, git: 'git@github.com:luna/luna-core.git'}
+  subdirs: [lib/autovector, lib/cpp-containers, lib/data-construction, lib/data-tag, lib/data-typemap, lib/data-property, lib/data-storable, lib/exception, lib/foreign-utils, lib/generic-traversable, lib/memory-manager, lib/memory-pool, lib/nested-containers, lib/syntax-definition, lib/text-processing, lib/th-builder, lib/tuple-utils, lib/type-cache, lib/typelevel, project]
 - extra-dep: true
   location: {commit: ddfcd1e0372b93e947b380b911c123fe67227b21, git: 'git@github.com:luna/visualization-api.git'}
 - extra-dep: true

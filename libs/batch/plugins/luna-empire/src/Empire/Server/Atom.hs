@@ -3,6 +3,7 @@
 module Empire.Server.Atom where
 
 import           Control.Exception.Safe         (try, catchAny)
+import           Control.Lens                   ((.=), use)
 import qualified Control.Monad.Catch            as MC
 import           Control.Monad.State            (StateT)
 import           Data.List                      (stripPrefix)

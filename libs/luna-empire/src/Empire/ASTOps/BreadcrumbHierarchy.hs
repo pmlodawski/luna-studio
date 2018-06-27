@@ -27,6 +27,7 @@ import           Empire.Data.Layers              (Marker)
 import           LunaStudio.Data.Node            (NodeId)
 import           LunaStudio.Data.NodeCache       (NodeCache, nodeIdMap, nodeMetaMap)
 import           LunaStudio.Data.NodeLoc         (NodeLoc (..))
+import qualified LunaStudio.Data.NodeMeta        as NodeMeta
 import           LunaStudio.Data.PortRef         (OutPortRefTemplate (..))
 import qualified LunaStudio.Data.Port            as Port
 
@@ -65,7 +66,7 @@ childrenFromSeq tgtBeg edge = do
                     return expr'
             child    <- prepareChild ref childTarget
             nodeMeta <- use $ Graph.nodeCache . nodeMetaMap . at index
-            forM nodeMeta $ AST.writeMeta ref
+            forM nodeMeta $ AST.writeMeta ref . NodeMeta.toNodeMetaS
             return $ Map.singleton uid child
         _ -> do
             Code.addCodeMarker beg edge

@@ -10,12 +10,14 @@ module Empire.Commands.GraphBuilder where
 import           Control.Lens                    (uses)
 import           Control.Monad.State             hiding (when)
 import           Data.Foldable                   (toList)
+import           Data.Char                       (intToDigit)
 import qualified Data.List                       as List
 import qualified Data.Map                        as Map
 import           Data.Maybe                      (catMaybes, maybeToList)
 import           Data.Text                       (Text)
 import qualified Data.Text                       as Text
 import           Data.Text.Span                  (SpacedSpan (..), leftSpacedSpan)
+import qualified Data.Vector.Storable.Foreign    as Vector
 import           Empire.ASTOp                    (ClassOp, GraphOp, match, runASTOp)
 import qualified Empire.ASTOps.Deconstruct       as ASTDeconstruct
 import qualified Empire.ASTOps.Print             as Print
@@ -29,7 +31,7 @@ import           Empire.Data.Graph               (Graph)
 import qualified Empire.Data.Graph               as Graph
 import           Empire.Data.Layers              (Marker, SpanLength, TypeLayer)
 import           Empire.Empire
-import           Empire.Prelude                  hiding (toList)
+import           Empire.Prelude                  hiding (read, toList)
 import qualified Luna.IR                         as IR
 import qualified Luna.IR.Term.Literal            as Lit
 import           LunaStudio.Data.Breadcrumb      (Breadcrumb (..), BreadcrumbItem, Named (..))
@@ -53,19 +55,19 @@ import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan)
 import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
 import qualified Luna.Syntax.Text.Parser.Data.Name.Special as Parser (uminus)
 -- import qualified OCI.IR.Combinators              as IR
-import Data.Vector.Storable.Foreign ()
+import           Prelude (read)
 
 isDefinition :: BreadcrumbItem -> Bool
 isDefinition def | Breadcrumb.Definition{} <- def = True
                  | otherwise                      = False
 
 decodeBreadcrumbs :: Map.Map NodeId String -> Breadcrumb BreadcrumbItem -> Command Graph (Breadcrumb (Named BreadcrumbItem))
-decodeBreadcrumbs definitionsIDs bs@(Breadcrumb items) = return def -- runASTOp $ do
-    -- bh    <- use Graph.breadcrumbHierarchy
-    -- let funs = map (fmap Text.pack . flip Map.lookup definitionsIDs . view Breadcrumb.nodeId) $ takeWhile isDefinition items
-    --     children = dropWhile isDefinition items
-    -- names <- forM (BH.getBreadcrumbItems bh (Breadcrumb children)) $ \child -> getUniName $ child ^. BH.self
-    -- pure $ Breadcrumb $ fmap (\(n, i) -> Named (fromMaybe "" n) i) $ zip (funs <> names) items
+decodeBreadcrumbs definitionsIDs bs@(Breadcrumb items) = runASTOp $ do
+    bh    <- use Graph.breadcrumbHierarchy
+    let funs = map (fmap Text.pack . flip Map.lookup definitionsIDs . view Breadcrumb.nodeId) $ takeWhile isDefinition items
+        children = dropWhile isDefinition items
+    names <- forM (BH.getBreadcrumbItems bh (Breadcrumb children)) $ \child -> getUniName $ child ^. BH.self
+    pure $ Breadcrumb $ fmap (\(n, i) -> Named (fromMaybe "" n) i) $ zip (funs <> names) items
 
 data CannotEnterNodeException = CannotEnterNodeException NodeId
     deriving Show
@@ -75,7 +77,7 @@ instance Exception CannotEnterNodeException where
 
 buildGraph :: GraphOp m => m API.Graph
 buildGraph = do
-    connections <- map (over _1 PortRef.toPortRef) <$> buildConnections
+    connections <- buildConnections
     nodes       <- buildNodes
     (inE, outE) <- buildEdgeNodes
     API.Graph nodes connections (Just inE) (Just outE) <$> buildMonads
@@ -234,8 +236,11 @@ getNodeCode nid = do
 
 getDefault :: GraphOp m => NodeRef -> m (Maybe PortDefault)
 getDefault arg = match arg $ \case
-        -- IRString s       -> pure $ Just $ Constant $ TextValue $ convert s
-        -- IRNumber i       -> pure $ Just $ Constant $ if Lit.isInteger i then IntValue $ Lit.toInt i else RealValue $ Lit.toDouble i
+        IRString s       -> Just . Constant . TextValue <$> Vector.toList s
+        IRNumber b i f   -> do
+            fracPart <- map (intToDigit . fromIntegral) <$> Vector.toList f
+            intPart  <- map (intToDigit . fromIntegral) <$> Vector.toList i
+            pure $ Just $ Constant $ if fracPart == "" then IntValue $ read intPart else RealValue $ read intPart + read fracPart
         Cons "True"  _ -> pure $ Just $ Constant $ BoolValue True
         Cons "False" _ -> pure $ Just $ Constant $ BoolValue False
         Blank          -> pure $ Nothing
@@ -252,8 +257,11 @@ getPortState :: GraphOp m => NodeRef -> m PortState
 getPortState node = do
     isConnected <- ASTRead.isGraphNode node
     if isConnected then pure Connected else match node $ \case
-        -- IRString s     -> pure . WithDefault . Constant . TextValue $ convert s
-        -- IRNumber i     -> pure . WithDefault . Constant $ if Lit.isInteger i then IntValue $ Lit.toInt i else RealValue $ Lit.toDouble i
+        IRString s     -> WithDefault . Constant . TextValue <$> Vector.toList s
+        IRNumber b i f   -> do
+            fracPart <- map (intToDigit . fromIntegral) <$> Vector.toList f
+            intPart  <- map (intToDigit . fromIntegral) <$> Vector.toList i
+            pure $ WithDefault $ Constant $ if fracPart == "" then IntValue $ read intPart else RealValue $ read intPart + read fracPart
         Cons n _ -> do
             name <- pure $ nameToString n
             case name of
@@ -464,13 +472,13 @@ buildOutPorts ref = match ref $ \case
     _         -> buildDummyOutPort ref
 
 
-buildConnections :: GraphOp m => m [(OutPortRefS, InPortRef)]
+buildConnections :: GraphOp m => m [(OutPortRef, InPortRef)]
 buildConnections = do
     allNodes       <- uses Graph.breadcrumbHierarchy BH.topLevelIDs
     (_, outEdge)   <- getEdgePortMapping
     connections    <- mapM getNodeInputs allNodes
     outputEdgeConn <- getOutputSidebarInputs outEdge
-    pure $ (maybeToList outputEdgeConn) <> concat connections
+    pure $ map (over _1 PortRef.toPortRef) $ (maybeToList outputEdgeConn) <> concat connections
 
 buildInputSidebarTypecheckUpdate :: GraphOp m => NodeId -> m API.NodeTypecheckerUpdate
 buildInputSidebarTypecheckUpdate nid = do

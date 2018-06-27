@@ -33,6 +33,7 @@ dependencies:
   - text
   - time
   - unordered-containers
+  - uuid
   - uuid-types
   - yaml
   - zlib

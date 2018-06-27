@@ -116,7 +116,7 @@ mkUUID :: MonadIO m => m UUID
 mkUUID = liftIO nextRandom
 
 connectToInput :: GraphLocation -> OutPortRef -> InPortRef -> Empire Connection
-connectToInput loc outPort inPort = Graph.connect loc (PortRef.toPortRefS outPort) (InPortRef' inPort)
+connectToInput loc outPort inPort = Graph.connect loc outPort (InPortRef' inPort)
 
 outPortRef :: NodeId -> Port.OutPortId -> OutPortRef
 outPortRef = OutPortRef . NodeLoc def

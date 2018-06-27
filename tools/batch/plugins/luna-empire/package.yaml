@@ -25,20 +25,3 @@ executables:
     source-dirs: src
     main:        Main.hs
     ghc-options: -Wall -O2 -threaded "-with-rtsopts=-N -T"
-
-  luna-empire-logger:
-    source-dirs: src
-    main:        LoggerMain.hs
-
-  luna-empire-invoker:
-    source-dirs: src
-    main:        Invoker.hs
-    dependencies:
-      - bytestring
-      - containers
-      - docopt
-      - luna-empire
-      - luna-studio-common
-      - m-logger
-      - text
-      - uuid
