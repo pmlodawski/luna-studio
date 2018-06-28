@@ -1,7 +1,7 @@
 path = require 'path'
 {View} = require 'atom-space-pen-views'
 projects = require './projects'
-nodeEditorBaseGL = require 'node_editor_basegl'
+nodeEditorBaseGL = require 'luna-basegl-ui'
 
 uniqueTabNo = 0
 
