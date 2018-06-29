@@ -1,28 +1,13 @@
 from distutils import dir_util
 import os
-import subprocess
-import sys
 
 from scripts_build.atom_prepare import prep_path
-from scripts_build.common import print_title, process_context, working_directory
+from scripts_build.common import print_title
 
 
 new_gui_dir = prep_path('../luna-studio/basegl-ui')
-new_gui_dist = os.path.join(new_gui_dir, 'dist')
 new_gui_styles = os.path.join(new_gui_dir, 'dist/style')
 atom_styles = prep_path('../luna-studio/atom/styles/gen')
-
-
-def npm_install():
-    print('Installing the npm package...')
-    with process_context("npm install"), working_directory(new_gui_dir):
-        subprocess.call(['npm', 'install'])
-
-
-def run_webpack():
-    print('Running webpack...')
-    with process_context("run webpack"), working_directory(new_gui_dir):
-        subprocess.call(['npm', 'run', 'build'])
 
 
 def copy_styles():
@@ -32,6 +17,4 @@ def copy_styles():
 
 def install():
     print_title('Installing the new GUI...')
-    npm_install()
-    run_webpack()
     copy_styles()
