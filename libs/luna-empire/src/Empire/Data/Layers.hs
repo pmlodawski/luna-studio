@@ -51,28 +51,28 @@ data Marker
 instance Layer Marker where
     type Cons Marker = Layer.Simple (Maybe OutPortRefS)
     type Layout Marker layout = Layout.Get Marker layout
-    manager = Layer.unsafeNoManager
+    manager = Layer.staticManager
 
 data Meta
 instance Layer Meta where
     type Cons Meta = Layer.Simple (Maybe NodeMetaS)
     type Layout Meta layout = Layout.Get Meta layout
-    manager = Layer.unsafeNoManager
+    manager = Layer.staticManager
 
 data SpanOffset
 instance Layer SpanOffset where
     type Cons SpanOffset = Layer.Simple Delta
     type Layout SpanOffset layout = Layout.Get SpanOffset layout
-    manager = Layer.unsafeNoManager
+    manager = Layer.staticManager
 
 data SpanLength
 instance Layer SpanLength where
     type Cons SpanLength = Layer.Simple Delta
     type Layout SpanLength layout = Layout.Get SpanLength layout
-    manager = Layer.unsafeNoManager
+    manager = Layer.staticManager
 
--- instance Encoder1 (Layer.Simple t) where
---     encode1 _ _ = pure ()
+instance Default a => Default1 (Layer.Simple a) where
+    def1 = wrap def
 
 attachEmpireLayers :: _ => m ()
 attachEmpireLayers = return ()

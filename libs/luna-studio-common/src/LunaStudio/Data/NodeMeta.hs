@@ -48,7 +48,7 @@ instance forall a. Storable a => Storable (Maybe a) where
     peek ptr    = (Storable.peekByteOff ptr 0 :: IO Int) >>= \case
         0 -> pure Nothing
         1 -> Just <$> Storable.peekByteOff ptr wordSize
-        a -> error $ "Storable.Maybe peek: unrecognized constructor: " <> show a
+        a -> error $ "Storable.Maybe peek: unrecognized constructor: " <> show a <> " at " <> show ptr
     poke ptr (Just x) = Storable.pokeByteOff ptr 0 (1 :: Int) >> Storable.pokeByteOff ptr wordSize x
     poke ptr Nothing  = Storable.pokeByteOff ptr 0 (0 :: Int)
 

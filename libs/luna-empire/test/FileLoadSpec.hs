@@ -2409,7 +2409,7 @@ spec = around withChannels $ parallel $ do
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
                 Graph.addPortWithConnections loc' (outPortRef input [Port.Projection 1]) Nothing [InPortRef' $ inPortRef id1 [Port.Arg 0]]
                 Graph.removePort loc' (outPortRef input [Port.Projection 1])
-        xit "add port updates lambda length - core bug" $ let
+        it "add port updates lambda length - core bug" $ let
             initialCode = [r|
                 def main:
                     «2»lambda1 = x:
@@ -2673,7 +2673,7 @@ def main:
                 node <- Graph.addNode loc u2 "Just [(i,  Foo  b) ] =a" def
                 (_, output) <- Graph.withGraph loc $ runASTOp $ GraphBuilder.getEdgePortMapping
                 Graph.connect loc (outPortRef u2 [Port.Projection 0, Port.Projection 0, Port.Projection 1, Port.Projection 0]) (InPortRef' $ inPortRef output [])
-        xit "sets tuple port defaults" $ let
+        it "sets tuple port defaults" $ let
             initialCode = [r|
                 def main:
                     None

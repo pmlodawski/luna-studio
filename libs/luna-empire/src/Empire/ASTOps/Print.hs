@@ -48,11 +48,8 @@ getTypeRep tp = match tp $ \case
     IRNumber{}    -> return $ TCons "Number" []
     _             -> return TStar
 
-instance {-# OVERLAPPING #-} MonadIO m => Compactible CompactStyle m where
-    shouldBeCompact r = print "CHECKIN'" >> pure True -- print "CHECKIN'" >> ASTRead.isGraphNode r
-
 printExpression :: GraphOp m => NodeRef -> m String
-printExpression n = print "printin'" >> (convert <$> Prettyprint.run @CompactStyle def n)
+printExpression n = convert <$> Prettyprint.run @Prettyprint.Simple def n
 
 printFullExpression :: GraphOp m => NodeRef -> m Text
 printFullExpression n = Prettyprint.run @Prettyprint.Simple def n
@@ -93,43 +90,3 @@ genNodeBaseName ref = match ref $ \case
     where recurOn :: GraphOp m => EdgeRef -> m Text
           recurOn a = genNodeBaseName =<< source a
           genOp   n = if isOperator n  || n == "#uminus#" then genOperatorName n else nameToText n
-
-
-data CompactStyle = CompactStyle deriving (Show)
-
-
--- === Compactible === --
-
-class Monad m => Compactible style m where
-    shouldBeCompact :: IR.SomeTerm -> m Bool
-
--- instance {-# OVERLAPPABLE #-} Monad m => Compactible style m where
---     shouldBeCompact _ = pure False
-
--- === Definition === --
-
-instance ( MonadIO m -- DEBUG ONLY
-         , Prec.RelReader Prettyprint.SpacedName m
-         , Compactible CompactStyle m
-         , Assoc.Reader (Maybe Prettyprint.SpacedName) m
-         , State.Monad Scope m
-         , Layer.Reader IR.Term IR.Model m
-         , Layer.Reader IR.Link Link.Source m
-         -- , ASTOpReq Graph m
-         ) => Prettyprint.Prettyprinter CompactStyle m where
-    prettyprint root = Layer.read @IR.Model root >>= \case
-        IR.UniTermRawString (IR.RawString str') -> do
-            str <- Vector.toList str'
-            pure . unnamed . Prettyprint.Atom . convert . quoted $ if length str > succ maxLen then take maxLen str <> "…" else str where maxLen = 3
-        IR.UniTermVar (IR.Var name)   -> print "compactin'" >> shouldBeCompact @CompactStyle root >>= switch (pure . unnamed $ Prettyprint.Atom "•") defGen
-        IR.UniTermLam (IR.Lam{})         -> pure . unnamed $ Prettyprint.Atom "Ⓕ"
-        IR.UniTermFunction (IR.Function{}) -> pure . unnamed $ Prettyprint.Atom "Ⓕ"
-        IR.UniTermMarked (IR.Marked m b)    -> Prettyprint.prettyprint @CompactStyle =<< Link.source b
-        IR.UniTermGrouped (IR.Grouped g)     -> do
-            body <- Prettyprint.prettyprint @CompactStyle =<< Link.source g
-            pure $ case unlabel body of
-                Prettyprint.Atom{} -> body
-                _      -> unnamed . Prettyprint.Atom . parensed . getBody $ body
-        _             -> defGen
-        where simpleGen = Prettyprint.prettyprint @Prettyprint.Simple
-              defGen    = simpleGen root
