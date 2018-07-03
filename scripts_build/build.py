@@ -11,7 +11,6 @@ import atom_prepare
 import atom_apm
 import copy_configs
 import stack_build
-import basegl_gui
 from common import print_title, process_context
 
 
@@ -43,7 +42,6 @@ def build_frontend (frontend_args, gui_url, dev_mode):
         atom_prepare.run(dev_mode)
         atom_apm.run(gui_url, frontend_args, dev_mode)
         copy_configs.run()
-        basegl_gui.install()
 
 
 def build_js_only (frontend_args, gui_url, dev_mode):
