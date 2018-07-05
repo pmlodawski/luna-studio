@@ -7,7 +7,7 @@ import           NodeEditor.Action.Basic.UpdateNode      (localUpdateInputNode)
 import qualified NodeEditor.Action.Batch                 as Batch
 import           NodeEditor.Action.State.NodeEditor      (getInputNode)
 import           NodeEditor.React.Model.Node.SidebarNode (hasPort, inputSidebarPorts, isInputSidebar)
-import           NodeEditor.React.Model.Port             (OutPortIndex (Projection), OutPortRef (OutPortRef), name)
+import           NodeEditor.React.Model.Port             (OutPortIndex (Projection), OutPortRef, OutPortRefTemplate(OutPortRef), name)
 import           NodeEditor.State.Global                 (State)
 
 

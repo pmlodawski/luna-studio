@@ -9,7 +9,7 @@ import qualified NodeEditor.Action.State.NodeEditor as NodeEditor
 
 import           Common.Action.Command                      (Command)
 import           Control.Monad                              (filterM)
-import           LunaStudio.Data.NodeMeta                   (NodeMeta (NodeMeta))
+import           LunaStudio.Data.NodeMeta                   (NodeMeta, NodeMetaTemplate (NodeMeta))
 import           LunaStudio.Data.Position                   (Position)
 import           NodeEditor.React.Model.Node.ExpressionNode (NodeLoc, defaultVisualizer, position, visEnabled)
 import           NodeEditor.State.Global                    (State)

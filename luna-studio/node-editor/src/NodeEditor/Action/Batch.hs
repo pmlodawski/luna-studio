@@ -7,7 +7,7 @@ import           LunaStudio.Data.GraphLocation       (GraphLocation)
 import           LunaStudio.Data.NodeMeta            (NodeMeta)
 import           LunaStudio.Data.NodeSearcher        (ImportName)
 import           LunaStudio.Data.PortDefault         (PortDefault)
-import           LunaStudio.Data.PortRef             (AnyPortRef (InPortRef', OutPortRef'), InPortRef (InPortRef), OutPortRef (OutPortRef),
+import           LunaStudio.Data.PortRef             (AnyPortRef (InPortRef', OutPortRef'), InPortRef (InPortRef), OutPortRef, OutPortRefTemplate (OutPortRef),
                                                       dstNodeLoc, nodeLoc)
 import           LunaStudio.Data.Position            (Position)
 import           LunaStudio.Data.Project             (LocationSettings)

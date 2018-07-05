@@ -4,7 +4,7 @@
 {-# LANGUAGE TypeFamilies      #-}
 module LunaStudio.Data.Vector2 where
 
-import Control.Lens ((*~))
+import           Control.Lens        ((*~), Rewrapped)
 import           Data.Aeson.Types    (FromJSON, ToJSON)
 import           Data.Binary         (Binary)
 import           Foreign.Ptr         (castPtr, plusPtr)

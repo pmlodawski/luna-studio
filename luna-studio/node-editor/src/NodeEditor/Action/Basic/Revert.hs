@@ -19,7 +19,7 @@ import qualified LunaStudio.API.Response                   as Response
 import           LunaStudio.Data.Connection                (dst, src)
 import           LunaStudio.Data.Node                      (nodeId)
 import           LunaStudio.Data.NodeLoc                   (NodeLoc, prependPath)
-import           LunaStudio.Data.PortRef                   (AnyPortRef (InPortRef'), OutPortRef (OutPortRef))
+import           LunaStudio.Data.PortRef                   (AnyPortRef (InPortRef'), OutPortRef, OutPortRefTemplate (OutPortRef))
 import           NodeEditor.Action.Basic.AddConnection     (localAddConnection, localAddConnections)
 import           NodeEditor.Action.Basic.AddPort           (localAddPort)
 import           NodeEditor.Action.Basic.AddSubgraph       (localAddSubgraph)

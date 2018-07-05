@@ -11,7 +11,7 @@ import           Data.Timestamp                            (Timestamp (Timestamp
 import qualified JS.Mount                                  as Mount
 import           JS.Scene                                  (inputSidebarId, outputSidebarId)
 import qualified JS.UI                                     as UI
-import           LunaStudio.Data.PortRef                   (AnyPortRef (OutPortRef'), OutPortRef (OutPortRef), toAnyPortRef)
+import           LunaStudio.Data.PortRef                   (AnyPortRef (OutPortRef'), OutPortRefTemplate (OutPortRef), toAnyPortRef)
 import qualified LunaStudio.Data.PortRef                   as PortRef
 import           LunaStudio.Data.Position                  (y)
 import qualified NodeEditor.Event.UI                       as UI

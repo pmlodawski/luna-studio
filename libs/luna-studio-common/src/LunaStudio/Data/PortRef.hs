@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module LunaStudio.Data.PortRef
     ( module LunaStudio.Data.PortRef
     , nodeLoc
@@ -7,7 +8,9 @@ import Control.Lens (makePrisms)
 import           Control.DeepSeq         (NFData)
 import           Data.Aeson.Types        (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import           Data.Binary             (Binary)
+#ifndef __GHCJS__
 import qualified Data.Vector.Storable.Foreign as Foreign
+#endif
 import           Foreign.Ptr             (castPtr, plusPtr)
 import           Foreign.Storable        (Storable(..))
 import           LunaStudio.Data.Node    (NodeId)
@@ -27,7 +30,10 @@ data OutPortRefTemplate a b = OutPortRef { _srcNodeLoc :: a
                                          } deriving (Eq, Generic, Ord, Show)
 
 type OutPortRef = OutPortRefTemplate NodeLoc OutPortId
+
+#ifndef __GHCJS__
 type OutPortRefS = OutPortRefTemplate NodeId (Foreign.Vector Int)
+#endif
 
 
 data AnyPortRef = OutPortRef' OutPortRef | InPortRef' InPortRef deriving (Eq, Generic, Show)
@@ -92,6 +98,8 @@ dstNodeId = dstNodeLoc . NodeLoc.nodeId
 srcNodeId :: Lens' OutPortRef NodeId
 srcNodeId = srcNodeLoc . NodeLoc.nodeId
 
+#ifndef __GHCJS__
+
 toPortRefS :: OutPortRef -> OutPortRefS
 toPortRefS (OutPortRef a b) = OutPortRef (convert a) (unsafePerformIO $ Foreign.fromList (coerce b :: [Int]))
 
@@ -107,3 +115,4 @@ instance (Storable a, Storable b) => Storable (OutPortRefTemplate a b) where
         poke (castPtr p) (op ^. srcNodeLoc)
         poke (p `plusPtr` sizeOf (undefined :: a)) (op ^. srcPortId)
 
+#endif
