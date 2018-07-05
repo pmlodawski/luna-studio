@@ -55,18 +55,39 @@ packages:
 - {location: ../../tools/batch/plugins/bus-logger}
 - {location: ../../tools/batch/plugins/luna-empire}
 - {location: ../../tools/batch/plugins/request-monitor}
-- extra-dep: true
-  location: ../../../dependent-state
 # - extra-dep: true
-#   location: ../../../luna
-#   subdirs: [project]
+#   location: ../../../dependent-state
 - extra-dep: true
-  location: ../../../luna-core
-  subdirs: [core, syntax/text/parser, syntax/text/lexer, syntax/text/model, syntax/text/prettyprint, debug, passes, project]
-- extra-dep: true
-  location: {commit: f3c1046ef59d21f6dc12a2a822c536e2a814f31e, git: 'git@github.com:luna/luna-core.git'}
-  subdirs: [lib/autovector, lib/cpp-containers, lib/data-construction, lib/data-tag, lib/data-typemap, lib/data-property, lib/data-storable, lib/exception, lib/foreign-utils, lib/generic-traversable, lib/memory-manager, lib/memory-pool, lib/nested-containers, lib/syntax-definition, lib/text-processing, lib/th-builder, lib/tuple-utils, lib/type-cache, lib/typelevel]
+  location: {commit: a7179cac5243fdac990dc0e35b1e0ab11be91249, git: 'git@github.com:luna/luna-core.git'}
+  subdirs:
+    - core
+    - syntax/text/parser
+    - syntax/text/lexer
+    - syntax/text/model
+    - syntax/text/prettyprint
+    - debug
+    - passes
+    - project
+    - lib/autovector
+    - lib/cpp-containers
+    - lib/data-construction
+    - lib/data-tag
+    - lib/data-typemap
+    - lib/data-property
+    - lib/data-storable
+    - lib/exception
+    - lib/foreign-utils
+    - lib/generic-traversable
+    - lib/memory-manager
+    - lib/memory-pool
+    - lib/nested-containers
+    - lib/syntax-definition
+    - lib/text-processing
+    - lib/th-builder
+    - lib/tuple-utils
+    - lib/type-cache
+    - lib/typelevel
 - extra-dep: true
   location: {commit: ddfcd1e0372b93e947b380b911c123fe67227b21, git: 'git@github.com:luna/visualization-api.git'}
 - extra-dep: true
-  location: ../../../fuzzy-text
+  location: {commit: 76d44905891fe1f0c6c1d583e294cb393558976f, git: 'git@github.com:luna/fuzzy-text.git'}

@@ -1901,8 +1901,7 @@ setInterpreterState (Interpreter.Reload loc) = do
 -- internal
 
 getName :: GraphLocation -> NodeId -> Empire (Maybe Text)
-getName = error "getName"
--- getName loc nid = withGraph' loc (runASTOp $ GraphBuilder.getNodeName nid) $ use (Graph.clsFuns . ix nid . Graph.funName . packed . re _Just)
+getName loc nid = withGraph' loc (runASTOp $ GraphBuilder.getNodeName nid) $ use (Graph.clsFuns . ix nid . Graph.funName . packed . re _Just)
 
 generateNodeName :: GraphOp m => NodeRef -> m Text
 generateNodeName = ASTPrint.genNodeBaseName >=> generateNodeNameFromBase
