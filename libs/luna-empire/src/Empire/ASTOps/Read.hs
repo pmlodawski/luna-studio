@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 
 {-|
 
@@ -107,10 +108,10 @@ getOutputForPort portId@(Projection i : rest) ref = cutThroughGroups ref >>= fli
             _      -> throwM $ PortDoesNotExistException portId 
     _ -> throwM $ PortDoesNotExistException portId
 
-isGraphNode :: GraphOp m => NodeRef -> m Bool
+isGraphNode :: _ => NodeRef -> m Bool
 isGraphNode = fmap isJust . getNodeId
 
-getNodeId :: ASTOp g m => NodeRef -> m (Maybe NodeId)
+getNodeId :: _ => NodeRef -> m (Maybe NodeId)
 getNodeId node = do
     rootNodeId <- preview (_Just . PortRef.srcNodeLoc) <$> getLayer @Marker node
     varNodeId  <- (getVarNode node >>= getNodeId) `catch` (\(_e :: NotUnifyException) -> return Nothing)
@@ -146,7 +147,7 @@ getVarName' node = match node $ \case
 getVarName :: ASTOp a m => NodeRef -> m String
 getVarName = fmap nameToString . getVarName'
 
-getVarsInside :: ASTOp g m => NodeRef -> m [NodeRef]
+getVarsInside :: _ => NodeRef -> m [NodeRef]
 getVarsInside e = do
     var <- isVar e
     if var then return [e] else concat <$> (mapM (getVarsInside <=< source) =<< inputs e)
@@ -159,13 +160,13 @@ rightMatchOperand node = match node $ \case
 getTargetNode :: GraphOp m => NodeRef -> m NodeRef
 getTargetNode node = rightMatchOperand node >>= source
 
-leftMatchOperand :: ASTOp g m => NodeRef -> m EdgeRef
+leftMatchOperand :: _ => NodeRef -> m EdgeRef
 leftMatchOperand node = match node $ \case
     Unify a _         -> pure $ generalize a
     ASGFunction n _ _ -> pure $ generalize n
     _         -> throwM $ NotUnifyException node
 
-getVarNode :: ASTOp g m => NodeRef -> m NodeRef
+getVarNode :: _ => NodeRef -> m NodeRef
 getVarNode node = leftMatchOperand node >>= source
 
 data NodeDoesNotExistException = NodeDoesNotExistException NodeId
@@ -363,7 +364,7 @@ isCons expr = match expr $ \case
     Cons{} -> return True
     _     -> return False
 
-isVar :: ASTOp a m => NodeRef -> m Bool
+isVar :: _ => NodeRef -> m Bool
 -- isVar expr = isJust <$> narrowTerm @IR.Var expr
 isVar expr = match expr $ \case
     Var{} -> return True

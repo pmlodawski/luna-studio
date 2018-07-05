@@ -48,8 +48,11 @@ getTypeRep tp = match tp $ \case
     IRNumber{}    -> return $ TCons "Number" []
     _             -> return TStar
 
+instance (MonadIO m, Printer Graph m) => Prettyprint.Compactible Prettyprint.CompactStyle m where
+    shouldBeCompact a = ASTRead.isGraphNode a
+
 printExpression :: GraphOp m => NodeRef -> m String
-printExpression n = convert <$> Prettyprint.run @Prettyprint.Simple def n
+printExpression n = convert <$> Prettyprint.run @Prettyprint.CompactStyle def n
 
 printFullExpression :: GraphOp m => NodeRef -> m Text
 printFullExpression n = Prettyprint.run @Prettyprint.Simple def n
