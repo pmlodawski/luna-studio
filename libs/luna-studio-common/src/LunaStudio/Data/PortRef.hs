@@ -21,9 +21,10 @@ import           System.IO.Unsafe        (unsafePerformIO)
 import           Prologue
 
 
-data InPortRef  = InPortRef  { _dstNodeLoc :: NodeLoc
-                             , _dstPortId :: InPortId
-                             } deriving (Eq, Generic, Ord, Show)
+data InPortRef = InPortRef
+    { _dstNodeLoc :: NodeLoc
+    , _dstPortId :: InPortId
+    } deriving (Eq, Generic, Ord, Show)
 
 data OutPortRefTemplate a b = OutPortRef { _srcNodeLoc :: a
                                          , _srcPortId  :: b
@@ -36,7 +37,10 @@ type OutPortRefS = OutPortRefTemplate NodeId (Foreign.Vector Int)
 #endif
 
 
-data AnyPortRef = OutPortRef' OutPortRef | InPortRef' InPortRef deriving (Eq, Generic, Show)
+data AnyPortRef
+    = OutPortRef' OutPortRef
+    | InPortRef'  InPortRef
+    deriving (Eq, Generic, Show)
 
 makeLenses ''AnyPortRef
 makePrisms ''AnyPortRef
@@ -64,33 +68,38 @@ instance ToJSON      OutPortRef
 
 
 instance Ord AnyPortRef where
-  (InPortRef'  _)  `compare` (OutPortRef' _) = LT
-  (OutPortRef' _)  `compare` (InPortRef'  _) = GT
-  (InPortRef'  a)  `compare` (InPortRef'  b) = a `compare` b
-  (OutPortRef' a)  `compare` (OutPortRef' b) = a `compare` b
+    (InPortRef'  _)  `compare` (OutPortRef' _) = LT
+    (OutPortRef' _)  `compare` (InPortRef'  _) = GT
+    (InPortRef'  a)  `compare` (InPortRef'  b) = a `compare` b
+    (OutPortRef' a)  `compare` (OutPortRef' b) = a `compare` b
 
 instance HasNodeLoc InPortRef  where nodeLoc = dstNodeLoc
 instance HasNodeLoc OutPortRef where nodeLoc = srcNodeLoc
 instance HasNodeLoc AnyPortRef where
-    nodeLoc = lens getNodeLoc setNodeLoc  where
+    nodeLoc = lens getNodeLoc setNodeLoc where
         getNodeLoc (OutPortRef' outPortRef) = outPortRef ^. nodeLoc
         getNodeLoc (InPortRef'  inPortRef)  = inPortRef  ^. nodeLoc
-        setNodeLoc (OutPortRef' outPortRef) nl = OutPortRef' $ outPortRef & nodeLoc .~ nl
-        setNodeLoc (InPortRef'  inPortRef ) nl = InPortRef'  $ inPortRef  & nodeLoc .~ nl
+        setNodeLoc (OutPortRef' outPortRef) nl
+            = OutPortRef' $ outPortRef & nodeLoc .~ nl
+        setNodeLoc (InPortRef'  inPortRef ) nl
+            = InPortRef'  $ inPortRef  & nodeLoc .~ nl
 
 class    PortId a         where toAnyPortRef :: NodeLoc -> a -> AnyPortRef
 instance PortId InPortId  where toAnyPortRef = InPortRef'  .: InPortRef
 instance PortId OutPortId where toAnyPortRef = OutPortRef' .: OutPortRef
-instance PortId AnyPortId where toAnyPortRef nl (InPortId'  pid) = toAnyPortRef nl pid
-                                toAnyPortRef nl (OutPortId' pid) = toAnyPortRef nl pid
+instance PortId AnyPortId where
+    toAnyPortRef nl (InPortId'  pid) = toAnyPortRef nl pid
+    toAnyPortRef nl (OutPortId' pid) = toAnyPortRef nl pid
 
 {-# DEPRECATED nodeId "Use nodeLoc" #-}
 nodeId :: Lens' AnyPortRef NodeId
 nodeId = nodeLoc . NodeLoc.nodeId
 
 portId :: Lens' AnyPortRef AnyPortId
-portId f (OutPortRef' (OutPortRef nl pid)) = OutPortRef' . OutPortRef nl . outPortId' <$> f (OutPortId' pid)
-portId f (InPortRef'  (InPortRef  nl pid)) = InPortRef'  . InPortRef  nl . inPortId'  <$> f (InPortId'  pid)
+portId f (OutPortRef' (OutPortRef nl pid))
+    = OutPortRef' . OutPortRef nl . outPortId' <$> f (OutPortId' pid)
+portId f (InPortRef'  (InPortRef  nl pid))
+    = InPortRef'  . InPortRef  nl . inPortId'  <$> f (InPortId'  pid)
 
 dstNodeId :: Lens' InPortRef NodeId
 dstNodeId = dstNodeLoc . NodeLoc.nodeId

@@ -20,7 +20,7 @@ import           Empire.Prelude
 import           Control.Lens                       (preview)
 import qualified Safe
 
-import           LunaStudio.Data.Node               (NodeId)
+import           LunaStudio.Data.NodeId             (NodeId)
 import qualified LunaStudio.Data.PortRef            as PortRef
 import           LunaStudio.Data.Port               (OutPortId(..), OutPortIndex(..))
 import qualified LunaStudio.Data.NodeLoc            as NodeLoc

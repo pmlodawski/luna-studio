@@ -70,6 +70,7 @@ dependencies:
     - luna-syntax-text-prettyprint
     - luna-studio-common
     - m-logger
+    - matrix
     - megaparsec
     - mtl
     - open-browser
@@ -83,26 +84,54 @@ dependencies:
     - luna-text-processing
     - transformers
     - typelevel
+    - unordered-containers
     - uuid
     - vector-text
     - zlib == 0.6.1.2
 
 default-extensions:
-    - GeneralizedNewtypeDeriving
-    - DeriveFunctor
-    - DeriveTraversable
-    - DeriveFoldable
-    - TupleSections
+    - AllowAmbiguousTypes
+    - ApplicativeDo
+    - Arrows
+    - BangPatterns
+    - BinaryLiterals
     - ConstraintKinds
-    - FunctionalDependencies
     - DataKinds
-    - MultiWayIf
-    - TypeApplications
-    - LambdaCase
+    - DefaultSignatures
+    - DeriveDataTypeable
+    - DeriveFoldable
+    - DeriveFunctor
+    - DeriveGeneric
+    - DeriveTraversable
+    - DoAndIfThenElse
+    - DuplicateRecordFields
+    - EmptyDataDecls
     - FlexibleContexts
     - FlexibleInstances
-    - MultiParamTypeClasses
-    - ScopedTypeVariables
+    - FunctionalDependencies
+    - GeneralizedNewtypeDeriving
+    - InstanceSigs
+    - LambdaCase
+    - LiberalTypeSynonyms
+    - MonadComprehensions
+    - MultiWayIf
+    - NamedWildCards
+    - NegativeLiterals
     - NoImplicitPrelude
+    - NumDecimals
+    - OverloadedLabels
+    - OverloadedStrings
+    - PackageImports
+    - QuasiQuotes
+    - RankNTypes
+    - RecursiveDo
+    - RelaxedPolyRec
+    - ScopedTypeVariables
+    - StandaloneDeriving
     - TemplateHaskell
+    - TupleSections
+    - TypeApplications
     - TypeFamilies
+    - TypeFamilyDependencies
+    - TypeOperators
+    - ViewPatterns

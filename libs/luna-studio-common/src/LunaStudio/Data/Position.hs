@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeFamilies #-}
 module LunaStudio.Data.Position
     ( module LunaStudio.Data.Position
     , vector
@@ -20,7 +19,10 @@ import           Prologue
 
 -- === Definition === --
 
-newtype Position = Position { fromPosition :: Vector2 Double } deriving (Eq, Show, Generic, Default, NFData, Num, Ord, Storable)
+newtype Position = Position
+    { fromPosition :: Vector2 Double
+    } deriving (Eq, Generic, Num, Ord, Show, Storable)
+
 makeWrapped ''Position
 
 
@@ -32,6 +34,8 @@ instance Dim1     Position
 instance Dim2     Position
 instance IsVector Position
 instance Binary   Position
+instance Default  Position
+instance NFData   Position
 instance FromJSON Position
 instance ToJSON   Position
 
@@ -57,14 +61,20 @@ rescale pos factor = pos & vector %~ flip scalarProduct factor
 
 leftTopPoint :: [Position] -> Maybe Position
 leftTopPoint []        = Nothing
-leftTopPoint positions = Just $ Position (Vector2 (unsafeMinimum $ view x <$> positions) (unsafeMinimum $ view y <$> positions))
+leftTopPoint positions = Just . Position $ Vector2
+    (unsafeMinimum $ view x <$> positions)
+    (unsafeMinimum $ view y <$> positions)
 
 rightBottomPoint :: [Position] -> Maybe Position
 rightBottomPoint []        = Nothing
-rightBottomPoint positions = Just $ Position (Vector2 (unsafeMaximum $ view x <$> positions) (unsafeMaximum $ view y <$> positions))
+rightBottomPoint positions = Just . Position $ Vector2
+    (unsafeMaximum $ view x <$> positions)
+    (unsafeMaximum $ view y <$> positions)
 
 minimumRectangle :: [Position] -> Maybe (Position, Position)
-minimumRectangle positions = (,) <$> leftTopPoint positions <*> rightBottomPoint positions
+minimumRectangle positions = (,)
+    <$> leftTopPoint positions
+    <*> rightBottomPoint positions
 
 distance :: Position -> Position -> Double
 distance p0 p1 = magnitude (p0 ^. vector - p1 ^. vector)

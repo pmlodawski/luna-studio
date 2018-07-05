@@ -27,6 +27,7 @@ dependencies:
   - pretty-show
   - prologue
   - storable-tuple
+  - template-haskell
   - text
   - time
   - unordered-containers
@@ -41,29 +42,57 @@ when:
       - luna-core
       - luna-cpp-containers
       - luna-foreign-utils
+  - condition: impl(ghcjs)
+    dependencies: [ghcjs-base]
 
 default-extensions:
-  - BangPatterns
-  - ConstraintKinds
-  - DefaultSignatures
-  - DeriveDataTypeable
-  - DeriveFoldable
-  - DeriveFunctor
-  - DeriveGeneric
-  - DeriveTraversable
-  - DoAndIfThenElse
-  - FlexibleContexts
-  - FlexibleInstances
-  - GeneralizedNewtypeDeriving
-  - LambdaCase
-  - MultiParamTypeClasses
-  - NoImplicitPrelude
-  - ScopedTypeVariables
-  - StandaloneDeriving
-  - TemplateHaskell
-  - TupleSections
-  - TypeSynonymInstances
-  - ViewPatterns
+    - AllowAmbiguousTypes
+    - ApplicativeDo
+    - Arrows
+    - BangPatterns
+    - BinaryLiterals
+    - ConstraintKinds
+    - DataKinds
+    - DefaultSignatures
+    - DeriveDataTypeable
+    - DeriveFoldable
+    - DeriveFunctor
+    - DeriveGeneric
+    - DeriveTraversable
+    - DoAndIfThenElse
+    - DuplicateRecordFields
+    - EmptyDataDecls
+    - FlexibleContexts
+    - FlexibleInstances
+    - FunctionalDependencies
+    - GeneralizedNewtypeDeriving
+    - InstanceSigs
+    - LambdaCase
+    - LiberalTypeSynonyms
+    - MonadComprehensions
+    - MultiWayIf
+    - MultiParamTypeClasses
+    - NamedWildCards
+    - NegativeLiterals
+    - NoImplicitPrelude
+    - NumDecimals
+    - OverloadedLabels
+    - OverloadedStrings
+    - PackageImports
+    - QuasiQuotes
+    - RankNTypes
+    - RecursiveDo
+    - RelaxedPolyRec
+    - ScopedTypeVariables
+    - StandaloneDeriving
+    - TemplateHaskell
+    - TupleSections
+    - TypeApplications
+    - TypeFamilies
+    - TypeFamilyDependencies
+    - TypeSynonymInstances
+    - TypeOperators
+    - ViewPatterns
 
 library:
   source-dirs: src

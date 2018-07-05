@@ -19,7 +19,6 @@ import           Data.Map                          (Map)
 import qualified Data.Map                          as Map
 import           Empire.Data.AST                   (NodeRef, SomeASTException)
 import           Empire.Data.Layers                (attachEmpireLayers)
-import           LunaStudio.Data.Node              (NodeId)
 
 -- import           Control.Monad.Raise                    (MonadException(..))
 import qualified Control.Monad.State.Layered          as DepState

@@ -67,22 +67,23 @@ import qualified LunaStudio.Data.Position        as Position
 import           LunaStudio.Data.Range           (Range (..))
 import           LunaStudio.Data.TypeRep         (TypeRep (TStar))
 import           LunaStudio.Data.NodeValue
-import           LunaStudio.Data.Vector2         (Vector2 (..))
-import qualified LunaStudio.Data.LabeledTree     as LabeledTree
-import           System.Directory                (canonicalizePath, getCurrentDirectory)
-import           System.Environment              (lookupEnv, setEnv)
-import           System.FilePath                 ((</>), takeDirectory)
+import           LunaStudio.Data.Vector2               (Vector2 (..))
+import           LunaStudio.Data.Visualization         (VisualizationValue (Value))
+import qualified LunaStudio.Data.LabeledTree           as LabeledTree
+import           System.Directory                      (canonicalizePath, getCurrentDirectory)
+import           System.Environment                    (lookupEnv, setEnv)
+import           System.FilePath                       ((</>), takeDirectory)
 
-import           Empire.Prelude                  hiding (fromJust, minimum, maximum)
+import           Empire.Prelude                        hiding (fromJust, minimum, maximum)
 
-import           Test.Hspec                      (Expectation, Selector, Spec, around, describe, expectationFailure, it, parallel, shouldBe,
-                                                  shouldMatchList, shouldNotBe, shouldSatisfy, shouldStartWith, shouldThrow, xit)
+import           Test.Hspec                            (Expectation, Selector, Spec, around, describe, expectationFailure, it, parallel, shouldBe,
+                                                        shouldMatchList, shouldNotBe, shouldSatisfy, shouldStartWith, shouldThrow, xit)
 
 import           EmpireUtils
 
-import           Text.RawString.QQ               (r)
+import           Text.RawString.QQ                     (r)
 
-import qualified Luna.IR                         as IR
+import qualified Luna.IR                               as IR
 
 mainCondensed = [r|def main:
     «0»pi = 3.14
@@ -236,8 +237,8 @@ spec = around withChannels $ parallel $ do
                 c ^. Node.canEnter `shouldBe` False
                 i ^? _Just . Node.isDef `shouldBe` Just True
                 connections `shouldMatchList` [
-                      (outPortRef (pi ^. Node.nodeId)  [], inPortRef (anon ^. Node.nodeId) [Port.Arg 0])
-                    , (outPortRef (foo ^. Node.nodeId) [], inPortRef (bar  ^. Node.nodeId) [Port.Head])
+                      Connection (outPortRef (pi ^. Node.nodeId)  []) (inPortRef (anon ^. Node.nodeId) [Port.Arg 0])
+                    , Connection (outPortRef (foo ^. Node.nodeId) []) (inPortRef (bar  ^. Node.nodeId) [Port.Head])
                     ]
         it "does not duplicate nodes on edit" $ \env -> do
             res <- evalEmp env $ do
@@ -256,8 +257,8 @@ spec = around withChannels $ parallel $ do
                     Just bar = find (\node -> node ^. Node.name == Just "bar") nodes
                     Just foo = find (\node -> node ^. Node.name == Just "foo") nodes
                 connections `shouldMatchList` [
-                      (outPortRef (cNode ^. Node.nodeId) [], inPortRef (bar ^. Node.nodeId) [Port.Arg 1])
-                    , (outPortRef (foo ^. Node.nodeId) [], inPortRef (bar  ^. Node.nodeId) [Port.Head])
+                      Connection (outPortRef (cNode ^. Node.nodeId) []) (inPortRef (bar ^. Node.nodeId) [Port.Arg 1])
+                    , Connection (outPortRef (foo   ^. Node.nodeId) []) (inPortRef (bar  ^. Node.nodeId) [Port.Head])
                     ]
         it "double modification gives proper value" $ \env -> do
             res <- evalEmp env $ do
@@ -279,8 +280,8 @@ spec = around withChannels $ parallel $ do
                     Just foo = find (\node -> node ^. Node.name == Just "foo") nodes
                 cNode ^. Node.code `shouldBe` "334"
                 connections `shouldMatchList` [
-                      (outPortRef (cNode ^. Node.nodeId) [], inPortRef (bar ^. Node.nodeId) [Port.Arg 1])
-                    , (outPortRef (foo ^. Node.nodeId) [], inPortRef (bar  ^. Node.nodeId) [Port.Head])
+                      Connection (outPortRef (cNode ^. Node.nodeId) []) (inPortRef (bar ^. Node.nodeId) [Port.Arg 1])
+                    , Connection (outPortRef (foo   ^. Node.nodeId) []) (inPortRef (bar  ^. Node.nodeId) [Port.Head])
                     ]
         it "modifying two expressions give proper values" $ \env -> do
             res <- evalEmp env $ do
@@ -303,8 +304,8 @@ spec = around withChannels $ parallel $ do
                 cNode ^. Node.code `shouldBe` "34"
                 bar ^. Node.code `shouldBe` "foo 18 c"
                 connections `shouldMatchList` [
-                      (outPortRef (cNode ^. Node.nodeId) [], inPortRef (bar ^. Node.nodeId) [Port.Arg 1])
-                    , (outPortRef (foo ^. Node.nodeId) [], inPortRef (bar  ^. Node.nodeId) [Port.Head])
+                      Connection (outPortRef (cNode ^. Node.nodeId) []) (inPortRef (bar ^. Node.nodeId) [Port.Arg 1])
+                    , Connection (outPortRef (foo   ^. Node.nodeId) []) (inPortRef (bar  ^. Node.nodeId) [Port.Head])
                     ]
         it "adding an expression works" $ \env -> do
             res <- evalEmp env $ do
@@ -323,8 +324,8 @@ spec = around withChannels $ parallel $ do
                     Just bar = find (\node -> node ^. Node.name == Just "bar") nodes
                     Just foo = find (\node -> node ^. Node.name == Just "foo") nodes
                 connections `shouldMatchList` [
-                      (outPortRef (c ^. Node.nodeId) [], inPortRef (bar ^. Node.nodeId) [Port.Arg 1])
-                    , (outPortRef (foo ^. Node.nodeId) [], inPortRef (bar  ^. Node.nodeId) [Port.Head])
+                      Connection (outPortRef (c   ^. Node.nodeId) []) (inPortRef (bar ^. Node.nodeId) [Port.Arg 1])
+                    , Connection (outPortRef (foo ^. Node.nodeId) []) (inPortRef (bar ^. Node.nodeId) [Port.Head])
                     ]
         it "unparseable expression does not sabotage whole file" $ \env -> do
             res <- evalEmp env $ do
@@ -346,8 +347,8 @@ spec = around withChannels $ parallel $ do
                 c ^. Node.code `shouldBe` "4"
                 bar ^. Node.code `shouldBe` "foo 8 c"
                 connections `shouldMatchList` [
-                      (outPortRef (c ^. Node.nodeId) [], inPortRef (bar ^. Node.nodeId) [Port.Arg 1])
-                    , (outPortRef (foo ^. Node.nodeId) [], inPortRef (bar  ^. Node.nodeId) [Port.Head])
+                      Connection (outPortRef (c   ^. Node.nodeId) []) (inPortRef (bar ^. Node.nodeId) [Port.Arg 1])
+                    , Connection (outPortRef (foo ^. Node.nodeId) []) (inPortRef (bar  ^. Node.nodeId) [Port.Head])
                     ]
         it "enters lambda written in file" $ \env -> do
             let code = Text.pack $ normalizeQQ $ [r|
@@ -381,7 +382,7 @@ spec = around withChannels $ parallel $ do
                 Just foo <- Graph.withGraph loc' $ runASTOp $ Graph.getNodeIdForMarker 0
                 Graph.getGraph $ loc' |> foo
             withResult res $ \(Graph.Graph nodes connections _ _ _) -> do
-                nodes `shouldBe` []
+                nodes `shouldBe` mempty
                 connections `shouldSatisfy` (not . null)
         it "autolayouts nodes on file load" $ \env -> do
             nodes <- evalEmp env $ do
@@ -2293,7 +2294,7 @@ spec = around withChannels $ parallel $ do
                     d = 1000
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
-                [(outRef, inRef)] <- Graph.getConnections loc
+                [Connection outRef inRef] <- Graph.getConnections loc
                 Graph.disconnect loc inRef
                 Just c <- find (\n -> n ^. Node.name == Just "c") <$> Graph.getNodes loc
                 Graph.renameNode loc (c ^. Node.nodeId) "d"
@@ -2494,8 +2495,8 @@ spec = around withChannels $ parallel $ do
             |]
             in specifyCodeChange initialCode initialCode $ \loc -> do
                 [node] <- Graph.getNodes loc
-                selfConn <- filter (\(o,i) -> o ^. PortRef.srcNodeId == i ^. PortRef.dstNodeId) <$> Graph.getConnections loc
-                liftIO $ selfConn `shouldBe` []
+                selfConn <- filter (\c -> c ^. Connection.src . PortRef.srcNodeId == c ^. Connection.dst . PortRef.dstNodeId) <$> Graph.getConnections loc
+                liftIO $ selfConn `shouldBe` mempty
         it "moves lines in a file" $ let
             initialCode = [r|
                 def main:
@@ -2512,8 +2513,8 @@ def main:
     bar = foo 8 c
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
-                Graph.substituteCodeFromPoints "/TestPath" [ Diff (Just (Point 0 2, Point 0 3)) "" Nothing
-                                                           , Diff (Just (Point 0 4, Point 0 4)) "    foo = a: b: a + b\n" Nothing
+                Graph.substituteCodeFromPoints "/TestPath" [ TextDiff (Just (Point 0 2, Point 0 3)) "" Nothing
+                                                           , TextDiff (Just (Point 0 4, Point 0 4)) "    foo = a: b: a + b\n" Nothing
                                                            ]
         it "rename from tuple to var" $ let
             initialCode = [r|
@@ -2771,5 +2772,5 @@ def main:
                 code' <- Graph.withUnit top $ use Graph.code
                 liftIO $ code' `shouldBe` normalize initialCode
                 nodes' <- Graph.getNodes bar'
-                liftIO $ nodes `shouldMatchList` nodes'
+                liftIO $ nodes `shouldBe` nodes'
                 Graph.collapseToFunction bar' $ map fromJust ids
