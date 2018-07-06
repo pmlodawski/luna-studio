@@ -248,10 +248,14 @@ getOffsetRelativeToFile ref = do
 getAllBeginningsOf :: GraphOp m => NodeRef -> m [Delta]
 getAllBeginningsOf ref = do
     succs <- ociSetToList =<< getLayer @IR.Users ref
+    uniSuccs <- mapM (\a -> target a >>= \b -> matchExpr b (return . show)) succs
+    succsSuccs <- mapM (\a -> target a >>= \b -> getLayer @IR.Users b >>= \c -> ociSetToList c) succs
+    uniSuccsSuccs <- mapM (\a -> target a >>= \b -> ASTRead.isRecord b) $ concat succsSuccs
+
     isFun <- ASTRead.isASGFunction ref
     -- FIXME[MM]: this looks fishy, did something change regarding
     -- function successors?
-    let succs' = if isFun then [] else succs
+    let succs' = if uniSuccsSuccs == [True] then [] else succs
     case succs' of
         [] -> do
             off <- use Graph.fileOffset

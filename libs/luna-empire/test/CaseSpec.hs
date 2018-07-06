@@ -9,6 +9,7 @@ import           Data.List                     (find, stripPrefix)
 import qualified Data.Map                      as Map
 import qualified LunaStudio.Data.Graph         as Graph
 import qualified Empire.Data.Graph             as Graph (breadcrumbHierarchy)
+import           LunaStudio.Data.Connection    (Connection(..))
 import           LunaStudio.Data.GraphLocation (GraphLocation(..))
 import qualified LunaStudio.Data.Node          as Node
 import           LunaStudio.Data.NodeMeta      (NodeMeta(..))
@@ -82,8 +83,8 @@ spec = around withChannels $ parallel $ do
                       Port.Port [] "output" TStar Port.Connected
                     ]
                 connections `shouldMatchList` [
-                      (OutPortRef (NodeLoc def $ inputEdge  ^. Node.nodeId) [Port.Projection 0],
-                       InPortRef  (NodeLoc def $ outputEdge ^. Node.nodeId) [])
+                      Connection (OutPortRef (NodeLoc def $ inputEdge  ^. Node.nodeId) [Port.Projection 0])
+                       (InPortRef  (NodeLoc def $ outputEdge ^. Node.nodeId) [])
                     ]
         {-xit "shows anonymous breadcrumbs in foo ((Acc a): b: a + b) 1 ((Vector a b c): a * b + c)" $ \env -> do-}
             {-u1 <- mkUUID-}

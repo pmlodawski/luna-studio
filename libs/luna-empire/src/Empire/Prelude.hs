@@ -26,7 +26,7 @@ module Empire.Prelude (module X, nameToString, pathNameToString, stringToName,
                       type IRSuccs, deepDelete, deepDeleteWithWhitelist,
                       pattern ClsASG, type ClsASG, pattern Metadata, inputs,
                       pattern ImportHub, pattern Import, pattern ImportSrc,
-                      irDeleteLink
+                      irDeleteLink, pattern Invalid
                       ) where
 
 import qualified Control.Monad.State.Layered as Layered
@@ -159,6 +159,7 @@ pattern Metadata a <- IR.UniTermMetadata (Ast.Metadata a)
 pattern ImportHub a <- IR.UniTermImportHub (Ast.ImportHub a)
 pattern Import doc e <- IR.UniTermImp (Ast.Imp doc e)
 pattern ImportSrc a <- IR.UniTermImportSource (Ast.ImportSource a)
+pattern Invalid a <- IR.UniTermInvalid (Ast.Invalid a)
 
 getAttr :: forall attr m. (Monad m, Attr.Getter attr m) => m attr
 putAttr :: forall attr m. (Monad m, Attr.Setter attr m) => attr -> m ()

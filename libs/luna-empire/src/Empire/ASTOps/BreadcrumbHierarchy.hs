@@ -68,6 +68,7 @@ childrenFromSeq tgtBeg edge = do
             nodeMeta <- use $ Graph.nodeCache . nodeMetaMap . at index
             forM nodeMeta $ AST.writeMeta ref . NodeMeta.toNodeMetaS
             return $ Map.singleton uid child
+        Invalid{} -> return def
         _ -> do
             Code.addCodeMarker beg edge
             childrenFromSeq tgtBeg edge

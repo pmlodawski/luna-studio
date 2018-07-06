@@ -258,7 +258,7 @@ moveLambdaArg p@(Port.Projection port : []) newPosition lambda = match lambda $ 
         as <- ptrListToList as'
         for_ (as ^? ix port) $ \alink -> do
             Just funBeg   <- Code.getOffsetRelativeToFile   lambda
-            initialOffset <- (+funBeg) <$> Code.getOffsetRelativeToTarget (coerce alink)
+            initialOffset <- (+(funBeg)) <$> Code.getOffsetRelativeToTarget (coerce alink)
             let newArgs = shiftPosition port newPosition as
             Just (lam' :: Expr (P.ASGFunction)) <- narrowTerm lambda
             l <- PtrList.fromList $ coerce newArgs
@@ -266,7 +266,7 @@ moveLambdaArg p@(Port.Projection port : []) newPosition lambda = match lambda $ 
             let a' = a & IR.args_Function .~ l
             putLayer @IR.Model lam' $ IR.UniTermFunction a'
             -- IR.modifyExprTerm lam' $ wrapped . IR.termASGFunction_args .~ fmap coerce newArgs
-            newOffset <- (+funBeg) <$> Code.getOffsetRelativeToTarget (coerce alink)
+            newOffset <- (+(funBeg)) <$> Code.getOffsetRelativeToTarget (coerce alink)
             ownOff    <- getLayer @SpanOffset alink
             ownLen    <- getLayer @SpanLength =<< source alink
             landingLen <- do

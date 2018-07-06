@@ -50,6 +50,7 @@ import qualified Language.Haskell.TH             as TH
 import           LunaStudio.API.AsyncUpdate      (AsyncUpdate(ResultUpdate))
 import qualified LunaStudio.API.Graph.NodeResultUpdate as NodeResult
 import           LunaStudio.Data.Breadcrumb      (Breadcrumb (..), BreadcrumbItem (Definition))
+import qualified LunaStudio.Data.Connection      as Connection
 import           LunaStudio.Data.Connection      (Connection (..))
 import           LunaStudio.Data.Diff            (Diff (..))
 import qualified LunaStudio.Data.Graph           as Graph
@@ -65,6 +66,7 @@ import           LunaStudio.Data.PortRef         (AnyPortRef (..), InPortRef (..
 import qualified LunaStudio.Data.PortRef         as PortRef
 import qualified LunaStudio.Data.Position        as Position
 import           LunaStudio.Data.Range           (Range (..))
+import           LunaStudio.Data.TextDiff        (TextDiff (..))
 import           LunaStudio.Data.TypeRep         (TypeRep (TStar))
 import           LunaStudio.Data.NodeValue
 import           LunaStudio.Data.Vector2               (Vector2 (..))
@@ -427,7 +429,7 @@ spec = around withChannels $ parallel $ do
                 Graph.substituteCode "TestPath" [(63, 64, "5")]
                 Graph.getNodeMeta loc' foo
             meta `shouldBe` Just (NodeMeta (Position.Position (Vector2 15.3 99.2)) True Nothing)
-        xit "changing order of ports twice does nothing" $ \env -> do
+        it "changing order of ports twice does nothing" $ \env -> do
             -- [MM]: don't know why some nodes have empty code only in `before` so this test fails
             (before, after) <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"
@@ -1164,7 +1166,7 @@ spec = around withChannels $ parallel $ do
                 Just foo <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 1
                 (_, output) <- Graph.withGraph (loc |> foo) $ runASTOp $ GraphBuilder.getEdgePortMapping
                 Graph.disconnect (loc |> foo) (inPortRef output [])
-        xit "updates literal node" $ let
+        it "updates literal node" $ let
             expectedCode = [r|
                 def main:
                     pi = 3.14

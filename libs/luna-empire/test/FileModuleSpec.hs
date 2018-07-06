@@ -117,7 +117,7 @@ specifyCodeChange initialCode expectedCode act env = do
 spec :: Spec
 spec = around withChannels $ parallel $ do
     describe "imports" $ do
-        xit "adds import" $
+        it "adds import" $
             let initialCode = multiFunCode
                 expectedCode = [r|
                     import Foo
@@ -135,7 +135,7 @@ spec = around withChannels $ parallel $ do
                     |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 Graph.addImports loc $ Set.singleton "Foo"
-        xit "adds import 2" $
+        it "adds import 2" $
             let initialCode = [r|
                     import A
                     import Std
@@ -169,7 +169,7 @@ spec = around withChannels $ parallel $ do
                     |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 Graph.addImports loc $ Set.singleton "Foo"
-        xit "adds import 3" $
+        it "adds import 3" $
             let initialCode = [r|
                     import Std.Geo
                     import Time
@@ -185,9 +185,9 @@ spec = around withChannels $ parallel $ do
                         print bar
                     |]
                 expectedCode = [r|
-                    import Foo
                     import Bar
                     import Baz.Quux
+                    import Foo
                     import Std.Geo
                     import Time
                     import XML
@@ -887,7 +887,7 @@ spec = around withChannels $ parallel $ do
                 Library.createLibrary Nothing "TestPath"
                 let loc = GraphLocation "TestPath" $ Breadcrumb []
                 Graph.loadCode loc multiFunCode
-                Graph.pasteText loc [Range 23 23] ["«3»def quux: None### META {\"metas\":[{\"marker\":3,\"meta\":{\"_displayResult\":false,\"_selectedVisualizer\":null,\"_position\":{\"fromPosition\":{\"_vector2_y\":0,\"_vector2_x\":0}}}}]}"]
+                Graph.pasteText loc [Range 23 23] ["«3»def quux: None\n### META {\"metas\":[{\"marker\":3,\"meta\":{\"_displayResult\":false,\"_selectedVisualizer\":null,\"_position\":{\"fromPosition\":{\"_vector2_y\":0,\"_vector2_x\":0}}}}]}"]
                 (,) <$> Graph.getNodes loc <*> Graph.getCode loc
             normalizeQQ (Text.unpack code) `shouldBe` normalizeQQ [r|
                 # Docs

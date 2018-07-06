@@ -382,6 +382,12 @@ isASGFunction expr = match expr $ \case
     ASGFunction{} -> return True
     _     -> return False
 
+isRecord :: GraphOp m => NodeRef -> m Bool
+-- isRecord expr = isJust <$> narrowTerm @IR.Record expr
+isRecord expr = match expr $ \case
+    ClsASG{} -> return True
+    _     -> return False
+
 isAnonymous :: GraphOp m => NodeRef -> m Bool
 isAnonymous expr = match expr $ \case
     Marked _ e -> isAnonymous =<< source e
