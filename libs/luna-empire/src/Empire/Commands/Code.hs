@@ -247,7 +247,7 @@ getOffsetRelativeToFile ref = do
 
 getAllBeginningsOf :: GraphOp m => NodeRef -> m [Delta]
 getAllBeginningsOf ref = do
-    succs <- ociSetToList =<< getLayer @IR.Users ref
+    succs <- fmap coerce <$> ociSetToList =<< getLayer @IR.Users ref
     uniSuccs <- mapM (\a -> target a >>= \b -> matchExpr b (return . show)) succs
     succsSuccs <- mapM (\a -> target a >>= \b -> getLayer @IR.Users b >>= \c -> ociSetToList c) succs
     uniSuccsSuccs <- mapM (\a -> target a >>= \b -> ASTRead.isRecord b) $ concat succsSuccs

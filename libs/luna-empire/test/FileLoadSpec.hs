@@ -427,7 +427,8 @@ spec = around withChannels $ parallel $ do
                 Just foo <- Graph.withGraph loc' $ runASTOp (Graph.getNodeIdForMarker 1)
                 Graph.setNodeMeta loc' foo (NodeMeta (Position.Position (Vector2 15.3 99.2)) True Nothing)
                 Graph.substituteCode "TestPath" [(63, 64, "5")]
-                Graph.getNodeMeta loc' foo
+                a <- Graph.getNodeMeta loc' foo
+                return $ NodeMeta.toNodeMeta <$> a
             meta `shouldBe` Just (NodeMeta (Position.Position (Vector2 15.3 99.2)) True Nothing)
         it "changing order of ports twice does nothing" $ \env -> do
             -- [MM]: don't know why some nodes have empty code only in `before` so this test fails

@@ -45,6 +45,7 @@ import qualified Data.Graph.Component.Node.Layer as Layer
 import qualified Data.Graph.Data.Layer.Layout as Layout
 import qualified Data.Graph.Component.Edge.Destruction as DestructEdge
 import qualified Data.Graph.Component.Node.Destruction as Destruct
+import qualified Data.Mutable.Class as Mutable
 -- import qualified OCI.Pass.Registry as Registry
 import qualified Luna.IR as IR
 import OCI.IR.Link.Class (type (*-*), Links)
@@ -181,8 +182,9 @@ matchExpr e f = Layer.read @IR.Model e >>= f
 ptrListToList :: MonadIO m => PtrList.ComponentVector comp layout -> m [Component comp layout]
 ptrListToList = PtrList.toList
 
-ociSetToList :: (MonadIO m, PtrSet.IsPtr a) => PtrSet.ComponentSet c l -> m [a]
-ociSetToList = Set.toList . (coerce :: PtrSet.ComponentSet c l -> PtrSet.UnmanagedPtrSet a)
+ociSetToList :: (MonadIO m) => PtrSet.ComponentSet c l -> m [Component c l]
+-- ociSetToList = Set.toList . (coerce :: PtrSet.ComponentSet c l -> PtrSet.UnmanagedPtrSet a)
+ociSetToList = Mutable.toList 
 
 generalize :: Coercible a b => a -> b
 generalize = coerce

@@ -7,6 +7,7 @@ import           Data.Char                       (intToDigit)
 import qualified Data.List                       as List
 import qualified Data.Map                        as Map
 import           Data.Maybe                      (catMaybes, maybeToList)
+import qualified Data.Mutable.Class              as Mutable
 import           Data.Text                       (Text)
 import qualified Data.Text                       as Text
 import           Data.Text.Span                  (SpacedSpan (..), leftSpacedSpan)
@@ -245,10 +246,10 @@ getNodeCode nid = do
 
 getDefault :: GraphOp m => NodeRef -> m (Maybe PortDefault)
 getDefault arg = match arg $ \case
-        IRString s       -> Just . Constant . TextValue <$> Vector.toList s
+        IRString s       -> Just . Constant . TextValue <$> Mutable.toList s
         IRNumber b i f   -> do
-            fracPart <- map (intToDigit . fromIntegral) <$> Vector.toList f
-            intPart  <- map (intToDigit . fromIntegral) <$> Vector.toList i
+            fracPart <- map (intToDigit . fromIntegral) <$> Mutable.toList f
+            intPart  <- map (intToDigit . fromIntegral) <$> Mutable.toList i
             pure $ Just $ Constant $ if fracPart == "" then IntValue $ read intPart else RealValue $ read intPart + read fracPart
         Cons "True"  _ -> pure $ Just $ Constant $ BoolValue True
         Cons "False" _ -> pure $ Just $ Constant $ BoolValue False
@@ -266,10 +267,10 @@ getPortState :: GraphOp m => NodeRef -> m PortState
 getPortState node = do
     isConnected <- ASTRead.isGraphNode node
     if isConnected then pure Connected else match node $ \case
-        IRString s     -> WithDefault . Constant . TextValue <$> Vector.toList s
+        IRString s     -> WithDefault . Constant . TextValue <$> Mutable.toList s
         IRNumber b i f   -> do
-            fracPart <- map (intToDigit . fromIntegral) <$> Vector.toList f
-            intPart  <- map (intToDigit . fromIntegral) <$> Vector.toList i
+            fracPart <- map (intToDigit . fromIntegral) <$> Mutable.toList f
+            intPart  <- map (intToDigit . fromIntegral) <$> Mutable.toList i
             pure $ WithDefault $ Constant $ if fracPart == "" then IntValue $ read intPart else RealValue $ read intPart + read fracPart
         Cons n _ -> do
             name <- pure $ nameToString n

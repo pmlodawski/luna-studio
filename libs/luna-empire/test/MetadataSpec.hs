@@ -217,8 +217,8 @@ spec = around withChannels $ parallel $ do
                     ref <- preuse $ Graph.codeMarkers . ix 1
                     mapM AST.readMeta ref
                 return (join zeroMeta, join oneMeta)
-            zeroMeta `shouldBe` Just (NodeMeta (Position.fromTuple (66,33)) False Nothing)
-            oneMeta  `shouldBe` Just (NodeMeta (Position.fromTuple (-66,-33)) False Nothing)
+            fmap NodeMeta.toNodeMeta zeroMeta `shouldBe` Just (NodeMeta (Position.fromTuple (66,33)) False Nothing)
+            fmap NodeMeta.toNodeMeta oneMeta  `shouldBe` Just (NodeMeta (Position.fromTuple (-66,-33)) False Nothing)
         it "loads crypto file" $ \env -> do
             nodes <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"

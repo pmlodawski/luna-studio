@@ -21,6 +21,7 @@ import qualified Data.List.Split                  as Split
 import           Data.Map                         (Map)
 import qualified Data.Map                         as Map
 import           Data.Maybe                       (fromMaybe, maybeToList)
+import qualified Data.Mutable.Class               as Mutable
 import qualified Data.Set                         as Set
 import           Data.Set                         (Set)
 import           Data.Text                        (Text)
@@ -70,7 +71,7 @@ import qualified Luna.IR                          as IR
 import qualified Luna.IR.Term.Ast.Class           as Term
 -- import qualified Luna.IR.Term.Unit                as Term
 import qualified Data.Graph.Data.Layer.Class as Layer
--- import qualified Luna.Project                     as Project
+import qualified Luna.Project                     as Project
 import           Luna.Syntax.Text.Analysis.SpanTree (Spanned(..))
 import qualified Luna.Syntax.Text.Analysis.SpanTree as SpanTree
 import qualified Luna.Syntax.Text.Lexer           as Lexer
@@ -1300,7 +1301,7 @@ functionLocation (GraphLocation file (Breadcrumb b))
 previousOffset :: GraphOp m => NodeRef -> m Delta
 previousOffset ref = do
     parents <- getLayer @IRSuccs ref
-    p <- MutableSet.toList parents
+    p <- Mutable.toList parents
     case p of
         [] -> return mempty
         [parent] -> do
@@ -1778,10 +1779,10 @@ filterPrimMethods = id
 -- qualNameToText = convert
 
 getImportPaths :: GraphLocation -> IO (Map.Map IR.Name FilePath)
-getImportPaths (GraphLocation file _) = return def -- do
-    -- currentProjPath <- Project.projectRootForFile =<< Path.parseAbsFile file
-    -- importPaths     <- Project.projectImportPaths currentProjPath
-    -- return $ Map.fromList importPaths
+getImportPaths (GraphLocation file _) = do
+    currentProjPath <- Project.projectRootForFile =<< Path.parseAbsFile file
+    importPaths     <- Project.projectImportPaths currentProjPath
+    return $ Map.fromList importPaths
 
 getSearcherHints :: GraphLocation -> Empire ImportsHints
 getSearcherHints loc = return def -- do

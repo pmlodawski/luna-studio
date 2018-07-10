@@ -43,6 +43,7 @@ import qualified Control.Monad.State.Layered as State
 import           LunaStudio.Data.PortDefault     (PortDefault (..), PortValue (..))
 
 import qualified Data.Text.Position              as Pos
+import qualified Data.Mutable.Class              as Mutable
 import qualified Data.Vector.Storable.Foreign    as Vector
 -- import qualified Luna.Builtin.Data.Function      as Function (compile)
 import qualified Luna.IR.Layer as Layer
@@ -383,21 +384,23 @@ parsePortDefault (Expression expr)          = do
     return ref
 parsePortDefault (Constant (IntValue  i))
     | i >= 0     = do
-        intPart <- Vector.fromList $ map (fromIntegral . digitToInt) $ show i
-        generalize <$> IR.number 10 intPart Vector.empty `withLength` (length $ show i)
+        intPart <- Mutable.fromList $ map (fromIntegral . digitToInt) $ show i
+        empty   <- Mutable.new
+        generalize <$> IR.number 10 intPart empty `withLength` (length $ show i)
     | otherwise = do
-        intPart <- Vector.fromList $ map (fromIntegral . digitToInt) $ show (abs i)
-        number <- generalize <$> IR.number 10 intPart Vector.empty `withLength` (length $ show $ abs i)
+        intPart <- Mutable.fromList $ map (fromIntegral . digitToInt) $ show (abs i)
+        empty   <- Mutable.new
+        number <- generalize <$> IR.number 10 intPart empty `withLength` (length $ show $ abs i)
         minus  <- generalize <$> IR.var Parser.uminus `withLength` 1
         app    <- generalize <$> IR.app minus number `withLength` (1 + length (show (abs i)))
         return app
 parsePortDefault (Constant (TextValue s)) = do
-    l <- Vector.fromList s
+    l <- Mutable.fromList s
     generalize <$> IR.rawString l `withLength` (length s)
 parsePortDefault (Constant (RealValue d)) = do
     let (int, frac) = properFraction d
-    intPart <- Vector.fromList $ map (fromIntegral . digitToInt) $ show int
-    fracPart <- Vector.fromList $ map (fromIntegral . digitToInt) $ show frac
+    intPart <- Mutable.fromList $ map (fromIntegral . digitToInt) $ show int
+    fracPart <- Mutable.fromList $ map (fromIntegral . digitToInt) $ show frac
     generalize <$> IR.number 10 intPart fracPart `withLength` (length $ show d)
 parsePortDefault (Constant (BoolValue b)) = generalize <$> IR.cons (convert $ show b) []  `withLength` (length $ show b)
 parsePortDefault d = throwM $ PortDefaultNotConstructibleException d

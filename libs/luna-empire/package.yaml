@@ -54,6 +54,7 @@ dependencies:
     - lifted-base
     - luna-core
     - luna-cpp-containers
+    - luna-data-storable
     - luna-data-tag
     - luna-data-typemap
     - luna-debug
@@ -63,6 +64,7 @@ dependencies:
     - luna-nested-containers
     - luna-memory-pool
     - luna-passes
+    - luna-project
     - luna-syntax-definition
     - luna-syntax-text-parser
     - luna-syntax-text-lexer
