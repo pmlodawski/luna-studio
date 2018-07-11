@@ -23,7 +23,6 @@ import           NodeEditor.React.Model.Visualization       (Mode (Focused, Full
                                                              Visualization (Visualization), VisualizationId, Visualizer (Visualizer),
                                                              VisualizerId, mode, selectedVisualizerId, visualizationId, visualizations,
                                                              visualizer, visualizers)
-import qualified NodeEditor.React.Model.Visualization       as Vis
 import           NodeEditor.State.Action                    (Action (begin, continue, end, update),
                                                              DocVisualizationActive (DocVisualizationActive),
                                                              VisualizationActive (VisualizationActive), docVisualizationActiveAction,

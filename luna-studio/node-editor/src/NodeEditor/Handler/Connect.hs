@@ -53,12 +53,9 @@ handleViewEvent evt = case evt ^. base of
         handleConnectionMouseDown def inPortRef connectionEnd
     Mouse e -> do
         let path = evt ^. View.path
-            isInPort  = last path == "InPort"
-            isOutPort = last path == "OutPort"
-            anyPortRef = if isInPort
-                then InPortRef'  $ View.getInPortRef evt
-                else OutPortRef' $ View.getOutPortRef evt
-        if isInPort || isOutPort then case e ^. View.type_ of
+            isPort = "InPort" `elem` path || "OutPort" `elem` path
+            anyPortRef = View.getAnyPortRef evt
+        if isPort then case e ^. View.type_ of
             "mouseup"     -> Just . continue $ handlePortMouseUp anyPortRef
             "mouseenter"  -> Just . continue $ snapToPort anyPortRef
             "mouseleave"  -> Just . continue $ cancelSnapToPort anyPortRef
