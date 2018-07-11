@@ -20,7 +20,7 @@ module Empire.ASTOp (
   , EmpirePass
   , Printer
   , defaultClsGraph
-  , defaultPMState
+  -- , defaultPMState
   -- , PMStack
   -- , getImportedModules
   -- , putNewIR
@@ -46,7 +46,7 @@ import qualified Data.TypeMap.MultiState as MultiState
 import           Data.IORef
 import qualified Data.Map             as Map
 import qualified Data.Set             as Set
-import           Empire.Data.Graph    (AST(..), ClsGraph, Graph, withVis)
+import           Empire.Data.Graph    (ClsGraph, Graph, pmState, pmScheduler, pmStage, userState, withVis)
 import qualified Empire.Data.Graph    as Graph
 import qualified Empire.Data.BreadcrumbHierarchy as BH
 import           Empire.Data.Layers   (Marker, Meta, TypeLayer, SpanLength, SpanOffset, attachEmpireLayers)
@@ -217,64 +217,47 @@ defaultClsAST = do
         return (foo, st)
     return (a, grState, scState)
 
-defaultPMState :: IO (Graph.PMState a)
-defaultPMState = do
-    (scState, grState) <- LunaGraph.encodeAndEval @PatternTransformation.EmpireStage $ do
-        ((), foo) <- Scheduler.runT $ return ()
-        st <- LunaGraph.getState
-        return (foo, st)
-    return $ Graph.PMState scState grState (error "PMState graph")
-
 
 defaultClsGraph :: IO ClsGraph
 defaultClsGraph = do
     (ast, scSt, grSt) <- defaultClsAST
-    let cls = Graph.ClsGraph (AST () (Graph.PMState grSt scSt (error "g"))) ast def def def def def
+    let cls = Graph.ClsGraph ast def def def def def
     return cls
 
 
-runASTOp :: forall a g m. (Graph.HasAST g)
-         => (StateT g (Pass.Pass PatternTransformation.EmpireStage EmpirePass) a)
+runASTOp :: forall a g.
+            StateT g (Pass.Pass PatternTransformation.EmpireStage EmpirePass) a
          -> Command g a
-runASTOp p = do
-    g <- get
-    m <- liftIO $ newIORef (error "emptyreturn")
+runASTOp p = runPass (return ()) p
 
-    (((g', ret), scSt), grSt) <- flip LunaGraph.run (g ^. Graph.ast . Graph.pmState . Graph.pmStage) $ flip Layered.runT (g ^. Graph.ast . Graph.pmState . Graph.pmScheduler) $ unwrap $ Scheduler.SchedulerT $ do
-        Scheduler.registerPassFromFunction__ @PatternTransformation.EmpireStage @EmpirePass $ do
-            (a, g') <- runStateT p g
-            liftIO $ writeIORef m (g', a)
-        Scheduler.runPassByType @EmpirePass
-        (g', a) <- liftIO $ readIORef m
-        return (g', a)
-    put $ g' & Graph.ast . Graph.pmState . Graph.pmScheduler .~ scSt
-    put $ g' & Graph.ast . Graph.pmState . Graph.pmStage .~ grSt
-    return ret
-
-runPass :: forall pass a g. (Graph.HasAST g, Typeable pass, _)
-         => _
-         -> (StateT g (Pass.Pass PatternTransformation.EmpireStage pass) a)
+runPass :: forall pass a b g. (Typeable pass, _)
+         => Scheduler.SchedulerT (LunaGraph.GraphT PatternTransformation.EmpireStage IO) b
+         -> StateT g (Pass.Pass PatternTransformation.EmpireStage pass) a
          -> Command g a
 runPass inits p = do
-    g <- get
+    g <- use userState
+    schState <- use $ pmState.pmScheduler
+    graphState <- use $ pmState.pmStage
     m <- liftIO $ newIORef (error "emptyreturn")
 
-    (((g', ret), scSt), grSt) <- flip LunaGraph.run (g ^. Graph.ast . Graph.pmState . Graph.pmStage) $ flip Layered.runT (g ^. Graph.ast . Graph.pmState . Graph.pmScheduler) $ unwrap $ Scheduler.SchedulerT $ do
+    ((ret, g', newGraphState), newState) <- liftIO $ flip LunaGraph.eval graphState $ flip Layered.runT schState $ unwrap $ do
         inits
         Scheduler.registerPassFromFunction__ @PatternTransformation.EmpireStage @pass $ do
             (a, g') <- runStateT p g
-            liftIO $ writeIORef m (g', a)
+            liftIO $ writeIORef m (a, g')
         Scheduler.runPassByType @pass
-        (g', a) <- liftIO $ readIORef m
-        return (g', a)
-    put $ g' & Graph.ast . Graph.pmState . Graph.pmScheduler .~ scSt
-    put $ g' & Graph.ast . Graph.pmState . Graph.pmStage .~ grSt
+        (a, g') <- liftIO $ readIORef m
+        newGraphState <- LunaGraph.getState
+        return (a, g', newGraphState)
+    userState .= g'
+    pmState.pmStage .= newGraphState
+    pmState.pmScheduler .= newState
     return ret
 
 
 runAliasAnalysis :: Command Graph ()
 runAliasAnalysis = do
-    root <- use $ Graph.breadcrumbHierarchy . BH.self
+    root <- use $ userState . Graph.breadcrumbHierarchy . BH.self
     let inits = do
             Scheduler.registerAttr @Root
             Scheduler.enableAttrByType @Root
@@ -284,7 +267,7 @@ runAliasAnalysis = do
             Scheduler.setAttr @PatternTransformation.ExprRoots $ PatternTransformation.ExprRoots [coerce root]
             Scheduler.registerAttr @UnresolvedVariables
             Scheduler.enableAttrByType @UnresolvedVariables
-    runPass @PatternTransformation.PatternTransformation inits $ StateT $ \a -> PatternTransformation.runPatternTransformation >> return ((), a)
+    runPass @PatternTransformation.PatternTransformation inits $ StateT $ \a -> PatternTransformation.runPatternTransformation >> return ((),a)
     runPass @AliasAnalysis.AliasAnalysis inits $ StateT $ \a -> Pass.definition @PatternTransformation.EmpireStage @AliasAnalysis.AliasAnalysis >> return ((), a)
 
 

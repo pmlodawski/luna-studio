@@ -17,6 +17,7 @@ import           Data.Text.IO            as Text
 import           Empire.Prelude
 
 import           Empire.Data.AST         (astExceptionFromException, astExceptionToException)
+import           Empire.Data.Graph       (CommandState(..), userState)
 import           Empire.ASTOp            (defaultClsGraph)
 import           Empire.Data.Library     (Library)
 import qualified Empire.Data.Library     as Library
@@ -26,14 +27,14 @@ import qualified Empire.Data.Project     as Project
 import           LunaStudio.Data.Library (LibraryId)
 import           LunaStudio.Data.Project (ProjectId)
 
-import           Empire.Empire           (Command, Empire)
+import           Empire.Empire           (Command, Empire, zoomCommand)
 import qualified Empire.Empire           as Empire
 import qualified Empire.Utils.IdGen      as IdGen
 
 createLibrary :: Maybe String -> FilePath -> Empire Library
 createLibrary name path = do
     library <- liftIO $ make name path
-    Empire.activeFiles . at path ?= library
+    userState . Empire.activeFiles . at path ?= library
     pure library
 
 make :: Maybe String -> FilePath -> IO Library
@@ -44,7 +45,7 @@ make name path = do
 
 listLibraries :: Empire [Library]
 listLibraries = do
-    files <- use Empire.activeFiles
+    files <- use $ userState . Empire.activeFiles
     pure $ Map.elems files
 
 data LibraryNotFoundException = LibraryNotFoundException FilePath
@@ -56,11 +57,12 @@ instance Exception LibraryNotFoundException where
 
 withLibrary :: FilePath -> Command Library a -> Empire a
 withLibrary file cmd = do
-    zoom (Empire.activeFiles . at file) $ do
-        libMay <- get
+    zoomCommand (Empire.activeFiles . at file) $ do
+        CommandState pm libMay <- get
         notifEnv <- ask
         case libMay of
             Nothing  -> throwM $ LibraryNotFoundException file
             Just lib -> do
-                let result = (_2 %~ Just) <$> Empire.runEmpire notifEnv lib cmd
-                Empire.empire $ const $ const result
+                (a, CommandState pm' st) <- liftIO $ Empire.runEmpire notifEnv (CommandState pm lib) cmd
+                put $ CommandState pm' $ Just st
+                pure a

@@ -803,7 +803,7 @@ spec = around withChannels $ parallel $ do
                 Graph.addNode (loc |>= foo) u1 "5" (atXPos (-10))
                 funIds <- (map (view Node.nodeId)) <$> Graph.getNodes loc
                 offsets <- Graph.withUnit loc $ do
-                    funs <- use Graph.clsFuns
+                    funs <- use $ Graph.userState . Graph.clsFuns
                     return $ map (\fun -> (fun ^. Graph.funName, fun ^. Graph.funGraph . Graph.fileOffset)) $ Map.elems funs
                 return offsets
             offsets `shouldMatchList` [("foo",10), ("bar",58), ("main",91)]
@@ -818,7 +818,7 @@ spec = around withChannels $ parallel $ do
                 Graph.addNode loc u1 "def aaa" (atXPos $ 1.5 * gapBetweenNodes)
                 funIds <- (map (view Node.nodeId)) <$> Graph.getNodes loc
                 offsets <- Graph.withUnit loc $ do
-                    funs <- use Graph.clsFuns
+                    funs <- use $ Graph.userState . Graph.clsFuns
                     return $ map (\fun -> (fun ^. Graph.funName, fun ^. Graph.funGraph . Graph.fileOffset)) $ Map.elems funs
                 return offsets
             offsets `shouldMatchList` [("foo",10), ("bar",39), ("aaa",65), ("main",94)]
@@ -832,7 +832,7 @@ spec = around withChannels $ parallel $ do
                 Graph.removeNodes loc [bar]
                 funIds <- (map (view Node.nodeId)) <$> Graph.getNodes loc
                 offsets <- Graph.withUnit loc $ do
-                    funs <- use Graph.clsFuns
+                    funs <- use $ Graph.userState . Graph.clsFuns
                     return $ map (\fun -> (fun ^. Graph.funName, fun ^. Graph.funGraph . Graph.fileOffset)) $ Map.elems funs
                 return offsets
             offsets `shouldMatchList` [("foo",10), ("main",39)]
@@ -847,7 +847,7 @@ spec = around withChannels $ parallel $ do
                 Graph.renameNode loc (bar ^. Node.nodeId) "qwerty"
                 funIds <- (map (view Node.nodeId)) <$> Graph.getNodes loc
                 offsets <- Graph.withUnit loc $ do
-                    funs <- use Graph.clsFuns
+                    funs <- use $ Graph.userState . Graph.clsFuns
                     return $ map (\fun -> (fun ^. Graph.funName, fun ^. Graph.funGraph . Graph.fileOffset)) $ Map.elems funs
                 return offsets
             offsets `shouldMatchList` [("foo", 10), ("qwerty", 39), ("main", 75)]

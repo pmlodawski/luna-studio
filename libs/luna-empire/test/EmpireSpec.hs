@@ -23,7 +23,7 @@ import           Empire.Commands.Library         (createLibrary, withLibrary)
 import qualified Empire.Commands.Typecheck       as Typecheck (run)
 import           Empire.Data.BreadcrumbHierarchy (BreadcrumbDoesNotExistException)
 import qualified Empire.Data.BreadcrumbHierarchy as BH
-import           Empire.Data.Graph               (ast, breadcrumbHierarchy)
+import           Empire.Data.Graph               (breadcrumbHierarchy, userState)
 import qualified Empire.Data.Graph               as Graph (code)
 import qualified Empire.Data.Library             as Library (body)
 import qualified Empire.Data.Library             as Library (body)
@@ -388,7 +388,7 @@ spec = around withChannels $ parallel $ do
                 let referenceConnection = (outPortRef u2 [], inPortRef out [])
                 uncurry (connectToInput loc') referenceConnection
                 Graph.removeNodes top [u1]
-                Graph.withGraph top $ use (breadcrumbHierarchy . BH.children)
+                Graph.withGraph top $ use (userState . breadcrumbHierarchy . BH.children)
             withResult res $ \mapping -> do
                 length mapping `shouldBe` 0
         it "removes `foo = a: a`" $ \env -> do
@@ -396,7 +396,7 @@ spec = around withChannels $ parallel $ do
             res <- evalEmp env $ do
                 Graph.addNode top u1 "foo = a: a" def
                 Graph.removeNodes top [u1]
-                Graph.withGraph top $ use (breadcrumbHierarchy . BH.children)
+                Graph.withGraph top $ use (userState . breadcrumbHierarchy . BH.children)
             withResult res $ \mapping -> do
                 length mapping `shouldBe` 0
         it "RHS of `foo = a: a` is Lam" $ \env -> do

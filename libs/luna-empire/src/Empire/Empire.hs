@@ -3,9 +3,11 @@
 
 module Empire.Empire where
 
+import qualified Data.Graph.Data.Graph.Class   as LunaGraph
 import           Empire.Data.AST               (SomeASTException)
-import           Empire.Data.Graph             (ClsGraph, Graph)
+import           Empire.Data.Graph             (CommandState (..), ClsGraph, Graph)
 import           Empire.Data.Library           (Library)
+import qualified Empire.Pass.PatternTransformation as PT
 import           Empire.Prelude                hiding (TypeRep)
 import           Empire.Prelude
 -- import           Luna.Builtin.Data.Function    (Function)
@@ -18,6 +20,7 @@ import           LunaStudio.Data.Node          (ExpressionNode, NodeId)
 import           LunaStudio.Data.PortDefault   (PortValue)
 import           LunaStudio.Data.Project       (ProjectId)
 import           LunaStudio.Data.TypeRep       (TypeRep)
+import qualified OCI.Pass.Management.Scheduler as Scheduler
 -- import           OCI.IR.Name                   (Name)
 
 import           Control.Concurrent.Async      (Async)
@@ -40,6 +43,7 @@ makeLenses ''SymbolMap
 
 instance Default SymbolMap where
     def = SymbolMap def def
+
 
 data Env = Env { _activeFiles       :: ActiveFiles
                , _activeInterpreter :: Bool
@@ -77,19 +81,28 @@ data InterpreterEnv = InterpreterEnv { _valuesCache :: Map NodeId [PortValue]
                                      }
 makeLenses ''InterpreterEnv
 
-type CommandStack s = ReaderT CommunicationEnv (StateT s IO)
-type Command s a = ReaderT CommunicationEnv (StateT s IO) a
+type CommandStack s = ReaderT CommunicationEnv (StateT (CommandState s) IO)
+
+type Command s a = ReaderT CommunicationEnv (StateT (CommandState s) IO) a
 
 type Empire a = Command Env a
 
-runEmpire :: CommunicationEnv -> s -> Command s a -> IO (a, s)
+runEmpire :: CommunicationEnv -> CommandState s -> Command s a -> IO (a, CommandState s)
 runEmpire notif st cmd = runStateT (runReaderT cmd notif) st
 
-execEmpire :: CommunicationEnv -> s -> Command s a -> IO a
+execEmpire :: CommunicationEnv -> CommandState s -> Command s a -> IO a
 execEmpire = fmap fst .:. runEmpire
 
-evalEmpire :: CommunicationEnv -> s -> Command s a -> IO s
+evalEmpire :: CommunicationEnv -> CommandState s -> Command s a -> IO (CommandState s)
 evalEmpire = fmap snd .:. runEmpire
 
-empire :: (CommunicationEnv -> s -> IO (a, s)) -> Command s a
+empire :: (CommunicationEnv -> CommandState s -> IO (a, CommandState s)) -> Command s a
 empire = ReaderT . fmap StateT
+
+zoomCommand :: Lens' s t -> Command t a -> Command s a
+zoomCommand l cmd = do
+    CommandState pmState s <- get
+    commEnv <- ask
+    (r, CommandState pm' newS) <- liftIO $ runEmpire commEnv (CommandState pmState $ s ^. l) cmd
+    put $ CommandState pm' $ s & l .~ newS
+    return r

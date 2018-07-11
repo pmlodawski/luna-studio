@@ -17,7 +17,7 @@ import           Data.Maybe                      (listToMaybe, maybe)
 import qualified Data.Map                        as Map
 import qualified Data.UUID.V4                    as UUID
 
-import           Empire.ASTOp                      (GraphOp, runASTOp, runAliasAnalysis, defaultPMState)
+import           Empire.ASTOp                      (GraphOp, runASTOp, runAliasAnalysis)
 import           Empire.ASTOps.BreadcrumbHierarchy as ASTBreadcrumb
 import           Empire.ASTOps.Parse               as ASTParse
 import           Empire.ASTOps.Read                as ASTRead
@@ -41,7 +41,7 @@ import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
 import           Data.Text.Span                  (SpacedSpan(..))
 
 import           Empire.Commands.Library         (withLibrary)
-import           Empire.Empire                   (Command, CommunicationEnv, Empire, runEmpire)
+import           Empire.Empire                   (Command, CommunicationEnv, Empire, runEmpire, zoomCommand)
 
 import qualified Luna.IR              as IR
 -- import qualified OCI.IR.Combinators   as IR
@@ -50,7 +50,7 @@ withBreadcrumb :: FilePath -> Breadcrumb BreadcrumbItem -> Command Graph.Graph a
 withBreadcrumb file breadcrumb actG actC = withLibrary file $ zoomBreadcrumb breadcrumb actG actC
 
 makeGraph :: NodeRef -> Maybe NodeId -> Command Library.Library (NodeId, Graph.Graph)
-makeGraph fun lastUUID = zoom Library.body $ makeGraphCls fun lastUUID
+makeGraph fun lastUUID = zoomCommand (Library.body) $ makeGraphCls fun lastUUID
 
 extractMarkers :: GraphOp m => NodeRef -> m [Word64]
 extractMarkers root = do
@@ -65,8 +65,7 @@ extractMarkers root = do
 
 makeGraphCls :: NodeRef -> Maybe NodeId -> Command Graph.ClsGraph (NodeId, Graph.Graph)
 makeGraphCls fun lastUUID = do
-    pmState   <- liftIO defaultPMState
-    nodeCache <- use Graph.clsNodeCache
+    nodeCache <- use $ Graph.userState . Graph.clsNodeCache
     uuid      <- maybe (liftIO UUID.nextRandom) return lastUUID
     (funName, ref, fileOffset) <- runASTOp $ do
         putLayer @Marker fun $ Just $ OutPortRef uuid mempty
@@ -76,13 +75,12 @@ makeGraphCls fun lastUUID = do
                 offset <- functionBlockStartRef asgFun
                 name   <- ASTRead.getVarName' =<< source n
                 return (nameToString name, asgFun, offset)
-    let ast   = Graph.AST () pmState
     let oldPortMapping = nodeCache ^. portMappingMap . at (uuid, Nothing)
     portMapping <- fromJustM (liftIO $ (,) <$> UUID.nextRandom <*> UUID.nextRandom) oldPortMapping
-    globalMarkers <- use Graph.clsCodeMarkers
+    globalMarkers <- use $ Graph.userState . Graph.clsCodeMarkers
     let bh    = BH.LamItem portMapping ref def
-        graph = Graph.Graph ast bh def globalMarkers def def fileOffset nodeCache
-    Graph.clsFuns . at uuid ?= Graph.FunctionGraph funName graph Map.empty
+        graph = Graph.Graph bh def globalMarkers def def fileOffset nodeCache
+    Graph.userState . Graph.clsFuns . at uuid ?= Graph.FunctionGraph funName graph Map.empty
     updatedCache <- withRootedFunction uuid $ do
         runASTOp $ do
             markers <- extractMarkers ref
@@ -94,21 +92,21 @@ makeGraphCls fun lastUUID = do
             ASTBreadcrumb.makeTopBreadcrumbHierarchy ref
             restorePortMappings (nodeCache ^. portMappingMap)
             use Graph.graphNodeCache
-    Graph.clsNodeCache .= updatedCache
+    Graph.userState . Graph.clsNodeCache .= updatedCache
     return (uuid, graph)
 
 runInternalBreadcrumb :: Breadcrumb BreadcrumbItem -> Command Graph.Graph a -> Command Graph.Graph a
 runInternalBreadcrumb breadcrumb act = do
     graph <- get
-    let  breadcrumbHierarchy = graph ^. Graph.breadcrumbHierarchy
+    let  breadcrumbHierarchy = graph ^. Graph.userState . Graph.breadcrumbHierarchy
     case breadcrumbHierarchy `navigateTo` breadcrumb of
         Just h -> do
             env <- ask
-            let newGraph = graph & Graph.breadcrumbHierarchy .~ h
+            let newGraph = graph & Graph.userState . Graph.breadcrumbHierarchy .~ h
             (res, state) <- liftIO $ runEmpire env newGraph act
-            let modified = replaceAt breadcrumb breadcrumbHierarchy $ state ^. Graph.breadcrumbHierarchy
+            let modified = replaceAt breadcrumb breadcrumbHierarchy $ state ^. Graph.userState . Graph.breadcrumbHierarchy
             mod <- maybe (throwM $ BH.BreadcrumbDoesNotExistException breadcrumb) return modified
-            let newGraph = state & Graph.breadcrumbHierarchy .~ mod
+            let newGraph = state & Graph.userState . Graph.breadcrumbHierarchy .~ mod
             put newGraph
             return res
         _ -> throwM $ BH.BreadcrumbDoesNotExistException breadcrumb
@@ -119,10 +117,11 @@ zoomInternalBreadcrumb breadcrumb act = runInternalBreadcrumb breadcrumb act
 
 withRootedFunction :: NodeId -> Command Graph.Graph a -> Command Graph.ClsGraph a
 withRootedFunction uuid act = do
-    graph    <- preuse (Graph.clsFuns . ix uuid . Graph.funGraph) <?!> BH.BreadcrumbDoesNotExistException (Breadcrumb [Definition uuid])
+    graph    <- preuse (Graph.userState . Graph.clsFuns . ix uuid . Graph.funGraph) <?!> BH.BreadcrumbDoesNotExistException (Breadcrumb [Definition uuid])
     env      <- ask
-    clsGraph <- get
-    functionMarkers <- use $ Graph.clsFuns . ix uuid . Graph.funMarkers
+    state <- get
+    clsGraph <- use Graph.userState
+    functionMarkers <- use $ Graph.userState . Graph.clsFuns . ix uuid . Graph.funMarkers
     let properGraph = let clsCode        = clsGraph ^. Graph.code
                           clsCodeMarkers = clsGraph ^. Graph.clsCodeMarkers
                           clsParseError  = clsGraph ^. Graph.clsParseError
@@ -130,13 +129,13 @@ withRootedFunction uuid act = do
                                & Graph.codeMarkers .~ functionMarkers
                                & Graph.globalMarkers .~ clsCodeMarkers
                                & Graph.parseError .~ clsParseError
-    ((res, len), newGraph) <- liftIO $ runEmpire env properGraph $ do
+    ((res, len), newGraph) <- liftIO $ runEmpire env (state & Graph.userState .~ properGraph) $ do
         a <- act
         len <- runASTOp $ do
             ref <- ASTRead.getCurrentASTRef
             getLayer @SpanLength ref
         return (a, len)
-    Graph.clsFuns . ix uuid . Graph.funGraph .= newGraph
+    Graph.userState . Graph.clsFuns . ix uuid . Graph.funGraph .= newGraph ^. Graph.userState
     diffs <- runASTOp $ do
         cls <- use Graph.clsClass
         funs <- ASTRead.classFunctions cls
@@ -162,11 +161,11 @@ withRootedFunction uuid act = do
                     else return Nothing
     let diff = fromMaybe (error "function not in AST?") $ listToMaybe $ catMaybes diffs
         funOffset = properGraph ^. Graph.fileOffset
-    Graph.clsFuns . traverse . Graph.funGraph . Graph.fileOffset %= (\a -> if a > funOffset then a + diff else a)
-    Graph.clsFuns . ix uuid . Graph.funMarkers .= newGraph ^. Graph.codeMarkers
-    Graph.clsCodeMarkers %= \m -> Map.union m (newGraph ^. Graph.codeMarkers)
-    Graph.code           .= newGraph ^. Graph.code
-    Graph.clsParseError  .= newGraph ^. Graph.parseError
+    Graph.userState . Graph.clsFuns . traverse . Graph.funGraph . Graph.fileOffset %= (\a -> if a > funOffset then a + diff else a)
+    Graph.userState . Graph.clsFuns . ix uuid . Graph.funMarkers .= newGraph ^. Graph.userState . Graph.codeMarkers
+    Graph.userState . Graph.clsCodeMarkers %= \m -> Map.union m (newGraph ^. Graph.userState . Graph.codeMarkers)
+    Graph.userState . Graph.code           .= newGraph ^. Graph.userState . Graph.code
+    Graph.userState . Graph.clsParseError  .= newGraph ^. Graph.userState . Graph.parseError
     return res
 
 zoomBreadcrumb' :: Breadcrumb BreadcrumbItem -> Command Graph.Graph a -> Command Graph.ClsGraph a -> Command Graph.ClsGraph a
@@ -176,4 +175,4 @@ zoomBreadcrumb' breadcrumb@(Breadcrumb (Definition uuid : rest)) actG _actC =
 zoomBreadcrumb' breadcrumb _ _ = throwM $ BH.BreadcrumbDoesNotExistException breadcrumb
 
 zoomBreadcrumb :: Breadcrumb BreadcrumbItem -> Command Graph.Graph a -> Command Graph.ClsGraph a -> Command Library.Library a
-zoomBreadcrumb = zoom Library.body .:. zoomBreadcrumb'
+zoomBreadcrumb = zoomCommand Library.body .:. zoomBreadcrumb'

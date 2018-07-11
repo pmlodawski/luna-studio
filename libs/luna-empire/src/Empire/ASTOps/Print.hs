@@ -18,7 +18,7 @@ import           Empire.Prelude
 import           Empire.ASTOp                   (ASTOpReq, Printer, GraphOp, match)
 import qualified Empire.ASTOps.Read             as ASTRead
 import           Empire.Data.AST                (EdgeRef, NodeRef)
-import           Empire.Data.Graph              (Graph)
+import           Empire.Data.Graph              (CommandState, Graph)
 import qualified Language.Symbol.Operator.Assoc as Assoc
 import qualified Language.Symbol.Operator.Prec  as Prec
 import qualified Luna.IR                        as IR

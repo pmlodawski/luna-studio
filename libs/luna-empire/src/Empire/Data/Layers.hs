@@ -71,8 +71,6 @@ instance Layer SpanLength where
     type Layout SpanLength layout = Layout.Get SpanLength layout
     manager = Layer.staticManager
 
-instance Default a => Default1 (Layer.Simple a) where
-    def1 = wrap def
 
 attachEmpireLayers :: _ => m ()
 attachEmpireLayers = return ()

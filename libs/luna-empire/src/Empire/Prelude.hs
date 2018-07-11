@@ -282,4 +282,4 @@ GTraversable.derive ''OutPortRefTemplate
 GTraversable.derive ''NodeMetaTemplate
 GTraversable.derive ''Position
 GTraversable.derive ''Vector2
-GTraversable.derive ''UUID
+-- GTraversable.derive ''UUID

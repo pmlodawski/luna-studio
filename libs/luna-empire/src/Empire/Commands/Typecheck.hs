@@ -147,9 +147,10 @@ updateValues loc scope = return [] -- do
 
 flushCache :: Command InterpreterEnv ()
 flushCache = do
-    errorsCache .= def
-    valuesCache .= def
-    nodesCache  .= def
+    -- errorsCache .= def
+    -- valuesCache .= def
+    -- nodesCache  .= def
+    return ()
 
 -- newtype Scope = Scope CompiledModules
 -- makeWrapped ''Scope
@@ -200,9 +201,10 @@ flushCache = do
 
 stop :: Command InterpreterEnv ()
 stop = do
+    return ()
     -- cln       <- use cleanUp
     -- threads   <- use listeners
-    listeners .= []
+    -- listeners .= []
     -- liftIO $ mapM_ Async.uninterruptibleCancel threads
     -- liftIO cln
 

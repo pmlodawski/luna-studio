@@ -35,7 +35,7 @@ import           Data.UUID.V4                  (nextRandom)
 import qualified Empire.Commands.Graph         as Graph (addNode, connect, getNodes, loadCode)
 import           Empire.Commands.Library       (createLibrary, listLibraries, withLibrary)
 import           Empire.Data.AST               ()
-import           Empire.Data.Graph             (AST (..), ClsGraph, Graph)
+import           Empire.Data.Graph             (CommandState(..), ClsGraph, Graph, defaultPMState, userState)
 import qualified Empire.Data.Library           as Library (body, path)
 import           Empire.Empire                 (CommunicationEnv (..), Empire, Env, Error, InterpreterEnv (..), runEmpire)
 import           Empire.Prelude                hiding (mapping, toList, (|>))
@@ -53,26 +53,28 @@ import           LunaStudio.Data.PortRef       (AnyPortRef(InPortRef'), InPortRe
 import           Test.Hspec                    (expectationFailure)
 
 
-runEmp :: CommunicationEnv -> (Given GraphLocation => Empire a) -> IO (a, Env)
-runEmp env act = runEmpire env def $ do
-    _ <- createLibrary (Just "/TestFile") "/TestFile"
-    let toLoc = GraphLocation "/TestFile"
-    Graph.loadCode (toLoc (Breadcrumb [])) "def main:\n    None"
-    [node] <- Graph.getNodes (toLoc (Breadcrumb []))
-    -- uuid <- mkUUID
-    -- Graph.addNode (toLoc $ Breadcrumb []) uuid "def main" def
-    -- [node] <- Graph.getNodes (toLoc (Breadcrumb []))
-    give (toLoc $ Breadcrumb [Definition (node ^. Node.nodeId)]) act
+runEmp :: CommunicationEnv -> (Given GraphLocation => Empire a) -> IO (a, CommandState Env)
+runEmp env act = do
+    pm <- defaultPMState
+    runEmpire env (CommandState pm def) $ do
+        _ <- createLibrary (Just "/TestFile") "/TestFile"
+        let toLoc = GraphLocation "/TestFile"
+        Graph.loadCode (toLoc (Breadcrumb [])) "def main:\n    None"
+        [node] <- Graph.getNodes (toLoc (Breadcrumb []))
+        -- uuid <- mkUUID
+        -- Graph.addNode (toLoc $ Breadcrumb []) uuid "def main" def
+        -- [node] <- Graph.getNodes (toLoc (Breadcrumb []))
+        give (toLoc $ Breadcrumb [Definition (node ^. Node.nodeId)]) act
 
 evalEmp :: CommunicationEnv -> (Given GraphLocation => Empire a) -> IO a
 evalEmp env act = fst <$> runEmp env act
 
-runEmp' :: CommunicationEnv -> Env -> ClsGraph ->
-              (Given GraphLocation => Empire a) -> IO (a, Env)
+runEmp' :: CommunicationEnv -> CommandState Env -> ClsGraph ->
+              (Given GraphLocation => Empire a) -> IO (a, CommandState Env)
 runEmp' env st newGraph act = runEmpire env st $ do
     lib <- head <$> listLibraries
     let path = lib ^. Library.path
-    withLibrary path $ Library.body .= newGraph
+    withLibrary path $ userState . Library.body .= newGraph
     let toLoc = GraphLocation path
     give (toLoc $ Breadcrumb []) act
 

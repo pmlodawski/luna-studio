@@ -41,7 +41,7 @@ import qualified Empire.Commands.Library         as Library
 -- import qualified Empire.Commands.Typecheck       as Typecheck (Scope(..), createStdlib, run)
 import           Empire.Data.AST                 (SomeASTException)
 import qualified Empire.Data.BreadcrumbHierarchy as BH
-import qualified Empire.Data.Graph               as Graph (breadcrumbHierarchy, code, codeMarkers, nodeCache)
+import qualified Empire.Data.Graph               as Graph (breadcrumbHierarchy, code, codeMarkers, nodeCache, userState)
 import qualified Empire.Data.Library             as Library (body)
 import           Empire.Empire                   (CommunicationEnv (..), InterpreterEnv(..), Empire) -- , modules)
 import qualified Language.Haskell.TH             as TH
@@ -141,9 +141,9 @@ specifyCodeChange initialCode expectedCode act env = do
         [main] <- filter (\n -> n ^. Node.name == Just "main") <$> Graph.getNodes loc
         let loc' = GraphLocation "/TestPath" $ Breadcrumb [Definition (main ^. Node.nodeId)]
         (nodeIds, toplevel) <- Graph.withGraph loc' $ do
-            markers  <- fmap fromIntegral . Map.keys <$> use Graph.codeMarkers
+            markers  <- fmap fromIntegral . Map.keys <$> use (Graph.userState . Graph.codeMarkers)
             ids      <- runASTOp $ forM markers $ \i -> (i,) <$> Graph.getNodeIdForMarker i
-            toplevel <- uses Graph.breadcrumbHierarchy BH.topLevelIDs
+            toplevel <- uses (Graph.userState . Graph.breadcrumbHierarchy) BH.topLevelIDs
             return (ids, toplevel)
         forM nodeIds $ \(i, nodeIdMay) ->
             forM nodeIdMay $ \nodeId -> do

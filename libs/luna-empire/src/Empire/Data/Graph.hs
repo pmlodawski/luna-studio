@@ -58,9 +58,30 @@ import           Web.Browser                (openBrowser)
 
 type MarkerId = ID
 
+data CommandState s = CommandState { _pmState   :: PMState
+                                   , _userState :: s
+                                   }
 
-data Graph = Graph { _graphAst              :: AST Graph
-                   , _breadcrumbHierarchy   :: LamItem
+data PMState = PMState { _pmScheduler :: Scheduler.State
+                       , _pmStage     :: LunaGraph.State PT.EmpireStage
+                       }
+
+makeLenses ''CommandState
+makeLenses ''PMState
+
+defaultPMState :: IO PMState
+defaultPMState = do
+    (scState, grState) <- LunaGraph.encodeAndEval @PT.EmpireStage $ do
+        ((), schedulerState) <- Scheduler.runT $ return ()
+        graphState <- LunaGraph.getState
+        return (schedulerState, graphState)
+    return $ PMState scState grState
+
+
+instance Show PMState where show _ = "PMState"
+
+
+data Graph = Graph { _breadcrumbHierarchy   :: LamItem
                    , _codeMarkers           :: Map MarkerId NodeRef
                    , _globalMarkers         :: Map MarkerId NodeRef
                    , _graphCode             :: Text
@@ -74,8 +95,7 @@ data FunctionGraph = FunctionGraph { _funName    :: String
                                    , _funMarkers :: Map MarkerId NodeRef
                                    } deriving Show
 
-data ClsGraph = ClsGraph { _clsAst         :: AST ClsGraph
-                         , _clsClass       :: NodeRef
+data ClsGraph = ClsGraph { _clsClass       :: NodeRef
                          , _clsCodeMarkers :: Map MarkerId NodeRef
                          , _clsCode        :: Text
                          , _clsParseError  :: Maybe SomeException
@@ -83,21 +103,31 @@ data ClsGraph = ClsGraph { _clsAst         :: AST ClsGraph
                          , _clsNodeCache   :: NodeCache
                          } deriving Show
 
-data PMState g = PMState { _pmScheduler :: Scheduler.State
-                         , _pmStage     :: LunaGraph.State PT.EmpireStage
-                         , _pmGraph     :: g
-                         }
-
-data AST g = AST { _ir      :: ()
-                 , _pmState :: PMState g
-                 }
-
-instance Show (AST g) where
-   show _ = "AST"
-
 instance MonadState s m => MonadState s (DepState.StateT b m) where
     get = lift   get
     put = lift . put
+
+makeLenses ''Graph
+makeLenses ''FunctionGraph
+makeLenses ''ClsGraph
+
+-- breadcrumbHierarchy :: Lens' (CommandState Graph) LamItem
+-- breadcrumbHierarchy = userState . breadcrumbHierarchyOld
+
+-- codeMarkers :: Lens' (CommandState Graph) (Map MarkerId NodeRef)
+-- codeMarkers = userState . codeMarkersOld
+
+-- globalMarkers :: Lens' (CommandState Graph) (Map MarkerId NodeRef)
+-- globalMarkers = userState . globalMarkersOld
+
+-- fileOffset :: Lens' (CommandState Graph) Delta
+-- fileOffset = userState . fileOffsetOld
+
+-- clsClass :: Lens' (CommandState ClsGraph) NodeRef
+-- clsClass = userState . clsClassOld
+
+-- clsFuns :: Lens' (CommandState ClsGraph) (Map NodeId FunctionGraph)
+-- clsFuns = userState . clsFunsOld
 
 -- instance MonadState s m => MonadState s (PassManager.PassManager m) where
 --     get = lift   get
@@ -217,44 +247,27 @@ snapshot = return ()
 --     return (ast, cls)
 
 
-defaultPMState :: IO (PMState a)
-defaultPMState = undefined
-
-emptyClsAST :: IO (AST ClsGraph)
-emptyClsAST = undefined
-
-defaultClsAST :: IO (AST ClsGraph, SomeExpr)
-defaultClsAST = undefined
-
-makeLenses ''Graph
-makeLenses ''FunctionGraph
-makeLenses ''ClsGraph
-makeLenses ''AST
-makeLenses ''PMState
 
 class HasCode g where
     code :: Lens' g Text
 
-instance HasCode Graph where
+instance HasCode (Graph) where
     code = graphCode
 
-instance HasCode ClsGraph where
+instance HasCode (ClsGraph) where
     code = clsCode
+
+instance HasCode a => HasCode (CommandState a) where
+    code = userState . code
 
 class HasNodeCache g where
     nodeCache :: Lens' g NodeCache
 
-instance HasNodeCache Graph where
+instance HasNodeCache (Graph) where
     nodeCache = graphNodeCache
 
-instance HasNodeCache ClsGraph where
+instance HasNodeCache (ClsGraph) where
     nodeCache = clsNodeCache
 
-class HasAST g where
-    ast :: Lens' g (AST g)
-
-instance HasAST Graph where
-    ast = graphAst
-
-instance HasAST ClsGraph where
-    ast = clsAst
+instance HasNodeCache a => HasNodeCache (CommandState a) where
+    nodeCache = userState . nodeCache

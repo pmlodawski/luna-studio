@@ -28,6 +28,7 @@ import           Data.Text.Position      (Delta)
 import           Data.Text.Span          (SpacedSpan(..), leftSpacedSpan)
 import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
 import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan, realSpan)
+import           Data.Graph.Component.Node.Layer.PortMarker ()
 -- import Data.TypeDesc
 
 import qualified Data.Map   as Map
