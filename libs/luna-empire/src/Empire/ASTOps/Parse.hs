@@ -60,6 +60,8 @@ import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
 import           Luna.Syntax.Text.Parser.Data.Invalid  (Invalids)
 import qualified Luna.Syntax.Text.Parser.Data.Name.Special as Parser (uminus)
 import qualified Data.Graph.Data.Graph.Class as LunaGraph
+import           Luna.Pass.Data.Stage (Stage)
+
 import qualified Empire.Pass.PatternTransformation            as PT
 import qualified Luna.Pass.Attr as Attr
 -- import qualified Luna.Syntax.Text.Parser.Marker  as Parser (MarkedExprMap(..))
@@ -158,7 +160,7 @@ passConverter :: (stage1 ~ stage2) => Pass.Pass stage1 pass1 a -> Pass.Pass stag
 passConverter = unsafeCoerce
 
 
-runParser :: Token.Parser (IRBS IR.SomeTerm) -> Text -> IO (NodeRef, LunaGraph.State PT.EmpireStage, Scheduler.State, MarkedExprMap)
+runParser :: Token.Parser (IRBS IR.SomeTerm) -> Text -> IO (NodeRef, LunaGraph.State Stage, Scheduler.State, MarkedExprMap)
 runParser parser input = do
     -- r <- newIORef (error "empty runParser")
     -- st <- runPass' $ do
@@ -184,10 +186,10 @@ runParser parser input = do
     -- (ref, cs) <- readIORef r
     -- return (generalize ref, st, cs)
     -- putStrLn "foo"
-    (((ir, m), scState), grState) <- LunaGraph.encodeAndEval @PT.EmpireStage $ do
+    (((ir, m), scState), grState) <- LunaGraph.encodeAndEval @Stage $ do
         foo <- Scheduler.runT $ do
             ref <- liftIO $ newIORef (error "emptyreturn")
-            Scheduler.registerPassFromFunction__ @PT.EmpireStage @EmpirePass $ do
+            Scheduler.registerPassFromFunction__ @Stage @EmpirePass $ do
                 ((ir,scope), m) <- passConverter $ flip Parser.runParser__ (convert input) $ do
                     irb   <- parser
                     scope <- State.get @Scope
@@ -240,7 +242,7 @@ instance Convertible Text Source.Source where
     convert t = Source.Source (convertVia @String t)
 
 -- runProperParser :: Text.Text -> IO (NodeRef, IR.Rooted NodeRef, MarkedExprMap)
-runProperParser :: Text.Text -> IO (NodeRef, LunaGraph.State PT.EmpireStage, Scheduler.State, MarkedExprMap)
+runProperParser :: Text.Text -> IO (NodeRef, LunaGraph.State Stage, Scheduler.State, MarkedExprMap)
 runProperParser code = runParser Parsing.unit' code `catchAll` (\e -> throwM $ SomeParserException e) -- do
     -- runPM $ do
     --     parserBoilerplate
@@ -314,7 +316,7 @@ runFunHackParser expr parsing = do
     parse <- runFunParser input
     return (view _1 parse, input)
 
-runFunParser :: Text.Text -> Command ClsGraph (NodeRef, LunaGraph.State PT.EmpireStage, Scheduler.State, MarkedExprMap)
+runFunParser :: Text.Text -> Command ClsGraph (NodeRef, LunaGraph.State Stage, Scheduler.State, MarkedExprMap)
 runFunParser expr = liftIO $
     runParser (Parsing.possiblyDocumented Parsing.func) expr
         `catchAll` (\e -> throwM $ SomeParserException e)

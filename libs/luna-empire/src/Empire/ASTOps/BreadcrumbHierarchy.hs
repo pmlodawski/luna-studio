@@ -62,7 +62,7 @@ childrenFromSeq tgtBeg edge = do
                     ASTBuilder.attachNodeMarkers uid []      =<< source l
                     source r
                 _ -> do
-                    putLayer @Marker expr' $ Just $ OutPortRef uid mempty
+                    putLayer @Marker expr' $ Just $ toPortMarker' $ OutPortRef (convert uid) []
                     return expr'
             child    <- prepareChild ref childTarget
             nodeMeta <- use $ Graph.nodeCache . nodeMetaMap . at index

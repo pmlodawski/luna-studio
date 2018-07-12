@@ -8,9 +8,10 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 
 module Empire.Data.Layers (
-    Marker
+  --   Marker
+    TypeLayer
+  , Marker
   , Meta
-  , TypeLayer
   , SpanLength
   , SpanOffset
   , attachEmpireLayers
@@ -41,35 +42,40 @@ import qualified Data.Graph.Data.Layer.Layout                as Layout
 import           Type.Any
 import           Data.Text.Position             (Delta(..))
 import qualified Prologue                       as Prologue (mempty)
-
+import Data.Graph.Component.Node.Layer.PortMarker (PortMarker)
+import Data.Graph.Component.Node.Layer.NodeMeta (Meta)
+import Data.Graph.Component.Node.Layer.SpanLength (SpanLength)
+import Data.Graph.Component.Node.Layer.SpanOffset (SpanOffset)
 
 type TypeLayer = Layer.Type
+type Marker = PortMarker
+-- type Meta = NodeMeta
 
 -- instance DynamicProvider1 Maybe
 
-data Marker
-instance Layer Marker where
-    type Cons Marker = Layer.Simple (Maybe OutPortRefS)
-    type Layout Marker layout = Layout.Get Marker layout
-    manager = Layer.staticManager
+-- data Marker
+-- instance Layer Marker where
+--     type Cons Marker = Layer.Simple (Maybe OutPortRefS)
+--     type Layout Marker layout = Layout.Get Marker layout
+--     manager = Layer.staticManager
 
-data Meta
-instance Layer Meta where
-    type Cons Meta = Layer.Simple (Maybe NodeMetaS)
-    type Layout Meta layout = Layout.Get Meta layout
-    manager = Layer.staticManager
+-- data Meta
+-- instance Layer Meta where
+--     type Cons Meta = Layer.Simple (Maybe NodeMetaS)
+--     type Layout Meta layout = Layout.Get Meta layout
+--     manager = Layer.staticManager
 
-data SpanOffset
-instance Layer SpanOffset where
-    type Cons SpanOffset = Layer.Simple Delta
-    type Layout SpanOffset layout = Layout.Get SpanOffset layout
-    manager = Layer.staticManager
+-- data SpanOffset
+-- instance Layer SpanOffset where
+--     type Cons SpanOffset = Layer.Simple Delta
+--     type Layout SpanOffset layout = Layout.Get SpanOffset layout
+--     manager = Layer.staticManager
 
-data SpanLength
-instance Layer SpanLength where
-    type Cons SpanLength = Layer.Simple Delta
-    type Layout SpanLength layout = Layout.Get SpanLength layout
-    manager = Layer.staticManager
+-- data SpanLength
+-- instance Layer SpanLength where
+--     type Cons SpanLength = Layer.Simple Delta
+--     type Layout SpanLength layout = Layout.Get SpanLength layout
+--     manager = Layer.staticManager
 
 
 attachEmpireLayers :: _ => m ()

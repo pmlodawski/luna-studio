@@ -9,7 +9,9 @@ import           Data.Text.Position (Delta)
 import           Empire.ASTOp       (GraphOp, match)
 import qualified Empire.ASTOps.Read as Read
 import           Empire.Data.AST    (EdgeRef, NodeRef, NotAppException (..))
-import           Empire.Data.Layers (SpanLength, SpanOffset)
+-- import           Empire.Data.Layers (SpanLength, SpanOffset)
+import Data.Graph.Component.Node.Layer.SpanLength (SpanLength)
+import Data.Graph.Component.Node.Layer.SpanOffset (SpanOffset)
 
 import qualified Luna.IR            as IR
 -- import           Luna.IR.Term.Uni

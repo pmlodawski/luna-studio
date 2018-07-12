@@ -22,6 +22,8 @@ import qualified Safe
 
 import           LunaStudio.Data.NodeId             (NodeId)
 import qualified LunaStudio.Data.PortRef            as PortRef
+import qualified Data.Graph.Component.Node.Layer.PortMarker as PortMarker
+
 import           LunaStudio.Data.Port               (OutPortId(..), OutPortIndex(..))
 import qualified LunaStudio.Data.NodeLoc            as NodeLoc
 import           Empire.ASTOp                       (ClassOp, GraphOp, ASTOp, match)
@@ -113,7 +115,7 @@ isGraphNode = fmap isJust . getNodeId
 
 getNodeId :: _ => NodeRef -> m (Maybe NodeId)
 getNodeId node = do
-    rootNodeId <- preview (_Just . PortRef.srcNodeLoc) <$> getLayer @Marker node
+    rootNodeId <- preview (_Just . PortMarker.srcNodeLoc) <$> getLayer @Marker node
     varNodeId  <- (getVarNode node >>= getNodeId) `catch` (\(_e :: NotUnifyException) -> return Nothing)
     varsInside <- (getVarsInside =<< getVarNode node) `catch` (\(_e :: NotUnifyException) -> return [])
     varsNodeIds <- mapM getNodeId varsInside

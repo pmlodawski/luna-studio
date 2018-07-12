@@ -38,6 +38,8 @@ import qualified Empire.Pass.PatternTransformation            as PT
 import           LunaStudio.Data.Node                   (NodeId)
 import           LunaStudio.Data.NodeCache
 import           LunaStudio.Data.NodeMeta               (NodeMeta)
+import           Luna.Pass.Data.Stage (Stage)
+
 -- import           Luna.Syntax.Text.Parser.Errors         (Invalids)
 -- import qualified Luna.Syntax.Text.Parser.Marker         as Luna
 -- import qualified Luna.Syntax.Text.Parser.Parser         as Parser
@@ -63,7 +65,7 @@ data CommandState s = CommandState { _pmState   :: PMState
                                    }
 
 data PMState = PMState { _pmScheduler :: Scheduler.State
-                       , _pmStage     :: LunaGraph.State PT.EmpireStage
+                       , _pmStage     :: LunaGraph.State Stage
                        }
 
 makeLenses ''CommandState
@@ -71,7 +73,7 @@ makeLenses ''PMState
 
 defaultPMState :: IO PMState
 defaultPMState = do
-    (scState, grState) <- LunaGraph.encodeAndEval @PT.EmpireStage $ do
+    (scState, grState) <- LunaGraph.encodeAndEval @Stage $ do
         ((), schedulerState) <- Scheduler.runT $ return ()
         graphState <- LunaGraph.getState
         return (schedulerState, graphState)

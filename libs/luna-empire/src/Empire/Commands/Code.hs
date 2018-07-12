@@ -28,7 +28,9 @@ import           Empire.ASTOps.Read      as ASTRead
 import qualified Luna.IR                 as IR
 -- import qualified OCI.IR.Combinators      as IR (replace, substitute, replaceSource)
 import           Data.Text.Position      (Delta)
-import           Empire.Data.Layers      (SpanOffset, SpanLength)
+-- import           Empire.Data.Layers      (SpanOffset, SpanLength)
+import Data.Graph.Component.Node.Layer.SpanLength (SpanLength)
+import Data.Graph.Component.Node.Layer.SpanOffset (SpanOffset)
 import           Data.Text.Span          (SpacedSpan(..), leftSpacedSpan)
 import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
 import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan, realSpan)
