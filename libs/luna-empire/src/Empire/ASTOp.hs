@@ -27,6 +27,7 @@ module Empire.ASTOp (
   -- , putNewIRCls
   , runAliasAnalysis
   , runASTOp
+  , liftScheduler
   -- , runPass
   -- , runPM
   -- , runTypecheck
@@ -241,23 +242,31 @@ runPass :: forall pass a b g. (Typeable pass, _)
          -> Command g a
 runPass inits p = do
     g <- use userState
-    schState <- use $ pmState.pmScheduler
-    graphState <- use $ pmState.pmStage
     m <- liftIO $ newIORef (error "emptyreturn")
 
-    ((ret, g', newGraphState), newState) <- liftIO $ flip LunaGraph.eval graphState $ flip Layered.runT schState $ unwrap $ do
+    (ret, g') <- liftScheduler $ do
         inits
         Scheduler.registerPassFromFunction__ @Stage @pass $ do
             (a, g') <- runStateT p g
             liftIO $ writeIORef m (a, g')
         Scheduler.runPassByType @pass
         (a, g') <- liftIO $ readIORef m
-        newGraphState <- LunaGraph.getState
-        return (a, g', newGraphState)
+        return (a, g')
     userState .= g'
-    pmState.pmStage .= newGraphState
-    pmState.pmScheduler .= newState
     return ret
+
+liftScheduler :: Scheduler.SchedulerT (LunaGraph.GraphT Stage IO) b
+              -> Command g b
+liftScheduler act = do
+    schState <- use $ pmState.pmScheduler
+    graphState <- use $ pmState.pmStage
+    ((b, newGraphState), newSchState) <- liftIO $ flip LunaGraph.eval graphState $ flip Layered.runT schState $ unwrap $ do
+        b <- act
+        newGraphState <- LunaGraph.getState
+        return (b, newGraphState)
+    pmState.pmStage .= newGraphState
+    pmState.pmScheduler .= newSchState
+    return b
 
 
 runAliasAnalysis :: Command Graph ()

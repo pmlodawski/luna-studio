@@ -64,6 +64,9 @@ data CommandState s = CommandState { _pmState   :: PMState
                                    , _userState :: s
                                    }
 
+instance Show s => Show (CommandState s) where
+    show (CommandState _ s) = "CommandState { " <> show s <> "}"
+
 data PMState = PMState { _pmScheduler :: Scheduler.State
                        , _pmStage     :: LunaGraph.State Stage
                        }

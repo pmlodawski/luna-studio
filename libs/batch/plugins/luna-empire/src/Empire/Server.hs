@@ -32,7 +32,7 @@ import           System.FilePath.Manip                ()
 
 -- import           Data.Future                          (minCapabilityNumber, updateCapabilities)
 import           Empire.Data.AST                      (SomeASTException)
-import           Empire.Data.Graph                    (ClsGraph, Graph, ast)
+import           Empire.Data.Graph                    (ClsGraph, Graph)
 import qualified Empire.Data.Graph                    as Graph
 import qualified Luna.Project                         as Project
 import           LunaStudio.API.AsyncUpdate           (AsyncUpdate (..))
@@ -128,18 +128,18 @@ runBus formatted projectRoot = do
 --     (cleanup, std) <- Typecheck.createStdlib $ lunaroot <> "/Std/"
 --     return (std, cleanup)
 
-killPreviousTC :: Empire.CommunicationEnv -> Maybe (Async Empire.InterpreterEnv) -> IO ()
-killPreviousTC env prevAsync = case prevAsync of
-    Just a -> Async.poll a >>= \case
-        Just finished -> case finished of
-            Left exc     -> logger Logger.warning $ "[TCWorker]: TC failed with: " <> displayException exc
-            Right intEnv -> do
-                logger Logger.info "[TCWorker]: killing listeners"
-                void $ Empire.evalEmpire env intEnv Typecheck.stop
-        _      -> do
-            logger Logger.info "[TCWorker]: cancelling previous request"
-            Async.uninterruptibleCancel a
-    _      -> return ()
+-- killPreviousTC :: Empire.CommunicationEnv -> Maybe (Async Empire.InterpreterEnv) -> IO ()
+-- killPreviousTC env prevAsync = case prevAsync of
+--     Just a -> Async.poll a >>= \case
+--         Just finished -> case finished of
+--             Left exc     -> logger Logger.warning $ "[TCWorker]: TC failed with: " <> displayException exc
+--             Right intEnv -> do
+--                 logger Logger.info "[TCWorker]: killing listeners"
+--                 void $ Empire.evalEmpire env intEnv Typecheck.stop
+--         _      -> do
+--             logger Logger.info "[TCWorker]: cancelling previous request"
+--             Async.uninterruptibleCancel a
+--     _      -> return ()
 
 -- startTCWorker :: MVar (Scope, IO (), Graph.PMState ClsGraph) -> Empire.CommunicationEnv -> Bus ()
 -- startTCWorker compiledStdlib env = liftIO $ do

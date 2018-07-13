@@ -35,7 +35,7 @@ import           Data.Text.Position               (Delta)
 import           Data.Text.Span                   (SpacedSpan (..), leftSpacedSpan)
 import qualified Data.UUID.V4                     as UUID (nextRandom)
 import           Debug
-import           Empire.ASTOp                     (ASTOp, ClassOp, GraphOp, runASTOp, runAliasAnalysis)
+import           Empire.ASTOp                     (ASTOp, ClassOp, GraphOp, runASTOp, runAliasAnalysis, liftScheduler)
 -- import           Empire.ASTOp                     (ASTOp, ClassOp, GraphOp, putNewIR, putNewIRCls, runASTOp, runAliasAnalysis, runModuleTypecheck)
 import qualified Empire.ASTOps.Builder            as ASTBuilder
 import           Empire.ASTOps.BreadcrumbHierarchy (getMarker, prepareChild, isNone)
@@ -68,7 +68,12 @@ import           Empire.Prelude                   hiding (head, toList)
 -- import qualified Luna.Builtin.Data.Function       as IR
 -- import qualified Luna.Builtin.Data.Module         as Module
 -- import qualified Luna.Compilation                 as Compilation
+import qualified Luna.Pass.Sourcing.Data.Class as Class
+import qualified Luna.Pass.Sourcing.Data.Def as Def
+import qualified Luna.Pass.Sourcing.Data.Unit as Unit
+import qualified Luna.Pass.Scheduler                  as Scheduler
 import qualified Luna.Pass.Sourcing.UnitLoader    as ModLoader
+import qualified Luna.Pass.Sourcing.UnitMapper    as UnitMapper
 import qualified Luna.IR                          as IR
 import qualified Luna.IR.Term.Ast.Class           as Term
 -- import qualified Luna.IR.Term.Unit                as Term
@@ -1747,23 +1752,21 @@ getAvailableImports (GraphLocation file _) = withUnit (GraphLocation file (Bread
     let implicitImports = fromList [nativeModuleName, "Std.Base"]
     pure $ explicitImports <> implicitImports
 
--- classToHints :: IR.Class -> ClassHints
--- classToHints (IR.Class constructors methods) = ClassHints cons' meth'
---     where
---         getDoc = maybe def convert . view IR.documentation
---         cons'  = ((, def) . convert) <$> Map.keys constructors
---         meth'  = (convert *** getDoc) <$> (filter (isPublicMethod . fst) $ Map.toList methods)
+classToHints :: Class.Class -> ClassHints
+classToHints (Class.Class constructors methods _) = ClassHints cons' meth'
+    where
+        getDoc = fromMaybe def . view Def.documentation
+        cons'  = ((, def) . convert) <$> Map.keys constructors
+        meth'  = (convert *** getDoc) <$> (filter (isPublicMethod . fst) $ Map.toList $ unwrap methods)
 
 isPublicMethod :: IR.Name -> Bool
 isPublicMethod (nameToString -> n) = Safe.headMay n /= Just '_'
 
--- importsToHints :: Module.Imports -> ModuleHints
--- importsToHints (Module.Imports classes functions) = ModuleHints funHints classHints
-    -- where
-    --     getDoc     = maybe def convert . view IR.documentation
-    --     funHints   = (convert *** getDoc) <$> (filter (isPublicMethod . fst) $ Map.toList functions)
-    --     classes'   = Map.mapKeys convert classes
-    --     classHints = classToHints . view IR.documentedItem <$> classes'
+importsToHints :: Unit.Unit -> ModuleHints
+importsToHints (Unit.Unit definitions classes) = ModuleHints funHints (Map.mapKeys convert classHints)
+    where
+        funHints   = (convert *** (fromMaybe "" . view Def.documentation)) <$> Map.toList (unwrap definitions)
+        classHints = (classToHints . view Def.documented) <$> classes
 
 data ModuleCompilationException = ModuleCompilationException ModLoader.UnitLoadingError
     deriving (Show)
@@ -1779,8 +1782,8 @@ filterPrimMethods = id
 --         properFuns = Map.filterWithKey (\k _ -> not $ isPrimMethod k) funs
 --         isPrimMethod (nameToString -> n) = "prim" `List.isPrefixOf` n || n == "#uminus#"
 
--- qualNameToText :: QualName -> Text
--- qualNameToText = convert
+qualNameToText :: IR.Qualified -> Text
+qualNameToText = convertVia @String
 
 getImportPaths :: GraphLocation -> IO [FilePath]
 getImportPaths (GraphLocation file _) = do
@@ -1795,17 +1798,25 @@ getSearcherHints loc = do
         sources <- Project.findProjectSources =<< Path.parseAbsDir path
         return $ Bimap.toMapR sources
     let union = Map.map (Path.toFilePath) $ Map.unions availableSource
-    -- importsMVar <- view modules
+    importsMVar <- view modules
     -- cmpModules  <- liftIO $ readMVar importsMVar
-    -- res         <- withGraph loc $ runASTOp $ tryAny $ forM (Map.keys union) $ ModLoader.loadUnit union []
-    return def
-    -- case res of
-    --     Left exc                    -> throwM $ ModuleCompilationException exc
-    --     Right (imps, newCmpModules) -> do
-    --         Lifted.swapMVar importsMVar newCmpModules
-    --         return $ Map.fromList
-    --                $ map (\(a, b) -> (qualNameToText a, importsToHints b))
-    --                $ Map.toList imps
+    res         <- try $ liftScheduler $ do
+        ModLoader.initHC
+        Scheduler.registerAttr @Unit.UnitRefsMap
+        Scheduler.setAttr @Unit.UnitRefsMap def
+        forM (Map.keys union) $ ModLoader.loadUnit union []
+        refsMap <- Scheduler.getAttr @Unit.UnitRefsMap
+        units <- flip Map.traverseWithKey (unwrap refsMap) $ \name unitRef -> case unitRef ^. Unit.root of
+            Unit.Graph termUnit   -> UnitMapper.mapUnit name termUnit
+            Unit.Precompiled unit -> return unit
+        return units
+    case res of
+        Left exc    -> throwM $ ModuleCompilationException exc
+        Right units -> do
+            Lifted.tryPutMVar importsMVar units
+            return $ Map.fromList
+                   $ map (\(a, b) -> (qualNameToText a, importsToHints b))
+                   $ Map.toList units
 
 
 reloadInterpreter :: GraphLocation -> Empire ()

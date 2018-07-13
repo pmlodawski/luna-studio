@@ -13,6 +13,8 @@ import           Empire.Prelude
 -- import           Luna.Builtin.Data.Function    (Function)
 -- import           Luna.Builtin.Data.Module      (Imports)
 -- import           Luna.Compilation              (CompiledModules)
+import qualified Luna.IR                       as IR
+import qualified Luna.Pass.Sourcing.Data.Unit  as Unit
 import           LunaStudio.API.AsyncUpdate    (AsyncUpdate)
 import qualified LunaStudio.Data.Error         as APIError
 import           LunaStudio.Data.GraphLocation (GraphLocation)
@@ -62,10 +64,12 @@ data TCRequest = TCRequest { _tcLocation       :: GraphLocation
                            }
 makeLenses ''TCRequest
 
+type CompiledModules = Map IR.Qualified Unit.Unit
+
 data CommunicationEnv = CommunicationEnv { _updatesChan   :: TChan AsyncUpdate
                                          , _typecheckChan :: MVar TCRequest
                                          , _scopeVar      :: MVar SymbolMap
-                                         -- , _modules       :: MVar CompiledModules
+                                         , _modules       :: MVar CompiledModules
                                          } deriving Generic
 makeLenses ''CommunicationEnv
 

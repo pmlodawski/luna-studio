@@ -108,7 +108,7 @@ infixl 5 |>=
 withChannels :: (CommunicationEnv -> IO a) -> IO a
 withChannels = bracket createChannels (const $ return ())
     where
-        createChannels = CommunicationEnv <$> atomically newTChan <*> newEmptyMVar <*> newEmptyMVar -- <*> newEmptyMVar
+        createChannels = CommunicationEnv <$> atomically newTChan <*> newEmptyMVar <*> newEmptyMVar <*> newEmptyMVar
 
 emptyGraphLocation :: GraphLocation
 emptyGraphLocation = GraphLocation "" $ Breadcrumb []
