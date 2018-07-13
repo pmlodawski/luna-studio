@@ -65,6 +65,7 @@ dependencies:
     - luna-memory-pool
     - luna-passes
     - luna-project
+    - luna-runtime
     - luna-syntax-definition
     - luna-syntax-text-parser
     - luna-syntax-text-lexer

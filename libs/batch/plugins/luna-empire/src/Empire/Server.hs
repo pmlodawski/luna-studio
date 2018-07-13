@@ -41,6 +41,7 @@ import qualified LunaStudio.API.Graph.SetNodesMeta    as SetNodesMeta
 import qualified LunaStudio.API.Topic                 as Topic
 import           LunaStudio.Data.GraphLocation        (GraphLocation)
 
+import           Empire.ASTOp                         (liftScheduler)
 import qualified Empire.Commands.AST                  as AST
 import qualified Empire.Commands.Graph                as Graph (openFile)
 import qualified Empire.Commands.Library              as Library
@@ -73,6 +74,17 @@ import           ZMQ.Bus.EndPoint                     (BusEndPoints)
 import           ZMQ.Bus.Trans                        (BusT (..))
 import qualified ZMQ.Bus.Trans                        as BusT
 
+import qualified Luna.Pass.Sourcing.UnitLoader as UnitLoader
+import qualified Luna.Pass.Sourcing.Data.Unit  as Unit
+import           Luna.Pass.Data.Stage (Stage)
+import qualified Luna.Pass.Resolve.Data.Resolution  as Res
+import qualified Luna.Pass.Scheduler                 as Scheduler
+import qualified Luna.Pass.Sourcing.UnitMapper as UnitMap
+import qualified Luna.Std as Std
+import qualified Data.Bimap as Bimap
+import qualified Path
+import qualified Luna.Pass.Flow.ProcessUnits as ProcessUnits
+
 logger :: Logger.Logger
 logger = Logger.getLogger $(Logger.moduleName)
 
@@ -90,12 +102,11 @@ run endPoints topics formatted projectRoot = do
     forkServer "localhost" 1234
     logger Logger.info $ "Subscribing to topics: " <> show topics
     logger Logger.info $ (Utils.display formatted) endPoints
-    scope            <- newEmptyMVar
     toBusChan        <- atomically newTChan
     fromEmpireChan   <- atomically newTChan
     tcReq            <- newEmptyMVar
     modules          <- newEmptyMVar
-    env              <- Env.make toBusChan fromEmpireChan tcReq scope modules projectRoot
+    env              <- Env.make toBusChan fromEmpireChan tcReq modules projectRoot
     let commEnv = env ^. Env.empireNotif
     forkIO $ void $ Bus.runBus endPoints $ BusT.runBusT $ evalStateT (startAsyncUpdateWorker fromEmpireChan) env
     forkIO $ void $ Bus.runBus endPoints $ startToBusWorker toBusChan
@@ -105,7 +116,7 @@ run endPoints topics formatted projectRoot = do
         BusT.runBusT $ evalStateT (runBus formatted projectRoot) env
         liftIO $ putMVar waiting ()
     compiledStdlib <- newEmptyMVar
-    -- forkOn tcCapability $ void $ Bus.runBus endPoints $ startTCWorker compiledStdlib commEnv
+    forkOn tcCapability $ void $ Bus.runBus endPoints $ startTCWorker commEnv
     sendStarted endPoints
     -- forkOn tcCapability $ do
     --     writeIORef minCapabilityNumber 1
@@ -122,11 +133,34 @@ runBus formatted projectRoot = do
     createDefaultState
     forever handleMessage
 
--- prepareStdlib :: IO (Scope, IO ())
--- prepareStdlib = do
---     lunaroot       <- canonicalizePath =<< getEnv Project.lunaRootEnv
---     (cleanup, std) <- Typecheck.createStdlib $ lunaroot <> "/Std/"
---     return (std, cleanup)
+prepareStdlib :: Empire.Command Empire.InterpreterEnv ()
+prepareStdlib = do
+    lunaroot       <- liftIO $ canonicalizePath =<< getEnv Project.lunaRootEnv
+    (cleanup, typed, computed, stdBaseResolver) <- liftScheduler $ do
+        stdPath <- Path.parseAbsDir $ lunaroot <> "/Std/"
+        stdSources <- fmap Path.toFilePath . Bimap.toMapR <$> Project.findProjectSources stdPath
+        UnitLoader.init
+        (finalize, stdUnitRef) <- Std.stdlib @Stage
+        Scheduler.registerAttr @Unit.UnitRefsMap
+        Scheduler.setAttr $ Unit.UnitRefsMap $ Map.singleton "Std.Primitive" stdUnitRef
+        UnitLoader.loadUnit stdSources [] "Std.Base"
+        UnitLoader.loadUnit stdSources [] "Std.Graphics2D"
+        Unit.UnitRefsMap mods <- Scheduler.getAttr
+        units <- flip Map.traverseWithKey mods $ \n u -> case u ^. Unit.root of
+            Unit.Graph r -> UnitMap.mapUnit n r
+            Unit.Precompiled u -> pure u
+        let unitResolvers   = Map.mapWithKey Res.resolverFromUnit units
+            importResolvers = Map.mapWithKey (Res.resolverForUnit unitResolvers) $ over wrapped ("Std.Graphics2D" :) . over wrapped ("Std.Base" :) . over wrapped ("Std.Primitive" :) . view Unit.imports <$> mods
+
+            unitsWithResolvers = Map.mapWithKey (\n u -> (importResolvers Map.! n, u)) units
+
+        (typedUnits, computedUnits) <- ProcessUnits.processUnits unitsWithResolvers
+        let Just stdBaseResolver = unitResolvers ^. at "Std.Base"
+        return (finalize, typedUnits, computedUnits, stdBaseResolver)
+    Graph.userState . Empire.cleanUp .= cleanup
+    Graph.userState . Empire.typedUnits .= typed
+    Graph.userState . Empire.runtimeUnits .= computed
+    Graph.userState . Empire.stdBaseResolver .= stdBaseResolver
 
 -- killPreviousTC :: Empire.CommunicationEnv -> Maybe (Async Empire.InterpreterEnv) -> IO ()
 -- killPreviousTC env prevAsync = case prevAsync of
@@ -141,16 +175,20 @@ runBus formatted projectRoot = do
 --             Async.uninterruptibleCancel a
 --     _      -> return ()
 
--- startTCWorker :: MVar (Scope, IO (), Graph.PMState ClsGraph) -> Empire.CommunicationEnv -> Bus ()
--- startTCWorker compiledStdlib env = liftIO $ do
+startTCWorker :: Empire.CommunicationEnv -> Bus ()
+startTCWorker env = liftIO $ do
 --     tcAsync <- newEmptyMVar
---     let reqs = env ^. Empire.typecheckChan
+    let reqs = env ^. Empire.typecheckChan
 --         modules = env ^. Empire.modules
 --     (std, cleanup, pmState) <- readMVar compiledStdlib
 --     putMVar modules $ unwrap std
---     let interpreterEnv = Empire.InterpreterEnv def def def undefined cleanup def
---     forever $ do
---         Empire.TCRequest loc g flush interpret recompute stop <- takeMVar reqs
+    pmState <- Graph.defaultPMState
+    let interpreterEnv = Empire.InterpreterEnv (return ()) (error "startTCWorker: clsGraph") [] def def (error "startTCWorker: unitResolver")
+        commandState   = Graph.CommandState pmState interpreterEnv
+    newCommandState <- Empire.evalEmpire env commandState $ do
+        prepareStdlib
+    forever $ do
+        Empire.TCRequest loc g rooted flush interpret recompute stop <- takeMVar reqs
 --         prevAsync <- tryTakeMVar tcAsync
 --         killPreviousTC env prevAsync
 --         async     <- Async.asyncOn tcCapability (Empire.evalEmpire env interpreterEnv $ do
@@ -161,7 +199,8 @@ runBus formatted projectRoot = do
 --                         Typecheck.flushCache
 --                     Empire.graph .= (g & Graph.clsAst . Graph.pmState .~ pmState)
 --                     liftIO performGC
---                     Typecheck.run modules loc interpret recompute `Exception.onException` Typecheck.stop)
+        Empire.evalEmpire env newCommandState $ do
+            Typecheck.run loc g rooted interpret recompute `Exception.onException` Typecheck.stop
 --         when recompute $ void (Async.waitCatch async)
 --         putMVar tcAsync async
 

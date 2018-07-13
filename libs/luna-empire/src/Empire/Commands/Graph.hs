@@ -16,6 +16,7 @@ import qualified Data.Bimap                       as Bimap
 import           Data.Coerce                      (coerce)
 import           Data.Char                        (isSeparator, isSpace, isUpper)
 import           Data.Foldable                    (toList)
+import qualified Data.Graph.Store                 as Store
 import           Data.List                        ((++), elemIndex, find, group, partition, sortBy, sortOn, nub, head)
 import qualified Data.List                        as List
 import qualified Data.List.Split                  as Split
@@ -1242,21 +1243,21 @@ autolayout loc = do
 getNodeMetas :: GraphLocation -> [NodeLoc] -> Empire [Maybe (NodeLoc, NodeMeta)]
 getNodeMetas loc nids = return []
 -- getNodeMetas loc nids
-    -- | GraphLocation f (Breadcrumb []) <- loc = withUnit loc $ runASTOp $ do
-    --     clsFuns    <- use Graph.clsFuns
-    --     forM (Map.assocs clsFuns) $ \(id, fun) -> do
-    --         case find (\n -> convert n == id) nids of
-    --             Just nl -> do
-    --                 f     <- ASTRead.getFunByNodeId id
-    --                 fmap (nl,) <$> AST.readMeta f
-    --             _       -> return Nothing
-    -- | otherwise = withGraph loc $ runASTOp $ do
-    --     kids <- uses Graph.breadcrumbHierarchy (view BH.children)
-    --     forM (Map.keys kids) $ \id -> do
-    --         case find (\n -> convert n == id) nids of
-    --             Just nl -> do
-    --                 fmap (nl,) <$> AST.getNodeMeta id
-    --             _       -> return Nothing
+--     | GraphLocation f (Breadcrumb []) <- loc = withUnit loc $ runASTOp $ do
+--         clsFuns    <- use Graph.clsFuns
+--         forM (Map.assocs clsFuns) $ \(id, fun) -> do
+--             case find (\n -> convert n == id) nids of
+--                 Just nl -> do
+--                     f     <- ASTRead.getFunByNodeId id
+--                     fmap (nl,) <$> AST.readMeta f
+--                 _       -> return Nothing
+--     | otherwise = withGraph loc $ runASTOp $ do
+--         kids <- uses Graph.breadcrumbHierarchy (view BH.children)
+--         forM (Map.keys kids) $ \id -> do
+--             case find (\n -> convert n == id) nids of
+--                 Just nl -> do
+--                     fmap (nl,) <$> AST.getNodeMeta id
+--                 _       -> return Nothing
 
 autolayoutTopLevel :: GraphLocation -> Empire ()
 autolayoutTopLevel loc = do
@@ -1798,7 +1799,7 @@ getSearcherHints loc = do
         sources <- Project.findProjectSources =<< Path.parseAbsDir path
         return $ Bimap.toMapR sources
     let union = Map.map (Path.toFilePath) $ Map.unions availableSource
-    importsMVar <- view modules
+    -- importsMVar <- view modules
     -- cmpModules  <- liftIO $ readMVar importsMVar
     res         <- try $ liftScheduler $ do
         ModLoader.initHC
@@ -1813,7 +1814,7 @@ getSearcherHints loc = do
     case res of
         Left exc    -> throwM $ ModuleCompilationException exc
         Right units -> do
-            Lifted.tryPutMVar importsMVar units
+            -- Lifted.tryPutMVar importsMVar units
             return $ Map.fromList
                    $ map (\(a, b) -> (qualNameToText a, importsToHints b))
                    $ Map.toList units
@@ -1857,7 +1858,9 @@ generateNewFunctionName forbiddenNames base =
 runTC :: GraphLocation -> Bool -> Bool -> Bool -> Command ClsGraph ()
 runTC loc flush interpret recompute = do
     g <- use Graph.userState
-    Publisher.requestTC loc g flush interpret recompute
+    let root = g ^. Graph.clsClass
+    rooted <- runASTOp $ Store.serializeWithRedirectMap root
+    Publisher.requestTC loc g rooted flush interpret recompute
 
 typecheckWithRecompute :: GraphLocation -> Empire ()
 typecheckWithRecompute loc@(GraphLocation file _) = do

@@ -8,6 +8,7 @@
 
 module Empire.Commands.Typecheck where
 
+import Control.Lens (uses, element)
 import           Control.Arrow                    ((***), (&&&))
 import           Control.Concurrent.Async         (Async)
 import qualified Control.Concurrent.Async         as Async
@@ -18,21 +19,29 @@ import           Control.Monad                    (void)
 import           Control.Monad.Except             hiding (when)
 import           Control.Monad.Reader             (ask, runReaderT)
 import           Control.Monad.State              (execStateT)
+import           Data.Graph.Data.Component.Class  (Component(..))
+import qualified Data.Graph.Store                 as Store
+import qualified Data.Graph.Store.Buffer          as Buffer
 import qualified Data.Map                         as Map
 import           Data.Maybe                       (catMaybes, maybeToList)
 import           Empire.Prelude                   hiding (mapping, toList)
+import           Foreign.Ptr                      (plusPtr)
 import           System.Directory                 (canonicalizePath, withCurrentDirectory)
 import           System.Environment               (getEnv)
 import           System.FilePath                  (takeDirectory)
 import qualified Path
 
+import qualified Luna.IR                          as IR
+import qualified Luna.Pass.Typing.Typechecker     as TC
+import qualified Luna.Pass.Preprocess.PreprocessDef as Prep
+import qualified Memory                           as Memory
 import           LunaStudio.Data.Breadcrumb       (Breadcrumb (..), BreadcrumbItem(Definition))
 import           LunaStudio.Data.GraphLocation    (GraphLocation (..))
 import qualified LunaStudio.Data.Error            as APIError
 import           LunaStudio.Data.NodeValue        (NodeValue (..))
 import           LunaStudio.Data.Visualization    (VisualizationValue (..))
 
-import           Empire.ASTOp                     (runASTOp)
+import           Empire.ASTOp                     (liftScheduler, runASTOp)
 -- import           Empire.ASTOp                     (getImportedModules, runASTOp, runTypecheck, runModuleTypecheck)
 import qualified Empire.ASTOps.Read               as ASTRead
 import           Empire.Commands.Breadcrumb       (runInternalBreadcrumb, withRootedFunction)
@@ -40,10 +49,13 @@ import qualified Empire.Commands.GraphBuilder     as GraphBuilder
 import qualified Empire.Commands.Publisher        as Publisher
 import           Empire.Data.BreadcrumbHierarchy  (topLevelIDs)
 import qualified Empire.Data.BreadcrumbHierarchy  as BH
+import           Empire.Data.AST                  (NodeRef)
 import           Empire.Data.Graph                (Graph)
 import qualified Empire.Data.Graph                as Graph
 import           Empire.Empire
 
+import qualified System.IO as IO
+import qualified Luna.Debug.IR.Visualizer as Vis
 -- import           Luna.Builtin.Data.LunaEff        (runError, runIO)
 -- import           Luna.Builtin.Data.Module         (Imports (..), unionImports, unionsImports)
 -- import           Luna.Builtin.Prim                (SingleRep (..), ValueRep (..), getReps)
@@ -82,26 +94,26 @@ runInterpreter path imports = return Nothing -- runASTOp $ do
     --     _ -> return Nothing
 
 updateNodes :: GraphLocation -> Command Graph ()
-updateNodes loc@(GraphLocation _ br) = return () -- do
+updateNodes loc@(GraphLocation _ br) = do
     -- (inEdge, outEdge) <- use $ Graph.breadcrumbHierarchy . BH.portMapping
-    -- (updates, errors) <- runASTOp $ do
-    --     sidebarUpdates <- (\x y -> [x, y]) <$> GraphBuilder.buildInputSidebarTypecheckUpdate  inEdge
-    --                                        <*> GraphBuilder.buildOutputSidebarTypecheckUpdate outEdge
-    --     allNodeIds  <- uses Graph.breadcrumbHierarchy topLevelIDs
-    --     nodeUpdates <- mapM GraphBuilder.buildNodeTypecheckUpdate allNodeIds
-    --     errors      <- forM allNodeIds $ \nid -> do
-    --         errs <- IR.getLayer @IR.Errors =<< ASTRead.getASTRef nid
-    --         case errs of
-    --             []     -> return Nothing
-    --             e : es -> do
-    --                 let toSrcLoc (Errors.ModuleTagged mod (Errors.FromMethod klass method)) = APIError.SourceLocation (convert mod) (Just (convert klass)) (convert method)
-    --                     toSrcLoc (Errors.ModuleTagged mod (Errors.FromFunction function))   = APIError.SourceLocation (convert mod) Nothing (convert function)
-    --                     errorDetails = APIError.CompileErrorDetails (map toSrcLoc (e ^. Errors.arisingFrom)) (map toSrcLoc (e ^. Errors.requiredBy))
-    --                 return $ Just $ (nid, NodeError $ APIError.Error (APIError.CompileError errorDetails) $ e ^. Errors.description)
-    --     return (sidebarUpdates <> nodeUpdates, errors)
-    -- mask_ $ do
-    --     traverse_ (Publisher.notifyNodeTypecheck loc) updates
-    --     for_ (catMaybes errors) $ \(nid, e) -> Publisher.notifyResultUpdate loc nid e 0
+    (updates) <- runASTOp $ do
+        -- sidebarUpdates <- (\x y -> [x, y]) <$> GraphBuilder.buildInputSidebarTypecheckUpdate  inEdge
+        --                                    <*> GraphBuilder.buildOutputSidebarTypecheckUpdate outEdge
+        allNodeIds  <- uses Graph.breadcrumbHierarchy topLevelIDs
+        nodeUpdates <- mapM GraphBuilder.buildNodeTypecheckUpdate allNodeIds
+        -- errors      <- forM allNodeIds $ \nid -> do
+        --     errs <- IR.getLayer @IR.Errors =<< ASTRead.getASTRef nid
+        --     case errs of
+        --         []     -> return Nothing
+        --         e : es -> do
+        --             let toSrcLoc (Errors.ModuleTagged mod (Errors.FromMethod klass method)) = APIError.SourceLocation (convert mod) (Just (convert klass)) (convert method)
+        --                 toSrcLoc (Errors.ModuleTagged mod (Errors.FromFunction function))   = APIError.SourceLocation (convert mod) Nothing (convert function)
+        --                 errorDetails = APIError.CompileErrorDetails (map toSrcLoc (e ^. Errors.arisingFrom)) (map toSrcLoc (e ^. Errors.requiredBy))
+        --             return $ Just $ (nid, NodeError $ APIError.Error (APIError.CompileError errorDetails) $ e ^. Errors.description)
+        return (nodeUpdates)
+    mask_ $ do
+        traverse_ (Publisher.notifyNodeTypecheck loc) updates
+        -- for_ (catMaybes errors) $ \(nid, e) -> Publisher.notifyResultUpdate loc nid e 0
 
 updateMonads :: GraphLocation -> Command InterpreterEnv ()
 updateMonads loc@(GraphLocation _ br) = return ()
@@ -208,16 +220,47 @@ stop = do
     -- liftIO $ mapM_ Async.uninterruptibleCancel threads
     -- liftIO cln
 
-run :: MVar a
-    -> GraphLocation
+translate :: Buffer.RedirectMap -> Int -> NodeRef -> NodeRef 
+translate redMap off node = wrap $ (unwrap (redMap Map.! (Memory.Ptr $ convert node)))
+    `plusPtr` off
+
+run :: GraphLocation
+    -> Graph.ClsGraph
+    -> Store.RootedWithRedirects NodeRef
     -> Bool
     -> Bool
     -> Command InterpreterEnv ()
-run imports loc@(GraphLocation file br) interpret recompute = return () -- do
-    -- case br of
-    --     Breadcrumb [] -> do
-    --         void $ mask_ $ recomputeCurrentScope imports file
-    --     Breadcrumb (Definition uuid:rest) -> do
+run loc@(GraphLocation file br) clsGraph' rooted' interpret recompute = do
+    let Store.RootedWithRedirects rooted redMap = rooted'
+    (a, redirects) <- runASTOp $ Store.deserializeWithRedirects rooted
+    let originalCls = clsGraph' ^. Graph.clsClass
+        deserializerOff = redirects Map.! someTypeRep @IR.Terms
+        newCls = translate redMap deserializerOff originalCls
+    print newCls
+    let newClsGraph = clsGraph' & BH.refs %~ translate redMap deserializerOff
+    print newClsGraph
+    print redirects
+    liftIO $ IO.hFlush IO.stdout
+    Graph.userState . clsGraph .= newClsGraph
+    let [fun] = newClsGraph ^. Graph.clsFuns . to Map.elems
+    typed <- use $ Graph.userState . typedUnits
+    resolver <- use $ Graph.userState . stdBaseResolver
+    zoomCommand clsGraph $ do
+        cls <- use $ Graph.userState
+        case br of
+            Breadcrumb [] -> do
+                return ()
+            Breadcrumb (Definition uuid:rest) -> do
+                let Just root = cls ^? Graph.clsFuns . ix uuid . Graph.funGraph . Graph.breadcrumbHierarchy . BH.self
+                liftScheduler $ do
+                    Prep.preprocessDef resolver root
+                    TC.runTypechecker def root typed
+                withRootedFunction uuid $ do
+                    runInternalBreadcrumb (Breadcrumb rest) $ do
+                        updateNodes  loc
+        -- updateNodes loc
+    return ()
+            -- void $ mask_ $ recomputeCurrentScope imports file
     --         let scopeGetter = if recompute
     --                           then recomputeCurrentScope
     --                           else getCurrentScope
@@ -233,11 +276,8 @@ run imports loc@(GraphLocation file br) interpret recompute = return () -- do
     --             modName <- filePathToQualName file
     --             funName <- preuse $
     --                 Graph.clsFuns . at uuid . _Just . Graph.funName
-    --             withRootedFunction uuid $ do
-    --                 runInternalBreadcrumb (Breadcrumb rest) $ do
     --                     let functionName = fromMaybe "unknown function" funName
     --                     runTC modName functionName moduleEnv
-    --                     updateNodes  loc
     --                     {-updateMonads loc-}
     --                     if interpret then do
     --                         scope  <- runInterpreter file moduleEnv

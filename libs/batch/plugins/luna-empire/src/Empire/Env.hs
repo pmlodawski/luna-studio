@@ -15,6 +15,7 @@ import           Empire.Data.Graph             (CommandState(..), Graph, ClsGrap
 import qualified Empire.Empire                 as Empire
 import           LunaStudio.API.AsyncUpdate    (AsyncUpdate)
 import           LunaStudio.Data.GraphLocation (GraphLocation (..))
+import           LunaStudio.Data.NodeSearcher  (ImportsHints (..))
 import           ZMQ.Bus.Config                (Config)
 import qualified ZMQ.Bus.Config                as Config
 import           ZMQ.Bus.Data.Message          (Message)
@@ -34,15 +35,14 @@ makeLenses ''Env
 make :: TChan Message
      -> TChan AsyncUpdate
      -> MVar Empire.TCRequest
-     -> MVar Empire.SymbolMap
-     -> MVar Empire.CompiledModules
+     -> MVar ImportsHints
      -> FilePath
      -> IO Env
-make toBus fromEmpire tc sm imps fp = do
+make toBus fromEmpire tc imps fp = do
     zmqConfig <- Config.load
     pmState   <- defaultPMState
     let cmdState = CommandState pmState def
-    return $ Env cmdState (Empire.CommunicationEnv fromEmpire tc sm imps) True toBus fp zmqConfig
+    return $ Env cmdState (Empire.CommunicationEnv fromEmpire tc imps) True toBus fp zmqConfig
 
 newtype LoggerEnv = LoggerEnv { _formatLog :: Bool }
 makeLenses ''LoggerEnv

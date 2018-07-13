@@ -85,7 +85,7 @@ graphIDs loc = do
     return ids
 
 extractGraph :: InterpreterEnv -> ClsGraph
-extractGraph (InterpreterEnv _ _ _ g _ _) = g
+extractGraph (InterpreterEnv g _ _ _) = error "extractGraph"
 
 withResult :: a -> (a -> IO b) -> IO b
 withResult res act = act res
@@ -108,7 +108,7 @@ infixl 5 |>=
 withChannels :: (CommunicationEnv -> IO a) -> IO a
 withChannels = bracket createChannels (const $ return ())
     where
-        createChannels = CommunicationEnv <$> atomically newTChan <*> newEmptyMVar <*> newEmptyMVar <*> newEmptyMVar
+        createChannels = CommunicationEnv <$> atomically newTChan <*> newEmptyMVar <*> newEmptyMVar
 
 emptyGraphLocation :: GraphLocation
 emptyGraphLocation = GraphLocation "" $ Breadcrumb []

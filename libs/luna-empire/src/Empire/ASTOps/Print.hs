@@ -22,6 +22,7 @@ import           Empire.Data.Graph              (CommandState, Graph)
 import qualified Language.Symbol.Operator.Assoc as Assoc
 import qualified Language.Symbol.Operator.Prec  as Prec
 import qualified Luna.IR                        as IR
+import qualified Luna.IR.Aliases                as Uni
 import qualified Luna.IR.Layer                  as Layer
 import qualified Luna.IR.Link                   as Link
 -- import           Luna.IR.Term.Uni
@@ -41,6 +42,7 @@ import Language.Symbol.Label        (Labeled (Labeled), label, labeled, unlabel)
 getTypeRep :: GraphOp m => NodeRef -> m TypeRep
 getTypeRep tp = match tp $ \case
     -- Monadic s _   -> getTypeRep =<< source s
+    Uni.ResolvedCons _ n _ args -> TCons (nameToString n) <$> (mapM (getTypeRep <=< source) =<< ptrListToList args)
     Cons   n args -> TCons (nameToString n) <$> (mapM (getTypeRep <=< source) =<< ptrListToList args)
     Lam    a out  -> TLam <$> (getTypeRep =<< source a) <*> (getTypeRep =<< source out)
     Acc    t n    -> TAcc (nameToString n) <$> (getTypeRep =<< source t)

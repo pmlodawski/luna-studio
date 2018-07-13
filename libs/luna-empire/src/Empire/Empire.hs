@@ -3,8 +3,9 @@
 
 module Empire.Empire where
 
+import qualified Data.Graph.Store              as Store
 import qualified Data.Graph.Data.Graph.Class   as LunaGraph
-import           Empire.Data.AST               (SomeASTException)
+import           Empire.Data.AST               (SomeASTException, NodeRef)
 import           Empire.Data.Graph             (CommandState (..), ClsGraph, Graph)
 import           Empire.Data.Library           (Library)
 import qualified Empire.Pass.PatternTransformation as PT
@@ -15,10 +16,14 @@ import           Empire.Prelude
 -- import           Luna.Compilation              (CompiledModules)
 import qualified Luna.IR                       as IR
 import qualified Luna.Pass.Sourcing.Data.Unit  as Unit
+import qualified Luna.Pass.Typing.Data.Typed   as Typed
+import qualified Luna.Pass.Resolve.Data.Resolution  as Res
+import qualified Luna.Runtime.Data.Evaluated   as Runtime
 import           LunaStudio.API.AsyncUpdate    (AsyncUpdate)
 import qualified LunaStudio.Data.Error         as APIError
 import           LunaStudio.Data.GraphLocation (GraphLocation)
 import           LunaStudio.Data.Node          (ExpressionNode, NodeId)
+import           LunaStudio.Data.NodeSearcher  (ImportsHints)
 import           LunaStudio.Data.PortDefault   (PortValue)
 import           LunaStudio.Data.Project       (ProjectId)
 import           LunaStudio.Data.TypeRep       (TypeRep)
@@ -57,6 +62,7 @@ instance Default Env where
 
 data TCRequest = TCRequest { _tcLocation       :: GraphLocation
                            , _tcGraph          :: ClsGraph
+                           , _rooted           :: Store.RootedWithRedirects NodeRef
                            , _tcFlush          :: Bool
                            , _tcRunInterpreter :: Bool
                            , _tcRecompute      :: Bool
@@ -64,24 +70,21 @@ data TCRequest = TCRequest { _tcLocation       :: GraphLocation
                            }
 makeLenses ''TCRequest
 
-type CompiledModules = Map IR.Qualified Unit.Unit
-
 data CommunicationEnv = CommunicationEnv { _updatesChan   :: TChan AsyncUpdate
                                          , _typecheckChan :: MVar TCRequest
-                                         , _scopeVar      :: MVar SymbolMap
-                                         , _modules       :: MVar CompiledModules
+                                         , _searcherHints :: MVar ImportsHints
                                          } deriving Generic
 makeLenses ''CommunicationEnv
 
 instance Show CommunicationEnv where
     show _ = "CommunicationEnv"
 
-data InterpreterEnv = InterpreterEnv { _valuesCache :: Map NodeId [PortValue]
-                                     , _nodesCache  :: Map NodeId ExpressionNode
-                                     , _errorsCache :: Map NodeId (APIError.Error APIError.NodeError)
-                                     , _graph       :: ClsGraph
-                                     , _cleanUp     :: IO ()
-                                     , _listeners   :: [Async ()]
+data InterpreterEnv = InterpreterEnv { _cleanUp         :: IO ()
+                                     , _clsGraph        :: ClsGraph
+                                     , _listeners       :: [Async ()]
+                                     , _typedUnits      :: Typed.Units
+                                     , _runtimeUnits    :: Runtime.Units
+                                     , _stdBaseResolver :: Res.UnitResolver
                                      }
 makeLenses ''InterpreterEnv
 

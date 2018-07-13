@@ -11,7 +11,7 @@
 
 module Empire.Data.Graph where
 
-import           Empire.Data.BreadcrumbHierarchy   (LamItem)
+import           Empire.Data.BreadcrumbHierarchy   (HasRefs(..), LamItem)
 import           Empire.Prelude
 
 import           Control.Monad.State               (MonadState(..), StateT, evalStateT, lift)
@@ -107,6 +107,15 @@ data ClsGraph = ClsGraph { _clsClass       :: NodeRef
                          , _clsFuns        :: Map NodeId FunctionGraph
                          , _clsNodeCache   :: NodeCache
                          } deriving Show
+
+instance HasRefs Graph where
+    refs fun (Graph a b c d e f g) = Graph <$> refs fun a <*> traverse fun b <*> traverse fun c <*> pure d <*> pure e <*> pure f <*> pure g
+
+instance HasRefs FunctionGraph where
+    refs fun (FunctionGraph a b c) = FunctionGraph a <$> refs fun b <*> traverse fun c
+
+instance HasRefs ClsGraph where
+    refs fun (ClsGraph a b c d e f) = ClsGraph <$> fun a <*> traverse fun b <*> pure c <*> pure d <*> (traverse.refs) fun e <*> pure f
 
 instance MonadState s m => MonadState s (DepState.StateT b m) where
     get = lift   get

@@ -58,7 +58,7 @@ packages:
 - {location: ../../tools/batch/plugins/luna-empire}
 - {location: ../../tools/batch/plugins/request-monitor}
 - extra-dep: true
-  location: {commit: e405ca689e90145d07ff9ce6248d2cf2a14d4a20, git: 'git@github.com:luna/luna-core.git'}
+  location: {commit: f6f3b7e149ebb662b7efd52ef8ae002b5219fa01, git: 'git@github.com:luna/luna-core.git'}
   subdirs:
     - core
     - syntax/text/parser
@@ -69,6 +69,7 @@ packages:
     - passes
     - project
     - runtime
+    - stdlib
     - lib/autovector
     - lib/cpp-containers
     - lib/data-construction
@@ -78,6 +79,7 @@ packages:
     - lib/data-storable
     - lib/exception
     - lib/foreign-utils
+    - lib/future
     - lib/generic-traversable
     - lib/memory-manager
     - lib/memory-pool
