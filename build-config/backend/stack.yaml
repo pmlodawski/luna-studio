@@ -3,6 +3,7 @@ ghc-options:
   '*': -threaded -fconstraint-solver-iterations=100 -O2 -fsimpl-tick-factor=200
 local-bin-path:
   ../../dist/bin/private
+apply-ghc-options: everything
 
 # package-indices:
 #   - name:            standard-hackage
@@ -58,7 +59,7 @@ packages:
 - {location: ../../tools/batch/plugins/luna-empire}
 - {location: ../../tools/batch/plugins/request-monitor}
 - extra-dep: true
-  location: {commit: f6f3b7e149ebb662b7efd52ef8ae002b5219fa01, git: 'git@github.com:luna/luna-core.git'}
+  location: ../../../luna-core #{commit: f6f3b7e149ebb662b7efd52ef8ae002b5219fa01, git: 'git@github.com:luna/luna-core.git'}
   subdirs:
     - core
     - syntax/text/parser

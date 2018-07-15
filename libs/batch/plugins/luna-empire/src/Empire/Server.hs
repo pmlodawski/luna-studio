@@ -136,15 +136,15 @@ runBus formatted projectRoot = do
 prepareStdlib :: Empire.Command Empire.InterpreterEnv ()
 prepareStdlib = do
     lunaroot       <- liftIO $ canonicalizePath =<< getEnv Project.lunaRootEnv
-    (cleanup, typed, computed, stdBaseResolver) <- liftScheduler $ do
+    (cleanup, typed, computed, resolvers) <- liftScheduler $ do
         stdPath <- Path.parseAbsDir $ lunaroot <> "/Std/"
         stdSources <- fmap Path.toFilePath . Bimap.toMapR <$> Project.findProjectSources stdPath
         UnitLoader.init
         (finalize, stdUnitRef) <- Std.stdlib @Stage
         Scheduler.registerAttr @Unit.UnitRefsMap
         Scheduler.setAttr $ Unit.UnitRefsMap $ Map.singleton "Std.Primitive" stdUnitRef
-        UnitLoader.loadUnit stdSources [] "Std.Base"
-        UnitLoader.loadUnit stdSources [] "Std.Graphics2D"
+        UnitLoader.loadUnit def stdSources [] "Std.Base"
+        UnitLoader.loadUnit def stdSources [] "Std.Graphics2D"
         Unit.UnitRefsMap mods <- Scheduler.getAttr
         units <- flip Map.traverseWithKey mods $ \n u -> case u ^. Unit.root of
             Unit.Graph r -> UnitMap.mapUnit n r
@@ -154,13 +154,13 @@ prepareStdlib = do
 
             unitsWithResolvers = Map.mapWithKey (\n u -> (importResolvers Map.! n, u)) units
 
-        (typedUnits, computedUnits) <- ProcessUnits.processUnits unitsWithResolvers
+        (typedUnits, computedUnits) <- ProcessUnits.processUnits def def unitsWithResolvers
         let Just stdBaseResolver = unitResolvers ^. at "Std.Base"
-        return (finalize, typedUnits, computedUnits, stdBaseResolver)
+        return (finalize, typedUnits, computedUnits, unitResolvers)
     Graph.userState . Empire.cleanUp .= cleanup
     Graph.userState . Empire.typedUnits .= typed
     Graph.userState . Empire.runtimeUnits .= computed
-    Graph.userState . Empire.stdBaseResolver .= stdBaseResolver
+    Graph.userState . Empire.resolvers .= resolvers
 
 -- killPreviousTC :: Empire.CommunicationEnv -> Maybe (Async Empire.InterpreterEnv) -> IO ()
 -- killPreviousTC env prevAsync = case prevAsync of

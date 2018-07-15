@@ -1805,7 +1805,7 @@ getSearcherHints loc = do
         ModLoader.initHC
         Scheduler.registerAttr @Unit.UnitRefsMap
         Scheduler.setAttr @Unit.UnitRefsMap def
-        forM (Map.keys union) $ ModLoader.loadUnit union []
+        forM (Map.keys union) $ ModLoader.loadUnit def union []
         refsMap <- Scheduler.getAttr @Unit.UnitRefsMap
         units <- flip Map.traverseWithKey (unwrap refsMap) $ \name unitRef -> case unitRef ^. Unit.root of
             Unit.Graph termUnit   -> UnitMapper.mapUnit name termUnit

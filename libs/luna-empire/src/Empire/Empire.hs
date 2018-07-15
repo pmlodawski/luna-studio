@@ -79,13 +79,15 @@ makeLenses ''CommunicationEnv
 instance Show CommunicationEnv where
     show _ = "CommunicationEnv"
 
-data InterpreterEnv = InterpreterEnv { _cleanUp         :: IO ()
-                                     , _clsGraph        :: ClsGraph
-                                     , _listeners       :: [Async ()]
-                                     , _typedUnits      :: Typed.Units
-                                     , _runtimeUnits    :: Runtime.Units
-                                     , _stdBaseResolver :: Res.UnitResolver
-                                     }
+data InterpreterEnv = InterpreterEnv
+    { _cleanUp      :: IO ()
+    , _clsGraph     :: ClsGraph
+    , _listeners    :: [Async ()]
+    , _typedUnits   :: Typed.Units
+    , _runtimeUnits :: Runtime.Units
+    , _resolvers    :: Map IR.Qualified Res.UnitResolver
+    }
+
 makeLenses ''InterpreterEnv
 
 type CommandStack s = ReaderT CommunicationEnv (StateT (CommandState s) IO)

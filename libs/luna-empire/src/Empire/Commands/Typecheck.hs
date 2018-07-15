@@ -56,11 +56,17 @@ import           Empire.Empire
 
 import qualified System.IO as IO
 import qualified Luna.Debug.IR.Visualizer as Vis
+
+import qualified Luna.Pass.Resolve.Data.Resolution as Resolution
+import qualified Luna.Pass.Sourcing.UnitMapper     as UnitMap
+import qualified Luna.Pass.Flow.ProcessUnits       as ProcessUnits
+import qualified Data.Graph.Data.Layer.Layout      as Layout
+
 -- import           Luna.Builtin.Data.LunaEff        (runError, runIO)
 -- import           Luna.Builtin.Data.Module         (Imports (..), unionImports, unionsImports)
 -- import           Luna.Builtin.Prim                (SingleRep (..), ValueRep (..), getReps)
 -- import qualified Luna.Compilation                 as Compilation
--- import qualified Luna.Project                     as Project
+import qualified Luna.Project                     as Project
 -- import           Luna.Compilation                 (CompiledModules (..))
 import qualified Luna.IR                          as IR
 -- import           Luna.Pass.Data.ExprMapping
@@ -114,12 +120,6 @@ updateNodes loc@(GraphLocation _ br) = do
     mask_ $ do
         traverse_ (Publisher.notifyNodeTypecheck loc) updates
         -- for_ (catMaybes errors) $ \(nid, e) -> Publisher.notifyResultUpdate loc nid e 0
-
-updateMonads :: GraphLocation -> Command InterpreterEnv ()
-updateMonads loc@(GraphLocation _ br) = return ()
-    --zoom graph $ zoomBreadcrumb br $ do
-        {-newMonads <- runASTOp GraphBuilder.buildMonads-}
-        {-Publisher.notifyMonadsUpdate loc newMonads-}
 
 updateValues :: GraphLocation
              -> a
@@ -175,13 +175,13 @@ flushCache = do
 -- createStdlib =
 --     fmap (id *** Scope) . Compilation.prepareStdlib . Map.singleton "Std"
 
--- filePathToQualName :: MonadIO m => FilePath -> m QualName
--- filePathToQualName path = liftIO $ do
---     path' <- Path.parseAbsFile path
---     root  <- Project.projectRootForFile path'
---     let projName = Project.getProjectName root
---     file  <- Path.stripProperPrefix (root Path.</> $(Path.mkRelDir "src")) path'
---     return $ Project.mkQualName projName file
+filePathToQualName :: MonadIO m => FilePath -> m IR.Qualified
+filePathToQualName path = liftIO $ do
+    path' <- Path.parseAbsFile path
+    root  <- Project.projectRootForFile path'
+    let projName = Project.getProjectName root
+    file  <- Path.stripProperPrefix (root Path.</> $(Path.mkRelDir "src")) path'
+    return $ Project.mkQualName projName file
 
 -- recomputeCurrentScope :: MVar CompiledModules
 --                       -> FilePath
@@ -224,6 +224,27 @@ translate :: Buffer.RedirectMap -> Int -> NodeRef -> NodeRef
 translate redMap off node = wrap $ (unwrap (redMap Map.! (Memory.Ptr $ convert node)))
     `plusPtr` off
 
+compileCurrentScope :: FilePath -> NodeRef -> Command InterpreterEnv ()
+compileCurrentScope path root = do
+    typed <- use $ Graph.userState . typedUnits
+    evald <- use $ Graph.userState . runtimeUnits
+    ress  <- use $ Graph.userState . resolvers
+    modName <- filePathToQualName path
+
+    (newTyped, newEvald, resolver) <- liftScheduler $ do
+        mapped  <- UnitMap.mapUnit modName $ Layout.unsafeRelayout root
+        let resolver = Resolution.resolverFromUnit modName mapped
+            fullResolver = mconcat $ resolver : Map.elems ress
+
+        (newTyped, newEvald) <- ProcessUnits.processUnits typed evald
+            $ Map.singleton modName (fullResolver, mapped)
+        return (newTyped, newEvald, resolver)
+
+    Graph.userState . typedUnits   .= newTyped
+    Graph.userState . runtimeUnits .= newEvald
+    Graph.userState . resolvers . at modName .= Just resolver
+
+
 run :: GraphLocation
     -> Graph.ClsGraph
     -> Store.RootedWithRedirects NodeRef
@@ -238,13 +259,13 @@ run loc@(GraphLocation file br) clsGraph' rooted' interpret recompute = do
         newCls = translate redMap deserializerOff originalCls
     print newCls
     let newClsGraph = clsGraph' & BH.refs %~ translate redMap deserializerOff
-    print newClsGraph
-    print redirects
-    liftIO $ IO.hFlush IO.stdout
     Graph.userState . clsGraph .= newClsGraph
+
+    compileCurrentScope file a
+
     let [fun] = newClsGraph ^. Graph.clsFuns . to Map.elems
     typed <- use $ Graph.userState . typedUnits
-    resolver <- use $ Graph.userState . stdBaseResolver
+    resolver <- fmap (mconcat . Map.elems) $ use $ Graph.userState . resolvers
     zoomCommand clsGraph $ do
         cls <- use $ Graph.userState
         case br of
