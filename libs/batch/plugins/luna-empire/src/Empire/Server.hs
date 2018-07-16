@@ -133,35 +133,6 @@ runBus formatted projectRoot = do
     createDefaultState
     forever handleMessage
 
-prepareStdlib :: Empire.Command Empire.InterpreterEnv ()
-prepareStdlib = do
-    lunaroot       <- liftIO $ canonicalizePath =<< getEnv Project.lunaRootEnv
-    (cleanup, typed, computed, resolvers) <- liftScheduler $ do
-        stdPath <- Path.parseAbsDir $ lunaroot <> "/Std/"
-        stdSources <- fmap Path.toFilePath . Bimap.toMapR <$> Project.findProjectSources stdPath
-        UnitLoader.init
-        (finalize, stdUnitRef) <- Std.stdlib @Stage
-        Scheduler.registerAttr @Unit.UnitRefsMap
-        Scheduler.setAttr $ Unit.UnitRefsMap $ Map.singleton "Std.Primitive" stdUnitRef
-        UnitLoader.loadUnit def stdSources [] "Std.Base"
-        UnitLoader.loadUnit def stdSources [] "Std.Graphics2D"
-        Unit.UnitRefsMap mods <- Scheduler.getAttr
-        units <- flip Map.traverseWithKey mods $ \n u -> case u ^. Unit.root of
-            Unit.Graph r -> UnitMap.mapUnit n r
-            Unit.Precompiled u -> pure u
-        let unitResolvers   = Map.mapWithKey Res.resolverFromUnit units
-            importResolvers = Map.mapWithKey (Res.resolverForUnit unitResolvers) $ over wrapped ("Std.Graphics2D" :) . over wrapped ("Std.Base" :) . over wrapped ("Std.Primitive" :) . view Unit.imports <$> mods
-
-            unitsWithResolvers = Map.mapWithKey (\n u -> (importResolvers Map.! n, u)) units
-
-        (typedUnits, computedUnits) <- ProcessUnits.processUnits def def unitsWithResolvers
-        let Just stdBaseResolver = unitResolvers ^. at "Std.Base"
-        return (finalize, typedUnits, computedUnits, unitResolvers)
-    Graph.userState . Empire.cleanUp .= cleanup
-    Graph.userState . Empire.typedUnits .= typed
-    Graph.userState . Empire.runtimeUnits .= computed
-    Graph.userState . Empire.resolvers .= resolvers
-
 -- killPreviousTC :: Empire.CommunicationEnv -> Maybe (Async Empire.InterpreterEnv) -> IO ()
 -- killPreviousTC env prevAsync = case prevAsync of
 --     Just a -> Async.poll a >>= \case
@@ -177,18 +148,20 @@ prepareStdlib = do
 
 startTCWorker :: Empire.CommunicationEnv -> Bus ()
 startTCWorker env = liftIO $ do
---     tcAsync <- newEmptyMVar
     let reqs = env ^. Empire.typecheckChan
+    pmState <- Graph.defaultPMState
+    let interpreterEnv = Empire.InterpreterEnv (return ()) (error "startTCWorker: clsGraph") [] def def def
+        commandState   = Graph.CommandState pmState interpreterEnv
+    void $ Empire.evalEmpire env commandState $ do
+        forever $ do
+            Empire.TCRequest loc g rooted flush interpret recompute stop <- liftIO $ takeMVar reqs
+            when (not stop) $
+                Typecheck.run loc g rooted interpret recompute `Exception.onException` Typecheck.stop
+
+--     tcAsync <- newEmptyMVar
 --         modules = env ^. Empire.modules
 --     (std, cleanup, pmState) <- readMVar compiledStdlib
 --     putMVar modules $ unwrap std
-    pmState <- Graph.defaultPMState
-    let interpreterEnv = Empire.InterpreterEnv (return ()) (error "startTCWorker: clsGraph") [] def def (error "startTCWorker: unitResolver")
-        commandState   = Graph.CommandState pmState interpreterEnv
-    newCommandState <- Empire.evalEmpire env commandState $ do
-        prepareStdlib
-    forever $ do
-        Empire.TCRequest loc g rooted flush interpret recompute stop <- takeMVar reqs
 --         prevAsync <- tryTakeMVar tcAsync
 --         killPreviousTC env prevAsync
 --         async     <- Async.asyncOn tcCapability (Empire.evalEmpire env interpreterEnv $ do
@@ -199,8 +172,6 @@ startTCWorker env = liftIO $ do
 --                         Typecheck.flushCache
 --                     Empire.graph .= (g & Graph.clsAst . Graph.pmState .~ pmState)
 --                     liftIO performGC
-        Empire.evalEmpire env newCommandState $ do
-            Typecheck.run loc g rooted interpret recompute `Exception.onException` Typecheck.stop
 --         when recompute $ void (Async.waitCatch async)
 --         putMVar tcAsync async
 

@@ -66,6 +66,7 @@ dependencies:
     - luna-passes
     - luna-project
     - luna-runtime
+    - luna-stdlib
     - luna-syntax-definition
     - luna-syntax-text-parser
     - luna-syntax-text-lexer

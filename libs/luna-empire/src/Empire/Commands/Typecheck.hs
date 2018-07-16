@@ -58,10 +58,21 @@ import qualified System.IO as IO
 import qualified Luna.Debug.IR.Visualizer as Vis
 
 import qualified Luna.Pass.Resolve.Data.Resolution as Resolution
-import qualified Luna.Pass.Sourcing.UnitMapper     as UnitMap
+import qualified Luna.Pass.Sourcing.UnitMapper     as UnitMapper
+import           Luna.Pass.Data.Stage (Stage)
+import qualified Data.Bimap as Bimap
 import qualified Luna.Pass.Flow.ProcessUnits       as ProcessUnits
 import qualified Data.Graph.Data.Layer.Layout      as Layout
 
+import qualified Luna.Pass.Scheduler                 as Scheduler
+import qualified Luna.Pass.Sourcing.UnitLoader as UnitLoader
+import qualified Luna.Pass.Sourcing.ImportsPlucker as ImportsPlucker
+import qualified Luna.Std as Std
+import qualified Luna.Pass.Sourcing.Data.Unit  as Unit
+
+import qualified Data.Set as Set
+
+import Data.Map (Map)
 -- import           Luna.Builtin.Data.LunaEff        (runError, runIO)
 -- import           Luna.Builtin.Data.Module         (Imports (..), unionImports, unionsImports)
 -- import           Luna.Builtin.Prim                (SingleRep (..), ValueRep (..), getReps)
@@ -183,6 +194,16 @@ filePathToQualName path = liftIO $ do
     file  <- Path.stripProperPrefix (root Path.</> $(Path.mkRelDir "src")) path'
     return $ Project.mkQualName projName file
 
+fileImportPaths :: MonadIO m => FilePath -> m (Map IR.Qualified FilePath)
+fileImportPaths file = liftIO $ do
+    filePath        <- Path.parseAbsFile file
+    currentProjPath <- Project.projectRootForFile filePath
+    libs            <- Project.projectImportPaths currentProjPath
+    srcs            <- for (snd <$> libs) $ \libPath -> do
+        p <- Path.parseAbsDir libPath
+        fmap Path.toFilePath . Bimap.toMapR <$> Project.findProjectSources p
+    pure $ Map.unions srcs
+
 -- recomputeCurrentScope :: MVar CompiledModules
 --                       -> FilePath
 --                       -> Command InterpreterEnv Imports
@@ -224,26 +245,76 @@ translate :: Buffer.RedirectMap -> Int -> NodeRef -> NodeRef
 translate redMap off node = wrap $ (unwrap (redMap Map.! (Memory.Ptr $ convert node)))
     `plusPtr` off
 
-compileCurrentScope :: FilePath -> NodeRef -> Command InterpreterEnv ()
-compileCurrentScope path root = do
-    typed <- use $ Graph.userState . typedUnits
-    evald <- use $ Graph.userState . runtimeUnits
-    ress  <- use $ Graph.userState . resolvers
+primStdModuleName :: IR.Qualified
+primStdModuleName = "Std.Primitive"
+
+makePrimStdIfMissing :: FilePath -> Command InterpreterEnv ()
+makePrimStdIfMissing file = do
+    existingStd <- use $ Graph.userState . resolvers . at primStdModuleName
+    case existingStd of
+        Just _ -> return ()
+        Nothing -> do
+            print $ "STD IS MISSING"
+            liftIO $ IO.hFlush IO.stdout
+            (finalizer, typed, computed, ress) <- liftScheduler $ do
+                (fin, stdUnitRef) <- Std.stdlib @Stage
+                srcs <- fileImportPaths file
+                UnitLoader.init
+                Scheduler.registerAttr @Unit.UnitRefsMap
+                Scheduler.setAttr $ Unit.UnitRefsMap $ Map.singleton "Std.Primitive" stdUnitRef
+                for Std.stdlibImports $ UnitLoader.loadUnit def srcs []
+                Unit.UnitRefsMap mods <- Scheduler.getAttr
+                units <- flip Map.traverseWithKey mods $ \n u -> case u ^. Unit.root of
+                    Unit.Graph r -> UnitMapper.mapUnit n r
+                    Unit.Precompiled u -> pure u
+                let unitResolvers   = Map.mapWithKey Resolution.resolverFromUnit units
+                    importResolvers = Map.mapWithKey (Resolution.resolverForUnit unitResolvers) $ over wrapped ("Std.Base" :)
+                                                                                         . over wrapped ("Std.Primitive" :)
+                                                                                         . view Unit.imports <$> mods
+                    unitsWithResolvers = Map.mapWithKey (\n u -> (importResolvers Map.! n, u)) units
+                (typed, evald) <- ProcessUnits.processUnits def def unitsWithResolvers
+                return (fin, typed, evald, unitResolvers)
+            Graph.userState . cleanUp      .= finalizer
+            Graph.userState . typedUnits   .= typed
+            Graph.userState . runtimeUnits .= computed
+            Graph.userState . resolvers    .= ress
+
+
+compileCurrentScope :: Bool -> FilePath -> NodeRef -> Command InterpreterEnv ()
+compileCurrentScope recompute path root = do
+    typed   <- use $ Graph.userState . typedUnits
+    evald   <- use $ Graph.userState . runtimeUnits
+    ress    <- use $ Graph.userState . resolvers
     modName <- filePathToQualName path
 
-    (newTyped, newEvald, resolver) <- liftScheduler $ do
-        mapped  <- UnitMap.mapUnit modName $ Layout.unsafeRelayout root
-        let resolver = Resolution.resolverFromUnit modName mapped
-            fullResolver = mconcat $ resolver : Map.elems ress
+    (newTyped, newEvald, newResolvers) <- liftScheduler $ do
+        imports <- ImportsPlucker.run root
+        UnitLoader.init
+        srcs <- fileImportPaths path
+        Scheduler.registerAttr @Unit.UnitRefsMap
+        Scheduler.setAttr $ Unit.UnitRefsMap $ Map.singleton modName $ Unit.UnitRef (Unit.Graph $ Layout.unsafeRelayout root) (wrap imports)
+        print $ "known: " <> show (Map.keys ress)
+        liftIO $ IO.hFlush IO.stdout
+        for imports $ UnitLoader.loadUnitIfMissing (Set.fromList $ Map.keys ress) srcs [modName]
 
-        (newTyped, newEvald) <- ProcessUnits.processUnits typed evald
-            $ Map.singleton modName (fullResolver, mapped)
-        return (newTyped, newEvald, resolver)
+        Unit.UnitRefsMap mods <- Scheduler.getAttr
+        print $ Map.keys mods
+        liftIO $ IO.hFlush IO.stdout
+        units <- flip Map.traverseWithKey mods $ \n u -> case u ^. Unit.root of
+            Unit.Graph r -> UnitMapper.mapUnit n r
+            Unit.Precompiled u -> pure u
+
+        let unitResolvers   = Map.union (Map.mapWithKey Resolution.resolverFromUnit units) ress
+            importResolvers = Map.mapWithKey (Resolution.resolverForUnit unitResolvers) $ over wrapped ("Std.Base" :)
+                                                                                 . over wrapped ("Std.Primitive" :)
+                                                                                 . view Unit.imports <$> mods
+            unitsWithResolvers = Map.mapWithKey (\n u -> (importResolvers Map.! n, u)) units
+        (newTyped, newEvald) <- ProcessUnits.processUnits typed evald unitsWithResolvers
+        return (newTyped, newEvald, unitResolvers)
 
     Graph.userState . typedUnits   .= newTyped
     Graph.userState . runtimeUnits .= newEvald
-    Graph.userState . resolvers . at modName .= Just resolver
-
+    Graph.userState . resolvers    .= newResolvers
 
 run :: GraphLocation
     -> Graph.ClsGraph
@@ -258,10 +329,12 @@ run loc@(GraphLocation file br) clsGraph' rooted' interpret recompute = do
         deserializerOff = redirects Map.! someTypeRep @IR.Terms
         newCls = translate redMap deserializerOff originalCls
     print newCls
+    liftIO $ IO.hFlush IO.stdout
     let newClsGraph = clsGraph' & BH.refs %~ translate redMap deserializerOff
     Graph.userState . clsGraph .= newClsGraph
 
-    compileCurrentScope file a
+    makePrimStdIfMissing file
+    compileCurrentScope recompute file a
 
     let [fun] = newClsGraph ^. Graph.clsFuns . to Map.elems
     typed <- use $ Graph.userState . typedUnits
