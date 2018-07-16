@@ -18,7 +18,7 @@ listenStream val listener = do
     listenerSuccess <- Runtime.runIO $ Runtime.runError $ do
         each <- Runtime.tryDispatchMethod "each" val
         case each of
-            Just e -> void $ Runtime.applyFun e $ feedActionToLuna (makeReps >=> liftIO . listener)
+            Just e -> void $ Runtime.applyFun e $ feedActionToLuna (makeReps >=> Runtime.unsafeLiftIO . listener)
             Nothing -> return ()
     case listenerSuccess of
         Left err -> listener $ ErrorRep $ unwrap err
@@ -29,7 +29,7 @@ makeReps val = do
     short' <- Runtime.tryDispatchMethod "shortRep" val
     short  <- maybe (return "") (>>= Runtime.fromData) short'
     long'  <- Runtime.tryDispatchMethods ["toJSON", "render"] val
-    long  <- traverse (>>= Runtime.fromData) long'
+    long   <- traverse (>>= Runtime.fromData) long'
     return $ SuccessRep short long
 
 getReps' :: Runtime.Data -> Runtime.Eff ValueRep

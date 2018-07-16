@@ -22,6 +22,7 @@ import           Control.Monad.State              (execStateT)
 import           Data.Graph.Data.Component.Class  (Component(..))
 import qualified Data.Graph.Store                 as Store
 import qualified Data.Graph.Store.Buffer          as Buffer
+import qualified Data.IORef                       as IORef
 import qualified Data.Map                         as Map
 import           Data.Maybe                       (catMaybes, maybeToList)
 import           Empire.Prelude                   hiding (mapping, toList)
@@ -113,6 +114,12 @@ runTC (GraphLocation file br) = do
     --     mapping <- unwrap <$> IR.getAttr @ExprMapping
     --     Graph.breadcrumbHierarchy . BH.refs %= (\x -> Map.findWithDefault x x mapping)
     -- return ()
+    --
+withProjectCurrentDirectory :: FilePath -> IO a -> IO a
+withProjectCurrentDirectory currentFile act = do
+    rootPath <- liftIO $ Project.findProjectRootForFile =<< Path.parseAbsFile currentFile
+    let projectDirectory = maybe (takeDirectory currentFile) Path.toFilePath rootPath
+    withCurrentDirectory projectDirectory act
 
 runInterpreter :: FilePath -> Runtime.Units -> Command Graph (Maybe Interpreter.LocalScope)
 runInterpreter path imports = do
@@ -123,13 +130,13 @@ runInterpreter path imports = do
             args <- ComponentVector.toList as
             if null args then Just <$> IR.source b else pure Nothing
         _ -> return Nothing
-    interpreted <- for bodyRefMay $ \bodyRef -> liftScheduler $ Interpreter.execInterpreter bodyRef imports
-    fmap join $ for interpreted $ \res ->
-        mask_ $ do
-            result  <- liftIO $ withCurrentDirectory (maybe (takeDirectory path) Path.toFilePath rootPath) $ Runtime.runIO $ Runtime.runError res
-            case result of
-                Left e  -> return Nothing
-                Right r -> return $ Just r
+    interpreted <- for bodyRefMay $ \bodyRef -> liftScheduler $ Interpreter.runInterpreter' bodyRef imports
+    for interpreted $ \res ->
+        mask_ $ liftIO $ do
+            ref <- IORef.newIORef def
+            withProjectCurrentDirectory path
+                $ Runtime.runIO $ Runtime.runError $ Interpreter.evalWithRef res ref
+            IORef.readIORef ref
 
 updateNodes :: GraphLocation -> Command InterpreterEnv ()
 updateNodes loc@(GraphLocation _ br) = case br of
@@ -159,7 +166,7 @@ updateNodes loc@(GraphLocation _ br) = case br of
 updateValues :: GraphLocation
              -> Interpreter.LocalScope
              -> Command Graph [Async ()]
-updateValues loc scope = do
+updateValues loc@(GraphLocation path _) scope = do
     childrenMap <- use $ Graph.userState . Graph.breadcrumbHierarchy . BH.children
     let allNodes = Map.assocs $ view BH.self <$> childrenMap
     env     <- ask
@@ -180,15 +187,16 @@ updateValues loc scope = do
         sendStreamRep nid (SuccessRep s l) = send nid
                                            $ NodeValue s
                                            $ StreamDataPoint <$> l
-    asyncs <- forM allVars $ \(nid, ref) -> do
-        let resVal = Interpreter.localLookup ref scope
-        liftIO $ forM resVal $ \v -> do
-            value <- Listener.getReps v
-            case value of
-                OneTime r   -> Async.async $ sendRep nid r
-                Streaming f -> do
-                    send nid (NodeValue "Stream" $ Just StreamStart)
-                    Async.async (f (sendStreamRep nid))
+    asyncs <- liftIO $ withProjectCurrentDirectory path $
+        forM allVars $ \(nid, ref) -> do
+            let resVal = Interpreter.localLookup ref scope
+            liftIO $ forM resVal $ \v -> do
+                value <- Listener.getReps v
+                case value of
+                    OneTime r   -> Async.async $ sendRep nid r
+                    Streaming f -> do
+                        send nid (NodeValue "Stream" $ Just StreamStart)
+                        Async.async (f (sendStreamRep nid))
     return $ catMaybes asyncs
 
 
