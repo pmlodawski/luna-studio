@@ -1,6 +1,8 @@
+{-# LANGUAGE TypeSynonymInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module GraphDiffSpec (spec) where
 
+import           Control.Lens                         (FunctorWithIndex, imap)
 import           Control.Arrow                        ((&&&))
 import           Data.Foldable                        (toList)
 import           Data.HashMap.Strict                  (HashMap)
@@ -21,12 +23,12 @@ import           LunaStudio.Data.MonadPath            (MonadPath (MonadPath))
 import           LunaStudio.Data.Node                 (ExpressionNode (ExpressionNode), InputSidebar (InputSidebar), NodeId,
                                                        OutputSidebar (OutputSidebar))
 import qualified LunaStudio.Data.Node                 as Node
-import           LunaStudio.Data.NodeMeta             (NodeMeta (NodeMeta))
+import           LunaStudio.Data.NodeMeta             (type NodeMeta, NodeMetaTemplate(NodeMeta))
 import           LunaStudio.Data.Port                 (InPorts (InPorts), LabeledTree (LabeledTree), OutPorts (OutPorts), Port (Port))
 import qualified LunaStudio.Data.Port                 as Port
 import           LunaStudio.Data.PortDefault          (PortDefault, PortValue)
 import qualified LunaStudio.Data.PortDefault          as PortDef
-import           LunaStudio.Data.PortRef              (InPortRef (InPortRef), OutPortRef (OutPortRef))
+import           LunaStudio.Data.PortRef              (InPortRef (InPortRef), type OutPortRef, OutPortRefTemplate (OutPortRef))
 import qualified LunaStudio.Data.PortRef              as PortRef
 import qualified LunaStudio.Data.Position             as Position
 import           LunaStudio.Data.TypeRep              (TypeRep (TCons, TLam, TStar, TVar))

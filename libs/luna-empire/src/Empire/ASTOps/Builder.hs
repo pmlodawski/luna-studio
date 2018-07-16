@@ -1,10 +1,3 @@
-{-# LANGUAGE DeriveAnyClass      #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE TupleSections       #-}
-{-# LANGUAGE LambdaCase          #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications    #-}
-
 module Empire.ASTOps.Builder where
 
 import           Control.Monad                      (foldM, replicateM, zipWithM_)
@@ -32,7 +25,6 @@ import qualified Empire.Data.BreadcrumbHierarchy    as BH
 
 import           Data.Text.Position      (Delta)
 
--- import qualified OCI.IR.Combinators as IR (replace, replaceSource, deleteSubtree)
 import qualified Luna.IR as IR
 
 

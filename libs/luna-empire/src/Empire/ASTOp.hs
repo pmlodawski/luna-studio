@@ -1,16 +1,5 @@
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE DataKinds                  #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE InstanceSigs               #-}
 {-# LANGUAGE NoMonomorphismRestriction  #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE StandaloneDeriving         #-}
-{-# LANGUAGE TypeApplications           #-}
-{-# LANGUAGE TypeOperators              #-}
 {-# LANGUAGE UndecidableInstances       #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE PartialTypeSignatures      #-}
 
 module Empire.ASTOp (
     ASTOp
@@ -20,105 +9,60 @@ module Empire.ASTOp (
   , EmpirePass
   , Printer
   , defaultClsGraph
-  -- , defaultPMState
-  -- , PMStack
-  -- , getImportedModules
-  -- , putNewIR
-  -- , putNewIRCls
   , runAliasAnalysis
   , runASTOp
   , liftScheduler
-  -- , runPass
-  -- , runPM
-  -- , runTypecheck
-  -- , runModuleTypecheck
   , match
   ) where
 
-import           Empire.Prelude       hiding (Type, mempty, toList)
-import           Prologue             (mempty)
+import           Empire.Prelude              hiding (Type, mempty, toList)
+import           Prologue                    (mempty)
 
-import           Control.Monad.Catch  (MonadCatch(..))
--- import           Control.Monad.Raise  (MonadException)
-import           Control.Monad.State  (MonadState, StateT(..), runStateT, get, put)
--- import qualified Control.Monad.State.Dependent as DepState
+import           Control.Monad.Catch         (MonadCatch(..))
+import           Control.Monad.State         (MonadState, StateT(..), runStateT,
+                                              get, put)
 import qualified Control.Monad.State.Layered as Layered
-import qualified Data.TypeMap.MultiState as MultiState
+import qualified Data.TypeMap.MultiState     as MultiState
 import           Data.IORef
-import qualified Data.Map             as Map
-import qualified Data.Set             as Set
-import           Empire.Data.Graph    (ClsGraph, Graph, pmState, pmScheduler, pmStage, userState, withVis)
-import qualified Empire.Data.Graph    as Graph
-import qualified Empire.Data.BreadcrumbHierarchy as BH
-import           Empire.Data.Layers   ()
-import           Empire.Empire        (Command, CommandStack)
-import           GHC.Exts             (Any)
-import           Unsafe.Coerce        (unsafeCoerce)
-
-import qualified Luna.Pass        as Pass
-import qualified OCI.Pass.Definition.Declaration as Pass
-
-import           Luna.IR              as IR hiding (Unit, String, Marker, match, source)
--- import qualified Luna.IR.Term.Unit    as Term
--- import           OCI.IR.Layout.Typed  (type (>>))
-import Foreign.Info.ByteSize (ByteSize)
-import Foreign.Memory.Pool (MemPool)
-import           Data.Graph.Data.Component.Class   (Component)
-import qualified Data.Graph.Data.Component.Class   as Component
-import qualified Data.Graph.Component.Node.Layer   as Layer
-import qualified Data.Graph.Data.Layer.Class   as Layer
-import           Data.Graph.Component.Edge.Class   (Edge, Edges)
-import qualified Data.Graph.Data.Graph.Class   as LunaGraph
-import qualified Data.Graph.Component.Node.Destruction as Destruct
+import qualified Data.Map                    as Map
+import qualified Data.Set                    as Set
+import           Data.Graph.Component.Edge.Class (Edge, Edges)
 import           Data.Graph.Component.Node.Class (Node, Nodes)
--- import           OCI.IR.Name.Qualified (QualName)
-import           OCI.Pass.Definition.Class       (Pass(..)) --, ComponentSize, LayerMemManager, ComponentMemPool)
--- import           OCI.Pass.Class       (Inputs, Outputs, Preserves, KnownPass)
--- import           OCI.IR.Class         (Import)
--- import qualified OCI.Pass.Class       as Pass (SubPass, eval')
--- import qualified OCI.Pass.Manager     as Pass (PassManager, setAttr, State)
--- import qualified Luna.Runner as Runner
-import qualified OCI.Pass.Management.Scheduler as Scheduler
+import qualified Data.Graph.Component.Node.Destruction as Destruct
+import qualified Data.Graph.Component.Node.Layer as Layer
+import           Data.Graph.Component.Node.Layer.NodeMeta   (Meta)
+import           Data.Graph.Component.Node.Layer.PortMarker (PortMarker)
+import           Data.Graph.Component.Node.Layer.SpanLength (SpanLength)
+import           Data.Graph.Component.Node.Layer.SpanOffset (SpanOffset)
+import           Data.Graph.Data.Component.Class (Component)
+import qualified Data.Graph.Data.Component.Class as Component
 import qualified Data.Graph.Data.Graph.Class as LunaGraph
-import qualified Luna.Pass.Attr as Attr
-
--- import           System.Log                                   (DropLogger(..), dropLogs)
--- import           System.Log.Logger.Class                      (Logger(..), IdentityLogger(..))
-import           Luna.Pass.Data.Stage                         (Stage)
+import qualified Data.Graph.Data.Layer.Class as Layer
+import           Empire.Data.Graph           (ClsGraph, Graph, pmState,
+                                              pmScheduler, pmStage, userState,
+                                              withVis)
+import qualified Empire.Data.Graph           as Graph
+import qualified Empire.Data.BreadcrumbHierarchy as BH
+import           Empire.Data.Layers          ()
+import           Empire.Empire               (Command, CommandStack)
 import qualified Empire.Pass.PatternTransformation            as PatternTransformation
--- import           Luna.Pass.Resolution.Data.UnresolvedConses   (UnresolvedConses(..), NegativeConses(..))
-import           Luna.Pass.Resolve.Data.UnresolvedVariables     (UnresolvedVariables(..))
-import           Luna.Pass.Data.Root                     (Root(..))
-import qualified Luna.Pass.Resolve.AliasAnalysis           as AliasAnalysis
+import           Foreign.Info.ByteSize       (ByteSize)
+import           Foreign.Memory.Pool         (MemPool)
+import           Luna.IR                     as IR hiding (Unit, String, Marker,
+                                             match, source)
+import qualified Luna.Pass                   as Pass
+import qualified Luna.Pass.Attr              as Attr
+import qualified Luna.Pass.Data.Stage        as TC
+import           Luna.Pass.Data.Root         (Root(..))
+import qualified Luna.Pass.Resolve.AliasAnalysis as AliasAnalysis
+import           Luna.Pass.Resolve.Data.UnresolvedVariables (UnresolvedVariables(..))
 import           Luna.Syntax.Text.Parser.Data.Invalid (Invalids)
--- import qualified Parser.Parser               as Parser
-import           Luna.Syntax.Text.Parser.Data.CodeSpan        (CodeSpan)
-import Data.Graph.Component.Node.Layer.NodeMeta   (Meta)
-import Data.Graph.Component.Node.Layer.PortMarker (PortMarker)
-import Data.Graph.Component.Node.Layer.SpanLength (SpanLength)
-import Data.Graph.Component.Node.Layer.SpanOffset (SpanOffset)
--- import           Luna.Syntax.Text.Parser.Marker               (MarkedExprMap)
--- import           Luna.Syntax.Text.Source                      (Source)
--- import qualified Luna.Pass.Typechecking.Typecheck             as Typecheck
--- import qualified Luna.Compilation                             as Compilation
--- import           Luna.Compilation                             (CompiledModules (..))
-
--- import qualified OCI.IR.Repr.Vis                   as Vis
--- import qualified Control.Monad.State.Dependent.Old as DepOld
--- import           Luna.Pass.Data.UniqueNameGen               (initNameGen)
--- import           Luna.Pass.Data.ExprMapping
--- import           Luna.Builtin.Data.Module          (Imports (..), unionsImports)
--- import           Luna.Pass.Resolution.Data.CurrentTarget (CurrentTarget (TgtNone))
--- import qualified Luna.Pass.UnitCompilation.ModuleProcessing as ModuleTC
--- import qualified Luna.Pass.Sourcing.UnitLoader              as UnitLoader
--- import           Luna.IR.Term.World                         (WorldExpr)
--- import           Luna.IR.Term.Unit                          (UnitSet)
+import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan)
+import           OCI.Pass.Definition.Class   (Pass(..))
+import qualified OCI.Pass.Definition.Declaration as Pass
+import qualified OCI.Pass.Management.Scheduler as Scheduler
 
 
--- type PMStack m = PassManager (IRBuilder (DepState.StateT Cache (Logger DropLogger m)))
-
--- runPM :: MonadIO m => PMStack m a -> m a
--- runPM = dropLogs . DepState.evalDefStateT @Cache . evalIRBuilder' . evalPassManager'
 
 type ASTOpReq a m = (MonadIO m,
                      MonadState a m,
@@ -180,15 +124,10 @@ type ASTOp a m = (ASTOpReq a m, HasCallStack)
 type GraphOp m = ASTOp Graph m
 type ClassOp m = ASTOp ClsGraph m
 
-
-newtype PassReturnValue = PassReturnValue (Maybe Any)
-type instance Attr.Type PassReturnValue = Attr.Atomic
-instance Default PassReturnValue where def = PassReturnValue Nothing
-
 data EmpirePass
 type instance Pass.Spec EmpirePass t = EmpirePassSpec t
 type family EmpirePassSpec t where
-    EmpirePassSpec (Pass.In  Pass.Attrs)  = '[]  -- Parser attrs temporarily - probably need to call it as a separate Pass
+    EmpirePassSpec (Pass.In  Pass.Attrs)  = '[]
     EmpirePassSpec (Pass.Out Pass.Attrs)  = '[]
     EmpirePassSpec (Pass.In  AnyExpr)     = '[Model, Type, Users, SpanLength, CodeSpan, Meta, PortMarker]
     EmpirePassSpec (Pass.Out AnyExpr)     = '[Model, Type, Users, SpanLength, CodeSpan, Meta, PortMarker]
@@ -199,18 +138,19 @@ type family EmpirePassSpec t where
 
 match :: (Monad m, Layer.Reader t Model m) => t layout -> (UniTerm layout -> m a) -> m a
 match = matchExpr
+
 deriving instance MonadCatch (Pass stage t)
 deriving instance MonadCatch m => MonadCatch (MultiState.MultiStateT s m)
 deriving instance MonadCatch m => MonadCatch (LunaGraph.GraphT s m)
 deriving instance MonadCatch m => MonadCatch (Layered.StateT s m)
 
 
-defaultClsAST :: IO (IR.SomeTerm, LunaGraph.State Stage, Scheduler.State)
+defaultClsAST :: IO (IR.SomeTerm, LunaGraph.State TC.Stage, Scheduler.State)
 defaultClsAST = do
-    ((a, scState), grState) <- LunaGraph.encodeAndEval @Stage $ do
+    ((a, scState), grState) <- LunaGraph.encodeAndEval @TC.Stage $ do
         foo <- Scheduler.runT $ do
             m <- liftIO $ newIORef (error "emptyreturn")
-            Scheduler.registerPassFromFunction__ @Stage @EmpirePass $ do
+            Scheduler.registerPassFromFunction__ @TC.Stage @EmpirePass $ do
                 a <- do
                     hub <- IR.importHub []
                     c <- IR.record False "A" [] [] []
@@ -232,13 +172,13 @@ defaultClsGraph = do
 
 
 runASTOp :: forall a g.
-            StateT g (Pass.Pass Stage EmpirePass) a
+            StateT g (Pass.Pass TC.Stage EmpirePass) a
          -> Command g a
 runASTOp p = runPass (return ()) p
 
-runPass :: forall pass a b g. (Typeable pass, _)
-         => Scheduler.SchedulerT (LunaGraph.GraphT Stage IO) b
-         -> StateT g (Pass.Pass Stage pass) a
+runPass :: forall pass a b g. (Scheduler.PassRegister TC.Stage pass TC.Monad)
+         => TC.Monad b
+         -> StateT g (Pass.Pass TC.Stage pass) a
          -> Command g a
 runPass inits p = do
     g <- use userState
@@ -246,7 +186,7 @@ runPass inits p = do
 
     (ret, g') <- liftScheduler $ do
         inits
-        Scheduler.registerPassFromFunction__ @Stage @pass $ do
+        Scheduler.registerPassFromFunction__ @TC.Stage @pass $ do
             (a, g') <- runStateT p g
             liftIO $ writeIORef m (a, g')
         Scheduler.runPassByType @pass
@@ -255,7 +195,7 @@ runPass inits p = do
     userState .= g'
     return ret
 
-liftScheduler :: Scheduler.SchedulerT (LunaGraph.GraphT Stage IO) b
+liftScheduler :: Scheduler.SchedulerT (LunaGraph.GraphT TC.Stage IO) b
               -> Command g b
 liftScheduler act = do
     schState <- use $ pmState.pmScheduler
@@ -282,7 +222,7 @@ runAliasAnalysis = do
             Scheduler.registerAttr @UnresolvedVariables
             Scheduler.enableAttrByType @UnresolvedVariables
     runPass @PatternTransformation.PatternTransformation inits $ StateT $ \a -> PatternTransformation.runPatternTransformation >> return ((),a)
-    runPass @AliasAnalysis.AliasAnalysis inits $ StateT $ \a -> Pass.definition @Stage @AliasAnalysis.AliasAnalysis >> return ((), a)
+    runPass @AliasAnalysis.AliasAnalysis inits $ StateT $ \a -> Pass.definition @TC.Stage @AliasAnalysis.AliasAnalysis >> return ((), a)
 
 
 -- runTypecheck :: CurrentTarget -> Imports -> Command Graph ()
@@ -363,14 +303,3 @@ runAliasAnalysis = do
 --                 return $ Right (res, newCmpMods)
 --             Left err -> return $ Left err
 --     return res
-
--- putNewIR :: IR -> Command Graph ()
--- putNewIR ir = do
---     pmState <- liftIO $ Graph.defaultPMState
---     Graph.ast .= AST ir pmState
-
--- putNewIRCls :: IR -> Command ClsGraph ()
--- putNewIRCls ir = do
---     newAST <- liftIO $ Graph.emptyClsAST
---     Graph.clsAst .= (newAST & Graph.ir .~ ir)
-

@@ -1,9 +1,3 @@
-{-# LANGUAGE LambdaCase          #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications    #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE ViewPatterns        #-}
-
 {-| This module contains operations that output modified nodes.
     These functions use reading, deconstructing and building APIs.
 
@@ -36,7 +30,6 @@ import           Empire.Data.Layers                 (SpanLength, SpanOffset)
 import qualified Empire.Data.BreadcrumbHierarchy    as BH
 import qualified Empire.Data.Graph                  as Graph
 
--- import qualified OCI.IR.Combinators                 as IR
 import qualified Luna.IR                            as IR
 
 import qualified Data.List as L (take, head, drop, tail)
