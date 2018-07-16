@@ -112,10 +112,10 @@ runInterpreter path imports = return Nothing -- runASTOp $ do
 
 updateNodes :: GraphLocation -> Command Graph ()
 updateNodes loc@(GraphLocation _ br) = do
-    -- (inEdge, outEdge) <- use $ Graph.breadcrumbHierarchy . BH.portMapping
+    (inEdge, outEdge) <- use $ Graph.userState . Graph.breadcrumbHierarchy . BH.portMapping
     (updates) <- runASTOp $ do
-        -- sidebarUpdates <- (\x y -> [x, y]) <$> GraphBuilder.buildInputSidebarTypecheckUpdate  inEdge
-        --                                    <*> GraphBuilder.buildOutputSidebarTypecheckUpdate outEdge
+        sidebarUpdates <- (\x y -> [x, y]) <$> GraphBuilder.buildInputSidebarTypecheckUpdate  inEdge
+                                           <*> GraphBuilder.buildOutputSidebarTypecheckUpdate outEdge
         allNodeIds  <- uses Graph.breadcrumbHierarchy topLevelIDs
         nodeUpdates <- mapM GraphBuilder.buildNodeTypecheckUpdate allNodeIds
         -- errors      <- forM allNodeIds $ \nid -> do
@@ -127,7 +127,7 @@ updateNodes loc@(GraphLocation _ br) = do
         --                 toSrcLoc (Errors.ModuleTagged mod (Errors.FromFunction function))   = APIError.SourceLocation (convert mod) Nothing (convert function)
         --                 errorDetails = APIError.CompileErrorDetails (map toSrcLoc (e ^. Errors.arisingFrom)) (map toSrcLoc (e ^. Errors.requiredBy))
         --             return $ Just $ (nid, NodeError $ APIError.Error (APIError.CompileError errorDetails) $ e ^. Errors.description)
-        return (nodeUpdates)
+        return (sidebarUpdates <> nodeUpdates)
     mask_ $ do
         traverse_ (Publisher.notifyNodeTypecheck loc) updates
         -- for_ (catMaybes errors) $ \(nid, e) -> Publisher.notifyResultUpdate loc nid e 0
