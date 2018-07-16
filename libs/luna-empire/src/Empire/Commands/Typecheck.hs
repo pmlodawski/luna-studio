@@ -279,9 +279,17 @@ makePrimStdIfMissing file = do
             Graph.userState . runtimeUnits .= computed
             Graph.userState . resolvers    .= ress
 
+ensureCurrentScope :: Bool -> FilePath -> NodeRef -> Command InterpreterEnv ()
+ensureCurrentScope recompute path root = do
+    modName <- filePathToQualName path
+    existing <- use $ Graph.userState . resolvers . at modName
+    when (recompute || isNothing existing) $ do
+        print $ "RECOMPUTE"
+        liftIO $ IO.hFlush IO.stdout
+        compileCurrentScope path root
 
-compileCurrentScope :: Bool -> FilePath -> NodeRef -> Command InterpreterEnv ()
-compileCurrentScope recompute path root = do
+compileCurrentScope :: FilePath -> NodeRef -> Command InterpreterEnv ()
+compileCurrentScope path root = do
     typed   <- use $ Graph.userState . typedUnits
     evald   <- use $ Graph.userState . runtimeUnits
     ress    <- use $ Graph.userState . resolvers
@@ -334,7 +342,7 @@ run loc@(GraphLocation file br) clsGraph' rooted' interpret recompute = do
     Graph.userState . clsGraph .= newClsGraph
 
     makePrimStdIfMissing file
-    compileCurrentScope recompute file a
+    ensureCurrentScope recompute file a
 
     let [fun] = newClsGraph ^. Graph.clsFuns . to Map.elems
     typed <- use $ Graph.userState . typedUnits
