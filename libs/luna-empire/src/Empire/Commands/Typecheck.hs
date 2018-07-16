@@ -86,8 +86,20 @@ import qualified Luna.IR                          as IR
 -- import qualified Luna.IR.Layer.Errors             as Errors
 -- import           OCI.IR.Name.Qualified            (QualName)
 
--- runTC :: QualName -> String -> Imports -> Command Graph ()
-runTC moduleName functionName imports = return () -- do
+runTC :: GraphLocation -> Command InterpreterEnv ()
+runTC (GraphLocation file br) = do
+    typed <- use $ Graph.userState . typedUnits
+    resolver <- fmap (mconcat . Map.elems) $ use $ Graph.userState . resolvers
+    zoomCommand clsGraph $ case br of
+        Breadcrumb (Definition uuid:_) -> do
+            cls <- use $ Graph.userState
+            let Just root = cls ^? Graph.clsFuns . ix uuid . Graph.funGraph . Graph.breadcrumbHierarchy . BH.self
+            liftScheduler $ do
+                Prep.preprocessDef resolver root
+                TC.runTypechecker def root typed
+            return ()
+        Breadcrumb _                   -> return ()
+ -- do
     -- let currentTarget = TgtDef (convert moduleName) (convert functionName)
     -- runTypecheck currentTarget imports
     -- runASTOp $ do
@@ -110,26 +122,29 @@ runInterpreter path imports = return Nothing -- runASTOp $ do
     --                 Right r -> return $ Just r
     --     _ -> return Nothing
 
-updateNodes :: GraphLocation -> Command Graph ()
-updateNodes loc@(GraphLocation _ br) = do
-    (inEdge, outEdge) <- use $ Graph.userState . Graph.breadcrumbHierarchy . BH.portMapping
-    (updates) <- runASTOp $ do
-        sidebarUpdates <- (\x y -> [x, y]) <$> GraphBuilder.buildInputSidebarTypecheckUpdate  inEdge
-                                           <*> GraphBuilder.buildOutputSidebarTypecheckUpdate outEdge
-        allNodeIds  <- uses Graph.breadcrumbHierarchy topLevelIDs
-        nodeUpdates <- mapM GraphBuilder.buildNodeTypecheckUpdate allNodeIds
-        -- errors      <- forM allNodeIds $ \nid -> do
-        --     errs <- IR.getLayer @IR.Errors =<< ASTRead.getASTRef nid
-        --     case errs of
-        --         []     -> return Nothing
-        --         e : es -> do
-        --             let toSrcLoc (Errors.ModuleTagged mod (Errors.FromMethod klass method)) = APIError.SourceLocation (convert mod) (Just (convert klass)) (convert method)
-        --                 toSrcLoc (Errors.ModuleTagged mod (Errors.FromFunction function))   = APIError.SourceLocation (convert mod) Nothing (convert function)
-        --                 errorDetails = APIError.CompileErrorDetails (map toSrcLoc (e ^. Errors.arisingFrom)) (map toSrcLoc (e ^. Errors.requiredBy))
-        --             return $ Just $ (nid, NodeError $ APIError.Error (APIError.CompileError errorDetails) $ e ^. Errors.description)
-        return (sidebarUpdates <> nodeUpdates)
-    mask_ $ do
-        traverse_ (Publisher.notifyNodeTypecheck loc) updates
+updateNodes :: GraphLocation -> Command InterpreterEnv ()
+updateNodes loc@(GraphLocation _ br) = case br of
+    Breadcrumb (Definition uuid:rest) -> do
+        zoomCommand clsGraph $ withRootedFunction uuid $ runInternalBreadcrumb (Breadcrumb rest) $ do
+            (inEdge, outEdge) <- use $ Graph.userState . Graph.breadcrumbHierarchy . BH.portMapping
+            (updates) <- runASTOp $ do
+                sidebarUpdates <- (\x y -> [x, y]) <$> GraphBuilder.buildInputSidebarTypecheckUpdate  inEdge
+                                                   <*> GraphBuilder.buildOutputSidebarTypecheckUpdate outEdge
+                allNodeIds  <- uses Graph.breadcrumbHierarchy topLevelIDs
+                nodeUpdates <- mapM GraphBuilder.buildNodeTypecheckUpdate allNodeIds
+                -- errors      <- forM allNodeIds $ \nid -> do
+                --     errs <- IR.getLayer @IR.Errors =<< ASTRead.getASTRef nid
+                --     case errs of
+                --         []     -> return Nothing
+                --         e : es -> do
+                --             let toSrcLoc (Errors.ModuleTagged mod (Errors.FromMethod klass method)) = APIError.SourceLocation (convert mod) (Just (convert klass)) (convert method)
+                --                 toSrcLoc (Errors.ModuleTagged mod (Errors.FromFunction function))   = APIError.SourceLocation (convert mod) Nothing (convert function)
+                --                 errorDetails = APIError.CompileErrorDetails (map toSrcLoc (e ^. Errors.arisingFrom)) (map toSrcLoc (e ^. Errors.requiredBy))
+                --             return $ Just $ (nid, NodeError $ APIError.Error (APIError.CompileError errorDetails) $ e ^. Errors.description)
+                return (sidebarUpdates <> nodeUpdates)
+            mask_ $ do
+                traverse_ (Publisher.notifyNodeTypecheck loc) updates
+    Breadcrumb _ -> return ()
         -- for_ (catMaybes errors) $ \(nid, e) -> Publisher.notifyResultUpdate loc nid e 0
 
 updateValues :: GraphLocation
@@ -235,7 +250,7 @@ fileImportPaths file = liftIO $ do
 stop :: Command InterpreterEnv ()
 stop = do
     return ()
-    -- cln       <- use cleanUp
+    -- cln       <- use $ Graph.userState . cleanUp
     -- threads   <- use listeners
     -- listeners .= []
     -- liftIO $ mapM_ Async.uninterruptibleCancel threads
@@ -344,23 +359,8 @@ run loc@(GraphLocation file br) clsGraph' rooted' interpret recompute = do
     makePrimStdIfMissing file
     ensureCurrentScope recompute file a
 
-    let [fun] = newClsGraph ^. Graph.clsFuns . to Map.elems
-    typed <- use $ Graph.userState . typedUnits
-    resolver <- fmap (mconcat . Map.elems) $ use $ Graph.userState . resolvers
-    zoomCommand clsGraph $ do
-        cls <- use $ Graph.userState
-        case br of
-            Breadcrumb [] -> do
-                return ()
-            Breadcrumb (Definition uuid:rest) -> do
-                let Just root = cls ^? Graph.clsFuns . ix uuid . Graph.funGraph . Graph.breadcrumbHierarchy . BH.self
-                liftScheduler $ do
-                    Prep.preprocessDef resolver root
-                    TC.runTypechecker def root typed
-                withRootedFunction uuid $ do
-                    runInternalBreadcrumb (Breadcrumb rest) $ do
-                        updateNodes  loc
-        -- updateNodes loc
+    runTC loc
+    updateNodes loc
     return ()
             -- void $ mask_ $ recomputeCurrentScope imports file
     --         let scopeGetter = if recompute
