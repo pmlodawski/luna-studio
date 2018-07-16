@@ -31,6 +31,7 @@ import           System.Environment               (getEnv)
 import           System.FilePath                  (takeDirectory)
 import qualified Path
 
+import qualified Luna.IR.Aliases                  as Uni
 import qualified Luna.IR                          as IR
 import qualified Luna.Pass.Typing.Typechecker     as TC
 import qualified Luna.Pass.Preprocess.PreprocessDef as Prep
@@ -57,6 +58,7 @@ import           Empire.Empire
 import qualified System.IO as IO
 import qualified Luna.Debug.IR.Visualizer as Vis
 
+import qualified Data.Graph.Data.Component.Vector  as ComponentVector
 import qualified Luna.Pass.Resolve.Data.Resolution as Resolution
 import qualified Luna.Pass.Sourcing.UnitMapper     as UnitMapper
 import           Luna.Pass.Data.Stage (Stage)
@@ -67,10 +69,15 @@ import qualified Data.Graph.Data.Layer.Layout      as Layout
 import qualified Luna.Pass.Scheduler                 as Scheduler
 import qualified Luna.Pass.Sourcing.UnitLoader as UnitLoader
 import qualified Luna.Pass.Sourcing.ImportsPlucker as ImportsPlucker
+import qualified Luna.Pass.Evaluation.Interpreter as Interpreter
 import qualified Luna.Std as Std
 import qualified Luna.Pass.Sourcing.Data.Unit  as Unit
+import qualified Luna.Runtime as Runtime
 
 import qualified Data.Set as Set
+
+import Empire.Utils.ValueListener (ValueRep (..), SingleRep (..))
+import qualified Empire.Utils.ValueListener as Listener
 
 import Data.Map (Map)
 -- import           Luna.Builtin.Data.LunaEff        (runError, runIO)
@@ -107,20 +114,22 @@ runTC (GraphLocation file br) = do
     --     Graph.breadcrumbHierarchy . BH.refs %= (\x -> Map.findWithDefault x x mapping)
     -- return ()
 
--- runInterpreter :: FilePath -> Imports -> Command Graph (Maybe Interpreter.LocalScope)
-runInterpreter path imports = return Nothing -- runASTOp $ do
-    -- rootPath <- liftIO $ Project.findProjectRootForFile =<< Path.parseAbsFile path
-    -- selfRef  <- use $ Graph.breadcrumbHierarchy . BH.self
-    -- IR.matchExpr selfRef $ \case
-    --     IR.ASGFunction _ [] b -> do
-    --         bodyRef <- IR.source b
-    --         res     <- Interpreter.interpret' imports . IR.unsafeGeneralize $ bodyRef
-    --         mask_ $ do
-    --             result  <- liftIO $ withCurrentDirectory (maybe (takeDirectory path) Path.toFilePath rootPath) $ runIO $ runError $ execStateT res def
-    --             case result of
-    --                 Left e  -> return Nothing
-    --                 Right r -> return $ Just r
-    --     _ -> return Nothing
+runInterpreter :: FilePath -> Runtime.Units -> Command Graph (Maybe Interpreter.LocalScope)
+runInterpreter path imports = do
+    rootPath   <- liftIO $ Project.findProjectRootForFile =<< Path.parseAbsFile path
+    selfRef    <- use    $ Graph.userState . Graph.breadcrumbHierarchy . BH.self
+    bodyRefMay <- runASTOp $ matchExpr selfRef $ \case
+        Uni.Function _ as b -> do
+            args <- ComponentVector.toList as
+            if null args then Just <$> IR.source b else pure Nothing
+        _ -> return Nothing
+    interpreted <- for bodyRefMay $ \bodyRef -> liftScheduler $ Interpreter.execInterpreter bodyRef imports
+    fmap join $ for interpreted $ \res ->
+        mask_ $ do
+            result  <- liftIO $ withCurrentDirectory (maybe (takeDirectory path) Path.toFilePath rootPath) $ Runtime.runIO $ Runtime.runError res
+            case result of
+                Left e  -> return Nothing
+                Right r -> return $ Just r
 
 updateNodes :: GraphLocation -> Command InterpreterEnv ()
 updateNodes loc@(GraphLocation _ br) = case br of
@@ -148,58 +157,40 @@ updateNodes loc@(GraphLocation _ br) = case br of
         -- for_ (catMaybes errors) $ \(nid, e) -> Publisher.notifyResultUpdate loc nid e 0
 
 updateValues :: GraphLocation
-             -> a
+             -> Interpreter.LocalScope
              -> Command Graph [Async ()]
-updateValues loc scope = return [] -- do
-    -- childrenMap <- use $ Graph.breadcrumbHierarchy . BH.children
-    -- let allNodes = Map.assocs $ view BH.self <$> childrenMap
-    -- env     <- ask
-    -- allVars <- runASTOp $ fmap catMaybes $ forM allNodes $ \(nid, tgt) -> do
-    --     pointer <- ASTRead.getASTPointer nid
-    --     IR.matchExpr pointer $ \case
-    --         IR.Unify{} -> Just . (nid,) <$> ASTRead.getVarNode pointer
-    --         _          -> return Nothing
-    -- let send nid m = flip runReaderT env $
-    --         Publisher.notifyResultUpdate loc nid m 0
-    --     sendRep nid (ErrorRep e)     = send nid
-    --                                  $ NodeError
-    --                                  $ APIError.Error APIError.RuntimeError
-    --                                  $ convert e
-    --     sendRep nid (SuccessRep s l) = send nid
-    --                                  $ NodeValue (convert s)
-    --                                  $ Value . convert <$> l
-    --     sendStreamRep nid a@(ErrorRep _)   = sendRep nid a
-    --     sendStreamRep nid (SuccessRep s l) = send nid
-    --                                        $ NodeValue (convert s)
-    --                                        $ StreamDataPoint . convert <$> l
-    -- asyncs <- forM allVars $ \(nid, ref) -> do
-    --     let resVal = Interpreter.localLookup (IR.unsafeGeneralize ref) scope
-    --     liftIO $ forM resVal $ \v -> do
-    --         value <- getReps v
-    --         case value of
-    --             OneTime r   -> Async.async $ sendRep nid r
-    --             Streaming f -> do
-    --                 send nid (NodeValue "Stream" $ Just StreamStart)
-    --                 Async.async (f (sendStreamRep nid))
-    -- return $ catMaybes asyncs
+updateValues loc scope = do
+    childrenMap <- use $ Graph.userState . Graph.breadcrumbHierarchy . BH.children
+    let allNodes = Map.assocs $ view BH.self <$> childrenMap
+    env     <- ask
+    allVars <- runASTOp $ fmap catMaybes $ forM allNodes $ \(nid, tgt) -> do
+        pointer <- ASTRead.getASTPointer nid
+        matchExpr pointer $ \case
+            Uni.Unify{} -> Just . (nid,) <$> ASTRead.getVarNode pointer
+            _          -> return Nothing
+    let send nid m = (>>) (print (show nid <> ": " <> show m) >> liftIO (IO.hFlush IO.stdout)) $ flip runReaderT env $
+            Publisher.notifyResultUpdate loc nid m 0
+        sendRep nid (ErrorRep e)     = send nid
+                                     $ NodeError
+                                     $ APIError.Error APIError.RuntimeError e
+        sendRep nid (SuccessRep s l) = send nid
+                                     $ NodeValue s
+                                     $ Value <$> l
+        sendStreamRep nid a@(ErrorRep _)   = sendRep nid a
+        sendStreamRep nid (SuccessRep s l) = send nid
+                                           $ NodeValue s
+                                           $ StreamDataPoint <$> l
+    asyncs <- forM allVars $ \(nid, ref) -> do
+        let resVal = Interpreter.localLookup ref scope
+        liftIO $ forM resVal $ \v -> do
+            value <- Listener.getReps v
+            case value of
+                OneTime r   -> Async.async $ sendRep nid r
+                Streaming f -> do
+                    send nid (NodeValue "Stream" $ Just StreamStart)
+                    Async.async (f (sendStreamRep nid))
+    return $ catMaybes asyncs
 
-flushCache :: Command InterpreterEnv ()
-flushCache = do
-    -- errorsCache .= def
-    -- valuesCache .= def
-    -- nodesCache  .= def
-    return ()
-
--- newtype Scope = Scope CompiledModules
--- makeWrapped ''Scope
-
--- flattenScope :: Scope -> Imports
--- flattenScope (Scope (CompiledModules mods prims)) =
---     unionsImports $ prims : Map.elems mods
-
--- createStdlib :: String -> IO (IO (), Scope)
--- createStdlib =
---     fmap (id *** Scope) . Compilation.prepareStdlib . Map.singleton "Std"
 
 filePathToQualName :: MonadIO m => FilePath -> m IR.Qualified
 filePathToQualName path = liftIO $ do
@@ -219,42 +210,15 @@ fileImportPaths file = liftIO $ do
         fmap Path.toFilePath . Bimap.toMapR <$> Project.findProjectSources p
     pure $ Map.unions srcs
 
--- recomputeCurrentScope :: MVar CompiledModules
---                       -> FilePath
---                       -> Command InterpreterEnv Imports
--- recomputeCurrentScope imports file = do
---     Lifted.modifyMVar imports $ \imps -> do
---         importPaths     <- liftIO $ do
---             filePath        <- Path.parseAbsFile file
---             currentProjPath <- Project.projectRootForFile filePath
---             Project.projectImportPaths currentProjPath
---         qualName        <- filePathToQualName file
---         (f, nimps)      <- zoom graph $ do
---             t <- runModuleTypecheck qualName (Map.fromList importPaths) imps
---             case t of
---                 Right (a, b) -> return (a, b)
---                 Left e  -> error $ show e <> " " <> file
---         let nimpsF = nimps & Compilation.modules . at qualName ?~ f
---         return (nimpsF, f)
-
--- getCurrentScope :: MVar CompiledModules
---                 -> FilePath
---                 -> Command InterpreterEnv Imports
--- getCurrentScope imports file = do
---     fs       <- liftIO $ readMVar imports
---     qualName <- filePathToQualName file
---     case fs ^. Compilation.modules . at qualName of
---         Just f -> return f
---         _      -> recomputeCurrentScope imports file
-
 stop :: Command InterpreterEnv ()
 stop = do
-    return ()
-    -- cln       <- use $ Graph.userState . cleanUp
-    -- threads   <- use listeners
-    -- listeners .= []
-    -- liftIO $ mapM_ Async.uninterruptibleCancel threads
-    -- liftIO cln
+    print $ "STOPPPPIINNNNNGGGGG !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    liftIO $ IO.hFlush IO.stdout
+    cln     <- use $ Graph.userState . cleanUp
+    threads <- use $ Graph.userState . listeners
+    Graph.userState . listeners .= []
+    liftIO $ mapM_ Async.uninterruptibleCancel threads
+    liftIO cln
 
 translate :: Buffer.RedirectMap -> Int -> NodeRef -> NodeRef 
 translate redMap off node = wrap $ (unwrap (redMap Map.! (Memory.Ptr $ convert node)))
@@ -346,6 +310,8 @@ run :: GraphLocation
     -> Bool
     -> Command InterpreterEnv ()
 run loc@(GraphLocation file br) clsGraph' rooted' interpret recompute = do
+    stop
+
     let Store.RootedWithRedirects rooted redMap = rooted'
     (a, redirects) <- runASTOp $ Store.deserializeWithRedirects rooted
     let originalCls = clsGraph' ^. Graph.clsClass
@@ -361,7 +327,16 @@ run loc@(GraphLocation file br) clsGraph' rooted' interpret recompute = do
 
     runTC loc
     updateNodes loc
-    return ()
+
+    when interpret $ do
+        evald <- use $ Graph.userState . runtimeUnits
+        asyncs <- case br of
+            Breadcrumb (Definition uuid:r) -> zoomCommand clsGraph $ withRootedFunction uuid $ runInternalBreadcrumb (Breadcrumb r) $ do
+                scope <- runInterpreter file evald
+                traverse (updateValues loc) scope
+            _ -> return Nothing
+        Graph.userState . listeners .= fromMaybe [] asyncs
+
             -- void $ mask_ $ recomputeCurrentScope imports file
     --         let scopeGetter = if recompute
     --                           then recomputeCurrentScope

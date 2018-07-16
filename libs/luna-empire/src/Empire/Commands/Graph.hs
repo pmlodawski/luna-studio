@@ -1793,31 +1793,31 @@ getImportPaths (GraphLocation file _) = do
     return $ map (view _2) importPaths
 
 getSearcherHints :: GraphLocation -> Empire ImportsHints
-getSearcherHints loc = do
-    importPaths     <- liftIO $ getImportPaths loc
-    availableSource <- liftIO $ forM importPaths $ \path -> do
-        sources <- Project.findProjectSources =<< Path.parseAbsDir path
-        return $ Bimap.toMapR sources
-    let union = Map.map (Path.toFilePath) $ Map.unions availableSource
-    -- importsMVar <- view modules
-    -- cmpModules  <- liftIO $ readMVar importsMVar
-    res         <- try $ liftScheduler $ do
-        ModLoader.initHC
-        Scheduler.registerAttr @Unit.UnitRefsMap
-        Scheduler.setAttr @Unit.UnitRefsMap def
-        forM (Map.keys union) $ ModLoader.loadUnit def union []
-        refsMap <- Scheduler.getAttr @Unit.UnitRefsMap
-        units <- flip Map.traverseWithKey (unwrap refsMap) $ \name unitRef -> case unitRef ^. Unit.root of
-            Unit.Graph termUnit   -> UnitMapper.mapUnit name termUnit
-            Unit.Precompiled unit -> return unit
-        return units
-    case res of
-        Left exc    -> throwM $ ModuleCompilationException exc
-        Right units -> do
-            -- Lifted.tryPutMVar importsMVar units
-            return $ Map.fromList
-                   $ map (\(a, b) -> (qualNameToText a, importsToHints b))
-                   $ Map.toList units
+getSearcherHints loc = return def
+    {-importPaths     <- liftIO $ getImportPaths loc-}
+    {-availableSource <- liftIO $ forM importPaths $ \path -> do-}
+        {-sources <- Project.findProjectSources =<< Path.parseAbsDir path-}
+        {-return $ Bimap.toMapR sources-}
+    {-let union = Map.map (Path.toFilePath) $ Map.unions availableSource-}
+    {--- importsMVar <- view modules-}
+    {--- cmpModules  <- liftIO $ readMVar importsMVar-}
+    {-res         <- try $ liftScheduler $ do-}
+        {-ModLoader.initHC-}
+        {-Scheduler.registerAttr @Unit.UnitRefsMap-}
+        {-Scheduler.setAttr @Unit.UnitRefsMap def-}
+        {-forM (Map.keys union) $ ModLoader.loadUnit def union []-}
+        {-refsMap <- Scheduler.getAttr @Unit.UnitRefsMap-}
+        {-units <- flip Map.traverseWithKey (unwrap refsMap) $ \name unitRef -> case unitRef ^. Unit.root of-}
+            {-Unit.Graph termUnit   -> UnitMapper.mapUnit name termUnit-}
+            {-Unit.Precompiled unit -> return unit-}
+        {-return units-}
+    {-case res of-}
+        {-Left exc    -> throwM $ ModuleCompilationException exc-}
+        {-Right units -> do-}
+            {--- Lifted.tryPutMVar importsMVar units-}
+            {-return $ Map.fromList-}
+                   {-$ map (\(a, b) -> (qualNameToText a, importsToHints b))-}
+                   {-$ Map.toList units-}
 
 
 reloadInterpreter :: GraphLocation -> Empire ()
