@@ -73,6 +73,7 @@ import qualified Luna.Pass.Sourcing.Data.Class as Class
 import qualified Luna.Pass.Sourcing.Data.Def as Def
 import qualified Luna.Pass.Sourcing.Data.Unit as Unit
 import qualified Luna.Pass.Scheduler                  as Scheduler
+import           Luna.Pass.Data.Stage             (Stage)
 import qualified Luna.Pass.Sourcing.UnitLoader    as ModLoader
 import qualified Luna.Pass.Sourcing.UnitMapper    as UnitMapper
 import qualified Luna.IR                          as IR
@@ -80,6 +81,7 @@ import qualified Luna.IR.Term.Ast.Class           as Term
 -- import qualified Luna.IR.Term.Unit                as Term
 import qualified Data.Graph.Data.Layer.Class as Layer
 import qualified Luna.Project                     as Project
+import qualified Luna.Std                         as Std
 import           Luna.Syntax.Text.Analysis.SpanTree (Spanned(..))
 import qualified Luna.Syntax.Text.Analysis.SpanTree as SpanTree
 import qualified Luna.Syntax.Text.Lexer           as Lexer
@@ -1793,31 +1795,32 @@ getImportPaths (GraphLocation file _) = do
     return $ map (view _2) importPaths
 
 getSearcherHints :: GraphLocation -> Empire ImportsHints
-getSearcherHints loc = return def
-    {-importPaths     <- liftIO $ getImportPaths loc-}
-    {-availableSource <- liftIO $ forM importPaths $ \path -> do-}
-        {-sources <- Project.findProjectSources =<< Path.parseAbsDir path-}
-        {-return $ Bimap.toMapR sources-}
-    {-let union = Map.map (Path.toFilePath) $ Map.unions availableSource-}
-    {--- importsMVar <- view modules-}
-    {--- cmpModules  <- liftIO $ readMVar importsMVar-}
-    {-res         <- try $ liftScheduler $ do-}
-        {-ModLoader.initHC-}
-        {-Scheduler.registerAttr @Unit.UnitRefsMap-}
-        {-Scheduler.setAttr @Unit.UnitRefsMap def-}
-        {-forM (Map.keys union) $ ModLoader.loadUnit def union []-}
-        {-refsMap <- Scheduler.getAttr @Unit.UnitRefsMap-}
-        {-units <- flip Map.traverseWithKey (unwrap refsMap) $ \name unitRef -> case unitRef ^. Unit.root of-}
-            {-Unit.Graph termUnit   -> UnitMapper.mapUnit name termUnit-}
-            {-Unit.Precompiled unit -> return unit-}
-        {-return units-}
-    {-case res of-}
-        {-Left exc    -> throwM $ ModuleCompilationException exc-}
-        {-Right units -> do-}
-            {--- Lifted.tryPutMVar importsMVar units-}
-            {-return $ Map.fromList-}
-                   {-$ map (\(a, b) -> (qualNameToText a, importsToHints b))-}
-                   {-$ Map.toList units-}
+getSearcherHints loc = do
+    importPaths     <- liftIO $ getImportPaths loc
+    availableSource <- liftIO $ forM importPaths $ \path -> do
+        sources <- Project.findProjectSources =<< Path.parseAbsDir path
+        return $ Bimap.toMapR sources
+    let union = Map.map (Path.toFilePath) $ Map.unions availableSource
+    -- importsMVar <- view modules
+    -- cmpModules  <- liftIO $ readMVar importsMVar
+    res         <- try $ liftScheduler $ do
+        ModLoader.initHC
+        (_fin, stdUnitRef) <- Std.stdlib @Stage
+        Scheduler.registerAttr @Unit.UnitRefsMap
+        Scheduler.setAttr @Unit.UnitRefsMap $ wrap $ Map.singleton "Std.Primitive" stdUnitRef
+        forM (Map.keys union) $ ModLoader.loadUnit def union []
+        refsMap <- Scheduler.getAttr @Unit.UnitRefsMap
+        units <- flip Map.traverseWithKey (unwrap refsMap) $ \name unitRef -> case unitRef ^. Unit.root of
+            Unit.Graph termUnit   -> UnitMapper.mapUnit name termUnit
+            Unit.Precompiled unit -> return unit
+        return units
+    case res of
+        Left exc    -> throwM $ ModuleCompilationException exc
+        Right units -> do
+            -- Lifted.tryPutMVar importsMVar units
+            return $ Map.fromList
+                   $ map (\(a, b) -> (qualNameToText a, importsToHints b))
+                   $ Map.toList units
 
 
 reloadInterpreter :: GraphLocation -> Empire ()
