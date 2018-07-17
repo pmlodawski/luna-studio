@@ -21,7 +21,7 @@ import           LunaStudio.Data.Connection                (Connection (Connecti
 import qualified LunaStudio.Data.Connection                as Connection
 import           LunaStudio.Data.Node                      (nodeId)
 import           LunaStudio.Data.NodeLoc                   (NodeLoc, prependPath)
-import           LunaStudio.Data.PortRef                   (AnyPortRef (InPortRef'), OutPortRef, OutPortRefTemplate (OutPortRef))
+import           LunaStudio.Data.PortRef                   (AnyPortRef (InPortRef'), OutPortRef (OutPortRef))
 import           NodeEditor.Action.Basic.AddConnection     (localAddConnection, localAddConnections)
 import           NodeEditor.Action.Basic.AddPort           (localAddPort)
 import           NodeEditor.Action.Basic.AddSubgraph       (localAddSubgraph)

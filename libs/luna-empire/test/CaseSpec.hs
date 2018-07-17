@@ -18,7 +18,7 @@ import           LunaStudio.Data.Port          (OutPortTree (..))
 import           LunaStudio.Data.NodeLoc       (NodeLoc (..))
 import           LunaStudio.Data.PortDefault   (PortDefault (Constant, Expression))
 import           LunaStudio.Data.LabeledTree   (LabeledTree (..))
-import           LunaStudio.Data.PortRef       (InPortRef (..), OutPortRef, OutPortRefTemplate (..), AnyPortRef(..))
+import           LunaStudio.Data.PortRef       (InPortRef (..), OutPortRef (..), AnyPortRef(..))
 import           LunaStudio.Data.TypeRep       (TypeRep(TCons, TStar, TLam, TVar))
 import           Empire.ASTOp                  (runASTOp)
 import qualified Empire.ASTOps.Deconstruct     as ASTDeconstruct

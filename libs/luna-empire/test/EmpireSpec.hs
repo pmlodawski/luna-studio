@@ -44,7 +44,7 @@ import qualified LunaStudio.Data.NodeSearcher    as NodeSearcher
 import           LunaStudio.Data.Port            (InPorts (..), OutPorts (..))
 import qualified LunaStudio.Data.Port            as Port
 import           LunaStudio.Data.PortDefault     (PortDefault (Expression))
-import           LunaStudio.Data.PortRef         (AnyPortRef (..), InPortRef (..), OutPortRef, OutPortRefTemplate (..))
+import           LunaStudio.Data.PortRef         (AnyPortRef (..), InPortRef (..), OutPortRef (..))
 import qualified LunaStudio.Data.PortRef            as PortRef
 import qualified LunaStudio.Data.Position        as Position
 import           LunaStudio.Data.TypeRep         (TypeRep (TCons, TLam, TStar, TVar))

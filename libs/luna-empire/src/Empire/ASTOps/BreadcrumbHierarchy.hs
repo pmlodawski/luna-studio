@@ -28,7 +28,7 @@ import           LunaStudio.Data.NodeId          (NodeId)
 import           LunaStudio.Data.NodeCache       (NodeCache, nodeIdMap, nodeMetaMap)
 import           LunaStudio.Data.NodeLoc         (NodeLoc (..))
 import qualified LunaStudio.Data.NodeMeta        as NodeMeta
-import           LunaStudio.Data.PortRef         (OutPortRefTemplate (..))
+import           LunaStudio.Data.PortRef         (OutPortRef (..))
 import qualified LunaStudio.Data.Port            as Port
 
 import qualified Luna.IR as IR
@@ -62,7 +62,7 @@ childrenFromSeq tgtBeg edge = do
                     ASTBuilder.attachNodeMarkers uid []      =<< source l
                     source r
                 _ -> do
-                    putLayer @Marker expr' $ Just $ toPortMarker' $ OutPortRef (convert uid) []
+                    putLayer @Marker expr' $ Just $ toPortMarker $ OutPortRef (convert uid) []
                     return expr'
             child    <- prepareChild ref childTarget
             nodeMeta <- use $ Graph.nodeCache . nodeMetaMap . at index

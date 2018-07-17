@@ -27,7 +27,7 @@ import           LunaStudio.Data.Port                 (InPorts (InPorts), Labele
 import qualified LunaStudio.Data.Port                 as Port
 import           LunaStudio.Data.PortDefault          (PortDefault, PortValue)
 import qualified LunaStudio.Data.PortDefault          as PortDef
-import           LunaStudio.Data.PortRef              (InPortRef (InPortRef), type OutPortRef, OutPortRefTemplate (OutPortRef))
+import           LunaStudio.Data.PortRef              (InPortRef (InPortRef), OutPortRef (OutPortRef))
 import qualified LunaStudio.Data.PortRef              as PortRef
 import qualified LunaStudio.Data.Position             as Position
 import           LunaStudio.Data.TypeRep              (TypeRep (TCons, TLam, TStar, TVar))

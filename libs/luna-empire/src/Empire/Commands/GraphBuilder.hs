@@ -43,7 +43,7 @@ import           LunaStudio.Data.Port            (InPort, InPortId, InPortIndex 
 import qualified LunaStudio.Data.Port            as Port
 import           LunaStudio.Data.PortDefault     (PortDefault (..), PortValue (..), _Constant)
 import qualified LunaStudio.Data.PortRef         as PortRef
-import           LunaStudio.Data.PortRef         (InPortRef (..), OutPortRefS, OutPortRef (..), srcNodeId, srcNodeLoc)
+import           LunaStudio.Data.PortRef         (InPortRef (..), OutPortRef (..), srcNodeId, srcNodeLoc)
 import           LunaStudio.Data.Position        (Position)
 import           LunaStudio.Data.TypeRep         (TypeRep (TCons, TStar))
 import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan)
@@ -504,7 +504,7 @@ buildConnections = do
     (_, outEdge)   <- getEdgePortMapping
     connections    <- mapM getNodeInputs allNodes
     outputEdgeConn <- getOutputSidebarInputs outEdge
-    pure $ map (over _1 PortRef.toPortRef) $ (maybeToList outputEdgeConn) <> concat connections
+    pure $ (maybeToList outputEdgeConn) <> concat connections
 
 buildInputSidebarTypecheckUpdate :: GraphOp m
     => NodeId -> m API.NodeTypecheckerUpdate
@@ -537,7 +537,7 @@ buildOutputSidebar nid = do
         $ Port [] "output" tp state
 
 getOutputSidebarInputs :: GraphOp m
-    => NodeId -> m (Maybe (OutPortRefS, InPortRef))
+    => NodeId -> m (Maybe (OutPortRef, InPortRef))
 getOutputSidebarInputs outputEdge = do
     ref     <- ASTRead.getCurrentASTTarget
     out     <- ASTRead.getLambdaOutputRef ref
@@ -549,18 +549,18 @@ nodeConnectedToOutput = do
     edges  <- fmap Just $ use $ Graph.breadcrumbHierarchy . BH.portMapping
     fmap join $ forM edges $ \(i, o) -> do
         connection <- getOutputSidebarInputs o
-        let a = (view srcNodeLoc . fst) <$> connection
+        let a = (view srcNodeId . fst) <$> connection
         return a
 
-resolveInput :: GraphOp m => NodeRef -> m (Maybe OutPortRefS)
-resolveInput n = (fmap fromPortMarker') <$> getLayer @Marker n
+resolveInput :: GraphOp m => NodeRef -> m (Maybe OutPortRef)
+resolveInput n = (fmap fromPortMarker) <$> getLayer @Marker n
 
 deepResolveInputs :: GraphOp m
-    => NodeId -> NodeRef -> InPortRef -> m [(OutPortRefS, InPortRef)]
+    => NodeId -> NodeRef -> InPortRef -> m [(OutPortRef, InPortRef)]
 deepResolveInputs nid ref portRef@(InPortRef loc id) = do
     currentPortResolution <- toList <$> resolveInput ref
     let currentPortConn    = (, portRef)
-            <$> (filter ((/= nid) . view srcNodeLoc) currentPortResolution)
+            <$> (filter ((/= nid) . view srcNodeId) currentPortResolution)
         unfilteredPortConn = (, portRef) <$> currentPortResolution
     args       <- ASTDeconstruct.extractAppPorts ref
     argsConns  <- forM (zip args [0..]) $ \(arg, i)
@@ -577,7 +577,7 @@ deepResolveInputs nid ref portRef@(InPortRef loc id) = do
         _           -> pure []
     pure $ concat [currentPortConn, headConns, concat argsConns]
 
-getNodeInputs :: GraphOp m => NodeId -> m [(OutPortRefS, InPortRef)]
+getNodeInputs :: GraphOp m => NodeId -> m [(OutPortRef, InPortRef)]
 getNodeInputs nid = do
     let loc = NodeLoc def nid
     ref      <- ASTRead.getASTTarget   nid

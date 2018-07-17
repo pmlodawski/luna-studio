@@ -48,7 +48,7 @@ import           LunaStudio.Data.NodeLoc       (NodeLoc (..))
 import           LunaStudio.Data.Port          (Port)
 import qualified LunaStudio.Data.Port          as Port
 import qualified LunaStudio.Data.PortRef       as PortRef
-import           LunaStudio.Data.PortRef       (AnyPortRef(InPortRef'), InPortRef(..), OutPortRef, OutPortRefTemplate(..))
+import           LunaStudio.Data.PortRef       (AnyPortRef(InPortRef'), InPortRef(..), OutPortRef(..))
 
 import           Test.Hspec                    (expectationFailure)
 

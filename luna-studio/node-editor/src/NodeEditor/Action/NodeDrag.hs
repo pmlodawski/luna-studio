@@ -12,7 +12,7 @@ import           Control.Arrow
 import qualified Data.Map                                   as Map
 import           LunaStudio.Data.Geometry                   (snap)
 import           LunaStudio.Data.NodeLoc                    (NodeLoc)
-import           LunaStudio.Data.PortRef                    (InPortRef (InPortRef), OutPortRef, OutPortRefTemplate (OutPortRef))
+import           LunaStudio.Data.PortRef                    (InPortRef (InPortRef), OutPortRef (OutPortRef))
 import qualified LunaStudio.Data.PortRef                    as PortRef
 import           LunaStudio.Data.Position                   (Position, move, vector)
 import           NodeEditor.Action.Basic                    (connect, localMoveNodes, moveNodes, selectNodes, updatePortsModeForNode)

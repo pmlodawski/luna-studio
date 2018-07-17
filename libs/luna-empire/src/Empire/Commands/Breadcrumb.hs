@@ -35,7 +35,7 @@ import           LunaStudio.Data.Library         (LibraryId)
 import           LunaStudio.Data.NodeLoc         (NodeLoc(..))
 import           LunaStudio.Data.NodeId          (NodeId)
 import           LunaStudio.Data.NodeCache       (portMappingMap)
-import           LunaStudio.Data.PortRef         (OutPortRefTemplate(..))
+import           LunaStudio.Data.PortRef         (OutPortRef(..))
 import           LunaStudio.Data.Project         (ProjectId)
 import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
 import           Data.Text.Span                  (SpacedSpan(..))
@@ -67,7 +67,7 @@ makeGraphCls fun lastUUID = do
     nodeCache <- use $ Graph.userState . Graph.clsNodeCache
     uuid      <- maybe (liftIO UUID.nextRandom) return lastUUID
     (funName, ref, fileOffset) <- runASTOp $ do
-        putLayer @Marker fun $ Just $ toPortMarker' $ OutPortRef (convert uuid) []
+        putLayer @Marker fun $ Just $ toPortMarker $ OutPortRef (convert uuid) []
         asgFun    <- ASTRead.cutThroughDocAndMarked fun
         matchExpr asgFun $ \case
             ASGFunction n _ _ -> do

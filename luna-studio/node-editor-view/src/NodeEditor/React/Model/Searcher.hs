@@ -19,7 +19,7 @@ import           LunaStudio.Data.NodeLoc                    (NodeLoc)
 import qualified LunaStudio.Data.NodeLoc                    as NodeLoc
 import           LunaStudio.Data.NodeSearcher               (Match)
 import qualified LunaStudio.Data.NodeSearcher               as NS
-import           LunaStudio.Data.PortRef                    (OutPortRef, OutPortRefTemplate(OutPortRef), srcNodeLoc)
+import           LunaStudio.Data.PortRef                    (OutPortRef (OutPortRef), srcNodeLoc)
 import qualified LunaStudio.Data.PortRef                    as PortRef
 import           LunaStudio.Data.Position                   (Position)
 import           LunaStudio.Data.TypeRep                    (TypeRep (TCons))

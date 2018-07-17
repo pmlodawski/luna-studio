@@ -8,7 +8,7 @@ import qualified Safe
 
 import           LunaStudio.Data.Node               (NodeId)
 import qualified LunaStudio.Data.PortRef            as PortRef
-import           LunaStudio.Data.PortRef            (OutPortRefTemplate (..))
+import           LunaStudio.Data.PortRef            (OutPortRef (..))
 import           LunaStudio.Data.NodeLoc            (NodeLoc (..))
 import qualified LunaStudio.Data.Port               as Port
 import           Empire.ASTOp                       (GraphOp, match)
@@ -344,7 +344,7 @@ attachNodeMarkers marker port ref' = go port ref' where
             App{}     -> goOn port =<< extractAppPorts ref
             Tuple as  -> goOn port =<< mapM source =<< ptrListToList as
             List  as  -> goOn port =<< mapM source =<< ptrListToList as
-            _         -> putLayer @Marker ref $ Just $ toPortMarker' $ OutPortRef (NodeLoc def marker) port
+            _         -> putLayer @Marker ref $ Just $ toPortMarker $ OutPortRef (NodeLoc def marker) port
 
 detachNodeMarkersForArgs :: GraphOp m => NodeRef -> m ()
 detachNodeMarkersForArgs lam = do

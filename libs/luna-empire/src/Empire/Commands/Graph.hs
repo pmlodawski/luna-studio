@@ -105,7 +105,7 @@ import           LunaStudio.Data.Point            (Point)
 import           LunaStudio.Data.Port             (InPortId, InPortIndex (..), getPortNumber)
 import qualified LunaStudio.Data.Port             as Port
 import           LunaStudio.Data.PortDefault      (PortDefault)
-import           LunaStudio.Data.PortRef          (AnyPortRef (..), InPortRef (..), OutPortRefTemplate (..), OutPortRef, OutPortRefS)
+import           LunaStudio.Data.PortRef          (AnyPortRef (..), InPortRef (..), OutPortRef (..))
 import qualified LunaStudio.Data.PortRef          as PortRef
 import           LunaStudio.Data.Position         (Position)
 import qualified LunaStudio.Data.Position         as Position
@@ -787,7 +787,7 @@ getNodeDownstream nodeId = do
     return $ nodeId : go connsWithoutOutput nodeId
 
 connectPersistent :: GraphOp m => OutPortRef -> AnyPortRef -> m Connection
-connectPersistent src@(PortRef.toPortRefS -> OutPortRef srcNodeId srcPort) (InPortRef' dst@(InPortRef (NodeLoc _ dstNodeId) dstPort)) = do
+connectPersistent src@(OutPortRef (convert -> srcNodeId) srcPort) (InPortRef' dst@(InPortRef (NodeLoc _ dstNodeId) dstPort)) = do
     -- FIXME[MK]: passing the `generateNodeName` here is a hack arising from cyclic module deps. Need to remove together with modules refactoring.
     whenM (not <$> ASTRead.isInputSidebar srcNodeId) $ do
         ref   <- ASTRead.getASTRef srcNodeId

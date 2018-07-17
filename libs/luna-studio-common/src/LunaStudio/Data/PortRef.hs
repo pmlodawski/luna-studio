@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 module LunaStudio.Data.PortRef
     ( module LunaStudio.Data.PortRef
     , nodeLoc
@@ -8,16 +7,10 @@ import           Control.Lens            (makePrisms)
 import           Control.DeepSeq         (NFData)
 import           Data.Aeson.Types        (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import           Data.Binary             (Binary)
-#ifndef __GHCJS__
-import qualified Data.Vector.Storable.Foreign as Foreign
-#endif
-import           Foreign.Ptr             (castPtr, plusPtr)
-import           Foreign.Storable        (Storable(..))
 import           LunaStudio.Data.Node    (NodeId)
 import           LunaStudio.Data.NodeLoc (HasNodeLoc (..), NodeLoc)
 import qualified LunaStudio.Data.NodeLoc as NodeLoc
 import           LunaStudio.Data.Port    (AnyPortId (..), InPortId, OutPortId, OutPortIndex(Projection))
-import           System.IO.Unsafe        (unsafePerformIO)
 import           Prologue
 
 
@@ -26,16 +19,9 @@ data InPortRef = InPortRef
     , _dstPortId :: InPortId
     } deriving (Eq, Generic, Ord, Show)
 
-data OutPortRefTemplate a b = OutPortRef { _srcNodeLoc :: a
-                                         , _srcPortId  :: b
-                                         } deriving (Eq, Generic, Ord, Show)
-
-type OutPortRef = OutPortRefTemplate NodeLoc OutPortId
-
-#ifndef __GHCJS__
-type OutPortRefS = OutPortRefTemplate NodeId (Foreign.Vector Int)
-#endif
-
+data OutPortRef = OutPortRef { _srcNodeLoc :: NodeLoc
+                             , _srcPortId  :: OutPortId
+                             } deriving (Eq, Generic, Ord, Show)
 
 data AnyPortRef
     = OutPortRef' OutPortRef
@@ -44,8 +30,8 @@ data AnyPortRef
 
 makeLenses ''AnyPortRef
 makePrisms ''AnyPortRef
-makeLenses ''OutPortRefTemplate
-makePrisms ''OutPortRefTemplate
+makeLenses ''OutPortRef
+makePrisms ''OutPortRef
 makeLenses ''InPortRef
 makePrisms ''InPortRef
 
@@ -106,22 +92,3 @@ dstNodeId = dstNodeLoc . NodeLoc.nodeId
 
 srcNodeId :: Lens' OutPortRef NodeId
 srcNodeId = srcNodeLoc . NodeLoc.nodeId
-
-#ifndef __GHCJS__
-
-toPortRefS :: OutPortRef -> OutPortRefS
-toPortRefS (OutPortRef a b) = OutPortRef (convert a) (unsafePerformIO $ Foreign.fromList (coerce b :: [Int]))
-
-toPortRef :: OutPortRefS -> OutPortRef
-toPortRef (OutPortRef a b) = OutPortRef (convert a) (coerce (unsafePerformIO (Foreign.toList b)) :: OutPortId)
-
-instance (Storable a, Storable b) => Storable (OutPortRefTemplate a b) where
-    sizeOf _ = sizeOf (undefined :: a) + sizeOf (undefined :: b)
-    alignment _ = alignment (undefined :: Int)
-    peek p = OutPortRef <$> peek (castPtr p)
-                        <*> peek (p `plusPtr` sizeOf (undefined :: a))
-    poke p op = do
-        poke (castPtr p) (op ^. srcNodeLoc)
-        poke (p `plusPtr` sizeOf (undefined :: a)) (op ^. srcPortId)
-
-#endif

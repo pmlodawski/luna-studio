@@ -47,7 +47,7 @@ import qualified LunaStudio.Data.Diff                    as Diff
 import qualified LunaStudio.Data.Graph                   as Graph
 import qualified LunaStudio.Data.Node                    as Node
 import           LunaStudio.Data.Port                    (OutPortIndex (Projection))
-import           LunaStudio.Data.PortRef                 (AnyPortRef (InPortRef'), OutPortRef, OutPortRefTemplate (..))
+import           LunaStudio.Data.PortRef                 (AnyPortRef (InPortRef'), OutPortRef (..))
 import           Prologue                                hiding (throwM)
 
 type Handler = ByteString -> UndoPure ()

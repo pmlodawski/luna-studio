@@ -27,8 +27,7 @@ module Empire.Prelude (module X, nameToString, pathNameToString, stringToName,
                       pattern ClsASG, type ClsASG, pattern Metadata, inputs,
                       pattern ImportHub, pattern Import, pattern ImportSrc,
                       irDeleteLink, pattern Invalid, toNodeMeta, fromNodeMeta,
-                      toPortMarker, fromPortMarker, toPortMarker', fromPortMarker',
-                      NodeMetaLike, OutPortRefLike
+                      toPortMarker, fromPortMarker, NodeMetaLike, OutPortRefLike
                       ) where
 
 import qualified Control.Monad.State.Layered as Layered
@@ -76,7 +75,7 @@ import Data.Graph.Component.Node.Layer.NodeMeta (Meta, NodeMetaLike(..))
 import qualified Data.Graph.Component.Node.Layer.NodeMeta as NM
 import System.IO.Unsafe (unsafePerformIO)
 
-import LunaStudio.Data.PortRef (OutPortRefS, OutPortRef, OutPortRefTemplate(..))
+import LunaStudio.Data.PortRef (OutPortRef(..))
 import LunaStudio.Data.NodeMeta (NodeMeta(..))
 import LunaStudio.Data.Position (Position(..))
 import LunaStudio.Data.Vector2 (Vector2(..))
@@ -191,7 +190,6 @@ ptrListToList :: MonadIO m => PtrList.ComponentVector comp layout -> m [Componen
 ptrListToList = PtrList.toList
 
 ociSetToList :: (MonadIO m) => PtrSet.ComponentSet c l -> m [Component c l]
--- ociSetToList = Set.toList . (coerce :: PtrSet.ComponentSet c l -> PtrSet.UnmanagedPtrSet a)
 ociSetToList = Mutable.toList 
 
 generalize :: Coercible a b => a -> b
@@ -286,9 +284,6 @@ compListToList (List.Cons a l) = a : compListToList l
 inputs ref = compListToList <$> IR.inputs ref
 
 
-GTraversable.derive ''OutPortRefTemplate
--- GTraversable.derive ''UUID
-
 fromNodeMeta :: NodeMeta -> NodeMetaLike
 fromNodeMeta (NodeMeta (Position (Vector2 x y)) d s) = NodeMetaLike (NM.Position x y) d (over both (unsafePerformIO . Foreign.fromList . convert) <$> s)
 toNodeMeta :: NodeMetaLike -> NodeMeta
@@ -297,10 +292,6 @@ toNodeMeta (NodeMetaLike (NM.Position x y) d s) = NodeMeta (Position (Vector2 x 
 fromPortMarker :: OutPortRefLike -> OutPortRef
 fromPortMarker (OutPortRefLike uuid fvec) =
    OutPortRef (convert uuid) (coerce (unsafePerformIO (Foreign.toList fvec)) :: OutPortId)
-fromPortMarker' :: OutPortRefLike -> OutPortRefS
-fromPortMarker' (OutPortRefLike uuid fvec) =
-   OutPortRef (uuid) (fvec)
-toPortMarker :: OutPortRefS -> OutPortRefLike
-toPortMarker (OutPortRef a b) = OutPortRefLike (a) (b)
-toPortMarker' :: OutPortRef -> OutPortRefLike
-toPortMarker' (OutPortRef a b) = OutPortRefLike (convert a) (unsafePerformIO $ Foreign.fromList (coerce b :: [Int]))
+
+toPortMarker :: OutPortRef -> OutPortRefLike
+toPortMarker (OutPortRef a b) = OutPortRefLike (convert a) (unsafePerformIO $ Foreign.fromList (coerce b :: [Int]))
