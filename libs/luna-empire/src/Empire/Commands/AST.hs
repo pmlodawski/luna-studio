@@ -1,12 +1,3 @@
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE LambdaCase          #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE PartialTypeSignatures #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications    #-}
-{-# LANGUAGE TypeOperators       #-}
-{-# LANGUAGE ViewPatterns        #-}
-
 module Empire.Commands.AST where
 
 import           Control.Monad.State
@@ -15,7 +6,7 @@ import           Data.List                         (sortBy)
 import           Empire.Prelude
 
 import           LunaStudio.Data.Node              (NodeId)
-import           LunaStudio.Data.NodeMeta          (NodeMetaS)
+import           LunaStudio.Data.NodeMeta          (NodeMeta)
 import qualified LunaStudio.Data.NodeMeta          as NodeMeta
 import           Empire.Data.AST                   (NodeRef, NotLambdaException(..))
 import           Empire.Data.Layers                (Meta, SpanOffset, SpanLength)
@@ -34,14 +25,14 @@ addNode :: GraphOp m => NodeId -> Maybe Text -> m Text -> NodeRef -> m (NodeRef,
 addNode nid name genName node = do
     ASTBuilder.makeNodeRep nid name genName node
 
-readMeta :: _ => NodeRef -> m (Maybe NodeMetaS)
-readMeta ref = (fmap toNodeMeta') <$> getLayer @Meta ref
+readMeta :: ASTOp g m => NodeRef -> m (Maybe NodeMeta)
+readMeta ref = fmap toNodeMeta <$> getLayer @Meta ref
 
-getNodeMeta :: GraphOp m => NodeId -> m (Maybe NodeMetaS)
+getNodeMeta :: GraphOp m => NodeId -> m (Maybe NodeMeta)
 getNodeMeta = ASTRead.getASTRef >=> readMeta
 
-writeMeta :: _ => NodeRef -> NodeMetaS -> m ()
-writeMeta ref newMeta = putLayer @Meta ref $ Just $ fromNodeMeta' newMeta
+writeMeta :: ASTOp g m => NodeRef -> NodeMeta -> m ()
+writeMeta ref newMeta = putLayer @Meta ref $ Just $ fromNodeMeta newMeta
 
 sortByPosition :: GraphOp m => [NodeId] -> m [NodeRef]
 sortByPosition nodeIds = do

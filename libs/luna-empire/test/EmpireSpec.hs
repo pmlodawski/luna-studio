@@ -39,7 +39,7 @@ import           LunaStudio.Data.LabeledTree     (LabeledTree (..))
 import qualified LunaStudio.Data.Node            as Node
 import           LunaStudio.Data.NodeId          (NodeId)
 import           LunaStudio.Data.NodeLoc         (NodeLoc (..))
-import           LunaStudio.Data.NodeMeta        (NodeMetaTemplate (..), NodeMeta, position)
+import           LunaStudio.Data.NodeMeta        (NodeMeta (..), position)
 import qualified LunaStudio.Data.NodeSearcher    as NodeSearcher
 import           LunaStudio.Data.Port            (InPorts (..), OutPorts (..))
 import qualified LunaStudio.Data.Port            as Port

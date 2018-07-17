@@ -114,7 +114,7 @@ buildClassNode uuid name = do
             code
             (LabeledTree def (Port [] "base" TStar NotConnected))
             (LabeledTree (OutPorts []) (Port [] "base" TStar NotConnected))
-            (NodeMeta.toNodeMeta meta)
+            meta
             True
 
 buildNodes :: GraphOp m => m [API.ExpressionNode]
@@ -218,7 +218,7 @@ buildNode nid = do
     outports  <- buildOutPorts root
     code      <- Code.removeMarkers <$> getNodeCode nid
     pure $ API.ExpressionNode
-        nid expr False name code inports outports (NodeMeta.toNodeMeta meta) canEnter
+        nid expr False name code inports outports meta canEnter
 
 buildNodeTypecheckUpdate :: GraphOp m => NodeId -> m API.NodeTypecheckerUpdate
 buildNodeTypecheckUpdate nid = do

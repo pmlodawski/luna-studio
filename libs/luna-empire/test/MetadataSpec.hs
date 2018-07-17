@@ -38,7 +38,7 @@ import qualified LunaStudio.Data.Graph            as Graph
 import           LunaStudio.Data.GraphLocation    (GraphLocation (..))
 import qualified LunaStudio.Data.Node             as Node
 import           LunaStudio.Data.NodeLoc          (NodeLoc (..))
-import           LunaStudio.Data.NodeMeta         (NodeMeta, NodeMetaTemplate (..))
+import           LunaStudio.Data.NodeMeta         (NodeMeta (..))
 import qualified LunaStudio.Data.NodeMeta         as NodeMeta
 import           LunaStudio.Data.Point            (Point (Point))
 import qualified LunaStudio.Data.Port             as Port
@@ -217,8 +217,8 @@ spec = around withChannels $ parallel $ do
                     ref <- preuse $ Graph.codeMarkers . ix 1
                     mapM AST.readMeta ref
                 return (join zeroMeta, join oneMeta)
-            fmap NodeMeta.toNodeMeta zeroMeta `shouldBe` Just (NodeMeta (Position.fromTuple (66,33)) False Nothing)
-            fmap NodeMeta.toNodeMeta oneMeta  `shouldBe` Just (NodeMeta (Position.fromTuple (-66,-33)) False Nothing)
+            zeroMeta `shouldBe` Just (NodeMeta (Position.fromTuple (66,33)) False Nothing)
+            oneMeta  `shouldBe` Just (NodeMeta (Position.fromTuple (-66,-33)) False Nothing)
         it "loads crypto file" $ \env -> do
             nodes <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"

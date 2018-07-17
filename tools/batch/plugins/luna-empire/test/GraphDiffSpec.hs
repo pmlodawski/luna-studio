@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeSynonymInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module GraphDiffSpec (spec) where
 
@@ -23,7 +22,7 @@ import           LunaStudio.Data.MonadPath            (MonadPath (MonadPath))
 import           LunaStudio.Data.Node                 (ExpressionNode (ExpressionNode), InputSidebar (InputSidebar), NodeId,
                                                        OutputSidebar (OutputSidebar))
 import qualified LunaStudio.Data.Node                 as Node
-import           LunaStudio.Data.NodeMeta             (type NodeMeta, NodeMetaTemplate(NodeMeta))
+import           LunaStudio.Data.NodeMeta             (NodeMeta (..))
 import           LunaStudio.Data.Port                 (InPorts (InPorts), LabeledTree (LabeledTree), OutPorts (OutPorts), Port (Port))
 import qualified LunaStudio.Data.Port                 as Port
 import           LunaStudio.Data.PortDefault          (PortDefault, PortValue)

@@ -16,6 +16,8 @@ import qualified Data.Bimap                       as Bimap
 import           Data.Coerce                      (coerce)
 import           Data.Char                        (isSeparator, isSpace, isUpper)
 import           Data.Foldable                    (toList)
+import qualified Data.Graph.Data.Component.Vector as PtrList
+import qualified Data.Graph.Data.Layer.Class      as Layer
 import qualified Data.Graph.Store                 as Store
 import           Data.List                        ((++), elemIndex, find, group, partition, sortBy, sortOn, nub, head)
 import qualified Data.List                        as List
@@ -24,8 +26,9 @@ import           Data.Map                         (Map)
 import qualified Data.Map                         as Map
 import           Data.Maybe                       (fromMaybe, maybeToList)
 import qualified Data.Mutable.Class               as Mutable
-import qualified Data.Set                         as Set
 import           Data.Set                         (Set)
+import qualified Data.Set                         as Set
+import qualified Data.Set.Mutable.Class           as MutableSet
 import           Data.Text                        (Text)
 import           Data.Text.Strict.Lens            (packed)
 import qualified Data.Text                        as Text
@@ -35,9 +38,9 @@ import qualified Data.Text.IO                     as Text
 import           Data.Text.Position               (Delta)
 import           Data.Text.Span                   (SpacedSpan (..), leftSpacedSpan)
 import qualified Data.UUID.V4                     as UUID (nextRandom)
+import qualified Data.Vector.Storable.Foreign     as Foreign
 import           Debug
 import           Empire.ASTOp                     (ASTOp, ClassOp, GraphOp, runASTOp, runAliasAnalysis, liftScheduler)
--- import           Empire.ASTOp                     (ASTOp, ClassOp, GraphOp, putNewIR, putNewIRCls, runASTOp, runAliasAnalysis, runModuleTypecheck)
 import qualified Empire.ASTOps.Builder            as ASTBuilder
 import           Empire.ASTOps.BreadcrumbHierarchy (getMarker, prepareChild, isNone)
 import qualified Empire.ASTOps.Modify             as ASTModify
@@ -65,35 +68,23 @@ import           Empire.Data.Layers               (SpanLength, SpanOffset)
 import qualified Empire.Data.Library              as Library
 import           Empire.Empire
 import           Empire.Prelude                   hiding (head, toList)
--- import qualified Luna.Builtin.Data.Class          as IR
--- import qualified Luna.Builtin.Data.Function       as IR
--- import qualified Luna.Builtin.Data.Module         as Module
--- import qualified Luna.Compilation                 as Compilation
-import qualified Luna.Pass.Sourcing.Data.Class as Class
-import qualified Luna.Pass.Sourcing.Data.Def as Def
-import qualified Luna.Pass.Sourcing.Data.Unit as Unit
-import qualified Luna.Pass.Scheduler                  as Scheduler
 import           Luna.Pass.Data.Stage             (Stage)
+import qualified Luna.Pass.Scheduler              as Scheduler
+import qualified Luna.Pass.Sourcing.Data.Class    as Class
+import qualified Luna.Pass.Sourcing.Data.Def      as Def
+import qualified Luna.Pass.Sourcing.Data.Unit     as Unit
 import qualified Luna.Pass.Sourcing.UnitLoader    as ModLoader
 import qualified Luna.Pass.Sourcing.UnitMapper    as UnitMapper
 import qualified Luna.IR                          as IR
 import qualified Luna.IR.Term.Ast.Class           as Term
--- import qualified Luna.IR.Term.Unit                as Term
-import qualified Data.Graph.Data.Layer.Class as Layer
 import qualified Luna.Project                     as Project
 import qualified Luna.Std                         as Std
 import           Luna.Syntax.Text.Analysis.SpanTree (Spanned(..))
 import qualified Luna.Syntax.Text.Analysis.SpanTree as SpanTree
 import qualified Luna.Syntax.Text.Lexer           as Lexer
 import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan)
-import qualified Data.Graph.Data.Component.Vector as PtrList
--- import qualified Data.PtrList.Mutable as PtrList
-import qualified Data.Set.Mutable.Class     as MutableSet
-import qualified Data.Vector.Storable.Foreign as Foreign
 import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
 import           Luna.Syntax.Text.Parser.State.Marker (TermMap(..))
--- import           Luna.Syntax.Text.Parser.Marker   (MarkedExprMap (..))
--- import qualified Luna.Syntax.Text.Parser.Marker   as Luna
 import qualified LunaStudio.API.Control.Interpreter as Interpreter
 import           LunaStudio.Data.Breadcrumb       (Breadcrumb (..), BreadcrumbItem, Named)
 import qualified LunaStudio.Data.Breadcrumb       as Breadcrumb
@@ -107,7 +98,7 @@ import qualified LunaStudio.Data.Node             as Node
 import           LunaStudio.Data.NodeCache        (NodeCache (..), nodeMetaMap, nodeIdMap)
 import           LunaStudio.Data.NodeLoc          (NodeLoc (..))
 import qualified LunaStudio.Data.NodeLoc          as NodeLoc
-import           LunaStudio.Data.NodeMeta         (NodeMeta, NodeMetaS)
+import           LunaStudio.Data.NodeMeta         (NodeMeta)
 import qualified LunaStudio.Data.NodeMeta         as NodeMeta
 import           LunaStudio.Data.NodeSearcher     (ImportName, ImportsHints, ClassHints(..), ModuleHints(..))
 import           LunaStudio.Data.Point            (Point)
@@ -120,8 +111,6 @@ import           LunaStudio.Data.Position         (Position)
 import qualified LunaStudio.Data.Position         as Position
 import           LunaStudio.Data.Range            (Range(..))
 import qualified LunaStudio.Data.Range            as Range
--- import qualified OCI.IR.Combinators               as IR (replaceSource, deleteSubtree, narrow, replace)
--- import           OCI.IR.Name.Qualified            (QualName)
 import           LunaStudio.Data.TextDiff         (TextDiff (..))
 import qualified Path
 import qualified Safe
@@ -237,7 +226,7 @@ addFunNode loc parsing uuid expr meta = withUnit loc $ do
             markerLen  = convert $ Text.length markerText
         putLayer @CodeSpan marker $ CodeSpan.mkRealSpan (LeftSpacedSpan (SpacedSpan 0 markerLen))
         markedNode <- IR.marked' marker parse
-        when (meta /= def) $ AST.writeMeta markedNode $ NodeMeta.toNodeMetaS meta
+        when (meta /= def) $ AST.writeMeta markedNode meta
         Graph.clsCodeMarkers . at index ?= generalize markedNode
         putLayer @CodeSpan markedNode $ CodeSpan.mkRealSpan (LeftSpacedSpan (SpacedSpan 0 (markerLen + convert (Text.length code))))
         let markedCode = Text.concat [markerText, code]
@@ -290,7 +279,7 @@ addNodeNoTC loc uuid input name meta = do
     runAliasAnalysis
     node <- runASTOp $ do
         putChildrenIntoHierarchy uuid expr
-        AST.writeMeta expr $ NodeMeta.toNodeMetaS meta
+        AST.writeMeta expr meta
         GraphBuilder.buildNode uuid
     return node
 
@@ -320,7 +309,7 @@ findPreviousSeq seq nodesToTheLeft = matchExpr seq $ \case
         if Set.member r' nodesToTheLeft then return (Just r') else findPreviousSeq l' nodesToTheLeft
     _ -> return $ if Set.member seq nodesToTheLeft then Just seq else Nothing
 
-findPreviousNodeInSequence :: GraphOp m => NodeRef -> NodeMetaS -> [(NodeRef, NodeMetaS)] -> m (Maybe NodeRef)
+findPreviousNodeInSequence :: GraphOp m => NodeRef -> NodeMeta -> [(NodeRef, NodeMeta)] -> m (Maybe NodeRef)
 findPreviousNodeInSequence seq meta nodes = do
     let position           = Position.toTuple $ view NodeMeta.position meta
         nodesWithPositions = map (\(n, m) -> (n, Position.toTuple $ m ^. NodeMeta.position)) nodes
@@ -396,7 +385,7 @@ putInSequence ref code meta = do
     nodes              <- AST.readSeq oldSeq
     nodesAndMetas      <- mapM (\n -> (n,) <$> AST.readMeta n) nodes
     let nodesWithMetas =  mapMaybe (\(n,m) -> (n,) <$> m) nodesAndMetas
-    nearestNode        <- findPreviousNodeInSequence oldSeq (NodeMeta.toNodeMetaS meta) nodesWithMetas
+    nearestNode        <- findPreviousNodeInSequence oldSeq meta nodesWithMetas
     blockEnd           <- Code.getCurrentBlockEnd
     currentOutput      <- getCurrentFunctionOutput
     anonOutput         <- ASTRead.isAnonymous currentOutput
@@ -720,14 +709,14 @@ resendCodeWithCursor loc@(GraphLocation file _) cursor = do
 setNodeMetaGraph :: GraphOp m => NodeId -> NodeMeta -> m ()
 setNodeMetaGraph nodeId newMeta = do
     ref <- ASTRead.getASTRef nodeId
-    AST.writeMeta ref $ NodeMeta.toNodeMetaS newMeta
+    AST.writeMeta ref newMeta
     return ()
 
 setNodeMetaFun :: NodeId -> NodeMeta -> Command ClsGraph ()
 setNodeMetaFun nodeId newMeta = runASTOp $ do
     Just fun <- use $ Graph.clsFuns . at nodeId
     f        <- ASTRead.getFunByNodeId nodeId
-    AST.writeMeta f $ NodeMeta.toNodeMetaS newMeta
+    AST.writeMeta f newMeta
     return ()
 
 setNodeMeta :: GraphLocation -> NodeId -> NodeMeta -> Empire ()
@@ -736,7 +725,7 @@ setNodeMeta loc nodeId newMeta = withGraph' loc (runASTOp $ setNodeMetaGraph nod
 setNodePosition :: GraphLocation -> NodeId -> Position -> Empire ()
 setNodePosition loc nodeId newPos = do
     oldMeta <- fromMaybe def <$> getNodeMeta loc nodeId
-    setNodeMeta loc nodeId $ NodeMeta.toNodeMeta $ oldMeta & NodeMeta.position .~ newPos
+    setNodeMeta loc nodeId $ oldMeta & NodeMeta.position .~ newPos
     return ()
 
 setNodePositionAST :: GraphOp m => NodeId -> Position -> m ()
@@ -876,7 +865,7 @@ disconnect loc@(GraphLocation file _) port@(InPortRef (NodeLoc _ nid) _) = do
         runAliasAnalysis
     resendCode loc
 
-getNodeMeta :: GraphLocation -> NodeId -> Empire (Maybe NodeMetaS)
+getNodeMeta :: GraphLocation -> NodeId -> Empire (Maybe NodeMeta)
 getNodeMeta loc = withGraph loc . runASTOp . AST.getNodeMeta
 
 getCode :: GraphLocation -> Empire Text
@@ -1053,7 +1042,7 @@ extractMarkedMetasAndIds root = matchExpr root $ \case
         rest   <- extractMarkedMetasAndIds expr
         nid    <- ASTRead.getNodeId  expr
         nid2   <- ASTRead.getNodeId  root
-        return $ (marker, (NodeMeta.toNodeMeta <$> meta, nid <|> nid2)) : rest
+        return $ (marker, (meta, nid <|> nid2)) : rest
     _ -> concat <$> (mapM (extractMarkedMetasAndIds <=< source) =<< inputs root)
 
 prepareNodeCache :: GraphLocation -> Empire NodeCache
@@ -1179,8 +1168,6 @@ loadCode (GraphLocation file _) code = do
     (unit, grSt, scSt, exprMap) <- liftIO $ ASTParse.runProperParser code
     Graph.pmState . Graph.pmScheduler .= scSt
     Graph.pmState . Graph.pmStage .= grSt
-    -- activeFiles . at file . traverse . Library.body . Graph.ast . Graph.pmState . Graph.pmScheduler .= scSt
-    -- activeFiles . at file . traverse . Library.body . Graph.ast . Graph.pmState . Graph.pmStage .= grSt
     Graph.userState . activeFiles . at file . traverse . Library.body . Graph.clsClass .= unit
     Graph.userState . activeFiles . at file . traverse . Library.body . Graph.clsCodeMarkers .= (coerce exprMap)
     Graph.userState . activeFiles . at file . traverse . Library.body . Graph.code .= code
@@ -1188,7 +1175,6 @@ loadCode (GraphLocation file _) code = do
     (codeHadMeta, prevParseError) <- withUnit (GraphLocation file (Breadcrumb [])) $ do
         prevParseError <- use $ Graph.userState . Graph.clsParseError
         Graph.userState . Graph.clsParseError .= Nothing
-        -- putNewIRCls ir
         FileMetadata fileMetadata <- runASTOp readMetadata'
         let savedNodeMetas = Map.fromList $ map (\(MarkerNodeMeta m meta) -> (m, meta)) fileMetadata
         Graph.userState . Graph.nodeCache . nodeMetaMap %= (\cache -> Map.union cache savedNodeMetas)
@@ -1243,23 +1229,22 @@ autolayout loc = do
     traverse_ (\a -> autolayout (loc |> a)) next
 
 getNodeMetas :: GraphLocation -> [NodeLoc] -> Empire [Maybe (NodeLoc, NodeMeta)]
-getNodeMetas loc nids = return []
--- getNodeMetas loc nids
---     | GraphLocation f (Breadcrumb []) <- loc = withUnit loc $ runASTOp $ do
---         clsFuns    <- use Graph.clsFuns
---         forM (Map.assocs clsFuns) $ \(id, fun) -> do
---             case find (\n -> convert n == id) nids of
---                 Just nl -> do
---                     f     <- ASTRead.getFunByNodeId id
---                     fmap (nl,) <$> AST.readMeta f
---                 _       -> return Nothing
---     | otherwise = withGraph loc $ runASTOp $ do
---         kids <- uses Graph.breadcrumbHierarchy (view BH.children)
---         forM (Map.keys kids) $ \id -> do
---             case find (\n -> convert n == id) nids of
---                 Just nl -> do
---                     fmap (nl,) <$> AST.getNodeMeta id
---                 _       -> return Nothing
+getNodeMetas loc nids
+    | GraphLocation f (Breadcrumb []) <- loc = withUnit loc $ runASTOp $ do
+        clsFuns    <- use Graph.clsFuns
+        forM (Map.assocs clsFuns) $ \(id, fun) -> do
+            case find (\n -> convert n == id) nids of
+                Just nl -> do
+                    f     <- ASTRead.getFunByNodeId id
+                    fmap (nl,) <$> AST.readMeta f
+                _       -> return Nothing
+    | otherwise = withGraph loc $ runASTOp $ do
+        kids <- uses Graph.breadcrumbHierarchy (view BH.children)
+        forM (Map.keys kids) $ \id -> do
+            case find (\n -> convert n == id) nids of
+                Just nl -> do
+                    fmap (nl,) <$> AST.getNodeMeta id
+                _       -> return Nothing
 
 autolayoutTopLevel :: GraphLocation -> Empire ()
 autolayoutTopLevel loc = do

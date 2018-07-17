@@ -27,7 +27,7 @@ import           Empire.ASTOp                    (EmpirePass, GraphOp)
 import           Empire.Data.AST                 (NodeRef, astExceptionFromException, astExceptionToException)
 import           Empire.Data.Graph               (ClsGraph, Graph)
 import qualified Empire.Data.Graph               as Graph (codeMarkers)
-import           Empire.Data.Layers              (attachEmpireLayers, SpanLength)
+import           Empire.Data.Layers              (SpanLength)
 import qualified Empire.Commands.Code            as Code
 import qualified Control.Monad.State.Layered as State
 
@@ -69,74 +69,6 @@ instance Exception SomeParserException where
     fromException = astExceptionFromException
     displayException exc = case exc of SomeParserException e -> "SomeParserException (" <> displayException e <> ")"
 
--- parseExpr :: GraphOp m => String -> m NodeRef
--- parseExpr s = do
---     putAttr @Source.Source $ convert s
---     Parsing.parsingPassM Parsing.expr
---     res     <- getAttr @Parser.ParsedExpr
---     exprMap <- getAttr @MarkedExprMap
---     return $ unwrap' res
-
--- parsePattern :: GraphOp m => Text.Text -> m NodeRef
--- parsePattern s = do
---     putAttr @Source.Source $ convert s
---     Parsing.parsingPassM Parsing.pattern
---     res     <- getAttr @Parser.ParsedExpr
---     exprMap <- getAttr @MarkedExprMap
---     return $ unwrap' res
-
--- parserBoilerplate :: PMStack IO ()
--- parserBoilerplate = do
---     IR.runRegs
---     Loc.init
---     IR.attachLayer 5 (getTypeDesc @Pos.Range)         (getTypeDesc @IR.AnyExpr)
---     CodeSpan.init
---     IR.attachLayer 5 (getTypeDesc @CodeSpan.CodeSpan) (getTypeDesc @IR.AnyExpr)
---     IR.setAttr (getTypeDesc @MarkedExprMap)   $ (mempty :: MarkedExprMap)
---     IR.setAttr (getTypeDesc @Parser.ParsedExpr)      $ (error "Data not provided: ParsedExpr")
---     IR.setAttr (getTypeDesc @Parser.ReparsingStatus) $ (error "Data not provided: ReparsingStatus")
---     IR.setAttr (getTypeDesc @Invalids) $ (mempty :: Invalids)
-
--- type OnDemandPass pass = (Typeable pass, Pass.Compile pass IO)
-
--- runPass' :: forall pass. OnDemandPass pass => Pass.Pass pass () -> IO (Scheduler.State)
--- runPass' = runPasses . pure
-
--- newtype ParsedExpr = ParsedExpr (NodeRef, MarkedExprMap)
--- type instance Attr.Type ParsedExpr = Attr.Atomic
--- instance Default ParsedExpr where def = error "empty parsedexpr"
-
--- runPasses :: forall pass. OnDemandPass pass => [Pass.Pass pass ()] -> IO (Scheduler.State)
--- runPasses passes = Scheduler.runManual reg sched where
---     reg = do
---         Runner.registerAll
---         Parser.registerStatic
---     sched = do
---         Parser.registerDynamic
---         Scheduler.registerAttr @ParsedExpr
---         Scheduler.enableAttrByType @ParsedExpr
---         for_ passes $ \pass -> do
---             Scheduler.registerPassFromFunction__ pass -- ONLY FOR TEST SPEC
---             Scheduler.runPassByType @pass
---         State.get @Scheduler.State
-
--- shouldParseAs :: Token.Parser (IRBS IR.SomeTerm) -> Text -> Text
---               {- -> (Delta, Delta)-} -> IO ()
--- shouldParseAs parser input output {-desiredSpan-} = runPass' $ do
---     (((ir,cs),scope), _) <- flip Parser.runParser__ (convert input) $ do
---         irb   <- parser
---         scope <- State.get @Scope
---         let Parser.IRBS irx = irb
---             irb' = Parser.IRBS $ do
---                 ir <- irx
---                 cs <- Layer.read @CodeSpan ir
---                 pure (ir,cs)
---         pure $ (,scope) <$> irb'
-    -- genCode <- Prettyprint.run @Prettyprint.Simple scope ir
-
-    -- let span = convert $ view CodeSpan.realSpan cs :: (Delta,Delta)
-    -- genCode `shouldBe` output
-    -- span `shouldBe` desiredSpan
 
 parseExpr :: Text -> IO NodeRef
 parseExpr s = view _1 <$> runParser Parsing.expr s `catchAll` (\e -> throwM $ SomeParserException e)

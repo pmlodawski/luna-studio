@@ -1,9 +1,4 @@
-{-# LANGUAGE LambdaCase          #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications    #-}
 {-# LANGUAGE PartialTypeSignatures #-}
-
 {-|
 
 This module consists only of operation that get information from
@@ -22,7 +17,10 @@ import qualified Safe
 
 import           LunaStudio.Data.NodeId             (NodeId)
 import qualified LunaStudio.Data.PortRef            as PortRef
+import           Data.Graph.Component.Node.Class    (Node, Nodes)
 import qualified Data.Graph.Component.Node.Layer.PortMarker as PortMarker
+import           Data.Graph.Data.Component.Class    (Component)
+import qualified Data.Graph.Data.Layer.Class        as Layer
 
 import           LunaStudio.Data.Port               (OutPortId(..), OutPortIndex(..))
 import qualified LunaStudio.Data.NodeLoc            as NodeLoc
@@ -110,10 +108,16 @@ getOutputForPort portId@(Projection i : rest) ref = cutThroughGroups ref >>= fli
             _      -> throwM $ PortDoesNotExistException portId 
     _ -> throwM $ PortDoesNotExistException portId
 
-isGraphNode :: _ => NodeRef -> m Bool
+isGraphNode ::
+    _ => NodeRef -> m Bool
 isGraphNode = fmap isJust . getNodeId
 
-getNodeId :: _ => NodeRef -> m (Maybe NodeId)
+getNodeId ::
+    ( MonadCatch m
+    , Layer.Reader (Component Nodes) Marker m
+    , Layer.Reader (Component Nodes) IR.Model m
+    , Layer.Reader IR.Link IR.Source m
+    ) => NodeRef -> m (Maybe NodeId)
 getNodeId node = do
     rootNodeId <- preview (_Just . PortMarker.srcNodeLoc) <$> getLayer @Marker node
     varNodeId  <- (getVarNode node >>= getNodeId) `catch` (\(_e :: NotUnifyException) -> return Nothing)
@@ -149,7 +153,10 @@ getVarName' node = match node $ \case
 getVarName :: ASTOp a m => NodeRef -> m String
 getVarName = fmap nameToString . getVarName'
 
-getVarsInside :: _ => NodeRef -> m [NodeRef]
+getVarsInside ::
+    ( Layer.Reader (Component Nodes) IR.Model m
+    , Layer.Reader IR.Link IR.Source m
+    ) => NodeRef -> m [NodeRef]
 getVarsInside e = do
     var <- isVar e
     if var then return [e] else concat <$> (mapM (getVarsInside <=< source) =<< inputs e)
@@ -162,13 +169,20 @@ rightMatchOperand node = match node $ \case
 getTargetNode :: GraphOp m => NodeRef -> m NodeRef
 getTargetNode node = rightMatchOperand node >>= source
 
-leftMatchOperand :: _ => NodeRef -> m EdgeRef
+leftMatchOperand ::
+    ( Layer.Reader (Component Nodes) IR.Model m
+    , MonadThrow m
+    ) => NodeRef -> m EdgeRef
 leftMatchOperand node = match node $ \case
     Unify a _         -> pure $ generalize a
     ASGFunction n _ _ -> pure $ generalize n
     _         -> throwM $ NotUnifyException node
 
-getVarNode :: _ => NodeRef -> m NodeRef
+getVarNode ::
+    ( MonadThrow m
+    , Layer.Reader (Component Nodes) IR.Model m
+    , Layer.Reader IR.Link IR.Source m
+    ) => NodeRef -> m NodeRef
 getVarNode node = leftMatchOperand node >>= source
 
 data NodeDoesNotExistException = NodeDoesNotExistException NodeId
@@ -366,7 +380,7 @@ isCons expr = match expr $ \case
     Cons{} -> return True
     _     -> return False
 
-isVar :: _ => NodeRef -> m Bool
+isVar :: Layer.Reader (Component Nodes) IR.Model m => NodeRef -> m Bool
 -- isVar expr = isJust <$> narrowTerm @IR.Var expr
 isVar expr = match expr $ \case
     Var{} -> return True

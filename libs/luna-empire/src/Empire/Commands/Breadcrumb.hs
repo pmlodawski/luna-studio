@@ -44,7 +44,6 @@ import           Empire.Commands.Library         (withLibrary)
 import           Empire.Empire                   (Command, CommunicationEnv, Empire, runEmpire, zoomCommand)
 
 import qualified Luna.IR              as IR
--- import qualified OCI.IR.Combinators   as IR
 
 withBreadcrumb :: FilePath -> Breadcrumb BreadcrumbItem -> Command Graph.Graph a -> Command Graph.ClsGraph a -> Empire a
 withBreadcrumb file breadcrumb actG actC = withLibrary file $ zoomBreadcrumb breadcrumb actG actC

@@ -14,49 +14,33 @@ module Empire.Data.Graph where
 import           Empire.Data.BreadcrumbHierarchy   (HasRefs(..), LamItem)
 import           Empire.Prelude
 
-import           Control.Monad.State               (MonadState(..), StateT, evalStateT, lift)
+import           Control.Monad.State               (MonadState(..), StateT,
+                                                    evalStateT, lift)
+import qualified Data.Graph.Data.Graph.Class       as LunaGraph
 import           Data.Map                          (Map)
 import qualified Data.Map                          as Map
+import           Data.Text.Position                (Delta)
 import           Empire.Data.AST                   (NodeRef, SomeASTException)
-import           Empire.Data.Layers                (attachEmpireLayers)
 
--- import           Control.Monad.Raise                    (MonadException(..))
-import qualified Control.Monad.State.Layered          as DepState
--- import qualified Luna.Builtin.Data.Function             as Function
-import           Luna.IR.Term.Ast.Invalid (Symbol(FunctionBlock))
-import qualified Luna.IR                                as IR
--- import qualified Luna.Runner                                as Runner
--- import qualified OCI.Pass.Class                         as Pass
-import qualified Luna.Pass        as Pass
-import qualified Luna.Pass.Attr         as Attr
+import qualified Control.Monad.State.Layered       as DepState
+import qualified Luna.IR                           as IR
+import qualified Luna.Pass                         as Pass
+import qualified Luna.Pass.Attr                    as Attr
+import           Luna.Pass.Data.Stage              (Stage)
+import           Luna.Syntax.Text.Parser.State.Marker (ID)
+import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
 
-import qualified OCI.Pass.Management.Scheduler                       as Scheduler
-import qualified Data.Graph.Data.Graph.Class                       as LunaGraph
-import qualified Empire.Pass.PatternTransformation            as PT
-
--- import qualified OCI.Pass.Manager                       as PassManager (PassManager, State)
-import           LunaStudio.Data.Node                   (NodeId)
+import           LunaStudio.Data.Node              (NodeId)
 import           LunaStudio.Data.NodeCache
-import           LunaStudio.Data.NodeMeta               (NodeMeta)
-import           Luna.Pass.Data.Stage (Stage)
-
--- import           Luna.Syntax.Text.Parser.Errors         (Invalids)
--- import qualified Luna.Syntax.Text.Parser.Marker         as Luna
--- import qualified Luna.Syntax.Text.Parser.Parser         as Parser
--- import qualified Luna.Syntax.Text.Parser.Parsing        as Parser ()
-import Luna.Syntax.Text.Parser.State.Marker (ID)
-import qualified Luna.Syntax.Text.Parser.Data.CodeSpan       as CodeSpan
-import           Data.Text.Position                     (Delta)
-
--- import           System.Log                             (Logger, DropLogger, dropLogs, MonadLogging)
+import           LunaStudio.Data.NodeMeta          (NodeMeta)
+import qualified OCI.Pass.Management.Scheduler     as Scheduler
 
 -- import qualified OCI.IR.Repr.Vis            as Vis
-import           Data.Aeson                 (encode)
-import qualified Data.ByteString.Lazy.Char8 as ByteString
-import           Data.Maybe                 (isJust)
-import           System.Environment         (lookupEnv)
-import           Web.Browser                (openBrowser)
--- import           Luna.Pass.Data.ExprMapping
+-- import           Data.Aeson                        (encode)
+-- import qualified Data.ByteString.Lazy.Char8        as ByteString
+-- import           Data.Maybe                        (isJust)
+-- import           System.Environment                (lookupEnv)
+-- import           Web.Browser                       (openBrowser)
 
 type MarkerId = ID
 
@@ -125,35 +109,6 @@ makeLenses ''Graph
 makeLenses ''FunctionGraph
 makeLenses ''ClsGraph
 
--- breadcrumbHierarchy :: Lens' (CommandState Graph) LamItem
--- breadcrumbHierarchy = userState . breadcrumbHierarchyOld
-
--- codeMarkers :: Lens' (CommandState Graph) (Map MarkerId NodeRef)
--- codeMarkers = userState . codeMarkersOld
-
--- globalMarkers :: Lens' (CommandState Graph) (Map MarkerId NodeRef)
--- globalMarkers = userState . globalMarkersOld
-
--- fileOffset :: Lens' (CommandState Graph) Delta
--- fileOffset = userState . fileOffsetOld
-
--- clsClass :: Lens' (CommandState ClsGraph) NodeRef
--- clsClass = userState . clsClassOld
-
--- clsFuns :: Lens' (CommandState ClsGraph) (Map NodeId FunctionGraph)
--- clsFuns = userState . clsFunsOld
-
--- instance MonadState s m => MonadState s (PassManager.PassManager m) where
---     get = lift   get
---     put = lift . put
-
--- instance MonadState s m => MonadState s (Logger DropLogger m) where
---     get = lift   get
---     put = lift . put
-
--- instance Exception e => MonadException e IO where
---     raise = throwM
-
 -- unescapeUnaryMinus :: Vis.Node -> Vis.Node
 -- unescapeUnaryMinus n = if n ^. Vis.name == "Var \"#uminus#\""
 --                        then n & Vis.name .~ "Var uminus"
@@ -170,96 +125,8 @@ makeLenses ''ClsGraph
 --     return p
 withVis = id
 
--- data InitPass
--- type instance Pass.Spec InitPass t = InitPassSpec t
--- type family InitPassSpec t where
---     InitPassSpec (Pass.In  Pass.Attrs)  = '[]
---     InitPassSpec (Pass.Out Pass.Attrs)  = '[RetAttr]
---     InitPassSpec (Pass.In  AnyExpr)     = '[IR.Model, IR.Users, IR.Type]
---     InitPassSpec (Pass.Out AnyExpr)     = '[IR.Model, IR.Users, IR.Type]
---     InitPassSpec (Pass.In  AnyExprLink) = '[IR.Model, IR.Users, IR.Type, IR.Source, IR.Target]
---     InitPassSpec (Pass.Out AnyExprLink) = '[IR.Model, IR.Users, IR.Type, IR.Source, IR.Target]
---     InitPassSpec t                    = Pass.BasicPassSpec t
-
--- newtype RetAttr = RetAttr Int deriving (Show, Eq, Num)
--- type instance Attr.Type RetAttr = Attr.Atomic
--- instance Default RetAttr where
---     def = RetAttr 0
-
--- Pass.cache_phase1 ''InitPass
--- Pass.cache_phase2 ''InitPass
-
-
-
--- type OnDemandPass pass = (Typeable pass, Pass.Compile pass IO)
-
--- runPass :: forall pass. OnDemandPass pass => Pass.Pass pass () -> IO ()
--- runPass pass = Scheduler.runManual registers passes
---     where
---         registers = do
---             -- Runner.registerAll
---             attachEmpireLayers
-
---         passes = do
---             -- Scheduler.registerAttr     @RetAttr
---             -- Scheduler.enableAttrByType @RetAttr
---             Scheduler.registerPassFromFunction__ pass
---             Scheduler.runPassByType @pass
-
-initExprMapping :: IO ()
-initExprMapping = return ()
-
 snapshot :: IO ()
 snapshot = return ()
-
-
--- defaultClsGraph :: IO ClsGraph
--- defaultClsGraph = do
---     (ast, cls) <- defaultClsAST
---     return $ ClsGraph ast cls def def def def def
-
-
--- defaultPMState :: IO (PMState a)
--- defaultPMState = runPass $ mdo
---     -- CodeSpan.init
---     attachLayer @CodeSpan.CodeSpan @AnyExpr
---     attachEmpireLayers
---     initExprMapping
---     pass <- DepState.get @Scheduler.State
---     return $ PMState pass def
-
--- emptyClsAST :: IO (AST ClsGraph)
--- emptyClsAST = mdo
---     let g = ClsGraph ast undefined def def def def (NodeCache def def def)
---     ast <- runPass $ do
---         -- CodeSpan.init
---         attachLayer @CodeSpan.CodeSpan @AnyExpr
---         attachEmpireLayers
---         initExprMapping
---         st   <- snapshot
---         pass <- DepState.get @Scheduler.State
---         return $ AST st $ PMState pass def
---     return ast
-
--- defaultClsAST :: IO (AST ClsGraph, SomeExpr)
--- defaultClsAST = mdo
---     let g = ClsGraph ast undefined def def def def (NodeCache def def def)
---     (ast, cls) <- runPass $ do
---         -- CodeSpan.init
---         attachLayer @CodeSpan.CodeSpan @AnyExpr
---         attachEmpireLayers
---         initExprMapping
---         cls <- do
---             -- hub   <- IR.importHub' []
---             -- cls   <- IR.invalid FunctionBlock
---             -- klass <- IR.unit' hub [] cls
---             -- return klass
---             undefined
---         st   <- snapshot
---         pass <- DepState.get @Scheduler.State
---         return (AST st (PMState pass def), cls)
---     return (ast, cls)
-
 
 
 class HasCode g where
@@ -277,10 +144,10 @@ instance HasCode a => HasCode (CommandState a) where
 class HasNodeCache g where
     nodeCache :: Lens' g NodeCache
 
-instance HasNodeCache (Graph) where
+instance HasNodeCache Graph where
     nodeCache = graphNodeCache
 
-instance HasNodeCache (ClsGraph) where
+instance HasNodeCache ClsGraph where
     nodeCache = clsNodeCache
 
 instance HasNodeCache a => HasNodeCache (CommandState a) where

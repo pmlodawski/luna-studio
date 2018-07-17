@@ -66,7 +66,7 @@ childrenFromSeq tgtBeg edge = do
                     return expr'
             child    <- prepareChild ref childTarget
             nodeMeta <- use $ Graph.nodeCache . nodeMetaMap . at index
-            forM nodeMeta $ AST.writeMeta ref . NodeMeta.toNodeMetaS
+            forM nodeMeta $ AST.writeMeta ref
             return $ Map.singleton uid child
         Invalid{} -> return def
         _ -> do

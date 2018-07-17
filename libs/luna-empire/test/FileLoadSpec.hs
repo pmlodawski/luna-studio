@@ -57,7 +57,7 @@ import qualified LunaStudio.Data.Graph           as Graph
 import           LunaStudio.Data.GraphLocation   (GraphLocation (..))
 import qualified LunaStudio.Data.Node            as Node
 import           LunaStudio.Data.NodeLoc         (NodeLoc (..))
-import           LunaStudio.Data.NodeMeta        (NodeMeta, NodeMetaTemplate (..))
+import           LunaStudio.Data.NodeMeta        (NodeMeta (..))
 import qualified LunaStudio.Data.NodeMeta        as NodeMeta
 import           LunaStudio.Data.Point           (Point (Point))
 import qualified LunaStudio.Data.Port            as Port
@@ -428,7 +428,7 @@ spec = around withChannels $ parallel $ do
                 Graph.setNodeMeta loc' foo (NodeMeta (Position.Position (Vector2 15.3 99.2)) True Nothing)
                 Graph.substituteCode "TestPath" [(63, 64, "5")]
                 a <- Graph.getNodeMeta loc' foo
-                return $ NodeMeta.toNodeMeta <$> a
+                return a
             meta `shouldBe` Just (NodeMeta (Position.Position (Vector2 15.3 99.2)) True Nothing)
         it "changing order of ports twice does nothing" $ \env -> do
             -- [MM]: don't know why some nodes have empty code only in `before` so this test fails

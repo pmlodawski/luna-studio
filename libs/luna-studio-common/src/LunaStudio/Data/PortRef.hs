@@ -4,7 +4,7 @@ module LunaStudio.Data.PortRef
     , nodeLoc
     ) where
 
-import Control.Lens (makePrisms)
+import           Control.Lens            (makePrisms)
 import           Control.DeepSeq         (NFData)
 import           Data.Aeson.Types        (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import           Data.Binary             (Binary)

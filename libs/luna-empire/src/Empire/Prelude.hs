@@ -27,8 +27,8 @@ module Empire.Prelude (module X, nameToString, pathNameToString, stringToName,
                       pattern ClsASG, type ClsASG, pattern Metadata, inputs,
                       pattern ImportHub, pattern Import, pattern ImportSrc,
                       irDeleteLink, pattern Invalid, toNodeMeta, fromNodeMeta,
-                      toPortMarker, fromPortMarker, toPortMarker', fromNodeMeta',
-                      toNodeMeta', fromPortMarker'
+                      toPortMarker, fromPortMarker, toPortMarker', fromPortMarker',
+                      NodeMetaLike, OutPortRefLike
                       ) where
 
 import qualified Control.Monad.State.Layered as Layered
@@ -77,7 +77,7 @@ import qualified Data.Graph.Component.Node.Layer.NodeMeta as NM
 import System.IO.Unsafe (unsafePerformIO)
 
 import LunaStudio.Data.PortRef (OutPortRefS, OutPortRef, OutPortRefTemplate(..))
-import LunaStudio.Data.NodeMeta (NodeMetaS, NodeMeta, NodeMetaTemplate(..))
+import LunaStudio.Data.NodeMeta (NodeMeta(..))
 import LunaStudio.Data.Position (Position(..))
 import LunaStudio.Data.Vector2 (Vector2(..))
 import Data.UUID (UUID(..))
@@ -287,21 +287,12 @@ inputs ref = compListToList <$> IR.inputs ref
 
 
 GTraversable.derive ''OutPortRefTemplate
-GTraversable.derive ''NodeMetaTemplate
-GTraversable.derive ''Position
-GTraversable.derive ''Vector2
 -- GTraversable.derive ''UUID
-
-fromNodeMeta' :: NodeMetaS -> NodeMetaLike
-fromNodeMeta' (NodeMeta (Position (Vector2 x y)) d s) = NodeMetaLike (NM.Position x y) d s
 
 fromNodeMeta :: NodeMeta -> NodeMetaLike
 fromNodeMeta (NodeMeta (Position (Vector2 x y)) d s) = NodeMetaLike (NM.Position x y) d (over both (unsafePerformIO . Foreign.fromList . convert) <$> s)
 toNodeMeta :: NodeMetaLike -> NodeMeta
 toNodeMeta (NodeMetaLike (NM.Position x y) d s) = NodeMeta (Position (Vector2 x y)) d (over both (convert . unsafePerformIO . Foreign.toList) <$> s)
-
-toNodeMeta' :: NodeMetaLike -> NodeMetaS
-toNodeMeta' (NodeMetaLike (NM.Position x y) d s) = NodeMeta (Position (Vector2 x y)) d s
 
 fromPortMarker :: OutPortRefLike -> OutPortRef
 fromPortMarker (OutPortRefLike uuid fvec) =

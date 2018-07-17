@@ -13,7 +13,7 @@ import           Data.Text                            (Text)
 import           LunaStudio.Data.Geometry             (snap)
 import           LunaStudio.Data.LabeledTree          (LabeledTree (LabeledTree))
 import qualified LunaStudio.Data.Node                 as API
-import           LunaStudio.Data.NodeMeta             (NodeMetaTemplate (NodeMeta))
+import           LunaStudio.Data.NodeMeta             (NodeMeta (NodeMeta))
 import           LunaStudio.Data.Port                 (InPortIndex (Arg), Port (Port), PortState (NotConnected))
 import           LunaStudio.Data.Position             (Position)
 import           LunaStudio.Data.TypeRep              (TypeRep (TStar))

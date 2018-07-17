@@ -5,7 +5,7 @@ module LunaStudio.Data.Position
     , y
     ) where
 
-import Control.Lens ((+~), makeWrapped)
+import           Control.Lens            ((+~), makeWrapped)
 import           Data.Aeson.Types        (FromJSON, ToJSON)
 import           Data.Binary             (Binary)
 import           Foreign.Storable        (Storable)
