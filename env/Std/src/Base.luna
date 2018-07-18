@@ -720,19 +720,19 @@ class List a:
                 fstHalf.merge (f _ < f _) sndHalf
 
     # Private.
-    def chunkBy last f:
+    def privChunkBy last f:
         case (last, self) of
             (Nothing, Prepend a rest):
                 v = f a
-                rest.chunkBy (Just (v, [a])) f
+                rest.privChunkBy (Just (v, [a])) f
             (Nothing, Empty): Empty
             (Just (v, elts), Prepend a rest):
                 v1 = f a
                 case v1 == v of
-                    True: rest.chunkBy (Just (v, Prepend a elts)) f
+                    True: rest.privChunkBy (Just (v, Prepend a elts)) f
                     False:
                         grp = elts . reverse
-                        r   = rest.chunkBy (Just (v1, [a])) f
+                        r   = rest.privChunkBy (Just (v1, [a])) f
                         Prepend (v, grp) r
             (Just (v, elts), Empty):
                 grp = elts . reverse
@@ -743,7 +743,7 @@ class List a:
     # ```
     # [1, 2, 3, 4, 2, 2].chunkBy (> 2)    # => [(False, [1, 2]), (True, [3, 4]), (False, [2, 2])]
     # ```
-    def chunkBy f: self.chunkBy Nothing f
+    def chunkBy f: self.privChunkBy Nothing f
 
     # Groups the list into lists of values returning the same value of a given function. Requires the return value of the function to be ordered.
     # For example:
@@ -757,10 +757,10 @@ class List a:
     def sort: self . sortBy id
 
     # Private.
-    def prefixes i: Prepend (self.take i) (self.prefixes i.succ)
+    def privPrefixes i: Prepend (self.take i) (self.privPrefixes i.succ)
 
     # Returns a list of all prefixes of the given list.
-    def prefixes: self.prefixes 1
+    def prefixes: self.privPrefixes 1
 
     # Returns a list resulting from combining respective elements of two lists with the provided function. The length of the result is the length of the shorter of the lists.
     def zipWith f that: case Tuple2 self that of
