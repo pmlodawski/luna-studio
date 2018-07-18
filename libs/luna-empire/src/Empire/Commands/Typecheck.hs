@@ -175,7 +175,7 @@ updateValues loc@(GraphLocation path _) scope = do
         matchExpr pointer $ \case
             Uni.Unify{} -> Just . (nid,) <$> ASTRead.getVarNode pointer
             _          -> return Nothing
-    let send nid m = (>>) (print (show nid <> ": " <> show m) >> liftIO (IO.hFlush IO.stdout)) $ flip runReaderT env $
+    let send nid m = flip runReaderT env $
             Publisher.notifyResultUpdate loc nid m 0
         sendRep nid (ErrorRep e)     = send nid
                                      $ NodeError
@@ -220,8 +220,6 @@ fileImportPaths file = liftIO $ do
 
 stop :: Command InterpreterEnv ()
 stop = do
-    print $ "STOPPPPIINNNNNGGGGG !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    liftIO $ IO.hFlush IO.stdout
     cln     <- use $ Graph.userState . cleanUp
     threads <- use $ Graph.userState . listeners
     Graph.userState . listeners .= []
@@ -235,17 +233,17 @@ translate redMap off node = wrap $ (unwrap (redMap Map.! (Memory.Ptr $ convert n
 primStdModuleName :: IR.Qualified
 primStdModuleName = "Std.Primitive"
 
-makePrimStdIfMissing :: FilePath -> Command InterpreterEnv ()
-makePrimStdIfMissing file = do
+makePrimStdIfMissing :: Command InterpreterEnv ()
+makePrimStdIfMissing = do
     existingStd <- use $ Graph.userState . resolvers . at primStdModuleName
     case existingStd of
         Just _ -> return ()
         Nothing -> do
-            print $ "STD IS MISSING"
-            liftIO $ IO.hFlush IO.stdout
             (finalizer, typed, computed, ress) <- liftScheduler $ do
                 (fin, stdUnitRef) <- Std.stdlib @Stage
-                srcs <- fileImportPaths file
+                lunaroot <- liftIO $ canonicalizePath =<< getEnv Project.lunaRootEnv
+                stdPath <- Path.parseAbsDir $ lunaroot <> "/Std/"
+                srcs    <- fmap Path.toFilePath . Bimap.toMapR <$> Project.findProjectSources stdPath
                 UnitLoader.init
                 Scheduler.registerAttr @Unit.UnitRefsMap
                 Scheduler.setAttr $ Unit.UnitRefsMap $ Map.singleton "Std.Primitive" stdUnitRef
@@ -271,8 +269,6 @@ ensureCurrentScope recompute path root = do
     modName <- filePathToQualName path
     existing <- use $ Graph.userState . resolvers . at modName
     when (recompute || isNothing existing) $ do
-        print $ "RECOMPUTE"
-        liftIO $ IO.hFlush IO.stdout
         compileCurrentScope path root
 
 compileCurrentScope :: FilePath -> NodeRef -> Command InterpreterEnv ()
@@ -288,13 +284,9 @@ compileCurrentScope path root = do
         srcs <- fileImportPaths path
         Scheduler.registerAttr @Unit.UnitRefsMap
         Scheduler.setAttr $ Unit.UnitRefsMap $ Map.singleton modName $ Unit.UnitRef (Unit.Graph $ Layout.unsafeRelayout root) (wrap imports)
-        print $ "known: " <> show (Map.keys ress)
-        liftIO $ IO.hFlush IO.stdout
         for imports $ UnitLoader.loadUnitIfMissing (Set.fromList $ Map.keys ress) srcs [modName]
 
         Unit.UnitRefsMap mods <- Scheduler.getAttr
-        print $ Map.keys mods
-        liftIO $ IO.hFlush IO.stdout
         units <- flip Map.traverseWithKey mods $ \n u -> case u ^. Unit.root of
             Unit.Graph r -> UnitMapper.mapUnit n r
             Unit.Precompiled u -> pure u
@@ -325,12 +317,10 @@ run loc@(GraphLocation file br) clsGraph' rooted' interpret recompute = do
     let originalCls = clsGraph' ^. Graph.clsClass
         deserializerOff = redirects Map.! someTypeRep @IR.Terms
         newCls = translate redMap deserializerOff originalCls
-    print newCls
-    liftIO $ IO.hFlush IO.stdout
     let newClsGraph = clsGraph' & BH.refs %~ translate redMap deserializerOff
     Graph.userState . clsGraph .= newClsGraph
 
-    makePrimStdIfMissing file
+    makePrimStdIfMissing
     ensureCurrentScope recompute file a
 
     runTC loc

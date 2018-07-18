@@ -153,6 +153,7 @@ startTCWorker env = liftIO $ do
     let interpreterEnv = Empire.InterpreterEnv (return ()) (error "startTCWorker: clsGraph") [] def def def
         commandState   = Graph.CommandState pmState interpreterEnv
     void $ Empire.evalEmpire env commandState $ do
+        Typecheck.makePrimStdIfMissing
         forever $ do
             Empire.TCRequest loc g rooted flush interpret recompute stop <- liftIO $ takeMVar reqs
             when (not stop) $
