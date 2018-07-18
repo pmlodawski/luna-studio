@@ -18,11 +18,10 @@ import           Data.Text.Position      (Delta)
 import           Data.Text.Span          (SpacedSpan(..), leftSpacedSpan)
 import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
 import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan, realSpan)
-import           Data.Graph.Component.Node.Layer.PortMarker ()
-import Data.Graph.Component.Node.Layer.NodeMeta   (Meta)
-import Data.Graph.Component.Node.Layer.PortMarker (PortMarker)
-import Data.Graph.Component.Node.Layer.SpanLength (SpanLength)
-import Data.Graph.Component.Node.Layer.SpanOffset (SpanOffset)
+import Luna.Pass.Data.Layer.NodeMeta   (Meta)
+import Luna.Pass.Data.Layer.PortMarker (PortMarker)
+import Luna.Pass.Data.Layer.SpanLength (SpanLength)
+import Luna.Pass.Data.Layer.SpanOffset (SpanOffset)
 
 import qualified Data.Map   as Map
 import qualified Data.Set   as Set

@@ -104,9 +104,9 @@ import Luna.Pass (Pass)
 import qualified Luna.Pass.Attr as Attr
 import qualified Data.Vector.Storable.Foreign as Foreign
 import           LunaStudio.Data.Port    (AnyPortId (..), InPortId, OutPortId, OutPortIndex(Projection))
-import Data.Graph.Component.Node.Layer.PortMarker (PortMarker, OutPortRefLike(..))
-import Data.Graph.Component.Node.Layer.NodeMeta (Meta, NodeMetaLike(..))
-import qualified Data.Graph.Component.Node.Layer.NodeMeta as NM
+import Luna.Pass.Data.Layer.PortMarker (PortMarker, OutPortRefLike(..))
+import Luna.Pass.Data.Layer.NodeMeta (Meta, NodeMetaLike(..))
+import qualified Luna.Pass.Data.Layer.NodeMeta as NM
 import System.IO.Unsafe (unsafePerformIO)
 
 import LunaStudio.Data.PortRef (OutPortRef(..))
@@ -116,7 +116,7 @@ import LunaStudio.Data.Vector2 (Vector2(..))
 import Data.UUID (UUID(..))
 
 import Control.Lens ((?=), (.=), (%=), to, makeWrapped, makePrisms, use, preuse,
-                     _Just, (?~), zoom)
+                     _Just, (?~), zoom, mapMOf)
 import Prologue as X hiding (TypeRep, head, tail, init, last, p, r, s, (|>), return, liftIO, fromMaybe, fromJust, when, mapM, mapM_, minimum)
 import Control.Monad       as X (return, when, mapM, mapM_, forM)
 import Control.Monad.Trans as X (liftIO)
@@ -265,14 +265,15 @@ compListToList (List.Cons a l) = a : compListToList l
 inputs ref = compListToList <$> IR.inputs ref
 
 
-fromNodeMeta :: NodeMeta -> NodeMetaLike
-fromNodeMeta (NodeMeta (Position (Vector2 x y)) d s) = NodeMetaLike (NM.Position x y) d (over both (unsafePerformIO . Foreign.fromList . convert) <$> s)
-toNodeMeta :: NodeMetaLike -> NodeMeta
-toNodeMeta (NodeMetaLike (NM.Position x y) d s) = NodeMeta (Position (Vector2 x y)) d (over both (convert . unsafePerformIO . Foreign.toList) <$> s)
+fromNodeMeta :: MonadIO m => NodeMeta -> m NodeMetaLike
+fromNodeMeta (NodeMeta (Position (Vector2 x y)) d s) = NodeMetaLike (NM.Position x y) d <$> mapMOf (_Just . both) (Foreign.fromList . convert) s
 
-fromPortMarker :: OutPortRefLike -> OutPortRef
+toNodeMeta :: MonadIO m => NodeMetaLike -> m NodeMeta
+toNodeMeta (NodeMetaLike (NM.Position x y) d s) = NodeMeta (Position (Vector2 x y)) d <$> mapMOf (_Just . both) (fmap convert . Foreign.toList) s
+
+fromPortMarker :: MonadIO m => OutPortRefLike -> m OutPortRef
 fromPortMarker (OutPortRefLike uuid fvec) =
-   OutPortRef (convert uuid) (coerce (unsafePerformIO (Foreign.toList fvec)) :: OutPortId)
+   OutPortRef (convert uuid) <$> (coerce <$> Foreign.toList fvec)
 
-toPortMarker :: OutPortRef -> OutPortRefLike
-toPortMarker (OutPortRef a b) = OutPortRefLike (convert a) (unsafePerformIO $ Foreign.fromList (coerce b :: [Int]))
+toPortMarker :: MonadIO m => OutPortRef -> m OutPortRefLike
+toPortMarker (OutPortRef a b) = OutPortRefLike (convert a) <$> Foreign.fromList (coerce b :: [Int])

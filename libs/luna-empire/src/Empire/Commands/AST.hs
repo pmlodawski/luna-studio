@@ -26,13 +26,13 @@ addNode nid name genName node = do
     ASTBuilder.makeNodeRep nid name genName node
 
 readMeta :: ASTOp g m => NodeRef -> m (Maybe NodeMeta)
-readMeta ref = fmap toNodeMeta <$> getLayer @Meta ref
+readMeta ref = traverse toNodeMeta =<< getLayer @Meta ref
 
 getNodeMeta :: GraphOp m => NodeId -> m (Maybe NodeMeta)
 getNodeMeta = ASTRead.getASTRef >=> readMeta
 
 writeMeta :: ASTOp g m => NodeRef -> NodeMeta -> m ()
-writeMeta ref newMeta = putLayer @Meta ref $ Just $ fromNodeMeta newMeta
+writeMeta ref newMeta = putLayer @Meta ref . Just =<< fromNodeMeta newMeta
 
 sortByPosition :: GraphOp m => [NodeId] -> m [NodeRef]
 sortByPosition nodeIds = do

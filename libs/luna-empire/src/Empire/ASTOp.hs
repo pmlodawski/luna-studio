@@ -30,10 +30,10 @@ import           Data.Graph.Component.Edge.Class (Edge, Edges)
 import           Data.Graph.Component.Node.Class (Node, Nodes)
 import qualified Data.Graph.Component.Node.Destruction as Destruct
 import qualified Data.Graph.Component.Node.Layer as Layer
-import           Data.Graph.Component.Node.Layer.NodeMeta   (Meta)
-import           Data.Graph.Component.Node.Layer.PortMarker (PortMarker)
-import           Data.Graph.Component.Node.Layer.SpanLength (SpanLength)
-import           Data.Graph.Component.Node.Layer.SpanOffset (SpanOffset)
+import           Luna.Pass.Data.Layer.NodeMeta   (Meta)
+import           Luna.Pass.Data.Layer.PortMarker (PortMarker)
+import           Luna.Pass.Data.Layer.SpanLength (SpanLength)
+import           Luna.Pass.Data.Layer.SpanOffset (SpanOffset)
 import           Data.Graph.Data.Component.Class (Component)
 import qualified Data.Graph.Data.Component.Class as Component
 import qualified Data.Graph.Data.Graph.Class as LunaGraph

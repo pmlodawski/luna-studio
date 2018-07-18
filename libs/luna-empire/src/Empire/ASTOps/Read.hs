@@ -18,7 +18,7 @@ import qualified Safe
 import           LunaStudio.Data.NodeId             (NodeId)
 import qualified LunaStudio.Data.PortRef            as PortRef
 import           Data.Graph.Component.Node.Class    (Node, Nodes)
-import qualified Data.Graph.Component.Node.Layer.PortMarker as PortMarker
+import qualified Luna.Pass.Data.Layer.PortMarker    as PortMarker
 import           Data.Graph.Data.Component.Class    (Component)
 import qualified Data.Graph.Data.Layer.Class        as Layer
 

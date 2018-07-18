@@ -85,7 +85,8 @@ import Data.Map (Map)
 -- import           Luna.Builtin.Data.Module         (Imports (..), unionImports, unionsImports)
 -- import           Luna.Builtin.Prim                (SingleRep (..), ValueRep (..), getReps)
 -- import qualified Luna.Compilation                 as Compilation
-import qualified Luna.Project                     as Project
+import qualified Luna.Package                     as Package
+import qualified Luna.Package.Structure.Name      as Package
 -- import           Luna.Compilation                 (CompiledModules (..))
 import qualified Luna.IR                          as IR
 -- import           Luna.Pass.Data.ExprMapping
@@ -115,15 +116,15 @@ runTC (GraphLocation file br) = do
     --     Graph.breadcrumbHierarchy . BH.refs %= (\x -> Map.findWithDefault x x mapping)
     -- return ()
     --
-withProjectCurrentDirectory :: FilePath -> IO a -> IO a
-withProjectCurrentDirectory currentFile act = do
-    rootPath <- liftIO $ Project.findProjectRootForFile =<< Path.parseAbsFile currentFile
-    let projectDirectory = maybe (takeDirectory currentFile) Path.toFilePath rootPath
-    withCurrentDirectory projectDirectory act
+withPackageCurrentDirectory :: FilePath -> IO a -> IO a
+withPackageCurrentDirectory currentFile act = do
+    rootPath <- liftIO $ Package.findPackageRootForFile =<< Path.parseAbsFile currentFile
+    let packageDirectory = maybe (takeDirectory currentFile) Path.toFilePath rootPath
+    withCurrentDirectory packageDirectory act
 
 runInterpreter :: FilePath -> Runtime.Units -> Command Graph (Maybe Interpreter.LocalScope)
 runInterpreter path imports = do
-    rootPath   <- liftIO $ Project.findProjectRootForFile =<< Path.parseAbsFile path
+    rootPath   <- liftIO $ Package.findPackageRootForFile =<< Path.parseAbsFile path
     selfRef    <- use    $ Graph.userState . Graph.breadcrumbHierarchy . BH.self
     bodyRefMay <- runASTOp $ matchExpr selfRef $ \case
         Uni.Function _ as b -> do
@@ -134,7 +135,7 @@ runInterpreter path imports = do
     for interpreted $ \res ->
         mask_ $ liftIO $ do
             ref <- IORef.newIORef def
-            withProjectCurrentDirectory path
+            withPackageCurrentDirectory path
                 $ Runtime.runIO $ Runtime.runError $ Interpreter.evalWithRef res ref
             IORef.readIORef ref
 
@@ -187,7 +188,7 @@ updateValues loc@(GraphLocation path _) scope = do
         sendStreamRep nid (SuccessRep s l) = send nid
                                            $ NodeValue s
                                            $ StreamDataPoint <$> l
-    asyncs <- liftIO $ withProjectCurrentDirectory path $
+    asyncs <- liftIO $ withPackageCurrentDirectory path $
         forM allVars $ \(nid, ref) -> do
             let resVal = Interpreter.localLookup ref scope
             liftIO $ forM resVal $ \v -> do
@@ -203,19 +204,19 @@ updateValues loc@(GraphLocation path _) scope = do
 filePathToQualName :: MonadIO m => FilePath -> m IR.Qualified
 filePathToQualName path = liftIO $ do
     path' <- Path.parseAbsFile path
-    root  <- Project.projectRootForFile path'
-    let projName = Project.getProjectName root
+    root  <- Package.packageRootForFile path'
+    let projName = Package.getPackageName root
     file  <- Path.stripProperPrefix (root Path.</> $(Path.mkRelDir "src")) path'
-    return $ Project.mkQualName projName file
+    return $ Package.mkQualName projName file
 
 fileImportPaths :: MonadIO m => FilePath -> m (Map IR.Qualified FilePath)
 fileImportPaths file = liftIO $ do
     filePath        <- Path.parseAbsFile file
-    currentProjPath <- Project.projectRootForFile filePath
-    libs            <- Project.projectImportPaths currentProjPath
+    currentProjPath <- Package.packageRootForFile filePath
+    libs            <- Package.packageImportPaths currentProjPath
     srcs            <- for (snd <$> libs) $ \libPath -> do
         p <- Path.parseAbsDir libPath
-        fmap Path.toFilePath . Bimap.toMapR <$> Project.findProjectSources p
+        fmap Path.toFilePath . Bimap.toMapR <$> Package.findPackageSources p
     pure $ Map.unions srcs
 
 stop :: Command InterpreterEnv ()
@@ -241,9 +242,9 @@ makePrimStdIfMissing = do
         Nothing -> do
             (finalizer, typed, computed, ress) <- liftScheduler $ do
                 (fin, stdUnitRef) <- Std.stdlib @Stage
-                lunaroot <- liftIO $ canonicalizePath =<< getEnv Project.lunaRootEnv
+                lunaroot <- liftIO $ canonicalizePath =<< getEnv Package.lunaRootEnv
                 stdPath <- Path.parseAbsDir $ lunaroot <> "/Std/"
-                srcs    <- fmap Path.toFilePath . Bimap.toMapR <$> Project.findProjectSources stdPath
+                srcs    <- fmap Path.toFilePath . Bimap.toMapR <$> Package.findPackageSources stdPath
                 UnitLoader.init
                 Scheduler.registerAttr @Unit.UnitRefsMap
                 Scheduler.setAttr $ Unit.UnitRefsMap $ Map.singleton "Std.Primitive" stdUnitRef

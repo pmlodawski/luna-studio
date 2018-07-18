@@ -67,7 +67,7 @@ makeGraphCls fun lastUUID = do
     nodeCache <- use $ Graph.userState . Graph.clsNodeCache
     uuid      <- maybe (liftIO UUID.nextRandom) return lastUUID
     (funName, ref, fileOffset) <- runASTOp $ do
-        putLayer @Marker fun $ Just $ toPortMarker $ OutPortRef (convert uuid) []
+        putLayer @Marker fun . Just =<< toPortMarker (OutPortRef (convert uuid) [])
         asgFun    <- ASTRead.cutThroughDocAndMarked fun
         matchExpr asgFun $ \case
             ASGFunction n _ _ -> do

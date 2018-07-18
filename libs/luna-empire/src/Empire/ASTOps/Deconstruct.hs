@@ -6,8 +6,8 @@ import           Data.Text.Position (Delta)
 import           Empire.ASTOp       (GraphOp, match)
 import qualified Empire.ASTOps.Read as Read
 import           Empire.Data.AST    (EdgeRef, NodeRef, NotAppException (..))
-import           Data.Graph.Component.Node.Layer.SpanLength (SpanLength)
-import           Data.Graph.Component.Node.Layer.SpanOffset (SpanOffset)
+import           Luna.Pass.Data.Layer.SpanLength (SpanLength)
+import           Luna.Pass.Data.Layer.SpanOffset (SpanOffset)
 
 import qualified Luna.IR            as IR
 

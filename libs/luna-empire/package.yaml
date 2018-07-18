@@ -64,7 +64,7 @@ dependencies:
     - luna-nested-containers
     - luna-memory-pool
     - luna-passes
-    - luna-project
+    - luna-package
     - luna-runtime
     - luna-stdlib
     - luna-syntax-definition
@@ -75,7 +75,6 @@ dependencies:
     - luna-studio-common
     - m-logger
     - matrix
-    - megaparsec
     - mtl
     - open-browser
     - path

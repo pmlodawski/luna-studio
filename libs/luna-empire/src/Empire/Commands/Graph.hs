@@ -77,7 +77,7 @@ import qualified Luna.Pass.Sourcing.UnitLoader    as ModLoader
 import qualified Luna.Pass.Sourcing.UnitMapper    as UnitMapper
 import qualified Luna.IR                          as IR
 import qualified Luna.IR.Term.Ast.Class           as Term
-import qualified Luna.Project                     as Project
+import qualified Luna.Package                     as Package
 import qualified Luna.Std                         as Std
 import           Luna.Syntax.Text.Analysis.SpanTree (Spanned(..))
 import qualified Luna.Syntax.Text.Analysis.SpanTree as SpanTree
@@ -1775,15 +1775,15 @@ qualNameToText = convertVia @String
 
 getImportPaths :: GraphLocation -> IO [FilePath]
 getImportPaths (GraphLocation file _) = do
-    currentProjPath <- Project.projectRootForFile =<< Path.parseAbsFile file
-    importPaths     <- Project.projectImportPaths currentProjPath
+    currentProjPath <- Package.packageRootForFile =<< Path.parseAbsFile file
+    importPaths     <- Package.packageImportPaths currentProjPath
     return $ map (view _2) importPaths
 
 getSearcherHints :: GraphLocation -> Empire ImportsHints
 getSearcherHints loc = do
     importPaths     <- liftIO $ getImportPaths loc
     availableSource <- liftIO $ forM importPaths $ \path -> do
-        sources <- Project.findProjectSources =<< Path.parseAbsDir path
+        sources <- Package.findPackageSources =<< Path.parseAbsDir path
         return $ Bimap.toMapR sources
     let union = Map.map (Path.toFilePath) $ Map.unions availableSource
     -- importsMVar <- view modules

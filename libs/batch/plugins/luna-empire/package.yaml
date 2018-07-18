@@ -20,7 +20,7 @@ dependencies:
     - groom
     - lens
     - luna-core
-    - luna-project
+    - luna-package
     - luna-empire
     - luna-passes
     - luna-stdlib

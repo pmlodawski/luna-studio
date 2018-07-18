@@ -553,7 +553,7 @@ nodeConnectedToOutput = do
         return a
 
 resolveInput :: GraphOp m => NodeRef -> m (Maybe OutPortRef)
-resolveInput n = (fmap fromPortMarker) <$> getLayer @Marker n
+resolveInput n = traverse fromPortMarker =<< getLayer @Marker n
 
 deepResolveInputs :: GraphOp m
     => NodeId -> NodeRef -> InPortRef -> m [(OutPortRef, InPortRef)]

@@ -34,7 +34,7 @@ import           System.FilePath.Manip                ()
 import           Empire.Data.AST                      (SomeASTException)
 import           Empire.Data.Graph                    (ClsGraph, Graph)
 import qualified Empire.Data.Graph                    as Graph
-import qualified Luna.Project                         as Project
+import qualified Luna.Package                         as Package
 import           LunaStudio.API.AsyncUpdate           (AsyncUpdate (..))
 import qualified LunaStudio.API.Control.EmpireStarted as EmpireStarted
 import qualified LunaStudio.API.Graph.SetNodesMeta    as SetNodesMeta
@@ -98,7 +98,7 @@ requestCapability = 0
 tcCapability      = 1
 
 run :: BusEndPoints -> [Topic] -> Bool -> FilePath -> IO ()
-run endPoints topics formatted projectRoot = do
+run endPoints topics formatted packageRoot = do
     forkServer "localhost" 1234
     logger Logger.info $ "Subscribing to topics: " <> show topics
     logger Logger.info $ (Utils.display formatted) endPoints
@@ -106,14 +106,14 @@ run endPoints topics formatted projectRoot = do
     fromEmpireChan   <- atomically newTChan
     tcReq            <- newEmptyMVar
     modules          <- newEmptyMVar
-    env              <- Env.make toBusChan fromEmpireChan tcReq modules projectRoot
+    env              <- Env.make toBusChan fromEmpireChan tcReq modules packageRoot
     let commEnv = env ^. Env.empireNotif
     forkIO $ void $ Bus.runBus endPoints $ BusT.runBusT $ evalStateT (startAsyncUpdateWorker fromEmpireChan) env
     forkIO $ void $ Bus.runBus endPoints $ startToBusWorker toBusChan
     waiting <- newEmptyMVar
     requestThread <- forkOn requestCapability $ void $ Bus.runBus endPoints $ do
         mapM_ Bus.subscribe topics
-        BusT.runBusT $ evalStateT (runBus formatted projectRoot) env
+        BusT.runBusT $ evalStateT (runBus formatted packageRoot) env
         liftIO $ putMVar waiting ()
     compiledStdlib <- newEmptyMVar
     forkOn tcCapability $ void $ Bus.runBus endPoints $ startTCWorker commEnv
@@ -191,30 +191,30 @@ startAsyncUpdateWorker asyncChan = forever $ do
         CodeUpdate        up -> Server.sendToBus' up
         InterpreterUpdate up -> Server.sendToBus' up
 
-projectFiles :: FilePath -> IO [FilePath]
-projectFiles = find always (extension ==? ".luna")
+packageFiles :: FilePath -> IO [FilePath]
+packageFiles = find always (extension ==? ".luna")
 
-loadAllProjects :: StateT Env BusT ()
-loadAllProjects = do
-    projectRoot  <- use Env.projectRoot
+loadAllPackages :: StateT Env BusT ()
+loadAllPackages = do
+    packageRoot  <- use Env.projectRoot
     empireNotifEnv   <- use Env.empireNotif
   
-    projects <- liftIO $ projectFiles projectRoot
-    loadedProjects <- flip mapM projects $ \proj -> do
+    packages <- liftIO $ packageFiles packageRoot
+    loadedPackages <- flip mapM packages $ \proj -> do
         currentEmpireEnv <- use Env.empireEnv
         result <- liftIO $ Exception.try $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.openFile proj
         case result of
             Left (exc :: SomeASTException) -> do
-              logger Logger.error $ "Cannot load project [" <> proj <> "]: " <> (displayException exc)
+              logger Logger.error $ "Cannot load package [" <> proj <> "]: " <> (displayException exc)
               return Nothing
             Right (_, newEmpireEnv) -> do
               Env.empireEnv .= newEmpireEnv
               return $ Just ()
     return ()
 
-  -- when ((catMaybes loadedProjects) == []) $ do
+  -- when ((catMaybes loadedPackages) == []) $ do
   --   currentEmpireEnv <- use Env.empireEnv
-  --   result <- liftIO $ Exception.try $ Empire.runEmpire empireNotifEnv currentEmpireEnv $  Persistence.createDefaultProject
+  --   result <- liftIO $ Exception.try $ Empire.runEmpire empireNotifEnv currentEmpireEnv $  Persistence.createDefaultPackage
   --   case result of
   --       Right (_, newEmpireEnv) -> Env.empireEnv .= newEmpireEnv
   --       Left (exc :: SomeASTException) -> return ()
@@ -222,7 +222,7 @@ loadAllProjects = do
 
 
 createDefaultState :: StateT Env BusT ()
-createDefaultState = loadAllProjects
+createDefaultState = loadAllPackages
 
 handleMessage :: StateT Env BusT ()
 handleMessage = do
