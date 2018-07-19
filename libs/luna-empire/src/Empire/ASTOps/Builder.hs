@@ -406,8 +406,10 @@ attachName node n = do
     putLayer @SpanLength var (convert $ Text.length n)
     uni    <- IR.unify' var node
     [l, r] <- inputs uni
-    putLayer @SpanOffset l 0
-    putLayer @SpanOffset r 3
+    let noOffset              = 0
+        spacesAndEqualsOffset = 3
+    putLayer @SpanOffset l noOffset
+    putLayer @SpanOffset r spacesAndEqualsOffset
     putLayer @SpanLength uni =<< Code.computeLength uni
     return (var, uni)
 

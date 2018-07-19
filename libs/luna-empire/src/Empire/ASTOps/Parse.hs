@@ -136,34 +136,6 @@ runFunParser expr = liftIO $
     runParser (Parsing.possiblyDocumented Parsing.func) expr
         `catchAll` (\e -> throwM $ SomeParserException e)
 
--- runReparser :: Text.Text -> NodeRef -> Command Graph (NodeRef, MarkedExprMap, Parser.ReparsingStatus)
--- runReparser expr oldExpr = do
---     let inits = do
---             return ()
---             -- IR.setAttr (getTypeDesc @Invalids)               $ (mempty :: Invalids)
-
---             -- IR.setAttr (getTypeDesc @MarkedExprMap)   $ (mempty :: MarkedExprMap)
---             -- IR.setAttr (getTypeDesc @Source.Source)          $ (convert expr :: Source.Source)
---             -- IR.setAttr (getTypeDesc @Parser.ParsedExpr)      $ (wrap' oldExpr :: Parser.ParsedExpr)
---             -- IR.setAttr (getTypeDesc @Parser.ReparsingStatus) $ (error "Data not provided: ReparsingStatus")
---         run = runPass @Graph @ParserPass inits
---     run $ do
---         do
---             gidMapOld <- use Graph.codeMarkers
-
---             -- parsing new file and updating updated analysis
---             Parsing.parsingPassM Parsing.valExpr `catchAll` (\e -> throwM $ SomeParserException e)
---             gidMap    <- getAttr @MarkedExprMap
-
---             -- Preparing reparsing status
---             rs        <- Parsing.cmpMarkedExprMaps (wrap' gidMapOld) gidMap
---             putAttr @Parser.ReparsingStatus (wrap rs)
-
---         res     <- getAttr @Parser.ParsedExpr
---         exprMap <- getAttr @MarkedExprMap
---         status  <- getAttr @Parser.ReparsingStatus
---         return (unwrap' res, exprMap, status)
-
 data PortDefaultNotConstructibleException = PortDefaultNotConstructibleException PortDefault
     deriving Show
 

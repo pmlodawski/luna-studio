@@ -118,12 +118,6 @@ run endPoints topics formatted packageRoot = do
     compiledStdlib <- newEmptyMVar
     forkOn tcCapability $ void $ Bus.runBus endPoints $ startTCWorker commEnv
     sendStarted endPoints
-    -- forkOn tcCapability $ do
-    --     writeIORef minCapabilityNumber 1
-    --     updateCapabilities
-    --     (std, cleanup) <- prepareStdlib
-    --     pmState <- Graph.defaultPMState
-    --     putMVar compiledStdlib (std, cleanup, pmState)
     takeMVar waiting
 
 runBus :: Bool -> FilePath ->  StateT Env BusT ()
@@ -132,19 +126,6 @@ runBus formatted projectRoot = do
     Env.projectRoot .= projectRoot
     createDefaultState
     forever handleMessage
-
--- killPreviousTC :: Empire.CommunicationEnv -> Maybe (Async Empire.InterpreterEnv) -> IO ()
--- killPreviousTC env prevAsync = case prevAsync of
---     Just a -> Async.poll a >>= \case
---         Just finished -> case finished of
---             Left exc     -> logger Logger.warning $ "[TCWorker]: TC failed with: " <> displayException exc
---             Right intEnv -> do
---                 logger Logger.info "[TCWorker]: killing listeners"
---                 void $ Empire.evalEmpire env intEnv Typecheck.stop
---         _      -> do
---             logger Logger.info "[TCWorker]: cancelling previous request"
---             Async.uninterruptibleCancel a
---     _      -> return ()
 
 startTCWorker :: Empire.CommunicationEnv -> Bus ()
 startTCWorker env = liftIO $ do
@@ -158,23 +139,6 @@ startTCWorker env = liftIO $ do
             Empire.TCRequest loc g rooted flush interpret recompute stop <- liftIO $ takeMVar reqs
             when (not stop) $
                 Typecheck.run loc g rooted interpret recompute `Exception.onException` Typecheck.stop
-
---     tcAsync <- newEmptyMVar
---         modules = env ^. Empire.modules
---     (std, cleanup, pmState) <- readMVar compiledStdlib
---     putMVar modules $ unwrap std
---         prevAsync <- tryTakeMVar tcAsync
---         killPreviousTC env prevAsync
---         async     <- Async.asyncOn tcCapability (Empire.evalEmpire env interpreterEnv $ do
---             case stop of
---                 True  -> Typecheck.stop
---                 False -> do
---                     when flush
---                         Typecheck.flushCache
---                     Empire.graph .= (g & Graph.clsAst . Graph.pmState .~ pmState)
---                     liftIO performGC
---         when recompute $ void (Async.waitCatch async)
---         putMVar tcAsync async
 
 startToBusWorker :: TChan Message -> Bus ()
 startToBusWorker toBusChan = forever $ do

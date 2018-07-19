@@ -20,6 +20,5 @@ handle (Batch (Batch.EmpireStarted _)) = Just $
     withJust openedFile $ \gl -> do
     	liftIO $ putStrLn "textedit" >> print gl
     	Batch.openFile $ gl ^. GraphLocation.filePath
-    -- error "Server crashed." -- could have done that more politely, but… let it crash
 
 handle _ = Nothing
