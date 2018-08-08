@@ -11,8 +11,9 @@ import           NodeEditor.Action.State.NodeEditor (whenGraphLoaded)
 import           NodeEditor.Event.Event             (Event (Shortcut, UI, View))
 import qualified NodeEditor.Event.Shortcut          as Shortcut
 import           NodeEditor.Event.UI                (UIEvent (AppEvent, SearcherEvent))
-import           NodeEditor.Event.View              (BaseEvent (SearcherAccept, SearcherEdit), SearcherEditEvent (SearcherEditEvent),
-                                                     ViewEvent, base)
+import           NodeEditor.Event.View              (BaseEvent (EditNodeExpression, EditNodeName, SearcherAccept, SearcherEdit, SearcherMoveDown, SearcherMoveUp, SearcherTabPressed),
+                                                     SearcherEditEvent (SearcherEditEvent), ViewEvent, base)
+import qualified NodeEditor.Event.View              as View
 import qualified NodeEditor.React.Event.App         as App
 import qualified NodeEditor.React.Event.Searcher    as Searcher
 import           NodeEditor.State.Action            (Action (continue))
@@ -30,9 +31,9 @@ handle _ _                      = Nothing
 
 
 handleAppEvent :: App.Event -> Maybe (Command State ())
-handleAppEvent App.ContextMenu    = Just $ whenGraphLoaded $ Searcher.open def
-handleAppEvent (App.MouseDown {}) = Just $ continue Searcher.close
-handleAppEvent _                  = Nothing
+handleAppEvent App.ContextMenu = Just $ whenGraphLoaded $ Searcher.open def
+handleAppEvent App.MouseDown{} = Just $ continue Searcher.close
+handleAppEvent _               = Nothing
 
 handleShortcutEvent :: Shortcut.ShortcutEvent -> Maybe (Command State ())
 handleShortcutEvent evt = case evt ^. Shortcut.shortcut of
@@ -65,7 +66,16 @@ handleSearcherEvent scheduleEvent = \case
 
 handleViewEvent :: (Event -> IO ()) -> ViewEvent -> Maybe (Command State ())
 handleViewEvent scheduleEvent evt = case evt ^. base of
-    SearcherAccept {} -> Just . continue $ Searcher.accept scheduleEvent
-    SearcherEdit (SearcherEditEvent ss se input)
-        -> Just . continue $ Searcher.updateInput input ss se
-    _   -> Nothing
+    EditNodeName        {} -> Just $ Searcher.editName nl
+    EditNodeExpression  {} -> Just $ Searcher.editExpression nl
+    SearcherEdit (SearcherEditEvent ss se input) ->
+           jc $ Searcher.updateInput input ss se
+    -- NOTE: this will come in handy when going atomless:
+    -- SearcherAccept      {} -> jc   $ Searcher.accept scheduleEvent
+    -- SearcherTabPressed  {} -> jc     Searcher.handleTabPressed
+    -- SearcherMoveDown    {} -> jc     Searcher.selectPreviousHint
+    -- SearcherMoveUp      {} -> jc     Searcher.selectNextHint
+    _ -> Nothing
+    where
+        nl = View.getNodeLoc evt
+        jc = Just . continue
