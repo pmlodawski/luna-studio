@@ -62,15 +62,15 @@ def build_runner(runner_args):
 
 def main ():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--backend', help='Build backend only', action='store_true')
-    parser.add_argument('--runner', help='Build runner only', action='store_true')
-    parser.add_argument('--frontend', help='Build frontend only', action='store_true')
-    parser.add_argument('--js_only', action='store_true')
-    parser.add_argument('--release', help='Build package in release mode', action='store_false')
-    parser.add_argument('--gui_url', help='Path to uploaded gui')
-    parser.add_argument('--backend-stack', help='Additional options passed to stack while building backend', action='append', dest='stack_backend_args', default=['--copy-bins', '--install-ghc', '--ghc-options=-fexternal-interpreter'])
-    parser.add_argument('--frontend-stack', help='Additional options passed to stack while building frontend', action='append', dest='stack_frontend_args', default=['--install-ghc'])
-    parser.add_argument('--runner-stack', help='Additional options passed to stack while building runner', action='append', dest='stack_runner_args', default=['--copy-bins', '--install-ghc'])
+    parser.add_argument("--backend", help="Build backend only", action="store_true")
+    parser.add_argument("--runner", help="Build runner only", action="store_true")
+    parser.add_argument("--frontend", help="Build frontend only", action="store_true")
+    parser.add_argument("--js_only", action="store_true")
+    parser.add_argument("--release", help="Build package in release mode", action="store_false")
+    parser.add_argument("--gui_url", help="Path to uploaded gui")
+    parser.add_argument("--backend-stack", help="Additional options passed to stack while building backend", action="append", dest="stack_backend_args", default=['--copy-bins', '--install-ghc'])
+    parser.add_argument("--frontend-stack", help="Additional options passed to stack while building frontend", action="append", dest="stack_frontend_args", default=['--install-ghc'])
+    parser.add_argument("--runner-stack", help="Additional options passed to stack while building runner", action="append", dest="stack_runner_args", default=['--copy-bins', '--install-ghc'])
     args = parser.parse_args()
 
     if args.backend:
