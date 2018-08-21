@@ -2,12 +2,11 @@
 module Empire.Commands.Graph where
 
 import           Control.Arrow                    ((&&&), (***))
-import           Control.Exception.Safe           (tryAny)
+import           Control.Exception.Safe           (handle, try, tryAny)
 import           Control.Concurrent               (readMVar, swapMVar)
 import qualified Control.Concurrent.MVar.Lifted   as Lifted
 import           Control.Lens                     ((^..), uses, re, traverseOf_)
 import           Control.Monad                    (forM)
-import           Control.Monad.Catch              (handle, try)
 import           Control.Monad.State              hiding (forM_, void, when)
 import           Data.Aeson                       (FromJSON, ToJSON)
 import qualified Data.Aeson                       as Aeson
@@ -950,6 +949,7 @@ renameNode loc nid name
                     patLen   <- getLayer @SpanLength pat
                     vEdge    <- ASTRead.getVarEdge nid
                     replaceSource pat $ generalize vEdge
+                    ASTBuilder.attachNodeMarkers nid [] pat
                     Code.gossipLengthsChangedBy (patLen - varLen) ref
                     void $ Code.applyDiff beg (beg + varLen) name
             runAliasAnalysis

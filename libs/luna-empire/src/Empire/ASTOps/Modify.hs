@@ -16,6 +16,7 @@ import qualified Empire.Prelude as P
 
 import qualified Data.Graph.Data.Component.Vector   as PtrList
 import           Data.Text.Position                 (Delta)
+import           Data.Text.Span                     (SpacedSpan(..))
 import           LunaStudio.Data.NodeId             (NodeId)
 import qualified LunaStudio.Data.Port               as Port
 import           Empire.ASTOp                       (GraphOp, ASTOp, match)
@@ -31,9 +32,9 @@ import qualified Empire.Data.BreadcrumbHierarchy    as BH
 import qualified Empire.Data.Graph                  as Graph
 
 import qualified Luna.IR                            as IR
+import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan, realSpan)
 
 import qualified Data.List as L (take, head, drop, tail)
-
 
 
 addLambdaArg :: Int -> NodeRef -> Maybe Text -> [String] -> GraphOp ()
@@ -347,14 +348,22 @@ rewireCurrentNode newTarget = do
     replaceTargetNode matchNode newTarget
     ASTRemove.removeSubtree oldTarget
 
-renameVar :: NodeRef -> String -> ASTOp g ()
+renameVar :: Graph.HasCode g => NodeRef -> String -> ASTOp g ()
 renameVar vref name = do
     var <- narrowTerm @IR.Var vref
     case var of
         Just var' -> do
-            IR.UniTermVar a <- getLayer @IR.Model var'
-            let a' = a & IR.name_Var .~ stringToName name
-            putLayer @IR.Model var' $ IR.UniTermVar a'
+            match var' $ \case
+                IR.UniTermVar a -> do
+                    let a' = a & IR.name_Var .~ stringToName name
+                    putLayer @IR.Model var' $ IR.UniTermVar a'
+                a               -> do
+                    LeftSpacedSpan (SpacedSpan offv lenv) <- Code.getOffset vref
+                    LeftSpacedSpan (SpacedSpan off len) <-
+                        view realSpan <$> getLayer @CodeSpan var'
+                    Code.removeAt (offv + lenv) (offv + lenv + len)
+                    v <- IR.var $ convert name
+                    IR.replace v var'
         _ -> return ()
     -- mapM_ (flip IR.modifyExprTerm $ IR.name .~ (stringToName name)) var
     -- return ()

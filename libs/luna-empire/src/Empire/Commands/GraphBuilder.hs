@@ -76,8 +76,25 @@ instance Exception CannotEnterNodeException where
     toException = astExceptionToException
     fromException = astExceptionFromException
 
+data MalformedFunctionException = MalformedFunctionException Text
+    deriving Show
+instance Exception MalformedFunctionException where
+    toException = astExceptionToException
+    fromException = astExceptionFromException
+
+throwIfInvalid :: NodeRef -> GraphOp ()
+throwIfInvalid ref = match ref $ \case
+    ASGFunction n _ b -> source b >>= flip match (\case
+        Invalid{} -> do
+            n' <- ASTRead.getVarName' =<< source n
+            throwM $ MalformedFunctionException $ convert n'
+        _ -> return ())
+    _ -> return ()
+
 buildGraph :: GraphOp API.Graph
 buildGraph = do
+    currentTarget <- ASTRead.getCurrentASTTarget
+    throwIfInvalid currentTarget
     connections <- buildConnections
     nodes       <- buildNodes
     (inE, outE) <- buildEdgeNodes
@@ -209,7 +226,9 @@ buildNode :: NodeId -> GraphOp API.ExpressionNode
 buildNode nid = do
     root      <- GraphUtils.getASTPointer nid
     ref       <- GraphUtils.getASTTarget  nid
-    expr      <- Text.pack <$> Print.printExpression ref
+    expr <- match ref $ \case
+        Invalid{} -> return Nothing
+        _         -> (Just . Text.pack) <$> Print.printExpression ref
     marked    <- ASTRead.getASTRef nid
     meta      <- fromMaybe def <$> AST.readMeta marked
     name      <- getNodeName nid
@@ -218,7 +237,7 @@ buildNode nid = do
     outports  <- buildOutPorts root
     code      <- Code.removeMarkers <$> getNodeCode nid
     pure $ API.ExpressionNode
-        nid expr False name code inports outports meta canEnter
+        nid (fromMaybe code expr) False name code inports outports meta canEnter
 
 buildNodeTypecheckUpdate :: NodeId -> GraphOp API.NodeTypecheckerUpdate
 buildNodeTypecheckUpdate nid = do
@@ -231,10 +250,13 @@ buildNodeTypecheckUpdate nid = do
 getUniName :: NodeRef -> GraphOp (Maybe Text)
 getUniName root = do
     root'  <- getMarkedExpr root
-    matchExpr root' $ \case
-        Unify       l _   -> Just . Text.pack <$> (Print.printName =<< source l)
-        ASGFunction n _ _ -> Just . Text.pack <$> (Print.printName =<< source n)
+    var    <- matchExpr root' $ \case
+        Unify       l _   -> Just <$> source l
+        ASGFunction n _ _ -> Just <$> source n
         _ -> pure Nothing
+    forM var $ \v -> matchExpr v $ \case
+        Invalid{} -> Code.getCodeOf v
+        _         -> Text.pack <$> Print.printName v
 
 getNodeName :: NodeId -> GraphOp (Maybe Text)
 getNodeName nid = ASTRead.getASTPointer nid >>= getUniName
@@ -301,12 +323,6 @@ extractArgTypes node = do
         Lam arg out -> (:) <$> (Print.getTypeRep =<< source arg) <*> (extractArgTypes =<< source out)
         _           -> pure []
 
-safeGetVarName :: NodeRef -> GraphOp (Maybe String)
-safeGetVarName node = do
-    name <- (Just <$> ASTRead.getVarName node) `catch`
-        (\(e :: ASTRead.NoNameException) -> pure Nothing)
-    pure name
-
 extractArgNames :: NodeRef -> GraphOp [Maybe String]
 extractArgNames node = do
     match node $ \case
@@ -316,7 +332,7 @@ extractArgNames node = do
             args       <- ASTDeconstruct.extractArguments node
             vars       <- concat <$> mapM ASTRead.getVarsInside args
             let ports = if insideLam then vars else args
-            mapM safeGetVarName ports
+            mapM ASTRead.safeGetVarName ports
         -- App is Lam that has some args applied
         App{}  -> extractAppArgNames node
         Cons{} -> do
@@ -325,7 +341,7 @@ extractArgNames node = do
             pure $ map Just names
         ASGFunction _ a _ -> do
             args <- mapM source =<< ptrListToList a
-            mapM safeGetVarName args
+            mapM ASTRead.safeGetVarName args
         _ -> pure []
 
 extractAppArgNames :: NodeRef -> GraphOp [Maybe String]
@@ -334,7 +350,7 @@ extractAppArgNames node = go [] node
         go :: [Maybe String] -> NodeRef -> GraphOp [Maybe String]
         go vars node = match node $ \case
             App f a -> do
-                varName <- safeGetVarName =<< source a
+                varName <- ASTRead.safeGetVarName =<< source a
                 go (varName : vars) =<< source f
             Lam{}   -> extractArgNames node
             Cons{}  -> pure vars
@@ -494,7 +510,9 @@ buildOutPortTree portId ref' = do
 
 buildOutPorts :: NodeRef -> GraphOp (OutPortTree OutPort)
 buildOutPorts ref = match ref $ \case
-    Unify l r -> buildOutPortTree [] =<< source l
+    Unify l r -> source l >>= \a -> match a (\case
+        Invalid{} -> buildDummyOutPort ref
+        _         -> buildOutPortTree [] a)
     _         -> buildDummyOutPort ref
 
 

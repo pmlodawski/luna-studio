@@ -34,8 +34,6 @@ import           Empire.Data.Layers                 (Marker)
 
 import qualified Luna.IR as IR
 
-import qualified System.IO as IO
-
 cutThroughGroups :: NodeRef -> GraphOp NodeRef
 cutThroughGroups r = match r $ \case
     Grouped g -> cutThroughGroups =<< source g
@@ -152,6 +150,12 @@ getVarName' node = match node $ \case
 
 getVarName :: NodeRef -> ASTOp g String
 getVarName = fmap nameToString . getVarName'
+
+safeGetVarName :: NodeRef -> ASTOp g (Maybe String)
+safeGetVarName node = do
+    name <- (Just <$> getVarName node) `catch`
+        (\(e :: NoNameException) -> pure Nothing)
+    pure name
 
 getVarsInside ::
     ( Layer.Reader (Component Nodes) IR.Model m

@@ -312,7 +312,7 @@ functionBlockStartRef ref = do
     return $ off + len
 
 
-getOffset :: NodeRef -> ClassOp (LeftSpacedSpan Delta)
+getOffset :: NodeRef -> ASTOp g (LeftSpacedSpan Delta)
 getOffset ref = do
     succs    <- ociSetToList =<< getLayer @IR.Users ref
     leftSpan <- case succs of

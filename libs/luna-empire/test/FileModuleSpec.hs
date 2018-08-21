@@ -1022,3 +1022,37 @@ spec = around withChannels $ parallel $ do
                 Graph.movePort loc (outPortRef input [Port.Projection 0]) 1
                 Graph.movePort loc (outPortRef input [Port.Projection 1]) 0
                 Graph.movePort loc (outPortRef input [Port.Projection 1]) 0
+        it "renames invalid def" $
+            let initialCode = [r|
+                    def :
+                        4
+                    |]
+                expectedCode = [r|
+                    def foo:
+                        4
+                    |]
+            in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
+                let loc' = GraphLocation file def
+                [fun] <- Graph.getNodes loc'
+                Graph.renameNode loc' (fun ^. Node.nodeId) "foo"
+        it "renames invalid def 2" $
+            let initialCode = [r|
+                    def main:
+                        test = "Test"
+                        None
+
+                    def   4 :
+                        4
+                    |]
+                expectedCode = [r|
+                    def main:
+                        test = "Test"
+                        None
+
+                    def   foo :
+                        4
+                    |]
+            in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
+                let loc' = GraphLocation file def
+                Just fun <- find (\n -> n ^. Node.name == Just "") <$> Graph.getNodes loc'
+                Graph.renameNode loc' (fun ^. Node.nodeId) "foo"

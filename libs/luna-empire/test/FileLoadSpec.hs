@@ -11,7 +11,7 @@ module FileLoadSpec (spec) where
 import           Control.Concurrent.MVar
 import           Control.Concurrent.STM          (atomically)
 import           Control.Concurrent.STM.TChan    (tryReadTChan)
-import           Control.Exception.Safe          (finally)
+import           Control.Exception.Safe          (finally, tryAny)
 import           Control.Lens                    (uses)
 import           Control.Monad                   (forM)
 import           Control.Monad.Loops             (unfoldM)
@@ -2887,3 +2887,44 @@ def main:
                 nodes' <- Graph.getNodes bar'
                 liftIO $ nodes `shouldBe` nodes'
                 Graph.collapseToFunction bar' $ map fromJust ids
+    describe "handles invalids" $ do
+        xit "throws exception on getting graph of an invalid function" $ \env -> let
+            initialCode = [r|
+                import Std.Base
+
+                def main:
+                    test = "test"
+                |]
+            expectedCode = [r|
+                import Std.Base
+
+                def main:
+                    foo =
+                    test = "test"
+                |]
+            invalidFunctionException :: Selector GraphBuilder.MalformedFunctionException
+            invalidFunctionException = const True
+            in specifyCodeChange initialCode expectedCode (\loc@(GraphLocation file _) -> do
+                tryAny $ Graph.substituteCode file [(29,29,"\n    foo")]
+                tryAny $ Graph.substituteCode file [(40,40," =")]
+                Graph.getGraph loc
+                ) env `shouldThrow` invalidFunctionException
+        it "gets out of double invalid unification" $ let
+            initialCode = [r|
+                import Std.Base
+
+                def main:
+                    test = "test"
+                |]
+            expectedCode = [r|
+                import Std.Base
+
+                def main:
+                    test = "test"
+                    r = 6
+                |]
+            in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
+                u1 <- mkUUID
+                Graph.addNode loc u1 "5r = 6f" def
+                Graph.renameNode loc u1 "r"
+                Graph.setNodeExpression loc u1 "6"

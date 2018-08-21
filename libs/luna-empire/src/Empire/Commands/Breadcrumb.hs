@@ -72,8 +72,8 @@ makeGraphCls fun lastUUID = do
         matchExpr asgFun $ \case
             ASGFunction n _ _ -> do
                 offset <- functionBlockStartRef asgFun
-                name   <- ASTRead.getVarName' =<< source n
-                return (nameToString name, asgFun, offset)
+                name   <- ASTRead.safeGetVarName =<< source n
+                return (fromMaybe "" name, asgFun, offset)
     let oldPortMapping = nodeCache ^. portMappingMap . at (uuid, Nothing)
     portMapping <- fromJustM (liftIO $ (,) <$> UUID.nextRandom <*> UUID.nextRandom) oldPortMapping
     globalMarkers <- use $ Graph.userState . Graph.clsCodeMarkers
