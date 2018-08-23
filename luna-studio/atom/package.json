@@ -41,6 +41,6 @@
         "unzipper": "0.8.11",
         "uuid": "3.1.x",
         "vm2": "3.5.x",
-        "luna-basegl-ui": "0.0.5"
+        "luna-basegl-ui": "latest"
     }
 }
