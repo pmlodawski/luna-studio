@@ -3,6 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE MultiWayIf        #-}
+{-# LANGUAGE PackageImports        #-}
 
 module Empire.Commands.Code where
 
@@ -66,7 +67,7 @@ removeMarkers (convert -> code) = convertVia @String $ SpanTree.foldlSpans conca
 
 extractMarkers :: Text -> Set.Set Graph.MarkerId
 extractMarkers (convert -> code) = Set.fromList markers where
-    markers     = mapMaybe (\(Lexer.Token _ _ symbol) -> Lexer.matchMarker symbol) lexerStream
+    markers     = mapMaybe (\(Lexer.Token _ symbol) -> Lexer.matchMarker symbol) lexerStream
     lexerStream = Lexer.evalDefLexer code
 
 readMarker :: Text -> Either String Word64
@@ -84,10 +85,10 @@ remarkerCode orig@(convert -> code) reservedMarkers = (remarkedCode, substitutio
     remarkedCode = convertVia @String $ SpanTree.foldlSpans (concatAll substitutions) "" spanTree
     spanTree     = SpanTree.buildSpanTree code lexerStream
     (remarkedStream, substitutions, _) = foldl' f ([], Map.empty, reservedMarkers) lexerStream
-    f :: ([Lexer.Token Lexer.Symbol], Map.Map Graph.MarkerId Graph.MarkerId, Set.Set Graph.MarkerId)
-      -> Lexer.Token Lexer.Symbol
-      -> ([Lexer.Token Lexer.Symbol], Map.Map Graph.MarkerId Graph.MarkerId, Set.Set Graph.MarkerId)
-    f (remarkedStream, substitutions, reservedMarkers) token@(Lexer.Token s o el) =
+    f :: ([Lexer.Token], Map.Map Graph.MarkerId Graph.MarkerId, Set.Set Graph.MarkerId)
+      -> Lexer.Token
+      -> ([Lexer.Token], Map.Map Graph.MarkerId Graph.MarkerId, Set.Set Graph.MarkerId)
+    f (remarkedStream, substitutions, reservedMarkers) token@(Lexer.Token info el) =
         case el of
             Lexer.Marker m ->
                 if m `Set.member` reservedMarkers then
@@ -95,7 +96,7 @@ remarkerCode orig@(convert -> code) reservedMarkers = (remarkedCode, substitutio
                         newMarker          = succ maxReservedMarker
                         newSubstitutions   = Map.insert m newMarker substitutions
                         newReservedMarkers = Set.insert newMarker reservedMarkers
-                        newToken           = Lexer.Token s o $ Lexer.Marker newMarker
+                        newToken           = Lexer.Token info $ Lexer.Marker newMarker
                     in (newToken:remarkedStream, newSubstitutions, newReservedMarkers)
                 else
                     (token:remarkedStream, substitutions, reservedMarkers)

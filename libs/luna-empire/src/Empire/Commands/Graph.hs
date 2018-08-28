@@ -28,7 +28,6 @@ import           Data.Maybe                       (fromMaybe, maybeToList)
 import qualified Data.Mutable.Class               as Mutable
 import           Data.Set                         (Set)
 import qualified Data.Set                         as Set
-import qualified Data.Set.Mutable.Class           as MutableSet
 import           Data.Text                        (Text)
 import           Data.Text.Strict.Lens            (packed)
 import qualified Data.Text                        as Text
@@ -82,9 +81,9 @@ import qualified Luna.Std                         as Std
 import           Luna.Syntax.Text.Analysis.SpanTree (Spanned(..))
 import qualified Luna.Syntax.Text.Analysis.SpanTree as SpanTree
 import qualified Luna.Syntax.Text.Lexer           as Lexer
-import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan)
-import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
-import           Luna.Syntax.Text.Parser.State.Marker (TermMap(..))
+import           "luna-syntax-text-parser2" Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan)
+import qualified "luna-syntax-text-parser2" Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
+import           "luna-syntax-text-parser2" Luna.Syntax.Text.Parser.State.Marker (TermMap(..))
 import qualified LunaStudio.API.Control.Interpreter as Interpreter
 import           LunaStudio.Data.Breadcrumb       (Breadcrumb (..), BreadcrumbItem, Named)
 import qualified LunaStudio.Data.Breadcrumb       as Breadcrumb
@@ -258,7 +257,7 @@ addFunNode loc parsing uuid expr meta = withUnit loc $ do
 addNodeNoTC :: GraphLocation -> NodeId -> Text -> Maybe Text -> NodeMeta -> Command Graph ExpressionNode
 addNodeNoTC loc uuid input name meta = do
     let propInput = Text.strip input
-    parse <- liftIO $ ASTParse.parseExpr propInput
+    parse <- ASTParse.parseExpr propInput
     expr <- runASTOp $ do
         Code.propagateLengths parse
         (parsedNode, newName) <- AST.addNode uuid name (generateNodeName parse) parse
@@ -930,9 +929,9 @@ renameNode loc nid name
         resendCode loc
     | otherwise = do
         withTC loc False $ do
+            _        <- ASTParse.runProperPatternParser name
+            pat      <- ASTParse.parsePattern name
             runASTOp $ do
-                _        <- liftIO $ ASTParse.runProperPatternParser name
-                pat      <- liftIO $ ASTParse.parsePattern name
                 Code.propagateLengths pat
                 ASTBuilder.ensureNodeHasName generateNodeName nid
                 ref      <- ASTRead.getASTPointer nid
@@ -1096,8 +1095,8 @@ stripMetadata :: Text -> Text
 stripMetadata text = if lexerStream == code then text else flip Text.append "\n" $ Text.stripEnd $ convert withoutMeta
     where
         lexerStream  = Lexer.evalDefLexer (convert text)
-        code         = takeWhile (\(Lexer.Token _ _ s) -> isNothing $ Lexer.matchMetadata s) lexerStream
-        textTree     = SpanTree.buildSpanTree (convert text) $ code ++ [Lexer.Token 0 0 Lexer.ETX]
+        code         = takeWhile (\(Lexer.Token _ s) -> isNothing $ Lexer.matchMetadata s) lexerStream
+        textTree     = SpanTree.buildSpanTree (convert text) $ code ++ [Lexer.Token mempty Lexer.ETX]
         withoutMeta  = SpanTree.foldlSpans (\t (Spanned _ t1) -> t <> t1) "" textTree
 
 removeMetadataNode :: ClassOp ()
@@ -1610,7 +1609,7 @@ paste loc@(GraphLocation file (Breadcrumb [])) position (Text.pack -> code) = do
     resendCode loc
 paste loc position (Text.pack -> text) = do
     let lexerStream  = Lexer.evalDefLexer (convert text)
-        (_, code)    = partition (\(Lexer.Token _ _ s) -> isJust $ Lexer.matchMetadata s) lexerStream
+        (_, code)    = partition (\(Lexer.Token _ s) -> isJust $ Lexer.matchMetadata s) lexerStream
         textTree     = SpanTree.buildSpanTree (convert text) code
         withoutMeta  = SpanTree.foldlSpans (\t (Spanned _ t1) -> t <> t1) "" textTree
         metaLine     = Text.drop (Text.length $ convert withoutMeta) text
@@ -1681,7 +1680,7 @@ rangeToMarked code range' = (start, end)
 pasteText :: GraphLocation -> [Range] -> [Text] -> Empire Text
 pasteText (GraphLocation file _) ranges (Text.concat -> text) = do
     let lexerStream  = Lexer.evalDefLexer (convert text)
-        (meta, code) = partition (\(Lexer.Token _ _ s) -> isJust $ Lexer.matchMetadata s) lexerStream
+        (meta, code) = partition (\(Lexer.Token _ s) -> isJust $ Lexer.matchMetadata s) lexerStream
         textTree     = SpanTree.buildSpanTree (convert text) code
         withoutMeta  = SpanTree.foldlSpans (\t (Spanned _ t1) -> t <> t1) "" textTree
         metaLine     = Text.drop (Text.length $ convert withoutMeta) text

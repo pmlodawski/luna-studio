@@ -247,7 +247,8 @@ ensureHasSelf e beg = source e >>= flip matchExpr `id` \case
         let n = convertVia @String n'
         bl <- IR.blank
         putLayer @SpanLength bl 1
-        ac <- generalize <$> IR.acc bl n'
+        v <- IR.var n'
+        ac <- generalize <$> IR.acc bl v
         putLayer @SpanLength ac (4 + fromIntegral (Text.length n))
         oldTgt <- source e
         replaceSource ac $ coerce e
@@ -258,13 +259,14 @@ ensureHasSelf e beg = source e >>= flip matchExpr `id` \case
     LeftSection f a -> do
         bl    <- IR.blank
         putLayer @SpanLength bl 1
-        name  <- ASTRead.getVarName =<< source f
-        ac    <- IR.acc bl (stringToName name)
-        putLayer @SpanLength ac (2 + fromIntegral (length name))
+        name  <- ASTRead.getVarName' =<< source f
+        v     <- IR.var name
+        ac    <- IR.acc bl v
+        putLayer @SpanLength ac (2 + fromIntegral (length $ nameToString name))
         a'    <- source a
         app   <- generalize <$> IR.app ac a'
         aSpan <- getLayer @SpanLength a'
-        putLayer @SpanLength app (2 + fromIntegral (length name) + aSpan)
+        putLayer @SpanLength app (2 + fromIntegral (length $ nameToString name) + aSpan)
         oldTarget <- source e
         replaceSource app $ coerce e
         deleteSubtree oldTarget
@@ -315,8 +317,9 @@ removeAccessor ed beg = do
         Acc t n -> do
             off <- Code.getOffsetRelativeToTarget $ coerce t
             length <- getLayer @SpanLength expr
-            v      <- generalize <$> IR.var n
-            let n' = convertVia @String n
+            name <- ASTRead.getVarName' =<< source n
+            v      <- generalize <$> (IR.var name)
+            let n' = convertVia @String name
             putLayer @SpanLength v $ fromIntegral $ Text.length n'
             Code.applyDiff beg (beg + length) n'
             replaceSource v $ coerce ed

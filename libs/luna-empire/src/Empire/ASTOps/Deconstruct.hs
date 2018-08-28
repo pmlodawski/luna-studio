@@ -110,7 +110,7 @@ dumpAccessors' firstApp node = do
             dumpAccessors' False target
         Acc t n -> do
             target <- source t
-            let name = nameToString n
+            name <- Read.getVarName =<< source n
             (tgt, names) <- dumpAccessors' False target
             return (tgt, names <> [name])
         _ -> return (Just node, [])

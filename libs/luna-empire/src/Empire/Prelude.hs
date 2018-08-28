@@ -1,4 +1,5 @@
 {-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE PackageImports #-}
 
 module Empire.Prelude (
   module X, nameToString, nameToText, pathNameToString, stringToName, (<?!>),
@@ -88,7 +89,6 @@ import OCI.IR.Term.Class (Term, Terms)
 import Foreign.Info.ByteSize (ByteSize)
 import Foreign.Memory.Pool (MemPool)
 import qualified Luna.IR.Term.Core as Ast
-import qualified Data.Set.Mutable.Class     as MutableSet
 import qualified Luna.IR.Term.Literal as Ast
 import qualified Luna.IR.Term.Ast.Class as Ast
 import Data.Graph.Data.Component.Class (Component)
@@ -99,7 +99,7 @@ import qualified Data.Graph.Component.Edge as Edge
 import qualified Data.Graph.Component.Edge.Construction as Construction
 import qualified Data.Generics.Traversable.Deriving as GTraversable
 import qualified Data.Graph.Fold.SubComponents as Traversal
-import Luna.Syntax.Text.Parser.State.Marker (TermMap(..))
+import "luna-syntax-text-parser2" Luna.Syntax.Text.Parser.State.Marker (TermMap(..))
 import Luna.Pass (Pass)
 import qualified Luna.Pass.Attr as Attr
 import qualified Data.Mutable.Class as Foreign

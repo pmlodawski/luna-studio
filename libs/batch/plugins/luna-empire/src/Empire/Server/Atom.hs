@@ -124,6 +124,7 @@ withClosedTempFile dir template action = MC.bracket (liftIO mkFile)
 
 handleSaveFile :: Request SaveFile.Request -> StateT Env BusT ()
 handleSaveFile req@(Request _ _ (SaveFile.Request inPath)) = do
+    logger Logger.info $ show ("SAVE FILE")
     currentEmpireEnv <- use Env.empireEnv
     empireNotifEnv   <- use Env.empireNotif
     res <- liftIO $ try $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ do
@@ -132,6 +133,7 @@ handleSaveFile req@(Request _ _ (SaveFile.Request inPath)) = do
         case parseError of
             Just _ -> return code
             _      -> Graph.addMetadataToCode inPath
+    logger Logger.info $ show ("SAVE FILE", req, res)
     case res of
         Left (exc :: SomeASTException) -> do
             err <- liftIO $ Graph.prepareLunaError $ toException exc

@@ -68,7 +68,9 @@ dependencies:
     - luna-runtime
     - luna-stdlib
     - luna-syntax-definition
-    - luna-syntax-text-parser
+    # - luna-syntax-text-parser
+    - luna-syntax-text-parser2
+    - luna-syntax-text-parser3
     - luna-syntax-text-lexer
     - luna-syntax-text-model
     - luna-syntax-text-prettyprint

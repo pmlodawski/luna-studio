@@ -45,7 +45,7 @@ getTypeRep tp = match tp $ \case
     Uni.ResolvedCons _ n _ args -> TCons (nameToString n) <$> (mapM (getTypeRep <=< source) =<< ptrListToList args)
     Cons   n args -> TCons (nameToString n) <$> (mapM (getTypeRep <=< source) =<< ptrListToList args)
     Lam    a out  -> TLam <$> (getTypeRep =<< source a) <*> (getTypeRep =<< source out)
-    Acc    t n    -> TAcc (nameToString n) <$> (getTypeRep =<< source t)
+    Acc    t n    -> TAcc <$> (ASTRead.getVarName =<< source n) <*> (getTypeRep =<< source t)
     Var    n      -> return $ TVar $ delete '#' $ nameToString n
     IRNumber{}    -> return $ TCons "Number" []
     _             -> return TStar
@@ -90,7 +90,7 @@ genNodeBaseName ref = match ref $ \case
     List{}            -> return "list"
     Cons n _          -> return $ Text.toLower $ nameToText n
     Var n             -> return $ genOp n
-    Acc t n           -> return $ genOp n
+    Acc t n           -> recurOn $ generalize n
     _                 -> return $ "expr"
     where recurOn :: EdgeRef -> GraphOp Text
           recurOn a = genNodeBaseName =<< source a
