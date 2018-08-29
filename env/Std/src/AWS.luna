@@ -1,13 +1,24 @@
 import Std.Base
 
 
+def toJSONDefault className obj:
+    Map.empty . insert "class" className . insert "name" obj.name . toJSON
+
+def shortRepDefault className obj:
+    className + "{ name = " + obj.name + " }"
+
+
 native class AWSEnv:
     def shortRep: "AWSEnv {}"
+
+    def toJSON: "AWSEnv"
+
 
 native class LambdaFunctionConfiguration:
     def name: primAWSFuncNameFromConf self
 
-    def shortRep: "LambdaFunctionConfiguration { name = " + self.name + " }"
+    def shortRep: shortRepDefault "LambdaFunctionConfiguration" self
+    def toJSON:   toJSONDefault   "LambdaFunctionConfiguration" self
 
 
 class LambdaFunctionCode:
@@ -29,6 +40,9 @@ class LambdaFunctionCode:
     def toZippedBinary:
         primZipFunctionCode self.name self.code
 
+    def shortRep: shortRepDefault "LambdaFunctionCode" self
+    def toJSON:   toJSONDefault   "LambdaFunctionCode" self
+    def toText:   self.code
 
 class LambdaFunction:
     name   :: Text
@@ -38,24 +52,27 @@ class LambdaFunction:
     def invoke payload:
         primAWSInvoke self.env self.name payload.toBinary
 
-    def shortRep: "LambdaFunction { name = " + self.name + " }"
-
-    def toText: self.shortRep
+    def shortRep: shortRepDefault "LambdaFunction" self
+    def toJSON:   toJSONDefault   "LambdaFunction" self
+    def toText:   self.shortRep
 
 
 class LambdaInvokeResponse:
     statusCode :: Int
     payload    :: Maybe Binary
 
+    def text: self.payload.map (_.toText) . withDefault ""
+
+    def json: self.text.toJSON
+
     def shortRep:
         "LambdaInvokeResponse[" + self.statusCode.toText + "]"
 
+    def toJSON:
+        JSON.empty . insert "class" "LambdaInvokeResponse" . insert "statusCode" self.statusCode . insert "payload" self.text
+
     def toText:
         self.shortRep + ": " + self.payload.toText
-
-    def json: self.payload.toJSON
-
-    def text: self.payload.map (_.toText) . withDefault ""
 
 
 class AWS:
@@ -112,3 +129,10 @@ class AWS:
                         fun  = primAWSCreateFunction self.env function.name r code
                         aws  = self.registerFunction fun
                         (aws, fun)
+
+    def shortRep: "AWS Config Object"
+
+    def toJSON:
+        JSON.empty . insert "class" "AWS" . insert "role" self.role . insert "functions" self.functions
+
+    def toText: "AWS { functions = " + self.functions + " }"
