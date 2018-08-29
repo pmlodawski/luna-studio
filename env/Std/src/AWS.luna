@@ -1,0 +1,114 @@
+import Std.Base
+
+
+native class AWSEnv:
+    def shortRep: "AWSEnv {}"
+
+native class LambdaFunctionConfiguration:
+    def name: primAWSFuncNameFromConf self
+
+    def shortRep: "LambdaFunctionConfiguration { name = " + self.name + " }"
+
+
+class LambdaFunctionCode:
+    LambdaFunctionCode
+    LambdaFunctionCodeText Text Text
+    LambdaFunctionCodeFile Text Text
+
+    def fromText name code: LambdaFunctionCodeText name code
+    def fromFile name path: LambdaFunctionCodeFile name path
+
+    def name: case self of
+        LambdaFunctionCodeText n _: n
+        LambdaFunctionCodeFile n _: n
+
+    def code: case self of
+        LambdaFunctionCodeText _ c: c
+        LambdaFunctionCodeFile _ p: readFile p
+
+    def toZippedBinary:
+        primZipFunctionCode self.name self.code
+
+
+class LambdaFunction:
+    name   :: Text
+    env    :: AWSEnv
+    config :: LambdaFunctionConfiguration
+
+    def invoke payload:
+        primAWSInvoke self.env self.name payload.toBinary
+
+    def shortRep: "LambdaFunction { name = " + self.name + " }"
+
+    def toText: self.shortRep
+
+
+class LambdaInvokeResponse:
+    statusCode :: Int
+    payload    :: Maybe Binary
+
+    def shortRep:
+        "LambdaInvokeResponse[" + self.statusCode.toText + "]"
+
+    def toText:
+        self.shortRep + ": " + self.payload.toText
+
+    def json: self.payload.toJSON
+
+    def text: self.payload.map (_.toText) . withDefault ""
+
+
+class AWS:
+    AWS
+    AWSVal AWSEnv (Maybe Text) (Map Text LambdaFunction)
+
+    def init:
+        e       = primAWSNewEnv
+        tmpSelf = AWSVal e Nothing Map.empty
+        funCfgs = tmpSelf.listFunctions
+        funs    = funCfgs.map fc: LambdaFunction fc.name e fc
+        funMap  = funs.foldLeft Map.empty (fc: acc: acc.insert fc.name fc)
+        tmpSelf.setFunctions funMap
+
+    def role: case self of
+        AWSVal _ r _: r
+
+    def setRole r: case self of
+        AWSVal env _ funs: AWSVal env (Just r) funs
+
+    def env: case self of
+        AWSVal e _ _: e
+
+    def setEnv e: case self of
+        AWSVal _ role funs: AWSVal e role funs
+
+    def functions: case self of
+        AWSVal _ _ fs: fs
+
+    def setFunctions fs: case self of
+        AWSVal env role _: AWSVal env role fs
+
+    def isDefined name:
+        self.functions.has name
+
+    def registerFunction fun:
+        newFuns = self.functions.insert fun.name fun
+        self.setFunctions newFuns
+
+    def lookupFunction name:
+        self.functions.lookup name
+
+    def listFunctions:
+        primAWSListFuns self.env
+
+    def createFunction function:
+        case self.role of
+            Nothing: errorStr "Please set an IAM role."
+            Just r:
+                case self.lookupFunction function.name of
+                    Just fun: (self, fun)
+                    Nothing:
+                        code = function.toZippedBinary
+                        fun  = primAWSCreateFunction self.env function.name r code
+                        aws  = self.registerFunction fun
+                        (aws, fun)

@@ -874,6 +874,9 @@ class Map k v:
         Just v: v
         Nothing: throw "Map.get: key not found"
 
+    # Checks whether a given key exists in the Map.
+    def has k: self . lookup k . isJust
+
     # Inserts an element at a given key.
     def insert k v: case self of
         Tip: Bin 1 k v Tip Tip
