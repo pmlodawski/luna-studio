@@ -18,6 +18,9 @@
     "deserializers": {
         "LunaCodeEditorTab": "deserializeLunaCodeEditorTab"
     },
+    "scripts": {
+        "postinstall": "cp node_modules/luna-basegl-ui/dist/style/* styles/gen"
+    },
     "dependencies": {
         "atom-space-pen-views": "^2.0.x",
         "etch": "0.12.x",
