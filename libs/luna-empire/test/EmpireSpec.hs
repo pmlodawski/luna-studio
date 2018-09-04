@@ -458,11 +458,12 @@ spec = around withChannels $ parallel $ do
                 node ^. Node.nodeId     `shouldBe` u1
                 node ^. Node.canEnter   `shouldBe` True
                 nodes `shouldSatisfy` ((== 1) . length)
-        it "does not allow to change expression to assignment" $ \env -> do
+        xit "does not allow to change expression to assignment" $ \env -> do
             u1 <- mkUUID
             let res = evalEmp env $ do
                     Graph.addNode top u1 "1" def
                     Graph.setNodeExpression top u1 "foo = a: a"
+                    Graph.withGraph top $ runASTOp $ GraphBuilder.buildNode u1
             let parserException :: Selector Parser.SomeParserException
                 parserException = const True
             res `shouldThrow` parserException

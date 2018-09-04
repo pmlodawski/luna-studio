@@ -455,6 +455,7 @@ classFunctions unit = do
 classFromUnit :: NodeRef -> ClassOp NodeRef
 classFromUnit unit = match unit $ \case
     Unit _ _ c -> source c
+    a -> error (show a)
 
 getMetadataRef :: NodeRef -> ClassOp (Maybe NodeRef)
 getMetadataRef unit = do

@@ -37,7 +37,7 @@ import           LunaStudio.Data.NodeId          (NodeId)
 import           LunaStudio.Data.NodeCache       (portMappingMap)
 import           LunaStudio.Data.PortRef         (OutPortRef(..))
 import           LunaStudio.Data.Project         (ProjectId)
-import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
+import qualified Luna.Syntax.Text.Parser.Ast.CodeSpan as CodeSpan
 import           Data.Text.Span                  (SpacedSpan(..))
 
 import           Empire.Commands.Library         (withLibrary)

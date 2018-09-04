@@ -72,12 +72,14 @@ countArguments expr = matchExpr expr $ \case
     LeftSection  f _ -> return 2
     RightSection f _ -> return 1
     Grouped      g   -> countArguments =<< source g
+    Acc          t n -> countArguments =<< source n
     _                -> return 0
 
 getArgumentOf :: NodeRef -> Delta -> GraphOp (EdgeRef, Delta)
 getArgumentOf fun beg = matchExpr fun $ \case
     App f a -> do
         off <- Code.getOffsetRelativeToTarget $ coerce a
+        -- print off
         return (coerce a, beg + off)
     LeftSection f a -> do
         off <- Code.getOffsetRelativeToTarget $ coerce a
@@ -100,20 +102,30 @@ getOrCreateArgument :: EdgeRef -> Delta -> Int -> Int -> GraphOp (EdgeRef, Delta
 getOrCreateArgument currentFun codeBegin currentArgument neededArgument
     | currentArgument <= neededArgument = do
         padArgs currentFun codeBegin 1 (neededArgument - currentArgument)
+        -- print "cool"
+        -- source currentFun >>= flip matchExpr print
+        -- print codeBegin
         flip getArgumentOf codeBegin =<< source currentFun
     | otherwise = do
         fun <- source currentFun
+        -- print "get"
+        -- matchExpr fun print
         matchExpr fun $ \case
             Tuple l' -> do
                 l <- ptrListToList l'
                 arg  <- return (Safe.atMay l neededArgument) <?!> TupleElementOutOfBoundsException fun neededArgument
                 foff <- Code.getOffsetRelativeToTarget $ coerce arg
                 return (coerce arg, codeBegin + foff)
+            Acc t n -> do
+                foff <- Code.getOffsetRelativeToTarget (coerce n)
+                getOrCreateArgument (coerce n) (codeBegin + foff) currentArgument neededArgument
             Grouped g -> do
                 foff <- Code.getOffsetRelativeToTarget (coerce g)
+                -- print $ codeBegin + foff
                 getOrCreateArgument (coerce g) (codeBegin + foff) currentArgument neededArgument
             App f a -> do
                 foff <- Code.getOffsetRelativeToTarget (coerce f)
+                -- print $ codeBegin + foff
                 getOrCreateArgument (coerce f) (codeBegin + foff) (pred currentArgument) neededArgument
             LeftSection f a -> do
                 foff      <- Code.getOffsetRelativeToTarget (coerce f)
@@ -139,6 +151,7 @@ instance Exception TupleElementOutOfBoundsException where
 padArgs :: EdgeRef -> Delta -> Delta -> Int -> GraphOp ()
 padArgs e beg argOffset i | i <= 0    = return ()
                           | otherwise = do
+    -- print "padding"
     bl     <- IR.blank
     fun    <- source e
     funIsTuple <- ASTRead.isTuple fun
@@ -190,6 +203,7 @@ dropBlankArgumentsAtTailPosition e beg = do
 
 removeAppArgument :: EdgeRef -> Delta -> Int -> GraphOp ()
 removeAppArgument funE beg pos = do
+    -- print "removeAppArg"
     bl <- generalize <$> IR.blank
     putLayer @SpanLength bl 1
     applyFunction funE beg bl pos
@@ -203,7 +217,15 @@ removeArgument funE beg (Port.Arg i : rest) = do
     (edge, beg) <- getOrCreateArgument funE beg (argCount - 1) i
     removeArgument edge beg rest
 removeArgument funE beg (Port.Self : rest) = do
+    -- print "first"
+    -- print funE
+    -- source funE >>= \a -> matchExpr a print
+    -- source funE >>= ASTPrint.printFullExpression >>= print
+    -- print "getcurrenttarget"
     (edge, beg) <- getCurrentAccTarget funE beg
+    -- print "getcurrenttarget2"
+    -- source edge >>= ASTPrint.printFullExpression >>= print
+    -- print edge
     removeArgument edge beg rest
 removeArgument _ _ _ = return ()
 
@@ -232,6 +254,8 @@ getCurrentAccTarget :: EdgeRef -> Delta -> GraphOp (EdgeRef, Delta)
 getCurrentAccTarget = curry $ unfoldM $ \(edge, codeBeg) -> do
     let passThrough e = Right . (e,) <$> ((+ codeBeg) <$> Code.getOffsetRelativeToTarget e)
     ref <- source edge
+    -- source edge >>= ASTPrint.printFullExpression >>= print
+    -- matchExpr ref print
     matchExpr ref $ \case
         App f _ -> passThrough $ coerce f
         Acc t _ -> Left . (coerce t,) . (+ codeBeg) <$> Code.getOffsetRelativeToTarget (coerce t)
@@ -248,7 +272,10 @@ ensureHasSelf e beg = source e >>= flip matchExpr `id` \case
         bl <- IR.blank
         putLayer @SpanLength bl 1
         v <- IR.var n'
+        putLayer @SpanLength v $ fromIntegral $ Text.length n
         ac <- generalize <$> IR.acc bl v
+        matchExpr ac $ \case
+            Acc _ nm -> putLayer @SpanOffset nm $ fromIntegral $ Text.length " . "
         putLayer @SpanLength ac (4 + fromIntegral (Text.length n))
         oldTgt <- source e
         replaceSource ac $ coerce e
@@ -282,8 +309,20 @@ makeAccessor target naming exprBegin = do
 
 applyFunction :: EdgeRef -> Delta -> NodeRef -> Int -> GraphOp ()
 applyFunction funE beg arg pos = do
+    -- print beg
+    -- Code.applyDiff beg (succ beg) "*"
     argCount    <- countArguments =<< source funE
+    -- print "args"
+    -- print =<< ASTPrint.printFullExpression =<< source funE
+    -- print argCount
+    -- print pos
     (edge, beg) <- getOrCreateArgument funE beg (argCount - 1) pos
+    -- print "edge"
+    -- print =<< ASTPrint.printFullExpression =<< source edge
+    -- print =<< ASTPrint.printFullExpression arg
+    -- print edge
+    -- print beg
+    -- Code.applyDiff beg (succ beg) "|"
     replaceEdgeSource edge beg arg
 
 makeConnection :: EdgeRef -> Delta -> Port.InPortId -> NodeRef -> GraphOp ()
@@ -291,6 +330,7 @@ makeConnection funE beg [] arg = do
     replaceEdgeSource funE beg arg
 makeConnection funE beg (Port.Self : rest) arg = do
     ensureHasSelf funE beg
+    -- print =<< use Graph.code
     (edge, beg) <- getCurrentAccTarget funE beg
     makeConnection edge beg rest arg
 makeConnection funE beg (Port.Arg i : rest) arg = do
@@ -310,6 +350,8 @@ instance Exception SelfPortNotConnectedException where
 removeAccessor :: EdgeRef -> Delta -> GraphOp ()
 removeAccessor ed beg = do
     expr <- source ed
+    -- print "expr"
+    -- matchExpr expr print
     matchExpr expr $ \case
         App f _ -> do
             off <- Code.getOffsetRelativeToTarget $ coerce f
@@ -317,14 +359,22 @@ removeAccessor ed beg = do
         Acc t n -> do
             off <- Code.getOffsetRelativeToTarget $ coerce t
             length <- getLayer @SpanLength expr
-            name <- ASTRead.getVarName' =<< source n
-            v      <- generalize <$> (IR.var name)
-            let n' = convertVia @String name
-            putLayer @SpanLength v $ fromIntegral $ Text.length n'
-            Code.applyDiff beg (beg + length) n'
-            replaceSource v $ coerce ed
+            -- print "acc"
+            -- source t >>= \a -> matchExpr a print
+            acc <- source n
+            -- print length
+            -- print =<< getLayer @SpanOffset n
+            -- print =<< getLayer @SpanLength =<< source n
+            accCode <- Code.getCodeOf =<< source n
+            -- print accCode
+            -- name <- ASTRead.getVarName' =<< source t
+            -- v      <- generalize <$> (IR.var name)
+            -- let n' = convertVia @String name
+            -- putLayer @SpanLength v $ fromIntegral $ Text.length n'
+            Code.applyDiff beg (beg + length) accCode
+            replaceSource acc $ coerce ed
             deleteSubtree expr
-            Code.gossipLengthsChangedBy (fromIntegral (Text.length n') - length) =<< target ed
+            Code.gossipLengthsChangedBy (fromIntegral (Text.length accCode) - length) =<< target ed
         Grouped g -> do
             off <- Code.getOffsetRelativeToTarget (coerce g)
             removeAccessor (coerce g) (beg + off)

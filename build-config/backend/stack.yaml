@@ -14,7 +14,7 @@ extra-deps:
 - layered-state-1.1.4
 - impossible-1.1.3
 - typelevel-1.2.2
-# - container-1.1.0
+- container-1.1.5
 - layouting-1.1.3
 - monoid-0.1.8
 - terminal-text-1.1.1
@@ -58,7 +58,7 @@ packages:
 - {location: ../../tools/batch/plugins/luna-empire}
 - {location: ../../tools/batch/plugins/request-monitor}
 - extra-dep: true
-  location: ../../../luna-core # {commit: 61a0b132d540a533408d26f250ddb39224c7672e, git: 'git@github.com:luna/luna.git'}
+  location: ../../../luna # {commit: 61a0b132d540a533408d26f250ddb39224c7672e, git: 'git@github.com:luna/luna.git'}
   subdirs:
     - core
     # - syntax/text/parser
@@ -101,5 +101,5 @@ packages:
   location: {commit: 2936e9e0f99288346d7e13b1c0c113be413e0f5e, git: 'git@github.com:luna/vector-text.git'}
 - extra-dep: true
   location: {commit: 20f0def29ab440acae6f9f1df91304cf2cf2fb81, git: 'git@github.com:luna/prologue.git'}
-- extra-dep: true
-  location: {commit: ace8f77e4582018acffcbb7c325d98f0f1a8aa96, git: 'git@github.com:luna/container.git'}
+# - extra-dep: true
+#   location: {commit: ace8f77e4582018acffcbb7c325d98f0f1a8aa96, git: 'git@github.com:luna/container.git'}

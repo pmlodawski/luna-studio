@@ -17,8 +17,8 @@ import qualified OCI.Pass.Definition.Declaration as Pass
 import           Empire.Data.Layers      (TypeLayer)
 import           Data.Text.Position      (Delta)
 import           Data.Text.Span          (SpacedSpan(..), leftSpacedSpan)
-import qualified "luna-syntax-text-parser2" Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
-import "luna-syntax-text-parser2"           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan, realSpan)
+import qualified "luna-syntax-text-parser2" Luna.Syntax.Text.Parser.Ast.CodeSpan as CodeSpan
+import "luna-syntax-text-parser2"           Luna.Syntax.Text.Parser.Ast.CodeSpan (CodeSpan, realSpan)
 import Luna.Pass.Data.Layer.NodeMeta   (Meta)
 import Luna.Pass.Data.Layer.PortMarker (PortMarker)
 import Luna.Pass.Data.Layer.SpanLength (SpanLength)
@@ -59,7 +59,8 @@ instance Exception ParseError where
 
 dumpConsApplication :: Expr Draft -> SubPass Stage PatternTransformation (Name, [Expr Draft], [Link (Expr Draft) (Expr Draft)])
 dumpConsApplication expr = matchExpr expr $ \case
-    Grouped g -> dumpConsApplication . coerce =<< source g
+    Grouped g -> do
+        dumpConsApplication . coerce =<< source g
     Cons n _  -> return (n, [], [])
     App f a   -> do
         (n, args, links) <- dumpConsApplication . coerce =<< source f
