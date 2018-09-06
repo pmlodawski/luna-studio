@@ -20,8 +20,8 @@ extra-deps:
 - terminal-text-1.1.1
 - lens-utils-1.4.5
 - convert-1.5
-# - prologue-3.2.3
-# - vector-text-1.1.3
+- prologue-3.2.4
+- vector-text-1.1.5
 - monad-branch-1.0.3
 - functor-utils-1.17.1
 
@@ -58,10 +58,9 @@ packages:
 - {location: ../../tools/batch/plugins/luna-empire}
 - {location: ../../tools/batch/plugins/request-monitor}
 - extra-dep: true
-  location: ../../../luna # {commit: 61a0b132d540a533408d26f250ddb39224c7672e, git: 'git@github.com:luna/luna.git'}
+  location: {commit: f7d5acc661f305aa22b66fc4e3df15d4732c586b, git: 'git@github.com:luna/luna.git'}
   subdirs:
     - core
-    # - syntax/text/parser
     - syntax/text/parser2
     - syntax/text/parser3
     - syntax/text/lexer
@@ -97,9 +96,3 @@ packages:
   location: {commit: ddfcd1e0372b93e947b380b911c123fe67227b21, git: 'git@github.com:luna/visualization-api.git'}
 - extra-dep: true
   location: {commit: 76d44905891fe1f0c6c1d583e294cb393558976f, git: 'git@github.com:luna/fuzzy-text.git'}
-- extra-dep: true
-  location: {commit: 2936e9e0f99288346d7e13b1c0c113be413e0f5e, git: 'git@github.com:luna/vector-text.git'}
-- extra-dep: true
-  location: {commit: 20f0def29ab440acae6f9f1df91304cf2cf2fb81, git: 'git@github.com:luna/prologue.git'}
-# - extra-dep: true
-#   location: {commit: ace8f77e4582018acffcbb7c325d98f0f1a8aa96, git: 'git@github.com:luna/container.git'}

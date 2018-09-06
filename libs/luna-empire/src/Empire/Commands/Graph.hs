@@ -217,8 +217,11 @@ addFunNode loc parsing uuid expr meta = withUnit loc $ do
     (name, markedFunction, markedCode) <- runASTOp $ do
         name <- ASTRead.cutThroughDocAndMarked parse >>= \x -> matchExpr x $ \case
             ASGFunction n _ _ -> do
-                name <- ASTRead.getVarName' =<< source n
+                name <- handle
+                    (\(_e::ASTRead.InvalidNameException) -> return "") $
+                        ASTRead.getVarName' =<< source n
                 return $ nameToString name
+            a -> error (show a <> " " <> convert expr)
         index  <- getNextTopLevelMarker
         marker <- IR.marker index
         let markerText = Code.makeMarker index
@@ -259,6 +262,7 @@ addNodeNoTC loc uuid input name meta = do
     let propInput = Text.strip input
     parse <- ASTParse.parseExpr propInput
     expr <- runASTOp $ do
+        ASTBuilder.ensureFunctionIsValid
         Code.propagateLengths parse
         (parsedNode, newName) <- AST.addNode uuid name (generateNodeName parse) parse
         index        <- getNextExprMarker
@@ -924,7 +928,6 @@ renameNode loc nid name
         withGraph (GraphLocation f (Breadcrumb [Breadcrumb.Definition nid])) $ runASTOp $ do
             self <- use $ Graph.breadcrumbHierarchy . BH.self
             v    <- ASTRead.getVarNode self
-            ASTModify.renameVar v $ convert stripped
             Code.replaceAllUses v stripped
         resendCode loc
     | otherwise = do

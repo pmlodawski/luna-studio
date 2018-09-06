@@ -26,6 +26,7 @@ import qualified Empire.Data.BreadcrumbHierarchy    as BH
 import           Data.Text.Position      (Delta)
 
 import qualified Luna.IR as IR
+import qualified Luna.IR.Term.Ast.Invalid as IR
 
 
 apps :: Expr f -> [NodeRef] -> GraphOp NodeRef
@@ -300,6 +301,40 @@ ensureHasSelf e beg = source e >>= flip matchExpr `id` \case
         Code.insertAt beg "_."
         Code.gossipLengthsChangedBy 2 =<< target e
     _ -> throwM . SelfPortNotExistantException =<< source e
+
+ensureFunctionIsValid :: GraphOp ()
+ensureFunctionIsValid = do
+    self <- ASTRead.cutThroughDocAndMarked =<< use (Graph.breadcrumbHierarchy . BH.self)
+    match self $ \case
+        ASGFunction n as b -> do
+            source b >>= \a -> matchExpr a $ \case
+                Invalid IR.MissingSection -> do
+                    let section = ":\n    None"
+                    ir <- IR.cons' "None" []
+                    Code.propagateLengths ir
+                    Just foo <- Code.getOffsetRelativeToFile self
+                    len <- getLayer @SpanLength self
+                    Code.applyDiff (foo+len) (foo+len) section
+                    IR.replace ir a
+                    matchExpr self $ \case
+                        ASGFunction _ _ b -> putLayer @SpanOffset b $
+                            fromIntegral $ length (":\n    " :: String)
+                Invalid IR.EmptyExpression -> do
+                    let section = "\n    None"
+                    ir <- IR.cons' "None" []
+                    Code.propagateLengths ir
+                    Just foo <- Code.getOffsetRelativeToFile self
+                    len <- getLayer @SpanLength self
+                    Code.applyDiff (foo+len) (foo+len) section
+                    IR.replace ir a
+                    matchExpr self $ \case
+                        ASGFunction _ _ b -> putLayer @SpanOffset b $
+                            fromIntegral $ length (":\n    " :: String)
+                Invalid a -> error (show a)
+                _ -> return ()
+            return ()
+        _ -> return ()
+
 
 makeAccessor :: NodeRef -> EdgeRef -> Delta -> GraphOp ()
 makeAccessor target naming exprBegin = do

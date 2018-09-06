@@ -15,7 +15,7 @@ import qualified Data.Text                      as Text
 import qualified Data.Vector.Storable.Foreign   as Vector
 import           Empire.Prelude
 
-import           Empire.ASTOp                   (Printer, GraphOp, match)
+import           Empire.ASTOp                   (ASTOp, Printer, GraphOp, match)
 import qualified Empire.ASTOps.Read             as ASTRead
 import           Empire.Data.AST                (EdgeRef, NodeRef)
 import           Empire.Data.Graph              (CommandState, Graph)
@@ -56,7 +56,7 @@ instance (MonadIO m, Printer Graph m) => Prettyprint.Compactible Prettyprint.Com
 printExpression :: NodeRef -> GraphOp String
 printExpression n = convert <$> Prettyprint.run @Prettyprint.CompactStyle def n
 
-printFullExpression :: NodeRef -> GraphOp Text
+printFullExpression :: NodeRef -> ASTOp g Text
 printFullExpression n = Prettyprint.run @Prettyprint.Simple def n
 
 printName :: NodeRef -> GraphOp String

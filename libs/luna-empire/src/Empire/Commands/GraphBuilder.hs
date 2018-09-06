@@ -100,18 +100,26 @@ buildClassGraph = do
 buildClassNode :: NodeId -> String -> ClassOp API.ExpressionNode
 buildClassNode uuid name = do
     f    <- ASTRead.getFunByNodeId uuid
-    meta <- fromMaybe def <$> AST.readMeta f
     codeStart <- Code.functionBlockStartRef f
+    (nameOff, nameLen) <- ASTRead.cutThroughDocAndMarked f >>= \a -> matchExpr a $ \case
+        ASGFunction n _ _ -> do
+            LeftSpacedSpan (SpacedSpan off nlen) <- Code.getOffset =<< source n
+            LeftSpacedSpan (SpacedSpan _ len)
+                <- view CodeSpan.realSpan <$> (getLayer @CodeSpan =<< source n)
+            return (off + nlen, off + fromIntegral len)
+        a -> error (show a <> name)
+    meta <- fromMaybe def <$> AST.readMeta f
     LeftSpacedSpan (SpacedSpan _ len)
         <- view CodeSpan.realSpan <$> getLayer @CodeSpan f
     fileCode <- use Graph.code
+    let name = Text.take (fromIntegral nameLen) $ Text.drop (fromIntegral nameOff) fileCode
     let code = Code.removeMarkers $ Text.take (fromIntegral len)
             $ Text.drop (fromIntegral codeStart) fileCode
     pure $ API.ExpressionNode
             uuid
             ""
             True
-            (Just $ convert name)
+            (Just name)
             code
             (LabeledTree def (Port [] "base" TStar NotConnected))
             (LabeledTree (OutPorts []) (Port [] "base" TStar NotConnected))

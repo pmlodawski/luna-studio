@@ -216,6 +216,18 @@ spec = around withChannels $ parallel $ do
                 u2 <- mkUUID
                 Graph.addNode loc u1 "def main" def
                 Graph.addNode (loc |>= u1) u2 "4" def
+        it "adds a function to empty file 2" $
+            let initialCode = ""
+                expectedCode = [r|
+                    def main:
+                        number1 = 4
+                        None
+                    |]
+            in specifyCodeChange initialCode expectedCode $ \loc -> do
+                u1 <- mkUUID
+                u2 <- mkUUID
+                Graph.addNode loc u1 "def main:" def
+                Graph.addNode (loc |>= u1) u2 "4" def
         it "shows functions at file top-level" $ \env -> do
             nodes <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"
@@ -238,8 +250,7 @@ spec = around withChannels $ parallel $ do
             length nodes `shouldBe` 4
             find (\n -> n ^. Node.name == Just "quux") nodes `shouldSatisfy` isJust
             normalizeQQ (Text.unpack code) `shouldBe` normalizeQQ [r|
-                def quux a b c:
-                    None
+                def quux a b c
 
                 # Docs
                 def foo:
@@ -272,8 +283,7 @@ spec = around withChannels $ parallel $ do
                 def bar:
                     "bar"
 
-                def quux:
-                    None
+                def quux
 
                 # Docs
                 def main:
@@ -302,8 +312,7 @@ spec = around withChannels $ parallel $ do
                 def main:
                     print bar
 
-                def quux:
-                    None
+                def quux
                 |]
         it "adds function at top-level as def" $ \env -> do
             u1 <- mkUUID
@@ -316,8 +325,7 @@ spec = around withChannels $ parallel $ do
             length nodes `shouldBe` 4
             find (\n -> n ^. Node.name == Just "quux") nodes `shouldSatisfy` isJust
             normalizeQQ (Text.unpack code) `shouldBe` normalizeQQ [r|
-                def quux:
-                    None
+                def quux
 
                 # Docs
                 def foo:
@@ -341,7 +349,7 @@ spec = around withChannels $ parallel $ do
                 Graph.getGraph (GraphLocation "TestPath" (Breadcrumb [Definition (n ^. Node.nodeId)]))
             length (graph ^. APIGraph.nodes) `shouldBe` 0
             let Just (Node.OutputSidebar _ ports) = graph ^. APIGraph.outputSidebar
-            toListOf traverse ports `shouldBe` [Port [] "output" TStar (WithDefault (Expression "None"))]
+            toListOf traverse ports `shouldBe` [Port [] "output" TStar (WithDefault (Expression "(MissingSection)"))]
         it "removes function at top-level" $ \env -> do
             (nodes, code) <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"
@@ -821,7 +829,7 @@ spec = around withChannels $ parallel $ do
                     funs <- use $ Graph.userState . Graph.clsFuns
                     return $ map (\fun -> (fun ^. Graph.funName, fun ^. Graph.funGraph . Graph.fileOffset)) $ Map.elems funs
                 return offsets
-            offsets `shouldMatchList` [("foo",10), ("bar",39), ("aaa",65), ("main",94)]
+            offsets `shouldMatchList` [("foo",10), ("bar",39), ("aaa",65), ("main",84)]
         it "maintains proper function file offsets after removing a function" $ \env -> do
             offsets <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"
@@ -862,8 +870,7 @@ spec = around withChannels $ parallel $ do
             length nodes `shouldBe` 1
             find (\n -> n ^. Node.name == Just "main") nodes `shouldSatisfy` isJust
             normalizeQQ (Text.unpack code) `shouldBe` normalizeQQ [r|
-                def main:
-                    None
+                def main
                 |]
         it "adds the first function in a file with imports" $ \env -> do
             u1 <- mkUUID
@@ -879,8 +886,7 @@ spec = around withChannels $ parallel $ do
                 import Std
                 import Foo
 
-                def main:
-                    None
+                def main
                 |]
         it "pastes top level function with marker" $ \env -> do
             (nodes, code) <- evalEmp env $ do
@@ -1022,3 +1028,42 @@ spec = around withChannels $ parallel $ do
                 Graph.movePort loc (outPortRef input [Port.Projection 0]) 1
                 Graph.movePort loc (outPortRef input [Port.Projection 1]) 0
                 Graph.movePort loc (outPortRef input [Port.Projection 1]) 0
+        it "adds def" $
+            let initialCode = ""
+                expectedCode = [r|
+                    def
+                    |]
+            in specifyCodeChange initialCode expectedCode $ \loc -> do
+                u1 <- mkUUID
+                node <- Graph.addNode loc u1 "def" def
+                liftIO $ node ^. Node.name `shouldBe` Just ""
+        it "adds def name" $
+            let initialCode = ""
+                expectedCode = [r|
+                    def foo
+                    |]
+            in specifyCodeChange initialCode expectedCode $ \loc -> do
+                u1 <- mkUUID
+                node <- Graph.addNode loc u1 "def foo" def
+                liftIO $ node ^. Node.name `shouldBe` Just "foo"
+        it "adds def with invalid name" $
+            let initialCode = ""
+                expectedCode = [r|
+                    def 4
+                    |]
+            in specifyCodeChange initialCode expectedCode $ \loc -> do
+                u1 <- mkUUID
+                node <- Graph.addNode loc u1 "def 4" def
+                liftIO $ node ^. Node.name `shouldBe` Just "4"
+        it "adds def with invalid name and renames it from graph" $
+            let initialCode = ""
+                expectedCode = [r|
+                    def foo
+                    |]
+            in specifyCodeChange initialCode expectedCode $ \loc -> do
+                u1 <- mkUUID
+                Graph.addNode loc u1 "def 4" def
+                Graph.renameNode loc u1 "foo"
+                node <- Graph.withUnit loc $ runASTOp $ GraphBuilder.buildClassNode u1 ""
+                liftIO $ node ^. Node.name `shouldBe` Just "foo"
+                return ()

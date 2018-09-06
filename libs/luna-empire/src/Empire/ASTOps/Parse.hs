@@ -179,9 +179,9 @@ data FunctionParsing = AppendNone | ParseAsIs
 
 runFunHackParser :: Text.Text -> FunctionParsing -> Command g (NodeRef, Text.Text)
 runFunHackParser expr parsing = do
-    let input = prepareInput expr parsing
-    parse <- runFunParser input
-    return (view _1 parse, input)
+    -- let input = prepareInput expr parsing
+    parse <- runFunParser expr
+    return (view _1 parse, expr)
 
 runFunParser :: Text.Text -> Command g (NodeRef, MarkedExprMap)
 runFunParser expr = parse3 (Macro.expr) expr
