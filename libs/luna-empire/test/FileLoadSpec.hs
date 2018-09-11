@@ -1497,6 +1497,50 @@ spec = around withChannels $ parallel $ do
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 [Just uri, Just withCrypto, Just fullUri, Just response, Just result] <- Graph.withGraph loc $ runASTOp $ mapM Graph.getNodeIdForMarker [3, 6, 8, 4, 9]
                 Graph.collapseToFunction loc [uri, withCrypto, fullUri, response, result]
+        it "shows proper names of functions in crypto" $ let
+            initialCode = [r|
+                import Std.HTTP
+                import Std.Time
+
+                «51»def getCurrencyPrice crypto fiat:
+                    «40»uri = "https://min-api.cryptocompare.com/data/price"
+                    «41»request = Http.get uri
+                    «42»withFsym = request . setParam "fsym" (Just crypto)
+                    «43»withTsyms = withFsym . setParam "tsyms" (Just fiat)
+                    «44»response = withTsyms . perform . json
+                    «46»price = response . getReal fiat
+                    price
+
+                «52»def main:
+                    «47»fiat = "USD"
+                    «48»crypto = "BTC"
+                    «50»prices = every 1.seconds (getCurrencyPrice crypto fiat)
+                    None
+
+                ### META {"metas":[{"marker":47,"meta":{"_displayResult":false,"_selectedVisualizer":["base: json","base/json/json.html"],"_position":{"fromPosition":{"_vector2_y":0,"_vector2_x":3872}}}},{"marker":48,"meta":{"_displayResult":false,"_selectedVisualizer":["base: json","base/json/json.html"],"_position":{"fromPosition":{"_vector2_y":208,"_vector2_x":3872}}}},{"marker":50,"meta":{"_displayResult":true,"_selectedVisualizer":["echarts: plot","echarts/plot.html"],"_position":{"fromPosition":{"_vector2_y":128,"_vector2_x":4208}}}},{"marker":40,"meta":{"_displayResult":false,"_selectedVisualizer":["base: json","base/json/json.html"],"_position":{"fromPosition":{"_vector2_y":0,"_vector2_x":0}}}},{"marker":41,"meta":{"_displayResult":false,"_selectedVisualizer":["base: json","base/json/json.html"],"_position":{"fromPosition":{"_vector2_y":0,"_vector2_x":176}}}},{"marker":42,"meta":{"_displayResult":false,"_selectedVisualizer":["base: json","base/json/json.html"],"_position":{"fromPosition":{"_vector2_y":0,"_vector2_x":352}}}},{"marker":43,"meta":{"_displayResult":false,"_selectedVisualizer":["base: json","base/json/json.html"],"_position":{"fromPosition":{"_vector2_y":0,"_vector2_x":528}}}},{"marker":44,"meta":{"_displayResult":false,"_selectedVisualizer":["base: json","base/json/json.html"],"_position":{"fromPosition":{"_vector2_y":0,"_vector2_x":672}}}},{"marker":46,"meta":{"_displayResult":false,"_selectedVisualizer":["base: json","base/json/json.html"],"_position":{"fromPosition":{"_vector2_y":0,"_vector2_x":1056}}}}]}
+                |]
+            expectedCode = [r|
+                import Std.HTTP
+                import Std.Time
+
+                def getCurrencyPrice crypto fiat:
+                    uri = "https://min-api.cryptocompare.com/data/price"
+                    request = Http.get uri
+                    withFsym = request . setParam "fsym" (Just crypto)
+                    withTsyms = withFsym . setParam "tsyms" (Just fiat)
+                    response = withTsyms . perform . json
+                    price = response . getReal fiat
+                    price
+
+                def main:
+                    fiat = "USD"
+                    crypto = "BTC"
+                    prices = every 1.seconds (getCurrencyPrice crypto fiat)
+                    None
+                |]
+            in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
+                funs <- Graph.getNodes (GraphLocation file def)
+                liftIO $ map (view Node.name) funs `shouldMatchList` [Just "getCurrencyPrice", Just "main"]
         it "sorts arguments by position when collapsing to function" $ let
             initialCode = [r|
                 def main:
