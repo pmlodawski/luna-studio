@@ -7,6 +7,7 @@ import           Control.Lens                    ((^..))
 import           Data.Foldable                   (toList)
 import           Data.List                       (find, stripPrefix)
 import qualified Data.Map                        as Map
+import qualified Data.Graph.Store                as Store
 import           Empire.ASTOp                    (runASTOp)
 import qualified Empire.ASTOps.Deconstruct       as ASTDeconstruct
 import           Empire.ASTOps.Modify            (CannotRemovePortException)
@@ -17,15 +18,14 @@ import qualified Empire.Commands.AST             as AST (isTrivialLambda)
 import qualified Empire.Commands.Graph           as Graph (addNode, addPort, connect, disconnect, getConnections, getGraph,
                                                            getNodeIdForMarker, getNodes, loadCode, movePort, removeNodes, removePort,
                                                            renameNode, renamePort, setNodeExpression, setNodeMeta, withGraph,
-                                                           addPortWithConnections)
+                                                           addPortWithConnections, withUnit)
 import qualified Empire.Commands.GraphBuilder    as GraphBuilder
 import           Empire.Commands.Library         (createLibrary, withLibrary)
 import qualified Empire.Commands.Typecheck       as Typecheck (run)
 import           Empire.Data.BreadcrumbHierarchy (BreadcrumbDoesNotExistException)
 import qualified Empire.Data.BreadcrumbHierarchy as BH
 import           Empire.Data.Graph               (breadcrumbHierarchy, userState)
-import qualified Empire.Data.Graph               as Graph (code)
-import qualified Empire.Data.Library             as Library (body)
+import qualified Empire.Data.Graph               as Graph hiding (Graph)
 import qualified Empire.Data.Library             as Library (body)
 -- import qualified Luna.Builtin.Data.Class         as Class
 -- import qualified Luna.Builtin.Data.Function      as Function
@@ -338,27 +338,34 @@ spec = around withChannels $ parallel $ do
                         {-outputType = map (view Port.valueType) outPorts'-}
                     {-inputType  `shouldBe` [TCons "Int" []]-}
                     {-outputType `shouldBe` [TCons "Int" []]-}
-        {-xit "properly typechecks second id in `mock id -> mock id`" $ \env -> do-}
-            {-u1 <- mkUUID-}
-            {-u2 <- mkUUID-}
-            {-(res, st) <- runEmp env $ do-}
-                {-Graph.addNode top u1 "id" def-}
-                {-Graph.addNode top u2 "id" def-}
-                {-connectToInput top (outPortRef u1 Port.All) (inPortRef u2 (Port.Arg 0))-}
-                {-let GraphLocation file _ = top-}
-                {-withLibrary file (use Library.body)-}
-            {-withResult res $ \g -> do-}
-                {-(_, (extractGraph -> g')) <- runEmpire env (InterpreterEnv def def def g def) $-}
-                    {-Typecheck.run emptyGraphLocation-}
-                {-(res'',_) <- runEmp' env st g' $ do-}
-                    {-Graph.withGraph top $ runASTOp $ (,) <$> GraphBuilder.buildNode u1 <*> GraphBuilder.buildNode u2-}
-                {-withResult res'' $ \(n1, n2) -> do-}
-                    {-inputPorts n2 `shouldMatchList` [-}
-                          {-Port.Port (Port.InPortId (Port.Arg 0)) "in" (TLam (TVar "a") (TVar "a")) Port.Connected-}
-                        {-]-}
-                    {-outputPorts n1 `shouldMatchList` [-}
-                          {-Port.Port (Port.OutPortId Port.All) "Output" (TLam (TVar "a") (TVar "a")) (Port.WithDefault (Expression "in: in"))-}
-                        {-]-}
+        it "properly typechecks second id in `mock id -> mock id`" $ \env -> do
+            u1 <- mkUUID
+            u2 <- mkUUID
+            (res, st) <- runEmp env $ do
+                Graph.addNode top u1 "id" def
+                Graph.addNode top u2 "id" def
+                connectToInput top (outPortRef u1 []) (inPortRef u2 [Port.Arg 0])
+                let GraphLocation file _ = top
+                Graph.withUnit (GraphLocation file def) $ do
+                    g <- use userState
+                    let root = g ^. Graph.clsClass
+                    rooted <- runASTOp $ Store.serializeWithRedirectMap root
+                    return (top, g, rooted)
+            withResult res $ \(top, g, rooted) -> do
+                pmState <- Graph.defaultPMState
+                let interpreterEnv = InterpreterEnv (return ()) g [] def def def
+                (_, (extractGraph -> g')) <- runEmpire env (Graph.CommandState pmState interpreterEnv) $
+                    Typecheck.run top g rooted False False
+                (res'',_) <- runEmp' env st g' $ do
+                    Graph.withGraph top $ runASTOp $ (,) <$> GraphBuilder.buildNode u1 <*> GraphBuilder.buildNode u2
+                -- withResult res'' $ \(n1, n2) -> do
+                --     view Node.inPorts n2 `shouldMatchList` [
+                --           Port.Port [Port.Arg 0] "in" (TLam (TVar "a") (TVar "a")) Port.Connected
+                --         ]
+                --     view Node.outPorts n1 `shouldMatchList` [
+                --           Port.Port [] "Output" (TLam (TVar "a") (TVar "a")) (Port.WithDefault (Expression "in: in"))
+                --         ]
+                return ()
         it "puts + inside plus lambda" $ \env -> do
             u1 <- mkUUID
             res <- evalEmp env $ do

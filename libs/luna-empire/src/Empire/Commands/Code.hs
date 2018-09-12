@@ -24,6 +24,7 @@ import qualified Safe
 
 import           Empire.Data.AST         (NodeRef, EdgeRef)
 import           Empire.ASTOp            (ASTOp, ClassOp, GraphOp, runASTOp)
+import           Empire.ASTOps.Print     as ASTPrint
 import           Empire.ASTOps.Read      as ASTRead
 
 import qualified Luna.IR                 as IR
@@ -325,6 +326,7 @@ getOffset ref = do
             moreOffset     <- getOffset =<< target more
             lefts          <- mapM (fmap (view CodeSpan.realSpan) . getLayer @CodeSpan) leftInputs
             return $ moreOffset <> (mconcat lefts)
+        a -> print a >> ASTPrint.printFullExpression ref >>= error . convert
     LeftSpacedSpan (SpacedSpan off _) <- view CodeSpan.realSpan <$> getLayer @CodeSpan ref
     return $ leftSpan <> LeftSpacedSpan (SpacedSpan off 0)
 
