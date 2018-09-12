@@ -242,6 +242,26 @@ spec = around withChannels $ parallel $ do
                       Connection (outPortRef (pi ^. Node.nodeId)  []) (inPortRef (anon ^. Node.nodeId) [Port.Arg 0])
                     , Connection (outPortRef (foo ^. Node.nodeId) []) (inPortRef (bar  ^. Node.nodeId) [Port.Head])
                     ]
+        it "parses unit with empty line before imports" $ \env -> do
+            let code = Text.pack $ [r|
+
+import Std.Base
+
+def main:
+    «0»pi = 3.14
+                |]
+            res <- evalEmp env $ do
+                Library.createLibrary Nothing "TestPath"
+                let loc = GraphLocation "TestPath" $ Breadcrumb []
+                Graph.loadCode loc code
+                [main] <- Graph.getNodes loc
+                let loc' = GraphLocation "TestPath" $ Breadcrumb [Definition (main ^. Node.nodeId)]
+                graph <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.buildGraph
+                return graph
+            withResult res $ \(Graph.Graph nodes connections i _ _) -> do
+                let Just pi = find (\node -> node ^. Node.name == Just "pi") nodes
+                pi ^. Node.code `shouldBe` "3.14"
+                pi ^. Node.canEnter `shouldBe` False
         it "does not duplicate nodes on edit" $ \env -> do
             res <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"
