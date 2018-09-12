@@ -1067,3 +1067,29 @@ spec = around withChannels $ parallel $ do
                 node <- Graph.withUnit loc $ runASTOp $ GraphBuilder.buildClassNode u1 ""
                 liftIO $ node ^. Node.name `shouldBe` Just "foo"
                 return ()
+        it "adds invalid def, another node inside and connects to output" $ \env -> do
+            evalEmp env $ do
+                let initialCode = normalizeQQ [r|
+                        def main:
+                            None
+                        |]
+                Library.createLibrary Nothing "TestPath"
+                let top = GraphLocation "TestPath" $ Breadcrumb []
+                Graph.loadCode top $ convert initialCode
+                u1 <- mkUUID
+                u2 <- mkUUID
+                Graph.addNode top u1 "def foo" def
+                Graph.addNode (top |>= u1) u2 "4" def
+                (_, output) <- Graph.withGraph (top |>= u1) $ runASTOp GraphBuilder.getEdgePortMapping
+                Graph.connect (top |>= u1) (outPortRef u2 [])
+                    (InPortRef' $ inPortRef output [])
+                code <- convert <$> Graph.getCode top
+                liftIO $ normalizeQQ code `shouldBe` normalizeQQ [r|
+                    def foo:
+                        number1 = 4
+                        number1
+
+                    def main:
+                        None
+                    |]
+

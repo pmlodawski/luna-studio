@@ -3,6 +3,7 @@ module Empire.ASTOps.Builder where
 import           Control.Monad                      (foldM, replicateM, zipWithM_)
 import           Data.Maybe                         (isNothing)
 import qualified Data.Text                          as Text
+import qualified Data.Text.IO                       as Text
 import           Empire.Prelude
 import qualified Safe
 
@@ -307,32 +308,22 @@ ensureFunctionIsValid = do
     self <- ASTRead.cutThroughDocAndMarked =<< use (Graph.breadcrumbHierarchy . BH.self)
     match self $ \case
         ASGFunction n as b -> do
-            source b >>= \a -> matchExpr a $ \case
-                Invalid IR.MissingSection -> do
-                    let section = ":\n    None"
-                    ir <- IR.cons' "None" []
-                    Code.propagateLengths ir
-                    Just foo <- Code.getOffsetRelativeToFile self
-                    len <- getLayer @SpanLength self
-                    Code.applyDiff (foo+len) (foo+len) section
-                    IR.replace ir a
-                    matchExpr self $ \case
-                        ASGFunction _ _ b -> putLayer @SpanOffset b $
-                            fromIntegral $ length (":\n    " :: String)
-                Invalid IR.EmptyExpression -> do
-                    let section = "\n    None"
-                    ir <- IR.cons' "None" []
-                    Code.propagateLengths ir
-                    Just foo <- Code.getOffsetRelativeToFile self
-                    len <- getLayer @SpanLength self
-                    Code.applyDiff (foo+len) (foo+len) section
-                    IR.replace ir a
-                    matchExpr self $ \case
-                        ASGFunction _ _ b -> putLayer @SpanOffset b $
-                            fromIntegral $ length (":\n    " :: String)
-                Invalid a -> error (show a)
-                _ -> return ()
-            return ()
+            section' <- source b >>= \a -> matchExpr a $ \case
+                Invalid IR.MissingSection  -> return $ Just ":\n    None"
+                Invalid IR.EmptyExpression -> return $ Just "\n    None"
+                Invalid a                  -> error ("ensureFunctionIsValid: " 
+                                                    <> show a)
+                _                          -> return Nothing
+            forM_ section' $ \section -> do
+                ir <- IR.cons "None" []
+                putLayer @SpanLength ir $ fromIntegral $ length ("None" :: String)
+                Just foo <- Code.getOffsetRelativeToFile self
+                len <- getLayer @SpanLength self
+                Code.applyDiff (foo+len) (foo+len) section
+                IR.replace ir =<< source b
+                matchExpr self $ \case
+                    ASGFunction _ _ b -> putLayer @SpanOffset b $
+                        fromIntegral $ length (":\n    " :: String)
         _ -> return ()
 
 
