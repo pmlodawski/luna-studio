@@ -3,11 +3,15 @@
 
 module EmpireSpec (spec) where
 
+import           Control.Exception.Safe          (finally)
 import           Control.Lens                    ((^..))
+import           Data.Char                       (isSpace)
 import           Data.Foldable                   (toList)
-import           Data.List                       (find, stripPrefix)
-import qualified Data.Map                        as Map
 import qualified Data.Graph.Store                as Store
+import           Data.List                       (find, stripPrefix)
+import           Data.List                       (dropWhileEnd, find, minimum, maximum)
+import qualified Data.Map                        as Map
+import qualified Data.Text                       as Text
 import           Empire.ASTOp                    (runASTOp)
 import qualified Empire.ASTOps.Deconstruct       as ASTDeconstruct
 import           Empire.ASTOps.Modify            (CannotRemovePortException)
@@ -31,6 +35,9 @@ import qualified Empire.Data.Library             as Library (body)
 -- import qualified Luna.Builtin.Data.Function      as Function
 -- import qualified Luna.Builtin.Data.Module        as Module
 import           Empire.Empire                   (InterpreterEnv (..))
+import qualified Language.Haskell.TH             as TH
+import qualified Luna.Package.Structure.Generate as Package
+import qualified Luna.Package.Structure.Name     as Project
 import           LunaStudio.Data.Breadcrumb      (Breadcrumb (..), BreadcrumbItem (Definition))
 import           LunaStudio.Data.Connection      (Connection (Connection))
 import qualified LunaStudio.Data.Graph           as Graph
@@ -50,12 +57,22 @@ import qualified LunaStudio.Data.Position        as Position
 import           LunaStudio.Data.TypeRep         (TypeRep (TCons, TLam, TStar, TVar))
 -- import           OCI.IR.Class                    (exprs, links)
 import           Empire.Prelude                  hiding (mapping, toList, (|>))
+import           Text.RawString.QQ                     (r)
+import           System.Directory                (canonicalizePath, getCurrentDirectory)
+import           System.Environment              (lookupEnv, setEnv)
+import           System.FilePath                 ((</>), takeDirectory)
+import qualified System.IO.Temp                  as Temp
 
 import           Test.Hspec                      (Selector, Spec, around, describe, expectationFailure, it, parallel, shouldBe,
                                                   shouldContain, shouldMatchList, shouldNotBe, shouldSatisfy, shouldStartWith, shouldThrow,
                                                   xdescribe, xit)
 
 import           EmpireUtils
+
+normalizeQQ :: String -> String
+normalizeQQ str = dropWhileEnd isSpace $ intercalate "\n" $ fmap (drop minWs) allLines where
+    allLines = dropWhile null $ dropWhileEnd isSpace <$> lines str
+    minWs    = minimum $ length . takeWhile isSpace <$> (filter (not.null) allLines)
 
 spec :: Spec
 spec = around withChannels $ parallel $ do
@@ -338,34 +355,56 @@ spec = around withChannels $ parallel $ do
                         {-outputType = map (view Port.valueType) outPorts'-}
                     {-inputType  `shouldBe` [TCons "Int" []]-}
                     {-outputType `shouldBe` [TCons "Int" []]-}
-        it "properly typechecks second id in `mock id -> mock id`" $ \env -> do
-            u1 <- mkUUID
-            u2 <- mkUUID
-            (res, st) <- runEmp env $ do
-                Graph.addNode top u1 "id" def
-                Graph.addNode top u2 "id" def
-                connectToInput top (outPortRef u1 []) (inPortRef u2 [Port.Arg 0])
-                let GraphLocation file _ = top
-                Graph.withUnit (GraphLocation file def) $ do
-                    g <- use userState
-                    let root = g ^. Graph.clsClass
-                    rooted <- runASTOp $ Store.serializeWithRedirectMap root
-                    return (top, g, rooted)
-            withResult res $ \(top, g, rooted) -> do
-                pmState <- Graph.defaultPMState
-                let interpreterEnv = InterpreterEnv (return ()) g [] def def def
-                (_, (extractGraph -> g')) <- runEmpire env (Graph.CommandState pmState interpreterEnv) $
-                    Typecheck.run top g rooted False False
-                (res'',_) <- runEmp' env st g' $ do
-                    Graph.withGraph top $ runASTOp $ (,) <$> GraphBuilder.buildNode u1 <*> GraphBuilder.buildNode u2
-                -- withResult res'' $ \(n1, n2) -> do
-                --     view Node.inPorts n2 `shouldMatchList` [
-                --           Port.Port [Port.Arg 0] "in" (TLam (TVar "a") (TVar "a")) Port.Connected
-                --         ]
-                --     view Node.outPorts n1 `shouldMatchList` [
-                --           Port.Port [] "Output" (TLam (TVar "a") (TVar "a")) (Port.WithDefault (Expression "in: in"))
-                --         ]
-                return ()
+        xit "properly typechecks second id in `mock id -> mock id`" $ \env -> do
+            Temp.withSystemTempDirectory "luna-empirespec" $ \path -> do
+                u1 <- mkUUID
+                u2 <- mkUUID
+                (res, st) <- runEmp env $ do
+                    Right pkgPath <- Package.genPackageStructure (path </> "MockId") Nothing def
+                    let mainLuna = pkgPath </> "src" </> "Main.luna"
+                    createLibrary Nothing mainLuna
+                    let loc = GraphLocation mainLuna $ Breadcrumb []
+                    let initialCode = [r|
+                            import Std.Base
+
+                            def main:
+                                None
+                            |]
+                    let normalize = Text.pack . normalizeQQ . Text.unpack
+                    Graph.loadCode loc $ normalize initialCode
+                    [main] <- filter (\n -> n ^. Node.name == Just "main") <$> Graph.getNodes loc
+                    let loc' = GraphLocation mainLuna $ Breadcrumb [Definition (main ^. Node.nodeId)]
+                    Graph.addNode loc' u1 "id" def
+                    Graph.addNode loc' u2 "id" def
+                    connectToInput loc' (outPortRef u1 []) (inPortRef u2 [Port.Arg 0])
+                    Graph.withUnit (GraphLocation mainLuna def) $ do
+                        g <- use userState
+                        let root = g ^. Graph.clsClass
+                        rooted <- runASTOp $ Store.serializeWithRedirectMap root
+                        return (loc', g, rooted)
+                withResult res $ \(top, g, rooted) -> liftIO $ do
+                    let thisFilePath = $(do
+                            dir <- TH.runIO getCurrentDirectory
+                            filename <- TH.loc_filename <$> TH.location
+                            TH.litE $ TH.stringL $ dir </> filename)
+                    lunaroot <- canonicalizePath $ takeDirectory thisFilePath </> "../../../env"
+                    oldLunaRoot <- fromMaybe "" <$> lookupEnv Project.lunaRootEnv
+                    flip finally (setEnv Project.lunaRootEnv oldLunaRoot) $ do
+                        setEnv Project.lunaRootEnv lunaroot
+                        pmState <- Graph.defaultPMState
+                        let interpreterEnv = InterpreterEnv (return ()) g [] def def def
+                        (_, (extractGraph -> g')) <- runEmpire env (Graph.CommandState pmState interpreterEnv) $
+                            Typecheck.run top g rooted False False
+                        (res'',_) <- runEmp' env st g' $ do
+                            Graph.withGraph top $ runASTOp $ (,) <$> GraphBuilder.buildNode u1 <*> GraphBuilder.buildNode u2
+                    -- withResult res'' $ \(n1, n2) -> do
+                    --     view Node.inPorts n2 `shouldMatchList` [
+                    --           Port.Port [Port.Arg 0] "in" (TLam (TVar "a") (TVar "a")) Port.Connected
+                    --         ]
+                    --     view Node.outPorts n1 `shouldMatchList` [
+                    --           Port.Port [] "Output" (TLam (TVar "a") (TVar "a")) (Port.WithDefault (Expression "in: in"))
+                    --         ]
+                        return ()
         it "puts + inside plus lambda" $ \env -> do
             u1 <- mkUUID
             res <- evalEmp env $ do

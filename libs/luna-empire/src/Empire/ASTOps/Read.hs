@@ -402,7 +402,7 @@ isTuple expr = match expr $ \case
     Tuple{} -> return True
     _     -> return False
 
-isASGFunction :: NodeRef -> GraphOp Bool
+isASGFunction :: NodeRef -> ASTOp g Bool
 -- isASGFunction expr = isJust <$> narrowTerm @IR.Function expr
 isASGFunction expr = match expr $ \case
     ASGFunction{} -> return True

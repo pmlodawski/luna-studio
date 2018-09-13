@@ -51,6 +51,7 @@ import qualified Empire.Data.Graph               as Graph (CommandState(..),
 import qualified Empire.Data.Library             as Library (body)
 import           Empire.Empire                   (CommunicationEnv (..), InterpreterEnv(..), Empire) -- , modules)
 import qualified Language.Haskell.TH             as TH
+import qualified Luna.Package.Structure.Generate as Package
 import qualified Luna.Package.Structure.Name     as Project
 -- import qualified Luna.Syntax.Text.Parser.Parser  as Parser (ReparsingChange (..), ReparsingStatus (..))
 import           LunaStudio.API.AsyncUpdate      (AsyncUpdate(ResultUpdate))
@@ -81,6 +82,7 @@ import qualified LunaStudio.Data.LabeledTree           as LabeledTree
 import           System.Directory                      (canonicalizePath, getCurrentDirectory)
 import           System.Environment                    (lookupEnv, setEnv)
 import           System.FilePath                       ((</>), takeDirectory)
+import qualified System.IO.Temp                        as Temp
 
 import           Empire.Prelude                        hiding (fromJust, minimum, maximum)
 
@@ -2593,49 +2595,52 @@ def main:
                 u1 <- mkUUID
                 Graph.addNode loc u1 "first" (atXPos 300)
         it "interprets Fibonacci program" $ \env -> do
-            (res, st) <- runEmp env $ do
-                let initialCode = [r|
-                        import Std.Base
-                        def fib n:
-                            if n < 2 then 1 else fib (n-1) + fib (n-2)
+            let thisFilePath = $(do
+                    dir <- TH.runIO getCurrentDirectory
+                    filename <- TH.loc_filename <$> TH.location
+                    TH.litE $ TH.stringL $ dir </> filename)
+            Temp.withSystemTempDirectory "luna-fileloadspec" $ \path -> do
+                (res, st) <- runEmp env $ do
+                    let initialCode = [r|
+                            import Std.Base
+                            def fib n:
+                                if n < 2 then 1 else fib (n-1) + fib (n-2)
 
-                        def main:
-                            a = fib 10
-                            a
-                        |]
-                Library.createLibrary Nothing "/TestPath"
-                let loc = GraphLocation "/TestPath" $ Breadcrumb []
-                let normalize = Text.pack . normalizeQQ . Text.unpack
-                Graph.loadCode loc $ normalize initialCode
-                [main] <- filter (\n -> n ^. Node.name == Just "main") <$> Graph.getNodes loc
-                let loc' = GraphLocation "/TestPath" $ Breadcrumb [Definition (main ^. Node.nodeId)]
-                [fib] <- filter (\n -> n ^. Node.name == Just "fib") <$> Graph.getNodes loc
-                let loc'' = GraphLocation "/TestPath" $ Breadcrumb [Definition (fib ^. Node.nodeId)]
-                Graph.withUnit loc $ do
-                    g <- use Graph.userState
-                    let root = g ^. Graph.clsClass
-                    rooted <- runASTOp $ Store.serializeWithRedirectMap root
-                    return (loc', g, rooted)
-            withResult res $ \(loc, g, rooted) -> do
-                let thisFilePath = $(do
-                        dir <- TH.runIO getCurrentDirectory
-                        filename <- TH.loc_filename <$> TH.location
-                        TH.litE $ TH.stringL $ dir </> filename)
-                liftIO $ do
-                    lunaroot <- canonicalizePath $ takeDirectory thisFilePath </> "../../../env"
-                    oldLunaRoot <- fromMaybe "" <$> lookupEnv Project.lunaRootEnv
-                    flip finally (setEnv Project.lunaRootEnv oldLunaRoot) $ do
-                        setEnv Project.lunaRootEnv lunaroot
-                        pmState <- Graph.defaultPMState
-                        let cs = Graph.CommandState pmState $ InterpreterEnv (return ()) g [] def def def
-                        runEmpire env cs $ Typecheck.run loc g rooted True False
-            let updates = env ^. to _updatesChan
-            ups <- atomically $ unfoldM (tryReadTChan updates)
-            let _ResultUpdate = prism ResultUpdate $ \n -> case n of
-                    ResultUpdate a -> Right a
-                    _              -> Left n
-            let [fibUpdate] = ups ^.. traverse . _ResultUpdate . NodeResult.value
-            fibUpdate `shouldBe` NodeValue "89" (Just (Value "89.0"))
+                            def main:
+                                a = fib 10
+                                a
+                            |]
+                    Right pkgPath <- Package.genPackageStructure (path </> "Fibonacci") Nothing def
+                    let mainLuna = pkgPath </> "src" </> "Main.luna"
+                    Library.createLibrary Nothing mainLuna
+                    let loc = GraphLocation mainLuna $ Breadcrumb []
+                    let normalize = Text.pack . normalizeQQ . Text.unpack
+                    Graph.loadCode loc $ normalize initialCode
+                    [main] <- filter (\n -> n ^. Node.name == Just "main") <$> Graph.getNodes loc
+                    let loc' = GraphLocation mainLuna $ Breadcrumb [Definition (main ^. Node.nodeId)]
+                    [fib] <- filter (\n -> n ^. Node.name == Just "fib") <$> Graph.getNodes loc
+                    let loc'' = GraphLocation mainLuna $ Breadcrumb [Definition (fib ^. Node.nodeId)]
+                    Graph.withUnit loc $ do
+                        g <- use Graph.userState
+                        let root = g ^. Graph.clsClass
+                        rooted <- runASTOp $ Store.serializeWithRedirectMap root
+                        return (loc', g, rooted)
+                withResult res $ \(loc, g, rooted) -> do
+                    liftIO $ do
+                        lunaroot <- canonicalizePath $ takeDirectory thisFilePath </> "../../../env"
+                        oldLunaRoot <- fromMaybe "" <$> lookupEnv Project.lunaRootEnv
+                        flip finally (setEnv Project.lunaRootEnv oldLunaRoot) $ do
+                            setEnv Project.lunaRootEnv lunaroot
+                            pmState <- Graph.defaultPMState
+                            let cs = Graph.CommandState pmState $ InterpreterEnv (return ()) g [] def def def
+                            runEmpire env cs $ Typecheck.run loc g rooted True False
+                let updates = env ^. to _updatesChan
+                ups <- atomically $ unfoldM (tryReadTChan updates)
+                let _ResultUpdate = prism ResultUpdate $ \n -> case n of
+                        ResultUpdate a -> Right a
+                        _              -> Left n
+                let [fibUpdate] = ups ^.. traverse . _ResultUpdate . NodeResult.value
+                fibUpdate `shouldBe` NodeValue "89" (Just (Value "89"))
         it "does not display connection to itself on anonymous nodes" $ let
             initialCode = [r|
                 def main:

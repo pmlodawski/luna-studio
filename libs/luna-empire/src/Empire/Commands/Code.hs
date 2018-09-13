@@ -9,7 +9,7 @@ module Empire.Commands.Code where
 
 import           Empire.Prelude
 import           Control.Monad.State     (MonadState)
-import           Control.Monad           (forM)
+import           Control.Monad           (filterM, forM)
 import qualified Data.Set                as Set
 import qualified Data.Map                as Map
 import           Data.Text               (Text)
@@ -317,7 +317,12 @@ functionBlockStartRef ref = do
 getOffset :: NodeRef -> ClassOp (LeftSpacedSpan Delta)
 getOffset ref = do
     succs    <- ociSetToList =<< getLayer @IR.Users ref
-    leftSpan <- case succs of
+    -- filtering ASGFunction here, because previously Var representing
+    -- function name wasn't aliased with its uses inside in
+    -- recursive functions
+    isFun    <- mapM (target >=> ASTRead.isASGFunction) succs
+    funs     <- filterM (target >=> ASTRead.isASGFunction) succs
+    leftSpan <- case (if or isFun then funs else succs) of
         []     -> return $ LeftSpacedSpan (SpacedSpan 0 0)
         [more] -> do
             inputs         <- inputs =<< target more
@@ -326,7 +331,7 @@ getOffset ref = do
             moreOffset     <- getOffset =<< target more
             lefts          <- mapM (fmap (view CodeSpan.realSpan) . getLayer @CodeSpan) leftInputs
             return $ moreOffset <> (mconcat lefts)
-        a -> print a >> ASTPrint.printFullExpression ref >>= error . convert
+        _ -> ASTPrint.printFullExpression ref >>= error . ("getOffset: " <>) . convert
     LeftSpacedSpan (SpacedSpan off _) <- view CodeSpan.realSpan <$> getLayer @CodeSpan ref
     return $ leftSpan <> LeftSpacedSpan (SpacedSpan off 0)
 
