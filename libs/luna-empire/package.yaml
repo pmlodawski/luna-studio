@@ -20,6 +20,7 @@ tests:
             - reflection
             - raw-strings-qq
             - template-haskell
+            - temporary
             - safe-exceptions
 
 benchmarks:

@@ -12,13 +12,14 @@ import           Control.Concurrent.MVar
 import           Control.Concurrent.STM          (atomically)
 import           Control.Concurrent.STM.TChan    (tryReadTChan)
 import           Control.Exception.Safe          (finally)
-import           Control.Lens                    (uses)
+import           Control.Lens                    ((^..), uses, prism)
 import           Control.Monad                   (forM)
 import           Control.Monad.Loops             (unfoldM)
 import           Control.Monad.Reader            (ask)
 import           Data.Coerce
 import           Data.Char                       (isSpace)
 import qualified Data.Graph.Data.Component.Set   as MutableSet
+import qualified Data.Graph.Store                as Store
 import           Data.List                       (dropWhileEnd, find, minimum, maximum)
 import qualified Data.Map                        as Map
 import           Data.Maybe                      (fromJust)
@@ -38,14 +39,20 @@ import qualified Empire.Commands.Code            as Code
 import qualified Empire.Commands.Graph           as Graph
 import qualified Empire.Commands.GraphBuilder    as GraphBuilder
 import qualified Empire.Commands.Library         as Library
--- import qualified Empire.Commands.Typecheck       as Typecheck (Scope(..), createStdlib, run)
+import qualified Empire.Commands.Typecheck       as Typecheck
 import           Empire.Data.AST                 (SomeASTException)
 import qualified Empire.Data.BreadcrumbHierarchy as BH
-import qualified Empire.Data.Graph               as Graph (breadcrumbHierarchy, code, codeMarkers, nodeCache, userState)
+import qualified Empire.Data.Graph               as Graph (CommandState(..),
+                                                           breadcrumbHierarchy,
+                                                           clsClass,
+                                                           code, codeMarkers,
+                                                           defaultPMState,
+                                                           nodeCache, userState)
 import qualified Empire.Data.Library             as Library (body)
 import           Empire.Empire                   (CommunicationEnv (..), InterpreterEnv(..), Empire) -- , modules)
 import qualified Language.Haskell.TH             as TH
--- import qualified Luna.Project                    as Project
+import qualified Luna.Package.Structure.Generate as Package
+import qualified Luna.Package.Structure.Name     as Project
 -- import qualified Luna.Syntax.Text.Parser.Parser  as Parser (ReparsingChange (..), ReparsingStatus (..))
 import           LunaStudio.API.AsyncUpdate      (AsyncUpdate(ResultUpdate))
 import qualified LunaStudio.API.Graph.NodeResultUpdate as NodeResult
@@ -75,6 +82,7 @@ import qualified LunaStudio.Data.LabeledTree           as LabeledTree
 import           System.Directory                      (canonicalizePath, getCurrentDirectory)
 import           System.Environment                    (lookupEnv, setEnv)
 import           System.FilePath                       ((</>), takeDirectory)
+import qualified System.IO.Temp                        as Temp
 
 import           Empire.Prelude                        hiding (fromJust, minimum, maximum)
 
@@ -2586,47 +2594,53 @@ def main:
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 u1 <- mkUUID
                 Graph.addNode loc u1 "first" (atXPos 300)
-        -- xit "interprets Fibonacci program" $ \env -> do
-        --     (res, st) <- runEmp env $ do
-        --         let initialCode = [r|
-        --                 import Std.Base
-        --                 def fib n:
-        --                     if n < 2 then 1 else fib (n-1) + fib (n-2)
+        it "interprets Fibonacci program" $ \env -> do
+            let thisFilePath = $(do
+                    dir <- TH.runIO getCurrentDirectory
+                    filename <- TH.loc_filename <$> TH.location
+                    TH.litE $ TH.stringL $ dir </> filename)
+            Temp.withSystemTempDirectory "luna-fileloadspec" $ \path -> do
+                (res, st) <- runEmp env $ do
+                    let initialCode = [r|
+                            import Std.Base
+                            def fib n:
+                                if n < 2 then 1 else fib (n-1) + fib (n-2)
 
-        --                 def main:
-        --                     a = fib 10
-        --                     a
-        --                 |]
-        --         Library.createLibrary Nothing "/TestPath"
-        --         let loc = GraphLocation "/TestPath" $ Breadcrumb []
-        --         let normalize = Text.pack . normalizeQQ . Text.unpack
-        --         Graph.loadCode loc $ normalize initialCode
-        --         [main] <- filter (\n -> n ^. Node.name == Just "main") <$> Graph.getNodes loc
-        --         let loc' = GraphLocation "/TestPath" $ Breadcrumb [Definition (main ^. Node.nodeId)]
-        --         [fib] <- filter (\n -> n ^. Node.name == Just "fib") <$> Graph.getNodes loc
-        --         let loc'' = GraphLocation "/TestPath" $ Breadcrumb [Definition (fib ^. Node.nodeId)]
-        --         (loc',) <$> Library.withLibrary "/TestPath" (use Library.body)
-        --     withResult res $ \(loc, g) -> do
-        --         let imports = env ^. modules
-        --         let thisFilePath = $(do
-        --                 dir <- TH.runIO getCurrentDirectory
-        --                 filename <- TH.loc_filename <$> TH.location
-        --                 TH.litE $ TH.stringL $ dir </> filename)
-        --         liftIO $ do
-        --             lunaroot <- canonicalizePath $ takeDirectory thisFilePath </> "../../../env"
-        --             oldLunaRoot <- fromMaybe "" <$> lookupEnv Project.lunaRootEnv
-        --             flip finally (setEnv Project.lunaRootEnv oldLunaRoot) $ do
-        --                 setEnv Project.lunaRootEnv lunaroot
-        --                 (cleanup, std) <- Typecheck.createStdlib $ lunaroot <> "/Std/"
-        --                 putMVar imports $ unwrap std
-        --                 runEmpire env (InterpreterEnv def def def g def def) $ Typecheck.run imports loc True False
-        --     let updates = env ^. to _updatesChan
-        --     ups <- atomically $ unfoldM (tryReadTChan updates)
-        --     let _ResultUpdate = prism ResultUpdate $ \n -> case n of
-        --             ResultUpdate a -> Right a
-        --             _              -> Left n
-        --     let [fibUpdate] = ups ^.. traverse . _ResultUpdate . NodeResult.value
-        --     fibUpdate `shouldBe` NodeValue "89" (Just (Value "89.0"))
+                            def main:
+                                a = fib 10
+                                a
+                            |]
+                    Right pkgPath <- Package.genPackageStructure (path </> "Fibonacci") Nothing def
+                    let mainLuna = pkgPath </> "src" </> "Main.luna"
+                    Library.createLibrary Nothing mainLuna
+                    let loc = GraphLocation mainLuna $ Breadcrumb []
+                    let normalize = Text.pack . normalizeQQ . Text.unpack
+                    Graph.loadCode loc $ normalize initialCode
+                    [main] <- filter (\n -> n ^. Node.name == Just "main") <$> Graph.getNodes loc
+                    let loc' = GraphLocation mainLuna $ Breadcrumb [Definition (main ^. Node.nodeId)]
+                    [fib] <- filter (\n -> n ^. Node.name == Just "fib") <$> Graph.getNodes loc
+                    let loc'' = GraphLocation mainLuna $ Breadcrumb [Definition (fib ^. Node.nodeId)]
+                    Graph.withUnit loc $ do
+                        g <- use Graph.userState
+                        let root = g ^. Graph.clsClass
+                        rooted <- runASTOp $ Store.serializeWithRedirectMap root
+                        return (loc', g, rooted)
+                withResult res $ \(loc, g, rooted) -> do
+                    liftIO $ do
+                        lunaroot <- canonicalizePath $ takeDirectory thisFilePath </> "../../../env"
+                        oldLunaRoot <- fromMaybe "" <$> lookupEnv Project.lunaRootEnv
+                        flip finally (setEnv Project.lunaRootEnv oldLunaRoot) $ do
+                            setEnv Project.lunaRootEnv lunaroot
+                            pmState <- Graph.defaultPMState
+                            let cs = Graph.CommandState pmState $ InterpreterEnv (return ()) g [] def def def
+                            runEmpire env cs $ Typecheck.run loc g rooted True False
+                let updates = env ^. to _updatesChan
+                ups <- atomically $ unfoldM (tryReadTChan updates)
+                let _ResultUpdate = prism ResultUpdate $ \n -> case n of
+                        ResultUpdate a -> Right a
+                        _              -> Left n
+                let [fibUpdate] = ups ^.. traverse . _ResultUpdate . NodeResult.value
+                fibUpdate `shouldBe` NodeValue "89" (Just (Value "89"))
         it "does not display connection to itself on anonymous nodes" $ let
             initialCode = [r|
                 def main:
