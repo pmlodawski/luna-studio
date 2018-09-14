@@ -357,6 +357,47 @@ def main:
                       Connection (outPortRef (c   ^. Node.nodeId) []) (inPortRef (bar ^. Node.nodeId) [Port.Arg 1])
                     , Connection (outPortRef (foo ^. Node.nodeId) []) (inPortRef (bar ^. Node.nodeId) [Port.Head])
                     ]
+        it "adding None at the end works" $ let
+            initialCode = [r|
+                import Std.Base
+
+                def main:
+                    «0»hello = "Hello"
+                |]
+            expectedCode = [r|
+                import Std.Base
+
+                def main:
+                    hello = "Hello"
+                    None
+                |]
+            in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
+                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 19 3), (Point 19 3))) "\n    " (Just (Point 4 4))]
+                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 4 4), (Point 4 4))) "No" (Just (Point 6 4))]
+                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 6 4), (Point 6 4))) "ne" (Just (Point 8 4))]
+        it "removing None at the end works" $ let
+            initialCode = [r|
+                import Std.Base
+
+                def main:
+                    «0»hello = "Hello"
+                |]
+            expectedCode = [r|
+                import Std.Base
+
+                def main:
+                    hello = "Hello"
+                |]
+            in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
+                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 21 3), (Point 21 3))) "\n    " (Just (Point 4 4))]
+                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 4 4), (Point 4 4))) "No" (Just (Point 6 4))]
+                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 6 4), (Point 6 4))) "ne" (Just (Point 8 4))]
+                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 7 4), (Point 8 4))) "" (Just (Point 7 4))]
+                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 6 4), (Point 7 4))) "" (Just (Point 6 4))]
+                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 5 4), (Point 6 4))) "" (Just (Point 5 4))]
+                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 4 4), (Point 5 4))) "" (Just (Point 4 4))]
+                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 0 4), (Point 4 4))) "" (Just (Point 0 4))]
+                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 21 3), (Point 0 4))) "" (Just (Point 21 3))]
         it "unparseable expression does not sabotage whole file" $ \env -> do
             res <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"

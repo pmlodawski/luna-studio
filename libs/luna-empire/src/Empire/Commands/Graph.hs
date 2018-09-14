@@ -1017,7 +1017,7 @@ substituteCodeFromPoints path (breakDiffs -> diffs) = do
                 _                 -> (0, fromIntegral (Text.length noMarkers), code))
                         diffs
             viewToReal c = case Text.uncons c of
-                Nothing        -> Code.viewDeltasToReal
+                Nothing        -> Code.viewDeltasToRealBeforeMarker
                 Just (char, _) -> if isSpace char then Code.viewDeltasToRealBeforeMarker else Code.viewDeltasToReal
             realDeltas   = map (\(a,b,c) -> let (a', b') = (viewToReal c) oldCode (a,b) in (a', b', c)) deltas
         return realDeltas
