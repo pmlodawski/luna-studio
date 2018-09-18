@@ -1631,6 +1631,7 @@ paste loc position (Text.pack -> text) = do
                 beg <- Code.getCurrentBlockBeginning
                 Code.applyDiff beg beg $ text' <> "\n" <> Text.replicate indentation " "
     reloadCode loc newCode
+    typecheck loc
     resendCode loc
 
 includeWhitespace :: Text -> (Delta, Delta) -> (Delta, Delta)
@@ -1662,7 +1663,7 @@ rangeToMarked code range' = (start, end)
         (start, end) = Code.viewDeltasToRealBeforeMarker code span
 
 pasteText :: GraphLocation -> [Range] -> [Text] -> Empire Text
-pasteText (GraphLocation file _) ranges (Text.concat -> text) = do
+pasteText loc@(GraphLocation file _) ranges (Text.concat -> text) = do
     res <- withUnit (GraphLocation file (Breadcrumb [])) $ do
         runASTOp $ forM (Safe.headMay ranges) $ \range -> do
             code <- use Graph.code
@@ -1675,6 +1676,7 @@ pasteText (GraphLocation file _) ranges (Text.concat -> text) = do
         Just (newCode, cursorPos) -> do
             reloadCode (GraphLocation file (Breadcrumb [])) newCode `catch` \(e::ASTParse.SomeParserException) ->
                 withUnit (GraphLocation file (Breadcrumb [])) (Graph.userState . Graph.code .= newCode >> Graph.userState . Graph.clsParseError ?= toException e)
+            typecheck loc
             resendCodeWithCursor (GraphLocation file (Breadcrumb [])) (Just cursorPos)
             return newCode
         _ -> return ""
