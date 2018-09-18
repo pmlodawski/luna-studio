@@ -888,12 +888,13 @@ spec = around withChannels $ parallel $ do
 
                 def main
                 |]
-        it "pastes top level function with marker" $ \env -> do
+        it "pastes top level function" $ \env -> do
             (nodes, code) <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"
                 let loc = GraphLocation "TestPath" $ Breadcrumb []
                 Graph.loadCode loc multiFunCode
-                Graph.pasteText loc [Range 23 23] ["«3»def quux: None\n### META {\"metas\":[{\"marker\":3,\"meta\":{\"_displayResult\":false,\"_selectedVisualizer\":null,\"_position\":{\"fromPosition\":{\"_vector2_y\":0,\"_vector2_x\":0}}}}]}"]
+                Graph.pasteText loc [Range 23 23] ["def quux: None"]
+                Graph.substituteCode "TestPath" [(46,46,"\n")]
                 (,) <$> Graph.getNodes loc <*> Graph.getCode loc
             normalizeQQ (Text.unpack code) `shouldBe` normalizeQQ [r|
                 # Docs
@@ -988,10 +989,10 @@ spec = around withChannels $ parallel $ do
                         number1 = 3
                         number1
                     |]
-            in specifyCodeChange initialCode expectedCode $ \loc -> do
-                Just foo <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 1
+            in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
                 clipboard <- Graph.copyText loc [Range 14 25]
                 Graph.paste loc (Position.fromTuple (300, 0)) $ Text.unpack clipboard
+                Graph.substituteCode file [(32, 32, "    ")]
         it "pastes multiline code from text editor to node editor" $
             let initialCode = [r|
                     def main:
@@ -1007,10 +1008,28 @@ spec = around withChannels $ parallel $ do
                         node=1
                         number1
                     |]
-            in specifyCodeChange initialCode expectedCode $ \loc -> do
-                Just foo <- Graph.withGraph loc $ runASTOp $ Graph.getNodeIdForMarker 1
+            in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
                 clipboard <- Graph.copyText loc [Range 14 36]
                 Graph.paste loc (Position.fromTuple (1000, 0)) $ Text.unpack clipboard
+                Graph.substituteCode file [(46, 46, "    ")]
+        it "pastes multiline code from text editor to node editor at the beginning" $
+            let initialCode = [r|
+                    def main:
+                        «1»number1 = 3
+                        «2»node=1
+                        number1
+                    |]
+                expectedCode = [r|
+                    def main:
+                        number1 = 3
+                        node=1
+                        number1 = 3
+                        node=1
+                        number1
+                    |]
+            in specifyCodeChange initialCode expectedCode $ \loc -> do
+                clipboard <- Graph.copyText loc [Range 14 36]
+                Graph.paste loc (Position.fromTuple (-1000, 0)) $ Text.unpack clipboard
         it "moves ports on top-level def" $
             let initialCode = [r|
                     def main:
@@ -1092,4 +1111,56 @@ spec = around withChannels $ parallel $ do
                     def main:
                         None
                     |]
+        it "uses defined class in main" $
+            let initialCode = [r|
+                    class Foo:
+                        a :: Int
+                        b :: Real
+
+                        def baz a : "Hello" + a
+
+                    def main:
+                        test = "Hello"
+                        None
+                    |]
+                expectedCode = [r|
+                    class Foo:
+                        a :: Int
+                        b :: Real
+
+                        def baz a : "Hello" + a
+
+                    def main:
+                        test = "Hello"
+                        Foo.baz
+                        None
+                    |]
+            in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
+                Graph.substituteCode file [(100, 100, "\n    Foo.baz")]
+        it "uses defined class with list of fields in main" $
+            let initialCode = [r|
+                    class Foo:
+                        a, c, d, e :: Int
+                        b :: Real
+
+                        def baz a : "Hello" + a
+
+                    def main:
+                        test = "Hello"
+                        None
+                    |]
+                expectedCode = [r|
+                    class Foo:
+                        a, c, d, e :: Int
+                        b :: Real
+
+                        def baz a : "Hello" + a
+
+                    def main:
+                        test = "Hello"
+                        Foo.baz
+                        None
+                    |]
+            in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
+                Graph.substituteCode file [(109, 109, "\n    Foo.baz")]
 

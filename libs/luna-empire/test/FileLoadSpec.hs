@@ -2295,7 +2295,6 @@ def main:
                 |]
             in specifyCodeChange initialCode expectedCode $ \(GraphLocation file _) -> do
                 Graph.paste (GraphLocation file def) (Position.fromTuple (-300, 0)) "def foo:\n    url = \"http://example.com\"\n    request = Http.get url\n    response = request . perform\n    None"
-                Graph.substituteCode file [(121, 122, "")] -- removing superfluous newline that normalizeQQ removes anyway
         it "pastes a function to functionlevel" $ let
             initialCode = [r|
                 def main:
@@ -2310,8 +2309,12 @@ def main:
                         None
                     None
                 |]
-            in specifyCodeChange initialCode expectedCode $ \loc -> do
-                Graph.paste loc (Position.fromTuple (300, 0)) "def foo:\n    url = \"http://example.com\"\n    request = Http.get url\n    response = request . perform\n    None\n"
+            in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
+                Graph.paste loc (Position.fromTuple (300, 0)) "def foo:\n    url = \"http://example.com\"\n    request = Http.get url\n    response = request . perform\n    None"
+                Graph.substituteCode file [(30, 30, "    ")]
+                Graph.substituteCode file [(67, 67, "    ")]
+                Graph.substituteCode file [(101, 101, "    ")]
+                Graph.substituteCode file [(141, 141, "    ")]
         it "copy pastes" $ let
             initialCode = [r|
                 def main:
@@ -2330,7 +2333,6 @@ def main:
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 code <- Graph.copyText loc [Range 50 60]
                 Graph.pasteText loc [Range 50 60] [code]
-                Graph.substituteCode "/TestPath" [(58, 62, "")]
         it "copy pastes a function" $ let
             initialCode = [r|
                 def main:
@@ -2410,11 +2412,12 @@ def main:
                     c = 1
                     t = 2
                 |]
-            in specifyCodeChange initialCode expectedCode $ \loc -> do
-                let paste = [r|    «2»c = 4.0
-    «3»bar = foo 8.0 c
-### META {"metas":[{"marker":2,"meta":{"_displayResult":false,"_selectedVisualizer":["base: json","/home/mmikolajczyk/git/verynew/luna-studio/atom/lib/visualizers/base/json/json.html"],"_position":{"fromPosition":{"_vector2_y":-128,"_vector2_x":0}}}},{"marker":3,"meta":{"_displayResult":false,"_selectedVisualizer":["base: json","/home/mmikolajczyk/git/verynew/luna-studio/atom/lib/visualizers/base/json/json.html"],"_position":{"fromPosition":{"_vector2_y":-96,"_vector2_x":176}}}}]}|]
+            in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
+                let paste = [r|c = 4.0
+    bar = foo 8.0 c
+|]
                 Graph.pasteText loc [Range 56 56] [paste]
+                Graph.substituteCode file [(71, 71, "    ")]
         it "handles unary minus" $ let
             initialCode = [r|
                 def main:
