@@ -179,7 +179,7 @@ updateValues loc@(GraphLocation path _) scope = do
         pointer <- ASTRead.getASTPointer nid
         matchExpr pointer $ \case
             Uni.Unify{} -> Just . (nid,) <$> ASTRead.getVarNode pointer
-            _           -> return Nothing
+            _           -> return $ Just (nid, pointer)
     let send nid m = flip runReaderT env $
             Publisher.notifyResultUpdate loc nid m 0
         sendRep nid (ErrorRep e)     = send nid
