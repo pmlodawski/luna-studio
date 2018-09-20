@@ -852,7 +852,7 @@ getPortDefault loc (InPortRef (NodeLoc _ nodeId) [])          = withGraph loc $ 
 setPortDefault :: GraphLocation -> InPortRef -> Maybe PortDefault -> Empire ()
 setPortDefault loc (InPortRef (NodeLoc _ nodeId) port) (Just val) = do
     withTC loc False $ do
-        parsed <- runASTOp $ ASTParse.parsePortDefault val
+        parsed <- ASTParse.parsePortDefault val
         runAliasAnalysis
         runASTOp $ case port of
             [] -> makeWhole parsed nodeId
@@ -1668,8 +1668,9 @@ pasteText loc@(GraphLocation file _) ranges (Text.concat -> text) = do
         runASTOp $ forM (Safe.headMay ranges) $ \range -> do
             code <- use Graph.code
             let (start, end)   = rangeToMarked code range
-            code' <- Code.applyDiff start end text
-            let endPosition = start + fromIntegral (Text.length text)
+            let cleanText = Code.removeMarkers text
+            code' <- Code.applyDiff start end cleanText
+            let endPosition = start + fromIntegral (Text.length cleanText)
                 cursorPos   = Code.deltaToPoint endPosition code'
             return (code', cursorPos)
     case res of
@@ -1889,7 +1890,6 @@ removeInternalConnection :: NodeId -> InPortId -> GraphOp ()
 removeInternalConnection nodeId port = do
     dstAst <- ASTRead.getTargetEdge nodeId
     beg    <- Code.getASTTargetBeginning nodeId
-    -- print "remove argument"
     ASTBuilder.removeArgument dstAst beg port
 
 makeInternalConnection :: NodeRef -> NodeId -> InPortId -> GraphOp ()

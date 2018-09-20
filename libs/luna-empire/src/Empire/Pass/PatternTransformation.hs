@@ -1,5 +1,4 @@
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE PackageImports #-}
 
 module Empire.Pass.PatternTransformation where
 
@@ -17,8 +16,8 @@ import qualified OCI.Pass.Definition.Declaration as Pass
 import           Empire.Data.Layers      (TypeLayer)
 import           Data.Text.Position      (Delta)
 import           Data.Text.Span          (SpacedSpan(..), leftSpacedSpan)
-import qualified "luna-syntax-text-parser2" Luna.Syntax.Text.Parser.Ast.CodeSpan as CodeSpan
-import "luna-syntax-text-parser2"           Luna.Syntax.Text.Parser.Ast.CodeSpan (CodeSpan, realSpan)
+import qualified Luna.Syntax.Text.Parser.Ast.CodeSpan as CodeSpan
+import           Luna.Syntax.Text.Parser.Ast.CodeSpan (CodeSpan, realSpan)
 import Luna.Pass.Data.Layer.NodeMeta   (Meta)
 import Luna.Pass.Data.Layer.PortMarker (PortMarker)
 import Luna.Pass.Data.Layer.SpanLength (SpanLength)

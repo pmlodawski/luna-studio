@@ -1,6 +1,5 @@
 {-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE UndecidableInstances       #-}
-{-# LANGUAGE PackageImports       #-}
 
 module Empire.ASTOp (
     ASTOp

@@ -1,6 +1,5 @@
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE PackageImports #-}
-{-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE PartialTypeSignatures     #-}
 
 module Empire.ASTOps.Parse (
     SomeParserException
@@ -27,7 +26,7 @@ import qualified Data.List.Split              as Split
 import qualified Data.Text                    as Text
 import qualified Data.Scientific              as Scientific
 
-import           Empire.ASTOp                    (EmpirePass, GraphOp, liftScheduler)
+import           Empire.ASTOp                    (EmpirePass, GraphOp, liftScheduler, runASTOp)
 import           Empire.Data.AST                 (NodeRef, astExceptionFromException, astExceptionToException)
 import           Empire.Data.Graph               (ClsGraph, Graph)
 import qualified Empire.Data.Graph               as Graph (codeMarkers)
@@ -46,8 +45,6 @@ import qualified OCI.Pass.Definition.Declaration      as Pass
 import qualified Luna.Pass                         as Pass
 import qualified Luna.Pass.Scheduler as Scheduler
 import           Luna.Syntax.Text.Parser.Ast.CodeSpan (CodeSpan)
--- import qualified Luna.Syntax.Text.Parser.IR.Class as Token
--- import qualified Luna.Syntax.Text.Parser.Pass as Parser
 import qualified Luna.Syntax.Text.Parser.Ast.CodeSpan as CodeSpan
 import           Luna.Syntax.Text.Parser.State.Invalid  (Invalids)
 import qualified Luna.Syntax.Text.Parser.Lexer.Names   as Parser (uminus)
@@ -58,24 +55,19 @@ import qualified Empire.Pass.PatternTransformation            as PT
 import qualified Luna.Pass.Attr as Attr
 import qualified Luna.Syntax.Prettyprint as Prettyprint
 import qualified Luna.Syntax.Text.Parser.Ast           as Parsing
--- import qualified Luna.Syntax.Text.Parser.IR.Term as Parsing
 import Luna.Syntax.Text.Scope (Scope)
 import qualified Luna.Syntax.Text.Source         as Source
 import qualified Luna.IR.Term.Literal            as Lit
--- import Luna.Syntax.Text.Parser.Pass.Class (IRBS, Parser)
 import Luna.Syntax.Text.Parser.State.Result (Result (Result))
 import qualified Luna.Syntax.Text.Parser.State.Marker      as Marker
 import qualified Luna.Syntax.Text.Parser.Lexer         as Lexer
 
--- import qualified Luna.Pass.Parsing.Parserx                 as Stage1
 import qualified Luna.Syntax.Text.Parser.Parser.Class                     as Macro
 import qualified Luna.Syntax.Text.Parser.Hardcoded as Hardcoded
--- import qualified Luna.Syntax.Text.Parser.Pass.Definition     as Parser
 import qualified Luna.Syntax.Text.Parser.State.Version as Syntax
--- import qualified Luna.Syntax.Text.Parser.IR.Ast              as Parsing (Parser)
 
 import qualified Luna.Pass.Parsing.Parser as Parser3
-import Debug.Trace
+
 data SomeParserException = forall e. Exception e => SomeParserException e
 
 deriving instance Show SomeParserException
@@ -231,27 +223,27 @@ withLength act len = do
 
 
 
-parsePortDefault :: PortDefault -> GraphOp NodeRef
-parsePortDefault (Expression expr)          = do
-    ref <- liftIO $ parseExpr' (convert expr)
-    Code.propagateLengths ref
+parsePortDefault :: PortDefault -> Command Graph NodeRef
+parsePortDefault (Expression expr) = do
+    ref <- parseExpr (convert expr)
+    runASTOp $ Code.propagateLengths ref
     return ref
 parsePortDefault (Constant (IntValue  i))
-    | i >= 0     = do
+    | i >= 0     = runASTOp $ do
         intPart <- Mutable.fromList $ map (fromIntegral . digitToInt) $ show i
         empty   <- Mutable.new
         generalize <$> IR.number 10 intPart empty `withLength` (length $ show i)
-    | otherwise = do
+    | otherwise = runASTOp $ do
         intPart <- Mutable.fromList $ map (fromIntegral . digitToInt) $ show (abs i)
         empty   <- Mutable.new
         number <- generalize <$> IR.number 10 intPart empty `withLength` (length $ show $ abs i)
         minus  <- generalize <$> IR.var Parser.uminus `withLength` 1
         app    <- generalize <$> IR.app minus number `withLength` (1 + length (show (abs i)))
         return app
-parsePortDefault (Constant (TextValue s)) = do
+parsePortDefault (Constant (TextValue s)) = runASTOp $ do
     l <- Mutable.fromList s
     generalize <$> IR.rawString l `withLength` (length s)
-parsePortDefault (Constant (RealValue d)) = do
+parsePortDefault (Constant (RealValue d)) = runASTOp $ do
     let negative    = d < 0
         sc          = Scientific.fromFloatDigits $ abs d
         scString    = Scientific.formatScientific Scientific.Fixed Nothing sc
@@ -273,5 +265,5 @@ parsePortDefault (Constant (RealValue d)) = do
             else
                 return number
         _ -> throwM $ PortDefaultNotConstructibleException (Constant (RealValue d))
-parsePortDefault (Constant (BoolValue b)) = generalize <$> IR.cons (convert $ show b) []  `withLength` (length $ show b)
+parsePortDefault (Constant (BoolValue b)) = runASTOp $ generalize <$> IR.cons (convert $ show b) []  `withLength` (length $ show b)
 parsePortDefault d = throwM $ PortDefaultNotConstructibleException d

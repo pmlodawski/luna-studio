@@ -449,7 +449,7 @@ def bar:
                 (Just c, Just bar) <- Graph.withGraph (loc |>= main ^. Node.nodeId) $ runASTOp $ do
                     (,) <$> Graph.getNodeIdForMarker 2 <*> Graph.getNodeIdForMarker 14
                 copy  <- Graph.prepareCopy (loc |>= main ^. Node.nodeId) [c, bar]
-                Graph.paste (loc |>= main ^. Node.nodeId) (Position.fromTuple (200,0)) copy
+                Graph.paste (loc |>= main ^. Node.nodeId) (Position.fromTuple (400,0)) copy
                 Graph.substituteCode "TestPath" [(225, 225, "    ")]
                 Graph.substituteCode "TestPath" [(242, 242, "    ")]
                 code  <- Graph.withUnit loc $ use Graph.code

@@ -270,7 +270,7 @@ spec = around withChannels $ parallel $ do
                 Library.createLibrary Nothing "TestPath"
                 let loc = GraphLocation "TestPath" $ Breadcrumb []
                 Graph.loadCode loc multiFunCode
-                Graph.addNode loc u1 "def quux" $ set NodeMeta.position (Position.fromTuple (200,0)) def
+                Graph.addNode loc u1 "def quux" $ set NodeMeta.position (Position.fromTuple (400,0)) def
                 (,) <$> Graph.getNodes loc <*> Graph.getCode loc
             length nodes `shouldBe` 4
             find (\n -> n ^. Node.name == Just "quux") nodes `shouldSatisfy` isJust
@@ -295,7 +295,7 @@ spec = around withChannels $ parallel $ do
                 Library.createLibrary Nothing "TestPath"
                 let loc = GraphLocation "TestPath" $ Breadcrumb []
                 Graph.loadCode loc multiFunCode
-                Graph.addNode loc u1 "def quux" $ set NodeMeta.position (Position.fromTuple (500,0)) def
+                Graph.addNode loc u1 "def quux" $ set NodeMeta.position (Position.fromTuple (800,0)) def
                 (,) <$> Graph.getNodes loc <*> Graph.getCode loc
             length nodes `shouldBe` 4
             find (\n -> n ^. Node.name == Just "quux") nodes `shouldSatisfy` isJust

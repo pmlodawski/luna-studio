@@ -3,7 +3,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE MultiWayIf        #-}
-{-# LANGUAGE PackageImports        #-}
 
 module Empire.Commands.Code where
 
@@ -28,9 +27,7 @@ import           Empire.ASTOps.Print     as ASTPrint
 import           Empire.ASTOps.Read      as ASTRead
 
 import qualified Luna.IR                 as IR
--- import qualified OCI.IR.Combinators      as IR (replace, substitute, replaceSource)
 import           Data.Text.Position      (Delta)
--- import           Empire.Data.Layers      (SpanOffset, SpanLength)
 import           Luna.Pass.Data.Layer.SpanLength (SpanLength)
 import           Luna.Pass.Data.Layer.SpanOffset (SpanOffset)
 import           Data.Text.Span          (SpacedSpan(..), leftSpacedSpan)

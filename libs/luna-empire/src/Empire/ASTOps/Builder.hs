@@ -104,14 +104,9 @@ getOrCreateArgument :: EdgeRef -> Delta -> Int -> Int -> GraphOp (EdgeRef, Delta
 getOrCreateArgument currentFun codeBegin currentArgument neededArgument
     | currentArgument <= neededArgument = do
         padArgs currentFun codeBegin 1 (neededArgument - currentArgument)
-        -- print "cool"
-        -- source currentFun >>= flip matchExpr print
-        -- print codeBegin
         flip getArgumentOf codeBegin =<< source currentFun
     | otherwise = do
         fun <- source currentFun
-        -- print "get"
-        -- matchExpr fun print
         matchExpr fun $ \case
             Tuple l' -> do
                 l <- ptrListToList l'
@@ -123,11 +118,9 @@ getOrCreateArgument currentFun codeBegin currentArgument neededArgument
                 getOrCreateArgument (coerce n) (codeBegin + foff) currentArgument neededArgument
             Grouped g -> do
                 foff <- Code.getOffsetRelativeToTarget (coerce g)
-                -- print $ codeBegin + foff
                 getOrCreateArgument (coerce g) (codeBegin + foff) currentArgument neededArgument
             App f a -> do
                 foff <- Code.getOffsetRelativeToTarget (coerce f)
-                -- print $ codeBegin + foff
                 getOrCreateArgument (coerce f) (codeBegin + foff) (pred currentArgument) neededArgument
             LeftSection f a -> do
                 foff      <- Code.getOffsetRelativeToTarget (coerce f)
@@ -153,7 +146,6 @@ instance Exception TupleElementOutOfBoundsException where
 padArgs :: EdgeRef -> Delta -> Delta -> Int -> GraphOp ()
 padArgs e beg argOffset i | i <= 0    = return ()
                           | otherwise = do
-    -- print "padding"
     bl     <- IR.blank
     fun    <- source e
     funIsTuple <- ASTRead.isTuple fun
@@ -423,7 +415,6 @@ makeConnection funE beg [] arg = do
     replaceEdgeSource funE beg arg
 makeConnection funE beg (Port.Self : rest) arg = do
     ensureHasSelf funE beg
-    -- print =<< use Graph.code
     (edge, beg) <- getCurrentAccTarget funE beg
     makeConnection edge beg rest arg
 makeConnection funE beg (Port.Arg i : rest) arg = source funE >>= flip match (\case

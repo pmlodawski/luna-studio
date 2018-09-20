@@ -1,5 +1,4 @@
 {-# LANGUAGE PatternSynonyms #-}
-{-# LANGUAGE PackageImports #-}
 
 module Empire.Prelude (
   module X, nameToString, nameToText, pathNameToString, stringToName, (<?!>),
@@ -100,7 +99,7 @@ import qualified Data.Graph.Component.Edge as Edge
 import qualified Data.Graph.Component.Edge.Construction as Construction
 import qualified Data.Generics.Traversable.Deriving as GTraversable
 import qualified Data.Graph.Fold.SubComponents as Traversal
-import "luna-syntax-text-parser2" Luna.Syntax.Text.Parser.State.Marker (TermMap(..))
+import Luna.Syntax.Text.Parser.State.Marker (TermMap(..))
 import Luna.Pass (Pass)
 import qualified Luna.Pass.Attr as Attr
 import qualified Data.Mutable.Class as Foreign
