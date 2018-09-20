@@ -1,7 +1,7 @@
 module Empire.ASTOps.Builder where
 
 import           Control.Monad                      (foldM, replicateM, zipWithM_)
-import           Data.Maybe                         (isNothing)
+import           Data.Maybe                         (isNothing, listToMaybe)
 import qualified Data.Text                          as Text
 import qualified Data.Text.IO                       as Text
 import           Empire.Prelude
@@ -203,13 +203,67 @@ dropBlankArgumentsAtTailPosition e beg = do
                 dropBlankArgumentsAtTailPosition e beg
         _ -> return ()
 
+dropListElement :: NodeRef -> Int -> GraphOp NodeRef
+dropListElement oldList index = match oldList $ \case
+    List elts -> do
+        l <- ptrListToList elts
+        let (before, after) = splitAt index l
+            l'              = before <> drop 1 after
+        newElems <- mapM source l'
+        newList <- IR.list' newElems
+        putLayer @SpanLength newList =<< getLayer @SpanLength oldList
+        match newList $ \case
+            List elts -> do
+                elems <- ptrListToList elts
+                forM (zip l' elems) $ \(prev, curr) -> do
+                    offset <- getLayer @SpanOffset prev
+                    putLayer @SpanOffset curr offset
+        replace newList oldList
+        return newList
+
 removeAppArgument :: EdgeRef -> Delta -> Int -> GraphOp ()
 removeAppArgument funE beg pos = do
-    -- print "removeAppArg"
-    bl <- generalize <$> IR.blank
-    putLayer @SpanLength bl 1
-    applyFunction funE beg bl pos
-    dropBlankArgumentsAtTailPosition funE beg
+    ref <- source funE
+    match ref $ \case
+        List elts -> do
+            l <- ptrListToList elts
+            let (before, after) = splitAt pos l
+                l'              = before <> drop 1 after
+            listLen <- getLayer @SpanLength ref
+            let removedArg = listToMaybe after
+            forM removedArg $ \a -> do
+                off <- Code.getOffsetRelativeToTarget $ coerce a
+                spanOffset <- getLayer @SpanOffset a
+                len <- getLayer @SpanLength =<< source a
+                let nextArg = listToMaybe (drop 1 after)
+                case nextArg of
+                    Just next -> do
+                        nextSpanOffset <- getLayer @SpanOffset next
+                        Code.removeAt (beg+off) (beg+off+len+nextSpanOffset)
+                        putLayer @SpanOffset next spanOffset
+                        newList <- dropListElement ref pos
+                        Code.gossipLengthsChangedBy (-(len+nextSpanOffset))
+                            newList
+                    _         -> do
+                        Just listBeginning <- Code.getAnyBeginningOf ref
+                        newList <- dropListElement ref pos
+                        if null l' then do
+                            Code.removeAt listBeginning (listBeginning+listLen)
+                            let empty = "[]"
+                                emptyLen = fromIntegral $ Text.length empty
+                            Code.insertAt listBeginning empty
+                            Code.gossipLengthsChangedBy
+                                (-(fromIntegral listLen - emptyLen)) newList
+                        else do
+                            Code.removeAt (beg+off-spanOffset) (beg+off+len)
+                            Code.gossipLengthsChangedBy
+                                (-(len+spanOffset)) newList
+            return ()
+        _      -> do
+            bl <- generalize <$> IR.blank
+            putLayer @SpanLength bl 1
+            applyFunction funE beg bl pos
+            dropBlankArgumentsAtTailPosition funE beg
 
 removeArgument :: EdgeRef -> Delta -> Port.InPortId -> GraphOp ()
 removeArgument funE beg [Port.Self]  = void $ removeAccessor   funE beg
@@ -219,15 +273,7 @@ removeArgument funE beg (Port.Arg i : rest) = do
     (edge, beg) <- getOrCreateArgument funE beg (argCount - 1) i
     removeArgument edge beg rest
 removeArgument funE beg (Port.Self : rest) = do
-    -- print "first"
-    -- print funE
-    -- source funE >>= \a -> matchExpr a print
-    -- source funE >>= ASTPrint.printFullExpression >>= print
-    -- print "getcurrenttarget"
     (edge, beg) <- getCurrentAccTarget funE beg
-    -- print "getcurrenttarget2"
-    -- source edge >>= ASTPrint.printFullExpression >>= print
-    -- print edge
     removeArgument edge beg rest
 removeArgument _ _ _ = return ()
 
@@ -256,8 +302,6 @@ getCurrentAccTarget :: EdgeRef -> Delta -> GraphOp (EdgeRef, Delta)
 getCurrentAccTarget = curry $ unfoldM $ \(edge, codeBeg) -> do
     let passThrough e = Right . (e,) <$> ((+ codeBeg) <$> Code.getOffsetRelativeToTarget e)
     ref <- source edge
-    -- source edge >>= ASTPrint.printFullExpression >>= print
-    -- matchExpr ref print
     matchExpr ref $ \case
         App f _ -> passThrough $ coerce f
         Acc t _ -> Left . (coerce t,) . (+ codeBeg) <$> Code.getOffsetRelativeToTarget (coerce t)
@@ -335,21 +379,44 @@ makeAccessor target naming exprBegin = do
 
 applyFunction :: EdgeRef -> Delta -> NodeRef -> Int -> GraphOp ()
 applyFunction funE beg arg pos = do
-    -- print beg
-    -- Code.applyDiff beg (succ beg) "*"
     argCount    <- countArguments =<< source funE
-    -- print "args"
-    -- print =<< ASTPrint.printFullExpression =<< source funE
-    -- print argCount
-    -- print pos
     (edge, beg) <- getOrCreateArgument funE beg (argCount - 1) pos
-    -- print "edge"
-    -- print =<< ASTPrint.printFullExpression =<< source edge
-    -- print =<< ASTPrint.printFullExpression arg
-    -- print edge
-    -- print beg
-    -- Code.applyDiff beg (succ beg) "|"
     replaceEdgeSource edge beg arg
+
+data ListElementOutOfBoundsException = ListElementOutOfBoundsException NodeRef Int
+    deriving Show
+
+instance Exception ListElementOutOfBoundsException where
+    toException = astExceptionToException
+    fromException = astExceptionFromException
+
+type ReplacedArgInfo = (Delta, Delta, Delta)
+
+addOrReplaceListArg :: NodeRef -> Int -> NodeRef -> GraphOp (NodeRef, Maybe ReplacedArgInfo)
+addOrReplaceListArg oldList pos newArg = match oldList $ \case
+    List elts -> do
+        l <- ptrListToList elts
+        let (before, after) = splitAt pos l
+        replacedSpan <- case Safe.headMay after of
+            Just replacedEdge -> do
+                argBeg <- Code.getOffsetRelativeToTarget $ unsafeRelayout replacedEdge
+                argLen <- getLayer @SpanLength =<< source replacedEdge
+                argOff <- getLayer @SpanOffset replacedEdge
+                return $ Just (argBeg, argLen, argOff)
+            _ -> return Nothing
+        beforeArgs <- mapM source before
+        afterArgs  <- mapM source $ drop 1 after
+        let newArgs = beforeArgs <> [newArg] <> afterArgs
+        newList <- IR.list' newArgs
+        putLayer @SpanLength newList =<< getLayer @SpanLength oldList
+        match newList $ \case
+            List elts -> do
+                elems <- ptrListToList elts
+                forM (zip l elems) $ \(prev, curr) -> do
+                    offset <- getLayer @SpanOffset prev
+                    putLayer @SpanOffset curr offset
+        replace newList oldList
+        return (newList, replacedSpan)
 
 makeConnection :: EdgeRef -> Delta -> Port.InPortId -> NodeRef -> GraphOp ()
 makeConnection funE beg [] arg = do
@@ -359,10 +426,55 @@ makeConnection funE beg (Port.Self : rest) arg = do
     -- print =<< use Graph.code
     (edge, beg) <- getCurrentAccTarget funE beg
     makeConnection edge beg rest arg
-makeConnection funE beg (Port.Arg i : rest) arg = do
-    argCount <- countArguments =<< source funE
-    (edge, beg) <- getOrCreateArgument funE beg (argCount - 1) i
-    makeConnection edge beg rest arg
+makeConnection funE beg (Port.Arg i : rest) arg = source funE >>= flip match (\case
+    List elts -> do
+        l <- ptrListToList elts
+        ref <- source funE
+        when_ (i < 0 || i > length l) $
+            throwM $ ListElementOutOfBoundsException ref i
+        newArgCode <- ASTPrint.printFullExpression arg
+        (newList, replacedSpan) <- addOrReplaceListArg ref i arg
+        newArgs <- match newList $ \case
+            List elts -> ptrListToList elts
+        ithArg <- return (Safe.atMay newArgs i) <?!>
+            ListElementOutOfBoundsException newList i
+        case replacedSpan of
+            Just (argBeg, argLen, argOff) -> do
+                putLayer @SpanOffset ithArg argOff
+                Code.applyDiff (beg+argBeg) (beg+argBeg+argLen) newArgCode
+                Code.gossipLengthsChangedBy
+                    (fromIntegral (Text.length newArgCode) - argLen) newList
+            _ -> do
+                -- new arg at the end, nothing to replace
+                let prevArg = Safe.atMay newArgs (i - 1)
+                case prevArg of
+                    Just prev -> do
+                        let newCode = ", " <> newArgCode
+                            newCodeLength = fromIntegral $ Text.length newCode
+                            commaSpaceLen = fromIntegral $
+                                length (", " :: String)
+                        putLayer @SpanOffset ithArg commaSpaceLen
+                        lastArgBeg <- Code.getOffsetRelativeToTarget $
+                            unsafeRelayout prev
+                        lastArgLen <- getLayer @SpanLength =<< source prev
+                        Code.insertAt (beg+lastArgBeg+lastArgLen) newCode
+                        Code.gossipLengthsChangedBy newCodeLength newList
+                    _ -> do
+                        -- no previous arg, adding expr + ", " at the beginning
+                        -- and changing spanoffset of next arg
+                        let newCode = newArgCode <>
+                                if length newArgs == 1 then "" else ", "
+                            newCodeLength = fromIntegral $ Text.length newCode
+                            squareBracket =
+                                fromIntegral $ length ("[" :: String)
+                        putLayer @SpanOffset ithArg squareBracket
+                        Code.insertAt (beg+squareBracket) newCode
+                        Code.gossipLengthsChangedBy newCodeLength newList
+        return ()
+    _ -> do
+        argCount <- countArguments =<< source funE
+        (edge, beg) <- getOrCreateArgument funE beg (argCount - 1) i
+        makeConnection edge beg rest arg)
 makeConnection _ _ _ _ = return ()
 
 
@@ -376,8 +488,6 @@ instance Exception SelfPortNotConnectedException where
 removeAccessor :: EdgeRef -> Delta -> GraphOp ()
 removeAccessor ed beg = do
     expr <- source ed
-    -- print "expr"
-    -- matchExpr expr print
     matchExpr expr $ \case
         App f _ -> do
             off <- Code.getOffsetRelativeToTarget $ coerce f
@@ -385,18 +495,8 @@ removeAccessor ed beg = do
         Acc t n -> do
             off <- Code.getOffsetRelativeToTarget $ coerce t
             length <- getLayer @SpanLength expr
-            -- print "acc"
-            -- source t >>= \a -> matchExpr a print
             acc <- source n
-            -- print length
-            -- print =<< getLayer @SpanOffset n
-            -- print =<< getLayer @SpanLength =<< source n
             accCode <- Code.getCodeOf =<< source n
-            -- print accCode
-            -- name <- ASTRead.getVarName' =<< source t
-            -- v      <- generalize <$> (IR.var name)
-            -- let n' = convertVia @String name
-            -- putLayer @SpanLength v $ fromIntegral $ Text.length n'
             Code.applyDiff beg (beg + length) accCode
             replaceSource acc $ coerce ed
             deleteSubtree expr
