@@ -3,7 +3,7 @@ module Empire.Server.Server where
 import qualified Compress
 import           Control.Arrow                 ((&&&))
 import           Control.Concurrent.STM.TChan  (writeTChan)
-import           Control.Lens                  (_Left, (.=), (^..), to, use)
+import           Control.Lens                  (to, use, (.=), (^..), _Left)
 import           Control.Monad.Catch           (handle, try)
 import           Control.Monad.State           (StateT)
 import           Control.Monad.STM             (atomically)
@@ -155,11 +155,14 @@ catchAllExceptions act = try act
 withDefaultResult' :: (GraphLocation -> Empire Graph) -> GraphLocation
     -> Empire a -> Empire Diff
 withDefaultResult' getFinalGraph location action = do
-    oldGraph <- (_Left %~ Graph.prepareGraphError)
-        <$> catchAllExceptions (Graph.getGraphNoTC location)
+    let addImports imps g = g & GraphAPI.imports .~ imps
+    oldImports <- Graph.getAvailableImports location
+    oldGraph   <- (_Left %~ Graph.prepareGraphError) <$> catchAllExceptions
+        (addImports oldImports <$> Graph.getGraphNoTC location)
     void action
-    newGraph <- (_Left %~ Graph.prepareGraphError)
-        <$> catchAllExceptions (getFinalGraph location)
+    newImports <- Graph.getAvailableImports location
+    newGraph   <- (_Left %~ Graph.prepareGraphError) <$> catchAllExceptions
+        (addImports newImports <$> getFinalGraph location)
     pure $ diff oldGraph newGraph
 
 withDefaultResult :: GraphLocation -> Empire a -> Empire Diff

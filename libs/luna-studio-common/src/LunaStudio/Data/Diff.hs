@@ -1,6 +1,6 @@
 module LunaStudio.Data.Diff where
 
-import           Control.Lens                         (_Right, makePrisms)
+import           Control.Lens                         (makePrisms, _Right)
 import           Data.Aeson.Types                     (ToJSON)
 import           Data.Binary                          (Binary)
 import           Data.HashMap.Strict                  (HashMap)
@@ -461,6 +461,7 @@ instance Diffable Graph where
     patch mod@(RenameNode       _) g = g & Graph.nodes         %~ patch mod
     patch mod@(SetCanEnterNode  _) g = g & Graph.nodes         %~ patch mod
     patch mod@(SetExpression    _) g = g & Graph.nodes         %~ patch mod
+    patch mod@(SetImports       _) g = g & Graph.imports       %~ patch mod
     patch mod@(SetInPorts       _) g = g & Graph.nodes         %~ patch mod
     patch     (SetInputSidebar  m) g = g & Graph.inputSidebar  .~ m ^. newInputSidebar
     patch mod@(SetIsDefinition  _) g = g & Graph.nodes         %~ patch mod
@@ -470,7 +471,7 @@ instance Diffable Graph where
     patch mod@(SetOutPorts      _) g = g & Graph.nodes         %~ patch mod
     patch     (SetOutputSidebar m) g = g & Graph.outputSidebar .~ m ^. newOutputSidebar
     patch     _                    g = g
-    diff g1 g2 = nodesDiff <> inSidebarDiff <> outSidebarDiff <> connsDiff <> monadsDiff where
+    diff g1 g2 = nodesDiff <> inSidebarDiff <> outSidebarDiff <> connsDiff <> monadsDiff <> importsDiff where
         nodesDiff     = diff (g1 ^. Graph.nodes) (g2 ^. Graph.nodes)
         connsDiff     = diff (g1 ^. Graph.connections) (g2 ^. Graph.connections)
         inSidebarDiff = Diff $ if g1 ^. Graph.inputSidebar /= g2 ^. Graph.inputSidebar
@@ -481,6 +482,9 @@ instance Diffable Graph where
             else mempty
         monadsDiff     = Diff $ if g1 ^. Graph.monads /= g2 ^. Graph.monads
             then pure . toModification . ModificationSetMonadPath $ g2 ^. Graph.monads
+            else mempty
+        importsDiff    = Diff $ if g1 ^. Graph.imports /= g2 ^. Graph.imports
+            then pure . toModification . ModificationSetImports $ g2 ^. Graph.imports
             else mempty
 
 instance Diffable (Either (Error GraphError) Graph) where
