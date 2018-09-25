@@ -9,12 +9,11 @@ import           NodeEditor.Event.Event               (Event (View))
 import           NodeEditor.Event.Shortcut            (ShortcutEvent)
 import qualified NodeEditor.Event.Shortcut            as Shortcut
 import           NodeEditor.Event.UI                  (UIEvent (AppEvent, VisualizationEvent))
-import           NodeEditor.Event.View                (ViewEvent, base, path, _FocusVisualization, _SelectVisualizer, _ToggleVisualizations)
+import           NodeEditor.Event.View                (ViewEvent, base, path)
 import qualified NodeEditor.Event.View                as View
 import qualified NodeEditor.React.Event.App           as App
 import qualified NodeEditor.React.Event.Visualization as Visualization
-import           NodeEditor.React.Model.Visualization (Mode (Preview), Parent (Node))
-import           NodeEditor.State.Action              (continue)
+import           NodeEditor.React.Model.Visualization (Parent (Node))
 import           NodeEditor.State.Global              (State)
 
 
@@ -51,19 +50,18 @@ unfocusesVisualization evt = case evt ^. base of
     _                          -> True
 
 handleViewEvent :: ViewEvent -> Maybe (Command State ())
-handleViewEvent evt = case evt ^. path of
-    [ "NodeEditor", "NodeVisualization", nlString, visIdString ] -> do
-        let parent    = Node $ read nlString
-            visId     = read visIdString
-            maySelect = Visualization.selectVisualizer parent visId 
-                <$> evt ^? base . _SelectVisualizer . View.visualizerId
-            mayFocus  = if has (base . _FocusVisualization) evt
-                then Just $ Visualization.focusVisualization parent visId
-                else Nothing
-        listToMaybe $ catMaybes [mayFocus, maySelect]
-    _ -> if has (base . _ToggleVisualizations) evt
-            then Just . Visualization.toggleVisualizations
-                . Node $ View.getNodeLoc evt
-        else if unfocusesVisualization evt
+handleViewEvent evt = case evt ^. base of
+    View.FocusVisualization evt' -> Just $ do
+        let parent = Node $ View.getNodeLoc evt
+            visualizationId = View.getVisualizationId evt
+        Visualization.focusVisualization parent visualizationId
+    View.SelectVisualizer evt' -> Just $ do
+        let parent = Node $ View.getNodeLoc evt
+            visualizerId = evt' ^. View.visualizerId
+            visualizationId = View.getVisualizationId evt
+        Visualization.selectVisualizer parent visualizationId visualizerId
+    View.ToggleVisualizations _ -> Just . Visualization.toggleVisualizations
+        . Node $ View.getNodeLoc evt
+    _ -> if unfocusesVisualization evt
             then Just Visualization.exitAnyVisualizationMode
             else Nothing
