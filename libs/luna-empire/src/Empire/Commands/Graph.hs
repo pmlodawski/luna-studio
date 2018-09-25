@@ -1695,7 +1695,7 @@ getImportsInFile = matchUnit =<< use Graph.clsClass where
     matchImport imp = matchExpr imp $ \(Import absolute _) -> 
         matchAbsolute =<< source absolute
     matchAbsolute a = matchExpr a $ \(ImportSrc (Term.Absolute n)) -> 
-        pure . convert . nameToString $ convert n
+        pure . nameToText $ convert n
 
 getAvailableImports :: GraphLocation -> Empire (Set ImportName)
 getAvailableImports gl = withUnit pureGl mkImports where
