@@ -3,11 +3,17 @@
 
 module EmpireSpec (spec) where
 
+import           Control.Exception.Safe          (finally)
 import           Control.Lens                    ((^..))
+import           Data.Char                       (isSpace)
 import           Data.Foldable                   (toList)
+import qualified Data.Graph.Store                as Store
 import           Data.List                       (find, stripPrefix)
+import           Data.List                       (dropWhileEnd, find, minimum, maximum)
 import qualified Data.Map                        as Map
+import qualified Data.Text                       as Text
 import           Empire.ASTOp                    (runASTOp)
+import qualified Empire.ASTOps.Builder           as ASTBuilder
 import qualified Empire.ASTOps.Deconstruct       as ASTDeconstruct
 import           Empire.ASTOps.Modify            (CannotRemovePortException)
 import qualified Empire.ASTOps.Parse             as Parser
@@ -17,20 +23,22 @@ import qualified Empire.Commands.AST             as AST (isTrivialLambda)
 import qualified Empire.Commands.Graph           as Graph (addNode, addPort, connect, disconnect, getConnections, getGraph,
                                                            getNodeIdForMarker, getNodes, loadCode, movePort, removeNodes, removePort,
                                                            renameNode, renamePort, setNodeExpression, setNodeMeta, withGraph,
-                                                           addPortWithConnections)
+                                                           addPortWithConnections, withUnit)
 import qualified Empire.Commands.GraphBuilder    as GraphBuilder
 import           Empire.Commands.Library         (createLibrary, withLibrary)
 import qualified Empire.Commands.Typecheck       as Typecheck (run)
+import qualified Empire.Data.AST                 as AST
 import           Empire.Data.BreadcrumbHierarchy (BreadcrumbDoesNotExistException)
 import qualified Empire.Data.BreadcrumbHierarchy as BH
 import           Empire.Data.Graph               (breadcrumbHierarchy, userState)
-import qualified Empire.Data.Graph               as Graph (code)
-import qualified Empire.Data.Library             as Library (body)
+import qualified Empire.Data.Graph               as Graph hiding (Graph)
 import qualified Empire.Data.Library             as Library (body)
 -- import qualified Luna.Builtin.Data.Class         as Class
 -- import qualified Luna.Builtin.Data.Function      as Function
--- import qualified Luna.Builtin.Data.Module        as Module
 import           Empire.Empire                   (InterpreterEnv (..))
+import qualified Language.Haskell.TH             as TH
+import qualified Luna.Package.Structure.Generate as Package
+import qualified Luna.Package.Structure.Name     as Project
 import           LunaStudio.Data.Breadcrumb      (Breadcrumb (..), BreadcrumbItem (Definition))
 import           LunaStudio.Data.Connection      (Connection (Connection))
 import qualified LunaStudio.Data.Graph           as Graph
@@ -50,12 +58,22 @@ import qualified LunaStudio.Data.Position        as Position
 import           LunaStudio.Data.TypeRep         (TypeRep (TCons, TLam, TStar, TVar))
 -- import           OCI.IR.Class                    (exprs, links)
 import           Empire.Prelude                  hiding (mapping, toList, (|>))
+import           Text.RawString.QQ                     (r)
+import           System.Directory                (canonicalizePath, getCurrentDirectory)
+import           System.Environment              (lookupEnv, setEnv)
+import           System.FilePath                 ((</>), takeDirectory)
+import qualified System.IO.Temp                  as Temp
 
 import           Test.Hspec                      (Selector, Spec, around, describe, expectationFailure, it, parallel, shouldBe,
                                                   shouldContain, shouldMatchList, shouldNotBe, shouldSatisfy, shouldStartWith, shouldThrow,
                                                   xdescribe, xit)
 
 import           EmpireUtils
+
+normalizeQQ :: String -> String
+normalizeQQ str = dropWhileEnd isSpace $ intercalate "\n" $ fmap (drop minWs) allLines where
+    allLines = dropWhile null $ dropWhileEnd isSpace <$> lines str
+    minWs    = minimum $ length . takeWhile isSpace <$> (filter (not.null) allLines)
 
 spec :: Spec
 spec = around withChannels $ parallel $ do
@@ -338,27 +356,56 @@ spec = around withChannels $ parallel $ do
                         {-outputType = map (view Port.valueType) outPorts'-}
                     {-inputType  `shouldBe` [TCons "Int" []]-}
                     {-outputType `shouldBe` [TCons "Int" []]-}
-        {-xit "properly typechecks second id in `mock id -> mock id`" $ \env -> do-}
-            {-u1 <- mkUUID-}
-            {-u2 <- mkUUID-}
-            {-(res, st) <- runEmp env $ do-}
-                {-Graph.addNode top u1 "id" def-}
-                {-Graph.addNode top u2 "id" def-}
-                {-connectToInput top (outPortRef u1 Port.All) (inPortRef u2 (Port.Arg 0))-}
-                {-let GraphLocation file _ = top-}
-                {-withLibrary file (use Library.body)-}
-            {-withResult res $ \g -> do-}
-                {-(_, (extractGraph -> g')) <- runEmpire env (InterpreterEnv def def def g def) $-}
-                    {-Typecheck.run emptyGraphLocation-}
-                {-(res'',_) <- runEmp' env st g' $ do-}
-                    {-Graph.withGraph top $ runASTOp $ (,) <$> GraphBuilder.buildNode u1 <*> GraphBuilder.buildNode u2-}
-                {-withResult res'' $ \(n1, n2) -> do-}
-                    {-inputPorts n2 `shouldMatchList` [-}
-                          {-Port.Port (Port.InPortId (Port.Arg 0)) "in" (TLam (TVar "a") (TVar "a")) Port.Connected-}
-                        {-]-}
-                    {-outputPorts n1 `shouldMatchList` [-}
-                          {-Port.Port (Port.OutPortId Port.All) "Output" (TLam (TVar "a") (TVar "a")) (Port.WithDefault (Expression "in: in"))-}
-                        {-]-}
+        xit "properly typechecks second id in `mock id -> mock id`" $ \env -> do
+            Temp.withSystemTempDirectory "luna-empirespec" $ \path -> do
+                u1 <- mkUUID
+                u2 <- mkUUID
+                (res, st) <- runEmp env $ do
+                    Right pkgPath <- Package.genPackageStructure (path </> "MockId") Nothing def
+                    let mainLuna = pkgPath </> "src" </> "Main.luna"
+                    createLibrary Nothing mainLuna
+                    let loc = GraphLocation mainLuna $ Breadcrumb []
+                    let initialCode = [r|
+                            import Std.Base
+
+                            def main:
+                                None
+                            |]
+                    let normalize = Text.pack . normalizeQQ . Text.unpack
+                    Graph.loadCode loc $ normalize initialCode
+                    [main] <- filter (\n -> n ^. Node.name == Just "main") <$> Graph.getNodes loc
+                    let loc' = GraphLocation mainLuna $ Breadcrumb [Definition (main ^. Node.nodeId)]
+                    Graph.addNode loc' u1 "id" def
+                    Graph.addNode loc' u2 "id" def
+                    connectToInput loc' (outPortRef u1 []) (inPortRef u2 [Port.Arg 0])
+                    Graph.withUnit (GraphLocation mainLuna def) $ do
+                        g <- use userState
+                        let root = g ^. Graph.clsClass
+                        rooted <- runASTOp $ Store.serializeWithRedirectMap root
+                        return (loc', g, rooted)
+                withResult res $ \(top, g, rooted) -> liftIO $ do
+                    let thisFilePath = $(do
+                            dir <- TH.runIO getCurrentDirectory
+                            filename <- TH.loc_filename <$> TH.location
+                            TH.litE $ TH.stringL $ dir </> filename)
+                    lunaroot <- canonicalizePath $ takeDirectory thisFilePath </> "../../../env"
+                    oldLunaRoot <- fromMaybe "" <$> lookupEnv Project.lunaRootEnv
+                    flip finally (setEnv Project.lunaRootEnv oldLunaRoot) $ do
+                        setEnv Project.lunaRootEnv lunaroot
+                        pmState <- Graph.defaultPMState
+                        let interpreterEnv = InterpreterEnv (return ()) g [] def def def
+                        (_, (extractGraph -> g')) <- runEmpire env (Graph.CommandState pmState interpreterEnv) $
+                            Typecheck.run top g rooted False False
+                        (res'',_) <- runEmp' env st g' $ do
+                            Graph.withGraph top $ runASTOp $ (,) <$> GraphBuilder.buildNode u1 <*> GraphBuilder.buildNode u2
+                    -- withResult res'' $ \(n1, n2) -> do
+                    --     view Node.inPorts n2 `shouldMatchList` [
+                    --           Port.Port [Port.Arg 0] "in" (TLam (TVar "a") (TVar "a")) Port.Connected
+                    --         ]
+                    --     view Node.outPorts n1 `shouldMatchList` [
+                    --           Port.Port [] "Output" (TLam (TVar "a") (TVar "a")) (Port.WithDefault (Expression "in: in"))
+                    --         ]
+                        return ()
         it "puts + inside plus lambda" $ \env -> do
             u1 <- mkUUID
             res <- evalEmp env $ do
@@ -369,14 +416,236 @@ spec = around withChannels $ parallel $ do
                 nodes `shouldSatisfy` ((== 1) . length)
                 unsafeHead nodes `shouldSatisfy` (\a -> a ^. Node.expression == "• + •")
         it "places connections between + node and output" $ \env -> do
-          u1 <- mkUUID
-          res <- evalEmp env $ do
-              let loc' = top |> u1
-              Graph.addNode top u1 "a: b: a + b" def
-              Graph.getConnections loc'
-          withResult res $ \conns -> do
-              -- one from a to +, one from b to + and one from + to output edge
-              conns `shouldSatisfy` ((== 3) . length)
+            u1 <- mkUUID
+            res <- evalEmp env $ do
+                let loc' = top |> u1
+                Graph.addNode top u1 "a: b: a + b" def
+                Graph.getConnections loc'
+            withResult res $ \conns -> do
+                -- one from a to +, one from b to + and one from + to output edge
+                conns `shouldSatisfy` ((== 3) . length)
+        it "shows connection between node and list containing it" $ \env -> do
+            u1 <- mkUUID
+            u2 <- mkUUID
+            res <- evalEmp env $ do
+                Graph.addNode top u1 "2" def
+                Graph.addNode top u2 "[number1]" def
+                Graph.getConnections top
+            withResult res $ \conns -> do
+                conns `shouldSatisfy` ((== 1) . length)
+        it "shows connection between nodes and list containing them" $ \env -> do
+            u1 <- mkUUID
+            u2 <- mkUUID
+            u3 <- mkUUID
+            u4 <- mkUUID
+            u5 <- mkUUID
+            u6 <- mkUUID
+            res <- evalEmp env $ do
+                Graph.addNode top u1 "2" def
+                Graph.addNode top u2 "2" def
+                Graph.addNode top u3 "2" def
+                Graph.addNode top u4 "2" def
+                Graph.addNode top u6 "    [   number1  , number2   ,   number3 ,number4   ]" def
+                (,) <$> Graph.withGraph top (runASTOp (GraphBuilder.buildNode u6)) <*> Graph.getConnections top
+            withResult res $ \(list, conns) -> do
+                conns `shouldSatisfy` ((== 4) . length)
+        it "connects elements to a list" $ \env -> do
+            u1 <- mkUUID
+            u2 <- mkUUID
+            u3 <- mkUUID
+            res <- evalEmp env $ do
+                Graph.addNode top u1 "[]" def
+                Graph.addNode top u2 "2" def
+                Graph.addNode top u3 "3" def
+                Graph.connect top (outPortRef u2 []) (InPortRef' $ inPortRef u1 [Port.Arg 0])
+                Graph.connect top (outPortRef u3 []) (InPortRef' $ inPortRef u1 [Port.Arg 1])
+                Graph.withGraph top $ runASTOp $ do
+                    GraphBuilder.buildNode u1
+            withResult res $ \(node) -> do
+                node ^. Node.expression `shouldBe` "[\8226, \8226]"
+                node ^. Node.code `shouldBe` "[number1, number2]"
+        it "connects elements to a list and removes all but one" $ \env -> do
+            u1 <- mkUUID
+            u2 <- mkUUID
+            u3 <- mkUUID
+            u4 <- mkUUID
+            res <- evalEmp env $ do
+                Graph.addNode top u1 "[]" def
+                Graph.addNode top u2 "2" def
+                Graph.addNode top u3 "3" def
+                Graph.addNode top u4 "4" def
+                Graph.connect top (outPortRef u2 []) (InPortRef' $ inPortRef u1 [Port.Arg 0])
+                Graph.connect top (outPortRef u3 []) (InPortRef' $ inPortRef u1 [Port.Arg 1])
+                Graph.connect top (outPortRef u4 []) (InPortRef' $ inPortRef u1 [Port.Arg 2])
+                Graph.disconnect top (inPortRef u1 [Port.Arg 0])
+                Graph.disconnect top (inPortRef u1 [Port.Arg 0])
+                Graph.withGraph top $ runASTOp $ do
+                    GraphBuilder.buildNode u1
+            withResult res $ \(node) -> do
+                node ^. Node.expression `shouldBe` "[\8226]"
+                node ^. Node.code `shouldBe` "[number3]"
+        it "replaces element in a list" $ \env -> do
+            u1 <- mkUUID
+            u2 <- mkUUID
+            u3 <- mkUUID
+            res <- evalEmp env $ do
+                Graph.addNode top u2 "2" def
+                Graph.addNode top u3 "3" def
+                Graph.addNode top u1 "[    number1   ,     number2   ]" def
+                Graph.connect top (outPortRef u3 []) (InPortRef' $ inPortRef u1 [Port.Arg 0])
+                Graph.connect top (outPortRef u2 []) (InPortRef' $ inPortRef u1 [Port.Arg 0])
+                Graph.withGraph top $ runASTOp $ do
+                    GraphBuilder.buildNode u1
+            withResult res $ \node -> do
+                node ^. Node.expression `shouldBe` "[\8226, \8226]"
+                node ^. Node.code `shouldBe` "[    number1   ,     number2   ]"
+        it "replaces newly added element in a list" $ \env -> do
+            u1 <- mkUUID
+            u2 <- mkUUID
+            u3 <- mkUUID
+            u4 <- mkUUID
+            res <- evalEmp env $ do
+                Graph.addNode top u2 "2" def
+                Graph.addNode top u3 "3" def
+                Graph.addNode top u4 "4" def
+                Graph.addNode top u1 "[    number1   ,     number2   ]" def
+                Graph.connect top (outPortRef u2 []) (InPortRef' $ inPortRef u1 [Port.Arg 2])
+                Graph.connect top (outPortRef u4 []) (InPortRef' $ inPortRef u1 [Port.Arg 2])
+                Graph.withGraph top $ runASTOp $ do
+                    GraphBuilder.buildNode u1
+            withResult res $ \node -> do
+                node ^. Node.expression `shouldBe` "[\8226, \8226, \8226]"
+                node ^. Node.code `shouldBe` "[    number1   ,     number2, number3   ]"
+        it "disconnects the only list element" $ \env -> do
+            u1 <- mkUUID
+            u2 <- mkUUID
+            res <- evalEmp env $ do
+                Graph.addNode top u1 "2" def
+                Graph.addNode top u2 "[number1]" def
+                Graph.disconnect top (inPortRef u2 [Port.Arg 0])
+                Graph.withGraph top $ runASTOp $ do
+                    GraphBuilder.buildNode u2
+            withResult res $ \node -> do
+                node ^. Node.expression `shouldBe` "[]"
+                node ^. Node.code `shouldBe` "[]"
+        it "disconnects the first list element" $ \env -> do
+            u1 <- mkUUID
+            u2 <- mkUUID
+            u3 <- mkUUID
+            res <- evalEmp env $ do
+                Graph.addNode top u1 "2" def
+                Graph.addNode top u2 "3" def
+                Graph.addNode top u3 "[ number1,  number2   ]" def
+                Graph.disconnect top (inPortRef u3 [Port.Arg 0])
+                Graph.withGraph top $ runASTOp $ do
+                    GraphBuilder.buildNode u3
+            withResult res $ \node -> do
+                node ^. Node.expression `shouldBe` "[\8226]"
+                node ^. Node.code `shouldBe` "[ number2   ]"
+        it "disconnects the last list element" $ \env -> do
+            u1 <- mkUUID
+            u2 <- mkUUID
+            u3 <- mkUUID
+            res <- evalEmp env $ do
+                Graph.addNode top u1 "2" def
+                Graph.addNode top u2 "3" def
+                Graph.addNode top u3 "[   number1  ,  number2  ]" def
+                Graph.disconnect top (inPortRef u3 [Port.Arg 1])
+                Graph.withGraph top $ runASTOp $ do
+                    GraphBuilder.buildNode u3
+            withResult res $ \node -> do
+                node ^. Node.expression `shouldBe` "[\8226]"
+                node ^. Node.code `shouldBe` "[   number1  ]"
+        it "disconnects all list element" $ \env -> do
+            u1 <- mkUUID
+            u2 <- mkUUID
+            u3 <- mkUUID
+            res <- evalEmp env $ do
+                Graph.addNode top u1 "2" def
+                Graph.addNode top u2 "3" def
+                Graph.addNode top u3 "[   number1  ,  number2  ]" def
+                Graph.disconnect top (inPortRef u3 [Port.Arg 0])
+                Graph.disconnect top (inPortRef u3 [Port.Arg 0])
+                Graph.withGraph top $ runASTOp $ do
+                    GraphBuilder.buildNode u3
+            withResult res $ \node -> do
+                node ^. Node.expression `shouldBe` "[]"
+                node ^. Node.code `shouldBe` "[]"
+        it "disconnects middle list element" $ \env -> do
+            u1 <- mkUUID
+            u2 <- mkUUID
+            u3 <- mkUUID
+            u4 <- mkUUID
+            res <- evalEmp env $ do
+                Graph.addNode top u1 "2" def
+                Graph.addNode top u2 "3" def
+                Graph.addNode top u3 "4" def
+                Graph.addNode top u4 "[   number1  ,  number2  ,     number3]" def
+                Graph.disconnect top (inPortRef u4 [Port.Arg 1])
+                Graph.withGraph top $ runASTOp $ do
+                    GraphBuilder.buildNode u4
+            withResult res $ \node -> do
+                node ^. Node.expression `shouldBe` "[\8226, \8226]"
+                node ^. Node.code `shouldBe` "[   number1  ,  number3]"
+        it "disconnects middle list elements" $ \env -> do
+            u1 <- mkUUID
+            u2 <- mkUUID
+            u3 <- mkUUID
+            u4 <- mkUUID
+            u5 <- mkUUID
+            res <- evalEmp env $ do
+                Graph.addNode top u1 "2" def
+                Graph.addNode top u2 "3" def
+                Graph.addNode top u3 "4" def
+                Graph.addNode top u4 "4" def
+                Graph.addNode top u5 "[   number1 ,    number2  ,number3    ,    number4    ]" def
+                Graph.disconnect top (inPortRef u5 [Port.Arg 2])
+                Graph.disconnect top (inPortRef u5 [Port.Arg 1])
+                Graph.disconnect top (inPortRef u5 [Port.Arg 0])
+                Graph.withGraph top $ runASTOp $ do
+                    GraphBuilder.buildNode u5
+            withResult res $ \node -> do
+                node ^. Node.expression `shouldBe` "[\8226]"
+                node ^. Node.code `shouldBe` "[   number4    ]"
+        it "disconnects two list elements from the end" $ \env -> do
+            u1 <- mkUUID
+            u2 <- mkUUID
+            u3 <- mkUUID
+            u4 <- mkUUID
+            res <- evalEmp env $ do
+                Graph.addNode top u1 "2" def
+                Graph.addNode top u2 "3" def
+                Graph.addNode top u3 "4" def
+                Graph.addNode top u4 "[   number1  ,  number2  ,     number3]" def
+                Graph.disconnect top (inPortRef u4 [Port.Arg 2])
+                Graph.disconnect top (inPortRef u4 [Port.Arg 1])
+                Graph.withGraph top $ runASTOp $ do
+                    GraphBuilder.buildNode u4
+            withResult res $ \node -> do
+                node ^. Node.expression `shouldBe` "[\8226]"
+                node ^. Node.code `shouldBe` "[   number1]"
+        it "disallows connecting past last + 1 list element" $ \env -> do
+            u1 <- mkUUID
+            u2 <- mkUUID
+            u3 <- mkUUID
+            let res = evalEmp env $ do
+                    Graph.addNode top u1 "[]" def
+                    Graph.addNode top u2 "2" def
+                    Graph.connect top (outPortRef u2 []) (InPortRef' $ inPortRef u1 [Port.Arg 1])
+            let parserException :: Selector AST.ConnectionException
+                parserException = const True
+            res `shouldThrow` parserException
+        it "disallows connecting negative list element" $ \env -> do
+            u1 <- mkUUID
+            u2 <- mkUUID
+            u3 <- mkUUID
+            let res = evalEmp env $ do
+                    Graph.addNode top u1 "[]" def
+                    Graph.addNode top u2 "2" def
+                    Graph.connect top (outPortRef u2 []) (InPortRef' $ inPortRef u1 [Port.Arg (-1)])
+            let parserException :: Selector AST.ConnectionException
+                parserException = const True
+            res `shouldThrow` parserException
         it "cleans after removing `foo = a: a` with `4` inside connected to output" $ \env -> do
             u1 <- mkUUID
             u2 <- mkUUID
@@ -458,11 +727,12 @@ spec = around withChannels $ parallel $ do
                 node ^. Node.nodeId     `shouldBe` u1
                 node ^. Node.canEnter   `shouldBe` True
                 nodes `shouldSatisfy` ((== 1) . length)
-        it "does not allow to change expression to assignment" $ \env -> do
+        xit "does not allow to change expression to assignment" $ \env -> do
             u1 <- mkUUID
             let res = evalEmp env $ do
                     Graph.addNode top u1 "1" def
                     Graph.setNodeExpression top u1 "foo = a: a"
+                    Graph.withGraph top $ runASTOp $ GraphBuilder.buildNode u1
             let parserException :: Selector Parser.SomeParserException
                 parserException = const True
             res `shouldThrow` parserException

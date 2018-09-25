@@ -10,6 +10,7 @@ import           Data.Maybe                      (catMaybes, maybeToList)
 import qualified Data.Mutable.Class              as Mutable
 import           Data.Text                       (Text)
 import qualified Data.Text                       as Text
+import qualified Data.Text.IO                    as Text
 import           Data.Text.Span                  (SpacedSpan (..), leftSpacedSpan)
 import qualified Data.Vector.Storable.Foreign    as Vector
 import           Empire.ASTOp                    (ClassOp, GraphOp, match, runASTOp)
@@ -46,9 +47,9 @@ import qualified LunaStudio.Data.PortRef         as PortRef
 import           LunaStudio.Data.PortRef         (InPortRef (..), OutPortRef (..), srcNodeId, srcNodeLoc)
 import           LunaStudio.Data.Position        (Position)
 import           LunaStudio.Data.TypeRep         (TypeRep (TCons, TStar))
-import           Luna.Syntax.Text.Parser.Data.CodeSpan (CodeSpan)
-import qualified Luna.Syntax.Text.Parser.Data.CodeSpan as CodeSpan
-import qualified Luna.Syntax.Text.Parser.Data.Name.Special as Parser (uminus)
+import           Luna.Syntax.Text.Parser.Ast.CodeSpan (CodeSpan)
+import qualified Luna.Syntax.Text.Parser.Ast.CodeSpan as CodeSpan
+import qualified Luna.Syntax.Text.Parser.Lexer.Names   as Parser (uminus)
 -- import qualified OCI.IR.Combinators              as IR
 import           Prelude (read)
 
@@ -99,18 +100,26 @@ buildClassGraph = do
 buildClassNode :: NodeId -> String -> ClassOp API.ExpressionNode
 buildClassNode uuid name = do
     f    <- ASTRead.getFunByNodeId uuid
-    meta <- fromMaybe def <$> AST.readMeta f
     codeStart <- Code.functionBlockStartRef f
+    (nameOff, nameLen) <- ASTRead.cutThroughDocAndMarked f >>= \a -> matchExpr a $ \case
+        ASGFunction n _ _ -> do
+            LeftSpacedSpan (SpacedSpan off nlen) <- Code.getOffset =<< source n
+            LeftSpacedSpan (SpacedSpan _ len)
+                <- view CodeSpan.realSpan <$> (getLayer @CodeSpan =<< source n)
+            return (off + nlen, off + fromIntegral len)
+        a -> error (show a <> name)
+    meta <- fromMaybe def <$> AST.readMeta f
     LeftSpacedSpan (SpacedSpan _ len)
         <- view CodeSpan.realSpan <$> getLayer @CodeSpan f
     fileCode <- use Graph.code
+    let name = Text.take (fromIntegral nameLen) $ Text.drop (fromIntegral nameOff) fileCode
     let code = Code.removeMarkers $ Text.take (fromIntegral len)
             $ Text.drop (fromIntegral codeStart) fileCode
     pure $ API.ExpressionNode
             uuid
             ""
             True
-            (Just $ convert name)
+            (Just name)
             code
             (LabeledTree def (Port [] "base" TStar NotConnected))
             (LabeledTree (OutPorts []) (Port [] "base" TStar NotConnected))
@@ -396,12 +405,44 @@ mergePortInfo []             (t : ts) = (t, NotConnected) : mergePortInfo [] ts
 mergePortInfo (Nothing : as) (t : ts) = (t, NotConnected) : mergePortInfo as ts
 mergePortInfo (Just a  : as) ts       = a : mergePortInfo as ts
 
+extractListPorts :: NodeRef -> GraphOp [(TypeRep, PortState)]
+extractListPorts n = match n $ \case
+    App f a -> do
+        rest <- extractListPorts =<< source f
+        let addPort edge = do
+                argTp <- source edge >>= getLayer @TypeLayer >>= source
+                t     <- Print.getTypeRep argTp
+                ps    <- getPortState =<< source edge
+                return $ (t,ps) : rest
+        source a >>= flip match (\case
+            Var _      -> addPort a
+            IRNumber{} -> addPort a
+            IRString{} -> addPort a
+            _ -> do
+                foo <- extractListPorts =<< source a
+                return $ foo <> rest)
+    Lam i o -> do
+        foo <- extractListPorts =<< source i
+        bar <- extractListPorts =<< source o
+        return $ foo <> bar
+    ResolvedCons "Std.Base" "List" "Prepend" args -> do
+        args' <- ptrListToList args
+        as <- mapM (source >=> extractListPorts) args'
+        return $ concat as
+    _ -> do
+        return []
+
 extractPortInfo :: NodeRef -> GraphOp [(TypeRep, PortState)]
 extractPortInfo n = do
-    applied  <- reverse <$> extractAppliedPorts False False [] n
     tp       <- getLayer @TypeLayer n >>= source
-    fromType <- extractArgTypes tp
-    pure $ mergePortInfo applied fromType
+    match tp $ \case
+        ResolvedCons "Std.Base" "List" "List" args -> do
+            a <- extractListPorts n
+            return a
+        _ -> do
+            applied  <- reverse <$> extractAppliedPorts False False [] n
+            fromType <- extractArgTypes tp
+            pure $ mergePortInfo applied fromType
 
 isNegativeLiteral :: NodeRef -> GraphOp Bool
 isNegativeLiteral ref = match ref $ \case
@@ -420,7 +461,10 @@ isNegativeLiteral ref = match ref $ \case
 buildArgPorts :: InPortId -> NodeRef -> GraphOp [InPort]
 buildArgPorts currentPort ref = do
     typed <- extractPortInfo ref
-    names <- getPortsNames ref
+    tp    <- getLayer @TypeLayer ref >>= source
+    names <- match tp $ \case
+        ResolvedCons "Std.Base" "List" "List" _ -> return []
+        _                                       -> getPortsNames ref
     let portsTypes = fmap fst typed
             <> List.replicate (length names - length typed) TStar
         psCons = zipWith3 Port

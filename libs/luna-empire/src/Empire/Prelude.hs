@@ -46,6 +46,7 @@ module Empire.Prelude (
   pattern MarkedExprMap,
   pattern Metadata,
   pattern Missing,
+  pattern ResolvedCons,
   pattern RightSection,
   pattern Seq,
   pattern Tuple,
@@ -89,7 +90,6 @@ import OCI.IR.Term.Class (Term, Terms)
 import Foreign.Info.ByteSize (ByteSize)
 import Foreign.Memory.Pool (MemPool)
 import qualified Luna.IR.Term.Core as Ast
-import qualified Data.Set.Mutable.Class     as MutableSet
 import qualified Luna.IR.Term.Literal as Ast
 import qualified Luna.IR.Term.Ast.Class as Ast
 import Data.Graph.Data.Component.Class (Component)
@@ -195,6 +195,7 @@ pattern Acc n e <- IR.UniTermAcc (Ast.Acc n e)
 pattern Documented doc e <- IR.UniTermDocumented (Ast.Documented doc e)
 pattern IRString s <- IR.UniTermRawString (Ast.RawString s)
 pattern IRNumber a b c <- IR.UniTermNumber (Ast.Number a b c)
+pattern ResolvedCons a b c d <- IR.UniTermResolvedCons (Ast.ResolvedCons a b c d)
 pattern ClsASG a b c d e <- IR.UniTermRecord (Ast.Record a b c d e)
 pattern Metadata a <- IR.UniTermMetadata (Ast.Metadata a)
 pattern ImportHub a <- IR.UniTermImportHub (Ast.ImportHub a)
