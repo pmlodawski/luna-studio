@@ -155,14 +155,11 @@ catchAllExceptions act = try act
 withDefaultResult' :: (GraphLocation -> Empire Graph) -> GraphLocation
     -> Empire a -> Empire Diff
 withDefaultResult' getFinalGraph location action = do
-    let addImports imps g = g & GraphAPI.imports .~ imps
-    oldImports <- Graph.getAvailableImports location
-    oldGraph   <- (_Left %~ Graph.prepareGraphError) <$> catchAllExceptions
-        (addImports oldImports <$> Graph.getGraphNoTC location)
+    oldGraph <- (_Left %~ Graph.prepareGraphError)
+        <$> catchAllExceptions (Graph.getGraphNoTC location)
     void action
-    newImports <- Graph.getAvailableImports location
-    newGraph   <- (_Left %~ Graph.prepareGraphError) <$> catchAllExceptions
-        (addImports newImports <$> getFinalGraph location)
+    newGraph <- (_Left %~ Graph.prepareGraphError)
+        <$> catchAllExceptions (getFinalGraph location)
     pure $ diff oldGraph newGraph
 
 withDefaultResult :: GraphLocation -> Empire a -> Empire Diff

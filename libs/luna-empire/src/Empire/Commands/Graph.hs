@@ -882,16 +882,16 @@ getBuffer :: FilePath -> Empire Text
 getBuffer file = getCode (GraphLocation file (Breadcrumb []))
 
 getGraphCondTC :: Bool -> GraphLocation -> Empire APIGraph.Graph
-getGraphCondTC tc loc = (if tc then withTC' loc True else withGraph' loc) (runASTOp $ do
-    exc <- use Graph.parseError
-    case exc of
-        Just e  -> throwM e
-        Nothing -> GraphBuilder.buildGraph)
-    (runASTOp $ do
-        exc <- use Graph.clsParseError
-        case exc of
-            Just e  -> throwM e
-            Nothing -> GraphBuilder.buildClassGraph)
+getGraphCondTC tc loc = withImports getFullGraph where
+    getFullGraph = (if tc then withTC' loc True else withGraph' loc)
+        (runASTOp buildGraph)
+        (runASTOp buildClassGraph)
+    unlessError action = maybe action throwM
+    buildGraph = unlessError GraphBuilder.buildGraph =<< use Graph.parseError
+    buildClassGraph = unlessError GraphBuilder.buildClassGraph 
+        =<< use Graph.clsParseError
+    withImports graphGetter = getAvailableImports loc >>= \imports ->
+        (& APIGraph.imports .~ imports) <$> graphGetter
 
 getGraph :: GraphLocation -> Empire APIGraph.Graph
 getGraph = getGraphCondTC True

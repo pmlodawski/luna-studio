@@ -235,7 +235,6 @@ handleGetProgram = modifyGraph defInverse action replyResult where
             makeError e = pure $ (location', GUIState
                 (Breadcrumb [])
                 mempty
-                mempty
                 def
                 mempty
                 mempty
@@ -262,7 +261,6 @@ handleGetProgram = modifyGraph defInverse action replyResult where
                         mayModuleSettings
             graph            <- Graph.getGraph location
             crumb            <- Graph.decodeLocation location
-            availableImports <- Graph.getAvailableImports location
             code             <- Code <$> Graph.getCode location
             let mayVisPath    = ((</> "visualizers") . Path.toFilePath)
                     <$> mayPackageRoot
@@ -286,7 +284,6 @@ handleGetProgram = modifyGraph defInverse action replyResult where
                         in (visMap, cam)
             pure $ (location, GUIState
                 crumb
-                availableImports
                 typeRepToVisMap
                 camera
                 mayVisPath
@@ -586,13 +583,10 @@ handleSubstitute :: Request Substitute.Request -> StateT Env BusT ()
 handleSubstitute = modifyGraph defInverse action replyResult where
     action req@(Substitute.Request location diffs) = do
         let file = location ^. GraphLocation.filePath
-        prevImports <- Graph.getAvailableImports location
-        graphDiff   <- withDefaultResult location
+        graphDiff <- withDefaultResult location
             $ Graph.substituteCodeFromPoints file diffs
-        newImports  <- Graph.getAvailableImports location
-        let impDiff = diff prevImports newImports
         Graph.typecheckWithRecompute location
-        pure $ impDiff <> graphDiff
+        pure graphDiff
 
 
 handleGetBuffer :: Request GetBuffer.Request -> StateT Env BusT ()

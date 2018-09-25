@@ -919,7 +919,7 @@ spec = around withChannels $ parallel $ do
                         4
                     |]
             in specifyCodeChange initialCode initialCode $ \loc -> do
-                imports <- Graph.getAvailableImports $ loc
+                imports <- Graph.getAvailableImports loc
                 liftIO $ imports `shouldBe` fromList ["Std.Base", "Std.Geo", "Native"]
         it "shows implicit imports as always imported" $
             let initialCode = [r|
