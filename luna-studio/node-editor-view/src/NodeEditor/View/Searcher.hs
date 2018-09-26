@@ -64,7 +64,7 @@ instance Convertible Match EntryView where
         {- name       -} (m ^. Match.name . to convert)
         {- doc        -} (m ^. Match.doc . to convert)
         {- className  -} (m ^. Match.className . to convert)
-        {- highlights -} (m ^. Match.match . to convert)
+        {- highlights -} (m ^. Match.charsMatch . to convert)
 
 sliceEntries :: Searcher -> [EntryView]
 sliceEntries s = slice es
