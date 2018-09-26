@@ -346,23 +346,22 @@ extractAppArgNames :: NodeRef -> Maybe TCFunResolver -> GraphOp [Maybe String]
 extractAppArgNames node funResolve = go [] node
     where
         go :: [Maybe String] -> NodeRef -> GraphOp [Maybe String]
-        go vars node = do
-            match node $ \case
-                ResolvedDef mod n -> do
-                    let fun = case funResolve of
-                            Just f -> f mod n
-                            _      -> Nothing
-                    case fun of
-                        Just f -> extractArgNames (generalize f) funResolve
-                        _      -> pure []
-                App f a -> do
-                    varName <- safeGetVarName =<< source a
-                    go (varName : vars) =<< source f
-                Lam{}   -> extractArgNames node funResolve
-                Cons{}  -> pure vars
-                Var{}   -> pure vars
-                Acc{}   -> pure vars
-                _       -> pure []
+        go vars node = match node $ \case
+            ResolvedDef mod n -> do
+                let fun = case funResolve of
+                        Just f -> f mod n
+                        _      -> Nothing
+                case fun of
+                    Just f -> extractArgNames (generalize f) funResolve
+                    _      -> pure []
+            App f a -> do
+                varName <- safeGetVarName =<< source a
+                go (varName : vars) =<< source f
+            Lam{}   -> extractArgNames node funResolve
+            Cons{}  -> pure vars
+            Var{}   -> pure vars
+            Acc{}   -> pure vars
+            _       -> pure []
 
 insideThisNode :: NodeRef -> GraphOp Bool
 insideThisNode node = (== node) <$> ASTRead.getCurrentASTTarget
