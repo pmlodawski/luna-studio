@@ -10,11 +10,11 @@ searcherId :: JSString
 searcherId = Mount.prefix "focus-searcher"
 
 selection :: MonadIO m => m (Int, Int)
-selection = liftIO $ (,) <$> selectionStart searcherId <*> selectionEnd searcherId
+selection = pure (0, 0) -- liftIO $ (,) <$> selectionStart searcherId <*> selectionEnd searcherId
 
 foreign import javascript safe "document.getElementById($1).selectionStart" selectionStart :: JSString -> IO Int
 foreign import javascript safe "document.getElementById($1).selectionEnd"   selectionEnd   :: JSString -> IO Int
 foreign import javascript safe "document.getElementById($1).setSelectionRange($2, $3)" setSelection' :: JSString -> Int -> Int -> IO ()
 
 setSelection :: MonadIO m => Int -> Int -> m ()
-setSelection = liftIO .: setSelection' searcherId
+setSelection _ _ = pure () -- liftIO .: setSelection' searcherId
