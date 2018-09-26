@@ -348,9 +348,7 @@ extractAppArgNames node funResolve = go [] node
         go :: [Maybe String] -> NodeRef -> GraphOp [Maybe String]
         go vars node = match node $ \case
             ResolvedDef mod n -> do
-                let fun = case funResolve of
-                        Just f -> f mod n
-                        _      -> Nothing
+                let fun = (\f -> f mod n) =<< funResolve
                 case fun of
                     Just f -> extractArgNames (generalize f) funResolve
                     _      -> pure []

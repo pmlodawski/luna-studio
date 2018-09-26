@@ -155,7 +155,7 @@ updateNodes loc@(GraphLocation _ br) = case br of
                 sidebarUpdates <- (\x y -> [x, y]) <$> GraphBuilder.buildInputSidebarTypecheckUpdate  inEdge
                                                    <*> GraphBuilder.buildOutputSidebarTypecheckUpdate outEdge
                 allNodeIds  <- uses Graph.breadcrumbHierarchy topLevelIDs
-                nodeUpdates <- mapM (GraphBuilder.buildNodeTypecheckUpdate resolveFun) allNodeIds
+                nodeUpdates <- forM allNodeIds $ GraphBuilder.buildNodeTypecheckUpdate resolveFun
                 errors      <- forM allNodeIds $ \nid -> do
                     err <- Error.getError =<< ASTRead.getASTRef nid
                     case err of
