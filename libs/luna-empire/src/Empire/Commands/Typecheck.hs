@@ -148,7 +148,12 @@ updateNodes :: GraphLocation -> Command InterpreterEnv ()
 updateNodes loc@(GraphLocation _ br) = case br of
     Breadcrumb (Definition uuid:rest) -> do
         units <- use $ Graph.userState . mappedUnits
-        let resolveFun mod n = units ^? ix mod . to Unit._definitions . wrapped . ix n . Def.documented . Def._Body
+        let resolveFun mod n =
+                let moduleDefs = units ^? ix mod . to Unit._definitions
+                    defRef     = moduleDefs >>= \a -> a ^? wrapped . ix n
+                    docTerm    = view Def.documented <$> defRef
+                    defBody    = docTerm >>= \a -> a ^? Def._Body
+                in defBody
         zoomCommand clsGraph $ withRootedFunction uuid $ runInternalBreadcrumb (Breadcrumb rest) $ do
             (inEdge, outEdge) <- use $ Graph.userState . Graph.breadcrumbHierarchy . BH.portMapping
             (updates, errors) <- runASTOp $ do
