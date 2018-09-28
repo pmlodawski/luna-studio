@@ -18,7 +18,7 @@ import           LunaStudio.Data.PortRef         (AnyPortRef (InPortRef', OutPor
 import qualified LunaStudio.Data.PortRef         as PortRef
 import           LunaStudio.Data.TypeRep         (TypeRep (TStar))
 import           SpecUtils                       ((|>), addNode, connectToInput, emptyCodeTemplate, findNodeByName, findNodeIdByName
-                                                 , inPortRef, mkAliasPort, mkAllPort, mkSelfPort, noCheck, outPortRef
+                                                 , inPortRef, mkAliasPort, mkAllPort, mkSelfPort, outPortRef
                                                  , runTests, testCase, testCaseWithMarkers, xitWithReason)
 import           Test.Hspec                      (describe, it, shouldBe, Spec, shouldMatchList)
 import           Text.RawString.QQ               (r)
@@ -35,7 +35,7 @@ spec = runTests "pattern match tests" $ do
                     Just a = Just 1
                     None
                 |]
-            in testCase emptyCodeTemplate expectedCode noCheck $ \gl ->
+            in testCase emptyCodeTemplate expectedCode $ \gl ->
                 addNode gl "Just a = Just 1"
                 
         it "adds a node pattern-matching on nested value" $ let
@@ -46,7 +46,7 @@ spec = runTests "pattern match tests" $ do
                     (Just (Just (Foo a b c)), Nothing, (Bar x y)) = foo
                     None
                 |]
-            in testCase emptyCodeTemplate expectedCode noCheck $ \gl ->
+            in testCase emptyCodeTemplate expectedCode $ \gl ->
                 addNode gl "(Just (Just (Foo a b c)), Nothing, (Bar x y)) = foo"
 
         it "renames a node to pattern-matching on simple value" $ let
@@ -64,7 +64,7 @@ spec = runTests "pattern match tests" $ do
                     Just a = Just 1
                     None
                 |]
-            in testCase initialCode expectedCode noCheck $ \gl -> do
+            in testCase initialCode expectedCode $ \gl -> do
                 Just nid <- findNodeIdByName gl $ Just "a"
                 Graph.renameNode gl nid "Just a"
 
@@ -76,7 +76,7 @@ spec = runTests "pattern match tests" $ do
                     «1»foo = (Just x): y: z: «2»x + y
                     None
                 |]
-            in testCaseWithMarkers emptyCodeTemplate expectedCode noCheck $ \gl ->
+            in testCaseWithMarkers emptyCodeTemplate expectedCode $ \gl ->
                 addNode gl "foo = (Just x): y: z: x + y"
 
         it "adds a marker in proper place in lambda pattern-matching on an argument with nested value" $ let
@@ -87,7 +87,7 @@ spec = runTests "pattern match tests" $ do
                     «1»foo = (Just (Just (Foo x b c))): y: z: «2»x + y
                     None
                 |]
-            in testCaseWithMarkers emptyCodeTemplate expectedCode noCheck $ \gl ->
+            in testCaseWithMarkers emptyCodeTemplate expectedCode $ \gl ->
                 addNode gl "foo = (Just (Just (Foo x b c))): y: z: x + y"
 
     describe "connections tests" $ do
@@ -109,19 +109,21 @@ spec = runTests "pattern match tests" $ do
             expectedConnections fooId barId patternMatchId =
                     [ (outPortRef fooId mempty, inPortRef patternMatchId mempty)
                     , (outPortRef patternMatchId [Projection 0], inPortRef barId [Arg 0]) ]
-            check (fooId, barId, patternMatch, connections) = do
-                let patternMatchId       = patternMatch ^. Node.nodeId
-                    patternMatchOutPorts = patternMatch ^. Node.outPorts
-                patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
-                connections          `shouldMatchList` expectedConnections fooId barId patternMatchId
-            in testCase code code check $ \gl -> do
+            prepare gl = do
                 Just fooId          <- findNodeIdByName gl $ Just "foo"
                 Just barId          <- findNodeIdByName gl $ Just "bar"
                 Just patternMatchId <- findNodeIdByName gl $ Just "Tuple2 x y"
                 Graph.withGraph gl . runASTOp $ (fooId, barId, , ) 
                     <$> GraphBuilder.buildNode patternMatchId
                     <*> GraphBuilder.buildConnections
-
+            in testCase code code $ \gl -> do
+                (fooId, barId, patternMatch, connections) <- prepare gl
+                let patternMatchId       = patternMatch ^. Node.nodeId
+                    patternMatchOutPorts = patternMatch ^. Node.outPorts
+                liftIO $ do
+                    patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
+                    connections          `shouldMatchList` expectedConnections fooId barId patternMatchId
+                
         it "contains proper connections and ports on a pattern matching node with tuple pattern" $ let
             code = [r|
                 import Std.Base
@@ -140,18 +142,20 @@ spec = runTests "pattern match tests" $ do
             expectedConnections fooId barId patternMatchId = 
                 [ (outPortRef fooId mempty, inPortRef patternMatchId mempty)
                 , (outPortRef patternMatchId [Projection 0], inPortRef barId [Arg 0]) ]
-            check (fooId, barId, patternMatch, connections) = do
-                let patternMatchId       = patternMatch ^. Node.nodeId
-                    patternMatchOutPorts = patternMatch ^. Node.outPorts
-                patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
-                connections          `shouldMatchList` expectedConnections fooId barId patternMatchId
-            in testCase code code check $ \gl -> do
+            prepare gl = do
                 Just fooId          <- findNodeIdByName gl $ Just "foo"
                 Just patternMatchId <- findNodeIdByName gl $ Just "(x, y)"
                 Just barId          <- findNodeIdByName gl $ Just "bar"
                 Graph.withGraph gl . runASTOp $ (fooId,barId, , ) 
                     <$> GraphBuilder.buildNode patternMatchId
-                    <*> GraphBuilder.buildConnections
+                    <*> GraphBuilder.buildConnections              
+            in testCase code code $ \gl -> do
+                (fooId, barId, patternMatch, connections) <- prepare gl
+                let patternMatchId       = patternMatch ^. Node.nodeId
+                    patternMatchOutPorts = patternMatch ^. Node.outPorts
+                liftIO $ do
+                    patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
+                    connections          `shouldMatchList` expectedConnections fooId barId patternMatchId
 
         it "contains proper connections for nested pattern use" $ let
             code = [r|
@@ -164,13 +168,16 @@ spec = runTests "pattern match tests" $ do
                 |]
             expectedConnections patternMatchId c1Id =
                 [ (outPortRef patternMatchId [Projection 2, Projection 0], inPortRef c1Id mempty) ]
-            check (patternMatchId, c1Id, connections) =
-                connections `shouldMatchList` expectedConnections patternMatchId c1Id
-            in testCase code code check $ \gl -> do
+            prepare gl = do
                 Just patternMatchId <- findNodeIdByName gl $ Just "(a, b, (c, d))"
                 Just c1Id           <- findNodeIdByName gl $ Just "c1"
                 Graph.withGraph gl . runASTOp $ (patternMatchId, c1Id, ) 
                     <$> GraphBuilder.buildConnections
+            in testCase code code $ \gl -> do
+                (patternMatchId, c1Id, connections) <- prepare gl
+                liftIO $
+                    connections `shouldMatchList` expectedConnections patternMatchId c1Id
+
                 
         it "connects two outputs when one of them is pattern match" $ let
             initialCode = [r|
@@ -203,26 +210,30 @@ spec = runTests "pattern match tests" $ do
                 (mkAllPort "Vector x y z" NotConnected)
             expectedConnections myVec1Id patternMatchId = [
                 ( outPortRef myVec1Id mempty, inPortRef patternMatchId mempty ) ]
-            check (myVec1Id, patternMatch, connections, isPatternMatch) = do
-                let patternMatchId       = patternMatch ^. Node.nodeId
-                    patternMatchInPorts  = patternMatch ^. Node.inPorts
-                    patternMatchOutPorts = patternMatch ^. Node.outPorts
-                patternMatchInPorts  `shouldBe`        expectedPatternMatchInPorts
-                patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
-                connections          `shouldMatchList` expectedConnections myVec1Id patternMatchId
-                isPatternMatch       `shouldBe`        True
-            in testCase initialCode expectedCode check $ \gl -> do
+            prepare gl = do
                 Just myVec1Id  <- findNodeIdByName gl $ Just "myVec1"
                 Just vector1Id <- findNodeIdByName gl $ Just "vector1"
+                pure (myVec1Id, vector1Id)
+            getResult gl vector1Id = Graph.withGraph gl . runASTOp $ (,,) 
+                <$> GraphBuilder.buildNode vector1Id
+                <*> GraphBuilder.buildConnections
+                <*> (ASTRead.getASTPointer vector1Id >>= ASTRead.varIsPatternMatch)
+            in testCase initialCode expectedCode $ \gl -> do
+                (myVec1Id, vector1Id) <- prepare gl
                 Graph.connect
                     gl 
                     (outPortRef myVec1Id mempty) 
                     (OutPortRef' $ outPortRef vector1Id mempty)
-                Graph.withGraph gl . runASTOp $ (myVec1Id, , , ) 
-                    <$> GraphBuilder.buildNode vector1Id
-                    <*> GraphBuilder.buildConnections
-                    <*> (ASTRead.getASTPointer vector1Id >>= ASTRead.varIsPatternMatch)
-
+                (patternMatch, connections, isPatternMatch) <- getResult gl vector1Id
+                let patternMatchId       = vector1Id
+                    patternMatchInPorts  = patternMatch ^. Node.inPorts
+                    patternMatchOutPorts = patternMatch ^. Node.outPorts
+                liftIO $ do
+                    patternMatchInPorts  `shouldBe`        expectedPatternMatchInPorts
+                    patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
+                    connections          `shouldMatchList` expectedConnections myVec1Id patternMatchId
+                    isPatternMatch       `shouldBe`        True
+    
         it "disconnects pattern match" $ let
             initialCode = [r|
                 import Std.Base
@@ -249,21 +260,25 @@ spec = runTests "pattern match tests" $ do
                     , LabeledTree def $ Port [Projection 1] "y" TStar NotConnected
                     , LabeledTree def $ Port [Projection 2] "z" TStar NotConnected ])
                 (mkAllPort "Vector x y z" NotConnected)
-            check (patternMatch, connections, isPatternMatch) = do
+            prepare gl = do
+                Just patternMatchId <- findNodeIdByName gl $ Just "Vector x y z"
+                pure patternMatchId
+            getResult gl patternMatchId = Graph.withGraph gl . runASTOp $ (,,)
+                <$> GraphBuilder.buildNode patternMatchId
+                <*> GraphBuilder.buildConnections
+                <*> (ASTRead.getASTPointer patternMatchId >>= ASTRead.varIsPatternMatch)
+            in testCase initialCode expectedCode $ \gl -> do
+                patternMatchId <- prepare gl
+                Graph.disconnect gl $ inPortRef patternMatchId mempty
+                (patternMatch, connections, isPatternMatch) <- getResult gl patternMatchId
                 let patternMatchOutPorts = patternMatch ^. Node.outPorts
                     patternMatchInPorts  = patternMatch ^. Node.inPorts
-                patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
-                patternMatchInPorts  `shouldBe`        expectedPatternMatchInPorts
-                connections          `shouldMatchList` mempty
-                isPatternMatch       `shouldBe`        True
-            in testCase initialCode expectedCode check $ \gl -> do
-                Just patternMatchId <- findNodeIdByName gl $ Just "Vector x y z"
-                Graph.disconnect gl $ inPortRef patternMatchId mempty
-                Graph.withGraph gl . runASTOp $ (,,)
-                    <$> GraphBuilder.buildNode patternMatchId
-                    <*> GraphBuilder.buildConnections
-                    <*> (ASTRead.getASTPointer patternMatchId >>= ASTRead.varIsPatternMatch)
-
+                liftIO $ do
+                    patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
+                    patternMatchInPorts  `shouldBe`        expectedPatternMatchInPorts
+                    connections          `shouldMatchList` mempty
+                    isPatternMatch       `shouldBe`        True
+    
         it "connects to pattern match, disconnects and connects again" $ let
             initialCode = [r|
                 import Std.Base
@@ -295,17 +310,16 @@ spec = runTests "pattern match tests" $ do
                 (mkAllPort "Vector x y z" NotConnected)
             expectedConnections myVec1Id patternMatchId = 
                 [ (outPortRef myVec1Id mempty, inPortRef patternMatchId mempty) ]
-            check (myVec1Id, patternMatch, connections, isPatternMatch) = do
-                let patternMatchId       = patternMatch ^. Node.nodeId
-                    patternMatchInPorts  = patternMatch ^. Node.inPorts                    
-                    patternMatchOutPorts = patternMatch ^. Node.outPorts
-                patternMatchInPorts  `shouldBe`        expectedPatternMatchInPorts
-                patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
-                connections          `shouldMatchList` expectedConnections myVec1Id patternMatchId
-                isPatternMatch       `shouldBe`        True
-            in testCase initialCode expectedCode check $ \gl -> do
+            prepare gl = do
                 Just myVec1Id       <- findNodeIdByName gl $ Just "myVec1"
                 Just patternMatchId <- findNodeIdByName gl $ Just "vector1"
+                pure (myVec1Id, patternMatchId)
+            getResult gl patternMatchId = Graph.withGraph gl . runASTOp $ (,,) 
+                <$> GraphBuilder.buildNode patternMatchId
+                <*> GraphBuilder.buildConnections
+                <*> (ASTRead.getASTPointer patternMatchId >>= ASTRead.varIsPatternMatch)
+            in testCase initialCode expectedCode $ \gl -> do
+                (myVec1Id, patternMatchId) <- prepare gl
                 Graph.connect
                     gl 
                     (outPortRef myVec1Id mempty) 
@@ -314,11 +328,15 @@ spec = runTests "pattern match tests" $ do
                 Graph.connect gl
                     (outPortRef myVec1Id mempty)
                     (InPortRef' $ inPortRef patternMatchId mempty)
-                Graph.withGraph gl . runASTOp $ (myVec1Id, , , ) 
-                    <$> GraphBuilder.buildNode patternMatchId
-                    <*> GraphBuilder.buildConnections
-                    <*> (ASTRead.getASTPointer patternMatchId >>= ASTRead.varIsPatternMatch)
-
+                (patternMatch, connections, isPatternMatch) <- getResult gl patternMatchId
+                let patternMatchInPorts  = patternMatch ^. Node.inPorts                    
+                    patternMatchOutPorts = patternMatch ^. Node.outPorts
+                liftIO $ do
+                    patternMatchInPorts  `shouldBe`        expectedPatternMatchInPorts
+                    patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
+                    connections          `shouldMatchList` expectedConnections myVec1Id patternMatchId
+                    isPatternMatch       `shouldBe`        True
+                
         it "connects deconstructed value to other nodes" $ let
             initialCode = [r|
                 import Std.Base
@@ -356,25 +374,11 @@ spec = runTests "pattern match tests" $ do
             expectedConnections patternMatchId function1Id =
                 [ (outPortRef patternMatchId [Projection 0], inPortRef function1Id [Arg 0])
                 , (outPortRef patternMatchId [Projection 1], inPortRef function1Id [Arg 1]) ]
-            check (patternMatch, function1, connections) = do
-                let patternMatchId       = patternMatch ^. Node.nodeId
-                    function1Id          = function1    ^. Node.nodeId
-                    patternMatchOutPorts = patternMatch ^. Node.outPorts
-                    function1InPorts     = function1    ^. Node.inPorts
-                patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
-                function1InPorts     `shouldBe`        expectedFunction1InPorts
-                connections          `shouldMatchList` expectedConnections patternMatchId function1Id
-            in testCase initialCode expectedCode check $ \gl -> do
+            prepare gl = do
                 Just patternMatchId <- findNodeIdByName gl $ Just "Vector x y z"
                 Just function1Id    <- findNodeIdByName gl $ Just "function1"
-                connectToInput
-                    gl
-                    (outPortRef patternMatchId [Projection 0])
-                    (inPortRef function1Id [Arg 0])
-                connectToInput
-                    gl 
-                    (outPortRef patternMatchId [Projection 1]) 
-                    (inPortRef function1Id [Arg 1])
+                pure (patternMatchId, function1Id)
+            getResult gl patternMatchId function1Id = do
                 let isRelevantConnection (outRef, inRef)
                         = outRef ^. PortRef.srcNodeId == patternMatchId
                         && inRef ^. PortRef.dstNodeId == function1Id
@@ -383,7 +387,24 @@ spec = runTests "pattern match tests" $ do
                     <$> GraphBuilder.buildNode patternMatchId
                     <*> GraphBuilder.buildNode function1Id
                     <*> (filterConnections <$> GraphBuilder.buildConnections)
-                     
+            in testCase initialCode expectedCode $ \gl -> do
+                (patternMatchId, function1Id) <- prepare gl
+                connectToInput
+                    gl
+                    (outPortRef patternMatchId [Projection 0])
+                    (inPortRef function1Id [Arg 0])
+                connectToInput
+                    gl 
+                    (outPortRef patternMatchId [Projection 1]) 
+                    (inPortRef function1Id [Arg 1])
+                (patternMatch, function1, connections) <- getResult gl patternMatchId function1Id
+                let patternMatchOutPorts = patternMatch ^. Node.outPorts
+                    function1InPorts     = function1    ^. Node.inPorts
+                liftIO $ do
+                    patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
+                    function1InPorts     `shouldBe`        expectedFunction1InPorts
+                    connections          `shouldMatchList` expectedConnections patternMatchId function1Id
+                         
         it "connects two outputs when one of them is nested pattern match with literals" $ let
             initialCode = [r|
                 import Std.Base
@@ -420,25 +441,29 @@ spec = runTests "pattern match tests" $ do
                 (mkAllPort "SomeCons (Just a) 0 \"foo\" x" NotConnected)
             expectedConnections myVec1Id patternMatchId =
                 [ (outPortRef myVec1Id mempty, inPortRef patternMatchId mempty) ]
-            check (myVec1Id, patternMatch, connections, isPatternMatch) = do
-                let patternMatchId       = patternMatch ^. Node.nodeId
-                    patternMatchOutPorts = patternMatch ^. Node.outPorts
-                    patternMatchInPorts  = patternMatch ^. Node.inPorts
-                patternMatchInPorts  `shouldBe`        expectedPatternMatchInPorts
-                patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
-                connections          `shouldMatchList` expectedConnections myVec1Id patternMatchId
-                isPatternMatch       `shouldBe`        True
-            in testCase initialCode expectedCode check $ \gl -> do
+            prepare gl = do
                 Just myVec1Id    <- findNodeIdByName gl $ Just "myVec1"
                 Just someCons1Id <- findNodeIdByName gl $ Just "someCons1"
+                pure (myVec1Id, someCons1Id)
+            getResult gl patternMatchId = Graph.withGraph gl . runASTOp $ (,,)
+                <$> GraphBuilder.buildNode patternMatchId
+                <*> GraphBuilder.buildConnections
+                <*> (ASTRead.getASTPointer patternMatchId >>= ASTRead.varIsPatternMatch)
+            in testCase initialCode expectedCode $ \gl -> do
+                (myVec1Id, someCons1Id) <- prepare gl
                 Graph.connect
                     gl 
                     (outPortRef myVec1Id mempty) 
                     (OutPortRef' $ outPortRef someCons1Id mempty)
-                Graph.withGraph gl . runASTOp $ (myVec1Id, , , )
-                    <$> GraphBuilder.buildNode someCons1Id
-                    <*> GraphBuilder.buildConnections
-                    <*> (ASTRead.getASTPointer someCons1Id >>= ASTRead.varIsPatternMatch)
+                (patternMatch, connections, isPatternMatch) <- getResult gl someCons1Id
+                let patternMatchId       = someCons1Id
+                    patternMatchOutPorts = patternMatch ^. Node.outPorts
+                    patternMatchInPorts  = patternMatch ^. Node.inPorts
+                liftIO $ do
+                    patternMatchInPorts  `shouldBe`        expectedPatternMatchInPorts
+                    patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
+                    connections          `shouldMatchList` expectedConnections myVec1Id patternMatchId
+                    isPatternMatch       `shouldBe`        True
 
     describe "pattern matching on lambdas" $ do
         xitWithReason "supports lambdas pattern matching on their argument" "waiting for new printer" $ let
@@ -467,32 +492,33 @@ spec = runTests "pattern match tests" $ do
             expectedConnections inputId outputId = [ Connection
                 (outPortRef inputId  [Projection 0, Projection 1])
                 (inPortRef  outputId mempty) ]
-            check (patternMatch, nodes, connections, input, output) = do
+            prepare gl = do
+                Just lambda1 <- findNodeByName gl $ Just "lambda1"
+                let lambda1Gl = gl |> (lambda1 ^. Node.nodeId)
+                Graph.withGraph lambda1Gl . runASTOp $ do
+                    graph           <- GraphBuilder.buildGraph
+                    (input, output) <- GraphBuilder.buildEdgeNodes
+                    pure
+                        ( lambda1
+                        , graph ^. Graph.nodes
+                        , graph ^. Graph.connections
+                        , input
+                        , output)
+            in testCase code code $ \gl -> do
+                (patternMatch, nodes, connections, input, output) <- prepare gl
                 let inputId             = input        ^. Node.nodeId
                     outputId            = output       ^. Node.nodeId
                     patternMatchInPorts = patternMatch ^. Node.inPorts
                     inputOutPorts       = input        ^. Node.inputEdgePorts
                     outputInPorts       = output       ^. Node.outputEdgePorts
-                patternMatchInPorts `shouldBe`        expectedPatternMatchInPorts
-                inputOutPorts       `shouldBe`        expectedInputOutPorts
-                outputInPorts       `shouldBe`        expectedOutputInPorts
-                nodes               `shouldBe`        mempty
-                connections         `shouldMatchList` expectedConnections inputId outputId
-            in testCase code code check $ \gl -> do
-                Just lambda1 <- findNodeByName gl $ Just "lambda1"
-                let lambda1Gl = gl |> (lambda1 ^. Node.nodeId)
-                (nodes, connections, input, output) <- 
-                    Graph.withGraph lambda1Gl . runASTOp $ do
-                        graph           <- GraphBuilder.buildGraph
-                        (input, output) <- GraphBuilder.buildEdgeNodes
-                        pure
-                            ( graph ^. Graph.nodes
-                            , graph ^. Graph.connections
-                            , input
-                            , output)
-                pure (lambda1, nodes, connections, input, output)
+                liftIO $ do
+                    patternMatchInPorts `shouldBe`        expectedPatternMatchInPorts
+                    inputOutPorts       `shouldBe`        expectedInputOutPorts
+                    outputInPorts       `shouldBe`        expectedOutputInPorts
+                    nodes               `shouldBe`        mempty
+                    connections         `shouldMatchList` expectedConnections inputId outputId
         
-        xitWithReason "supports lambdas pattern matching on their arguments" "waiting for new printer" $ let
+        xitWithReason "supports multi-parameter lambdas pattern matching on their arguments" "waiting for new printer" $ let
             code = [r|
                 import Std.Base
 
@@ -530,28 +556,28 @@ spec = runTests "pattern match tests" $ do
             expectedConnections inputId outputId = [ Connection
                 (outPortRef inputId  [Projection 0, Projection 2, Projection 0])
                 (inPortRef  outputId mempty) ]
-            check (patternMatch, nodes, connections, input, output) = do
+            prepare gl = do
+                Just lambda1 <- findNodeByName gl $ Just "lambda1"
+                let lambda1Gl = gl |> (lambda1 ^. Node.nodeId)
+                Graph.withGraph lambda1Gl . runASTOp $ do
+                    graph           <- GraphBuilder.buildGraph
+                    (input, output) <- GraphBuilder.buildEdgeNodes
+                    pure
+                        ( lambda1
+                        , graph ^. Graph.nodes
+                        , graph ^. Graph.connections
+                        , input
+                        , output)
+            in testCase code code $ \gl -> do
+                (patternMatch, nodes, connections, input, output) <- prepare gl
                 let inputId             = input        ^. Node.nodeId
                     outputId            = output       ^. Node.nodeId
                     patternMatchInPorts = patternMatch ^. Node.inPorts
                     inputOutPorts       = input        ^. Node.inputEdgePorts
                     outputInPorts       = output       ^. Node.outputEdgePorts
-                patternMatchInPorts `shouldBe`        expectedPatternMatchInPorts
-                inputOutPorts       `shouldBe`        expectedInputOutPorts
-                outputInPorts       `shouldBe`        expectedOutputInPorts
-                nodes               `shouldBe`        mempty
-                connections         `shouldMatchList` expectedConnections inputId outputId
-            in testCase code code check $ \gl -> do
-                Just lambda1 <- findNodeByName gl $ Just "lambda1"
-                let lambda1Gl = gl |> (lambda1 ^. Node.nodeId)
-                (nodes, connections, input, output) <- 
-                    Graph.withGraph lambda1Gl . runASTOp $ do
-                        graph           <- GraphBuilder.buildGraph
-                        (input, output) <- GraphBuilder.buildEdgeNodes
-                        pure
-                            ( graph ^. Graph.nodes
-                            , graph ^. Graph.connections
-                            , input
-                            , output)
-                pure (lambda1, nodes, connections, input, output)
-                
+                liftIO $ do
+                    patternMatchInPorts `shouldBe`        expectedPatternMatchInPorts
+                    inputOutPorts       `shouldBe`        expectedInputOutPorts
+                    outputInPorts       `shouldBe`        expectedOutputInPorts
+                    nodes               `shouldBe`        mempty
+                    connections         `shouldMatchList` expectedConnections inputId outputId

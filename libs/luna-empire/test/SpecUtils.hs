@@ -1,7 +1,6 @@
 module SpecUtils
     ( emptyCodeTemplate
     , evalEmp
-    , noCheck
     , normalizeQQ
     , runEmp
     , runTests
@@ -85,17 +84,13 @@ codeCheck :: Text -> (Text -> Expectation)
 codeCheck expectedCode = \resultCode -> 
     Text.strip resultCode `shouldBe` normalizeQQ expectedCode
 
-noCheck :: a -> Expectation
-noCheck _ = pure ()
-
 testCase
     :: Text
     -> Text
-    -> (a -> Expectation)
     -> (GraphLocation -> Empire a)
     -> CommunicationEnv
     -> Expectation
-testCase initialCode expectedCode resultCheck action env = let
+testCase initialCode expectedCode action env = let
         filePath = "/TestPath"
         topGl    = GraphLocation filePath def
         isMain n = n ^. Node.name == Just "main"
@@ -109,20 +104,18 @@ testCase initialCode expectedCode resultCheck action env = let
                     let gl = topGl |>= main ^. Node.nodeId
                     mockNodesLayout gl
                     pure gl
-            (,) <$> action gl <*> Graph.getCode gl
-    in evalEmp env execute >>= \(result, resultCode) -> do
-        codeCheck expectedCode resultCode
-        resultCheck result
+            action gl
+            Graph.getCode gl
+    in evalEmp env execute >>= codeCheck expectedCode
         
 -- This function is copy paste of testCase and is meant to be removed soon, when markers are removed from Luna
 testCaseWithMarkers
     :: Text
     -> Text
-    -> (a -> Expectation)
     -> (GraphLocation -> Empire a)
     -> CommunicationEnv
     -> Expectation
-testCaseWithMarkers initialCode expectedCode resultCheck action env = let
+testCaseWithMarkers initialCode expectedCode action env = let
         filePath = "/TestPath"
         topGl    = GraphLocation filePath def
         isMain n = n ^. Node.name == Just "main"
@@ -136,7 +129,6 @@ testCaseWithMarkers initialCode expectedCode resultCheck action env = let
                     let gl = topGl |>= main ^. Node.nodeId
                     mockNodesLayout gl
                     pure gl
-            (,) <$> action gl <*> Graph.withGraph gl (use Graph.code)
-    in evalEmp env execute >>= \(result, resultCode) -> do
-        codeCheck expectedCode resultCode
-        resultCheck result
+            action gl
+            Graph.withGraph gl (use Graph.code)
+    in evalEmp env execute >>= codeCheck expectedCode

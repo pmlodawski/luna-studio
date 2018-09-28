@@ -18,7 +18,6 @@ module EmpireUtils
 import           Data.Reflection               (Given (..), give)
 import qualified Empire.Commands.Graph         as Graph (getNodes)
 import           Empire.Commands.Library       (listLibraries, withLibrary)
-import           Empire.Data.AST               ()
 import           Empire.Data.Graph             (CommandState(..), ClsGraph, userState)
 import qualified Empire.Data.Library           as Library (body, path)
 import           Empire.Empire                 (CommunicationEnv (..), Empire, Env, InterpreterEnv (..), runEmpire)
@@ -65,5 +64,5 @@ emptyGraphLocation = GraphLocation "" $ Breadcrumb []
 -- this function exists for backwards compatibility, meant to be removed soon
 specifyCodeChange :: Text -> Text -> (GraphLocation -> Empire a) -> CommunicationEnv -> Expectation
 specifyCodeChange initialCode expectedCode action env =
-    testCase initialCode expectedCode noCheck action env
+    testCase initialCode expectedCode action env
 
