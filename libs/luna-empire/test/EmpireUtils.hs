@@ -3,54 +3,80 @@
 {-# LANGUAGE RankNTypes        #-}
 {-# LANGUAGE TypeApplications  #-}
 
-module EmpireUtils (
-      runEmp
+module EmpireUtils
+    ( (|>-)
+    , (|>)
+    , (|>=)
+    , addNode
+    , connectToInput
+    , emptyCodeTemplate
+    , emptyGraphLocation
     , evalEmp
+    , extractGraph
+    , findNodeByName
+    , findNodeIdByName
+    , graphIDs
+    , inPortRef
+    , mkAliasPort
+    , mkAllPort
+    , mkSelfPort
+    , mkUUID
+    , noCheck
+    , normalizeQQ
+    , outPortRef
+    , runEmp
     , runEmp'
     , runEmpire
-    , graphIDs
-    , extractGraph
-    , withResult
+    , runTests
+    , specifyCodeChange
+    , testCase
+    , testCaseWithMarkers
     , top
-    , (|>)
-    , (|>-)
-    , (|>=)
-    , mkUUID
     , withChannels
-    , emptyGraphLocation
-    , connectToInput
-    , outPortRef
-    , inPortRef
+    , withResult
+    , xitWithReason
     ) where
 
-import           Control.Concurrent.MVar       (newEmptyMVar)
-import           Control.Concurrent.STM        (atomically)
-import           Control.Concurrent.STM.TChan  (newTChan)
-import           Control.Exception             (Exception, bracket)
-import           Data.Coerce                   (coerce)
-import qualified Data.Map                      as Map
-import           Data.Reflection               (Given (..), give)
-import           Data.UUID                     (UUID, nil)
-import           Data.UUID.V4                  (nextRandom)
-import qualified Empire.Commands.Graph         as Graph (addNode, connect, getNodes, loadCode)
-import           Empire.Commands.Library       (createLibrary, listLibraries, withLibrary)
-import           Empire.Data.AST               ()
-import           Empire.Data.Graph             (CommandState(..), ClsGraph, Graph, defaultPMState, userState)
-import qualified Empire.Data.Library           as Library (body, path)
-import           Empire.Empire                 (CommunicationEnv (..), Empire, Env, Error, InterpreterEnv (..), runEmpire)
-import           Empire.Prelude                hiding (mapping, toList, (|>))
-import           LunaStudio.Data.Breadcrumb    (Breadcrumb (..), BreadcrumbItem (Arg, Definition, Lambda))
-import           LunaStudio.Data.Connection    (Connection)
-import           LunaStudio.Data.GraphLocation (GraphLocation (..))
-import           LunaStudio.Data.Node          (ExpressionNode, NodeId, nodeId)
-import qualified LunaStudio.Data.Node          as Node
-import           LunaStudio.Data.NodeLoc       (NodeLoc (..))
-import           LunaStudio.Data.Port          (Port)
-import qualified LunaStudio.Data.Port          as Port
-import qualified LunaStudio.Data.PortRef       as PortRef
-import           LunaStudio.Data.PortRef       (AnyPortRef(InPortRef'), InPortRef(..), OutPortRef(..))
-
-import           Test.Hspec                    (expectationFailure)
+import           Control.Concurrent.MVar         (newEmptyMVar)
+import           Control.Concurrent.STM          (atomically)
+import           Control.Concurrent.STM.TChan    (newTChan)
+import           Control.Exception               (bracket)
+import           Control.Lens                    (uses)
+import           Data.Char                       (isSpace)
+import           Data.Coerce                     (coerce)
+import           Data.List                       (dropWhileEnd)
+import qualified Data.Map                        as Map
+import           Data.Reflection                 (Given (..), give)
+import qualified Data.Text                       as Text
+import           Data.UUID                       (UUID)
+import           Data.UUID.V4                    (nextRandom)
+import           Empire.ASTOp                    (runASTOp)
+import qualified Empire.Commands.Graph           as Graph
+import qualified Empire.Commands.Graph           as Graph (addNode, connect, getNodes, loadCode)
+import           Empire.Commands.Library         (createLibrary, listLibraries, withLibrary)
+import qualified Empire.Commands.Library         as Library
+import           Empire.Data.AST                 ()
+import qualified Empire.Data.BreadcrumbHierarchy as BH
+import           Empire.Data.Graph               (CommandState(..), ClsGraph, defaultPMState, userState)
+import qualified Empire.Data.Graph               as Graph
+import qualified Empire.Data.Library             as Library (body, path)
+import           Empire.Empire                   (CommunicationEnv (..), Empire, Env, InterpreterEnv (..), runEmpire)
+import           Empire.Prelude                  hiding (toList)
+import           LunaStudio.Data.Breadcrumb      (Breadcrumb (..), BreadcrumbItem (Arg, Definition, Lambda))
+import           LunaStudio.Data.Connection      (Connection)
+import           LunaStudio.Data.GraphLocation   (GraphLocation (..))
+import           LunaStudio.Data.Node            (ExpressionNode, NodeId, nodeId)
+import qualified LunaStudio.Data.Node            as Node
+import           LunaStudio.Data.NodeLoc         (NodeLoc (..))
+import           LunaStudio.Data.NodeMeta        (NodeMeta (..))
+import           LunaStudio.Data.Port            (InPort, InPortIndex(Self), OutPort, Port (Port), PortState)
+import qualified LunaStudio.Data.Port            as Port
+import           LunaStudio.Data.PortRef         (AnyPortRef(InPortRef'), InPortRef(..), OutPortRef(..))
+import qualified LunaStudio.Data.Position        as Position
+import           LunaStudio.Data.TypeRep         (TypeRep (TStar))
+import           Test.Hspec                      (Arg, Example, Expectation, Spec, SpecWith
+                                                 , around, before_, describe, it, parallel, pendingWith, shouldBe)
+import           Text.RawString.QQ               (r)
 
 
 runEmp :: CommunicationEnv -> (Given GraphLocation => Empire a) -> IO (a, CommandState Env)
@@ -124,3 +150,102 @@ outPortRef = OutPortRef . NodeLoc def
 
 inPortRef :: NodeId -> Port.InPortId -> InPortRef
 inPortRef = InPortRef . NodeLoc def
+
+
+emptyCodeTemplate :: Text
+emptyCodeTemplate = [r|
+import Std.Base
+
+def main:
+    None
+|]
+
+normalizeQQ :: Text -> Text
+normalizeQQ str = Text.intercalate "\n" $ Text.drop minWs <$> allLines where
+    trimTrailingSpaces = Text.dropWhileEnd isSpace
+    trimEmptyLines     = dropWhileEnd Text.null . dropWhile Text.null
+    indentLength       = Text.length . Text.takeWhile isSpace
+    allLines = trimEmptyLines $ trimTrailingSpaces <$> Text.lines str
+    minWs    = minimum $ indentLength <$> filter (not . Text.null) allLines
+
+codeCheck :: Text -> (Text -> Expectation)
+codeCheck expectedCode = \resultCode -> 
+    Text.strip resultCode `shouldBe` normalizeQQ expectedCode
+
+noCheck :: a -> Expectation
+noCheck _ = pure ()
+    
+mockNodesLayout :: GraphLocation -> Empire ()
+mockNodesLayout gl = getMarkersWithNodeId >>= mapM_ (uncurry mockNodeMeta) where
+    getMarkersWithNodeId = Graph.withGraph gl $ do
+        markers <- fmap fromIntegral . Map.keys 
+            <$> use (Graph.userState . Graph.codeMarkers)
+        foundNodeIds <- runASTOp $ fmap catMaybes . forM markers $ \m ->
+            (m,) `fmap2` Graph.getNodeIdForMarker m
+        topLevelNodeIds <- uses
+            (Graph.userState . Graph.breadcrumbHierarchy)
+            BH.topLevelIDs
+        pure $ filter (\(_, nid) -> elem nid topLevelNodeIds) foundNodeIds    
+    mockNodeMeta marker nid = Graph.setNodeMeta gl nid $ NodeMeta
+        (Position.fromTuple (0, fromIntegral marker * 10))
+        False
+        mempty
+
+        
+-- this function exists for backwards compatibility, meant to be removed soon
+specifyCodeChange :: Text -> Text -> (GraphLocation -> Empire a) -> CommunicationEnv -> Expectation
+specifyCodeChange initialCode expectedCode action env =
+    testCase initialCode expectedCode noCheck action env
+
+testCase
+    :: Text
+    -> Text
+    -> (a -> Expectation)
+    -> (GraphLocation -> Empire a)
+    -> CommunicationEnv
+    -> Expectation
+testCase initialCode expectedCode resultCheck action env = let
+        filePath = "/TestPath"
+        topGl    = GraphLocation filePath def
+        isMain n = n ^. Node.name == Just "main"
+        execute  = do
+            Library.createLibrary Nothing filePath
+            Graph.loadCode topGl $ normalizeQQ initialCode
+            mainNode <- filter isMain <$> Graph.getNodes topGl
+            gl <- case mainNode of
+                []     -> pure topGl
+                [main] -> do
+                    let gl = topGl |>= main ^. Node.nodeId
+                    mockNodesLayout gl
+                    pure gl
+            (,) <$> action gl <*> Graph.getCode gl
+    in evalEmp env execute >>= \(result, resultCode) -> do
+        codeCheck expectedCode resultCode
+        resultCheck result
+        
+-- This function is copy paste of testCase and is meant to be removed soon, when markers are removed from Luna
+testCaseWithMarkers
+    :: Text
+    -> Text
+    -> (a -> Expectation)
+    -> (GraphLocation -> Empire a)
+    -> CommunicationEnv
+    -> Expectation
+testCaseWithMarkers initialCode expectedCode resultCheck action env = let
+        filePath = "/TestPath"
+        topGl    = GraphLocation filePath def
+        isMain n = n ^. Node.name == Just "main"
+        execute  = do
+            Library.createLibrary Nothing filePath
+            Graph.loadCode topGl $ normalizeQQ initialCode
+            mainNode <- filter isMain <$> Graph.getNodes topGl
+            gl <- case mainNode of
+                []     -> pure topGl
+                [main] -> do
+                    let gl = topGl |>= main ^. Node.nodeId
+                    mockNodesLayout gl
+                    pure gl
+            (,) <$> action gl <*> Graph.withGraph gl (use Graph.code)
+    in evalEmp env execute >>= \(result, resultCode) -> do
+        codeCheck expectedCode resultCode
+        resultCheck result

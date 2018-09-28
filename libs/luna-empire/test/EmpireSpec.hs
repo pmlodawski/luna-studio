@@ -70,10 +70,6 @@ import           Test.Hspec                      (Selector, Spec, around, descri
 
 import           EmpireUtils
 
-normalizeQQ :: String -> String
-normalizeQQ str = dropWhileEnd isSpace $ intercalate "\n" $ fmap (drop minWs) allLines where
-    allLines = dropWhile null $ dropWhileEnd isSpace <$> lines str
-    minWs    = minimum $ length . takeWhile isSpace <$> (filter (not.null) allLines)
 
 spec :: Spec
 spec = around withChannels $ parallel $ do
@@ -371,8 +367,7 @@ spec = around withChannels $ parallel $ do
                             def main:
                                 None
                             |]
-                    let normalize = Text.pack . normalizeQQ . Text.unpack
-                    Graph.loadCode loc $ normalize initialCode
+                    Graph.loadCode loc $ normalizeQQ initialCode
                     [main] <- filter (\n -> n ^. Node.name == Just "main") <$> Graph.getNodes loc
                     let loc' = GraphLocation mainLuna $ Breadcrumb [Definition (main ^. Node.nodeId)]
                     Graph.addNode loc' u1 "id" def
