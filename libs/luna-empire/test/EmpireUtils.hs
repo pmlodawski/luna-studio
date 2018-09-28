@@ -151,6 +151,29 @@ outPortRef = OutPortRef . NodeLoc def
 inPortRef :: NodeId -> Port.InPortId -> InPortRef
 inPortRef = InPortRef . NodeLoc def
 
+mkAllPort :: Text -> PortState -> OutPort
+mkAllPort name = Port mempty name TStar
+
+mkSelfPort :: PortState -> InPort
+mkSelfPort = Port [Self] "self" TStar
+
+mkAliasPort :: PortState -> InPort
+mkAliasPort = Port mempty "alias" TStar
+
+
+addNode :: GraphLocation -> Text -> Empire ExpressionNode
+addNode gl code = mkUUID >>= \nid -> Graph.addNode gl nid code def
+
+findNodeIdByName :: GraphLocation -> Maybe Text -> Empire (Maybe NodeId)
+findNodeIdByName = fmap2 (view Node.nodeId) .: findNodeByName
+
+findNodeByName :: GraphLocation -> Maybe Text -> Empire (Maybe ExpressionNode)
+findNodeByName gl name = findNode <$> Graph.getNodes gl where
+    filterNodes = filter (\n -> n ^. Node.name == name)
+    findNode nodes = case filterNodes nodes of
+        [n] -> Just n
+        _   -> Nothing
+
 
 emptyCodeTemplate :: Text
 emptyCodeTemplate = [r|
@@ -249,3 +272,11 @@ testCaseWithMarkers initialCode expectedCode resultCheck action env = let
     in evalEmp env execute >>= \(result, resultCode) -> do
         codeCheck expectedCode resultCode
         resultCheck result
+
+runTests :: String -> SpecWith CommunicationEnv -> Spec
+runTests = around withChannels . parallel .: describe
+
+xitWithReason :: (HasCallStack, Example a) 
+    => String -> String -> a -> SpecWith (Arg a)
+xitWithReason label reason action 
+    = before_ (pendingWith reason) $ it label action
