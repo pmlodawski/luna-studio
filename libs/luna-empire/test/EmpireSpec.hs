@@ -53,7 +53,7 @@ import           LunaStudio.Data.Port            (InPorts (..), OutPorts (..))
 import qualified LunaStudio.Data.Port            as Port
 import           LunaStudio.Data.PortDefault     (PortDefault (Expression))
 import           LunaStudio.Data.PortRef         (AnyPortRef (..), InPortRef (..), OutPortRef (..))
-import qualified LunaStudio.Data.PortRef            as PortRef
+import qualified LunaStudio.Data.PortRef         as PortRef
 import qualified LunaStudio.Data.Position        as Position
 import           LunaStudio.Data.TypeRep         (TypeRep (TCons, TLam, TStar, TVar))
 -- import           OCI.IR.Class                    (exprs, links)
@@ -99,7 +99,7 @@ spec = around withChannels $ parallel $ do
                 topLevel <- graphIDs top
                 n1Level  <- Graph.getGraph (top |> u1)
                 return (topLevel, n1Level)
-            withResult res $ \(topLevel, Graph.Graph n1LevelNodes _ i o _) -> do
+            withResult res $ \(topLevel, Graph.Graph n1LevelNodes _ i o _ _) -> do
                 length topLevel `shouldBe` 1
                 topLevel `shouldContain` [u1]
                 i            `shouldSatisfy` isJust
@@ -112,7 +112,7 @@ spec = around withChannels $ parallel $ do
                 topLevel <- graphIDs top
                 n1Level <- Graph.getGraph (top |> u1)
                 return (topLevel, n1Level)
-            withResult res $ \(topLevel, Graph.Graph n1LevelNodes _ i o _) -> do
+            withResult res $ \(topLevel, Graph.Graph n1LevelNodes _ i o _ _) -> do
                 length topLevel `shouldBe` 1
                 topLevel `shouldContain` [u1]
                 i            `shouldSatisfy` isJust
@@ -388,7 +388,7 @@ spec = around withChannels $ parallel $ do
                     flip finally (setEnv Project.lunaRootEnv oldLunaRoot) $ do
                         setEnv Project.lunaRootEnv lunaroot
                         pmState <- Graph.defaultPMState
-                        let interpreterEnv = InterpreterEnv (return ()) g [] def def def
+                        let interpreterEnv = InterpreterEnv (return ()) g [] def def def def
                         (_, (extractGraph -> g')) <- runEmpire env (Graph.CommandState pmState interpreterEnv) $
                             Typecheck.run top g rooted False False
                         (res'',_) <- runEmp' env st g' $ do
@@ -738,7 +738,7 @@ spec = around withChannels $ parallel $ do
                 Graph.setNodeExpression top u1 "a: b: a + b"
                 Graph.getGraph (top |> u1)
             withResult res $ \graph -> do
-                let Graph.Graph nodes connections _ _ _ = graph
+                let Graph.Graph nodes connections _ _ _ _ = graph
                 let [node] = nodes
                 node ^. Node.expression `shouldBe` "• + •"
                 connections `shouldSatisfy` ((== 3) . length)
