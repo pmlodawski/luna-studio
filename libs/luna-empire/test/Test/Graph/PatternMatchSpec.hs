@@ -1,11 +1,10 @@
-module Test.PatternMatchSpec (spec) where
+module Test.Graph.PatternMatchSpec (spec) where
 
 import           Empire.ASTOp                    (runASTOp)
 import qualified Empire.ASTOps.Read              as ASTRead
 import qualified Empire.Commands.Graph           as Graph
 import qualified Empire.Commands.GraphBuilder    as GraphBuilder
 import           Empire.Prelude
-import           EmpireUtils
 import           LunaStudio.Data.Connection      (Connection (Connection))
 import qualified LunaStudio.Data.Graph           as Graph
 import           LunaStudio.Data.LabeledTree     (LabeledTree (LabeledTree))
@@ -18,6 +17,9 @@ import           LunaStudio.Data.PortDefault     (PortDefault (Expression))
 import           LunaStudio.Data.PortRef         (AnyPortRef (InPortRef', OutPortRef'))
 import qualified LunaStudio.Data.PortRef         as PortRef
 import           LunaStudio.Data.TypeRep         (TypeRep (TStar))
+import           SpecUtils                       ((|>), addNode, connectToInput, emptyCodeTemplate, findNodeByName, findNodeIdByName
+                                                 , inPortRef, mkAliasPort, mkAllPort, mkSelfPort, noCheck, outPortRef
+                                                 , runTests, testCase, testCaseWithMarkers, xitWithReason)
 import           Test.Hspec                      (describe, it, shouldBe, Spec, shouldMatchList)
 import           Text.RawString.QQ               (r)
 
