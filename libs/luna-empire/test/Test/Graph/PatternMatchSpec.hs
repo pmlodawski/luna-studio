@@ -458,7 +458,7 @@ spec = runTests "pattern match tests" $ do
                 connections          `shouldMatchList` expectedConnections myVec1Id patternMatchId
                 isPatternMatch       `shouldBe`        True
 
-    describe "pattern matching on lambdas" $ do
+    describe "lambdas pattern matching on their arguments" $ do
         xitWithReason "supports lambdas pattern matching on their argument" "waiting for new printer" $ let
             code = [r|
                 import Std.Base
