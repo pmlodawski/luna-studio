@@ -1,7 +1,7 @@
 module SpecUtils
     ( emptyCodeTemplate
     , evalEmp
-    , normalizeQQ
+    , normalizeLunaCode
     , runEmp
     , runTests
     , testCase
@@ -72,8 +72,8 @@ def main:
     None
 |]
 
-normalizeQQ :: Text -> Text
-normalizeQQ str = Text.intercalate "\n" $ Text.drop minWs <$> allLines where
+normalizeLunaCode :: Text -> Text
+normalizeLunaCode str = Text.intercalate "\n" $ Text.drop minWs <$> allLines where
     trimTrailingSpaces = Text.dropWhileEnd isSpace
     trimEmptyLines     = dropWhileEnd Text.null . dropWhile Text.null
     indentLength       = Text.length . Text.takeWhile isSpace
@@ -82,7 +82,7 @@ normalizeQQ str = Text.intercalate "\n" $ Text.drop minWs <$> allLines where
 
 codeCheck :: Text -> (Text -> Expectation)
 codeCheck expectedCode = \resultCode -> 
-    Text.strip resultCode `shouldBe` normalizeQQ expectedCode
+    Text.strip resultCode `shouldBe` normalizeLunaCode expectedCode
 
 testCase
     :: Text
@@ -95,7 +95,7 @@ testCase initialCode expectedCode action env = let
         topGl    = GraphLocation filePath def
         execute  = do
             createLibrary Nothing filePath
-            Graph.loadCode topGl $ normalizeQQ initialCode
+            Graph.loadCode topGl $ normalizeLunaCode initialCode
             let mainNodeName = "main"
                 withMain mainNodeId = do
                     let gl = topGl |>= mainNodeId
@@ -119,7 +119,7 @@ testCaseWithMarkers initialCode expectedCode action env = let
         topGl    = GraphLocation filePath def
         execute  = do
             createLibrary Nothing filePath
-            Graph.loadCode topGl $ normalizeQQ initialCode
+            Graph.loadCode topGl $ normalizeLunaCode initialCode
             let mainNodeName = "main"
                 withMain mainNodeId = do
                     let gl = topGl |>= mainNodeId

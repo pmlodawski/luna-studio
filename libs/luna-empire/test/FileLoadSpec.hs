@@ -187,7 +187,7 @@ spec = around withChannels $ parallel $ do
             Code.removeMarkers code `shouldBe` expectedCode
     describe "file loading" $ do
         it "parses unit" $ \env -> do
-            let code = normalizeQQ $ [r|
+            let code = normalizeLunaCode $ [r|
                 def main:
                     «0»pi = 3.14
                     «1»foo = a: b: a + b
@@ -396,7 +396,7 @@ def main:
                     , Connection (outPortRef (foo ^. Node.nodeId) []) (inPortRef (bar  ^. Node.nodeId) [Port.Head])
                     ]
         it "enters lambda written in file" $ \env -> do
-            let code = normalizeQQ $ [r|
+            let code = normalizeLunaCode $ [r|
                     def main:
                         «0»foo = a: b: a + b
                     |]
@@ -414,7 +414,7 @@ def main:
                 nodes `shouldSatisfy` ((== 1) . length)
                 connections `shouldSatisfy` ((== 3) . length)
         it "lambda in code can be entered" $ \env -> do
-            let code = normalizeQQ $ [r|
+            let code = normalizeLunaCode $ [r|
                     def main:
                         «0»foo = a: a
                     |]
@@ -500,7 +500,7 @@ def main:
                 Graph.movePort (loc' |> foo) (outPortRef (input ^. Node.nodeId) [Port.Projection 0]) 1
                 code <- Graph.withUnit loc $ use Graph.code
                 return code
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
             «13»def main:
                 «0»pi = 3.14
                 «1»foo = b: a:
@@ -516,7 +516,7 @@ def main:
             |]
     describe "code spans" $ do
         it "simple example" $ \env -> do
-            let code = normalizeQQ $ [r|
+            let code = normalizeLunaCode $ [r|
                     def main:
                         «0»pi = 5
                     |]
@@ -532,7 +532,7 @@ def main:
                       (17, 26)
                     ]
         it "not so simple example" $ \env -> do
-            let code = normalizeQQ $ [r|
+            let code = normalizeLunaCode $ [r|
                     def main:
                         «0»pi = 5
                         «1»a = 60
@@ -594,7 +594,7 @@ def main:
             withResult res $ \ids -> do
                 ids `shouldSatisfy` (all isJust)
         it "autolayouts nested nodes on file load" $ \env -> do
-            let code = normalizeQQ $ [r|
+            let code = normalizeLunaCode $ [r|
                     def main:
                         «0»pi = 3.14
                         «1»foo = a: b:
@@ -1822,7 +1822,7 @@ def main:
                 (input, _) <- Graph.withGraph loc' $ runASTOp $ GraphBuilder.getEdgePortMapping
                 Graph.movePort loc' (outPortRef input [Port.Projection 0]) 1
         it "removes last port in top-level def" $ \env -> do
-            let initialCode = normalizeQQ [r|
+            let initialCode = normalizeLunaCode [r|
                     def foo aaaa:
                         «0»c = aaaa + 2
                         c
@@ -1837,13 +1837,13 @@ def main:
                 Graph.removePort loc' (outPortRef input [Port.Projection 0])
                 code <- Graph.withUnit loc $ use Graph.code
                 return code
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 «1»def foo:
                     «0»c = aaaa + 2
                     c
                 |]
         it "removes last port in nested def" $ \env -> do
-            let initialCode = normalizeQQ [r|
+            let initialCode = normalizeLunaCode [r|
                     def main:
                         «2»def foo aaaa:
                             «0»c = aaaa + 2
@@ -1866,7 +1866,7 @@ def main:
                 inputSidebar <- Graph.withGraph loc'' $ runASTOp $ GraphBuilder.buildInputSidebar input
                 return (inputSidebar, code)
             inputSidebar ^. Node.isDef `shouldBe` True
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 «3»def main:
                     «2»def foo:
                         «0»c = aaaa + 2
@@ -2632,7 +2632,7 @@ def main:
                     let mainLuna = pkgPath </> "src" </> "Main.luna"
                     Library.createLibrary Nothing mainLuna
                     let loc = GraphLocation mainLuna $ Breadcrumb []
-                    Graph.loadCode loc $ normalizeQQ initialCode
+                    Graph.loadCode loc $ normalizeLunaCode initialCode
                     [main] <- filter (\n -> n ^. Node.name == Just "main") <$> Graph.getNodes loc
                     let loc' = GraphLocation mainLuna $ Breadcrumb [Definition (main ^. Node.nodeId)]
                     [fib] <- filter (\n -> n ^. Node.name == Just "fib") <$> Graph.getNodes loc
@@ -2973,11 +2973,11 @@ def main:
                 (undoCode, undoCache) <- (,) <$> Graph.withUnit top (use Graph.code) <*> Graph.prepareNodeCache top
                 Graph.collapseToFunction bar' $ map fromJust ids
                 code <- Graph.getCode top
-                liftIO $ code `shouldBe` normalizeQQ expectedCode
+                liftIO $ code `shouldBe` normalizeLunaCode expectedCode
                 Graph.withUnit top $ Graph.nodeCache .= undoCache
                 Graph.loadCode loc undoCode
                 code' <- Graph.withUnit top $ use Graph.code
-                liftIO $ code' `shouldBe` normalizeQQ initialCode
+                liftIO $ code' `shouldBe` normalizeLunaCode initialCode
                 nodes' <- Graph.getNodes bar'
                 liftIO $ nodes `shouldBe` nodes'
                 Graph.collapseToFunction bar' $ map fromJust ids

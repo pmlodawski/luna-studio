@@ -41,7 +41,7 @@ import           LunaStudio.Data.TypeRep         (TypeRep (TStar))
 
 import           Empire.Empire
 import           Empire.Prelude                  as P
--- import           Luna.Prelude                    (forM, normalizeQQ)
+-- import           Luna.Prelude                    (forM, normalizeLunaCode)
 
 import           Test.Hspec                      (Expectation, Spec, around, describe, expectationFailure, it, parallel, shouldBe,
                                                   shouldMatchList, shouldNotBe, shouldSatisfy, shouldStartWith, shouldThrow, xit)
@@ -226,7 +226,7 @@ spec = around withChannels $ parallel $ do
                 (,) <$> Graph.getNodes loc <*> Graph.getCode loc
             length nodes `shouldBe` 4
             find (\n -> n ^. Node.name == Just "quux") nodes `shouldSatisfy` isJust
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 def quux a b c
 
                 # Docs
@@ -251,7 +251,7 @@ spec = around withChannels $ parallel $ do
                 (,) <$> Graph.getNodes loc <*> Graph.getCode loc
             length nodes `shouldBe` 4
             find (\n -> n ^. Node.name == Just "quux") nodes `shouldSatisfy` isJust
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 # Docs
                 def foo:
                     5
@@ -276,7 +276,7 @@ spec = around withChannels $ parallel $ do
                 (,) <$> Graph.getNodes loc <*> Graph.getCode loc
             length nodes `shouldBe` 4
             find (\n -> n ^. Node.name == Just "quux") nodes `shouldSatisfy` isJust
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 # Docs
                 def foo:
                     5
@@ -301,7 +301,7 @@ spec = around withChannels $ parallel $ do
                 (,) <$> Graph.getNodes loc <*> Graph.getCode loc
             length nodes `shouldBe` 4
             find (\n -> n ^. Node.name == Just "quux") nodes `shouldSatisfy` isJust
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 def quux
 
                 # Docs
@@ -339,7 +339,7 @@ spec = around withChannels $ parallel $ do
             find (\n -> n ^. Node.name == Just "main") nodes `shouldSatisfy` isJust
             find (\n -> n ^. Node.name == Just "foo") nodes `shouldSatisfy` isJust
             find (\n -> n ^. Node.name == Just "bar") nodes `shouldSatisfy` isNothing
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 # Docs
                 def foo:
                     5
@@ -361,7 +361,7 @@ spec = around withChannels $ parallel $ do
             find (\n -> n ^. Node.name == Just "main") nodes `shouldSatisfy` isJust
             find (\n -> n ^. Node.name == Just "foo") nodes `shouldSatisfy` isJust
             find (\n -> n ^. Node.name == Just "bar") nodes `shouldSatisfy` isJust
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 # Docs
                 def foo:
                     5
@@ -385,7 +385,7 @@ spec = around withChannels $ parallel $ do
                 (,) <$> Graph.getNodes loc <*> Graph.getCode loc
             find (\n -> n ^. Node.name == Just "qwerty") nodes `shouldSatisfy` isJust
             find (\n -> n ^. Node.name == Just "bar") nodes `shouldSatisfy` isNothing
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 # Docs
                 def foo:
                     5
@@ -411,7 +411,7 @@ spec = around withChannels $ parallel $ do
                 (,) <$> Graph.getNodes loc <*> Graph.getCode loc
             find (\n -> n ^. Node.name == Just "qwerty") nodes `shouldSatisfy` isJust
             find (\n -> n ^. Node.name == Just "bar") nodes `shouldSatisfy` isNothing
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 # Docs
                 def foo:
                     5
@@ -437,7 +437,7 @@ spec = around withChannels $ parallel $ do
                 Graph.renameNode loc (bar ^. Node.nodeId) "qwerty"
                 Graph.addNode (loc |>= main ^. Node.nodeId) u1 "1" (atXPos (-10))
                 (,) <$> Graph.getNodes loc <*> Graph.getCode loc
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 # Docs
                 def foo:
                     5
@@ -461,7 +461,7 @@ spec = around withChannels $ parallel $ do
                 Graph.renameNode loc (bar ^. Node.nodeId) ")" `catch` (\(_e :: SomeParserException) -> return ())
                 (,) <$> Graph.getNodes loc <*> Graph.getCode loc
             find (\n -> n ^. Node.name == Just "bar") nodes `shouldSatisfy` isJust
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 # Docs
                 def foo:
                     5
@@ -487,9 +487,9 @@ spec = around withChannels $ parallel $ do
             find (\n -> n ^. Node.name == Just "foo") nodes `shouldSatisfy` isJust
             find (\n -> n ^. Node.name == Just "bar") nodes `shouldSatisfy` isJust
             find (\n -> n ^. Node.name == Just "quux") nodes `shouldSatisfy` isNothing
-            normalizeQQ code `shouldBe` normalizeQQ (Code.removeMarkers multiFunCode)
+            normalizeLunaCode code `shouldBe` normalizeLunaCode (Code.removeMarkers multiFunCode)
         it "decodes breadcrumbs in function" $ \env -> do
-            let code = normalizeQQ $ [r|
+            let code = normalizeLunaCode $ [r|
                     def main:
                         «0»pi = 3.14
                         «1»foo = a: b:
@@ -514,7 +514,7 @@ spec = around withChannels $ parallel $ do
             let names = map (view Breadcrumb.name) location
             names `shouldBe` ["main", "foo"]
         it "decodes breadcrumbs in function 2" $ \env -> do
-            let code = normalizeQQ $ [r|
+            let code = normalizeLunaCode $ [r|
                     def main:
                         «0»pi = 3.14
                         «1»foo = a: b:
@@ -643,7 +643,7 @@ spec = around withChannels $ parallel $ do
                 u2 <- mkUUID
                 Graph.addNode (loc |>= bar) u2 "1" (atXPos (-10))
                 Graph.withUnit loc $ use Graph.code
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 # Docs
                 «1»def foo:
                     «6»number1 = 5
@@ -659,7 +659,7 @@ spec = around withChannels $ parallel $ do
                     «5»print bar
                 |]
         it "connects anonymous node" $ \env -> do
-            let code = normalizeQQ [r|
+            let code = normalizeLunaCode [r|
                     def foo:
                         n1 = _ * 5
                         5
@@ -681,7 +681,7 @@ spec = around withChannels $ parallel $ do
                     Just five = view Node.nodeId <$> find (\n -> n ^. Node.name == Nothing) fooNodes
                 Graph.connect (loc |>= foo) (outPortRef five []) (InPortRef' $ inPortRef n1 [Port.Arg 0])
                 Graph.withUnit loc $ use Graph.code
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 «0»def foo:
                     «4»number1 = 5
                     «3»n1 = number1 * 5
@@ -707,7 +707,7 @@ spec = around withChannels $ parallel $ do
                 u2 <- mkUUID
                 Graph.addNode (loc |>= bar) u2 "1" (atXPos (-20))
                 Graph.withUnit loc $ use Graph.code
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                     # Docs
                     «1»def foo:
                         «3»5
@@ -737,7 +737,7 @@ spec = around withChannels $ parallel $ do
                 blockEnd <- Graph.withGraph (loc |>= bar) $ runASTOp $ Code.getCurrentBlockEnd
                 code <- Graph.withUnit loc $ use Graph.code
                 return (blockEnd, code)
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                     # Docs
                     «1»def foo:
                         «3»5
@@ -766,7 +766,7 @@ spec = around withChannels $ parallel $ do
                 starts <- Graph.withUnit loc $ runASTOp $ forM funIds $ Code.functionBlockStart
                 code <- Graph.getCode loc
                 return (starts, code)
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 # Docs
                 def foo:
                     number1 = 5
@@ -850,7 +850,7 @@ spec = around withChannels $ parallel $ do
                 (,) <$> Graph.getNodes loc <*> Graph.getCode loc
             length nodes `shouldBe` 1
             find (\n -> n ^. Node.name == Just "main") nodes `shouldSatisfy` isJust
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 def main
                 |]
         it "adds the first function in a file with imports" $ \env -> do
@@ -863,7 +863,7 @@ spec = around withChannels $ parallel $ do
                 (,) <$> Graph.getNodes loc <*> Graph.getCode loc
             length nodes `shouldBe` 1
             find (\n -> n ^. Node.name == Just "main") nodes `shouldSatisfy` isJust
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 import Std
                 import Foo
 
@@ -877,7 +877,7 @@ spec = around withChannels $ parallel $ do
                 Graph.pasteText loc [Range 23 23] ["def quux: None"]
                 Graph.substituteCode "TestPath" [(46,46,"\n")]
                 (,) <$> Graph.getNodes loc <*> Graph.getCode loc
-            normalizeQQ code `shouldBe` normalizeQQ [r|
+            normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 # Docs
                 def foo:
                     5
@@ -1070,7 +1070,7 @@ spec = around withChannels $ parallel $ do
                 return ()
         it "adds invalid def, another node inside and connects to output" $ \env -> do
             evalEmp env $ do
-                let initialCode = normalizeQQ [r|
+                let initialCode = normalizeLunaCode [r|
                         def main:
                             None
                         |]
@@ -1085,7 +1085,7 @@ spec = around withChannels $ parallel $ do
                 Graph.connect (top |>= u1) (outPortRef u2 [])
                     (InPortRef' $ inPortRef output [])
                 code <- Graph.getCode top
-                liftIO $ normalizeQQ code `shouldBe` normalizeQQ [r|
+                liftIO $ normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                     def foo:
                         number1 = 4
                         number1

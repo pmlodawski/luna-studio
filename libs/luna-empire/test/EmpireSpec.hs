@@ -367,7 +367,7 @@ spec = around withChannels $ parallel $ do
                             def main:
                                 None
                             |]
-                    Graph.loadCode loc $ normalizeQQ initialCode
+                    Graph.loadCode loc $ normalizeLunaCode initialCode
                     [main] <- filter (\n -> n ^. Node.name == Just "main") <$> Graph.getNodes loc
                     let loc' = GraphLocation mainLuna $ Breadcrumb [Definition (main ^. Node.nodeId)]
                     Graph.addNode loc' u1 "id" def
