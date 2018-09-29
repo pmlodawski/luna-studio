@@ -20,7 +20,8 @@ import           LunaStudio.Data.TypeRep         (TypeRep (TStar))
 import           SpecUtils                       ((|>), addNode, connectToInput, emptyCodeTemplate, findNodeByName, findNodeIdByName
                                                  , inPortRef, mkAliasPort, mkAllPort, mkSelfPort, outPortRef
                                                  , runTests, testCase, testCaseWithMarkers, xitWithReason)
-import           Test.Hspec                      (describe, it, shouldBe, Spec, shouldMatchList)
+import           Test.Hspec                      (describe, it, Spec)
+import           Test.Hspec.Expectations.Lifted  (shouldBe, shouldMatchList)
 import           Text.RawString.QQ               (r)
 
 
@@ -120,9 +121,8 @@ spec = runTests "pattern match tests" $ do
                 (fooId, barId, patternMatch, connections) <- prepare gl
                 let patternMatchId       = patternMatch ^. Node.nodeId
                     patternMatchOutPorts = patternMatch ^. Node.outPorts
-                liftIO $ do
-                    patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
-                    connections          `shouldMatchList` expectedConnections fooId barId patternMatchId
+                patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
+                connections          `shouldMatchList` expectedConnections fooId barId patternMatchId
                 
         it "contains proper connections and ports on a pattern matching node with tuple pattern" $ let
             code = [r|
@@ -153,9 +153,8 @@ spec = runTests "pattern match tests" $ do
                 (fooId, barId, patternMatch, connections) <- prepare gl
                 let patternMatchId       = patternMatch ^. Node.nodeId
                     patternMatchOutPorts = patternMatch ^. Node.outPorts
-                liftIO $ do
-                    patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
-                    connections          `shouldMatchList` expectedConnections fooId barId patternMatchId
+                patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
+                connections          `shouldMatchList` expectedConnections fooId barId patternMatchId
 
         it "contains proper connections for nested pattern use" $ let
             code = [r|
@@ -175,8 +174,7 @@ spec = runTests "pattern match tests" $ do
                     <$> GraphBuilder.buildConnections
             in testCase code code $ \gl -> do
                 (patternMatchId, c1Id, connections) <- prepare gl
-                liftIO $
-                    connections `shouldMatchList` expectedConnections patternMatchId c1Id
+                connections `shouldMatchList` expectedConnections patternMatchId c1Id
 
                 
         it "connects two outputs when one of them is pattern match" $ let
@@ -228,11 +226,10 @@ spec = runTests "pattern match tests" $ do
                 let patternMatchId       = vector1Id
                     patternMatchInPorts  = patternMatch ^. Node.inPorts
                     patternMatchOutPorts = patternMatch ^. Node.outPorts
-                liftIO $ do
-                    patternMatchInPorts  `shouldBe`        expectedPatternMatchInPorts
-                    patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
-                    connections          `shouldMatchList` expectedConnections myVec1Id patternMatchId
-                    isPatternMatch       `shouldBe`        True
+                patternMatchInPorts  `shouldBe`        expectedPatternMatchInPorts
+                patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
+                connections          `shouldMatchList` expectedConnections myVec1Id patternMatchId
+                isPatternMatch       `shouldBe`        True
     
         it "disconnects pattern match" $ let
             initialCode = [r|
@@ -273,11 +270,10 @@ spec = runTests "pattern match tests" $ do
                 (patternMatch, connections, isPatternMatch) <- getResult gl patternMatchId
                 let patternMatchOutPorts = patternMatch ^. Node.outPorts
                     patternMatchInPorts  = patternMatch ^. Node.inPorts
-                liftIO $ do
-                    patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
-                    patternMatchInPorts  `shouldBe`        expectedPatternMatchInPorts
-                    connections          `shouldMatchList` mempty
-                    isPatternMatch       `shouldBe`        True
+                patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
+                patternMatchInPorts  `shouldBe`        expectedPatternMatchInPorts
+                connections          `shouldMatchList` mempty
+                isPatternMatch       `shouldBe`        True
     
         it "connects to pattern match, disconnects and connects again" $ let
             initialCode = [r|
@@ -331,11 +327,10 @@ spec = runTests "pattern match tests" $ do
                 (patternMatch, connections, isPatternMatch) <- getResult gl patternMatchId
                 let patternMatchInPorts  = patternMatch ^. Node.inPorts                    
                     patternMatchOutPorts = patternMatch ^. Node.outPorts
-                liftIO $ do
-                    patternMatchInPorts  `shouldBe`        expectedPatternMatchInPorts
-                    patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
-                    connections          `shouldMatchList` expectedConnections myVec1Id patternMatchId
-                    isPatternMatch       `shouldBe`        True
+                patternMatchInPorts  `shouldBe`        expectedPatternMatchInPorts
+                patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
+                connections          `shouldMatchList` expectedConnections myVec1Id patternMatchId
+                isPatternMatch       `shouldBe`        True
                 
         it "connects deconstructed value to other nodes" $ let
             initialCode = [r|
@@ -400,10 +395,9 @@ spec = runTests "pattern match tests" $ do
                 (patternMatch, function1, connections) <- getResult gl patternMatchId function1Id
                 let patternMatchOutPorts = patternMatch ^. Node.outPorts
                     function1InPorts     = function1    ^. Node.inPorts
-                liftIO $ do
-                    patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
-                    function1InPorts     `shouldBe`        expectedFunction1InPorts
-                    connections          `shouldMatchList` expectedConnections patternMatchId function1Id
+                patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
+                function1InPorts     `shouldBe`        expectedFunction1InPorts
+                connections          `shouldMatchList` expectedConnections patternMatchId function1Id
                          
         it "connects two outputs when one of them is nested pattern match with literals" $ let
             initialCode = [r|
@@ -459,11 +453,10 @@ spec = runTests "pattern match tests" $ do
                 let patternMatchId       = someCons1Id
                     patternMatchOutPorts = patternMatch ^. Node.outPorts
                     patternMatchInPorts  = patternMatch ^. Node.inPorts
-                liftIO $ do
-                    patternMatchInPorts  `shouldBe`        expectedPatternMatchInPorts
-                    patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
-                    connections          `shouldMatchList` expectedConnections myVec1Id patternMatchId
-                    isPatternMatch       `shouldBe`        True
+                patternMatchInPorts  `shouldBe`        expectedPatternMatchInPorts
+                patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
+                connections          `shouldMatchList` expectedConnections myVec1Id patternMatchId
+                isPatternMatch       `shouldBe`        True
 
     describe "pattern matching on lambdas" $ do
         xitWithReason "supports lambdas pattern matching on their argument" "waiting for new printer" $ let
@@ -511,12 +504,11 @@ spec = runTests "pattern match tests" $ do
                     patternMatchInPorts = patternMatch ^. Node.inPorts
                     inputOutPorts       = input        ^. Node.inputEdgePorts
                     outputInPorts       = output       ^. Node.outputEdgePorts
-                liftIO $ do
-                    patternMatchInPorts `shouldBe`        expectedPatternMatchInPorts
-                    inputOutPorts       `shouldBe`        expectedInputOutPorts
-                    outputInPorts       `shouldBe`        expectedOutputInPorts
-                    nodes               `shouldBe`        mempty
-                    connections         `shouldMatchList` expectedConnections inputId outputId
+                patternMatchInPorts `shouldBe`        expectedPatternMatchInPorts
+                inputOutPorts       `shouldBe`        expectedInputOutPorts
+                outputInPorts       `shouldBe`        expectedOutputInPorts
+                nodes               `shouldBe`        mempty
+                connections         `shouldMatchList` expectedConnections inputId outputId
         
         xitWithReason "supports multi-parameter lambdas pattern matching on their arguments" "waiting for new printer" $ let
             code = [r|
@@ -575,9 +567,8 @@ spec = runTests "pattern match tests" $ do
                     patternMatchInPorts = patternMatch ^. Node.inPorts
                     inputOutPorts       = input        ^. Node.inputEdgePorts
                     outputInPorts       = output       ^. Node.outputEdgePorts
-                liftIO $ do
-                    patternMatchInPorts `shouldBe`        expectedPatternMatchInPorts
-                    inputOutPorts       `shouldBe`        expectedInputOutPorts
-                    outputInPorts       `shouldBe`        expectedOutputInPorts
-                    nodes               `shouldBe`        mempty
-                    connections         `shouldMatchList` expectedConnections inputId outputId
+                patternMatchInPorts `shouldBe`        expectedPatternMatchInPorts
+                inputOutPorts       `shouldBe`        expectedInputOutPorts
+                outputInPorts       `shouldBe`        expectedOutputInPorts
+                nodes               `shouldBe`        mempty
+                connections         `shouldMatchList` expectedConnections inputId outputId

@@ -14,6 +14,7 @@ tests:
         ghc-options: -Wno-unused-do-bind -threaded -with-rtsopts=-N4
         dependencies:
             - hspec
+            - hspec-expectations-lifted
             - luna-empire
             - monad-loops
             - QuickCheck
