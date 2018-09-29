@@ -1121,16 +1121,16 @@ spec = around withChannels $ parallel $ do
                 Graph.substituteCode file [(102, 102, "\n    Foo.baz")]
         it "uses defined class with list of fields in main" $
             let initialCode = [r|
-                class Foo:
-                    a, c, d, e :: Int
-                    b :: Real
+                    class Foo:
+                        a, c, d, e :: Int
+                        b :: Real
 
-                    def baz a : "Hello" + a
+                        def baz a : "Hello" + a
 
-                def main:
-                    test = "Hello"
-                    None
-                    |]
+                    def main:
+                        test = "Hello"
+                        None
+                        |]
                 expectedCode = [r|
                     class Foo:
                         a, c, d, e :: Int
