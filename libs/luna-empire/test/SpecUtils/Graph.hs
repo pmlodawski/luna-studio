@@ -77,6 +77,8 @@ findNodeByName gl name = findNode <$> Graph.getNodes gl where
 
 mockNodesLayout :: GraphLocation -> Empire ()
 mockNodesLayout gl = getMarkersWithNodeId >>= mapM_ (uncurry mockNodeMeta) where
+    nodesInterspace          = 10
+    mockMarkerOfffset marker = fromIntegral marker * nodesInterspace
     getMarkersWithNodeId = Graph.withGraph gl $ do
         markers <- fmap fromIntegral . Map.keys 
             <$> use (Graph.userState . Graph.codeMarkers)
@@ -87,7 +89,7 @@ mockNodesLayout gl = getMarkersWithNodeId >>= mapM_ (uncurry mockNodeMeta) where
             BH.topLevelIDs
         pure $ filter (\(_, nid) -> elem nid topLevelNodeIds) foundNodeIds    
     mockNodeMeta marker nid = Graph.setNodeMeta gl nid $ NodeMeta
-        (Position.fromTuple (0, fromIntegral marker * 10))
+        (Position.fromTuple (0, mockMarkerOfffset marker))
         False
         mempty
 
