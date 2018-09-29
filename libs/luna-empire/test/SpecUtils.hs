@@ -96,7 +96,7 @@ testCase initialCode expectedCode action env = let
         execute  = do
             createLibrary Nothing filePath
             Graph.loadCode topGl $ normalizeQQ initialCode
-            let mainNodeName = Just "main"
+            let mainNodeName = "main"
                 withMain mainNodeId = do
                     let gl = topGl |>= mainNodeId
                     mockNodesLayout gl
@@ -120,7 +120,7 @@ testCaseWithMarkers initialCode expectedCode action env = let
         execute  = do
             createLibrary Nothing filePath
             Graph.loadCode topGl $ normalizeQQ initialCode
-            let mainNodeName = Just "main"
+            let mainNodeName = "main"
                 withMain mainNodeId = do
                     let gl = topGl |>= mainNodeId
                     mockNodesLayout gl

@@ -66,7 +66,7 @@ spec = runTests "pattern match tests" $ do
                     None
                 |]
             in testCase initialCode expectedCode $ \gl -> do
-                Just nid <- findNodeIdByName gl $ Just "a"
+                Just nid <- findNodeIdByName gl "a"
                 Graph.renameNode gl nid "Just a"
 
         it "adds a marker in proper place in lambda pattern-matching on an argument with simple value" $ let
@@ -111,9 +111,9 @@ spec = runTests "pattern match tests" $ do
                     [ (outPortRef fooId mempty, inPortRef patternMatchId mempty)
                     , (outPortRef patternMatchId [Projection 0], inPortRef barId [Arg 0]) ]
             prepare gl = do
-                Just fooId          <- findNodeIdByName gl $ Just "foo"
-                Just barId          <- findNodeIdByName gl $ Just "bar"
-                Just patternMatchId <- findNodeIdByName gl $ Just "Tuple2 x y"
+                Just fooId          <- findNodeIdByName gl "foo"
+                Just barId          <- findNodeIdByName gl "bar"
+                Just patternMatchId <- findNodeIdByName gl "Tuple2 x y"
                 Graph.withGraph gl . runASTOp $ (fooId, barId, , ) 
                     <$> GraphBuilder.buildNode patternMatchId
                     <*> GraphBuilder.buildConnections
@@ -143,9 +143,9 @@ spec = runTests "pattern match tests" $ do
                 [ (outPortRef fooId mempty, inPortRef patternMatchId mempty)
                 , (outPortRef patternMatchId [Projection 0], inPortRef barId [Arg 0]) ]
             prepare gl = do
-                Just fooId          <- findNodeIdByName gl $ Just "foo"
-                Just patternMatchId <- findNodeIdByName gl $ Just "(x, y)"
-                Just barId          <- findNodeIdByName gl $ Just "bar"
+                Just fooId          <- findNodeIdByName gl "foo"
+                Just patternMatchId <- findNodeIdByName gl "(x, y)"
+                Just barId          <- findNodeIdByName gl "bar"
                 Graph.withGraph gl . runASTOp $ (fooId,barId, , ) 
                     <$> GraphBuilder.buildNode patternMatchId
                     <*> GraphBuilder.buildConnections              
@@ -168,8 +168,8 @@ spec = runTests "pattern match tests" $ do
             expectedConnections patternMatchId c1Id =
                 [ (outPortRef patternMatchId [Projection 2, Projection 0], inPortRef c1Id mempty) ]
             prepare gl = do
-                Just patternMatchId <- findNodeIdByName gl $ Just "(a, b, (c, d))"
-                Just c1Id           <- findNodeIdByName gl $ Just "c1"
+                Just patternMatchId <- findNodeIdByName gl "(a, b, (c, d))"
+                Just c1Id           <- findNodeIdByName gl "c1"
                 Graph.withGraph gl . runASTOp $ (patternMatchId, c1Id, ) 
                     <$> GraphBuilder.buildConnections
             in testCase code code $ \gl -> do
@@ -209,8 +209,8 @@ spec = runTests "pattern match tests" $ do
             expectedConnections myVec1Id patternMatchId = [
                 ( outPortRef myVec1Id mempty, inPortRef patternMatchId mempty ) ]
             prepare gl = do
-                Just myVec1Id  <- findNodeIdByName gl $ Just "myVec1"
-                Just vector1Id <- findNodeIdByName gl $ Just "vector1"
+                Just myVec1Id  <- findNodeIdByName gl "myVec1"
+                Just vector1Id <- findNodeIdByName gl "vector1"
                 pure (myVec1Id, vector1Id)
             getResult gl vector1Id = Graph.withGraph gl . runASTOp $ (,,) 
                 <$> GraphBuilder.buildNode vector1Id
@@ -258,7 +258,7 @@ spec = runTests "pattern match tests" $ do
                     , LabeledTree def $ Port [Projection 2] "z" TStar NotConnected ])
                 (mkAllPort "Vector x y z" NotConnected)
             prepare gl = do
-                Just patternMatchId <- findNodeIdByName gl $ Just "Vector x y z"
+                Just patternMatchId <- findNodeIdByName gl "Vector x y z"
                 pure patternMatchId
             getResult gl patternMatchId = Graph.withGraph gl . runASTOp $ (,,)
                 <$> GraphBuilder.buildNode patternMatchId
@@ -307,8 +307,8 @@ spec = runTests "pattern match tests" $ do
             expectedConnections myVec1Id patternMatchId = 
                 [ (outPortRef myVec1Id mempty, inPortRef patternMatchId mempty) ]
             prepare gl = do
-                Just myVec1Id       <- findNodeIdByName gl $ Just "myVec1"
-                Just patternMatchId <- findNodeIdByName gl $ Just "vector1"
+                Just myVec1Id       <- findNodeIdByName gl "myVec1"
+                Just patternMatchId <- findNodeIdByName gl "vector1"
                 pure (myVec1Id, patternMatchId)
             getResult gl patternMatchId = Graph.withGraph gl . runASTOp $ (,,) 
                 <$> GraphBuilder.buildNode patternMatchId
@@ -370,8 +370,8 @@ spec = runTests "pattern match tests" $ do
                 [ (outPortRef patternMatchId [Projection 0], inPortRef function1Id [Arg 0])
                 , (outPortRef patternMatchId [Projection 1], inPortRef function1Id [Arg 1]) ]
             prepare gl = do
-                Just patternMatchId <- findNodeIdByName gl $ Just "Vector x y z"
-                Just function1Id    <- findNodeIdByName gl $ Just "function1"
+                Just patternMatchId <- findNodeIdByName gl "Vector x y z"
+                Just function1Id    <- findNodeIdByName gl "function1"
                 pure (patternMatchId, function1Id)
             getResult gl patternMatchId function1Id = do
                 let isRelevantConnection (outRef, inRef)
@@ -436,8 +436,8 @@ spec = runTests "pattern match tests" $ do
             expectedConnections myVec1Id patternMatchId =
                 [ (outPortRef myVec1Id mempty, inPortRef patternMatchId mempty) ]
             prepare gl = do
-                Just myVec1Id    <- findNodeIdByName gl $ Just "myVec1"
-                Just someCons1Id <- findNodeIdByName gl $ Just "someCons1"
+                Just myVec1Id    <- findNodeIdByName gl "myVec1"
+                Just someCons1Id <- findNodeIdByName gl "someCons1"
                 pure (myVec1Id, someCons1Id)
             getResult gl patternMatchId = Graph.withGraph gl . runASTOp $ (,,)
                 <$> GraphBuilder.buildNode patternMatchId
@@ -486,7 +486,7 @@ spec = runTests "pattern match tests" $ do
                 (outPortRef inputId  [Projection 0, Projection 1])
                 (inPortRef  outputId mempty) ]
             prepare gl = do
-                Just lambda1 <- findNodeByName gl $ Just "lambda1"
+                Just lambda1 <- findNodeByName gl "lambda1"
                 let lambda1Gl = gl |> (lambda1 ^. Node.nodeId)
                 Graph.withGraph lambda1Gl . runASTOp $ do
                     graph           <- GraphBuilder.buildGraph
@@ -549,7 +549,7 @@ spec = runTests "pattern match tests" $ do
                 (outPortRef inputId  [Projection 0, Projection 2, Projection 0])
                 (inPortRef  outputId mempty) ]
             prepare gl = do
-                Just lambda1 <- findNodeByName gl $ Just "lambda1"
+                Just lambda1 <- findNodeByName gl "lambda1"
                 let lambda1Gl = gl |> (lambda1 ^. Node.nodeId)
                 Graph.withGraph lambda1Gl . runASTOp $ do
                     graph           <- GraphBuilder.buildGraph

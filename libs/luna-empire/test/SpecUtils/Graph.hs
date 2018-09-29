@@ -64,12 +64,12 @@ addNode gl code = mkUUID >>= \nid -> Graph.addNode gl nid code def
 connectToInput :: GraphLocation -> OutPortRef -> InPortRef -> Empire Connection
 connectToInput loc outPort inPort = Graph.connect loc outPort (InPortRef' inPort)
 
-findNodeIdByName :: GraphLocation -> Maybe Text -> Empire (Maybe NodeId)
+findNodeIdByName :: GraphLocation -> Text -> Empire (Maybe NodeId)
 findNodeIdByName = fmap2 (view Node.nodeId) .: findNodeByName
 
-findNodeByName :: GraphLocation -> Maybe Text -> Empire (Maybe ExpressionNode)
+findNodeByName :: GraphLocation -> Text -> Empire (Maybe ExpressionNode)
 findNodeByName gl name = findNode <$> Graph.getNodes gl where
-    filterNodes = filter (\n -> n ^. Node.name == name)
+    filterNodes = filter (\n -> n ^. Node.name == Just name)
     findNode nodes = case filterNodes nodes of
         [n] -> Just n
         _   -> Nothing
