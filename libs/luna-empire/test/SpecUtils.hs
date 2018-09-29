@@ -93,17 +93,16 @@ testCase
 testCase initialCode expectedCode action env = let
         filePath = "/TestPath"
         topGl    = GraphLocation filePath def
-        isMain n = n ^. Node.name == Just "main"
         execute  = do
             createLibrary Nothing filePath
             Graph.loadCode topGl $ normalizeQQ initialCode
-            mainNode <- filter isMain <$> Graph.getNodes topGl
-            gl <- case mainNode of
-                []     -> pure topGl
-                [main] -> do
-                    let gl = topGl |>= main ^. Node.nodeId
+            let mainNodeName = Just "main"
+                withMain mainNodeId = do
+                    let gl = topGl |>= mainNodeId
                     mockNodesLayout gl
                     pure gl
+            mainNodeId <- findNodeIdByName topGl mainNodeName
+            gl <- maybe (pure topGl) withMain mainNodeId
             action gl
             Graph.getCode gl
     in evalEmp env execute >>= codeCheck expectedCode
@@ -118,17 +117,16 @@ testCaseWithMarkers
 testCaseWithMarkers initialCode expectedCode action env = let
         filePath = "/TestPath"
         topGl    = GraphLocation filePath def
-        isMain n = n ^. Node.name == Just "main"
         execute  = do
             createLibrary Nothing filePath
             Graph.loadCode topGl $ normalizeQQ initialCode
-            mainNode <- filter isMain <$> Graph.getNodes topGl
-            gl <- case mainNode of
-                []     -> pure topGl
-                [main] -> do
-                    let gl = topGl |>= main ^. Node.nodeId
+            let mainNodeName = Just "main"
+                withMain mainNodeId = do
+                    let gl = topGl |>= mainNodeId
                     mockNodesLayout gl
                     pure gl
+            mainNodeId <- findNodeIdByName topGl mainNodeName
+            gl <- maybe (pure topGl) withMain mainNodeId
             action gl
             Graph.withGraph gl (use Graph.code)
     in evalEmp env execute >>= codeCheck expectedCode
