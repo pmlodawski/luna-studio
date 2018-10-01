@@ -1,8 +1,3 @@
-{-# LANGUAGE DeriveAnyClass    #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes        #-}
-{-# LANGUAGE TypeApplications  #-}
-
 module EmpireUtils (module EmpireUtils, module X) where
 
 import Empire.Empire as X (runEmpire)
@@ -10,12 +5,15 @@ import SpecUtils     as X
 
 import Empire.Prelude
 
-import qualified Empire.Commands.Graph as Graph (getNodes)
+import qualified Empire.Commands.Graph as Graph
 import qualified Empire.Data.Library   as Library (body, path)
+import qualified LunaStudio.Data.Node  as Node
 
 import Data.Reflection               (Given (..), give)
 import Empire.Commands.Library       (listLibraries, withLibrary)
-import Empire.Data.Graph             (ClsGraph, CommandState (..), userState)
+import Empire.Commands.Library       (createLibrary)
+import Empire.Data.Graph             (ClsGraph, CommandState (..),
+                                      defaultPMState, userState)
 import Empire.Empire                 (CommunicationEnv (..), Empire, Env,
                                       InterpreterEnv (..))
 import LunaStudio.Data.Breadcrumb    (Breadcrumb (Breadcrumb))
@@ -23,6 +21,19 @@ import LunaStudio.Data.GraphLocation (GraphLocation (GraphLocation))
 import LunaStudio.Data.Node          (NodeId, nodeId)
 import Test.Hspec                    (Expectation)
 
+
+runEmp :: CommunicationEnv -> (Given GraphLocation => Empire a) -> IO (a, CommandState Env)
+runEmp env act = defaultPMState >>= \pm ->
+    runEmpire env (CommandState pm def) $ do
+        let testFile = "/TestFile"
+            topGl    = GraphLocation testFile def
+        void $ createLibrary (Just testFile) testFile
+        Graph.loadCode topGl "def main:\n    None"
+        [node] <- Graph.getNodes topGl
+        give (topGl |>= (node ^. Node.nodeId)) act
+
+evalEmp :: CommunicationEnv -> (Given GraphLocation => Empire a) -> IO a
+evalEmp env act = fst <$> runEmp env act
 
 runEmp'
     :: CommunicationEnv

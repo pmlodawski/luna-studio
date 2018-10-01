@@ -7,7 +7,6 @@ import Empire.Prelude
 import qualified Data.Text             as Text
 import qualified Empire.Commands.Graph as Graph
 import qualified Empire.Data.Graph     as Graph
-import qualified LunaStudio.Data.Node  as Node
 
 import Control.Concurrent.MVar       (newEmptyMVar)
 import Control.Concurrent.STM        (atomically)
@@ -15,12 +14,11 @@ import Control.Concurrent.STM.TChan  (newTChan)
 import Control.Exception             (bracket)
 import Data.Char                     (isSpace)
 import Data.List                     (dropWhileEnd)
-import Data.Reflection               (Given, give)
 import Empire.Commands.Library       (createLibrary)
 import Empire.Data.Graph             (CommandState (CommandState),
                                       defaultPMState)
 import Empire.Empire                 (CommunicationEnv (CommunicationEnv),
-                                      Empire, Env, runEmpire)
+                                      Empire, evalEmpire)
 import LunaStudio.Data.GraphLocation (GraphLocation (GraphLocation))
 import Test.Hspec                    (Arg, Example, Expectation, Spec, SpecWith,
                                       around, before_, describe, it, parallel,
@@ -32,20 +30,6 @@ withChannels :: (CommunicationEnv -> IO a) -> IO a
 withChannels = bracket createChannels (const $ pure ()) where
     createChannels = CommunicationEnv
         <$> atomically newTChan <*> newEmptyMVar <*> newEmptyMVar
-
-runEmp :: CommunicationEnv -> (Given GraphLocation => Empire a) -> IO (a, CommandState Env)
-runEmp env act = defaultPMState >>= \pm ->
-    runEmpire env (CommandState pm def) $ do
-        let testFile = "/TestFile"
-            topGl    = GraphLocation testFile def
-        void $ createLibrary (Just testFile) testFile
-        Graph.loadCode topGl "def main:\n    None"
-        [node] <- Graph.getNodes topGl
-        give (topGl |>= (node ^. Node.nodeId)) act
-
-evalEmp :: CommunicationEnv -> (Given GraphLocation => Empire a) -> IO a
-evalEmp env act = fst <$> runEmp env act
-
 
 runTests :: String -> SpecWith CommunicationEnv -> Spec
 runTests = around withChannels . parallel .: describe
@@ -97,7 +81,10 @@ testCase initialCode expectedCode action env = let
             gl <- maybe (pure topGl) withMain mainNodeId
             action gl
             Graph.getCode gl
-    in evalEmp env execute >>= codeCheck expectedCode
+    in do
+        pm         <- defaultPMState
+        resultCode <- evalEmpire env (CommandState pm def) execute
+        codeCheck expectedCode resultCode
 
 --[TODO]: This function is copy paste of testCase and is meant to be removed soon, when markers are removed from Luna
 testCaseWithMarkers
@@ -121,4 +108,7 @@ testCaseWithMarkers initialCode expectedCode action env = let
             gl <- maybe (pure topGl) withMain mainNodeId
             action gl
             Graph.withGraph gl (use Graph.code)
-    in evalEmp env execute >>= codeCheck expectedCode
+    in do
+        pm         <- defaultPMState
+        resultCode <- evalEmpire env (CommandState pm def) execute
+        codeCheck expectedCode resultCode
