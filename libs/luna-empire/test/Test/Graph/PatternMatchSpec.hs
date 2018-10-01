@@ -20,13 +20,13 @@ import LunaStudio.Data.Port           (InPortIndex (Arg), InPorts (InPorts),
 import LunaStudio.Data.PortDefault    (PortDefault (Expression))
 import LunaStudio.Data.PortRef        (AnyPortRef (InPortRef', OutPortRef'))
 import LunaStudio.Data.TypeRep        (TypeRep (TStar))
-import SpecUtils                      (addNode, connectToInput,
+import Test.Hspec                     (Spec, describe, it)
+import Test.Hspec.Empire              (addNode, connectToInput,
                                        emptyCodeTemplate, findNodeByName,
                                        findNodeIdByName, inPortRef, mkAliasPort,
                                        mkAllPort, mkSelfPort, outPortRef,
                                        runTests, testCase, testCaseWithMarkers,
                                        xitWithReason, (|>))
-import Test.Hspec                     (Spec, describe, it)
 import Test.Hspec.Expectations.Lifted (shouldBe, shouldMatchList)
 import Text.RawString.QQ              (r)
 

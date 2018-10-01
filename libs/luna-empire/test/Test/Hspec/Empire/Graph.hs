@@ -1,4 +1,4 @@
-module SpecUtils.Graph where
+module Test.Hspec.Empire.Graph where
 
 import Empire.Prelude
 

@@ -1,6 +1,7 @@
-module SpecUtils (module SpecUtils, module X) where
+module Test.Hspec.Empire (module Test.Hspec.Empire, module X) where
 
-import SpecUtils.Graph as X
+import Test.Hspec.Empire.Graph     as X
+import Test.Hspec.Hspec.WithReason as X
 
 import Empire.Prelude
 
@@ -20,9 +21,8 @@ import Empire.Data.Graph             (CommandState (CommandState),
 import Empire.Empire                 (CommunicationEnv (CommunicationEnv),
                                       Empire, evalEmpire)
 import LunaStudio.Data.GraphLocation (GraphLocation (GraphLocation))
-import Test.Hspec                    (Arg, Example, Expectation, Spec, SpecWith,
-                                      around, before_, describe, it, parallel,
-                                      pendingWith, shouldBe)
+import Test.Hspec                    (Expectation, Spec, SpecWith, around,
+                                      describe, parallel, shouldBe)
 import Text.RawString.QQ             (r)
 
 
@@ -33,12 +33,6 @@ withChannels = bracket createChannels (const $ pure ()) where
 
 runTests :: String -> SpecWith CommunicationEnv -> Spec
 runTests = around withChannels . parallel .: describe
-
-xitWithReason :: (HasCallStack, Example a)
-    => String -> String -> a -> SpecWith (Arg a)
-xitWithReason label reason action
-    = before_ (pendingWith reason) $ it label action
-
 
 emptyCodeTemplate :: Text
 emptyCodeTemplate = [r|

@@ -1,7 +1,7 @@
 module EmpireUtils (module EmpireUtils, module X) where
 
-import Empire.Empire as X (runEmpire)
-import SpecUtils     as X
+import Empire.Empire     as X (runEmpire)
+import Test.Hspec.Empire as X
 
 import Empire.Prelude
 
