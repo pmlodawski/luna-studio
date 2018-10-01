@@ -34,18 +34,28 @@ import LunaStudio.Data.TypeRep       (TypeRep (TStar))
 
 infixl 5 |>
 (|>) :: GraphLocation -> NodeId -> GraphLocation
-(|>) (GraphLocation file bc) nid = GraphLocation file
+(|>) = appendLambda
+
+appendLambda  :: GraphLocation -> NodeId -> GraphLocation
+appendLambda (GraphLocation file bc) nid = GraphLocation file
     . coerce . (<> [Lambda nid]) $ coerce bc
 
 infixl 5 |>-
 (|>-) :: GraphLocation -> (NodeId, Int) -> GraphLocation
-(|>-) (GraphLocation file bc) it = GraphLocation file
-    . Breadcrumb . (<> [uncurry Arg it]) $ coerce bc
+(|>-) = appendArg
+
+appendArg :: GraphLocation -> (NodeId, Int) -> GraphLocation
+appendArg (GraphLocation file bc) it = GraphLocation file
+    . Breadcrumb . (<> [uncurry Arg it]) $ coerce bc    
 
 infixl 5 |>=
 (|>=) :: GraphLocation -> NodeId -> GraphLocation
-(|>=) (GraphLocation file bc) it = GraphLocation file
+(|>=) = appendDefinition
+
+appendDefinition :: GraphLocation -> NodeId -> GraphLocation
+appendDefinition (GraphLocation file bc) it = GraphLocation file
     . Breadcrumb . (<> [Definition it]) $ coerce bc
+
 
 mkUUID :: MonadIO m => m UUID
 mkUUID = liftIO nextRandom
