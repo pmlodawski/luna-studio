@@ -17,7 +17,7 @@ import Data.Reflection               (Given (..), give)
 import Empire.Commands.Library       (listLibraries, withLibrary)
 import Empire.Data.Graph             (ClsGraph, CommandState (..), userState)
 import Empire.Empire                 (CommunicationEnv (..), Empire, Env,
-                                      InterpreterEnv (..), runEmpire)
+                                      InterpreterEnv (..))
 import LunaStudio.Data.Breadcrumb    (Breadcrumb (Breadcrumb))
 import LunaStudio.Data.GraphLocation (GraphLocation (GraphLocation))
 import LunaStudio.Data.Node          (NodeId, nodeId)

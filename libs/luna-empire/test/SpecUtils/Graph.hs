@@ -9,7 +9,6 @@ import qualified Empire.Data.Graph               as Graph
 import qualified LunaStudio.Data.Node            as Node
 import qualified LunaStudio.Data.Position        as Position
 
-
 import Control.Lens                  (uses)
 import Data.Coerce                   (coerce)
 import Data.UUID                     (UUID)
