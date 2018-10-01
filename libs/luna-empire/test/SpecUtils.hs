@@ -99,7 +99,7 @@ testCase initialCode expectedCode action env = let
             Graph.getCode gl
     in evalEmp env execute >>= codeCheck expectedCode
 
--- This function is copy paste of testCase and is meant to be removed soon, when markers are removed from Luna
+--[TODO]: This function is copy paste of testCase and is meant to be removed soon, when markers are removed from Luna
 testCaseWithMarkers
     :: Text
     -> Text

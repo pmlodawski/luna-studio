@@ -55,7 +55,7 @@ top = given
 emptyGraphLocation :: GraphLocation
 emptyGraphLocation = GraphLocation "" $ Breadcrumb []
 
--- this function exists for backwards compatibility, meant to be removed soon
+--[TODO]: This function exists for backwards compatibility, meant to be removed soon
 specifyCodeChange :: Text -> Text -> (GraphLocation -> Empire a) -> CommunicationEnv -> Expectation
 specifyCodeChange initialCode expectedCode action env =
     testCase initialCode expectedCode action env
