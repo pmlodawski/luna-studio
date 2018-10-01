@@ -342,6 +342,11 @@ extractArgNames node funResolve = do
         ASGFunction _ a _ -> do
             args <- mapM source =<< ptrListToList a
             mapM safeGetVarName args
+        ResolvedDef mod n -> do
+            let fun = (\f -> f mod n) =<< funResolve
+            case fun of
+                Just f -> extractArgNames (generalize f) funResolve
+                _      -> pure []
         _ -> pure []
 
 extractAppArgNames :: NodeRef -> Maybe TCFunResolver -> GraphOp [Maybe String]
@@ -622,11 +627,14 @@ deepResolveInputs nid ref portRef@(InPortRef loc id) = do
             <$> (filter ((/= nid) . view srcNodeId) currentPortResolution)
         unfilteredPortConn = (, portRef) <$> currentPortResolution
     args       <- ASTDeconstruct.extractAppPorts ref
-    argsConns  <- forM (zip args [0..]) $ \(arg, i)
+    startingPortNumber <- match ref $ \case
+        LeftSection{} -> pure 1
+        _             -> pure 0
+    argsConns <- forM (zip args [startingPortNumber..]) $ \(arg, i)
         -> deepResolveInputs nid arg (InPortRef loc (id <> [Arg i]))
-    head       <- ASTDeconstruct.extractFun ref
-    self       <- ASTDeconstruct.extractSelf head
-    firstRun   <- (== ref) <$> ASTRead.getASTTarget nid
+    head      <- ASTDeconstruct.extractFun ref
+    self      <- ASTDeconstruct.extractSelf head
+    firstRun  <- (== ref) <$> ASTRead.getASTTarget nid
     headConns <- case (self, head == ref) of
         (Just s, _) -> deepResolveInputs nid s    (InPortRef loc (id <> [Self]))
         (_, False)  -> deepResolveInputs nid head (InPortRef loc (id <> [Head]))
