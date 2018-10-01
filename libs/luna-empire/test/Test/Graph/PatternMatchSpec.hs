@@ -1,28 +1,34 @@
 module Test.Graph.PatternMatchSpec (spec) where
 
-import           Empire.ASTOp                    (runASTOp)
-import qualified Empire.ASTOps.Read              as ASTRead
-import qualified Empire.Commands.Graph           as Graph
-import qualified Empire.Commands.GraphBuilder    as GraphBuilder
-import           Empire.Prelude
-import           LunaStudio.Data.Connection      (Connection (Connection))
-import qualified LunaStudio.Data.Graph           as Graph
-import           LunaStudio.Data.LabeledTree     (LabeledTree (LabeledTree))
-import qualified LunaStudio.Data.Node            as Node
-import           LunaStudio.Data.Port            (InPortIndex(Arg), InPorts (InPorts)
-                                                 , OutPortIndex (Projection), OutPorts (OutPorts)
-                                                 , Port (Port), PortState (Connected, NotConnected, WithDefault))
-import qualified LunaStudio.Data.Port            as Port
-import           LunaStudio.Data.PortDefault     (PortDefault (Expression))
-import           LunaStudio.Data.PortRef         (AnyPortRef (InPortRef', OutPortRef'))
-import qualified LunaStudio.Data.PortRef         as PortRef
-import           LunaStudio.Data.TypeRep         (TypeRep (TStar))
-import           SpecUtils                       ((|>), addNode, connectToInput, emptyCodeTemplate, findNodeByName, findNodeIdByName
-                                                 , inPortRef, mkAliasPort, mkAllPort, mkSelfPort, outPortRef
-                                                 , runTests, testCase, testCaseWithMarkers, xitWithReason)
-import           Test.Hspec                      (describe, it, Spec)
-import           Test.Hspec.Expectations.Lifted  (shouldBe, shouldMatchList)
-import           Text.RawString.QQ               (r)
+import Empire.Prelude
+
+import qualified Empire.ASTOps.Read           as ASTRead
+import qualified Empire.Commands.Graph        as Graph
+import qualified Empire.Commands.GraphBuilder as GraphBuilder
+import qualified LunaStudio.Data.Graph        as Graph
+import qualified LunaStudio.Data.Node         as Node
+import qualified LunaStudio.Data.Port         as Port
+import qualified LunaStudio.Data.PortRef      as PortRef
+
+import Empire.ASTOp                   (runASTOp)
+import LunaStudio.Data.Connection     (Connection (Connection))
+import LunaStudio.Data.LabeledTree    (LabeledTree (LabeledTree))
+import LunaStudio.Data.Port           (InPortIndex (Arg), InPorts (InPorts),
+                                       OutPortIndex (Projection),
+                                       OutPorts (OutPorts), Port (Port),
+                                       PortState (Connected, NotConnected, WithDefault))
+import LunaStudio.Data.PortDefault    (PortDefault (Expression))
+import LunaStudio.Data.PortRef        (AnyPortRef (InPortRef', OutPortRef'))
+import LunaStudio.Data.TypeRep        (TypeRep (TStar))
+import SpecUtils                      (addNode, connectToInput,
+                                       emptyCodeTemplate, findNodeByName,
+                                       findNodeIdByName, inPortRef, mkAliasPort,
+                                       mkAllPort, mkSelfPort, outPortRef,
+                                       runTests, testCase, testCaseWithMarkers,
+                                       xitWithReason, (|>))
+import Test.Hspec                     (Spec, describe, it)
+import Test.Hspec.Expectations.Lifted (shouldBe, shouldMatchList)
+import Text.RawString.QQ              (r)
 
 
 spec :: Spec
@@ -38,7 +44,7 @@ spec = runTests "pattern match tests" $ do
                 |]
             in testCase emptyCodeTemplate expectedCode $ \gl ->
                 addNode gl "Just a = Just 1"
-                
+
         it "adds a node pattern-matching on nested value" $ let
             expectedCode = [r|
                 import Std.Base
@@ -114,7 +120,7 @@ spec = runTests "pattern match tests" $ do
                 Just fooId          <- findNodeIdByName gl "foo"
                 Just barId          <- findNodeIdByName gl "bar"
                 Just patternMatchId <- findNodeIdByName gl "Tuple2 x y"
-                Graph.withGraph gl . runASTOp $ (fooId, barId, , ) 
+                Graph.withGraph gl . runASTOp $ (fooId, barId, , )
                     <$> GraphBuilder.buildNode patternMatchId
                     <*> GraphBuilder.buildConnections
             in testCase code code $ \gl -> do
@@ -123,7 +129,7 @@ spec = runTests "pattern match tests" $ do
                     patternMatchOutPorts = patternMatch ^. Node.outPorts
                 patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
                 connections          `shouldMatchList` expectedConnections fooId barId patternMatchId
-                
+
         it "contains proper connections and ports on a pattern matching node with tuple pattern" $ let
             code = [r|
                 import Std.Base
@@ -139,16 +145,16 @@ spec = runTests "pattern match tests" $ do
                     [ LabeledTree def $ Port [Projection 0] "x" TStar NotConnected
                     , LabeledTree def $ Port [Projection 1] "y" TStar NotConnected ])
                 (mkAllPort "(x, y)" NotConnected)
-            expectedConnections fooId barId patternMatchId = 
+            expectedConnections fooId barId patternMatchId =
                 [ (outPortRef fooId mempty, inPortRef patternMatchId mempty)
                 , (outPortRef patternMatchId [Projection 0], inPortRef barId [Arg 0]) ]
             prepare gl = do
                 Just fooId          <- findNodeIdByName gl "foo"
                 Just patternMatchId <- findNodeIdByName gl "(x, y)"
                 Just barId          <- findNodeIdByName gl "bar"
-                Graph.withGraph gl . runASTOp $ (fooId,barId, , ) 
+                Graph.withGraph gl . runASTOp $ (fooId,barId, , )
                     <$> GraphBuilder.buildNode patternMatchId
-                    <*> GraphBuilder.buildConnections              
+                    <*> GraphBuilder.buildConnections
             in testCase code code $ \gl -> do
                 (fooId, barId, patternMatch, connections) <- prepare gl
                 let patternMatchId       = patternMatch ^. Node.nodeId
@@ -159,7 +165,7 @@ spec = runTests "pattern match tests" $ do
         it "contains proper connections for nested pattern use" $ let
             code = [r|
                 import Std.Base
-    
+
                 def main:
                     (a, b, (c, d)) = (1, 2, (3, 4))
                     c1 = c
@@ -170,13 +176,13 @@ spec = runTests "pattern match tests" $ do
             prepare gl = do
                 Just patternMatchId <- findNodeIdByName gl "(a, b, (c, d))"
                 Just c1Id           <- findNodeIdByName gl "c1"
-                Graph.withGraph gl . runASTOp $ (patternMatchId, c1Id, ) 
+                Graph.withGraph gl . runASTOp $ (patternMatchId, c1Id, )
                     <$> GraphBuilder.buildConnections
             in testCase code code $ \gl -> do
                 (patternMatchId, c1Id, connections) <- prepare gl
                 connections `shouldMatchList` expectedConnections patternMatchId c1Id
 
-                
+
         it "connects two outputs when one of them is pattern match" $ let
             initialCode = [r|
                 import Std.Base
@@ -212,15 +218,15 @@ spec = runTests "pattern match tests" $ do
                 Just myVec1Id  <- findNodeIdByName gl "myVec1"
                 Just vector1Id <- findNodeIdByName gl "vector1"
                 pure (myVec1Id, vector1Id)
-            getResult gl vector1Id = Graph.withGraph gl . runASTOp $ (,,) 
+            getResult gl vector1Id = Graph.withGraph gl . runASTOp $ (,,)
                 <$> GraphBuilder.buildNode vector1Id
                 <*> GraphBuilder.buildConnections
                 <*> (ASTRead.getASTPointer vector1Id >>= ASTRead.varIsPatternMatch)
             in testCase initialCode expectedCode $ \gl -> do
                 (myVec1Id, vector1Id) <- prepare gl
                 Graph.connect
-                    gl 
-                    (outPortRef myVec1Id mempty) 
+                    gl
+                    (outPortRef myVec1Id mempty)
                     (OutPortRef' $ outPortRef vector1Id mempty)
                 (patternMatch, connections, isPatternMatch) <- getResult gl vector1Id
                 let patternMatchId       = vector1Id
@@ -230,7 +236,7 @@ spec = runTests "pattern match tests" $ do
                 patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
                 connections          `shouldMatchList` expectedConnections myVec1Id patternMatchId
                 isPatternMatch       `shouldBe`        True
-    
+
         it "disconnects pattern match" $ let
             initialCode = [r|
                 import Std.Base
@@ -274,7 +280,7 @@ spec = runTests "pattern match tests" $ do
                 patternMatchInPorts  `shouldBe`        expectedPatternMatchInPorts
                 connections          `shouldMatchList` mempty
                 isPatternMatch       `shouldBe`        True
-    
+
         it "connects to pattern match, disconnects and connects again" $ let
             initialCode = [r|
                 import Std.Base
@@ -304,34 +310,34 @@ spec = runTests "pattern match tests" $ do
                     , LabeledTree def $ Port [Projection 1] "y" TStar NotConnected
                     , LabeledTree def $ Port [Projection 2] "z" TStar NotConnected ])
                 (mkAllPort "Vector x y z" NotConnected)
-            expectedConnections myVec1Id patternMatchId = 
+            expectedConnections myVec1Id patternMatchId =
                 [ (outPortRef myVec1Id mempty, inPortRef patternMatchId mempty) ]
             prepare gl = do
                 Just myVec1Id       <- findNodeIdByName gl "myVec1"
                 Just patternMatchId <- findNodeIdByName gl "vector1"
                 pure (myVec1Id, patternMatchId)
-            getResult gl patternMatchId = Graph.withGraph gl . runASTOp $ (,,) 
+            getResult gl patternMatchId = Graph.withGraph gl . runASTOp $ (,,)
                 <$> GraphBuilder.buildNode patternMatchId
                 <*> GraphBuilder.buildConnections
                 <*> (ASTRead.getASTPointer patternMatchId >>= ASTRead.varIsPatternMatch)
             in testCase initialCode expectedCode $ \gl -> do
                 (myVec1Id, patternMatchId) <- prepare gl
                 Graph.connect
-                    gl 
-                    (outPortRef myVec1Id mempty) 
+                    gl
+                    (outPortRef myVec1Id mempty)
                     (OutPortRef' $ outPortRef patternMatchId mempty)
                 Graph.disconnect gl $ inPortRef patternMatchId mempty
                 Graph.connect gl
                     (outPortRef myVec1Id mempty)
                     (InPortRef' $ inPortRef patternMatchId mempty)
                 (patternMatch, connections, isPatternMatch) <- getResult gl patternMatchId
-                let patternMatchInPorts  = patternMatch ^. Node.inPorts                    
+                let patternMatchInPorts  = patternMatch ^. Node.inPorts
                     patternMatchOutPorts = patternMatch ^. Node.outPorts
                 patternMatchInPorts  `shouldBe`        expectedPatternMatchInPorts
                 patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
                 connections          `shouldMatchList` expectedConnections myVec1Id patternMatchId
                 isPatternMatch       `shouldBe`        True
-                
+
         it "connects deconstructed value to other nodes" $ let
             initialCode = [r|
                 import Std.Base
@@ -354,8 +360,8 @@ spec = runTests "pattern match tests" $ do
                     None
                 |]
             expectedFunction1InPorts = LabeledTree
-                (InPorts 
-                    (Just . LabeledTree def $ mkSelfPort NotConnected) 
+                (InPorts
+                    (Just . LabeledTree def $ mkSelfPort NotConnected)
                     mempty
                     [ LabeledTree def $ Port [Arg 0] "x" TStar Connected
                     , LabeledTree def $ Port [Arg 1] "y" TStar Connected ])
@@ -378,7 +384,7 @@ spec = runTests "pattern match tests" $ do
                         = outRef ^. PortRef.srcNodeId == patternMatchId
                         && inRef ^. PortRef.dstNodeId == function1Id
                     filterConnections = filter isRelevantConnection
-                Graph.withGraph gl . runASTOp $ (,,) 
+                Graph.withGraph gl . runASTOp $ (,,)
                     <$> GraphBuilder.buildNode patternMatchId
                     <*> GraphBuilder.buildNode function1Id
                     <*> (filterConnections <$> GraphBuilder.buildConnections)
@@ -389,8 +395,8 @@ spec = runTests "pattern match tests" $ do
                     (outPortRef patternMatchId [Projection 0])
                     (inPortRef function1Id [Arg 0])
                 connectToInput
-                    gl 
-                    (outPortRef patternMatchId [Projection 1]) 
+                    gl
+                    (outPortRef patternMatchId [Projection 1])
                     (inPortRef function1Id [Arg 1])
                 (patternMatch, function1, connections) <- getResult gl patternMatchId function1Id
                 let patternMatchOutPorts = patternMatch ^. Node.outPorts
@@ -398,7 +404,7 @@ spec = runTests "pattern match tests" $ do
                 patternMatchOutPorts `shouldBe`        expectedPatternMatchOutPorts
                 function1InPorts     `shouldBe`        expectedFunction1InPorts
                 connections          `shouldMatchList` expectedConnections patternMatchId function1Id
-                         
+
         it "connects two outputs when one of them is nested pattern match with literals" $ let
             initialCode = [r|
                 import Std.Base
@@ -418,14 +424,14 @@ spec = runTests "pattern match tests" $ do
                 |]
             expectedPatternMatchInPorts = LabeledTree
                 ( InPorts
-                    (Just $ LabeledTree def $ mkSelfPort NotConnected) 
-                    mempty 
+                    (Just $ LabeledTree def $ mkSelfPort NotConnected)
+                    mempty
                     mempty )
                 (mkAliasPort Connected)
             expectedPatternMatchOutPorts = LabeledTree
                 (OutPorts [
                     LabeledTree
-                        (OutPorts [ LabeledTree def 
+                        (OutPorts [ LabeledTree def
                             (Port [Projection 0, Port.Projection 0] "a" TStar NotConnected) ])
                         (Port [Projection 0] "Just a" TStar NotConnected)
                     , LabeledTree def $ Port [Projection 1] "0"       TStar NotConnected
@@ -446,8 +452,8 @@ spec = runTests "pattern match tests" $ do
             in testCase initialCode expectedCode $ \gl -> do
                 (myVec1Id, someCons1Id) <- prepare gl
                 Graph.connect
-                    gl 
-                    (outPortRef myVec1Id mempty) 
+                    gl
+                    (outPortRef myVec1Id mempty)
                     (OutPortRef' $ outPortRef someCons1Id mempty)
                 (patternMatch, connections, isPatternMatch) <- getResult gl someCons1Id
                 let patternMatchId       = someCons1Id
@@ -468,13 +474,13 @@ spec = runTests "pattern match tests" $ do
                     None
                 |]
             expectedPatternMatchInPorts = LabeledTree
-                (InPorts 
-                    mempty 
-                    mempty 
+                (InPorts
+                    mempty
+                    mempty
                     [ LabeledTree def $ Port [Arg 0] "arg0" TStar NotConnected ])
                 (mkAliasPort . WithDefault $ Expression "(Foobar a b c): b")
             expectedInputOutPorts = [ LabeledTree
-                (OutPorts 
+                (OutPorts
                     [ LabeledTree def $ Port [Projection 0, Projection 0] "a" TStar NotConnected
                     , LabeledTree def $ Port [Projection 0, Projection 1] "b" TStar NotConnected
                     , LabeledTree def $ Port [Projection 0, Projection 2] "c" TStar NotConnected ])
@@ -509,7 +515,7 @@ spec = runTests "pattern match tests" $ do
                 outputInPorts       `shouldBe`        expectedOutputInPorts
                 nodes               `shouldBe`        mempty
                 connections         `shouldMatchList` expectedConnections inputId outputId
-        
+
         xitWithReason "supports multi-parameter lambdas pattern matching on their arguments" "waiting for new printer" $ let
             code = [r|
                 import Std.Base
@@ -519,26 +525,26 @@ spec = runTests "pattern match tests" $ do
                     None
                 |]
             expectedPatternMatchInPorts = LabeledTree
-                (InPorts 
-                    mempty 
-                    mempty 
+                (InPorts
+                    mempty
+                    mempty
                     [ LabeledTree def $ Port [Arg 0] "arg0" TStar NotConnected
                     , LabeledTree def $ Port [Arg 1] "x"    TStar NotConnected
                     , LabeledTree def $ Port [Arg 2] "arg2" TStar NotConnected ])
                 (mkAliasPort . WithDefault $ Expression "(Foobar a b (Just c)): x: (Quux y z): c")
             expectedInputOutPorts =
                 [ LabeledTree
-                    (OutPorts 
+                    (OutPorts
                         [ LabeledTree def $ Port [Projection 0, Projection 0] "a" TStar NotConnected
                         , LabeledTree def $ Port [Projection 0, Projection 1] "b" TStar NotConnected
-                        , LabeledTree 
+                        , LabeledTree
                             (OutPorts
                                 [ LabeledTree def $ Port [Projection 0, Projection 2, Projection 0] "c" TStar NotConnected ])
                             (Port [Projection 0, Projection 2] "Just c" TStar NotConnected) ])
                     (Port [Projection 0] "Foobar a b (Just c)" TStar NotConnected)
                 , LabeledTree def $ Port [Projection 1] "x" TStar NotConnected
                 , LabeledTree
-                    (OutPorts 
+                    (OutPorts
                         [ LabeledTree def $ Port [Projection 2, Projection 0] "y" TStar NotConnected
                         , LabeledTree def $ Port [Projection 2, Projection 1] "z" TStar NotConnected ])
                     (Port [Projection 2] "Quux y z" TStar NotConnected) ]

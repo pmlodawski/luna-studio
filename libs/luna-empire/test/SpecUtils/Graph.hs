@@ -1,47 +1,55 @@
 module SpecUtils.Graph where
 
-import           Control.Lens                    (uses)
-import           Data.Coerce                     (coerce)
+import Empire.Prelude
+
 import qualified Data.Map                        as Map
-import           Data.UUID                       (UUID)
-import           Data.UUID.V4                    (nextRandom)
-import           Empire.ASTOp                    (runASTOp)
 import qualified Empire.Commands.Graph           as Graph
 import qualified Empire.Data.BreadcrumbHierarchy as BH
 import qualified Empire.Data.Graph               as Graph
-import           Empire.Empire                   (Empire)
-import           Empire.Prelude
-import           LunaStudio.Data.Breadcrumb      (Breadcrumb (Breadcrumb), BreadcrumbItem (Arg, Definition, Lambda))
-import           LunaStudio.Data.Connection      (Connection)
-import           LunaStudio.Data.GraphLocation   (GraphLocation (GraphLocation))
-import           LunaStudio.Data.Node            (ExpressionNode, NodeId)
 import qualified LunaStudio.Data.Node            as Node
-import           LunaStudio.Data.NodeLoc         (NodeLoc (NodeLoc))
-import           LunaStudio.Data.NodeMeta        (NodeMeta (NodeMeta))
-import           LunaStudio.Data.Port            (InPort, InPortId, InPortIndex (Self), OutPort, OutPortId, Port (Port), PortState)
-import           LunaStudio.Data.PortRef         (AnyPortRef (InPortRef'), InPortRef (InPortRef), OutPortRef (OutPortRef))
 import qualified LunaStudio.Data.Position        as Position
-import           LunaStudio.Data.TypeRep         (TypeRep (TStar))
+
+
+import Control.Lens                  (uses)
+import Data.Coerce                   (coerce)
+import Data.UUID                     (UUID)
+import Data.UUID.V4                  (nextRandom)
+import Empire.ASTOp                  (runASTOp)
+import Empire.Empire                 (Empire)
+import LunaStudio.Data.Breadcrumb    (Breadcrumb (Breadcrumb),
+                                      BreadcrumbItem (Arg, Definition, Lambda))
+import LunaStudio.Data.Connection    (Connection)
+import LunaStudio.Data.GraphLocation (GraphLocation (GraphLocation))
+import LunaStudio.Data.Node          (ExpressionNode, NodeId)
+import LunaStudio.Data.NodeLoc       (NodeLoc (NodeLoc))
+import LunaStudio.Data.NodeMeta      (NodeMeta (NodeMeta))
+import LunaStudio.Data.Port          (InPort, InPortId, InPortIndex (Self),
+                                      OutPort, OutPortId, Port (Port),
+                                      PortState)
+import LunaStudio.Data.PortRef       (AnyPortRef (InPortRef'),
+                                      InPortRef (InPortRef),
+                                      OutPortRef (OutPortRef))
+import LunaStudio.Data.TypeRep       (TypeRep (TStar))
 
 
 infixl 5 |>
 (|>) :: GraphLocation -> NodeId -> GraphLocation
-(|>) (GraphLocation file bc) nid = GraphLocation file 
+(|>) (GraphLocation file bc) nid = GraphLocation file
     . coerce . (<> [Lambda nid]) $ coerce bc
 
 infixl 5 |>-
 (|>-) :: GraphLocation -> (NodeId, Int) -> GraphLocation
-(|>-) (GraphLocation file bc) it = GraphLocation file 
+(|>-) (GraphLocation file bc) it = GraphLocation file
     . Breadcrumb . (<> [uncurry Arg it]) $ coerce bc
 
 infixl 5 |>=
 (|>=) :: GraphLocation -> NodeId -> GraphLocation
-(|>=) (GraphLocation file bc) it = GraphLocation file 
+(|>=) (GraphLocation file bc) it = GraphLocation file
     . Breadcrumb . (<> [Definition it]) $ coerce bc
 
 mkUUID :: MonadIO m => m UUID
 mkUUID = liftIO nextRandom
-        
+
 mkAllPort :: Text -> PortState -> OutPort
 mkAllPort name = Port mempty name TStar
 
@@ -80,14 +88,14 @@ mockNodesLayout gl = getMarkersWithNodeId >>= mapM_ (uncurry mockNodeMeta) where
     nodesInterspace          = 10
     mockMarkerOfffset marker = fromIntegral marker * nodesInterspace
     getMarkersWithNodeId = Graph.withGraph gl $ do
-        markers <- fmap fromIntegral . Map.keys 
+        markers <- fmap fromIntegral . Map.keys
             <$> use (Graph.userState . Graph.codeMarkers)
         foundNodeIds <- runASTOp . fmap catMaybes . forM markers $ \m ->
             (m,) `fmap2` Graph.getNodeIdForMarker m
         topLevelNodeIds <- uses
             (Graph.userState . Graph.breadcrumbHierarchy)
             BH.topLevelIDs
-        pure $ filter (\(_, nid) -> elem nid topLevelNodeIds) foundNodeIds    
+        pure $ filter (\(_, nid) -> elem nid topLevelNodeIds) foundNodeIds
     mockNodeMeta marker nid = Graph.setNodeMeta gl nid $ NodeMeta
         (Position.fromTuple (0, mockMarkerOfffset marker))
         False

@@ -3,38 +3,32 @@
 {-# LANGUAGE RankNTypes        #-}
 {-# LANGUAGE TypeApplications  #-}
 
-module EmpireUtils
-    ( emptyGraphLocation
-    , extractGraph
-    , graphIDs
-    , runEmp'
-    , runEmpire
-    , specifyCodeChange
-    , top
-    , withResult
-    , module X
-    ) where
+module EmpireUtils (module EmpireUtils, module X) where
 
-import           Data.Reflection               (Given (..), give)
-import qualified Empire.Commands.Graph         as Graph (getNodes)
-import           Empire.Commands.Library       (listLibraries, withLibrary)
-import           Empire.Data.Graph             (CommandState(..), ClsGraph, userState)
-import qualified Empire.Data.Library           as Library (body, path)
-import           Empire.Empire                 (CommunicationEnv (..), Empire, Env, InterpreterEnv (..), runEmpire)
-import           Empire.Prelude                hiding (toList)
-import           LunaStudio.Data.Breadcrumb    (Breadcrumb (Breadcrumb))
-import           LunaStudio.Data.GraphLocation (GraphLocation (GraphLocation))
-import           LunaStudio.Data.Node          (NodeId, nodeId)
-import           Test.Hspec                    (Expectation)
+import Empire.Empire as X (runEmpire)
+import SpecUtils     as X
 
-import           SpecUtils                     as X
+import Empire.Prelude
+
+import qualified Empire.Commands.Graph as Graph (getNodes)
+import qualified Empire.Data.Library   as Library (body, path)
+
+import Data.Reflection               (Given (..), give)
+import Empire.Commands.Library       (listLibraries, withLibrary)
+import Empire.Data.Graph             (ClsGraph, CommandState (..), userState)
+import Empire.Empire                 (CommunicationEnv (..), Empire, Env,
+                                      InterpreterEnv (..), runEmpire)
+import LunaStudio.Data.Breadcrumb    (Breadcrumb (Breadcrumb))
+import LunaStudio.Data.GraphLocation (GraphLocation (GraphLocation))
+import LunaStudio.Data.Node          (NodeId, nodeId)
+import Test.Hspec                    (Expectation)
 
 
-runEmp' 
-    :: CommunicationEnv 
-    -> CommandState Env 
-    -> ClsGraph 
-    -> (Given GraphLocation => Empire a) 
+runEmp'
+    :: CommunicationEnv
+    -> CommandState Env
+    -> ClsGraph
+    -> (Given GraphLocation => Empire a)
     -> IO (a, CommandState Env)
 runEmp' env st newGraph act = runEmpire env st $ do
     lib <- head <$> listLibraries

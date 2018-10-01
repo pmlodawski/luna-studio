@@ -1,44 +1,36 @@
-module SpecUtils
-    ( emptyCodeTemplate
-    , evalEmp
-    , normalizeLunaCode
-    , runEmp
-    , runTests
-    , testCase
-    , testCaseWithMarkers
-    , withChannels
-    , xitWithReason
-    , module X
-    ) where
+module SpecUtils (module SpecUtils, module X) where
 
+import SpecUtils.Graph as X
 
-import           Control.Concurrent.MVar       (newEmptyMVar)
-import           Control.Concurrent.STM        (atomically)
-import           Control.Concurrent.STM.TChan  (newTChan)
-import           Data.Char                     (isSpace)
-import           Data.List                     (dropWhileEnd)
-import qualified Data.Text                     as Text
-import           Data.Reflection               (Given, give)
-import qualified Empire.Commands.Graph         as Graph
-import           Empire.Commands.Library       (createLibrary)
-import           Control.Exception             (bracket)
-import           Empire.Data.Graph             (CommandState (CommandState), defaultPMState)
-import           Empire.Empire                 (CommunicationEnv (CommunicationEnv), Empire, Env
-                                               , runEmpire)
-import           Empire.Prelude
-import qualified Empire.Data.Graph             as Graph
-import           LunaStudio.Data.GraphLocation (GraphLocation (GraphLocation))
-import qualified LunaStudio.Data.Node          as Node
-import           Test.Hspec                    (Arg, Example, Expectation, Spec, SpecWith
-                                               , around, before_, describe, it, parallel, pendingWith, shouldBe)
-import           Text.RawString.QQ             (r)
+import Empire.Prelude
 
-import           SpecUtils.Graph               as X
-    
+import qualified Data.Text             as Text
+import qualified Empire.Commands.Graph as Graph
+import qualified Empire.Data.Graph     as Graph
+import qualified LunaStudio.Data.Node  as Node
+
+import Control.Concurrent.MVar       (newEmptyMVar)
+import Control.Concurrent.STM        (atomically)
+import Control.Concurrent.STM.TChan  (newTChan)
+import Control.Exception             (bracket)
+import Data.Char                     (isSpace)
+import Data.List                     (dropWhileEnd)
+import Data.Reflection               (Given, give)
+import Empire.Commands.Library       (createLibrary)
+import Empire.Data.Graph             (CommandState (CommandState),
+                                      defaultPMState)
+import Empire.Empire                 (CommunicationEnv (CommunicationEnv),
+                                      Empire, Env, runEmpire)
+import LunaStudio.Data.GraphLocation (GraphLocation (GraphLocation))
+import Test.Hspec                    (Arg, Example, Expectation, Spec, SpecWith,
+                                      around, before_, describe, it, parallel,
+                                      pendingWith, shouldBe)
+import Text.RawString.QQ             (r)
+
 
 withChannels :: (CommunicationEnv -> IO a) -> IO a
 withChannels = bracket createChannels (const $ pure ()) where
-    createChannels = CommunicationEnv 
+    createChannels = CommunicationEnv
         <$> atomically newTChan <*> newEmptyMVar <*> newEmptyMVar
 
 runEmp :: CommunicationEnv -> (Given GraphLocation => Empire a) -> IO (a, CommandState Env)
@@ -58,9 +50,9 @@ evalEmp env act = fst <$> runEmp env act
 runTests :: String -> SpecWith CommunicationEnv -> Spec
 runTests = around withChannels . parallel .: describe
 
-xitWithReason :: (HasCallStack, Example a) 
+xitWithReason :: (HasCallStack, Example a)
     => String -> String -> a -> SpecWith (Arg a)
-xitWithReason label reason action 
+xitWithReason label reason action
     = before_ (pendingWith reason) $ it label action
 
 
@@ -81,7 +73,7 @@ normalizeLunaCode str = Text.intercalate "\n" $ Text.drop minWs <$> allLines whe
     minWs    = minimum $ indentLength <$> filter (not . Text.null) allLines
 
 codeCheck :: Text -> (Text -> Expectation)
-codeCheck expectedCode = \resultCode -> 
+codeCheck expectedCode = \resultCode ->
     Text.strip resultCode `shouldBe` normalizeLunaCode expectedCode
 
 testCase
@@ -106,7 +98,7 @@ testCase initialCode expectedCode action env = let
             action gl
             Graph.getCode gl
     in evalEmp env execute >>= codeCheck expectedCode
-        
+
 -- This function is copy paste of testCase and is meant to be removed soon, when markers are removed from Luna
 testCaseWithMarkers
     :: Text
