@@ -8,10 +8,10 @@ import LunaStudio.Data.LabeledTree    (LabeledTree (LabeledTree))
 import LunaStudio.Data.Port           (OutPortIndex (Projection),
                                        OutPorts (OutPorts), Port (Port),
                                        PortState (NotConnected))
-import LunaStudio.Data.TypeRep        (TypeRep (TStar))
+import LunaStudio.Data.TypeRep        (TypeRep (TCons))
 import Test.Hspec                     (Spec, describe, it)
 import Test.Hspec.Empire              (findNodeByName,
-                                       mkAllPort, noAction, runTests, testCaseWithTC)
+                                       noAction, runTests, testCaseWithTC)
 import Test.Hspec.Expectations.Lifted (shouldBe)
 import Text.RawString.QQ              (r)
 
@@ -32,14 +32,14 @@ spec = runTests "typechecker pattern match tests" $ do
                     None
                 |]
             prepare gl = do
-                Just patternMatch <- findNodeByName gl "Vector a b c"
+                Just patternMatch <- findNodeByName gl "TestProject.Main.Vector.Vector a b c"
                 pure patternMatch
             expectedPatternMatchOutPorts = LabeledTree
                 (OutPorts
-                    [ LabeledTree def $ Port [Projection 0] "a" TStar NotConnected
-                    , LabeledTree def $ Port [Projection 1] "b" TStar NotConnected
-                    , LabeledTree def $ Port [Projection 2] "c" TStar NotConnected ])
-                (mkAllPort "Vector a b c" NotConnected)
+                    [ LabeledTree def $ Port [Projection 0] "a" (TCons "Int" mempty) NotConnected
+                    , LabeledTree def $ Port [Projection 1] "b" (TCons "Int" mempty) NotConnected
+                    , LabeledTree def $ Port [Projection 2] "c" (TCons "Int" mempty) NotConnected ])
+                (Port mempty "TestProject.Main.Vector.Vector a b c" (TCons "Vector" mempty) NotConnected)
             in testCaseWithTC code code noAction $ \gl -> do
                 patternMatch <- prepare gl
                 let patternMatchOutPorts = patternMatch ^. Node.outPorts

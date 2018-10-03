@@ -8,19 +8,17 @@ import Empire.Prelude
 import qualified Data.Graph.Store              as Store
 import qualified Data.Text                     as Text
 import qualified Empire.Commands.Graph         as Graph
-import qualified Empire.Commands.Typecheck     as Typecheck (run)
+import qualified Empire.Commands.Typecheck     as Typecheck (runNoCleanUp)
 import qualified Empire.Data.Graph             as Graph
 import qualified Empire.Data.Library           as Library (body, path)
 import qualified Empire.Empire                 as Empire
-import qualified Language.Haskell.TH           as TH
-import qualified Luna.Package.Structure.Name   as Project
 import qualified LunaStudio.Data.GraphLocation as GraphLocation
 import qualified System.IO.Temp                as Temp
 
 import Control.Concurrent.MVar         (newEmptyMVar)
 import Control.Concurrent.STM          (atomically)
 import Control.Concurrent.STM.TChan    (newTChan)
-import Control.Exception               (bracket, finally)
+import Control.Exception               (bracket)
 import Data.Char                       (isSpace)
 import Data.List                       (dropWhileEnd)
 import Empire.ASTOp                    (runASTOp)
@@ -34,8 +32,7 @@ import Empire.Empire                   (CommunicationEnv (CommunicationEnv),
 import Empire.Empire                   (InterpreterEnv (InterpreterEnv))
 import Luna.Package.Structure.Generate (genPackageStructure)
 import LunaStudio.Data.GraphLocation   (GraphLocation (GraphLocation))
-import System.Directory                (canonicalizePath, getCurrentDirectory)
-import System.FilePath                 (takeDirectory, (</>))
+import System.FilePath                 ((</>))
 import Test.Hspec                      (Expectation, Spec, SpecWith, around,
                                         describe, parallel, shouldBe)
 import Text.RawString.QQ               (r)
@@ -141,7 +138,7 @@ testCaseWithTC initialCode expectedCode action tcResultCheck env = let
         let commandState = CommandState pmState
                 $ InterpreterEnv (pure ()) clsGraph mempty def def def def
         updatedState <- execEmpire env commandState $
-            Typecheck.run gl clsGraph rooted False False
+            Typecheck.runNoCleanUp gl clsGraph rooted False False
         let updatedClsGraph
                 = updatedState ^. Graph.userState . Empire.clsGraph
         void . evalEmpire env state $ do
@@ -162,8 +159,6 @@ prepareTestEnvironmentWithTC projectParentDirName initialCode = let
     mainLunaName            = "Main.luna"
     genMainLunaPath pkgPath = pkgPath </> srcDirName </> mainLunaName
     in do
-        --[TODO]: Find out why lack of this line causes segmentation fault
-        createLibrary Nothing $ "/" <> projectName
         Right pkgPath <- genPackageStructure
             (genProjectPath projectParentDirName)
             Nothing
