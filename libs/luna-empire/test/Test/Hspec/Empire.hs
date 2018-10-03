@@ -35,7 +35,6 @@ import Empire.Empire                   (InterpreterEnv (InterpreterEnv))
 import Luna.Package.Structure.Generate (genPackageStructure)
 import LunaStudio.Data.GraphLocation   (GraphLocation (GraphLocation))
 import System.Directory                (canonicalizePath, getCurrentDirectory)
-import System.Environment              (lookupEnv, setEnv)
 import System.FilePath                 (takeDirectory, (</>))
 import Test.Hspec                      (Expectation, Spec, SpecWith, around,
                                         describe, parallel, shouldBe)
@@ -138,19 +137,18 @@ testCaseWithTC initialCode expectedCode action tcResultCheck env = let
                         $ clsGraph ^. Graph.clsClass
                     pure (gl, code, clsGraph, rooted)
         codeCheck expectedCode resultCode
-        withMockedLunaRoot . void $ do
-            pmState <- Graph.defaultPMState
-            let commandState = CommandState pmState
-                    $ InterpreterEnv (pure ()) clsGraph mempty def def def def
-            updatedState <- execEmpire env commandState $
-                Typecheck.run gl clsGraph rooted False False
-            let updatedClsGraph
-                    = updatedState ^. Graph.userState . Empire.clsGraph
-            evalEmpire env state $ do
-                libPath <- fmap (view Library.path . head) listLibraries
-                withLibrary libPath
-                    $ Graph.userState . Library.body .= updatedClsGraph
-                tcResultCheck gl
+        pmState <- Graph.defaultPMState
+        let commandState = CommandState pmState
+                $ InterpreterEnv (pure ()) clsGraph mempty def def def def
+        updatedState <- execEmpire env commandState $
+            Typecheck.run gl clsGraph rooted False False
+        let updatedClsGraph
+                = updatedState ^. Graph.userState . Empire.clsGraph
+        void . evalEmpire env state $ do
+            libPath <- fmap (view Library.path . head) listLibraries
+            withLibrary libPath
+                $ Graph.userState . Library.body .= updatedClsGraph
+            tcResultCheck gl
 
 prepareTestEnvironment :: Text -> Empire GraphLocation
 prepareTestEnvironment = prepareTestEnvironmentWithCustomPath defProjectPath where
@@ -187,20 +185,3 @@ prepareTestEnvironmentWithCustomPath filePath initialCode = let
         Graph.loadCode topGl $ normalizeLunaCode initialCode
         mainNodeId <- findNodeIdByName topGl mainNodeName
         maybe (pure topGl) withMain mainNodeId
-
-withMockedLunaRoot :: IO a -> IO a
-withMockedLunaRoot action = let
-    testSpecEmpireHsPath = $(do
-        dir      <- TH.runIO getCurrentDirectory
-        fileName <- TH.loc_filename <$> TH.location
-        TH.litE . TH.stringL $ dir </> fileName)
-    envDirName  = "env"
-    repoDirPath = takeDirectory testSpecEmpireHsPath </> "../../../../.."
-    envDirPath  = repoDirPath </> envDirName
-    in do
-        userLunaRoot   <- fromMaybe mempty <$> lookupEnv Project.lunaRootEnv
-        mockedLunaRoot <- canonicalizePath envDirPath
-        finally
-            (setEnv Project.lunaRootEnv mockedLunaRoot >> action)
-            $ setEnv Project.lunaRootEnv userLunaRoot
-            
