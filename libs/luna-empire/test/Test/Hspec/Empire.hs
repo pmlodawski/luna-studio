@@ -8,9 +8,9 @@ import Empire.Prelude
 import qualified Data.Graph.Store              as Store
 import qualified Data.Text                     as Text
 import qualified Empire.Commands.Graph         as Graph
-import qualified Empire.Commands.Typecheck     as Typecheck (runNoCleanUp)
+import qualified Empire.Commands.Typecheck     as Typecheck
 import qualified Empire.Data.Graph             as Graph
-import qualified Empire.Data.Library           as Library (body, path)
+import qualified Empire.Data.Library           as Library
 import qualified Empire.Empire                 as Empire
 import qualified LunaStudio.Data.GraphLocation as GraphLocation
 import qualified System.IO.Temp                as Temp
@@ -22,7 +22,7 @@ import Control.Exception               (bracket)
 import Data.Char                       (isSpace)
 import Data.List                       (dropWhileEnd)
 import Empire.ASTOp                    (runASTOp)
-import Empire.Commands.Library         (createLibrary, listLibraries,
+import Empire.Commands.Library         (createLibrary,
                                         withLibrary)
 import Empire.Data.Graph               (CommandState (CommandState),
                                         defaultPMState)
@@ -142,8 +142,7 @@ testCaseWithTC initialCode expectedCode action tcResultCheck env = let
         let updatedClsGraph
                 = updatedState ^. Graph.userState . Empire.clsGraph
         void . evalEmpire env state $ do
-            libPath <- fmap (view Library.path . head) listLibraries
-            withLibrary libPath
+            withLibrary (gl ^. GraphLocation.filePath)
                 $ Graph.userState . Library.body .= updatedClsGraph
             tcResultCheck gl
 
