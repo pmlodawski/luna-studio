@@ -3,12 +3,9 @@ path = require 'path'
 projects = require './projects'
 nodeEditorBaseGL = require 'luna-basegl-ui'
 
-uniqueTabNo = 0
-
 module.exports =
 class LunaNodeEditorTab extends View
-    mountPoint = ""
-    mountPoint2 = "luna-mount-basegl"
+    mountPoint = "node-editor-mount"
     @pushShortcutEvent = null
     @pushSearcherEvent = null
 
@@ -18,7 +15,7 @@ class LunaNodeEditorTab extends View
         @handleEvents()
         @pushShortcutEvent = (name, arg = null) => @nodeEditor.pushEvent({_shortcut: name, _arg : arg})
         @pushSearcherEvent = (name, arg = null) => @nodeEditor.pushEvent(if arg == null then {tag: name} else {tag: name, contents : arg})
-        window.install = => nodeEditorBaseGL.install mountPoint2, 'atom://luna-studio/rsc/',  (ne) =>
+        window.install = => nodeEditorBaseGL.install mountPoint, 'atom://luna-studio/rsc/',  (ne) =>
             window.nodeEditor = ne
             @nodeEditor.setView ne
             @nodeEditor.start @uri, mountPoint
@@ -83,19 +80,13 @@ class LunaNodeEditorTab extends View
                     base:   base
 
     @content: ->
-        uniqueTabNo++
-        mountPoint = "luna-studio-mount" + uniqueTabNo
-        @div =>
-            @div
-                style: 'display: flex; width: 100%; height: 100%'
-                =>
-                    @div
-                        id: mountPoint2
-                        style: 'flex-direction:row; width: 100%; height: inherit'
-                        class: 'luna-studio-mount luna-studio luna-noselect'
-                        tabindex: -1
-                        =>
-                            @h1 "Loading ..."
+        @div
+            id: mountPoint
+            style: 'flex-direction:row; width: 100%; height: inherit'
+            class: 'luna-studio-mount luna-studio luna-noselect'
+            tabindex: -1
+            =>
+                @h1 "Loading ..."
 
     getTitle:     -> 'Node editor'
 
