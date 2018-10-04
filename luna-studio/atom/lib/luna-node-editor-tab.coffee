@@ -82,7 +82,6 @@ class LunaNodeEditorTab extends View
     @content: ->
         @div
             id: mountPoint
-            style: 'flex-direction:row; width: 100%; height: inherit'
             class: 'luna-studio-mount luna-studio luna-noselect'
             tabindex: -1
             =>
@@ -156,7 +155,7 @@ class LunaNodeEditorTab extends View
             'luna-studio:debug-layer-8': => @pushShortcutEvent("EnableDebugLayer", "8")
             'luna-studio:debug-layer-9': => @pushShortcutEvent("EnableDebugLayer", "9")
 
-        atom.commands.add '.luna-searcher',
+        atom.commands.add '.luna-searcher__input',
             # searcher
             'luna-studio:searcher-accept-0':     => @pushSearcherEvent "HintShortcut", 0
             'luna-studio:searcher-accept-1':     => @pushSearcherEvent "HintShortcut", 1
