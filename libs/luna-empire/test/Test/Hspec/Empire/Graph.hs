@@ -31,31 +31,6 @@ import LunaStudio.Data.PortRef       (AnyPortRef (InPortRef'),
 import LunaStudio.Data.TypeRep       (TypeRep (TStar))
 
 
-infixl 5 |>
-(|>) :: GraphLocation -> NodeId -> GraphLocation
-(|>) = appendLambda
-
-appendLambda  :: GraphLocation -> NodeId -> GraphLocation
-appendLambda (GraphLocation file bc) nid = GraphLocation file
-    . coerce . (<> [Lambda nid]) $ coerce bc
-
-infixl 5 |>-
-(|>-) :: GraphLocation -> (NodeId, Int) -> GraphLocation
-(|>-) = appendArg
-
-appendArg :: GraphLocation -> (NodeId, Int) -> GraphLocation
-appendArg (GraphLocation file bc) it = GraphLocation file
-    . Breadcrumb . (<> [uncurry Arg it]) $ coerce bc    
-
-infixl 5 |>=
-(|>=) :: GraphLocation -> NodeId -> GraphLocation
-(|>=) = appendDefinition
-
-appendDefinition :: GraphLocation -> NodeId -> GraphLocation
-appendDefinition (GraphLocation file bc) it = GraphLocation file
-    . Breadcrumb . (<> [Definition it]) $ coerce bc
-
-
 mkUUID :: MonadIO m => m UUID
 mkUUID = liftIO nextRandom
 
