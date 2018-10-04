@@ -46,7 +46,7 @@ packages:
 - {location: ../../tools/batch/plugins/luna-empire}
 - {location: ../../tools/batch/plugins/request-monitor}
 - extra-dep: true
-  location: {commit: 8d9c35951aa7a2747a68b5627356c1dd3b69743a, git: 'git@github.com:luna/luna.git'}
+  location: {commit: 96a57ff5b34c71d8bbfc815aa25dcb5422f9b9ea, git: 'git@github.com:luna/luna.git'}
   subdirs:
     - core
     - syntax/text/parser2
@@ -83,4 +83,4 @@ packages:
 - extra-dep: true
   location: {commit: ddfcd1e0372b93e947b380b911c123fe67227b21, git: 'git@github.com:luna/visualization-api.git'}
 - extra-dep: true
-  location: {commit: 8babf4c65507fa7608e6c6468be4fcabddf77327, git: 'git@github.com:luna/fuzzy-text.git'}
+  location: {commit: 1fe94d4d8b106b2ab37c65de9200b3f0404ac2ca, git: 'git@github.com:luna/fuzzy-text.git'}

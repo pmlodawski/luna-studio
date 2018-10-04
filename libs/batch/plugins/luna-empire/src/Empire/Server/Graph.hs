@@ -6,8 +6,7 @@ import           Control.Concurrent                      (forkIO)
 import           Control.Concurrent.MVar                 (readMVar)
 import           Control.Concurrent.STM.TChan            (writeTChan)
 import           Control.Error                           (runExceptT)
-import           Control.Lens                            ((.=), (^..), to,
-                                                          traversed, use)
+import           Control.Lens                            (to, traversed, use, (.=), (^..))
 import           Control.Monad                           (when)
 import           Control.Monad.Catch                     (handle, try)
 import           Control.Monad.Reader                    (asks)
@@ -46,7 +45,7 @@ import qualified Empire.Env                              as Env
 import           Empire.Server.Server                    (defInverse, errorMessage, modifyGraph, modifyGraphOk, prettyException, replyFail,
                                                           replyOk, replyResult, sendToBus', webGUIHack, withDefaultResult,
                                                           withDefaultResultTC)
-import           Luna.Package                            (findPackageFileForFile, getRelativePathForModule, findPackageRootForFile)
+import           Luna.Package                            (findPackageFileForFile, findPackageRootForFile, getRelativePathForModule)
 import qualified LunaStudio.API.Atom.GetBuffer           as GetBuffer
 import qualified LunaStudio.API.Atom.Substitute          as Substitute
 import qualified LunaStudio.API.Control.Interpreter      as Interpreter
@@ -236,7 +235,6 @@ handleGetProgram = modifyGraph defInverse action replyResult where
             makeError e = pure $ (location', GUIState
                 (Breadcrumb [])
                 mempty
-                mempty
                 def
                 mempty
                 mempty
@@ -263,7 +261,6 @@ handleGetProgram = modifyGraph defInverse action replyResult where
                         mayModuleSettings
             graph            <- Graph.getGraph location
             crumb            <- Graph.decodeLocation location
-            availableImports <- Graph.getAvailableImports location
             code             <- Code <$> Graph.getCode location
             let mayVisPath    = ((</> "visualizers") . Path.toFilePath)
                     <$> mayPackageRoot
@@ -285,7 +282,6 @@ handleGetProgram = modifyGraph defInverse action replyResult where
                         in (ms ^. Project.typeRepToVisMap, cam)
             pure $ (location, GUIState
                 crumb
-                availableImports
                 typeRepToVisMap
                 camera
                 mayVisPath
@@ -413,7 +409,7 @@ handleRemoveNodes :: Request RemoveNodes.Request -> StateT Env BusT ()
 handleRemoveNodes = modifyGraph inverse action replyResult where
     inverse (RemoveNodes.Request location nodeLocs) = do
         let nodeIds = convert <$> nodeLocs --TODO[PM -> MM] Use NodeLoc instead of NodeId
-        Graph allNodes allConnections _ _ monads <- Graph.getGraph location
+        Graph allNodes allConnections _ _ monads _ <- Graph.getGraph location
         let isNodeRelevant n = Set.member (n ^. Node.nodeId) idSet
             isConnRelevant c
                 =  Set.member (c ^. Connection.src . PortRef.srcNodeId) idSet
@@ -585,13 +581,10 @@ handleSubstitute :: Request Substitute.Request -> StateT Env BusT ()
 handleSubstitute = modifyGraph defInverse action replyResult where
     action req@(Substitute.Request location diffs) = do
         let file = location ^. GraphLocation.filePath
-        prevImports <- Graph.getAvailableImports location
-        graphDiff   <- withDefaultResult location
+        graphDiff <- withDefaultResult location
             $ Graph.substituteCodeFromPoints file diffs
-        newImports  <- Graph.getAvailableImports location
-        let impDiff = diff prevImports newImports
         Graph.typecheckWithRecompute location
-        pure $ impDiff <> graphDiff
+        pure graphDiff
 
 
 handleGetBuffer :: Request GetBuffer.Request -> StateT Env BusT ()

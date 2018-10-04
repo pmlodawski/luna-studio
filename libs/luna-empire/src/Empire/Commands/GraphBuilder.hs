@@ -82,19 +82,21 @@ buildGraph = do
     connections <- buildConnections
     nodes       <- buildNodes
     (inE, outE) <- buildEdgeNodes
-    API.Graph
+    monads      <- buildMonads
+    pure $ API.Graph
         nodes
         (uncurry API.Connection <$> connections)
         (Just inE)
         (Just outE)
-        <$> buildMonads
+        monads
+        mempty
 
 buildClassGraph :: ClassOp API.Graph
 buildClassGraph = do
     funs <- use Graph.clsFuns
     nodes' <- mapM (\(uuid, funGraph)
         -> buildClassNode uuid (funGraph ^. Graph.funName)) $ Map.assocs funs
-    pure $ API.Graph nodes' mempty mempty mempty mempty
+    pure $ API.Graph nodes' mempty mempty mempty mempty mempty
 
 
 buildClassNode :: NodeId -> String -> ClassOp API.ExpressionNode
@@ -223,17 +225,22 @@ buildNode nid = do
     meta      <- fromMaybe def <$> AST.readMeta marked
     name      <- getNodeName nid
     canEnter  <- ASTRead.isEnterable ref
-    inports   <- buildInPorts nid ref [] aliasPortName
+    inports   <- buildInPorts nid ref [] aliasPortName Nothing
     outports  <- buildOutPorts root
     code      <- Code.removeMarkers <$> getNodeCode nid
     pure $ API.ExpressionNode
         nid expr False name code inports outports meta canEnter
 
-buildNodeTypecheckUpdate :: NodeId -> GraphOp API.NodeTypecheckerUpdate
-buildNodeTypecheckUpdate nid = do
+type TCFunResolver = IR.Qualified -> IR.Name -> Maybe (IR.Term IR.Function)
+
+buildNodeTypecheckUpdate
+    :: TCFunResolver
+    -> NodeId
+    -> GraphOp API.NodeTypecheckerUpdate
+buildNodeTypecheckUpdate funResolver nid = do
   root     <- GraphUtils.getASTPointer nid
   ref      <- GraphUtils.getASTTarget  nid
-  inPorts  <- buildInPorts nid ref [] aliasPortName
+  inPorts  <- buildInPorts nid ref [] aliasPortName (Just funResolver)
   outPorts <- buildOutPorts root
   pure $ API.ExpressionUpdate nid inPorts outPorts
 
@@ -316,10 +323,10 @@ safeGetVarName node = do
         (\(e :: ASTRead.NoNameException) -> pure Nothing)
     pure name
 
-extractArgNames :: NodeRef -> GraphOp [Maybe String]
-extractArgNames node = do
+extractArgNames :: NodeRef -> Maybe TCFunResolver -> GraphOp [Maybe String]
+extractArgNames node funResolve = do
     match node $ \case
-        Grouped g -> source g >>= extractArgNames
+        Grouped g -> source g >>= \a -> extractArgNames a funResolve
         Lam{}  -> do
             insideLam  <- insideThisNode node
             args       <- ASTDeconstruct.extractArguments node
@@ -327,7 +334,7 @@ extractArgNames node = do
             let ports = if insideLam then vars else args
             mapM safeGetVarName ports
         -- App is Lam that has some args applied
-        App{}  -> extractAppArgNames node
+        App{}  -> extractAppArgNames node funResolve
         Cons{} -> do
             vars  <- ASTRead.getVarsInside node
             names <- mapM ASTRead.getVarName vars
@@ -335,17 +342,27 @@ extractArgNames node = do
         ASGFunction _ a _ -> do
             args <- mapM source =<< ptrListToList a
             mapM safeGetVarName args
+        ResolvedDef mod n -> do
+            let fun = (\f -> f mod n) =<< funResolve
+            case fun of
+                Just f -> extractArgNames (generalize f) funResolve
+                _      -> pure []
         _ -> pure []
 
-extractAppArgNames :: NodeRef -> GraphOp [Maybe String]
-extractAppArgNames node = go [] node
+extractAppArgNames :: NodeRef -> Maybe TCFunResolver -> GraphOp [Maybe String]
+extractAppArgNames node funResolve = go [] node
     where
         go :: [Maybe String] -> NodeRef -> GraphOp [Maybe String]
         go vars node = match node $ \case
+            ResolvedDef mod n -> do
+                let fun = (\f -> f mod n) =<< funResolve
+                case fun of
+                    Just f -> extractArgNames (generalize f) funResolve
+                    _      -> pure []
             App f a -> do
                 varName <- safeGetVarName =<< source a
                 go (varName : vars) =<< source f
-            Lam{}   -> extractArgNames node
+            Lam{}   -> extractArgNames node funResolve
             Cons{}  -> pure vars
             Var{}   -> pure vars
             Acc{}   -> pure vars
@@ -354,9 +371,9 @@ extractAppArgNames node = go [] node
 insideThisNode :: NodeRef -> GraphOp Bool
 insideThisNode node = (== node) <$> ASTRead.getCurrentASTTarget
 
-getPortsNames :: NodeRef -> GraphOp [String]
-getPortsNames node = do
-    names <- extractArgNames node
+getPortsNames :: NodeRef -> Maybe TCFunResolver -> GraphOp [String]
+getPortsNames node funResolve = do
+    names <- extractArgNames node funResolve
     let backupNames = map (\i -> "arg" <> show i) [(0::Int)..]
     forM (zip names backupNames)
         $ \(name, backup) -> pure $ maybe backup id name
@@ -458,13 +475,13 @@ isNegativeLiteral ref = match ref $ \case
         return $ minus && number
     _ -> return False
 
-buildArgPorts :: InPortId -> NodeRef -> GraphOp [InPort]
-buildArgPorts currentPort ref = do
+buildArgPorts :: InPortId -> NodeRef -> Maybe TCFunResolver -> GraphOp [InPort]
+buildArgPorts currentPort ref resolveFun = do
     typed <- extractPortInfo ref
     tp    <- getLayer @TypeLayer ref >>= source
     names <- match tp $ \case
         ResolvedCons "Std.Base" "List" "List" _ -> return []
-        _                                       -> getPortsNames ref
+        _                                       -> getPortsNames ref resolveFun
     let portsTypes = fmap fst typed
             <> List.replicate (length names - length typed) TStar
         psCons = zipWith3 Port
@@ -480,7 +497,7 @@ buildSelfPort nid currentPort node = do
     match node $ \case
         Acc t _ -> do
             target <- source t
-            tree   <- buildInPorts nid target currentPort selfPortName
+            tree   <- buildInPorts nid target currentPort selfPortName Nothing
             pure $ Just tree
         Var _     -> pure $ Just $ LabeledTree def potentialSelf
         App f _   -> buildSelfPort nid currentPort =<< source f
@@ -499,16 +516,21 @@ followTypeRep ref = do
     tp <- source =<< getLayer @TypeLayer ref
     Print.getTypeRep tp
 
-buildInPorts ::
-    NodeId -> NodeRef -> InPortId -> Text -> GraphOp (InPortTree InPort)
-buildInPorts nid ref currentPort portName = do
+buildInPorts
+    :: NodeId
+    -> NodeRef
+    -> InPortId
+    -> Text
+    -> Maybe TCFunResolver
+    -> GraphOp (InPortTree InPort)
+buildInPorts nid ref currentPort portName resolveFun = do
     negLiteral <- isNegativeLiteral ref
     if negLiteral then do
         whole    <- buildWholePort nid currentPort portName ref
         pure $ LabeledTree (InPorts def def def) whole
     else do
         selfPort <- buildSelfPort nid (currentPort <> [Self]) ref
-        argPorts <- buildArgPorts currentPort ref
+        argPorts <- buildArgPorts currentPort ref resolveFun
         whole    <- buildWholePort nid currentPort portName ref
         pure $ LabeledTree
             (InPorts selfPort def (LabeledTree def <$> argPorts))
@@ -605,11 +627,14 @@ deepResolveInputs nid ref portRef@(InPortRef loc id) = do
             <$> (filter ((/= nid) . view srcNodeId) currentPortResolution)
         unfilteredPortConn = (, portRef) <$> currentPortResolution
     args       <- ASTDeconstruct.extractAppPorts ref
-    argsConns  <- forM (zip args [0..]) $ \(arg, i)
+    startingPortNumber <- match ref $ \case
+        LeftSection{} -> pure 1
+        _             -> pure 0
+    argsConns <- forM (zip args [startingPortNumber..]) $ \(arg, i)
         -> deepResolveInputs nid arg (InPortRef loc (id <> [Arg i]))
-    head       <- ASTDeconstruct.extractFun ref
-    self       <- ASTDeconstruct.extractSelf head
-    firstRun   <- (== ref) <$> ASTRead.getASTTarget nid
+    head      <- ASTDeconstruct.extractFun ref
+    self      <- ASTDeconstruct.extractSelf head
+    firstRun  <- (== ref) <$> ASTRead.getASTTarget nid
     headConns <- case (self, head == ref) of
         (Just s, _) -> deepResolveInputs nid s    (InPortRef loc (id <> [Self]))
         (_, False)  -> deepResolveInputs nid head (InPortRef loc (id <> [Head]))
