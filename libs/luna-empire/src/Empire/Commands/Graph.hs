@@ -50,7 +50,7 @@ import qualified Empire.ASTOps.Print              as ASTPrint
 import qualified Empire.ASTOps.Read               as ASTRead
 import qualified Empire.Commands.AST              as AST
 import qualified Empire.Commands.Autolayout       as Autolayout
-import           Empire.Commands.Breadcrumb       (makeGraph, makeGraphCls, withBreadcrumb)
+import           Empire.Commands.Breadcrumb       (makeGraph, makeGraphCls, zoomBreadcrumb, fileImportPaths)
 import           Empire.Commands.Code             (addExprMapping, getNextExprMarker, getExprMap, setExprMap)
 import qualified Empire.Commands.Code             as Code
 import qualified Empire.Commands.GraphBuilder     as GraphBuilder
@@ -86,7 +86,7 @@ import           Luna.Syntax.Text.Parser.Ast.CodeSpan (CodeSpan)
 import qualified Luna.Syntax.Text.Parser.Ast.CodeSpan as CodeSpan
 import           Luna.Syntax.Text.Parser.State.Marker (TermMap(..))
 import qualified LunaStudio.API.Control.Interpreter as Interpreter
-import           LunaStudio.Data.Breadcrumb       (Breadcrumb (..), BreadcrumbItem, Named)
+import           LunaStudio.Data.Breadcrumb       (Breadcrumb (..), BreadcrumbItem(Redirection, Definition), Named, _Redirection)
 import qualified LunaStudio.Data.Breadcrumb       as Breadcrumb
 import           LunaStudio.Data.Constants        (gapBetweenNodes)
 import           LunaStudio.Data.Connection       (Connection (..), ConnectionId)
@@ -981,7 +981,8 @@ autolayoutNodes loc nids = withGraph' loc (runASTOp $ autolayoutNodesAST nids) (
 openFile :: FilePath -> Empire ()
 openFile path = do
     code <- liftIO (Text.readFile path) <!!> "readFile"
-    Library.createLibrary Nothing path  <!!> "createLibrary"
+    modName <- handle (\(_e::SomeException) -> return Nothing) $ Just <$> Typecheck.filePathToQualName path
+    Library.createLibrary (convertVia @String <$> modName) path  <!!> "createLibrary"
     let loc = GraphLocation path $ Breadcrumb []
     withUnit loc (Graph.code .= code)
     result <- try $ do
@@ -1846,6 +1847,42 @@ data UnsupportedOperation = UnsupportedOperation
 instance Exception UnsupportedOperation where
     fromException = astExceptionFromException
     toException = astExceptionToException
+
+withBreadcrumb :: FilePath -> Breadcrumb BreadcrumbItem -> Command Graph.Graph a -> Command Graph.ClsGraph a -> Empire a
+withBreadcrumb file breadcrumb actG actC = do
+    let afterRedirect = let
+            (end, rest) = span (\a -> isNothing $ a ^? _Redirection) . reverse . coerce $ breadcrumb
+            in case rest of
+                []              -> (Nothing, breadcrumb)
+                (redirection:_) -> (Just redirection, coerce $ reverse end)
+    case afterRedirect of
+        (Nothing, b) -> Library.withLibrary file $ zoomBreadcrumb breadcrumb actG actC
+        (Just (Redirection nodeId mod fun), bc) -> do
+            active        <- use $ Graph.userState . activeFiles
+            let libOpened  = find (\a -> a ^. Library.name == Just mod) $ Map.elems active
+            case libOpened of
+                Just f -> do
+                    let funs = f ^. Library.body . Graph.clsFuns
+                        funGraph = find (\a -> a ^. _2 . Graph.funName == convert fun) $ Map.toList funs
+                    case funGraph of
+                        Just (funId, _) -> Library.withLibrary (f ^. Library.path) $
+                            zoomBreadcrumb (coerce $ Definition funId : coerce bc) actG actC
+                        _ -> throwM $ BH.BreadcrumbDoesNotExistException breadcrumb
+                _      -> do
+                    visibleImports <- fileImportPaths file
+                    let pathToOpen = visibleImports ^. at (convertVia @String mod)
+                    case pathToOpen of
+                        Just path -> do
+                            openFile path
+                            active <- use $ Graph.userState . activeFiles
+                            let Just modOpened  = find (\a -> a ^. Library.path == path) $ Map.elems active
+                            let funs = modOpened ^. Library.body . Graph.clsFuns
+                                funGraph = find (\a -> a ^. _2 . Graph.funName == convert fun) $ Map.toList funs
+                            case funGraph of
+                                Just (funId, _) -> Library.withLibrary path $
+                                    zoomBreadcrumb (coerce $ Definition funId : coerce bc) actG actC
+                                _ -> error "dupa2"
+                        _ -> error "dupa"
 
 withGraph :: GraphLocation -> Command Graph a -> Empire a
 withGraph (GraphLocation file breadcrumb) act = withBreadcrumb file breadcrumb act (throwM UnsupportedOperation)

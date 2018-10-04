@@ -205,19 +205,19 @@ spec = around withChannels $ parallel $ do
             withResult res $ \(Graph.Graph nodes connections i _ _ _) -> do
                 let Just pi = find (\node -> node ^. Node.name == Just "pi") nodes
                 pi ^. Node.code `shouldBe` "3.14"
-                pi ^. Node.canEnter `shouldBe` False
+                pi ^. Node.toEnter `shouldSatisfy` isNothing
                 let Just foo = find (\node -> node ^. Node.name == Just "foo") nodes
                 foo ^. Node.code `shouldBe` "a: b: a + b"
-                foo ^. Node.canEnter `shouldBe` True
+                foo ^. Node.toEnter `shouldSatisfy` isJust
                 let Just bar = find (\node -> node ^. Node.name == Just "bar") nodes
                 bar ^. Node.code `shouldBe` "foo c 6"
-                bar ^. Node.canEnter `shouldBe` False
+                bar ^. Node.toEnter `shouldSatisfy` isNothing
                 let Just anon = find (\node -> node ^. Node.name == Nothing) nodes
                 anon ^. Node.code `shouldBe` "print pi"
-                anon ^. Node.canEnter `shouldBe` False
+                anon ^. Node.toEnter `shouldSatisfy` isNothing
                 let Just c = find (\node -> node ^. Node.name == Just "c") nodes
                 c ^. Node.code `shouldBe` "3"
-                c ^. Node.canEnter `shouldBe` False
+                c ^. Node.toEnter `shouldSatisfy` isNothing
                 i ^? _Just . Node.isDef `shouldBe` Just True
                 connections `shouldMatchList` [
                       Connection (outPortRef (pi ^. Node.nodeId)  []) (inPortRef (anon ^. Node.nodeId) [Port.Arg 0])
@@ -242,7 +242,7 @@ def main:
             withResult res $ \(Graph.Graph nodes connections i _ _ _) -> do
                 let Just pi = find (\node -> node ^. Node.name == Just "pi") nodes
                 pi ^. Node.code `shouldBe` "3.14"
-                pi ^. Node.canEnter `shouldBe` False
+                pi ^. Node.toEnter `shouldSatisfy` isNothing
         it "does not duplicate nodes on edit" $ \env -> do
             res <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"

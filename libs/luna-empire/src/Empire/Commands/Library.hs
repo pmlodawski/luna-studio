@@ -31,13 +31,13 @@ import           Empire.Empire           (Command, Empire, zoomCommand)
 import qualified Empire.Empire           as Empire
 import qualified Empire.Utils.IdGen      as IdGen
 
-createLibrary :: Maybe String -> FilePath -> Empire Library
+createLibrary :: Maybe Text -> FilePath -> Empire Library
 createLibrary name path = do
     library <- liftIO $ make name path
     userState . Empire.activeFiles . at path ?= library
     pure library
 
-make :: Maybe String -> FilePath -> IO Library
+make :: Maybe Text -> FilePath -> IO Library
 make name path = do
     clsGraph <- defaultClsGraph
     pure $ Library.Library name path clsGraph

@@ -78,6 +78,10 @@ getBreadcrumbItems b (Breadcrumb crumbs) = go crumbs b where
         Just (LambdaChild c) -> LambdaChild c : go crumbs c
         Just (ExprChild   c) -> ExprChild   c : []
         Nothing              -> []
+    go (Redirection id _ _ : crumbs) b = case b ^? children . ix id of
+        Just (LambdaChild c) -> LambdaChild c : go crumbs c
+        Just (ExprChild   c) -> ExprChild   c : []
+        Nothing              -> []
 
 navigateTo :: LamItem -> Breadcrumb BreadcrumbItem -> Maybe LamItem
 navigateTo b (Breadcrumb crumbs) = go crumbs b where

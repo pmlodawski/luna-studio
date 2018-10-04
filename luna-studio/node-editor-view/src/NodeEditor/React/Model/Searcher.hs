@@ -184,7 +184,7 @@ selectedNode = to getNode where
 
 applyExpressionHint :: ExpressionNode -> Model.ExpressionNode -> Model.ExpressionNode
 applyExpressionHint n exprN = exprN & Model.expression .~ n ^. Node.expression
-                                    & Model.canEnter   .~ n ^. Node.canEnter
+                                    & Model.toEnter    .~ n ^. Node.toEnter
                                     & Model.inPorts    .~ (convert <$> n ^. Node.inPorts)
                                     & Model.outPorts   .~ (convert <$> n ^. Node.outPorts)
                                     & Model.code       .~ n ^. Node.code

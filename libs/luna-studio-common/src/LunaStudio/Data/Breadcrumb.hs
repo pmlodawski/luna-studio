@@ -1,7 +1,7 @@
 module LunaStudio.Data.Breadcrumb where
 
 import           Control.DeepSeq        (NFData)
-import           Control.Lens           (toListOf, traversed)
+import           Control.Lens           (makePrisms, toListOf, traversed)
 import qualified Control.Lens.Aeson     as Lens
 import           Data.Aeson.Types       (FromJSON (..), FromJSONKey, ToJSON (..), ToJSONKey)
 import           Data.Binary            (Binary)
@@ -13,9 +13,10 @@ import           Prologue               hiding (Monoid, mappend, mconcat, mempty
 
 
 data BreadcrumbItem
-    = Definition { _nodeId  :: NodeId }
-    | Lambda     { _nodeId  :: NodeId }
-    | Arg        { _nodeId  :: NodeId, _arg :: Int }
+    = Definition  { _nodeId :: NodeId }
+    | Lambda      { _nodeId :: NodeId }
+    | Redirection { _nodeId :: NodeId, _mod :: Text, _function :: Text }
+    | Arg         { _nodeId :: NodeId, _arg :: Int }
     deriving (Eq, Generic, Ord, Show)
 
 data Named a = Named
@@ -28,6 +29,7 @@ newtype Breadcrumb a = Breadcrumb
     } deriving (Eq, Generic, Ord, Show)
 
 makeLenses ''BreadcrumbItem
+makePrisms ''BreadcrumbItem
 makeLenses ''Breadcrumb
 makeLenses ''Named
 

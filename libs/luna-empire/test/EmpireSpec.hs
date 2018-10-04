@@ -126,7 +126,7 @@ spec = around withChannels $ parallel $ do
                 node ^. Node.name       `shouldBe` Just "foo"
                 node ^. Node.code       `shouldBe` "a: a"
                 node ^. Node.expression `shouldBe` "Ⓕ"
-                node ^. Node.canEnter   `shouldBe` True
+                node ^. Node.toEnter    `shouldSatisfy` isJust
         it "returns connections for deeply nested uses of node" $ \env -> do
             u1 <- mkUUID
             u2 <- mkUUID
@@ -283,7 +283,7 @@ spec = around withChannels $ parallel $ do
                 Graph.getGraph top
             withResult res $ \g -> do
                 let Just lambdaNode = find ((== u1) . view Node.nodeId) $ Graph._nodes g
-                lambdaNode ^. Node.canEnter `shouldBe` False
+                lambdaNode ^. Node.toEnter `shouldSatisfy` isNothing
         it "has no null node inside `foo = a: a`" $ \env -> do
             u1 <- mkUUID
             res <- evalEmp env $ do
@@ -711,7 +711,7 @@ spec = around withChannels $ parallel $ do
                 node ^. Node.expression `shouldBe` "Ⓕ"
                 node ^. Node.code       `shouldBe` "a: a"
                 node ^. Node.nodeId     `shouldBe` u1
-                node ^. Node.canEnter   `shouldBe` True
+                node ^. Node.toEnter    `shouldSatisfy` isJust
                 nodes `shouldSatisfy` ((== 1) . length)
         xit "does not allow to change expression to assignment" $ \env -> do
             u1 <- mkUUID

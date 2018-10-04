@@ -134,7 +134,7 @@ buildClassNode uuid name = do
             (LabeledTree def (Port [] "base" TStar NotConnected))
             (LabeledTree (OutPorts []) (Port [] "base" TStar NotConnected))
             meta
-            True
+            (Just $ Breadcrumb.Definition uuid)
 
 buildNodes :: GraphOp [API.ExpressionNode]
 buildNodes = do
@@ -233,11 +233,15 @@ buildNode nid = do
     meta      <- fromMaybe def <$> AST.readMeta marked
     name      <- getNodeName nid
     canEnter  <- ASTRead.isEnterable ref
+    let breadcrumbToEnter =
+            if canEnter
+            then Just (Breadcrumb.Lambda nid)
+            else Nothing
     inports   <- buildInPorts nid ref [] aliasPortName Nothing
     outports  <- buildOutPorts root
     code      <- Code.removeMarkers <$> getNodeCode nid
     pure $ API.ExpressionNode
-        nid expr False name code inports outports meta canEnter
+        nid expr False name code inports outports meta breadcrumbToEnter
 
 type TCFunResolver = IR.Qualified -> IR.Name -> Maybe (IR.Term IR.Function)
 
@@ -246,11 +250,15 @@ buildNodeTypecheckUpdate
     -> NodeId
     -> GraphOp API.NodeTypecheckerUpdate
 buildNodeTypecheckUpdate funResolver nid = do
-  root     <- GraphUtils.getASTPointer nid
-  ref      <- GraphUtils.getASTTarget  nid
-  inPorts  <- buildInPorts nid ref [] aliasPortName (Just funResolver)
-  outPorts <- buildOutPorts root
-  pure $ API.ExpressionUpdate nid inPorts outPorts
+    root        <- GraphUtils.getASTPointer nid
+    ref         <- GraphUtils.getASTTarget  nid
+    inPorts     <- buildInPorts nid ref [] aliasPortName (Just funResolver)
+    outPorts    <- buildOutPorts root
+    resolvedDef <- extractResolvedDef ref
+    let breadcrumbToEnter = join $ forM resolvedDef $
+            \(FunctionRef (convertVia @String -> mod) (convert -> name)) ->
+                return $ Breadcrumb.Redirection nid mod name
+    pure $ API.ExpressionUpdate nid inPorts outPorts breadcrumbToEnter
 
 getUniName :: NodeRef -> GraphOp (Maybe Text)
 getUniName root = do
@@ -375,6 +383,27 @@ extractAppArgNames node funResolve = go [] node
             Var{}   -> pure vars
             Acc{}   -> pure vars
             _       -> pure []
+
+data FunctionRef = FunctionRef IR.Qualified IR.Name
+
+extractResolvedDef :: NodeRef -> GraphOp (Maybe FunctionRef)
+extractResolvedDef node = do
+    match node $ \case
+        Grouped g -> source g >>= \a -> extractResolvedDef a
+        -- App is Lam that has some args applied
+        App{}  -> extractAppResolvedDef node
+        ResolvedDef mod n -> return . Just $ FunctionRef mod n
+        _ -> pure Nothing
+
+extractAppResolvedDef :: NodeRef -> GraphOp (Maybe FunctionRef)
+extractAppResolvedDef node = go node
+    where
+        go :: NodeRef -> GraphOp (Maybe FunctionRef)
+        go node = match node $ \case
+            ResolvedDef mod n -> return . Just $ FunctionRef mod n
+            App f a -> go =<< source f
+            Lam{}   -> extractResolvedDef node
+            _       -> pure Nothing
 
 insideThisNode :: NodeRef -> GraphOp Bool
 insideThisNode node = (== node) <$> ASTRead.getCurrentASTTarget

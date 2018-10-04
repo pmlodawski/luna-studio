@@ -175,7 +175,7 @@ prepareTestEnvironmentWithCustomPath filePath initialCode = let
         mockNodesLayout gl
         pure gl
     in do
-        createLibrary Nothing filePath
+        createLibrary (Just "TestProject.Main") filePath
         Graph.loadCode topGl $ normalizeLunaCode initialCode
         mainNodeId <- findNodeIdByName topGl mainNodeName
         maybe (pure topGl) withMain mainNodeId

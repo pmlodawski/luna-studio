@@ -42,7 +42,7 @@ module NodeEditor.Action.Basic
     , localSetOutputSidebar
     , localSetPortDefault
     , localUnmerge
-    , localUpdateCanEnterExpressionNode
+    , localUpdateToEnterExpressionNode
     , localUpdateExpressionNode
     , localUpdateExpressionNodeInPorts
     , localUpdateExpressionNodeOutPorts
@@ -144,7 +144,7 @@ import           NodeEditor.Action.Basic.SetPortMode         (setInputSidebarPor
 import           NodeEditor.Action.Basic.Undo                (redo, undo)
 import           NodeEditor.Action.Basic.UpdateCollaboration (updateClient, updateCollaboration)
 import           NodeEditor.Action.Basic.UpdateNode          (NodeUpdateModification (KeepNodeMeta, KeepPorts, MergePorts),
-                                                              localUpdateCanEnterExpressionNode, localUpdateExpressionNode,
+                                                              localUpdateToEnterExpressionNode, localUpdateExpressionNode,
                                                               localUpdateExpressionNodeInPorts, localUpdateExpressionNodeOutPorts,
                                                               localUpdateExpressionNodes, localUpdateInputNode, localUpdateIsDefinition,
                                                               localUpdateNodeCode, localUpdateNodeTypecheck, localUpdateOrAddExpressionNode,

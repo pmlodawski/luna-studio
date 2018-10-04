@@ -13,7 +13,9 @@ import           Control.Monad                   (forM)
 import           Control.Monad.Except            (throwError)
 import           Control.Monad.Reader            (ask)
 import           Control.Monad.State             (get, put)
+import qualified Data.Bimap                      as Bimap
 import           Data.Coerce                     (coerce)
+import           Data.List                       (find)
 import           Data.Maybe                      (listToMaybe, maybe)
 import qualified Data.Map                        as Map
 import qualified Data.UUID.V4                    as UUID
@@ -31,23 +33,35 @@ import qualified Empire.Data.Graph                 as Graph
 import           Empire.Data.Layers                (Marker, SpanLength)
 import qualified Empire.Data.Library               as Library
 
-import           LunaStudio.Data.Breadcrumb      (Breadcrumb (..), BreadcrumbItem (..))
+import           LunaStudio.Data.Breadcrumb      (Breadcrumb (..), BreadcrumbItem (..), _Redirection)
 import           LunaStudio.Data.Library         (LibraryId)
 import           LunaStudio.Data.NodeLoc         (NodeLoc(..))
 import           LunaStudio.Data.NodeId          (NodeId)
 import           LunaStudio.Data.NodeCache       (portMappingMap)
 import           LunaStudio.Data.PortRef         (OutPortRef(..))
 import           LunaStudio.Data.Project         (ProjectId)
+import qualified Luna.Package                    as Package
 import qualified Luna.Syntax.Text.Parser.Ast.CodeSpan as CodeSpan
 import           Data.Text.Span                  (SpacedSpan(..))
 
 import           Empire.Commands.Library         (withLibrary)
-import           Empire.Empire                   (Command, CommunicationEnv, Empire, runEmpire, zoomCommand)
+import           Empire.Empire                   (Command, CommunicationEnv,
+                                                  Empire, activeFiles, 
+                                                  runEmpire, zoomCommand)
+import qualified Path
 
 import qualified Luna.IR              as IR
 
-withBreadcrumb :: FilePath -> Breadcrumb BreadcrumbItem -> Command Graph.Graph a -> Command Graph.ClsGraph a -> Empire a
-withBreadcrumb file breadcrumb actG actC = withLibrary file $ zoomBreadcrumb breadcrumb actG actC
+fileImportPaths :: MonadIO m => FilePath -> m (Map.Map IR.Qualified FilePath)
+fileImportPaths file = liftIO $ do
+    filePath        <- Path.parseAbsFile file
+    currentProjPath <- Package.packageRootForFile filePath
+    libs            <- Package.packageImportPaths currentProjPath
+    srcs            <- for (snd <$> libs) $ \libPath -> do
+        p <- Path.parseAbsDir libPath
+        fmap Path.toFilePath . Bimap.toMapR <$> Package.findPackageSources p
+    pure $ Map.unions srcs
+
 
 makeGraph :: NodeRef -> Maybe NodeId -> Command Library.Library (NodeId, Graph.Graph)
 makeGraph fun lastUUID = zoomCommand (Library.body) $ makeGraphCls fun lastUUID
