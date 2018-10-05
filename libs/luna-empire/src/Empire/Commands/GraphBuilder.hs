@@ -257,7 +257,9 @@ buildNodeTypecheckUpdate funResolver nid = do
     resolvedDef <- extractResolvedDef ref
     let breadcrumbToEnter = join $ forM resolvedDef $
             \(FunctionRef (convertVia @String -> mod) (convert -> name)) ->
-                return $ Breadcrumb.Redirection nid mod name
+                if mod == "Std.Primitive"
+                then Nothing 
+                else return $ Breadcrumb.Redirection nid mod name
     pure $ API.ExpressionUpdate nid inPorts outPorts breadcrumbToEnter
 
 getUniName :: NodeRef -> GraphOp (Maybe Text)

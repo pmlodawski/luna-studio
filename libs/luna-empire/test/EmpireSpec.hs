@@ -381,7 +381,7 @@ spec = around withChannels $ parallel $ do
                     pmState <- Graph.defaultPMState
                     let interpreterEnv = InterpreterEnv (return ()) g [] def def def def
                     (_, (extractGraph -> g')) <- runEmpire env (Graph.CommandState pmState interpreterEnv) $
-                        Typecheck.run top g rooted False False
+                        Typecheck.run top top g rooted False False
                     (res'',_) <- runEmp' env st g' $ do
                         Graph.withGraph top $ runASTOp $ (,) <$> GraphBuilder.buildNode u1 <*> GraphBuilder.buildNode u2
                     -- withResult res'' $ \(n1, n2) -> do

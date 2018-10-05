@@ -65,6 +65,7 @@ import qualified Empire.Data.BreadcrumbHierarchy  as BH
 import           Empire.Data.Graph                (ClsGraph, Graph)
 import qualified Empire.Data.Graph                as Graph
 import           Empire.Data.Layers               (SpanLength, SpanOffset)
+import           Empire.Data.Library              (Library)
 import qualified Empire.Data.Library              as Library
 import           Empire.Empire
 import           Empire.Prelude                   hiding (head, toList)
@@ -978,11 +979,11 @@ autolayoutNodesCls nids = do
 autolayoutNodes :: GraphLocation -> [NodeId] -> Empire ()
 autolayoutNodes loc nids = withGraph' loc (runASTOp $ autolayoutNodesAST nids) (runASTOp $ autolayoutNodesCls nids)
 
-openFile :: FilePath -> Empire ()
+openFile :: FilePath -> Empire Library
 openFile path = do
     code <- liftIO (Text.readFile path) <!!> "readFile"
     modName <- handle (\(_e::SomeException) -> return Nothing) $ Just <$> Typecheck.filePathToQualName path
-    Library.createLibrary (convertVia @String <$> modName) path  <!!> "createLibrary"
+    lib <- Library.createLibrary (convertVia @String <$> modName) path  <!!> "createLibrary"
     let loc = GraphLocation path $ Breadcrumb []
     withUnit loc (Graph.code .= code)
     result <- try $ do
@@ -991,6 +992,7 @@ openFile path = do
     case result of
         Left e -> withUnit loc $ Graph.userState . Graph.clsParseError ?= e
         _      -> return ()
+    return lib
 
 typecheck :: GraphLocation -> Empire ()
 typecheck loc = withTC' loc False (return ()) (return ())
@@ -1030,6 +1032,7 @@ substituteCode :: FilePath -> [(Delta, Delta, Text)] -> Empire ()
 substituteCode path changes = do
     let loc = GraphLocation path (Breadcrumb [])
     newCode <- withUnit loc $ Code.applyMany changes
+
     handle (\(e :: SomeException) -> withUnit loc $ Graph.userState . Graph.clsParseError ?= e) $ do
         withUnit loc $ do
             Graph.code .= newCode
@@ -1813,26 +1816,25 @@ generateNewFunctionName forbiddenNames base =
         Just newName     = find (not . flip Set.member forbiddenNames) allPossibleNames
     in newName
 
-runTC :: GraphLocation -> Bool -> Bool -> Bool -> Command ClsGraph ()
+runTC :: GraphLocation -> Bool -> Bool -> Bool -> Empire ()
 runTC loc flush interpret recompute = do
-    g <- use Graph.userState
+    newLoc@(GraphLocation newFile _) <- resolveRedirection loc
+    Just g <- preuse $ Graph.userState . activeFiles . at newFile . _Just . Library.body
     let root = g ^. Graph.clsClass
     rooted <- runASTOp $ Store.serializeWithRedirectMap root
-    Publisher.requestTC loc g rooted flush interpret recompute
+    Publisher.requestTC newLoc loc g rooted flush interpret recompute
 
 typecheckWithRecompute :: GraphLocation -> Empire ()
-typecheckWithRecompute loc@(GraphLocation file _) = do
-    withGraph' (GraphLocation file def) (return ()) (runTC loc True True True)
+typecheckWithRecompute loc = runTC loc True True True
 
 runInterpreter :: GraphLocation -> Empire ()
-runInterpreter loc@(GraphLocation file _) = do
-    withGraph' (GraphLocation file def) (return ()) (runTC loc True True False)
+runInterpreter loc = runTC loc True True False
 
 withTC' :: GraphLocation -> Bool -> Command Graph a -> Command ClsGraph a -> Empire a
 withTC' loc@(GraphLocation file bs) flush actG actC = do
     res       <- withGraph' loc actG actC
     interpret <- use $ Graph.userState . activeInterpreter
-    withGraph' (GraphLocation file def) (return ()) (runTC loc flush interpret False)
+    runTC loc flush interpret False
     return res
 
 withTCUnit :: GraphLocation -> Bool -> Command ClsGraph a -> Empire a
@@ -1848,6 +1850,48 @@ instance Exception UnsupportedOperation where
     fromException = astExceptionFromException
     toException = astExceptionToException
 
+openLibrary :: FilePath -> Text -> Empire Library
+openLibrary file mod = do
+    visibleImports <- fileImportPaths file
+    let pathToOpen = visibleImports ^. at (convertVia @String mod)
+    case pathToOpen of
+        Just path -> openFile path
+        _         -> error $ "openLibrary: " <> show mod
+
+getLibrary :: FilePath -> Text -> Empire Library
+getLibrary file mod = do
+    activeModules <- use $ Graph.userState . activeFiles
+    let libOpened = find (\a -> a ^. Library.name == Just mod) $ Map.elems activeModules
+    case libOpened of
+        Just lib -> return lib
+        _        -> openLibrary file mod
+
+
+resolveRedirection :: GraphLocation -> Empire GraphLocation
+resolveRedirection loc@(GraphLocation file (Breadcrumb bc)) =
+    let afterRedirect =
+            let (end, rest) = span (\a -> isNothing $ a ^? _Redirection)
+                            . reverse
+                            . coerce $ bc
+            in case rest of
+                []              -> (Nothing, bc)
+                (redirection:_) -> (Just redirection, coerce $ reverse end)
+    in case afterRedirect of
+        (Nothing, b) -> return loc
+        (Just (Redirection nodeId mod fun), bc) -> do
+            visibleImports <- fileImportPaths file
+            let pathToOpen = visibleImports ^. at (convertVia @String mod)
+            case pathToOpen of
+                Just path -> do
+                    lib <- getLibrary file mod
+                    let funs = lib ^. Library.body . Graph.clsFuns
+                        funGraph = find (\a -> a ^. _2 . Graph.funName == convert fun) $ Map.toList funs
+                    case funGraph of
+                        Just (funId, _) -> return $
+                            GraphLocation path (coerce $ Definition funId : bc)
+                        _               -> error $ "resolveRedirection1: " <> show funs
+                _         -> error $ "resolveRedirection2: " <> show bc
+
 withBreadcrumb :: FilePath -> Breadcrumb BreadcrumbItem -> Command Graph.Graph a -> Command Graph.ClsGraph a -> Empire a
 withBreadcrumb file breadcrumb actG actC = do
     let afterRedirect = let
@@ -1857,7 +1901,7 @@ withBreadcrumb file breadcrumb actG actC = do
                 (redirection:_) -> (Just redirection, coerce $ reverse end)
     case afterRedirect of
         (Nothing, b) -> Library.withLibrary file $ zoomBreadcrumb breadcrumb actG actC
-        (Just (Redirection nodeId mod fun), bc) -> do
+        (Just red@(Redirection nodeId mod fun), bc) -> do
             active        <- use $ Graph.userState . activeFiles
             let libOpened  = find (\a -> a ^. Library.name == Just mod) $ Map.elems active
             case libOpened of
@@ -1882,7 +1926,7 @@ withBreadcrumb file breadcrumb actG actC = do
                                 Just (funId, _) -> Library.withLibrary path $
                                     zoomBreadcrumb (coerce $ Definition funId : coerce bc) actG actC
                                 _ -> error "dupa2"
-                        _ -> error "dupa"
+                        _ -> error $ "dupa: " <> show visibleImports <> " " <> show red
 
 withGraph :: GraphLocation -> Command Graph a -> Empire a
 withGraph (GraphLocation file breadcrumb) act = withBreadcrumb file breadcrumb act (throwM UnsupportedOperation)

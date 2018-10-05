@@ -2640,7 +2640,7 @@ def main:
                 withResult res $ \(loc, g, rooted) -> do
                     pmState <- Graph.defaultPMState
                     let cs = Graph.CommandState pmState $ InterpreterEnv (return ()) g [] def def def def
-                    runEmpire env cs $ Typecheck.run loc g rooted True False
+                    runEmpire env cs $ Typecheck.run loc loc g rooted True False
                 let updates = env ^. to _updatesChan
                 ups <- atomically $ unfoldM (tryReadTChan updates)
                 let _ResultUpdate = prism ResultUpdate $ \n -> case n of

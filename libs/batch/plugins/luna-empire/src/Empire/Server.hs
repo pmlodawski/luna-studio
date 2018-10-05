@@ -157,12 +157,12 @@ startTCWorker env = liftIO $ do
     void $ Empire.evalEmpire env commandState $ do
         Typecheck.makePrimStdIfMissing
         forever $ do
-            Empire.TCRequest loc g rooted flush interpret recompute stop <- liftIO $ takeMVar reqs
+            Empire.TCRequest loc updateLoc g rooted flush interpret recompute stop <- liftIO $ takeMVar reqs
             if stop then do
                 Typecheck.stop
             else do
                 as <- AsyncL.asyncOn tcCapability $ do
-                    Typecheck.run loc g rooted interpret recompute `Exception.onException`
+                    Typecheck.run loc updateLoc g rooted interpret recompute `Exception.onException`
                         Typecheck.stop
                 res <- AsyncL.waitCatch as
                 case res of

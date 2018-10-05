@@ -117,8 +117,8 @@ runInterpreter path imports = do
     liftIO $ for interpreted $ \res ->
         mask_ $ withPackageCurrentDirectory path res
 
-updateNodes :: GraphLocation -> Command InterpreterEnv ()
-updateNodes loc@(GraphLocation _ br) = case br of
+updateNodes :: GraphLocation -> GraphLocation -> Command InterpreterEnv ()
+updateNodes loc@(GraphLocation _ br) updateLoc = case br of
     Breadcrumb (Definition uuid:rest) -> do
         units <- use $ Graph.userState . Empire.mappedUnits
         let resolveFun mod n =
@@ -145,8 +145,8 @@ updateNodes loc@(GraphLocation _ br) = case br of
                             return $ Just $ (nid, NodeError $ APIError.Error (APIError.CompileError errorDetails) $ e ^. Error.contents)
                 return (sidebarUpdates <> nodeUpdates, errors)
             mask_ $ do
-                traverse_ (Publisher.notifyNodeTypecheck loc) updates
-                for_ (catMaybes errors) $ \(nid, e) -> Publisher.notifyResultUpdate loc nid e 0
+                traverse_ (Publisher.notifyNodeTypecheck updateLoc) updates
+                for_ (catMaybes errors) $ \(nid, e) -> Publisher.notifyResultUpdate updateLoc nid e 0
     Breadcrumb _ -> return ()
 
 updateValues :: GraphLocation
@@ -297,23 +297,25 @@ compileCurrentScope modName path root = do
     Graph.userState . Empire.resolvers    .= newResolvers
 
 run :: GraphLocation
+    -> GraphLocation
     -> Graph.ClsGraph
     -> Store.RootedWithRedirects NodeRef
     -> Bool
     -> Bool
     -> Command InterpreterEnv ()
-run gl clsGraph rooted interpret recompute = do
-    root <- runNoCleanUp gl clsGraph rooted interpret recompute
+run gl updateLoc clsGraph rooted interpret recompute = do
+    root <- runNoCleanUp gl updateLoc clsGraph rooted interpret recompute
     zoomCommand Empire.clsGraph . runASTOp $ IR.deleteSubtree root
 
 runNoCleanUp
     :: GraphLocation
+    -> GraphLocation
     -> Graph.ClsGraph
     -> Store.RootedWithRedirects NodeRef
     -> Bool
     -> Bool
     -> Command InterpreterEnv (Component Nodes ())
-runNoCleanUp gl clsGraph rooted interpret recompute = do
+runNoCleanUp gl updateGl clsGraph rooted interpret recompute = do
     stop
     (root, redirects)
         <- runASTOp . Store.deserializeWithRedirects $ rooted ^. Store.rooted
@@ -327,7 +329,7 @@ runNoCleanUp gl clsGraph rooted interpret recompute = do
     makePrimStdIfMissing
     ensureCurrentScope recompute modName filePath root
     runTC modName gl
-    updateNodes gl
+    updateNodes gl updateGl
     let processBC evald (Breadcrumb (Definition uuid:r))
             = zoomCommand Empire.clsGraph
             . withRootedFunction uuid

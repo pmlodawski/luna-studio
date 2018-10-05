@@ -138,7 +138,7 @@ testCaseWithTC initialCode expectedCode action tcResultCheck env = let
         let commandState = CommandState pmState
                 $ InterpreterEnv (pure ()) clsGraph mempty def def def def
         updatedState <- execEmpire env commandState $
-            Typecheck.runNoCleanUp gl clsGraph rooted False False
+            Typecheck.runNoCleanUp gl gl clsGraph rooted False False
         let updatedClsGraph
                 = updatedState ^. Graph.userState . Empire.clsGraph
         void . evalEmpire env state $ do
