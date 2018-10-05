@@ -58,7 +58,7 @@ class LunaWelcomeTab extends View
                                 class: 'luna-welcome__section luna-welcome__section--private',
                                 outlet: 'privateSection'
                                 =>
-                                    @h2 class: 'luna-welcome__section__title icon icon-person', 'Private'
+                                    @h2 class: 'luna-welcome__section__title icon icon-person', 'My projects'
                                     @div class: 'luna-welcome__section__container', outlet: 'privateContainer', =>
                             @div
                                 class: 'luna-welcome__section luna-welcome__section--community'
