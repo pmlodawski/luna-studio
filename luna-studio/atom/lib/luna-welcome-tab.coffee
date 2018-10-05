@@ -49,11 +49,11 @@ class LunaWelcomeTab extends View
                                     @h2 class: 'luna-welcome__section__title icon icon-search', 'Search results'
                                     @div class: 'luna-welcome__section__container', outlet: 'searchResultsContainer', =>
                             @div
-                                class: 'luna-welcome__section luna-welcome__section--tutorials'
-                                outlet: 'tutorialsSection'
+                                class: 'luna-welcome__section luna-welcome__section--sample-projects'
+                                outlet: 'sampleProjectsSection'
                                 =>
-                                    @h2 class: 'luna-welcome__section__title icon icon-book', 'Tutorials'
-                                    @div class: 'luna-welcome__section__container', outlet: 'tutorialsContainer', =>
+                                    @h2 class: 'luna-welcome__section__title icon icon-book', 'Sample projects'
+                                    @div class: 'luna-welcome__section__container', outlet: 'sampleProjectsContainer', =>
                             @div
                                 class: 'luna-welcome__section luna-welcome__section--private',
                                 outlet: 'privateSection'
@@ -85,18 +85,18 @@ class LunaWelcomeTab extends View
 
         @projects.refreshRecentList @hideSearchResults
 
-        @noTutorialsMsg ?= 'Fetching tutorials list...'
-        @redrawTutorials()
-        @projects.refreshTutorialList (error) =>
-            @noTutorialsMsg = error
-            @noTutorialsMsg ?= ''
-            @redrawTutorials()
+        @noSampleProjectsMsg ?= 'Fetching sample projects list...'
+        @redrawSampleProjects()
+        @projects.refreshSampleProjectList (error) =>
+            @noSampleProjectsMsg = error
+            @noSampleProjectsMsg ?= ''
+            @redrawSampleProjects()
 
-    redrawTutorials: =>
-        @tutorialsContainer[0].innerText = @noTutorialsMsg
-        @tutorialItems = @projects.getTutorialItems()
-        for k, tutorialItem of @tutorialItems
-            @tutorialsContainer.append(tutorialItem.element)
+    redrawSampleProjects: =>
+        @sampleProjectsContainer[0].innerText = @noSampleProjectsMsg
+        @sampleProjectItems = @projects.getSampleProjectItems()
+        for k, sampleProjectItem of @sampleProjectItems
+            @sampleProjectsContainer.append(sampleProjectItem.element)
 
     getFilterKey: ->
         return 'name'
@@ -134,8 +134,8 @@ class LunaWelcomeTab extends View
         else
             fuzzyFilter ?= require('fuzzaldrin').filter
             allItems = []
-            for k, tutorialItem of @tutorialItems
-                allItems.push tutorialItem
+            for k, sampleProjectItem of @sampleProjectItems
+                allItems.push sampleProjectItem
 
             allItems = allItems.concat @projects.getRecentItems()
             filteredItems = fuzzyFilter(allItems, filterQuery, key: @getFilterKey())
@@ -149,7 +149,7 @@ class LunaWelcomeTab extends View
 
         @communitySection.hide()
         @privateSection.hide()
-        @tutorialsSection.hide()
+        @sampleProjectsSection.hide()
         @searchResultsSection.show()
 
     redrawPrivateItems: =>
@@ -167,11 +167,11 @@ class LunaWelcomeTab extends View
     hideSearchResults: =>
         @redrawPrivateItems()
         @redrawCommunityItems()
-        @redrawTutorials()
+        @redrawSampleProjects()
 
         @searchResultsSection.hide()
         @communitySection.show()
         @privateSection.show()
-        @tutorialsSection.show()
+        @sampleProjectsSection.show()
 
     getTitle: -> 'Welcome'
