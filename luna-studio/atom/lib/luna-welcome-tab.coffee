@@ -2,7 +2,7 @@
 etch   = require 'etch'
 shell  = require 'shell'
 fuzzyFilter = null # defer until used
-{ProjectItem, privateNewClasses, communityNewClasses} = require './project-item'
+{ProjectItem, privateNewClasses} = require './project-item'
 analytics = require './gen/analytics'
 report = require './report'
 
@@ -60,21 +60,10 @@ class LunaWelcomeTab extends View
                                 =>
                                     @h2 class: 'luna-welcome__section__title icon icon-person', 'My projects'
                                     @div class: 'luna-welcome__section__container', outlet: 'privateContainer', =>
-                            @div
-                                class: 'luna-welcome__section luna-welcome__section--community'
-                                outlet: 'communitySection'
-                                =>
-                                    @h2 class: 'luna-welcome__section__title icon icon-organization',  'Community'
-                                    @div  class: 'luna-welcome__section__container', outlet: 'communityContainer', =>
-
     initialize: =>
         @privateNew = new ProjectItem {name: 'New Project', uri: null}, privateNewClasses, (progress, finalize) =>
             finalize()
             @projects.createProject()
-        @communityItems = []
-        @comunnityNew = new ProjectItem({name: 'New Project', uri: null}, communityNewClasses, (progress, finalize) =>
-            finalize()
-            report.displayError 'Not supported yet', 'Community projects are not supported yet')
         @welcomeModal.on 'click', (e) -> e.stopPropagation()
         @searchInput.on 'search', @search
         @searchInput.on 'keyup', @search
@@ -147,7 +136,6 @@ class LunaWelcomeTab extends View
         for item in searchResults
             @searchResultsContainer.append item.element
 
-        @communitySection.hide()
         @privateSection.hide()
         @sampleProjectsSection.hide()
         @searchResultsSection.show()
@@ -158,19 +146,11 @@ class LunaWelcomeTab extends View
         for recentProject in @projects.getRecentItems()
             @privateContainer.append recentProject.element
 
-    redrawCommunityItems: =>
-        @communityContainer.empty()
-        @communityContainer.append @comunnityNew.element
-        for communityItem in @communityItems
-            @communityContainer.append communityItem.element
-
     hideSearchResults: =>
         @redrawPrivateItems()
-        @redrawCommunityItems()
         @redrawSampleProjects()
 
         @searchResultsSection.hide()
-        @communitySection.show()
         @privateSection.show()
         @sampleProjectsSection.show()
 
