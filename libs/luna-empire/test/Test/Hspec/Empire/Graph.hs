@@ -10,15 +10,12 @@ import qualified LunaStudio.Data.Node            as Node
 import qualified LunaStudio.Data.Position        as Position
 
 import Control.Lens                  (uses)
-import Data.Coerce                   (coerce)
 import Data.UUID                     (UUID)
 import Data.UUID.V4                  (nextRandom)
 import Empire.ASTOp                  (runASTOp)
 import Empire.Empire                 (Empire)
-import LunaStudio.Data.Breadcrumb    (Breadcrumb (Breadcrumb),
-                                      BreadcrumbItem (Arg, Definition, Lambda))
 import LunaStudio.Data.Connection    (Connection)
-import LunaStudio.Data.GraphLocation (GraphLocation (GraphLocation))
+import LunaStudio.Data.GraphLocation (GraphLocation)
 import LunaStudio.Data.Node          (ExpressionNode, NodeId)
 import LunaStudio.Data.NodeLoc       (NodeLoc (NodeLoc))
 import LunaStudio.Data.NodeMeta      (NodeMeta (NodeMeta))

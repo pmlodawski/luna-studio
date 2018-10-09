@@ -16,6 +16,7 @@ import Empire.Data.Graph                (ClsGraph, Graph)
 import Empire.Empire                    (Command, Empire)
 import LunaStudio.Data.GraphLocation    (GraphLocation)
 
+
 data UnsupportedOperation = UnsupportedOperation deriving Show
 
 instance Exception UnsupportedOperation where

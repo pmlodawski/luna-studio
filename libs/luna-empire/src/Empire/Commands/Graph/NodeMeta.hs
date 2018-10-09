@@ -19,13 +19,11 @@ import LunaStudio.Data.Position      (Position)
 getNodeMeta :: GraphLocation -> NodeId -> Empire (Maybe NodeMeta)
 getNodeMeta loc = withGraph loc . runASTOp . AST.getNodeMeta
 
-
 setNodeMeta :: GraphLocation -> NodeId -> NodeMeta -> Empire ()
 setNodeMeta gl nodeId newMeta = withBreadcrumb
     gl
     (runASTOp $ setNodeMetaGraph nodeId newMeta)
     (setNodeMetaFun nodeId newMeta)
-
 
 setNodePosition :: GraphLocation -> NodeId -> Position -> Empire ()
 setNodePosition loc nodeId newPos = do
@@ -40,7 +38,6 @@ setNodeMetaFun :: NodeId -> NodeMeta -> Command ClsGraph ()
 setNodeMetaFun nodeId newMeta = runASTOp $ do
     f <- ASTRead.getFunByNodeId nodeId
     void $ AST.writeMeta f newMeta
-
 
 setNodePositionAST :: NodeId -> Position -> GraphOp ()
 setNodePositionAST nodeId newPos = do

@@ -1,6 +1,6 @@
 module LunaStudio.Data.GraphLocation where
 
-import Prologue
+import Prologue hiding ((|>))
 
 import qualified Control.Lens.Aeson as Lens
 
