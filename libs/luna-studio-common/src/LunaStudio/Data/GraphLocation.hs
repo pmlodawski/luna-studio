@@ -45,9 +45,9 @@ appendBreadcrumbItem :: GraphLocation -> BreadcrumbItem -> GraphLocation
 appendBreadcrumbItem (GraphLocation file bc) item
     = GraphLocation file . coerce . (<> [item]) $ coerce bc
 
-infixl 5 |>*
-(|>*) :: GraphLocation -> NodeId -> GraphLocation
-(|>*) = appendLambda
+infixl 5 |>|
+(|>|) :: GraphLocation -> NodeId -> GraphLocation
+(|>|) = appendLambda
 
 appendLambda :: GraphLocation -> NodeId -> GraphLocation
 appendLambda gl nid = gl |> Lambda nid
