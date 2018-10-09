@@ -37,8 +37,6 @@ spec :: Spec
 spec = runTests "entering nodes at use-site" $ do
     it "enters defined function in the same file" $ let
         initialCode = [r|
-            import Std.Base
-
             def foo a:
                 a
 

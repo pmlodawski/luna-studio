@@ -182,7 +182,7 @@ insertFunAfter previousFunction function code = do
     case previousFunction of
         Nothing -> do
             unit <- use Graph.clsClass
-            funs <- ASTRead.classFunctions unit
+            funs <- ASTRead.unitDefinitions unit
             let firstFunction = Safe.headMay funs
             funBlockStart <- case firstFunction of
                 Just fun -> Code.functionBlockStartRef fun
@@ -238,7 +238,7 @@ addFunNode loc parsing uuid expr meta = withUnit loc $ do
         return (name, generalize markedNode, markedCode)
     unit <- use $ Graph.userState . Graph.clsClass
     (insertedCharacters, codePosition) <- runASTOp $ do
-        funs <- ASTRead.classFunctions unit
+        funs <- ASTRead.unitDefinitions unit
         previousFunction <- findPreviousFunction meta funs
         insertedCharacters <- insertFunAfter previousFunction markedFunction markedCode
         cls' <- ASTRead.classFromUnit unit
@@ -255,10 +255,10 @@ addFunNode loc parsing uuid expr meta = withUnit loc $ do
         codePosition       <- Code.functionBlockStartRef markedFunction
         return (fromIntegral insertedCharacters, codePosition)
 
-    Graph.userState . Graph.clsFuns . traverse . Graph.funGraph . Graph.fileOffset %= (\off -> if off >= codePosition then off + insertedCharacters else off)
+    Graph.userState . Graph.clsFuns . traverse . Graph._FunctionDefinition . Graph.funGraph . Graph.fileOffset %= (\off -> if off >= codePosition then off + insertedCharacters else off)
     (uuid', graph) <- makeGraphCls markedFunction (Just uuid)
 
-    runASTOp $ GraphBuilder.buildClassNode uuid' name
+    runASTOp $ GraphBuilder.buildClassNode uuid' (error "addFunNode")
 
 addNodeNoTC :: GraphLocation -> NodeId -> Text -> Maybe Text -> NodeMeta -> Command Graph ExpressionNode
 addNodeNoTC loc uuid input name meta = do
@@ -549,7 +549,7 @@ removeNodes loc@(GraphLocation file (Breadcrumb [])) nodeIds = do
                 return (start - off, start + len)
             forM (reverse spans) $ \(start, end) -> do
                 let removedCharacters = end - start
-                Graph.clsFuns . traverse . Graph.funGraph . Graph.fileOffset %= (\off -> if off > end then off - removedCharacters else off)
+                Graph.clsFuns . traverse . Graph._FunctionDefinition . Graph.funGraph . Graph.fileOffset %= (\off -> if off > end then off - removedCharacters else off)
                 Code.removeAt start end
             IR.UniTermRecord a <- getLayer @IR.Model cls''
             l <- PtrList.fromList (coerce left)
@@ -913,7 +913,7 @@ decodeLocation loc@(GraphLocation file crumbs) = case crumbs of
         _             -> do
             definitionsIDs <- withUnit (GraphLocation file (Breadcrumb [])) $ do
                 funs <- use $ Graph.userState . Graph.clsFuns
-                return $ Map.map (view Graph.funName) funs
+                return $ Map.map (view $ Graph._FunctionDefinition . Graph.funName) funs
             withGraph (functionLocation loc) $ GraphBuilder.decodeBreadcrumbs definitionsIDs crumbs
 
 renameNode :: GraphLocation -> NodeId -> Text -> Empire ()
@@ -922,8 +922,8 @@ renameNode loc nid name
         let stripped = Text.strip name
         withUnit loc $ do
             _ <- liftIO $ ASTParse.runProperVarParser stripped
-            oldName <- use $ Graph.userState . Graph.clsFuns . ix nid . Graph.funName
-            Graph.userState . Graph.clsFuns %= Map.adjust (Graph.funName .~ (Text.unpack stripped)) nid
+            oldName <- use $ Graph.userState . Graph.clsFuns . ix nid . Graph._FunctionDefinition . Graph.funName
+            Graph.userState . Graph.clsFuns %= Map.adjust (Graph._FunctionDefinition . Graph.funName .~ (Text.unpack stripped)) nid
             runASTOp $ do
                 fun     <- ASTRead.getFunByNodeId nid >>= ASTRead.cutThroughDocAndMarked
                 matchExpr fun $ \case
@@ -1145,9 +1145,8 @@ getASGRootedFunctionLink link = do
         _                  -> return link
 
 markFunctions :: NodeRef -> ClassOp ()
-markFunctions unit = do
-    klass' <- ASTRead.classFromUnit unit
-    matchExpr klass' $ \case
+markFunctions klass = do
+    matchExpr klass $ \case
         ClsASG _ _ _ _ funs' -> do
             funs <- (map generalize) <$> ptrListToList funs'
             forM_ funs $ \fun -> source fun >>= \asgFun -> ASTRead.cutThroughDoc asgFun >>= \f -> matchExpr f $ \case
@@ -1155,6 +1154,7 @@ markFunctions unit = do
                 ASGFunction{} -> do
                     newMarker <- getNextTopLevelMarker
                     funStart  <- Code.functionBlockStartRef f
+                    print funStart
                     Code.insertAt funStart (Code.makeMarker newMarker)
                     marker    <- IR.marker newMarker
                     markedFun <- IR.marked' marker (generalize f)
@@ -1168,6 +1168,23 @@ markFunctions unit = do
                     replaceSource (coerce markedFun) (coerce asgLink)
                     linkSrc <- source =<< getASGRootedFunctionLink fun
                     Code.gossipLengthsChangedByCls markerLength markedFun
+                ClsASG{} -> do
+                    -- newMarker <- getNextTopLevelMarker
+                    -- funStart  <- Code.functionBlockStartRef f
+                    -- Code.insertAt funStart (Code.makeMarker newMarker)
+                    -- marker    <- IR.marker newMarker
+                    -- markedFun <- IR.marked' marker (generalize f)
+                    -- Graph.clsCodeMarkers . at newMarker ?= markedFun
+                    -- LeftSpacedSpan (SpacedSpan off prevLen) <- view CodeSpan.realSpan <$> getLayer @CodeSpan f
+                    -- let markerLength = convert $ Text.length $ Code.makeMarker newMarker
+                    -- putLayer @CodeSpan marker $ CodeSpan.mkRealSpan (LeftSpacedSpan (SpacedSpan 0 markerLength))
+                    -- putLayer @CodeSpan markedFun $ CodeSpan.mkRealSpan (LeftSpacedSpan (SpacedSpan off prevLen))
+                    -- putLayer @CodeSpan f $ CodeSpan.mkRealSpan (LeftSpacedSpan (SpacedSpan 0 prevLen))
+                    -- asgLink <- getASGRootedFunctionLink fun
+                    -- replaceSource (coerce markedFun) (coerce asgLink)
+                    -- linkSrc <- source =<< getASGRootedFunctionLink fun
+                    -- Code.gossipLengthsChangedByCls markerLength markedFun
+                    markFunctions f
                 _ -> return ()
 
 loadCode :: GraphLocation -> Text -> Empire ()
@@ -1195,10 +1212,11 @@ loadCode (GraphLocation file _) code = do
             return (codeWithoutMeta /= code, prevParseError)
     when (codeHadMeta && isJust prevParseError) $ resendCode loc
     functions <- withUnit loc $ do
-        klass <- use $ Graph.userState . Graph.clsClass
+        unit <- use $ Graph.userState . Graph.clsClass
         runASTOp $ do
+            klass <- ASTRead.classFromUnit unit
             markFunctions klass
-            funs <- ASTRead.classFunctions klass
+            funs <- ASTRead.unitDefinitions unit
             forM funs $ \f -> ASTRead.cutThroughDoc f >>= \fun -> matchExpr fun $ \case
                 Marked m _e -> do
                     funCodeSpan <- getLayer @CodeSpan fun
@@ -1213,9 +1231,9 @@ loadCode (GraphLocation file _) code = do
     for_ functions $ \(lastUUID, fun) -> do
         uuid <- Library.withLibrary file (fst <$> makeGraph fun lastUUID)
         let loc' = GraphLocation file $ Breadcrumb [Breadcrumb.Definition uuid]
-        autolayout loc'
+        -- autolayout loc'
         return ()
-    autolayoutTopLevel loc
+    -- autolayoutTopLevel loc
     return ()
 
 infixl 5 |>
@@ -1261,8 +1279,8 @@ autolayoutTopLevel loc = do
         needLayout <- fmap catMaybes $ forM (Map.assocs clsFuns) $ \(id, fun) -> do
             f    <- ASTRead.getFunByNodeId id
             meta <- AST.readMeta f
-            let fileOffset = fun ^. Graph.funGraph . Graph.fileOffset
-            return $ if meta /= def then Nothing else Just (id, fileOffset)
+            let fileOffset = fun ^? Graph._FunctionDefinition . Graph.funGraph . Graph.fileOffset
+            return $ if meta /= def then Nothing else (id,) <$> fileOffset
 
         let sortedNeedLayout = sortOn snd needLayout
             positions  = map (Position.fromTuple . (,0)) [0,gapBetweenNodes..]
@@ -1556,7 +1574,7 @@ prepareCopy loc@(GraphLocation _ (Breadcrumb [])) nodeIds = withUnit loc $ do
                 nonExistent = filter (isNothing . snd) names
             forM nonExistent $ \(nid, _) ->
                 throwM $ BH.BreadcrumbDoesNotExistException (Breadcrumb [Breadcrumb.Definition nid])
-            refs <- mapM ASTRead.getFunByNodeId [ nid | (nid, Just (view Graph.funName -> _name)) <- names]
+            refs <- mapM ASTRead.getFunByNodeId [ nid | (nid, Just (view (Graph._FunctionDefinition . Graph.funName) -> _name)) <- names]
             forM refs $ \ref -> do
                 LeftSpacedSpan (SpacedSpan _off len) <- view CodeSpan.realSpan <$> getLayer @CodeSpan ref
                 return $ fromIntegral len
@@ -1600,7 +1618,7 @@ paste :: GraphLocation -> Position -> String -> Empire ()
 paste loc@(GraphLocation file (Breadcrumb [])) position (Text.pack -> code) = do
     newCode <- withUnit loc $ runASTOp $ do
         unit  <- use Graph.clsClass
-        funs  <- ASTRead.classFunctions unit
+        funs  <- ASTRead.unitDefinitions unit
         funStarts <- forM funs $ \fun -> do
             xFun <- view (NodeMeta.position . Position.x) <$> (fromMaybe def <$> AST.readMeta fun)
             if xFun < position ^. Position.x then return Nothing else do
@@ -1799,7 +1817,8 @@ pauseInterpreter loc = do
 -- internal
 
 getName :: GraphLocation -> NodeId -> Empire (Maybe Text)
-getName loc nid = withGraph' loc (runASTOp $ GraphBuilder.getNodeName nid) $ use (Graph.userState . Graph.clsFuns . ix nid . Graph.funName . packed . re _Just)
+getName loc nid = withGraph' loc (runASTOp $ GraphBuilder.getNodeName nid) $
+    use (Graph.userState . Graph.clsFuns . ix nid . Graph._FunctionDefinition . Graph.funName . packed . re _Just)
 
 generateNodeName :: NodeRef -> GraphOp Text
 generateNodeName = ASTPrint.genNodeBaseName >=> generateNodeNameFromBase
@@ -1885,7 +1904,7 @@ resolveRedirection loc@(GraphLocation file (Breadcrumb bc)) =
                 Just path -> do
                     lib <- getLibrary file mod
                     let funs = lib ^. Library.body . Graph.clsFuns
-                        funGraph = find (\a -> a ^. _2 . Graph.funName == convert fun) $ Map.toList funs
+                        funGraph = find (\a -> a ^. _2 . Graph._FunctionDefinition . Graph.funName == convert fun) $ Map.toList funs
                     case funGraph of
                         Just (funId, _) -> return $
                             GraphLocation path (coerce $ Definition funId : bc)
@@ -1907,7 +1926,7 @@ withBreadcrumb file breadcrumb actG actC = do
             case libOpened of
                 Just f -> do
                     let funs = f ^. Library.body . Graph.clsFuns
-                        funGraph = find (\a -> a ^. _2 . Graph.funName == convert fun) $ Map.toList funs
+                        funGraph = find (\a -> a ^. _2 . Graph._FunctionDefinition . Graph.funName == convert fun) $ Map.toList funs
                     case funGraph of
                         Just (funId, _) -> Library.withLibrary (f ^. Library.path) $
                             zoomBreadcrumb (coerce $ Definition funId : coerce bc) actG actC
@@ -1921,7 +1940,7 @@ withBreadcrumb file breadcrumb actG actC = do
                             active <- use $ Graph.userState . activeFiles
                             let Just modOpened  = find (\a -> a ^. Library.path == path) $ Map.elems active
                             let funs = modOpened ^. Library.body . Graph.clsFuns
-                                funGraph = find (\a -> a ^. _2 . Graph.funName == convert fun) $ Map.toList funs
+                                funGraph = find (\a -> a ^. _2 . Graph._FunctionDefinition . Graph.funName == convert fun) $ Map.toList funs
                             case funGraph of
                                 Just (funId, _) -> Library.withLibrary path $
                                     zoomBreadcrumb (coerce $ Definition funId : coerce bc) actG actC

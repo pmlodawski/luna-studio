@@ -102,13 +102,12 @@ buildGraph = do
 buildClassGraph :: ClassOp API.Graph
 buildClassGraph = do
     funs <- use Graph.clsFuns
-    nodes' <- mapM (\(uuid, funGraph)
-        -> buildClassNode uuid (funGraph ^. Graph.funName)) $ Map.assocs funs
+    nodes' <- mapM (uncurry buildClassNode) $ Map.assocs funs
     pure $ API.Graph nodes' mempty mempty mempty mempty mempty
 
 
-buildClassNode :: NodeId -> String -> ClassOp API.ExpressionNode
-buildClassNode uuid name = do
+buildClassNode :: NodeId -> Graph.TopLevelGraph -> ClassOp API.ExpressionNode
+buildClassNode uuid (Graph.FunctionDefinition (view Graph.funName -> name)) = do
     f    <- ASTRead.getFunByNodeId uuid
     codeStart <- Code.functionBlockStartRef f
     (nameOff, nameLen) <- ASTRead.cutThroughDocAndMarked f >>= \a -> matchExpr a $ \case
@@ -135,6 +134,20 @@ buildClassNode uuid name = do
             (LabeledTree (OutPorts []) (Port [] "base" TStar NotConnected))
             meta
             (Just $ Breadcrumb.Definition uuid)
+buildClassNode uuid (Graph.ClassDefinition g) = do
+    f    <- ASTRead.getFunByNodeId uuid
+    meta <- fromMaybe def <$> AST.readMeta f
+    let name = g ^. Graph.className
+    pure $ API.ExpressionNode
+        uuid
+        ""
+        True
+        (Just $ convert name)
+        ""
+        (LabeledTree def (Port [] "base" TStar NotConnected))
+        (LabeledTree (OutPorts []) (Port [] "base" TStar NotConnected))
+        meta
+        (Just $ Breadcrumb.Definition uuid)
 
 buildNodes :: GraphOp [API.ExpressionNode]
 buildNodes = do
@@ -218,7 +231,7 @@ buildNodesForAutolayoutCls = do
 
 buildNodeForAutolayoutCls :: NodeId -> ClassOp (NodeId, Int, Position)
 buildNodeForAutolayoutCls nid = do
-    name    <- use $ Graph.clsFuns . ix nid . Graph.funName
+    name    <- use $ Graph.clsFuns . ix nid . Graph._FunctionDefinition . Graph.funName
     marked  <- ASTRead.getFunByNodeId nid
     codePos <- Code.functionBlockStartRef marked
     meta    <- fromMaybe def <$> AST.readMeta marked

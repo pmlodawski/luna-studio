@@ -793,9 +793,9 @@ spec = around withChannels $ parallel $ do
                 funIds <- (map (view Node.nodeId)) <$> Graph.getNodes loc
                 offsets <- Graph.withUnit loc $ do
                     funs <- use $ Graph.userState . Graph.clsFuns
-                    return $ map (\fun -> (fun ^. Graph.funName, fun ^. Graph.funGraph . Graph.fileOffset)) $ Map.elems funs
+                    return $ map (\fun -> (fun ^. Graph._FunctionDefinition . Graph.funName, fun ^? Graph._FunctionDefinition . Graph.funGraph . Graph.fileOffset)) $ Map.elems funs
                 return offsets
-            offsets `shouldMatchList` [("foo",10), ("bar",58), ("main",91)]
+            offsets `shouldMatchList` [("foo",Just 10), ("bar",Just 58), ("main",Just 91)]
         it "maintains proper function file offsets after adding a function" $ \env -> do
             offsets <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"
@@ -808,9 +808,9 @@ spec = around withChannels $ parallel $ do
                 funIds <- (map (view Node.nodeId)) <$> Graph.getNodes loc
                 offsets <- Graph.withUnit loc $ do
                     funs <- use $ Graph.userState . Graph.clsFuns
-                    return $ map (\fun -> (fun ^. Graph.funName, fun ^. Graph.funGraph . Graph.fileOffset)) $ Map.elems funs
+                    return $ map (\fun -> (fun ^. Graph._FunctionDefinition . Graph.funName, fun ^? Graph._FunctionDefinition . Graph.funGraph . Graph.fileOffset)) $ Map.elems funs
                 return offsets
-            offsets `shouldMatchList` [("foo",10), ("bar",39), ("aaa",65), ("main",84)]
+            offsets `shouldMatchList` [("foo",Just 10), ("bar",Just 39), ("aaa",Just 65), ("main",Just 84)]
         it "maintains proper function file offsets after removing a function" $ \env -> do
             offsets <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"
@@ -822,9 +822,9 @@ spec = around withChannels $ parallel $ do
                 funIds <- (map (view Node.nodeId)) <$> Graph.getNodes loc
                 offsets <- Graph.withUnit loc $ do
                     funs <- use $ Graph.userState . Graph.clsFuns
-                    return $ map (\fun -> (fun ^. Graph.funName, fun ^. Graph.funGraph . Graph.fileOffset)) $ Map.elems funs
+                    return $ map (\fun -> (fun ^. Graph._FunctionDefinition . Graph.funName, fun ^? Graph._FunctionDefinition . Graph.funGraph . Graph.fileOffset)) $ Map.elems funs
                 return offsets
-            offsets `shouldMatchList` [("foo",10), ("main",39)]
+            offsets `shouldMatchList` [("foo",Just 10), ("main",Just 39)]
         it "maintains proper function file offsets after renaming a function" $ \env -> do
             u1 <- mkUUID
             offsets <- evalEmp env $ do
@@ -837,9 +837,9 @@ spec = around withChannels $ parallel $ do
                 funIds <- (map (view Node.nodeId)) <$> Graph.getNodes loc
                 offsets <- Graph.withUnit loc $ do
                     funs <- use $ Graph.userState . Graph.clsFuns
-                    return $ map (\fun -> (fun ^. Graph.funName, fun ^. Graph.funGraph . Graph.fileOffset)) $ Map.elems funs
+                    return $ map (\fun -> (fun ^. Graph._FunctionDefinition . Graph.funName, fun ^? Graph._FunctionDefinition . Graph.funGraph . Graph.fileOffset)) $ Map.elems funs
                 return offsets
-            offsets `shouldMatchList` [("foo", 10), ("qwerty", 39), ("main", 75)]
+            offsets `shouldMatchList` [("foo", Just 10), ("qwerty", Just 39), ("main", Just 75)]
         it "adds the first function in a file" $ \env -> do
             u1 <- mkUUID
             (nodes, code) <- evalEmp env $ do
@@ -1065,7 +1065,7 @@ spec = around withChannels $ parallel $ do
                 u1 <- mkUUID
                 Graph.addNode loc u1 "def 4" def
                 Graph.renameNode loc u1 "foo"
-                node <- Graph.withUnit loc $ runASTOp $ GraphBuilder.buildClassNode u1 ""
+                node <- Graph.withUnit loc $ runASTOp $ GraphBuilder.buildClassNode u1 (error "FileModuleSpec.hs:1068 error")
                 liftIO $ node ^. Node.name `shouldBe` Just "foo"
                 return ()
         it "adds invalid def, another node inside and connects to output" $ \env -> do

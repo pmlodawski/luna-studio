@@ -84,7 +84,7 @@ runTC modName (GraphLocation file br) = do
     zoomCommand Empire.clsGraph $ case br of
         Breadcrumb (Definition uuid:_) -> do
             cls <- use $ Graph.userState
-            let Just root = cls ^? Graph.clsFuns . ix uuid . Graph.funGraph . Graph.breadcrumbHierarchy . BH.self
+            let Just root = cls ^? Graph.clsFuns . ix uuid . Graph._FunctionDefinition . Graph.funGraph . Graph.breadcrumbHierarchy . BH.self
             liftScheduler $ do
                 Prep.preprocessDef resolver root
                 TC.runTypechecker def root typed
