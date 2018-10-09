@@ -617,7 +617,7 @@ handleSubstitute = modifyGraph defInverse action replyResult where
     action req@(Substitute.Request location diffs) = do
         let file = location ^. GraphLocation.filePath
         graphDiff <- withDefaultResult location
-            $ Graph.substituteCodeFromPoints file diffs
+            $ Graph.substituteCode file diffs
         Graph.typecheckWithRecompute location
         pure graphDiff
 

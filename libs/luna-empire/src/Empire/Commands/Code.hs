@@ -1,50 +1,45 @@
-{-# LANGUAGE ViewPatterns      #-}
-{-# LANGUAGE TypeApplications  #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE MultiWayIf        #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications  #-}
+{-# LANGUAGE ViewPatterns      #-}
 
 module Empire.Commands.Code where
 
-import           Empire.Prelude
-import           Control.Monad.State     (MonadState)
-import           Control.Monad           (filterM, forM)
-import qualified Data.Set                as Set
-import qualified Data.Map                as Map
-import           Data.Text               (Text)
-import qualified Data.Text               as Text
-import qualified Data.Text.IO            as Text
-import qualified Data.Text.Read          as Text
-import           Data.List               (sort, sortOn)
-import           Data.Maybe              (listToMaybe)
-import           Empire.Data.Graph       as Graph
-import           Empire.Empire           (Command, Empire)
+import Empire.Prelude
+
+import qualified Data.Map                             as Map
+import qualified Data.Set                             as Set
+import qualified Data.Text                            as Text
+import qualified Data.Text.Read                       as Text
+import qualified Empire.ASTOps.Print                  as ASTPrint
+import qualified Empire.ASTOps.Read                   as ASTRead
+import qualified Empire.Data.Graph                    as Graph
+import qualified Luna.IR                              as IR
+import qualified Luna.Syntax.Text.Analysis.SpanTree   as SpanTree
+import qualified Luna.Syntax.Text.Lexer               as Lexer
+import qualified Luna.Syntax.Text.Parser.Ast.CodeSpan as CodeSpan
+import qualified LunaStudio.Data.NodeCache            as NodeCache
 import qualified Safe
 
-import           Empire.Data.AST         (NodeRef, EdgeRef)
-import           Empire.ASTOp            (ASTOp, ClassOp, GraphOp, runASTOp)
-import           Empire.ASTOps.Print     as ASTPrint
-import           Empire.ASTOps.Read      as ASTRead
-
-import qualified Luna.IR                 as IR
-import           Data.Text.Position      (Delta)
-import           Luna.Pass.Data.Layer.SpanLength (SpanLength)
-import           Luna.Pass.Data.Layer.SpanOffset (SpanOffset)
-import           Data.Text.Span          (SpacedSpan(..), leftSpacedSpan)
-import qualified Luna.Syntax.Text.Parser.Ast.CodeSpan as CodeSpan
-import           Luna.Syntax.Text.Parser.Ast.CodeSpan (CodeSpan, realSpan)
-import qualified Luna.Syntax.Text.Parser.State.Marker   as Luna
-
-import           Luna.Syntax.Text.Lexer.Grammar     (isOperator)
-import qualified Luna.Syntax.Text.Lexer             as Lexer
-import           Luna.Syntax.Text.Analysis.SpanTree as SpanTree
-
-import           LunaStudio.Data.Breadcrumb         (Breadcrumb(..), BreadcrumbItem(..))
-import           LunaStudio.Data.NodeId             (NodeId)
-import qualified LunaStudio.Data.NodeCache          as NodeCache
-import qualified Empire.Data.BreadcrumbHierarchy as BH
-
-import           LunaStudio.Data.Point (Point(Point))
+import Control.Monad                        (filterM, forM)
+import Control.Monad.State                  (MonadState)
+import Data.List                            (sort, sortOn)
+import Data.Maybe                           (listToMaybe)
+import Data.Text                            (Text)
+import Data.Text.Position                   (Delta)
+import Data.Text.Span                       (SpacedSpan (SpacedSpan))
+import Empire.ASTOp                         (ASTOp, ClassOp, GraphOp)
+import Empire.Data.AST                      (EdgeRef, NodeRef)
+import Empire.Data.Graph                    (HasNodeCache)
+import Luna.Pass.Data.Layer.SpanLength      (SpanLength)
+import Luna.Pass.Data.Layer.SpanOffset      (SpanOffset)
+import Luna.Syntax.Text.Analysis.SpanTree   (SpanType (MarkerSpan),
+                                             Spanned (Spanned), Spantree)
+import Luna.Syntax.Text.Lexer.Grammar       (isOperator)
+import Luna.Syntax.Text.Parser.Ast.CodeSpan (CodeSpan)
+import LunaStudio.Data.NodeId               (NodeId)
+import LunaStudio.Data.Point                (Point (Point))
 
 pointToDelta :: Point -> Text -> Delta
 pointToDelta (Point col row) code = fromIntegral $ col + row + sumOfRowsBefore where
@@ -57,11 +52,60 @@ deltaToPoint delta code = Point col row where
     row = pred $ length $ Text.lines codePrefix
     col = Text.length $ Text.takeWhileEnd (/= '\n') $ Text.init codePrefix
 
+mergeMarkers :: Text -> Text -> Text
+mergeMarkers code codeFromPrevious = mergeToken mempty code 0 lexedCode lexedPrev where
+    lexedCode = Lexer.evalDefLexer $ convert code
+    lexedPrev = Lexer.evalDefLexer $ convert codeFromPrevious
+    mergeToken :: Text -> Text -> Int -> [Lexer.Token Lexer.Symbol] -> [Lexer.Token Lexer.Symbol] -> Text
+    mergeToken result _ _ []    _  = result
+    mergeToken result _ _ (h:r) [] = impossible
+    mergeToken
+        result
+        codeSuffix
+        suffixOffset
+        codeStream@(codeH : codeR)
+        prevStream@(prevH : prevR) = let
+            mayCodeMarker   = Lexer.matchMarker $ codeH ^. Lexer.element
+            mayPrevMarker   = Lexer.matchMarker $ prevH ^. Lexer.element
+            codeTokenLength
+                = if isNothing mayCodeMarker
+                && isNothing mayPrevMarker
+                && codeH ^. Lexer.span /= prevH ^. Lexer.span
+                    then impossible
+                    else fromIntegral $ codeH ^. Lexer.span
+            in case (mayCodeMarker, mayPrevMarker) of
+                (Nothing, Nothing) -> mergeToken
+                    (result <> Text.take codeTokenLength codeSuffix)
+                    (Text.drop codeTokenLength codeSuffix)
+                    (suffixOffset + codeTokenLength)
+                    codeR
+                    prevR
+                (Just m, Nothing) -> mergeToken
+                    (result <> makeMarker m)
+                    (Text.drop codeTokenLength codeSuffix)
+                    (suffixOffset + codeTokenLength)
+                    codeR
+                    prevStream
+                (Just _, Just m) -> mergeToken
+                    (result <> makeMarker m)
+                    (Text.drop codeTokenLength codeSuffix)
+                    (suffixOffset + codeTokenLength)
+                    codeR
+                    prevR
+                (Nothing, Just _) -> mergeToken
+                    result
+                    codeSuffix
+                    suffixOffset
+                    codeStream
+                    prevR
+
+
+
 removeMarkers :: Text -> Text
 removeMarkers (convert -> code) = convertVia @String $ SpanTree.foldlSpans concatNonMarker "" spanTree where
     spanTree    = SpanTree.buildSpanTree code lexerStream
     lexerStream = Lexer.evalDefLexer code
-    concatNonMarker t (Spanned span t1) = if span ^. spanType == MarkerSpan then t else t <> t1
+    concatNonMarker t (Spanned span t1) = if span ^. SpanTree.spanType == MarkerSpan then t else t <> t1
 
 extractMarkers :: Text -> Set.Set Graph.MarkerId
 extractMarkers (convert -> code) = Set.fromList markers where
@@ -74,7 +118,7 @@ readMarker text = fst <$> Text.decimal (Text.tail text)
 remarkerCode :: Text -> Set.Set Graph.MarkerId -> (Text, Map.Map Graph.MarkerId Graph.MarkerId)
 remarkerCode orig@(convert -> code) reservedMarkers = (remarkedCode, substitutions) where
     concatAll   subst t1 (Spanned span t2) = t1 <>
-        if span ^. spanType /= MarkerSpan then t2 else (case readMarker (convert t2) of
+        if span ^. SpanTree.spanType /= MarkerSpan then t2 else (case readMarker (convert t2) of
             Right m | m `Map.member` subst ->
                 let newMarker = subst Map.! m
                 in convert $ makeMarker newMarker
@@ -119,24 +163,39 @@ viewDeltasToRealBeforeMarker (convert -> code) (b, e) = if b == e then (bAf, bAf
     spantree    = SpanTree.buildSpanTree code lexerStream
     lexerStream = Lexer.evalDefLexer code
 
--- TODO: switch to Deltas exclusively
-applyDiff :: (MonadState state m, Integral a, Graph.HasCode state) => a -> a -> Text -> m Text
-applyDiff (fromIntegral -> start) (fromIntegral -> end) code = do
-    currentCode <- use Graph.code
-    let len            = end - start
-        (prefix, rest) = Text.splitAt start currentCode
-        prefix'        = if Text.length prefix < start
-                            then Text.concat [prefix, Text.replicate (start - Text.length prefix) " "]
-                            else prefix
+applyDiffToText :: (Integral a) => Text -> a -> a -> Text -> Text
+applyDiffToText
+    previousText
+    (fromIntegral -> start)
+    (fromIntegral -> end)
+    insertedText = Text.concat [prefix', insertedText, suffix] where
+        len            = end - start
+        (prefix, rest) = Text.splitAt start previousText
         suffix         = Text.drop len rest
-        newCode        = Text.concat [prefix', code, suffix]
-    Graph.code .= newCode
-    return newCode
+        prefix'        = if Text.length prefix >= start
+            then prefix
+            else Text.concat
+                [ prefix
+                , Text.replicate (start - Text.length prefix) " " ]
 
-applyMany :: (MonadState state m, Integral a, Graph.HasCode state) => [(a, a, Text)] -> m Text
+applyManyToText :: (Integral a) => Text -> [(a,a,Text)] -> Text
+applyManyToText previousText diffs = applyAll reverseSortedDiffs where
+    applyAll                            = foldl applyNext previousText
+    applyNext acc (start, end, newText) = applyDiffToText acc start end newText
+    reverseSortedDiffs                  = reverse $ sortOn (view _1) diffs
+
+-- TODO: switch to Deltas exclusively
+applyDiff :: (MonadState state m, Integral a, Graph.HasCode state)
+    => a -> a -> Text -> m Text
+applyDiff start end code = applyMany [(start, end, code)]
+
+applyMany :: (MonadState state m, Integral a, Graph.HasCode state)
+    => [(a, a, Text)] -> m Text
 applyMany diffs = do
-    mapM_ (uncurry applyDiff) $ reverse $ sortOn (view _1) diffs
-    use Graph.code
+    currentCode <- use Graph.code
+    let newCode = applyManyToText currentCode diffs
+    Graph.code .= newCode
+    pure newCode
 
 insertAt :: (MonadState state m, Graph.HasCode state) => Delta -> Text -> m Text
 insertAt at code = applyDiff at at code

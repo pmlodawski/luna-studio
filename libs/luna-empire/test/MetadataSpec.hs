@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE QuasiQuotes         #-}
 {-# LANGUAGE PatternSynonyms     #-}
+{-# LANGUAGE QuasiQuotes         #-}
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections       #-}
@@ -9,58 +9,67 @@
 
 module MetadataSpec (spec) where
 
-import           Control.Lens                     ((^..))
-import           Control.Monad                    (forM)
+import           Control.Lens                         ((^..))
+import           Control.Monad                        (forM)
 import           Data.Coerce
-import           Data.List                        (find)
-import qualified Data.Map                         as Map
-import           Data.Reflection                  (Given (..), give)
-import qualified Data.Set                         as Set
-import qualified Data.Text                        as Text
-import qualified Data.Text.IO                     as Text
-import           Data.Text.Span                   (LeftSpacedSpan (..), SpacedSpan (..))
-import           Empire.ASTOp                     (runASTOp)
-import qualified Empire.ASTOps.Parse              as ASTParse
-import qualified Empire.ASTOps.Print              as ASTPrint
-import qualified Empire.ASTOps.Read               as ASTRead
-import qualified Empire.Commands.AST              as AST
-import qualified Empire.Commands.Code             as Code
-import qualified Empire.Commands.Graph            as Graph
-import qualified Empire.Commands.GraphBuilder     as GraphBuilder
-import qualified Empire.Commands.Library          as Library
-import           Empire.Data.AST                  (SomeASTException)
-import qualified Empire.Data.BreadcrumbHierarchy  as BH
-import           Empire.Data.FileMetadata         (MarkerNodeMeta (MarkerNodeMeta))
-import qualified Empire.Data.FileMetadata         as FileMetadata
-import qualified Empire.Data.Graph                as Graph (breadcrumbHierarchy, clsClass, clsFuns, code, codeMarkers, fileOffset)
-import           Empire.Empire                    (CommunicationEnv (..), Empire)
+import           Data.List                            (find)
+import qualified Data.Map                             as Map
+import           Data.Reflection                      (Given (..), give)
+import qualified Data.Set                             as Set
+import qualified Data.Text                            as Text
+import qualified Data.Text.IO                         as Text
+import           Data.Text.Span                       (LeftSpacedSpan (..),
+                                                       SpacedSpan (..))
+import           Empire.ASTOp                         (runASTOp)
+import qualified Empire.ASTOps.Parse                  as ASTParse
+import qualified Empire.ASTOps.Print                  as ASTPrint
+import qualified Empire.ASTOps.Read                   as ASTRead
+import qualified Empire.Commands.AST                  as AST
+import qualified Empire.Commands.Code                 as Code
+import qualified Empire.Commands.Graph                as Graph
+import qualified Empire.Commands.GraphBuilder         as GraphBuilder
+import qualified Empire.Commands.Library              as Library
+import           Empire.Data.AST                      (SomeASTException)
+import qualified Empire.Data.BreadcrumbHierarchy      as BH
+import           Empire.Data.FileMetadata             (MarkerNodeMeta (MarkerNodeMeta))
+import qualified Empire.Data.FileMetadata             as FileMetadata
+import qualified Empire.Data.Graph                    as Graph (breadcrumbHierarchy,
+                                                                clsClass,
+                                                                clsFuns, code,
+                                                                codeMarkers,
+                                                                fileOffset)
+import           Empire.Empire                        (CommunicationEnv (..),
+                                                       Empire)
 import qualified Luna.Syntax.Text.Parser.Ast.CodeSpan as CodeSpan
 -- import qualified Luna.Syntax.Text.Parser.Parser   as Parser (ReparsingChange (..), ReparsingStatus (..))
-import           LunaStudio.Data.Breadcrumb       (Breadcrumb (..), BreadcrumbItem (Definition))
-import qualified LunaStudio.Data.Graph            as Graph
-import           LunaStudio.Data.GraphLocation    (GraphLocation (..), (|>=))
-import qualified LunaStudio.Data.Node             as Node
-import           LunaStudio.Data.NodeLoc          (NodeLoc (..))
-import           LunaStudio.Data.NodeMeta         (NodeMeta (..))
-import qualified LunaStudio.Data.NodeMeta         as NodeMeta
-import           LunaStudio.Data.Point            (Point (Point))
-import qualified LunaStudio.Data.Port             as Port
-import           LunaStudio.Data.PortRef          (AnyPortRef (..), InPortRef (..), OutPortRef (..))
-import qualified LunaStudio.Data.Position         as Position
-import           LunaStudio.Data.TextDiff         (TextDiff (..))
-import           LunaStudio.Data.TypeRep          (TypeRep (TStar))
-import           LunaStudio.Data.Vector2          (Vector2 (..))
+import           LunaStudio.Data.Breadcrumb    (Breadcrumb (..),
+                                                BreadcrumbItem (Definition))
+import qualified LunaStudio.Data.Graph         as Graph
+import           LunaStudio.Data.GraphLocation (GraphLocation (..), (|>=))
+import qualified LunaStudio.Data.Node          as Node
+import           LunaStudio.Data.NodeLoc       (NodeLoc (..))
+import           LunaStudio.Data.NodeMeta      (NodeMeta (..))
+import qualified LunaStudio.Data.NodeMeta      as NodeMeta
+import           LunaStudio.Data.Point         (Point (Point))
+import qualified LunaStudio.Data.Port          as Port
+import           LunaStudio.Data.PortRef       (AnyPortRef (..), InPortRef (..),
+                                                OutPortRef (..))
+import qualified LunaStudio.Data.Position      as Position
+import           LunaStudio.Data.TextDiff      (TextDiff (..), mkTextDiff)
+import           LunaStudio.Data.TypeRep       (TypeRep (TStar))
+import           LunaStudio.Data.Vector2       (Vector2 (..))
 
-import           Empire.Prelude
+import Empire.Prelude
 
-import           Test.Hspec                       (Expectation, Spec, around, describe, expectationFailure, it, parallel, shouldBe,
-                                                   shouldMatchList, shouldNotBe, shouldSatisfy, shouldStartWith, xit)
+import Test.Hspec (Expectation, Spec, around, describe, expectationFailure, it,
+                   parallel, shouldBe, shouldMatchList, shouldNotBe,
+                   shouldSatisfy, shouldStartWith, xit)
 
-import           EmpireUtils
+import EmpireUtils
 
-import           Text.RawString.QQ                (r)
+import Text.RawString.QQ (r)
 
-import qualified Luna.IR                          as IR
+import qualified Luna.IR as IR
 
 
 codeWithMetadata = [r|def foo:
@@ -426,7 +435,9 @@ def bar:
                 let Just main = find (\n -> n ^. Node.name == Just "main") nodes
                 Graph.paste (loc |>= main ^. Node.nodeId) (Position.fromTuple (200,0)) [r|c = 4.0
     bar = foo 8.0 c|]
-                Graph.substituteCode "TestPath" [(30, 30, "    ")]
+                Graph.substituteCode
+                    "TestPath"
+                    [mkTextDiff (0,2) (0,2) "    " def]
                 nodes <- Graph.getNodes (loc |>= main ^. Node.nodeId)
                 code  <- Graph.withUnit loc $ use Graph.code
                 return (nodes, Text.unpack code)
@@ -451,8 +462,12 @@ def bar:
                     (,) <$> Graph.getNodeIdForMarker 2 <*> Graph.getNodeIdForMarker 14
                 copy  <- Graph.prepareCopy (loc |>= main ^. Node.nodeId) [c, bar]
                 Graph.paste (loc |>= main ^. Node.nodeId) (Position.fromTuple (400,0)) copy
-                Graph.substituteCode "TestPath" [(225, 225, "    ")]
-                Graph.substituteCode "TestPath" [(242, 242, "    ")]
+                Graph.substituteCode
+                    "TestPath"
+                    [mkTextDiff (0,11) (0,11) "    " def]
+                Graph.substituteCode
+                    "TestPath"
+                    [mkTextDiff (0,13) (0,13) "    " def]
                 code  <- Graph.withUnit loc $ use Graph.code
                 (newC, newBar) <- Graph.withGraph (loc |>= main ^. Node.nodeId) $ runASTOp $ do
                     (Just c, Just bar) <- (,) <$> Graph.getNodeIdForMarker 19 <*> Graph.getNodeIdForMarker 20
@@ -499,15 +514,17 @@ def bar:
     «7»m = buzz b pi
     «8»m + n
 |]
-                Graph.substituteCode "TestPath" [ (141, 141, "    ")
-                                                , (123, 123, "    ")
-                                                , (103, 103, "    ")
-                                                , (89, 89, "    ")
-                                                , (75, 75, "    ")
-                                                , (58, 58, "    ")
-                                                , (42, 42, "    ")
-                                                , (30, 30, "    ")
-                                                ]
+                Graph.substituteCode
+                    "TestPath"
+                    [ mkTextDiff (0,2) (0,2) "    " def
+                    , mkTextDiff (0,3) (0,3) "    " def
+                    , mkTextDiff (0,4) (0,4) "    " def
+                    , mkTextDiff (0,5) (0,5) "    " def
+                    , mkTextDiff (0,6) (0,6) "    " def
+                    , mkTextDiff (0,7) (0,7) "    " def
+                    , mkTextDiff (0,8) (0,8) "    " def
+                    , mkTextDiff (0,9) (0,9) "    " def
+                    ]
                 nodes <- Graph.getNodes (loc |>= main ^. Node.nodeId)
                 code  <- Graph.withUnit loc $ use Graph.code
                 return (nodes, Text.unpack code)
@@ -533,7 +550,7 @@ def bar:
                 Graph.loadCode loc testLuna
                 --FIXME[MM]: we need this test to behave like Atom, so end column is
                 --           4 characters further than it is in the file
-                Graph.substituteCodeFromPoints "TestPath" $ [TextDiff (Just (Point 4 12, Point 36 14)) "5" Nothing]
+                Graph.substituteCode "TestPath" $ [TextDiff (Just (Point 4 12, Point 36 14)) "5" Nothing]
                 Graph.withUnit loc $ use Graph.code
             code `shouldBe` [r|«18»def main:
     «0»pi = 3.14

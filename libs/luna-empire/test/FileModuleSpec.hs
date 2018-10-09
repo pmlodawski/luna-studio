@@ -22,11 +22,13 @@ import qualified Empire.Commands.GraphBuilder    as GraphBuilder
 import qualified Empire.Commands.Library         as Library
 import qualified Empire.Data.BreadcrumbHierarchy as BH
 import qualified Empire.Data.Graph               as Graph
-import           LunaStudio.Data.Breadcrumb      (Breadcrumb (..), BreadcrumbItem (..))
+import           LunaStudio.Data.Breadcrumb      (Breadcrumb (..),
+                                                  BreadcrumbItem (..))
 import qualified LunaStudio.Data.Breadcrumb      as Breadcrumb
 import           LunaStudio.Data.Constants       (gapBetweenNodes)
 import qualified LunaStudio.Data.Graph           as APIGraph
-import           LunaStudio.Data.GraphLocation   (GraphLocation (..), (|>=), (|>-))
+import           LunaStudio.Data.GraphLocation   (GraphLocation (..), (|>-),
+                                                  (|>=))
 import qualified LunaStudio.Data.Node            as Node
 import           LunaStudio.Data.NodeMeta        (NodeMeta (..))
 import qualified LunaStudio.Data.NodeMeta        as NodeMeta
@@ -37,18 +39,20 @@ import           LunaStudio.Data.PortRef         (AnyPortRef (..))
 import qualified LunaStudio.Data.PortRef         as PortRef
 import qualified LunaStudio.Data.Position        as Position
 import           LunaStudio.Data.Range           (Range (..))
+import           LunaStudio.Data.TextDiff        (mkTextDiff)
 import           LunaStudio.Data.TypeRep         (TypeRep (TStar))
 
-import           Empire.Empire
-import           Empire.Prelude                  as P
+import Empire.Empire
+import Empire.Prelude as P
 -- import           Luna.Prelude                    (forM, normalizeLunaCode)
 
-import           Test.Hspec                      (Expectation, Spec, around, describe, expectationFailure, it, parallel, shouldBe,
-                                                  shouldMatchList, shouldNotBe, shouldSatisfy, shouldStartWith, shouldThrow, xit)
+import Test.Hspec (Expectation, Spec, around, describe, expectationFailure, it,
+                   parallel, shouldBe, shouldMatchList, shouldNotBe,
+                   shouldSatisfy, shouldStartWith, shouldThrow, xit)
 
-import           EmpireUtils
+import EmpireUtils
 
-import           Text.RawString.QQ               (r)
+import Text.RawString.QQ (r)
 
 
 multiFunCode = [r|# Docs
@@ -546,7 +550,9 @@ spec = around withChannels $ parallel $ do
                 Library.createLibrary Nothing "TestPath"
                 let loc = GraphLocation "TestPath" $ Breadcrumb []
                 Graph.loadCode loc multiFunCode
-                Graph.substituteCode "TestPath" [(19, 20, "10")]
+                Graph.substituteCode
+                    "TestPath"
+                    [mkTextDiff (9,1) (10,1) "10" def]
         it "shows proper function offsets without imports" $ \env -> do
             offsets <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"
@@ -875,13 +881,15 @@ spec = around withChannels $ parallel $ do
                 let loc = GraphLocation "TestPath" $ Breadcrumb []
                 Graph.loadCode loc multiFunCode
                 Graph.pasteText loc [Range 23 23] ["def quux: None"]
-                Graph.substituteCode "TestPath" [(46,46,"\n")]
+                Graph.substituteCode
+                    "TestPath"
+                    [mkTextDiff (14,4) (14,4) "\n" def]
                 (,) <$> Graph.getNodes loc <*> Graph.getCode loc
             normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 # Docs
                 def foo:
                     5
-                
+
                 def quux: None
                 # Docs
                 def bar:
@@ -974,7 +982,9 @@ spec = around withChannels $ parallel $ do
             in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
                 clipboard <- Graph.copyText loc [Range 14 25]
                 Graph.paste loc (Position.fromTuple (300, 0)) $ Text.unpack clipboard
-                Graph.substituteCode file [(32, 32, "    ")]
+                Graph.substituteCode
+                    file
+                    [mkTextDiff (0,2) (0,2) "    " def]
         it "pastes multiline code from text editor to node editor" $
             let initialCode = [r|
                     def main:
@@ -993,7 +1003,9 @@ spec = around withChannels $ parallel $ do
             in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
                 clipboard <- Graph.copyText loc [Range 14 36]
                 Graph.paste loc (Position.fromTuple (1000, 0)) $ Text.unpack clipboard
-                Graph.substituteCode file [(46, 46, "    ")]
+                Graph.substituteCode
+                    file
+                    [mkTextDiff (0,3) (0,3) "    " def]
         it "pastes multiline code from text editor to node editor at the beginning" $
             let initialCode = [r|
                     def main:
@@ -1118,7 +1130,9 @@ spec = around withChannels $ parallel $ do
                         None
                     |]
             in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
-                Graph.substituteCode file [(102, 102, "\n    Foo.baz")]
+                Graph.substituteCode
+                    file
+                    [mkTextDiff (18,7) (18,7) "\n    Foo.baz" def]
         it "uses defined class with list of fields in main" $
             let initialCode = [r|
                     class Foo:
@@ -1144,7 +1158,9 @@ spec = around withChannels $ parallel $ do
                         None
                     |]
             in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
-                Graph.substituteCode file [(111, 111, "\n    Foo.baz")]
+                Graph.substituteCode
+                    file
+                    [mkTextDiff (18,7) (18,7) "\n    Foo.baz" def]
         it "does not error on incomplete import" $
             let initialCode = [r|
                     import Std.Base

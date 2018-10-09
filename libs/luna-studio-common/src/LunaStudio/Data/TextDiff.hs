@@ -1,9 +1,10 @@
 module LunaStudio.Data.TextDiff where
 
-import           Data.Aeson.Types      (FromJSON, ToJSON)
-import           Data.Binary           (Binary)
-import           LunaStudio.Data.Point (Point)
-import           Prologue
+import Control.Lens          (each)
+import Data.Aeson.Types      (FromJSON, ToJSON)
+import Data.Binary           (Binary)
+import LunaStudio.Data.Point (Point)
+import Prologue
 
 
 data TextDiff = TextDiff
@@ -17,3 +18,9 @@ instance Binary   TextDiff
 instance NFData   TextDiff
 instance FromJSON TextDiff
 instance ToJSON   TextDiff
+
+mkTextDiff :: (Int,Int) -> (Int, Int) -> Text -> Maybe (Int, Int) -> TextDiff
+mkTextDiff start end t c = TextDiff
+    (Just (convert start, convert end))
+    t
+    (convert <$> c)

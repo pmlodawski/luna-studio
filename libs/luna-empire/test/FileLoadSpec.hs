@@ -3,8 +3,8 @@
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell     #-}
-{-# LANGUAGE TypeApplications    #-}
 {-# LANGUAGE TupleSections       #-}
+{-# LANGUAGE TypeApplications    #-}
 
 module FileLoadSpec (spec) where
 
@@ -12,22 +12,24 @@ import           Control.Concurrent.MVar
 import           Control.Concurrent.STM          (atomically)
 import           Control.Concurrent.STM.TChan    (tryReadTChan)
 import           Control.Exception.Safe          (finally)
-import           Control.Lens                    ((^..), uses, prism)
+import           Control.Lens                    (prism, uses, (^..))
 import           Control.Monad                   (forM)
 import           Control.Monad.Loops             (unfoldM)
 import           Control.Monad.Reader            (ask)
-import           Data.Coerce
 import           Data.Char                       (isSpace)
+import           Data.Coerce
 import qualified Data.Graph.Data.Component.Set   as MutableSet
 import qualified Data.Graph.Store                as Store
-import           Data.List                       (dropWhileEnd, find, minimum, maximum)
+import           Data.List                       (dropWhileEnd, find, maximum,
+                                                  minimum)
 import qualified Data.Map                        as Map
 import           Data.Maybe                      (fromJust)
 import           Data.Reflection                 (Given (..), give)
 import qualified Data.Set                        as Set
 import qualified Data.Text                       as Text
 import qualified Data.Text.IO                    as Text
-import           Data.Text.Span                  (LeftSpacedSpan (..), SpacedSpan (..))
+import           Data.Text.Span                  (LeftSpacedSpan (..),
+                                                  SpacedSpan (..))
 import           Empire.ASTOp                    (runASTOp)
 import qualified Empire.ASTOps.Builder           as ASTBuilder
 import qualified Empire.ASTOps.Modify            as ASTModify
@@ -42,58 +44,66 @@ import qualified Empire.Commands.Library         as Library
 import qualified Empire.Commands.Typecheck       as Typecheck
 import           Empire.Data.AST                 (SomeASTException)
 import qualified Empire.Data.BreadcrumbHierarchy as BH
-import qualified Empire.Data.Graph               as Graph (CommandState(..),
+import qualified Empire.Data.Graph               as Graph (CommandState (..),
                                                            breadcrumbHierarchy,
-                                                           clsClass,
-                                                           code, codeMarkers,
+                                                           clsClass, code,
+                                                           codeMarkers,
                                                            defaultPMState,
                                                            nodeCache, userState)
 import qualified Empire.Data.Library             as Library (body)
-import           Empire.Empire                   (CommunicationEnv (..), InterpreterEnv(..), Empire) -- , modules)
+import           Empire.Empire                   (CommunicationEnv (..), Empire,
+                                                  InterpreterEnv (..))
 import qualified Language.Haskell.TH             as TH
 import qualified Luna.Package.Structure.Generate as Package
 import qualified Luna.Package.Structure.Name     as Project
 -- import qualified Luna.Syntax.Text.Parser.Parser  as Parser (ReparsingChange (..), ReparsingStatus (..))
-import           LunaStudio.API.AsyncUpdate      (AsyncUpdate(ResultUpdate))
+import           LunaStudio.API.AsyncUpdate            (AsyncUpdate (ResultUpdate))
 import qualified LunaStudio.API.Graph.NodeResultUpdate as NodeResult
-import           LunaStudio.Data.Breadcrumb      (Breadcrumb (..), BreadcrumbItem (Definition))
-import qualified LunaStudio.Data.Connection      as Connection
-import           LunaStudio.Data.Connection      (Connection (..))
-import           LunaStudio.Data.Diff            (Diff (..))
-import qualified LunaStudio.Data.Graph           as Graph
-import           LunaStudio.Data.GraphLocation   (GraphLocation (..), (|>|), (|>=))
-import qualified LunaStudio.Data.GraphLocation   as GraphLocation
-import qualified LunaStudio.Data.Node            as Node
-import           LunaStudio.Data.NodeLoc         (NodeLoc (..))
-import           LunaStudio.Data.NodeMeta        (NodeMeta (..))
-import qualified LunaStudio.Data.NodeMeta        as NodeMeta
-import           LunaStudio.Data.Point           (Point (Point))
-import qualified LunaStudio.Data.Port            as Port
-import qualified LunaStudio.Data.PortDefault     as PortDefault
-import           LunaStudio.Data.PortRef         (AnyPortRef (..), InPortRef (..), OutPortRef (..))
-import qualified LunaStudio.Data.PortRef         as PortRef
-import qualified LunaStudio.Data.Position        as Position
-import           LunaStudio.Data.Range           (Range (..))
-import           LunaStudio.Data.TextDiff        (TextDiff (..))
-import           LunaStudio.Data.TypeRep         (TypeRep (TStar))
+import           LunaStudio.Data.Breadcrumb            (Breadcrumb (..), BreadcrumbItem (Definition))
+import           LunaStudio.Data.Connection            (Connection (..))
+import qualified LunaStudio.Data.Connection            as Connection
+import           LunaStudio.Data.Diff                  (Diff (..))
+import qualified LunaStudio.Data.Graph                 as Graph
+import           LunaStudio.Data.GraphLocation         (GraphLocation (..),
+                                                        (|>=), (|>|))
+import qualified LunaStudio.Data.GraphLocation         as GraphLocation
+import qualified LunaStudio.Data.LabeledTree           as LabeledTree
+import qualified LunaStudio.Data.Node                  as Node
+import           LunaStudio.Data.NodeLoc               (NodeLoc (..))
+import           LunaStudio.Data.NodeMeta              (NodeMeta (..))
+import qualified LunaStudio.Data.NodeMeta              as NodeMeta
 import           LunaStudio.Data.NodeValue
+import           LunaStudio.Data.Point                 (Point (Point))
+import qualified LunaStudio.Data.Port                  as Port
+import qualified LunaStudio.Data.PortDefault           as PortDefault
+import           LunaStudio.Data.PortRef               (AnyPortRef (..),
+                                                        InPortRef (..),
+                                                        OutPortRef (..))
+import qualified LunaStudio.Data.PortRef               as PortRef
+import qualified LunaStudio.Data.Position              as Position
+import           LunaStudio.Data.Range                 (Range (..))
+import           LunaStudio.Data.TextDiff              (TextDiff (..),
+                                                        mkTextDiff)
+import           LunaStudio.Data.TypeRep               (TypeRep (TStar))
 import           LunaStudio.Data.Vector2               (Vector2 (..))
 import           LunaStudio.Data.Visualization         (VisualizationValue (Value))
-import qualified LunaStudio.Data.LabeledTree           as LabeledTree
-import           System.Directory                      (canonicalizePath, getCurrentDirectory)
-import           System.FilePath                       ((</>), takeDirectory)
+import           System.Directory                      (canonicalizePath,
+                                                        getCurrentDirectory)
+import           System.FilePath                       (takeDirectory, (</>))
 import qualified System.IO.Temp                        as Temp
 
-import           Empire.Prelude                        hiding (fromJust, minimum, maximum)
+import Empire.Prelude hiding (fromJust, maximum, minimum)
 
-import           Test.Hspec                            (Expectation, Selector, Spec, around, describe, expectationFailure, it, parallel, shouldBe,
-                                                        shouldMatchList, shouldNotBe, shouldSatisfy, shouldStartWith, shouldThrow, xit)
+import Test.Hspec (Expectation, Selector, Spec, around, describe,
+                   expectationFailure, it, parallel, shouldBe, shouldMatchList,
+                   shouldNotBe, shouldSatisfy, shouldStartWith, shouldThrow,
+                   xit)
 
-import           EmpireUtils
+import EmpireUtils
 
-import           Text.RawString.QQ                     (r)
+import Text.RawString.QQ (r)
 
-import qualified Luna.IR                               as IR
+import qualified Luna.IR as IR
 
 mainCondensed = [r|def main:
     «0»pi = 3.14
@@ -250,7 +260,9 @@ def main:
                 Graph.loadCode loc mainFile
                 [main] <- Graph.getNodes loc
                 let loc' = GraphLocation "TestPath" $ Breadcrumb [Definition (main ^. Node.nodeId)]
-                Graph.substituteCode "TestPath" [(71, 71, "3")]
+                Graph.substituteCode
+                    "TestPath"
+                    [mkTextDiff (8, 5) (8, 5) "3" def]
                 Graph.getGraph loc'
             withResult res $ \graph -> do
                 let Graph.Graph nodes connections _ _ _ _ = graph
@@ -270,8 +282,12 @@ def main:
                 Graph.loadCode loc mainFile
                 [main] <- Graph.getNodes loc
                 let loc' = GraphLocation "TestPath" $ Breadcrumb [Definition (main ^. Node.nodeId)]
-                Graph.substituteCode "TestPath" [(71, 71, "3")]
-                Graph.substituteCode "TestPath" [(71, 71, "3")]
+                Graph.substituteCode
+                    "TestPath"
+                    [mkTextDiff (8,5) (8,5) "3" def]
+                Graph.substituteCode
+                    "TestPath"
+                    [mkTextDiff (8,5) (8,5) "3" def]
                 Graph.getGraph loc'
             withResult res $ \graph -> do
                 let Graph.Graph nodes connections _ _ _ _ = graph
@@ -293,8 +309,12 @@ def main:
                 Graph.loadCode loc mainFile
                 [main] <- Graph.getNodes loc
                 let loc' = GraphLocation "TestPath" $ Breadcrumb [Definition (main ^. Node.nodeId)]
-                Graph.substituteCode "TestPath" [(71, 71, "3")]
-                Graph.substituteCode "TestPath" [(91, 91, "1")]
+                Graph.substituteCode
+                    "TestPath"
+                    [mkTextDiff (8,5) (8,5) "3" def]
+                Graph.substituteCode
+                    "TestPath"
+                    [mkTextDiff (14,6) (14,6) "1" def]
                 Graph.getGraph loc'
             withResult res $ \graph -> do
                 let Graph.Graph nodes connections _ _ _ _ = graph
@@ -317,7 +337,9 @@ def main:
                 Graph.loadCode loc mainCondensed
                 [main] <- Graph.getNodes loc
                 let loc' = GraphLocation "TestPath" $ Breadcrumb [Definition (main ^. Node.nodeId)]
-                Graph.substituteCode "TestPath" [(92, 92, "    d = 10\n")]
+                Graph.substituteCode
+                    "TestPath"
+                    [mkTextDiff (0,5) (0,5) "    d = 10\n" def]
                 Graph.getGraph loc'
             withResult res $ \graph -> do
                 let Graph.Graph nodes connections _ _ _ _ = graph
@@ -345,9 +367,9 @@ def main:
                     None
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
-                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 19 3), (Point 19 3))) "\n    " (Just (Point 4 4))]
-                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 4 4), (Point 4 4))) "No" (Just (Point 6 4))]
-                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 6 4), (Point 6 4))) "ne" (Just (Point 8 4))]
+                Graph.substituteCode file [TextDiff (Just ((Point 19 3), (Point 19 3))) "\n    " (Just (Point 4 4))]
+                Graph.substituteCode file [TextDiff (Just ((Point 4 4), (Point 4 4))) "No" (Just (Point 6 4))]
+                Graph.substituteCode file [TextDiff (Just ((Point 6 4), (Point 6 4))) "ne" (Just (Point 8 4))]
         it "removing None at the end works" $ let
             initialCode = [r|
                 import Std.Base
@@ -362,15 +384,15 @@ def main:
                     hello = "Hello"
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
-                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 21 3), (Point 21 3))) "\n    " (Just (Point 4 4))]
-                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 4 4), (Point 4 4))) "No" (Just (Point 6 4))]
-                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 6 4), (Point 6 4))) "ne" (Just (Point 8 4))]
-                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 7 4), (Point 8 4))) "" (Just (Point 7 4))]
-                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 6 4), (Point 7 4))) "" (Just (Point 6 4))]
-                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 5 4), (Point 6 4))) "" (Just (Point 5 4))]
-                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 4 4), (Point 5 4))) "" (Just (Point 4 4))]
-                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 0 4), (Point 4 4))) "" (Just (Point 0 4))]
-                Graph.substituteCodeFromPoints file [TextDiff (Just ((Point 21 3), (Point 0 4))) "" (Just (Point 21 3))]
+                Graph.substituteCode file [TextDiff (Just ((Point 21 3), (Point 21 3))) "\n    " (Just (Point 4 4))]
+                Graph.substituteCode file [TextDiff (Just ((Point 4 4), (Point 4 4))) "No" (Just (Point 6 4))]
+                Graph.substituteCode file [TextDiff (Just ((Point 6 4), (Point 6 4))) "ne" (Just (Point 8 4))]
+                Graph.substituteCode file [TextDiff (Just ((Point 7 4), (Point 8 4))) "" (Just (Point 7 4))]
+                Graph.substituteCode file [TextDiff (Just ((Point 6 4), (Point 7 4))) "" (Just (Point 6 4))]
+                Graph.substituteCode file [TextDiff (Just ((Point 5 4), (Point 6 4))) "" (Just (Point 5 4))]
+                Graph.substituteCode file [TextDiff (Just ((Point 4 4), (Point 5 4))) "" (Just (Point 4 4))]
+                Graph.substituteCode file [TextDiff (Just ((Point 0 4), (Point 4 4))) "" (Just (Point 0 4))]
+                Graph.substituteCode file [TextDiff (Just ((Point 21 3), (Point 0 4))) "" (Just (Point 21 3))]
         it "unparseable expression does not sabotage whole file" $ \env -> do
             res <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"
@@ -378,8 +400,12 @@ def main:
                 Graph.loadCode loc mainCondensed
                 [main] <- Graph.getNodes loc
                 let loc' = GraphLocation "TestPath" $ Breadcrumb [Definition (main ^. Node.nodeId)]
-                Graph.substituteCode "TestPath" [(25, 29, ")")]
-                Graph.substituteCode "TestPath" [(25, 26, "5")]
+                Graph.substituteCode
+                    "TestPath"
+                    [mkTextDiff (9,1) (13,1) ")" def]
+                Graph.substituteCode
+                    "TestPath"
+                    [mkTextDiff (9,1) (10,1) "5" def]
                 Graph.getGraph loc'
             withResult res $ \graph -> do
                 let Graph.Graph nodes connections _ _ _ _ = graph
@@ -449,7 +475,9 @@ def main:
                 let loc' = GraphLocation "TestPath" $ Breadcrumb [Definition (main ^. Node.nodeId)]
                 Just foo <- Graph.withGraph loc' $ runASTOp (Graph.getNodeIdForMarker 1)
                 previousGraph <- Graph.getGraph (loc' |>| foo)
-                Graph.substituteCode "TestPath" [(69, 70, "5")]
+                Graph.substituteCode
+                    "TestPath"
+                    [mkTextDiff (16,3) (17,3) "5" def]
                 Just newFoo <- Graph.withGraph loc' $ runASTOp (Graph.getNodeIdForMarker 1)
                 newGraph <- Graph.getGraph (loc' |>| foo)
                 return (previousGraph, newGraph, foo, newFoo)
@@ -468,7 +496,9 @@ def main:
                 let loc' = GraphLocation "TestPath" $ Breadcrumb [Definition (main ^. Node.nodeId)]
                 Just foo <- Graph.withGraph loc' $ runASTOp (Graph.getNodeIdForMarker 1)
                 Graph.setNodeMeta loc' foo (NodeMeta (Position.Position (Vector2 15.3 99.2)) True Nothing)
-                Graph.substituteCode "TestPath" [(63, 64, "5")]
+                Graph.substituteCode
+                    "TestPath"
+                    [mkTextDiff (8,3) (9,3) "5" def]
                 a <- Graph.getNodeMeta loc' foo
                 return a
             meta `shouldBe` Just (NodeMeta (Position.Position (Vector2 15.3 99.2)) True Nothing)
@@ -2284,10 +2314,18 @@ def main:
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
                 Graph.paste loc (Position.fromTuple (300, 0)) "def foo:\n    url = \"http://example.com\"\n    request = Http.get url\n    response = request . perform\n    None"
-                Graph.substituteCode file [(30, 30, "    ")]
-                Graph.substituteCode file [(67, 67, "    ")]
-                Graph.substituteCode file [(101, 101, "    ")]
-                Graph.substituteCode file [(141, 141, "    ")]
+                Graph.substituteCode
+                    file
+                    [mkTextDiff (0,2) (0,2) "    " def]
+                Graph.substituteCode
+                    file
+                    [mkTextDiff (0,3) (0,3) "    " def]
+                Graph.substituteCode
+                    file
+                    [mkTextDiff (0,4) (0,4) "    " def]
+                Graph.substituteCode
+                    file
+                    [mkTextDiff (0,5) (0,5) "    " def]
         it "copy pastes" $ let
             initialCode = [r|
                 def main:
@@ -2390,7 +2428,9 @@ def main:
     bar = foo 8.0 c
 |]
                 Graph.pasteText loc [Range 56 56] [paste]
-                Graph.substituteCode file [(71, 71, "    ")]
+                Graph.substituteCode
+                    file
+                    [mkTextDiff (0,4) (0,4) "    " def]
         it "handles unary minus" $ let
             initialCode = [r|
                 def main:
@@ -2673,7 +2713,7 @@ def main:
     bar = foo 8 c
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
-                Graph.substituteCodeFromPoints "/TestProject" [ TextDiff (Just (Point 0 2, Point 0 3)) "" Nothing
+                Graph.substituteCode "/TestProject" [ TextDiff (Just (Point 0 2, Point 0 3)) "" Nothing
                                                               , TextDiff (Just (Point 0 4, Point 0 4)) "    foo = a: b: a + b\n" Nothing
                                                               ]
         it "rename from tuple to var" $ let

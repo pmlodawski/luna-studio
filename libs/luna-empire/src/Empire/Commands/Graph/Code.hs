@@ -8,9 +8,9 @@ import qualified Empire.ASTOps.Parse           as ASTParse
 import qualified Empire.ASTOps.Read            as ASTRead
 import qualified Empire.Commands.Code          as Code
 import qualified Empire.Commands.Publisher     as Publisher
+import qualified Empire.Data.FileMetadata      as FileMetadata
 import qualified Empire.Data.Graph             as Graph
 import qualified Empire.Data.Library           as Library
-import qualified Empire.Data.FileMetadata      as FileMetadata
 import qualified Empire.Empire                 as Empire
 import qualified LunaStudio.Data.GraphLocation as GraphLocation
 
@@ -35,38 +35,40 @@ import LunaStudio.Data.Point                (Point)
 import LunaStudio.Data.TextDiff             (TextDiff (TextDiff))
 
 
-substituteCodeFromPoints :: FilePath -> [TextDiff] -> Empire ()
-substituteCodeFromPoints path (breakDiffs -> diffs) = do
-    let gl = GraphLocation.top path
-    changes <- withUnit gl $ do
-        oldCode <- use Graph.code
-        let noMarkers    = Code.removeMarkers oldCode
-            toDelta (TextDiff range code _) = case range of
-                Just (start, end) ->
-                    ( Code.pointToDelta start noMarkers
-                    , Code.pointToDelta end noMarkers
-                    , code)
-                _ -> (0, fromIntegral $ Text.length noMarkers, code)
-            viewToReal c = case Text.uncons c of
-                Nothing        -> Code.viewDeltasToRealBeforeMarker
-                Just (char, _) -> if isSpace char
-                    then Code.viewDeltasToRealBeforeMarker
-                    else Code.viewDeltasToReal
-            toRealDelta (a,b,c) = let (a', b') = (viewToReal c) oldCode (a,b)
-                in (a', b', c)
-        pure $ map (toRealDelta . toDelta) diffs
-    substituteCode path changes
+toDeltas :: Text -> [TextDiff] -> [(Delta, Delta, Text)]
+toDeltas previousCode changes = map (toRealDelta . toDelta) changes where
+    noMarkers = Code.removeMarkers previousCode
+    toDelta (TextDiff range code _) = case range of
+        Just (start, end) ->
+            ( Code.pointToDelta start noMarkers
+            , Code.pointToDelta end   noMarkers
+            , code)
+        _ -> (0, fromIntegral $ Text.length noMarkers, code)
+    viewToReal c = if maybe False (not . isSpace . fst) $ Text.uncons c
+            then Code.viewDeltasToReal
+            else Code.viewDeltasToRealBeforeMarker
+    toRealDelta (a,b,c) =
+        let (a', b') = (viewToReal c) previousCode (a,b)
+        in (a', b', c)
 
-substituteCode :: FilePath -> [(Delta, Delta, Text)] -> Empire ()
-substituteCode path changes = do
-    let gl = GraphLocation.top path
-    newCode <- withUnit gl $ Code.applyMany changes
+markText :: Text -> [TextDiff] -> Text
+markText text diffs = Code.applyManyToText text changes where
+    changes = toDeltas text diffs
+
+substituteCode :: FilePath -> [TextDiff] -> Empire ()
+substituteCode (GraphLocation.top -> gl) (breakDiffs -> diffs) = do
+    code <- withUnit gl $ use Graph.code
+    let noMarkers = Code.removeMarkers code
+        t1 = (markText noMarkers diffs)
+        t2 = (markText code diffs)
+        newCode = Code.mergeMarkers t1 t2
+    print t1
+    print t2
+    print newCode
     handle
         (\(e :: SomeException)
             -> withUnit gl $ Graph.userState . Graph.clsParseError ?= e)
-        $ do
-            withUnit gl $ Graph.code .= newCode
-            reloadCode gl newCode
+        $ reloadCode gl newCode
 
 loadCode :: GraphLocation -> Text -> Empire ()
 loadCode gl code = do
@@ -86,7 +88,7 @@ loadCode gl code = do
         prevParseError <- use $ Graph.userState . Graph.clsParseError
         Graph.userState . Graph.clsParseError .= Nothing
         fileMetadata <- FileMetadata.toList <$> runASTOp readMetadata'
-        let savedNodeMetas 
+        let savedNodeMetas
                 = Map.fromList $ map FileMetadata.toTuple fileMetadata
         Graph.userState . Graph.nodeCache . nodeMetaMap
             %= (\cache -> Map.union cache savedNodeMetas)
