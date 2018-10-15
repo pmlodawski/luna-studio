@@ -2,8 +2,8 @@ module LunaStudio.Data.Breadcrumb where
 
 import           Control.DeepSeq        (NFData)
 import           Control.Lens           (toListOf, traversed)
-import qualified Control.Lens.Aeson     as Lens
 import           Data.Aeson.Types       (FromJSON (..), FromJSONKey, ToJSON (..), ToJSONKey)
+import qualified Control.Lens.Aeson     as Lens
 import           Data.Binary            (Binary)
 import           Data.Monoid            (Monoid (..))
 import           Data.Semigroup         (Semigroup (..))
@@ -26,7 +26,7 @@ data Named a = Named
 
 newtype Breadcrumb a = Breadcrumb
     { _items :: [a]
-    } deriving (Eq, Generic, Ord, Read, Show)
+    } deriving (Eq, Foldable, Generic, Ord, Read, Show)
 
 makeLenses ''BreadcrumbItem
 makeLenses ''Breadcrumb

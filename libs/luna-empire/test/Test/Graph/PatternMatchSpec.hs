@@ -11,6 +11,7 @@ import qualified LunaStudio.Data.Port         as Port
 import qualified LunaStudio.Data.PortRef      as PortRef
 
 import Empire.ASTOp                   (runASTOp)
+import LunaStudio.Data.GraphLocation  ((|>|))
 import LunaStudio.Data.Connection     (Connection (Connection))
 import LunaStudio.Data.LabeledTree    (LabeledTree (LabeledTree))
 import LunaStudio.Data.Port           (InPortIndex (Arg), InPorts (InPorts),
@@ -26,7 +27,7 @@ import Test.Hspec.Empire              (addNode, connectToInput,
                                        findNodeIdByName, inPortRef, mkAliasPort,
                                        mkAllPort, mkSelfPort, outPortRef,
                                        runTests, testCase, testCaseWithMarkers,
-                                       xitWithReason, (|>))
+                                       xitWithReason)
 import Test.Hspec.Expectations.Lifted (shouldBe, shouldMatchList)
 import Text.RawString.QQ              (r)
 
@@ -97,7 +98,7 @@ spec = runTests "pattern match tests" $ do
             in testCaseWithMarkers emptyCodeTemplate expectedCode $ \gl ->
                 addNode gl "foo = (Just (Just (Foo x b c))): y: z: x + y"
 
-    describe "connections tests" $ do
+    describe "connections and ports tests" $ do
         it "contains proper connections and ports on a pattern matching node" $ let
             code = [r|
                 import Std.Base
@@ -182,6 +183,31 @@ spec = runTests "pattern match tests" $ do
                 (patternMatchId, c1Id, connections) <- prepare gl
                 connections `shouldMatchList` expectedConnections patternMatchId c1Id
 
+        it "contains proper ports for pattern match on custom class" $ let
+            code = [r|
+                import Std.Base
+
+                class Vector:
+                    x y z :: Int
+
+                def main:
+                    v = Vector 1 2 3
+                    Vector a b c = v
+                    None
+                |]
+            prepare gl = do
+                Just patternMatch <- findNodeByName gl "Vector a b c"
+                pure patternMatch
+            expectedPatternMatchOutPorts = LabeledTree
+                (OutPorts
+                    [ LabeledTree def $ Port [Projection 0] "a" TStar NotConnected
+                    , LabeledTree def $ Port [Projection 1] "b" TStar NotConnected
+                    , LabeledTree def $ Port [Projection 2] "c" TStar NotConnected ])
+                (mkAllPort "Vector a b c" NotConnected)
+            in testCase code code $ \gl -> do
+                patternMatch <- prepare gl
+                let patternMatchOutPorts = patternMatch ^. Node.outPorts
+                patternMatchOutPorts `shouldBe` expectedPatternMatchOutPorts
 
         it "connects two outputs when one of them is pattern match" $ let
             initialCode = [r|
@@ -493,7 +519,7 @@ spec = runTests "pattern match tests" $ do
                 (inPortRef  outputId mempty) ]
             prepare gl = do
                 Just lambda1 <- findNodeByName gl "lambda1"
-                let lambda1Gl = gl |> (lambda1 ^. Node.nodeId)
+                let lambda1Gl = gl |>| (lambda1 ^. Node.nodeId)
                 Graph.withGraph lambda1Gl . runASTOp $ do
                     graph           <- GraphBuilder.buildGraph
                     (input, output) <- GraphBuilder.buildEdgeNodes
@@ -556,7 +582,7 @@ spec = runTests "pattern match tests" $ do
                 (inPortRef  outputId mempty) ]
             prepare gl = do
                 Just lambda1 <- findNodeByName gl "lambda1"
-                let lambda1Gl = gl |> (lambda1 ^. Node.nodeId)
+                let lambda1Gl = gl |>| (lambda1 ^. Node.nodeId)
                 Graph.withGraph lambda1Gl . runASTOp $ do
                     graph           <- GraphBuilder.buildGraph
                     (input, output) <- GraphBuilder.buildEdgeNodes
