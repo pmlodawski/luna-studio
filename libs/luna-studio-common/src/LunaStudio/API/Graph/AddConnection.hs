@@ -21,7 +21,7 @@ data Request = Request
     , _dst      :: Either AnyPortRef NodeLoc
     } deriving (Eq, Generic, Show)
 
-data Inverse = Inverse { _prevDstExpr :: Text } deriving (Eq, Generic, Show)
+data Inverse = Inverse { _prevDestExpr :: Text } deriving (Eq, Generic, Show)
 
 makeLenses ''Request
 makeLenses ''Inverse
