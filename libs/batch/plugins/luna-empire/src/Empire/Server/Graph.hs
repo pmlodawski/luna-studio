@@ -333,7 +333,7 @@ handleAddConnection = modifyGraph inverse action replyResult where
     getDstPort = either id getDstPortByNodeLoc
     inverse (AddConnection.Request location _ dst') = do
         let dstNodeId = either (view PortRef.nodeId) (view NodeLoc.nodeId) dst'
-        prevExpr <- Graph.withGraph location $ runASTOp $ getNodeCode dstNodeId
+        prevExpr <- Graph.withGraph location . runASTOp $ getNodeCode dstNodeId
         pure $ AddConnection.Inverse prevExpr
     action  (AddConnection.Request location src' dst')
         = withDefaultResult location $ Graph.connectCondTC
