@@ -108,8 +108,8 @@ closenestPow = 2.5
 axisDistanceRight, axisDistanceLeft, axisDistanceDown, axisDistanceUp :: Position -> Double
 axisDistanceRight pos =   pos ^. x
 axisDistanceLeft  pos = -(pos ^. x)
-axisDistanceDown  pos =   pos ^. y
-axisDistanceUp    pos = -(pos ^. y)
+axisDistanceDown  pos = -(pos ^. y)
+axisDistanceUp    pos =   pos ^. y
 
 findNearestRight, findNearestLeft, findNearestDown, findNearestUp :: Position -> [ExpressionNode] -> ExpressionNode
 findNearestRight pos = maximumBy (compare `on` closenest pos axisDistanceRight)
@@ -150,14 +150,14 @@ goCone findMost findNodesInCone findNodesOnSide = do
 findRightMost, findLeftMost, findDownMost, findUpMost :: [ExpressionNode] -> ExpressionNode
 findRightMost = maximumBy (compare `on` (^. position . x))
 findLeftMost  = minimumBy (compare `on` (^. position . x))
-findDownMost  = maximumBy (compare `on` (^. position . y))
-findUpMost    = minimumBy (compare `on` (^. position . y))
+findDownMost  = minimumBy (compare `on` (^. position . y))
+findUpMost    = maximumBy (compare `on` (^. position . y))
 
 findNodesOnRightSide, findNodesOnLeftSide, findNodesOnDownSide, findNodesOnUpSide :: Position -> [ExpressionNode] -> [ExpressionNode]
 findNodesOnRightSide pos = filter $ \node -> node ^. position . x > pos ^. x
 findNodesOnLeftSide  pos = filter $ \node -> node ^. position . x < pos ^. x
-findNodesOnDownSide  pos = filter $ \node -> node ^. position . y > pos ^. y
-findNodesOnUpSide    pos = filter $ \node -> node ^. position . y < pos ^. y
+findNodesOnDownSide  pos = filter $ \node -> node ^. position . y < pos ^. y
+findNodesOnUpSide    pos = filter $ \node -> node ^. position . y > pos ^. y
 
 findNodesOnRight, findNodesOnLeft, findNodesOnDown, findNodesOnUp :: Position -> [ExpressionNode] -> [ExpressionNode]
 findNodesOnRight = filter . isOnRight
@@ -168,8 +168,8 @@ findNodesOnUp    = filter . isOnUp
 isOnRight, isOnLeft, isOnDown, isOnUp :: Position -> ExpressionNode -> Bool
 isOnRight = isInCone (>)  skip (>=)
 isOnLeft  = isInCone (<)  skip (>=)
-isOnDown  = isInCone skip (>)  (<)
-isOnUp    = isInCone skip (<)  (<)
+isOnDown  = isInCone skip (<)  (<)
+isOnUp    = isInCone skip (>)  (<)
 
 skip :: Double -> Double -> Bool
 skip _ _ = True
