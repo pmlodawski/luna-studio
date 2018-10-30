@@ -13,6 +13,7 @@ import qualified Empire.Data.Library           as Library
 import qualified Empire.Data.FileMetadata      as FileMetadata
 import qualified Empire.Empire                 as Empire
 import qualified LunaStudio.Data.GraphLocation as GraphLocation
+import qualified LunaStudio.Data.NodeCache     as NodeCache
 import qualified Luna.Syntax.Text.Lexer        as Lexer
 
 import Control.Monad.Catch                  (handle)
@@ -32,7 +33,8 @@ import Luna.Syntax.Text.Parser.State.Marker (TermMap (TermMap))
 import LunaStudio.Data.Breadcrumb           (Breadcrumb (Breadcrumb),
                                              BreadcrumbItem (Definition))
 import LunaStudio.Data.GraphLocation        (GraphLocation)
-import LunaStudio.Data.NodeCache            (nodeIdMap, nodeMetaMap)
+import LunaStudio.Data.NodeCache            (NodeCache(..), nodeIdMap,
+                                             nodeMetaMap)
 import LunaStudio.Data.Point                (Point)
 import LunaStudio.Data.TextDiff             (TextDiff (TextDiff))
 
@@ -194,8 +196,20 @@ loadCode gl code = do
 reloadCode :: GraphLocation -> Text -> Empire ()
 reloadCode gl code = do
     nodeCache <- prepareNodeCache gl
-    withUnit (GraphLocation.top gl)
-        $ Graph.userState . Graph.nodeCache .= nodeCache
+    let mergeNodeCache nc1 nc2 =
+            NodeCache
+                (Map.union
+                    (nc1 ^. NodeCache.nodeIdMap)
+                    (nc2 ^. NodeCache.nodeIdMap))
+                (Map.union
+                    (nc1 ^. NodeCache.nodeMetaMap)
+                    (nc2 ^. NodeCache.nodeMetaMap))
+                (Map.union
+                    (nc1 ^. NodeCache.portMappingMap)
+                    (nc2 ^. NodeCache.portMappingMap))
+    withUnit (GraphLocation.top gl) $
+        Graph.userState . Graph.nodeCache %=
+            \prev -> mergeNodeCache prev nodeCache
     loadCode gl code
 
 breakDiffs :: [TextDiff] -> [TextDiff]

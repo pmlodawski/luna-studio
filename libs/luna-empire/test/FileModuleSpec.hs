@@ -18,6 +18,7 @@ import           Empire.ASTOps.Parse             (SomeParserException)
 import qualified Empire.Commands.AST             as AST
 import qualified Empire.Commands.Code            as Code
 import qualified Empire.Commands.Graph           as Graph
+import qualified Empire.Commands.Graph.CopyPaste as Graph
 import qualified Empire.Commands.GraphBuilder    as GraphBuilder
 import qualified Empire.Commands.Library         as Library
 import qualified Empire.Data.BreadcrumbHierarchy as BH
@@ -979,8 +980,7 @@ spec = around withChannels $ parallel $ do
                     |]
             in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
                 clipboard <- Graph.copyText loc [Range 14 25]
-                Graph.paste loc (Position.fromTuple (300, 0)) $ Text.unpack clipboard
-                Graph.substituteCode file [(32, 32, "    ")]
+                Graph.pasteNodes loc (Position.fromTuple (300, 0)) $ Text.unpack clipboard
         it "pastes multiline code from text editor to node editor" $
             let initialCode = [r|
                     def main:
@@ -998,8 +998,7 @@ spec = around withChannels $ parallel $ do
                     |]
             in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
                 clipboard <- Graph.copyText loc [Range 14 36]
-                Graph.paste loc (Position.fromTuple (1000, 0)) $ Text.unpack clipboard
-                Graph.substituteCode file [(46, 46, "    ")]
+                Graph.pasteNodes loc (Position.fromTuple (1000, 0)) $ Text.unpack clipboard
         it "pastes multiline code from text editor to node editor at the beginning" $
             let initialCode = [r|
                     def main:
@@ -1017,7 +1016,7 @@ spec = around withChannels $ parallel $ do
                     |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 clipboard <- Graph.copyText loc [Range 14 36]
-                Graph.paste loc (Position.fromTuple (-1000, 0)) $ Text.unpack clipboard
+                Graph.pasteNodes loc (Position.fromTuple (-1000, 0)) $ Text.unpack clipboard
         it "moves ports on top-level def" $
             let initialCode = [r|
                     def main:

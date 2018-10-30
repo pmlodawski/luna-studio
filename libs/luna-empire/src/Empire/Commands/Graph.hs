@@ -5,6 +5,7 @@ import Empire.Commands.Graph.Autolayout as X
 import Empire.Commands.Graph.Breadcrumb as X
 import Empire.Commands.Graph.Code       as X
 import Empire.Commands.Graph.Context    as X
+import Empire.Commands.Graph.CopyPaste  as X
 import Empire.Commands.Graph.Metadata   as X
 import Empire.Commands.Graph.NodeMeta   as X
 
@@ -312,21 +313,6 @@ addNodeWithConnection location nl@(NodeLoc _ nodeId) expression nodeMeta connect
             withGraph location $ runASTOp $ autolayoutNodesAST [nodeId]
     typecheck location
     return node
-
-findPreviousSeq :: NodeRef -> Set.Set NodeRef -> GraphOp (Maybe NodeRef)
-findPreviousSeq seq nodesToTheLeft = matchExpr seq $ \case
-    Seq l r -> do
-        l' <- source l
-        r' <- source r
-        if Set.member r' nodesToTheLeft then return (Just r') else findPreviousSeq l' nodesToTheLeft
-    _ -> return $ if Set.member seq nodesToTheLeft then Just seq else Nothing
-
-findPreviousNodeInSequence :: NodeRef -> NodeMeta -> [(NodeRef, NodeMeta)] -> GraphOp (Maybe NodeRef)
-findPreviousNodeInSequence seq meta nodes = do
-    let position           = Position.toTuple $ view NodeMeta.position meta
-        nodesWithPositions = map (\(n, m) -> (n, Position.toTuple $ m ^. NodeMeta.position)) nodes
-        nodesToTheLeft     = filter (\(n, (x, y)) -> x <= fst position) nodesWithPositions
-    findPreviousSeq seq (Set.fromList $ map fst nodesToTheLeft)
 
 findM :: Monad m => (a -> m Bool) -> [a] -> m (Maybe a)
 findM p [] = return Nothing
@@ -939,9 +925,6 @@ openFile path = do
         Left e -> withUnit loc $ Graph.userState . Graph.clsParseError ?= e
         _      -> return ()
 
-typecheck :: GraphLocation -> Empire ()
-typecheck loc = withTC' loc False (return ()) (return ())
-
 
 putIntoHierarchy :: NodeId -> NodeRef -> GraphOp ()
 putIntoHierarchy nodeId marked = do
@@ -1055,12 +1038,17 @@ readCodeSpan ref = view CodeSpan.realSpan <$> getLayer @CodeSpan ref
 setCodeSpan :: NodeRef -> LeftSpacedSpan Delta -> GraphOp ()
 setCodeSpan ref s = putLayer @CodeSpan ref $ CodeSpan.mkRealSpan s
 
-getNodeIdForMarker :: Int -> GraphOp (Maybe NodeId)
-getNodeIdForMarker index = do
+getNodeRefForMarker :: Int -> GraphOp (Maybe NodeRef)
+getNodeRefForMarker index = do
     exprMap      <- getExprMap
     let exprMap' :: Map.Map Graph.MarkerId NodeRef
         exprMap' = coerce exprMap
         ref      = Map.lookup (fromIntegral index) exprMap'
+    pure ref
+
+getNodeIdForMarker :: Int -> GraphOp (Maybe NodeId)
+getNodeIdForMarker index = do
+    ref <- getNodeRefForMarker index
     case ref of
         Nothing -> return Nothing
         Just r  -> matchExpr r $ \case
@@ -1071,15 +1059,9 @@ getNodeIdForMarker index = do
 
 markerCodeSpan :: GraphLocation -> Int -> Empire (Int, Int)
 markerCodeSpan loc index = withGraph loc $ runASTOp $ do
-    exprMap      <- getExprMap
-    let exprMap' :: Map.Map Graph.MarkerId NodeRef
-        exprMap' = coerce exprMap
-        Just ref = Map.lookup (fromIntegral index) exprMap'
+    Just ref <- getNodeRefForMarker index
     readRange ref
 
-
-unindent :: Int -> Text -> Text
-unindent offset code = Text.unlines $ map (Text.drop offset) $ Text.lines code
 
 data ImpossibleToInsert = ImpossibleToCollapse
     deriving (Show)
@@ -1210,44 +1192,6 @@ collapseToFunction loc@(GraphLocation file _) nids = do
             [a] -> setNodePositionAST (a ^. Node.nodeId) outputPosition
             _   -> return ()
 
-prepareCopy :: GraphLocation -> [NodeId] -> Empire String
-prepareCopy loc@(GraphLocation _ (Breadcrumb [])) nodeIds = withUnit loc $ do
-    clipboard <- runASTOp $ do
-        starts  <- mapM Code.functionBlockStart nodeIds
-        lengths <- do
-            funs  <- use Graph.clsFuns
-            let names       = map (\a -> (a, Map.lookup a funs)) nodeIds
-                nonExistent = filter (isNothing . snd) names
-            forM nonExistent $ \(nid, _) ->
-                throwM $ BH.BreadcrumbDoesNotExistException (Breadcrumb [Breadcrumb.Definition nid])
-            refs <- mapM ASTRead.getFunByNodeId [ nid | (nid, Just (view Graph.funName -> _name)) <- names]
-            forM refs $ \ref -> do
-                LeftSpacedSpan (SpacedSpan _off len) <- view CodeSpan.realSpan <$> getLayer @CodeSpan ref
-                return $ fromIntegral len
-        codes <- mapM
-            (\(start, len) -> Code.removeMarkers <$> Code.getAt start (start + len)) $
-            zip starts lengths
-        return $ Text.intercalate "\n\n" codes
-    return $ Text.unpack clipboard
-prepareCopy loc nodeIds = withGraph loc $ do
-    codes <- runASTOp $ forM nodeIds $ \nid -> do
-        ref     <- ASTRead.getASTPointer nid
-        code    <- Code.removeMarkers <$> Code.getCodeOf ref
-        return code
-    return $ Text.unpack $ Text.intercalate "\n\n" codes
-
-moveToOrigin :: [MarkerNodeMeta] -> [MarkerNodeMeta]
-moveToOrigin metas' = map (\(MarkerNodeMeta m me) -> MarkerNodeMeta m (me & NodeMeta.position %~ Position.move (coerce (Position.rescale leftTopCorner (-1))))) metas'
-    where
-        leftTopCorner = fromMaybe (Position.fromTuple (0,0))
-                      $ Position.leftTopPoint
-                      $ map (\mnm -> FileMetadata.meta mnm ^. NodeMeta.position) metas'
-
-indent :: Int -> Text -> Text
-indent offset (Text.lines -> header:rest) =
-    Text.unlines $ header : map (\line -> Text.concat [Text.replicate offset " ", line]) rest
-indent _      code = code
-
 data B = Break | NoBreak deriving Show
 
 exprBreaker :: [Text] -> [B] -> [Text]
@@ -1259,49 +1203,6 @@ exprBreaker (l:ls) bs = go [l] ls bs
         go (acc:accs) (ln:lns) (b:breaks) = case b of
             Break -> go (ln:acc:accs) lns breaks
             NoBreak -> go ((Text.stripEnd $ Text.unlines [acc, ln]):accs) lns breaks
-
-paste :: GraphLocation -> Position -> String -> Empire ()
-paste loc@(GraphLocation file (Breadcrumb [])) position (Text.pack -> code) = do
-    newCode <- withUnit loc $ runASTOp $ do
-        unit  <- use Graph.clsClass
-        funs  <- ASTRead.classFunctions unit
-        funStarts <- forM funs $ \fun -> do
-            xFun <- view (NodeMeta.position . Position.x) <$> (fromMaybe def <$> AST.readMeta fun)
-            if xFun < position ^. Position.x then return Nothing else do
-                funStart <- Code.functionBlockStartRef fun
-                return $ Just funStart
-        let cleanCode = Code.removeMarkers code
-        let spacedCode = cleanCode <> "\n"
-        case Safe.headMay (catMaybes funStarts) of
-            Just codePosition -> Code.applyDiff codePosition codePosition spacedCode
-            _                 -> do
-                unitSpan <- getLayer @CodeSpan unit
-                let endOfFile = view (CodeSpan.realSpan . Span.length) unitSpan
-                Code.applyDiff endOfFile endOfFile $ Text.cons '\n' cleanCode
-    reloadCode loc newCode
-    resendCode loc
-paste loc position (Text.pack -> text) = do
-    newCode <- withGraph loc $ runASTOp $ do
-        indentation <- fromIntegral <$> Code.getCurrentIndentationLength
-        oldSeq             <- ASTRead.getCurrentBody
-        nodes              <- AST.readSeq oldSeq
-        nodesAndMetas      <- mapM (\n -> (n,) <$> AST.readMeta n) nodes
-        let nodesWithMetas =  mapMaybe (\(n,m) -> (n,) <$> m) nodesAndMetas
-        nearestNode        <- findPreviousNodeInSequence oldSeq
-            (def & NodeMeta.position .~ position) nodesWithMetas
-        let text' = Code.removeMarkers text
-            code  = "\n" <> text'
-        case nearestNode of
-            Just ref -> do
-                Just beg <- Code.getAnyBeginningOf ref
-                len <- getLayer @SpanLength ref
-                Code.applyDiff (beg+len) (beg+len) code
-            _        -> do
-                beg <- Code.getCurrentBlockBeginning
-                Code.applyDiff beg beg $ text' <> "\n" <> Text.replicate indentation " "
-    reloadCode loc newCode
-    typecheck loc
-    resendCode loc
 
 includeWhitespace :: Text -> (Delta, Delta) -> (Delta, Delta)
 includeWhitespace c (s, e) = (newStart, e)
@@ -1485,35 +1386,6 @@ generateNewFunctionName forbiddenNames base =
     let allPossibleNames = zipWith (<>) (repeat base) (convert . show <$> [1..])
         Just newName     = find (not . flip Set.member forbiddenNames) allPossibleNames
     in newName
-
-runTC :: GraphLocation -> Bool -> Bool -> Bool -> Command ClsGraph ()
-runTC loc flush interpret recompute = do
-    g <- use Graph.userState
-    let root = g ^. Graph.clsClass
-    rooted <- runASTOp $ Store.serializeWithRedirectMap root
-    Publisher.requestTC loc g rooted flush interpret recompute
-
-typecheckWithRecompute :: GraphLocation -> Empire ()
-typecheckWithRecompute loc@(GraphLocation file _) = do
-    withBreadcrumb (GraphLocation file def) (return ()) (runTC loc True True True)
-
-runInterpreter :: GraphLocation -> Empire ()
-runInterpreter loc@(GraphLocation file _) = do
-    withBreadcrumb (GraphLocation file def) (return ()) (runTC loc True True False)
-
-withTC' :: GraphLocation -> Bool -> Command Graph a -> Command ClsGraph a -> Empire a
-withTC' loc@(GraphLocation file bs) flush actG actC = do
-    res       <- withBreadcrumb loc actG actC
-    interpret <- use $ Graph.userState . activeInterpreter
-    withBreadcrumb (GraphLocation file def) (return ()) (runTC loc flush interpret False)
-    return res
-
-withTCUnit :: GraphLocation -> Bool -> Command ClsGraph a -> Empire a
-withTCUnit loc flush cmd = withTC' loc flush (throwM UnsupportedOperation) cmd
-
-withTC :: GraphLocation -> Bool -> Command Graph a -> Empire a
-withTC loc flush actG = withTC' loc flush actG (throwM UnsupportedOperation)
-
 
 getOutEdges :: NodeId -> GraphOp [InPortRef]
 getOutEdges nodeId = do

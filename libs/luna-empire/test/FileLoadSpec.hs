@@ -2267,7 +2267,7 @@ def main:
                     None
                 |]
             in specifyCodeChange initialCode expectedCode $ \(GraphLocation file _) -> do
-                Graph.paste (GraphLocation file def) (Position.fromTuple (-300, 0)) "def foo:\n    url = \"http://example.com\"\n    request = Http.get url\n    response = request . perform\n    None"
+                Graph.pasteNodes (GraphLocation file def) (Position.fromTuple (-300, 0)) "def foo:\n    url = \"http://example.com\"\n    request = Http.get url\n    response = request . perform\n    None"
         it "pastes a function to functionlevel" $ let
             initialCode = [r|
                 def main:
@@ -2283,11 +2283,7 @@ def main:
                     None
                 |]
             in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
-                Graph.paste loc (Position.fromTuple (300, 0)) "def foo:\n    url = \"http://example.com\"\n    request = Http.get url\n    response = request . perform\n    None"
-                Graph.substituteCode file [(30, 30, "    ")]
-                Graph.substituteCode file [(67, 67, "    ")]
-                Graph.substituteCode file [(101, 101, "    ")]
-                Graph.substituteCode file [(141, 141, "    ")]
+                Graph.pasteNodes loc (Position.fromTuple (300, 0)) "def foo:\n    url = \"http://example.com\"\n    request = Http.get url\n    response = request . perform\n    None"
         it "copy pastes" $ let
             initialCode = [r|
                 def main:

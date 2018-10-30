@@ -52,23 +52,27 @@ dumpMetadata file = do
             | (marker, (Just meta, _)) <- oldMetas ]
     pure $ concat metas
 
+renderMetadata :: FileMetadata -> Text
+renderMetadata metadata =
+    let json = (TextLazy.toStrict . Aeson.encodeToLazyText . Aeson.toJSON)
+            metadata
+    in Lexer.mkMetadata (Text.cons ' ' json)
+
 addMetadataToCode :: FilePath -> Empire Text
 addMetadataToCode file = do
-    metadata <- FileMetadata <$> dumpMetadata file
-    let metadataJSON
-            = (TextLazy.toStrict . Aeson.encodeToLazyText . Aeson.toJSON)
-                metadata
-        metadataJSONWithHeader = Lexer.mkMetadata (Text.cons ' ' metadataJSON)
+    metadataJSON <- renderMetadata . FileMetadata <$> dumpMetadata file
     withUnit (GraphLocation.top file) $ do
         code <- use $ Graph.userState . Graph.code
-        let metadataJSONWithHeaderAndOffset
-                = Text.cons '\n' metadataJSONWithHeader
-        pure $ Text.concat [code, metadataJSONWithHeaderAndOffset]
+        let metadataJSONWithOffset
+                = Text.cons '\n' metadataJSON
+        pure $ Text.concat [code, metadataJSONWithOffset]
 
 parseMetadata :: MonadIO m => Text -> m FileMetadata
 parseMetadata meta =
     let metaPrefix = "### META "
-        json       = Text.drop (Text.length metaPrefix) meta
+        json       = if metaPrefix `Text.isPrefixOf` meta
+                     then Text.drop (Text.length metaPrefix) meta
+                     else meta
         metadata   = Aeson.eitherDecodeStrict' $ Text.encodeUtf8 json
     in case metadata of
         Right fm  -> pure fm
@@ -106,13 +110,19 @@ extractMarkedMetasAndIds root = matchExpr root $ \case
     _ -> concat <$> (mapM (extractMarkedMetasAndIds <=< source) =<< inputs root)
 
 stripMetadata :: Text -> Text
-stripMetadata text = if lexerStream == code
+stripMetadata = view _1 . stripMetadata'
+
+stripMetadata' :: Text -> (Text, Text)
+stripMetadata' text = (, metadata) $ if lexerStream == code
     then text
     else flip Text.append "\n" $ Text.stripEnd $ convert withoutMeta where
         lexerStream  = Lexer.evalDefLexer (convert text)
-        code = takeWhile
+        (code, meta) = span
             (\(Lexer.Token _ _ s) -> isNothing $ Lexer.matchMetadata s)
             lexerStream
+        metadata = case meta of
+            [] -> ""
+            Lexer.Token _ _ s : _ -> convert $ fromMaybe "" $ Lexer.matchMetadata s
         textTree = SpanTree.buildSpanTree
             (convert text)
             $ code <> [Lexer.Token 0 0 Lexer.ETX]
