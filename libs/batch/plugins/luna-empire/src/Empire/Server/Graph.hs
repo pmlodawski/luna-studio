@@ -385,7 +385,7 @@ handleCollapseToFunction = modifyGraph inverse action replyResult where
 handleCopy :: Request Copy.Request -> StateT Env BusT ()
 handleCopy = modifyGraph defInverse action replyResult where
     action (Copy.Request location nodeLocs) = do
-        r <- Graph.prepareCopy location (convert nodeLocs)
+        r <- convert <$> Graph.copyNodes location (convert nodeLocs)
         pure $ Copy.Result r r --FIXME
 
 handleDumpGraphViz :: Request DumpGraphViz.Request -> StateT Env BusT ()
@@ -409,7 +409,7 @@ handleMovePort = modifyGraph defInverse action replyResult where
 handlePaste :: Request Paste.Request -> StateT Env BusT ()
 handlePaste = modifyGraph defInverse action replyResult where
     action (Paste.Request location position string)
-        = withDefaultResult location $ Graph.paste location position string
+        = withDefaultResult location $ Graph.pasteNodes location position string
 
 data ConnectionDoesNotExistException
     = ConnectionDoesNotExistException InPortRef
