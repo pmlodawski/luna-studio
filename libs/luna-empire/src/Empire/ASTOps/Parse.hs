@@ -5,6 +5,7 @@ module Empire.ASTOps.Parse (
     SomeParserException
   , FunctionParsing(..)
   , parseExpr
+  , parseExpr4
   , parsePattern
   , parsePortDefault
   , runParser
@@ -25,7 +26,7 @@ import qualified Data.List.Split              as Split
 import qualified Data.Text                    as Text
 import qualified Data.Scientific              as Scientific
 
-import           Empire.ASTOp                    (EmpirePass, GraphOp, liftScheduler, runASTOp)
+import           Empire.ASTOp                    (ASTOp, EmpirePass, GraphOp, liftScheduler, runASTOp)
 import           Empire.Data.AST                 (NodeRef, astExceptionFromException, astExceptionToException)
 import           Empire.Data.Graph               (Graph)
 import           Empire.Data.Layers              (SpanLength)
@@ -83,6 +84,22 @@ parse3 parser input = do
                 (ir, m) <- passConverter $ run parser (convert input)
                 liftIO $ writeIORef ref $ generalize (ir, m)
             Scheduler.runPassByType @EmpirePass
+            liftIO $ readIORef ref
+        return foo
+    return (ir, m)
+
+parseExpr4 :: Text -> ASTOp g NodeRef
+parseExpr4 input = view _1 <$> parse4 Macro.unit input
+
+parse4 :: Macro.Parser (Parsing.Spanned Parsing.Ast) -> Text -> ASTOp g (NodeRef, MarkedExprMap)
+parse4 parser input = do
+    (ir, m) <- do
+        ref <- liftIO $ newIORef (error "emptyreturn")
+        foo <- do
+            -- Scheduler.registerPassFromFunction__ @Stage @EmpirePass $ do
+            (ir, m) <- lift $ passConverter $ run parser (convert input)
+            liftIO $ writeIORef ref $ generalize (ir, m)
+            -- Scheduler.runPassByType @EmpirePass
             liftIO $ readIORef ref
         return foo
     return (ir, m)

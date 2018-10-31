@@ -470,8 +470,8 @@ bar = foo 8.0 c|]
         «8»m = buzz b pi
         «11»m + n
     «2»c = 4.0
-    «19»c = 4.0
-    «20»bar = foo 8.0 c
+    «19»c1 = 4.0
+    «20»bar1 = foo 8.0 c1
 
     «14»bar = foo 8.0 c
     «17»node1 = BogusConstructorForParser

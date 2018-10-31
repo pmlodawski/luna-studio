@@ -975,7 +975,7 @@ spec = around withChannels $ parallel $ do
                 expectedCode = [r|
                     def main:
                         number1 = 3
-                        number1 = 3
+                        number11 = 3
                         number1
                     |]
             in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do

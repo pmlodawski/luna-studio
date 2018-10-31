@@ -1,6 +1,5 @@
 module Empire.Commands.AST where
 
-import           Control.Monad.State
 import           Data.Function                     (on)
 import           Data.List                         (sortBy)
 import           Empire.Prelude
@@ -8,12 +7,15 @@ import           Empire.Prelude
 import           LunaStudio.Data.Node              (NodeId)
 import           LunaStudio.Data.NodeMeta          (NodeMeta)
 import           Empire.Data.AST                   (NodeRef, NotLambdaException(..))
-import           Empire.Data.Layers                (Meta)
+import           Empire.Data.Layers                (Meta, SpanLength)
 
 import           Empire.ASTOp                      (ASTOp, GraphOp, match)
 import qualified Empire.ASTOps.Builder             as ASTBuilder
 import qualified Empire.ASTOps.Deconstruct         as ASTDeconstruct
 import qualified Empire.ASTOps.Read                as ASTRead
+import qualified Empire.ASTOps.Modify              as ASTModify
+
+import qualified Empire.Commands.Code              as Code
 
 import qualified Luna.IR as IR
 -- import qualified OCI.IR.Repr.Vis as Vis
@@ -95,6 +97,26 @@ isTrivialLambda node = match node $ \case
         out' <- ASTRead.getLambdaOutputRef node
         pure $ out' `elem` vars
     _ -> throwM $ NotLambdaException node
+
+renameNodeAST :: NodeId -> NodeRef -> Text -> GraphOp ()
+renameNodeAST nodeId newVar newName = do
+    ref      <- ASTRead.getASTPointer nodeId
+    v        <- ASTRead.getASTVar nodeId
+    patIsVar <- ASTRead.isVar newVar
+    varIsVar <- ASTRead.isVar v
+    if patIsVar && varIsVar then do
+        oldLen <- getLayer @SpanLength v
+        ASTModify.renameVar v $ convert newName
+        Code.replaceAllUses v oldLen newName
+        deleteSubtree newVar
+    else do
+        Just beg <- Code.getOffsetRelativeToFile ref
+        varLen   <- getLayer @SpanLength v
+        patLen   <- getLayer @SpanLength newVar
+        vEdge    <- ASTRead.getVarEdge nodeId
+        replaceSource newVar $ generalize vEdge
+        Code.gossipLengthsChangedBy (patLen - varLen) ref
+        void $ Code.applyDiff beg (beg + varLen) newName
 
 -- dumpGraphViz :: ASTOp g m => String -> m ()
 -- dumpGraphViz name = Vis.snapshotWith nodeVis edgeVis name where

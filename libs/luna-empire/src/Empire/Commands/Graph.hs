@@ -887,24 +887,7 @@ renameNode loc nid name
             runASTOp $ do
                 Code.propagateLengths pat
                 ASTBuilder.ensureNodeHasName generateNodeName nid
-                ref      <- ASTRead.getASTPointer nid
-                v        <- ASTRead.getASTVar nid
-                patIsVar <- ASTRead.isVar pat
-                varIsVar <- ASTRead.isVar v
-                if patIsVar && varIsVar then do
-                    oldLen <- getLayer @SpanLength v
-                    ASTModify.renameVar v $ convert name
-                    Code.replaceAllUses v oldLen name
-                    deleteSubtree pat
-                else do
-                    ref      <- ASTRead.getASTPointer nid
-                    Just beg <- Code.getOffsetRelativeToFile ref
-                    varLen   <- getLayer @SpanLength v
-                    patLen   <- getLayer @SpanLength pat
-                    vEdge    <- ASTRead.getVarEdge nid
-                    replaceSource pat $ generalize vEdge
-                    Code.gossipLengthsChangedBy (patLen - varLen) ref
-                    void $ Code.applyDiff beg (beg + varLen) name
+                AST.renameNodeAST nid pat name
             runAliasAnalysis
         resendCode loc
 
@@ -1037,25 +1020,6 @@ readCodeSpan ref = view CodeSpan.realSpan <$> getLayer @CodeSpan ref
 
 setCodeSpan :: NodeRef -> LeftSpacedSpan Delta -> GraphOp ()
 setCodeSpan ref s = putLayer @CodeSpan ref $ CodeSpan.mkRealSpan s
-
-getNodeRefForMarker :: Int -> GraphOp (Maybe NodeRef)
-getNodeRefForMarker index = do
-    exprMap      <- getExprMap
-    let exprMap' :: Map.Map Graph.MarkerId NodeRef
-        exprMap' = coerce exprMap
-        ref      = Map.lookup (fromIntegral index) exprMap'
-    pure ref
-
-getNodeIdForMarker :: Int -> GraphOp (Maybe NodeId)
-getNodeIdForMarker index = do
-    ref <- getNodeRefForMarker index
-    case ref of
-        Nothing -> return Nothing
-        Just r  -> matchExpr r $ \case
-            Marked _m expr -> do
-                expr'     <- source expr
-                nodeId    <- ASTRead.getNodeId expr'
-                return nodeId
 
 markerCodeSpan :: GraphLocation -> Int -> Empire (Int, Int)
 markerCodeSpan loc index = withGraph loc $ runASTOp $ do
@@ -1381,11 +1345,6 @@ generateNodeNameFromBase base = do
     names <- Set.fromList . catMaybes <$> mapM GraphBuilder.getNodeName ids
     return $ generateNewFunctionName names base
 
-generateNewFunctionName :: Set Text -> Text -> Text
-generateNewFunctionName forbiddenNames base =
-    let allPossibleNames = zipWith (<>) (repeat base) (convert . show <$> [1..])
-        Just newName     = find (not . flip Set.member forbiddenNames) allPossibleNames
-    in newName
 
 getOutEdges :: NodeId -> GraphOp [InPortRef]
 getOutEdges nodeId = do
