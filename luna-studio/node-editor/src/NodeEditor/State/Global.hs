@@ -3,7 +3,8 @@
 module NodeEditor.State.Global where
 
 import           Common.Action.Command                    (Command)
-import           Common.Debug                             (HasRequestTimes, requestTimes)
+import           Common.Debug                             (HasRequestTimes,
+                                                           requestTimes)
 import           Common.Prelude
 import           Data.HashMap.Lazy                        (HashMap)
 import           Data.Map                                 (Map)
@@ -19,10 +20,14 @@ import           NodeEditor.Event.Event                   (Event)
 import           NodeEditor.React.Model.App               (App)
 import qualified NodeEditor.React.Model.App               as App
 import           NodeEditor.React.Model.NodeEditor        (NodeEditor)
-import           NodeEditor.React.Model.Visualization     (VisualizerId, VisualizerMatcher, VisualizerPath)
+import           NodeEditor.React.Model.Visualization     (Visualizer,
+                                                           VisualizerId,
+                                                           VisualizerMatcher,
+                                                           VisualizerPath)
 import           NodeEditor.React.Store                   (Ref)
 import qualified NodeEditor.React.Store.Ref               as Ref
-import           NodeEditor.State.Action                  (ActionRep, Connect, SomeAction)
+import           NodeEditor.State.Action                  (ActionRep, Connect,
+                                                           SomeAction)
 import qualified NodeEditor.State.Collaboration           as Collaboration
 import qualified NodeEditor.State.UI                      as UI
 import           System.Random                            (StdGen)
@@ -39,7 +44,7 @@ data State = State
         , _selectionHistory    :: [Set NodeLoc]
         , _nodeSearcherData    :: NodeSearcherData
         , _waitingForTc        :: Bool
-        , _preferedVisualizers :: HashMap TypeRep VisualizerId
+        , _preferedVisualizers :: HashMap TypeRep Visualizer
         , _visualizers         :: Map VisualizerId VisualizerMatcher
         , _internalVisualizers :: Map VisualizerId VisualizerPath
         , _random              :: StdGen
@@ -54,13 +59,13 @@ data ActionState = ActionState
 instance Default ActionState
 
 data BackendState = BackendState
-        { _pendingRequests      :: Map UUID UTCTime
-        , _clientId             :: ClientId
+        { _pendingRequests :: Map UUID UTCTime
+        , _clientId        :: ClientId
         }
 
 data DebugState = DebugState
-        { _lastEvent            :: Maybe Event
-        , _eventNum             :: Int
+        { _lastEvent :: Maybe Event
+        , _eventNum  :: Int
         } deriving (Generic)
 
 instance Default DebugState

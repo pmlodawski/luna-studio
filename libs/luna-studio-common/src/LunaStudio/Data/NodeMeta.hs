@@ -3,18 +3,17 @@
 
 module LunaStudio.Data.NodeMeta where
 
-import           Data.Aeson.Types           (FromJSON, ToJSON)
-import           Data.Binary                (Binary)
+import Data.Aeson.Types (FromJSON, ToJSON)
+import Data.Binary      (Binary)
 
-import           LunaStudio.Data.Position   (Position)
-import           LunaStudio.Data.Visualizer (VisualizerId)
-import           Prologue
+import LunaStudio.Data.Position (Position)
+import Prologue
 
 
 data NodeMeta = NodeMeta
     { _position           :: Position
     , _displayResult      :: Bool
-    , _selectedVisualizer :: Maybe VisualizerId
+    , _selectedVisualizer :: Maybe (Text, Text)
     } deriving (Eq, Generic, Show)
 
 makeLenses ''NodeMeta

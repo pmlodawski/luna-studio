@@ -5,11 +5,13 @@ import           Common.Prelude
 import           Control.Monad                      (filterM)
 import           LunaStudio.Data.Connection         (Connection (Connection))
 import qualified LunaStudio.Data.Connection         as Connection
-import           LunaStudio.Data.PortRef            (AnyPortRef (InPortRef', OutPortRef'), InPortRef, OutPortRef)
+import           LunaStudio.Data.PortRef            (AnyPortRef (InPortRef', OutPortRef'),
+                                                     InPortRef, OutPortRef)
 import qualified NodeEditor.Action.Batch            as Batch
-import           NodeEditor.Action.State.Model      (createConnectionModel, updatePortMode)
+import           NodeEditor.Action.State.Model      (createConnectionModel,
+                                                     updatePortMode)
+import           NodeEditor.Action.State.NodeEditor (resetSuccessors)
 import qualified NodeEditor.Action.State.NodeEditor as NodeEditor
-import           NodeEditor.Action.State.ResetNode  (resetSuccessors)
 import           NodeEditor.React.Model.Connection  (ConnectionId)
 import           NodeEditor.React.Model.Node        (NodeLoc, nodeLoc)
 import           NodeEditor.State.Global            (State)

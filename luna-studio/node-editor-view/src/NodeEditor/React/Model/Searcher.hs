@@ -10,9 +10,11 @@ import qualified Data.Text                                  as Text
 import           Data.Text32                                (Text32)
 import qualified Data.UUID.Types                            as UUID
 import qualified Data.Vector.Unboxed                        as Vector
-import           Luna.Syntax.Text.Lexer                     (Bound (Begin, End), Symbol (..), Token)
+import           Luna.Syntax.Text.Lexer                     (Bound (Begin, End),
+                                                             Symbol (..), Token)
 import qualified Luna.Syntax.Text.Lexer                     as Lexer
-import           LunaStudio.Data.Node                       (ExpressionNode, mkExprNode)
+import           LunaStudio.Data.Node                       (ExpressionNode,
+                                                             mkExprNode)
 import qualified LunaStudio.Data.Node                       as Node
 import           LunaStudio.Data.NodeLoc                    (NodeLoc)
 import           LunaStudio.Data.NodeSearcher               (Match)
@@ -24,7 +26,7 @@ import           LunaStudio.Data.TypeRep                    (TypeRep (TCons))
 import qualified NodeEditor.Event.Shortcut                  as Shortcut
 import qualified NodeEditor.React.Model.Node.ExpressionNode as Model
 import qualified NodeEditor.React.Model.Port                as Port
-import           NodeEditor.React.Model.Visualization       (Visualization)
+import           NodeEditor.React.Model.Visualization       (RunningVisualization)
 import           Prologue                                   (unsafeFromJust)
 
 
@@ -35,7 +37,7 @@ data NewNode = NewNode { _position    :: Position
 data NodeModeInfo = NodeModeInfo { _className   :: Maybe Text
                                  , _newNodeData :: Maybe NewNode
                                  , _argNames    :: [Text]
-                                 , _docVisInfo  :: Maybe Visualization
+                                 , _docVisInfo  :: Maybe RunningVisualization
                                  } deriving (Eq, Generic, Show)
 makeLenses ''NewNode
 makeLenses ''NodeModeInfo
@@ -79,7 +81,7 @@ predNl :: Getter Searcher (Maybe NodeLoc)
 predNl = to predNl' where
     predNl' s = s ^? mode . _Node . _2 . newNodeData . _Just . predPortRef . _Just . PortRef.nodeLoc
 
-docVis :: Getter Searcher (Maybe Visualization)
+docVis :: Getter Searcher (Maybe RunningVisualization)
 docVis = to docVis' where
     docVis' s = case s ^. mode of
       Node _ nmi _ -> nmi ^. docVisInfo

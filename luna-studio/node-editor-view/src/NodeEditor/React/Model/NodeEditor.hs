@@ -1,40 +1,47 @@
-{-# LANGUAGE DataKinds              #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE LambdaCase             #-}
-{-# LANGUAGE RankNTypes             #-}
-{-# LANGUAGE StrictData             #-}
-{-# LANGUAGE TypeFamilies           #-}
 module NodeEditor.React.Model.NodeEditor where
 
-import           Common.Prelude
+import Common.Prelude
+
 import qualified Data.HashMap.Strict                        as HashMap
-import           Data.Map                                   (Map)
 import qualified Data.Map                                   as Map
 import qualified LunaStudio.Data.Breadcrumb                 as B
-import           LunaStudio.Data.CameraTransformation       (CameraTransformation)
 import qualified LunaStudio.Data.Error                      as Error
-import           LunaStudio.Data.MonadPath                  (MonadPath)
 import qualified LunaStudio.Data.NodeLoc                    as NodeLoc
 import qualified LunaStudio.Data.PortRef                    as PortRef
-import           NodeEditor.Data.Color                      (Color (Color))
-import           NodeEditor.React.Model.Connection          (Connection, ConnectionsMap, HalfConnection (HalfConnection),
-                                                             PosConnection (PosConnection), PosHalfConnection (PosHalfConnection))
 import qualified NodeEditor.React.Model.Connection          as Connection
-import           NodeEditor.React.Model.ConnectionPen       (ConnectionPen)
-import           NodeEditor.React.Model.Layout              (Layout)
 import qualified NodeEditor.React.Model.Layout              as Layout
-import           NodeEditor.React.Model.Node                (ExpressionNode, ExpressionNodesMap, HasNodeLoc, InputNode,
-                                                             Node (Expression, Input, Output), NodeLoc, OutputNode, countArgPorts, hasPort,
-                                                             lookupPort, nodeId)
 import qualified NodeEditor.React.Model.Node.ExpressionNode as ExpressionNode
-import           NodeEditor.React.Model.Port                (AnyPort, AnyPortId (InPortId', OutPortId'), AnyPortRef (OutPortRef'), InPort,
-                                                             InPortRef, OutPort, OutPortRef, getPortNumber)
 import qualified NodeEditor.React.Model.Port                as Port
-import           NodeEditor.React.Model.Searcher            (Searcher)
-import           NodeEditor.React.Model.SelectionBox        (SelectionBox)
-import           NodeEditor.React.Model.Visualization       (NodeVisualizations, VisualizationProperties (VisualizationProperties),
-                                                             visualizations)
 import qualified NodeEditor.React.Model.Visualization       as Visualization
+
+
+import Data.Map                             (Map)
+import LunaStudio.Data.CameraTransformation (CameraTransformation)
+import LunaStudio.Data.MonadPath            (MonadPath)
+import LunaStudio.Data.MonadPath            (MonadPath)
+import NodeEditor.Data.Color                (Color (Color))
+import NodeEditor.React.Model.Connection    (Connection, ConnectionsMap,
+                                             HalfConnection (HalfConnection),
+                                             PosConnection (PosConnection),
+                                             PosHalfConnection (PosHalfConnection))
+import NodeEditor.React.Model.ConnectionPen (ConnectionPen)
+import NodeEditor.React.Model.Layout        (Layout)
+import NodeEditor.React.Model.Node          (ExpressionNode, ExpressionNodesMap,
+                                             HasNodeLoc, InputNode,
+                                             Node (Expression, Input, Output),
+                                             NodeLoc, OutputNode, countArgPorts,
+                                             hasPort, lookupPort, nodeId)
+import NodeEditor.React.Model.Port          (AnyPort,
+                                             AnyPortId (InPortId', OutPortId'),
+                                             AnyPortRef (OutPortRef'), InPort,
+                                             InPortRef, OutPort, OutPortRef,
+                                             getPortNumber)
+import NodeEditor.React.Model.Searcher      (Searcher)
+import NodeEditor.React.Model.SelectionBox  (SelectionBox)
+import NodeEditor.React.Model.Visualization (NodeVisualizations, VisualizationProperties (VisualizationProperties),
+                                             VisualizationsBackupMap,
+                                             Visualizers)
+
 
 data GraphStatus = GraphLoaded
                  | GraphLoading
@@ -49,8 +56,9 @@ data NodeEditor = NodeEditor { _expressionNodes          :: ExpressionNodesMap
                              , _outputNode               :: Maybe OutputNode
                              , _monads                   :: [MonadPath]
                              , _connections              :: ConnectionsMap
-                             , _visualizersLibPaths      :: VisualizersPaths
+                             , _visualizersLibPaths      :: Visualizers FilePath
                              , _nodeVisualizations       :: Map NodeLoc NodeVisualizations
+                             , _visualizationsBackup     :: VisualizationsBackupMap
 
                              , _halfConnections          :: [HalfConnection]
                              , _connectionPen            :: Maybe ConnectionPen
@@ -64,14 +72,6 @@ data NodeEditor = NodeEditor { _expressionNodes          :: ExpressionNodesMap
                              , _debugLayer               :: Maybe Int --FIXME: This is used only to show different layers of basegl
                              } deriving (Eq, Generic)
 
-data VisualizersPaths = VisualizersPaths
-    { _internalVisualizersPath :: FilePath
-    , _lunaVisualizersPath     :: FilePath
-    , _projectVisualizersPath  :: Maybe FilePath
-    } deriving (Eq, Generic)
-    
-instance Default VisualizersPaths
-
 instance Default NodeEditor where
     def = NodeEditor
         {- expressionNodes          -} def
@@ -81,6 +81,7 @@ instance Default NodeEditor where
         {- connections              -} def
         {- visualizersLibPath       -} def
         {- nodeVisualizations       -} def
+        {- visualizationsBackup     -} def
         {- halfConnections          -} def
         {- connectionPen            -} def
         {- selectionBox             -} def
@@ -91,7 +92,6 @@ instance Default NodeEditor where
         {- topZIndex                -} def
         {- debugLayer               -} def
 
-makeLenses ''VisualizersPaths
 makeLenses ''NodeEditor
 
 isGraphLoaded :: Getter NodeEditor Bool
@@ -183,7 +183,7 @@ instance GetPort AnyPortRef AnyPort where
     getPort portRef ne = getNode (portRef ^. PortRef.nodeLoc) ne >>= flip lookupPort (portRef ^. PortRef.portId)
 
 atMostFirstLevel :: [a] -> [a]
-atMostFirstLevel [] = []
+atMostFirstLevel []    = []
 atMostFirstLevel (h:_) = [h]
 
 

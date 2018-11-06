@@ -8,10 +8,11 @@ import           LunaStudio.Data.NodeLoc                  (NodeLoc)
 import           NodeEditor.Action.Basic.RemoveConnection (localRemoveConnectionsContainingNodes)
 import           NodeEditor.Action.Basic.SelectNode       (selectPreviousNodes)
 import qualified NodeEditor.Action.Batch                  as Batch
-import           NodeEditor.Action.State.NodeEditor       (getSelectedNodes, inGraph)
+import           NodeEditor.Action.State.NodeEditor       (getSelectedNodes,
+                                                           inGraph,
+                                                           removeBackupForNodes,
+                                                           resetSuccessors)
 import qualified NodeEditor.Action.State.NodeEditor       as NodeEditor
-import           NodeEditor.Action.State.ResetNode        (resetSuccessors)
-import           NodeEditor.Action.State.Visualization    (removeNodeVisualizations)
 import           NodeEditor.React.Model.Node              (nodeLoc)
 import           NodeEditor.State.Global                  (State)
 
@@ -39,5 +40,5 @@ localRemoveNodes nodeLocs = do
     mapM_ NodeEditor.removeNode nls
     selectedIds <- Set.fromList . (map (view nodeLoc)) <$> getSelectedNodes
     when (Set.isSubsetOf selectedIds $ Set.fromList nls) selectPreviousNodes
-    mapM_ removeNodeVisualizations nls
+    removeBackupForNodes nls
     return nls

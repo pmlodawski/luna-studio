@@ -10,7 +10,7 @@ module Empire.Prelude (
   type ASGFunction,
   type ClsASG,
   type IRSuccs,
-  type LeftSpacedSpan, 
+  type LeftSpacedSpan,
   type Link,
   type MarkedExprMap,
   type SomeExpr,
@@ -38,7 +38,7 @@ module Empire.Prelude (
   pattern IRString,
   pattern IRNumber,
   pattern Lam,
-  pattern LeftSection, 
+  pattern LeftSection,
   pattern LeftSpacedSpan,
   pattern List,
   pattern Marked,
@@ -59,72 +59,78 @@ module Empire.Prelude (
   Substitute.replaceSource, Destruct.deleteSubtree, Substitute.substitute,
   Layout.unsafeRelayout,
   Substitute.replace,
-  
+
   -- layers in core
   NodeMetaLike, OutPortRefLike,
   toNodeMeta, fromNodeMeta, toPortMarker, fromPortMarker
   ) where
 
 import qualified Control.Monad.State.Layered as Layered
-import qualified Data.Convert              as Convert
-import qualified Data.Text as Text
-import qualified Data.Typeable as Typeable
+import qualified Data.Convert                as Convert
+import qualified Data.Text                   as Text
+import qualified Data.Typeable               as Typeable
 -- import qualified Data.PtrList.Mutable as PtrList
-import qualified Data.PtrSet.Mutable as PtrSet
 import qualified Data.Graph.Data.Component.Set as PtrSet
+import qualified Data.PtrSet.Mutable           as PtrSet
 -- import qualified Data.Graph.Component.Container as PtrSet
 import qualified Data.Graph.Data.Component.Vector as PtrList
-import qualified Data.Text.Span as Span
-import qualified Data.Set as Set
+import qualified Data.Set                         as Set
+import qualified Data.Text.Span                   as Span
 -- import qualified Data.Graph.Component as Component
-import qualified Data.Graph.Component.Node.Class    as Node
-import qualified Data.Graph.Data.Layer.Class as Layer
-import qualified Data.Graph.Component.Node.Layer as Layer
-import qualified Data.Graph.Data.Layer.Layout as Layout
 import qualified Data.Graph.Component.Edge.Destruction as DestructEdge
+import qualified Data.Graph.Component.Node.Class       as Node
 import qualified Data.Graph.Component.Node.Destruction as Destruct
-import qualified Data.Mutable.Class as Mutable
+import qualified Data.Graph.Component.Node.Layer       as Layer
+import qualified Data.Graph.Data.Layer.Class           as Layer
+import qualified Data.Graph.Data.Layer.Layout          as Layout
+import qualified Data.Mutable.Class                    as Mutable
 -- import qualified OCI.Pass.Registry as Registry
-import qualified Luna.IR as IR
-import OCI.IR.Link.Class (type (*-*), Links)
-import OCI.IR.Term.Class (Term, Terms)
-import Foreign.Info.ByteSize (ByteSize)
-import Foreign.Memory.Pool (MemPool)
-import qualified Luna.IR.Term.Core as Ast
-import qualified Luna.IR.Term.Literal as Ast
-import qualified Luna.IR.Term.Ast.Class as Ast
-import Data.Graph.Data.Component.Class (Component)
-import qualified Data.Graph.Data.Component.Class as Component
-import qualified Data.Graph.Transform.Substitute as Substitute
-import qualified Data.Graph.Data.Component.List as List (ComponentList(..))
-import qualified Data.Graph.Component.Edge as Edge
+import qualified Data.Generics.Traversable.Deriving     as GTraversable
+import qualified Data.Graph.Component.Edge              as Edge
 import qualified Data.Graph.Component.Edge.Construction as Construction
-import qualified Data.Generics.Traversable.Deriving as GTraversable
-import qualified Data.Graph.Fold.SubComponents as Traversal
-import Luna.Syntax.Text.Parser.State.Marker (TermMap(..))
-import Luna.Pass (Pass)
-import qualified Luna.Pass.Attr as Attr
-import qualified Data.Mutable.Class as Foreign
-import           LunaStudio.Data.Port    (AnyPortId (..), InPortId, OutPortId, OutPortIndex(Projection))
-import Luna.Pass.Data.Layer.PortMarker (PortMarker, OutPortRefLike(..))
-import Luna.Pass.Data.Layer.NodeMeta (Meta, NodeMetaLike(..))
-import qualified Luna.Pass.Data.Layer.NodeMeta as NM
-import System.IO.Unsafe (unsafePerformIO)
+import           Data.Graph.Data.Component.Class        (Component)
+import qualified Data.Graph.Data.Component.Class        as Component
+import qualified Data.Graph.Data.Component.List         as List (ComponentList (..))
+import qualified Data.Graph.Fold.SubComponents          as Traversal
+import qualified Data.Graph.Transform.Substitute        as Substitute
+import qualified Data.Mutable.Class                     as Foreign
+import           Foreign.Info.ByteSize                  (ByteSize)
+import           Foreign.Memory.Pool                    (MemPool)
+import qualified Luna.IR                                as IR
+import qualified Luna.IR.Term.Ast.Class                 as Ast
+import qualified Luna.IR.Term.Core                      as Ast
+import qualified Luna.IR.Term.Literal                   as Ast
+import           Luna.Pass                              (Pass)
+import qualified Luna.Pass.Attr                         as Attr
+import           Luna.Pass.Data.Layer.NodeMeta          (Meta,
+                                                         NodeMetaLike (..))
+import qualified Luna.Pass.Data.Layer.NodeMeta          as NM
+import           Luna.Pass.Data.Layer.PortMarker        (OutPortRefLike (..),
+                                                         PortMarker)
+import           Luna.Syntax.Text.Parser.State.Marker   (TermMap (..))
+import           LunaStudio.Data.Port                   (AnyPortId (..),
+                                                         InPortId, OutPortId,
+                                                         OutPortIndex (Projection))
+import           OCI.IR.Link.Class                      (type (*-*), Links)
+import           OCI.IR.Term.Class                      (Term, Terms)
+import           System.IO.Unsafe                       (unsafePerformIO)
 
-import LunaStudio.Data.PortRef (OutPortRef(..))
-import LunaStudio.Data.NodeMeta (NodeMeta(..))
-import LunaStudio.Data.Position (Position(..))
-import LunaStudio.Data.Vector2 (Vector2(..))
-import LunaStudio.Data.Visualizer (VisualizerId(..), VisualizerType(..))
-import Data.UUID (UUID(..))
+import Data.UUID                  (UUID (..))
+import LunaStudio.Data.NodeMeta   (NodeMeta (..))
+import LunaStudio.Data.PortRef    (OutPortRef (..))
+import LunaStudio.Data.Position   (Position (..))
+import LunaStudio.Data.Vector2    (Vector2 (..))
+import LunaStudio.Data.Visualizer (VisualizerId (..), VisualizerType (..))
 
-import Control.Lens ((?=), (.=), (%=), to, makeWrapped, makePrisms, use, preuse,
-                     _Just, (?~), zoom, mapMOf)
-import Prologue as X hiding (TypeRep, head, tail, init, last, p, r, s, (|>), return, liftIO, fromMaybe, fromJust, when, mapM, mapM_, minimum)
-import Control.Monad       as X (return, when, mapM, mapM_, forM)
+import Control.Lens        (makePrisms, makeWrapped, mapMOf, preuse, to, use,
+                            zoom, (%=), (.=), (?=), (?~), _Just)
+import Control.Monad       as X (forM, mapM, mapM_, return, when)
 import Control.Monad.Trans as X (liftIO)
-import Data.List           as X (head, tail, init, last, sort, minimum)
+import Data.List           as X (head, init, last, minimum, sort, tail)
 import Data.Maybe          as X (fromJust, fromMaybe)
+import Prologue            as X hiding (TypeRep, fromJust, fromMaybe, head,
+                                 init, last, liftIO, mapM, mapM_, minimum, p, r,
+                                 return, s, tail, when, (|>))
 
 infixr 0 <?!>
 (<?!>) :: (Exception e, MonadThrow m) => m (Maybe a) -> e -> m a
@@ -226,7 +232,7 @@ ptrListToList :: MonadIO m => PtrList.ComponentVector comp layout -> m [Componen
 ptrListToList = PtrList.toList
 
 ociSetToList :: (MonadIO m) => PtrSet.ComponentSet c l -> m [Component c l]
-ociSetToList = Mutable.toList 
+ociSetToList = Mutable.toList
 
 generalize :: Coercible a b => a -> b
 generalize = coerce
@@ -259,7 +265,7 @@ link = Construction.new
 modifyExprTerm = error "modifyExprTerm"
 
 compListToList :: List.ComponentList a -> [Component.Some a]
-compListToList List.Nil = []
+compListToList List.Nil        = []
 compListToList (List.Cons a l) = a : compListToList l
 
 -- inputs :: ( Layer.Reader Node.Node IR.Model m
@@ -269,37 +275,11 @@ compListToList (List.Cons a l) = a : compListToList l
 --           ) => Node.Node layout -> m [Component.Some Edge.Edges]
 inputs ref = compListToList <$> IR.inputs ref
 
-
-
---TODO: Replace below implementation with safer version, not an expert on this code and solution is not good here. Signed: LJK
-
-internalVisualizerString, lunaVisualizerString, projectVisualizerString :: Text
-internalVisualizerString = "InternalVisualizer"
-lunaVisualizerString     = "LunaVisualizer"
-projectVisualizerString  = "ProjectVisualizer"
-
-fromVisualizerType :: VisualizerType -> Text
-fromVisualizerType InternalVisualizer = internalVisualizerString
-fromVisualizerType LunaVisualizer     = lunaVisualizerString
-fromVisualizerType ProjectVisualizer  = projectVisualizerString
-
-fromVisualizerId :: VisualizerId -> (Text, Text)
-fromVisualizerId (VisualizerId name tpe) = (name, fromVisualizerType tpe)
-
-toVisualizerId :: (Text, Text) -> VisualizerId
-toVisualizerId (name, tpe) = VisualizerId name $
-  if tpe == internalVisualizerString then InternalVisualizer
-  else if tpe == lunaVisualizerString then LunaVisualizer
-  else if tpe == projectVisualizerString then ProjectVisualizer
-  else ProjectVisualizer
-
 fromNodeMeta :: MonadIO m => NodeMeta -> m NodeMetaLike
-fromNodeMeta (NodeMeta (Position (Vector2 x y)) d s) = NodeMetaLike (NM.Position x y) d <$> mapMOf (_Just . both) (Foreign.fromList . convert) (fromVisualizerId <$> s)
+fromNodeMeta (NodeMeta (Position (Vector2 x y)) d s) = NodeMetaLike (NM.Position x y) d <$> mapMOf (_Just . both) (Foreign.fromList . convert) s
 
 toNodeMeta :: MonadIO m => NodeMetaLike -> m NodeMeta
-toNodeMeta (NodeMetaLike (NM.Position x y) d s) = (NodeMeta (Position (Vector2 x y)) d . fmap toVisualizerId) <$> mapMOf (_Just . both) (fmap convert . Foreign.toList) s
-
---End of TODO
+toNodeMeta (NodeMetaLike (NM.Position x y) d s) = NodeMeta (Position (Vector2 x y)) d <$> mapMOf (_Just . both) (fmap convert . Foreign.toList) s
 
 fromPortMarker :: MonadIO m => OutPortRefLike -> m OutPortRef
 fromPortMarker (OutPortRefLike uuid fvec) =

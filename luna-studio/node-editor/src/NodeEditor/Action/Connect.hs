@@ -14,32 +14,48 @@ module NodeEditor.Action.Connect
 
 import           Common.Action.Command                      (Command)
 import           Common.Prelude
-import           Control.Monad.Trans.Maybe                  (MaybeT (MaybeT), runMaybeT)
+import           Control.Monad.Trans.Maybe                  (MaybeT (MaybeT),
+                                                             runMaybeT)
 import qualified LunaStudio.Data.Connection                 as ConnectionAPI
 import           LunaStudio.Data.PortRef                    (AnyPortRef (InPortRef', OutPortRef'))
 import qualified LunaStudio.Data.PortRef                    as PortRef
-import           LunaStudio.Data.ScreenPosition             (ScreenPosition)
 import           LunaStudio.Data.Position                   (Position)
-import           NodeEditor.Action.Basic                    (connect, localAddConnection, localRemovePort, removeConnection,
+import           LunaStudio.Data.ScreenPosition             (ScreenPosition)
+import           NodeEditor.Action.Basic                    (connect,
+                                                             localAddConnection,
+                                                             localRemovePort,
+                                                             removeConnection,
                                                              updateAllPortsMode)
 import qualified NodeEditor.Action.Batch                    as Batch
 import           NodeEditor.Action.NodeDrag                 (startNodeDrag)
-import           NodeEditor.Action.State.Action             (beginActionWithKey, continueActionWithKey, removeActionFromState,
+import           NodeEditor.Action.State.Action             (beginActionWithKey, continueActionWithKey,
+                                                             removeActionFromState,
                                                              updateActionWithKey)
-import           NodeEditor.Action.State.Model              (createHalfConnectionModel, createHalfConnectionModel')
-import           NodeEditor.Action.State.NodeEditor         (getConnection, getNode, inTopLevelBreadcrumb, modifyNodeEditor)
-import           NodeEditor.Action.State.ResetNode          (resetSuccessors)
+import           NodeEditor.Action.State.Model              (createHalfConnectionModel,
+                                                             createHalfConnectionModel')
+import           NodeEditor.Action.State.NodeEditor         (getConnection,
+                                                             getNode,
+                                                             inTopLevelBreadcrumb,
+                                                             modifyNodeEditor,
+                                                             resetSuccessors)
 import           NodeEditor.Action.State.Scene              (translateToWorkspace)
 import           NodeEditor.React.Event.Connection          (ModifiedEnd (Destination, Source))
-import           NodeEditor.React.Model.Connection          (ConnectionId, toValidConnection)
+import           NodeEditor.React.Model.Connection          (ConnectionId,
+                                                             toValidConnection)
 import qualified NodeEditor.React.Model.Connection          as Connection
 import           NodeEditor.React.Model.Node                (Node (Expression))
 import           NodeEditor.React.Model.Node.ExpressionNode (isCollapsed)
 import qualified NodeEditor.React.Model.NodeEditor          as NodeEditor
 import qualified NodeEditor.React.Model.Port                as Port
-import           NodeEditor.State.Action                    (Action (begin, continue, end, update), Connect (Connect), Mode (Click, Drag),
-                                                             connectAction, connectIsArgumentConstructor, connectMode, connectSnappedPort,
-                                                             connectSourcePort, connectStartPos)
+import           NodeEditor.State.Action                    (Action (begin, continue, end, update),
+                                                             Connect (Connect),
+                                                             Mode (Click, Drag),
+                                                             connectAction,
+                                                             connectIsArgumentConstructor,
+                                                             connectMode,
+                                                             connectSnappedPort,
+                                                             connectSourcePort,
+                                                             connectStartPos)
 import           NodeEditor.State.Global                    (State, actions, currentConnectAction)
 
 

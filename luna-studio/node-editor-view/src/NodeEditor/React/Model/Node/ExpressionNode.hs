@@ -16,8 +16,8 @@ import qualified LunaStudio.Data.Node        as Empire
 import qualified LunaStudio.Data.NodeLoc     as NodeLoc
 import qualified LunaStudio.Data.NodeMeta    as NodeMeta
 import qualified LunaStudio.Data.PortRef     as PortRef
-import qualified NodeEditor.React.Model.Port as Port
 import qualified LunaStudio.Data.Project     as Project
+import qualified NodeEditor.React.Model.Port as Port
 
 import Data.Convert                             (Convertible (convert))
 import Data.HashMap.Strict                      (HashMap)
@@ -36,8 +36,11 @@ import LunaStudio.Data.Vector2                  (Vector2 (Vector2))
 import NodeEditor.Data.Color                    (Color)
 import NodeEditor.React.Model.Constants         (nodeRadius)
 import NodeEditor.React.Model.Node.SidebarNode  (InputNode, OutputNode)
-import NodeEditor.React.Model.Port              (AnyPortId (InPortId', OutPortId'), InPort, InPortId, InPortTree, OutPort, OutPortId, OutPortTree)
-import NodeEditor.React.Model.Visualization     (VisualizerId)
+import NodeEditor.React.Model.Port              (AnyPortId (InPortId', OutPortId'),
+                                                 InPort, InPortId, InPortTree,
+                                                 OutPort, OutPortId,
+                                                 OutPortTree)
+import NodeEditor.React.Model.Visualization     (Visualizer)
 
 
 data ExpressionNode = ExpressionNode { _nodeLoc'                  :: NodeLoc
@@ -49,7 +52,7 @@ data ExpressionNode = ExpressionNode { _nodeLoc'                  :: NodeLoc
                                      , _argConstructorMode        :: Port.Mode
                                      , _canEnter                  :: Bool
                                      , _position                  :: Position
-                                     , _defaultVisualizer         :: Maybe VisualizerId
+                                     , _defaultVisualizer         :: Maybe Visualizer
                                      , _visEnabled                :: Bool
                                      , _errorVisEnabled           :: Bool
                                      , _code                      :: Text
@@ -110,7 +113,7 @@ instance Convertible (NodePath, Empire.ExpressionNode) ExpressionNode where
         {- argConstructorHighlighted -} Port.Invisible
         {- canEnter                  -} (n ^. Empire.canEnter)
         {- position                  -} (n ^. Empire.position)
-        {- defaultVisualizer         -} (n ^. Empire.nodeMeta . NodeMeta.selectedVisualizer)
+        {- defaultVisualizer         -} (Project.fromOldAPI <$> n ^. Empire.nodeMeta . NodeMeta.selectedVisualizer)
         {- visEnabled                -} (n ^. Empire.nodeMeta . NodeMeta.displayResult)
         {- errorVisEnabled           -} False
         {- code                      -} (n ^. Empire.code)
@@ -131,7 +134,7 @@ instance Convertible ExpressionNode Empire.ExpressionNode where
         {- code         -} (n ^. code)
         {- inPorts      -} (convert <$> n ^. inPorts)
         {- outPorts     -} (convert <$> n ^. outPorts)
-        {- nodeMeta     -} (NodeMeta.NodeMeta (n ^. position) (n ^. visEnabled) (n ^. defaultVisualizer))
+        {- nodeMeta     -} (NodeMeta.NodeMeta (n ^. position) (n ^. visEnabled) (Project.toOldAPI <$> n ^. defaultVisualizer))
         {- canEnter     -} (n ^. canEnter)
 
 instance Default Mode where def = Collapsed
@@ -220,10 +223,10 @@ visualizationsEnabled = lens getVisualizationEnabled setVisualizationEnabled whe
 
 nodeMeta :: Lens' ExpressionNode NodeMeta
 nodeMeta = lens getNodeMeta setNodeMeta where
-    getNodeMeta n    = NodeMeta (n ^. position) (n ^. visEnabled) (n ^. defaultVisualizer)
+    getNodeMeta n    = NodeMeta (n ^. position) (n ^. visEnabled) (Project.toOldAPI <$> n ^. defaultVisualizer)
     setNodeMeta n nm = n & position              .~ nm ^. NodeMeta.position
                          & visEnabled            .~ nm ^. NodeMeta.displayResult
-                         & defaultVisualizer     .~ nm ^. NodeMeta.selectedVisualizer
+                         & defaultVisualizer     .~ (Project.fromOldAPI <$> nm ^. NodeMeta.selectedVisualizer)
 
 containsNode :: NodeLoc -> NodeLoc -> Bool
 containsNode nl nlToCheck = inSubgraph False $ NodeLoc.toNodeIdList nl where

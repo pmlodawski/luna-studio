@@ -1,19 +1,24 @@
 module NodeEditor.View.VisualizerLibraries where
 
-import           Common.Data.JSON                     (toJSONVal)
-import           Common.Prelude
+import Common.Prelude
+
 import qualified Control.Lens.Aeson                   as Lens
-import           Data.Aeson                           (ToJSON (toEncoding, toJSON))
-import           Data.Convert                         (Convertible (convert))
-import           NodeEditor.React.Model.NodeEditor (VisualizersPaths)
-import qualified NodeEditor.React.Model.NodeEditor as NE
-import           NodeEditor.View.Diff                 (DiffT, diffApply)
+import qualified Data.Map                             as Map
+import qualified NodeEditor.React.Model.Visualization as Visualization
+
+import Common.Data.JSON                     (toJSONVal)
+import Data.Aeson                           (ToJSON (toEncoding, toJSON))
+import Data.Convert                         (Convertible (convert))
+import Data.Map                             (Map)
+import NodeEditor.React.Model.Visualization (Visualizers)
+import NodeEditor.View.Diff                 (DiffT, diffApply)
 
 
 data VisualizerLibrariesView = VisualizerLibrariesView
-    { _internalVisualizersPath :: String
-    , _lunaVisualizersPath     :: String
-    , _projectVisualizersPath  :: Maybe String
+    { _internalVisualizersPath  :: String
+    , _lunaVisualizersPath      :: String
+    , _projectVisualizersPath   :: Maybe String
+    , _importedVisualizersPaths :: Map String String
     } deriving (Eq, Generic, Show)
 
 makeLenses ''VisualizerLibrariesView
@@ -22,11 +27,16 @@ instance ToJSON VisualizerLibrariesView where
     toEncoding = Lens.toEncoding
     toJSON     = Lens.toJSON
 
-instance Convertible VisualizersPaths VisualizerLibrariesView where
+instance Convertible (Visualizers FilePath) VisualizerLibrariesView where
     convert vp = VisualizerLibrariesView
-        {- internalVisualizersPath -} (vp ^. NE.internalVisualizersPath)
-        {- lunaVisualizersPath     -} (vp ^. NE.lunaVisualizersPath)
-        {- projectVisualizersPath  -} (vp ^. NE.projectVisualizersPath)
+        {- internalVisualizersPath  -} (vp ^. Visualization.internalVisualizers)
+        {- lunaVisualizersPath      -} (vp ^. Visualization.lunaVisualizers)
+        {- projectVisualizersPath   -} (vp
+            ^. Visualization.externalVisualizers
+            .  Visualization.projectVisualizers)
+        {- importedVisualizersPaths -} (Map.mapKeys convert $ vp
+            ^. Visualization.externalVisualizers
+            .  Visualization.librariesVisualizers)
 
 foreign import javascript safe
     "atomCallback.getNodeEditorView().setVisualizerLibraries($1)"
@@ -35,5 +45,5 @@ foreign import javascript safe
 setVisualizerLibraries :: MonadIO m => VisualizerLibrariesView -> m ()
 setVisualizerLibraries = liftIO . setVisualizerLibraries__ <=< toJSONVal
 
-visualizerLibrariesView :: MonadIO m => DiffT VisualizersPaths m ()
+visualizerLibrariesView :: MonadIO m => DiffT (Visualizers FilePath) m ()
 visualizerLibrariesView = diffApply $ setVisualizerLibraries . convert

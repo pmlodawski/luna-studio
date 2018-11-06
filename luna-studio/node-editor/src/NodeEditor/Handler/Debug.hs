@@ -2,13 +2,14 @@
 
 module NodeEditor.Handler.Debug where
 
-import           Common.Prelude
+import Common.Prelude
 
-import           Common.Action.Command              (Command)
-import           NodeEditor.Event.Event             (Event (Shortcut))
-import qualified NodeEditor.Event.Shortcut          as Shortcut
-import           NodeEditor.State.Global            (State)
+import qualified NodeEditor.Event.Shortcut as Shortcut
+
+import Common.Action.Command              (Command)
 import NodeEditor.Action.State.NodeEditor (setDebugLayer)
+import NodeEditor.Event.Event             (Event (Shortcut))
+import NodeEditor.State.Global            (State)
 
 
 handle :: Event -> Maybe (Command State ())

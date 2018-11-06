@@ -61,7 +61,7 @@ import LunaStudio.Data.Port                 (InPort, InPortId,
 import LunaStudio.Data.PortDefault          (PortDefault (Constant, Expression), PortValue (BoolValue, IntValue, RealValue, TextValue),
                                              _Constant)
 import LunaStudio.Data.PortRef              (InPortRef (InPortRef), OutPortRef,
-                                             srcNodeId, dstPortId)
+                                             dstPortId, srcNodeId)
 import LunaStudio.Data.Position             (Position)
 import LunaStudio.Data.TypeRep              (TypeRep (TCons, TStar))
 
@@ -270,7 +270,10 @@ getNodeName nid = ASTRead.getASTPointer nid >>= getUniName
 
 getNodeCode :: NodeId -> GraphOp Text
 getNodeCode nid = do
-    ref <- ASTRead.getASTTarget nid
+    (_, output) <- getEdgePortMapping
+    ref <- if nid == output
+        then ASTRead.getCurrentASTRef
+        else ASTRead.getASTTarget nid
     Code.getCodeOf ref
 
 getDefault :: NodeRef -> GraphOp (Maybe PortDefault)

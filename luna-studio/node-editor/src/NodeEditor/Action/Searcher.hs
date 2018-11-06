@@ -11,7 +11,8 @@ import qualified JS.Searcher                                as Searcher
 import           JS.Visualizers                             (registerVisualizerFrame)
 import           Luna.Syntax.Text.Lexer                     (evalDefLexer)
 import           LunaStudio.Data.Geometry                   (snap)
-import           LunaStudio.Data.Matrix                     (invertedTranslationMatrix, translationMatrix)
+import           LunaStudio.Data.Matrix                     (invertedTranslationMatrix,
+                                                             translationMatrix)
 import           LunaStudio.Data.NodeLoc                    (NodeLoc, NodePath)
 import qualified LunaStudio.Data.NodeLoc                    as NodeLoc
 import qualified LunaStudio.Data.NodeSearcher               as NS
@@ -21,27 +22,45 @@ import           LunaStudio.Data.ScreenPosition             (move, x, y)
 import           LunaStudio.Data.Size                       (height, width)
 import           LunaStudio.Data.TypeRep                    (TypeRep (TCons))
 import           LunaStudio.Data.Vector2                    (Vector2 (Vector2))
-import           NodeEditor.Action.Basic                    (createNode, localClearSearcherHints, localUpdateSearcherHints, modifyCamera,
-                                                             renameNode, renamePort, setNodeExpression, updateDocs)
+import           NodeEditor.Action.Basic                    (createNode, localClearSearcherHints,
+                                                             localUpdateSearcherHints,
+                                                             modifyCamera,
+                                                             renameNode,
+                                                             renamePort,
+                                                             setNodeExpression,
+                                                             updateDocs)
 import qualified NodeEditor.Action.Basic                    as Basic
 import           NodeEditor.Action.Batch                    (addImport)
-import           NodeEditor.Action.State.Action             (beginActionWithKey, continueActionWithKey, removeActionFromState,
+import           NodeEditor.Action.State.Action             (beginActionWithKey, continueActionWithKey,
+                                                             removeActionFromState,
                                                              updateActionWithKey)
 import           NodeEditor.Action.State.App                (renderIfNeeded)
-import           NodeEditor.Action.State.NodeEditor         (findSuccessorPosition, getExpressionNode, getPort, getSearcher,
-                                                             getSelectedNodes, modifyNodeEditor, modifySearcher)
-import           NodeEditor.Action.State.Scene              (getScreenSize, translateToScreen)
+import           NodeEditor.Action.State.NodeEditor         (findSuccessorPosition,
+                                                             getExpressionNode,
+                                                             getPort,
+                                                             getSearcher,
+                                                             getSelectedNodes,
+                                                             modifyNodeEditor,
+                                                             modifySearcher)
+import           NodeEditor.Action.State.Scene              (getScreenSize,
+                                                             translateToScreen)
 import           NodeEditor.Action.UUID                     (getUUID)
 import           NodeEditor.Event.Event                     (Event (Shortcut))
 import qualified NodeEditor.Event.Shortcut                  as Shortcut
-import           NodeEditor.React.Model.Constants           (searcherHeight, searcherWidth)
+import           NodeEditor.React.Model.Constants           (searcherHeight,
+                                                             searcherWidth)
 import qualified NodeEditor.React.Model.Node.ExpressionNode as ExpressionNode
 import qualified NodeEditor.React.Model.NodeEditor          as NodeEditor
 import qualified NodeEditor.React.Model.Port                as Port
 import qualified NodeEditor.React.Model.Searcher            as Searcher
-import           NodeEditor.React.Model.Visualization       (Visualization (Visualization), getMdVisualizer, visualizerId)
+import           NodeEditor.React.Model.Visualization       (RunningVisualization (RunningVisualization),
+                                                             VisualizerProperties (VisualizerProperties),
+                                                             getMdVisualizer,
+                                                             visualizerId)
 import qualified NodeEditor.React.View.App                  as App
-import           NodeEditor.State.Action                    (Action (begin, continue, end, update), Searcher (Searcher), searcherAction)
+import           NodeEditor.State.Action                    (Action (begin, continue, end, update),
+                                                             Searcher (Searcher),
+                                                             searcherAction)
 import           NodeEditor.State.Global                    (State)
 import           NodeEditor.State.Global                    (visualizers)
 import qualified NodeEditor.State.Global                    as Global
@@ -55,15 +74,12 @@ instance Action (Command State) Searcher where
     update   = updateActionWithKey   searcherAction
     end      = close
 
-mkDocVis :: Command State (Maybe Visualization)
-mkDocVis = pure Nothing
-    -- visId    <- getUUID
-    -- iframeId <- getUUID
-    -- mayVis   <- use visualizers >>= getMdVisualizer
-    -- when (isNothing mayVis) $ warning "Documentation unavailable. Cannot find markdown visualizer."
-    -- liftIO $ registerVisualizerFrame iframeId
-    -- pure $ uncurry (Visualization visId iframeId def)
-    --     . (id &&& Just . view visualizerId) <$> mayVis
+mkDocVis :: Command State (Maybe RunningVisualization)
+mkDocVis = getUUID >>= \uuid -> do
+    mayVis <- use visualizers >>= getMdVisualizer
+    when (isNothing mayVis) $ warning "Documentation unavailable. Cannot find markdown visualizer."
+    liftIO $ registerVisualizerFrame uuid
+    return $ RunningVisualization uuid def . uncurry VisualizerProperties . (id &&& Just . view visualizerId) <$> mayVis
 
 
 emptyInputError :: Searcher.Mode -> Text

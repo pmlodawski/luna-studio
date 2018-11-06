@@ -1,12 +1,15 @@
 module NodeEditor.Action.Basic.SetNodeExpression where
 
-import           Common.Action.Command                      (Command)
-import           Common.Prelude
-import qualified NodeEditor.Action.Batch                    as Batch
-import           NodeEditor.Action.State.NodeEditor         (inGraph, modifyExpressionNode)
-import           NodeEditor.Action.State.ResetNode          (resetSuccessors)
-import           NodeEditor.React.Model.Node.ExpressionNode (NodeLoc, expression)
-import           NodeEditor.State.Global                    (State)
+import Common.Prelude
+
+import qualified NodeEditor.Action.Batch as Batch
+
+import Common.Action.Command                      (Command)
+import NodeEditor.Action.State.NodeEditor         (inGraph,
+                                                   modifyExpressionNode,
+                                                   resetSuccessors)
+import NodeEditor.React.Model.Node.ExpressionNode (NodeLoc, expression)
+import NodeEditor.State.Global                    (State)
 
 
 setNodeExpression :: NodeLoc -> Text -> Command State ()

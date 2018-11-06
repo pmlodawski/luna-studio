@@ -11,10 +11,13 @@ import Common.Action.Command              (Command)
 import LunaStudio.Data.GraphLocation      (GraphLocation, filePath)
 import LunaStudio.Data.Project            (LocationSettings (LocationSettings))
 import NodeEditor.Action.State.App        (getWorkspace, modifyApp)
-import NodeEditor.Action.State.NodeEditor (getNodeEditor, getScreenTransform, modifyNodeEditor, resetGraph, setGraphStatus)
+import NodeEditor.Action.State.NodeEditor (getNodeEditor, getScreenTransform,
+                                           modifyNodeEditor, resetGraph,
+                                           setGraphStatus)
 import NodeEditor.Batch.Workspace         (currentLocation)
 import NodeEditor.React.Model.App         (workspace)
-import NodeEditor.React.Model.NodeEditor  (GraphStatus (GraphLoading), visualizersLibPaths)
+import NodeEditor.React.Model.NodeEditor  (GraphStatus (GraphLoading),
+                                           visualizersLibPaths)
 import NodeEditor.State.Global            (State)
 
 
@@ -39,7 +42,7 @@ navigateToGraph location = do
         loadGraph location ((, settings) <$> mayCurrentLoc) False
 
 getSettings :: Command State LocationSettings
-getSettings = LocationSettings <$> (Just <$> use Global.preferedVisualizers) <*> getScreenTransform
+getSettings = LocationSettings <$> (Just . fmap Project.toOldAPI <$> use Global.preferedVisualizers) <*> getScreenTransform
 
 saveSettings :: Command State ()
 saveSettings = getSettings >>= Batch.saveSettings

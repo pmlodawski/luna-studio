@@ -1,22 +1,23 @@
-{-# LANGUAGE OverloadedStrings #-}
 module NodeEditor.React.View.Searcher where
 
-import           Common.Prelude
+import Common.Prelude
+import React.Flux
+
 import qualified Data.Text                                 as Text
-import           JS.Searcher                               (searcherId)
-import           LunaStudio.Data.NodeSearcher              (Match, Range)
 import qualified LunaStudio.Data.NodeSearcher              as NS
 import qualified NodeEditor.Event.Keys                     as Keys
 import qualified NodeEditor.Event.UI                       as UI
 import qualified NodeEditor.React.Event.App                as App
-import           NodeEditor.React.Event.Searcher
-import           NodeEditor.React.IsRef                    (IsRef, dispatch)
-import           NodeEditor.React.Model.SearcherProperties (SearcherProperties)
 import qualified NodeEditor.React.Model.SearcherProperties as Searcher
 import qualified NodeEditor.React.View.Style               as Style
-import           NodeEditor.React.View.Visualization       (docVisualization_)
-import           React.Flux
 import qualified React.Flux                                as React
+
+import JS.Searcher                               (searcherId)
+import LunaStudio.Data.NodeSearcher              (Match, Range)
+import NodeEditor.React.Event.Searcher
+import NodeEditor.React.IsRef                    (IsRef, dispatch)
+import NodeEditor.React.Model.SearcherProperties (SearcherProperties)
+import NodeEditor.React.View.Visualization       (docVisualization_)
 
 
 name :: JSString
@@ -59,7 +60,8 @@ searcher =  React.defineView name $ \(ref, s) -> do
         case s ^. Searcher.mode of
             Searcher.Command    results -> do results_ ref selected results
             Searcher.Node _ nmi results -> do results_ ref selected results
-                                              withJust (s ^. Searcher.docVis) $ docVisualization_ ref docPresent (s ^. Searcher.visLibPath)
+                                              withJust (s ^. Searcher.docVis) $
+                                                    docVisualization_ ref docPresent (s ^. Searcher.visLibPath)
             Searcher.NodeName _ results -> do results_ ref selected results
             Searcher.PortName _ results -> do results_ ref selected results
 

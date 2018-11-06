@@ -7,11 +7,13 @@ import           LunaStudio.Data.NodeLoc            (NodeLoc)
 import           LunaStudio.Data.PortRef            (AnyPortRef (InPortRef', OutPortRef'))
 import qualified NodeEditor.Action.Batch            as Batch
 import           NodeEditor.Action.State.Model      (updatePortMode)
-import           NodeEditor.Action.State.NodeEditor (getConnection, getConnectionsBetweenNodes,
-                                                     getConnectionsContainingNodes)
+import           NodeEditor.Action.State.NodeEditor (getConnection,
+                                                     getConnectionsBetweenNodes,
+                                                     getConnectionsContainingNodes,
+                                                     resetSuccessors)
 import qualified NodeEditor.Action.State.NodeEditor as NodeEditor
-import           NodeEditor.Action.State.ResetNode  (resetSuccessors)
-import           NodeEditor.React.Model.Connection  (ConnectionId, connectionId, dst, dstNodeLoc, src)
+import           NodeEditor.React.Model.Connection  (ConnectionId, connectionId,
+                                                     dst, dstNodeLoc, src)
 import           NodeEditor.State.Global            (State)
 
 

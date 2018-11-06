@@ -689,18 +689,32 @@ getPortName loc portRef = do
             then maybe (throwM $ PortDoesNotExistException portId) (return . convert) $ Safe.atMay portsNames arg
             else throwM NotInputEdgeException
 
-setNodeExpression :: GraphLocation -> NodeId -> Text -> Empire ExpressionNode
+setNodeExpression :: GraphLocation -> NodeId -> Text -> Empire Node.Node
 setNodeExpression loc@(GraphLocation file _) nodeId expr' = do
     let expression = Text.strip expr'
-    newCode <- withGraph loc $ runASTOp $ do
-        oldExpr   <- ASTRead.getASTTarget nodeId
-        oldBegin  <- Code.getASTTargetBeginning nodeId
-        oldLen    <- getLayer @SpanLength oldExpr
+    (newCode, sidebar) <- withGraph loc $ runASTOp $ do
+        (_, output) <- GraphBuilder.getEdgePortMapping
+        (oldExpr, oldBegin) <- if nodeId == output
+            then do
+                oldExpr       <- ASTRead.getCurrentASTRef
+                Just oldBegin <- Code.getOffsetRelativeToFile oldExpr
+                pure (oldExpr, oldBegin)
+            else do
+                oldExpr  <- ASTRead.getASTTarget nodeId
+                oldBegin <- Code.getASTTargetBeginning nodeId
+                pure (oldExpr, oldBegin)
+        oldLen <- getLayer @SpanLength oldExpr
         let oldEnd = oldBegin + oldLen
-        Code.applyDiff oldBegin oldEnd expression
+        code <- Code.applyDiff oldBegin oldEnd expression
+        pure (code, nodeId == output)
     reloadCode loc newCode
     resendCode loc
-    withGraph loc $ runASTOp $ GraphBuilder.buildNode nodeId
+    withGraph loc $ runASTOp $ do
+        (_, output) <- GraphBuilder.getEdgePortMapping
+        if sidebar
+        then Node.OutputSidebar'  <$> GraphBuilder.buildOutputSidebar output
+        else Node.ExpressionNode' <$> GraphBuilder.buildNode nodeId
+
 
 updateExprMap :: NodeRef -> NodeRef -> GraphOp ()
 updateExprMap new old = do
@@ -1223,18 +1237,18 @@ prepareCopy loc@(GraphLocation _ (Breadcrumb [])) nodeIds = withUnit loc $ do
             refs <- mapM ASTRead.getFunByNodeId [ nid | (nid, Just (view Graph.funName -> _name)) <- names]
             forM refs $ \ref -> do
                 LeftSpacedSpan (SpacedSpan _off len) <- view CodeSpan.realSpan <$> getLayer @CodeSpan ref
-                return $ fromIntegral len
+                pure $ fromIntegral len
         codes <- mapM
             (\(start, len) -> Code.removeMarkers <$> Code.getAt start (start + len)) $
             zip starts lengths
-        return $ Text.intercalate "\n\n" codes
-    return $ Text.unpack clipboard
+        pure $ Text.intercalate "\n" codes
+    pure $ Text.unpack clipboard
 prepareCopy loc nodeIds = withGraph loc $ do
     codes <- runASTOp $ forM nodeIds $ \nid -> do
         ref     <- ASTRead.getASTPointer nid
         code    <- Code.removeMarkers <$> Code.getCodeOf ref
-        return code
-    return $ Text.unpack $ Text.intercalate "\n\n" codes
+        pure code
+    pure $ Text.unpack $ Text.intercalate "\n" codes
 
 moveToOrigin :: [MarkerNodeMeta] -> [MarkerNodeMeta]
 moveToOrigin metas' = map (\(MarkerNodeMeta m me) -> MarkerNodeMeta m (me & NodeMeta.position %~ Position.move (coerce (Position.rescale leftTopCorner (-1))))) metas'
@@ -1244,8 +1258,8 @@ moveToOrigin metas' = map (\(MarkerNodeMeta m me) -> MarkerNodeMeta m (me & Node
                       $ map (\mnm -> FileMetadata.meta mnm ^. NodeMeta.position) metas'
 
 indent :: Int -> Text -> Text
-indent offset (Text.lines -> header:rest) =
-    Text.unlines $ header : map (\line -> Text.concat [Text.replicate offset " ", line]) rest
+indent offset (Text.lines -> lines) =
+    Text.unlines $ map (\line -> Text.concat [Text.replicate offset " ", line]) lines
 indent _      code = code
 
 data B = Break | NoBreak deriving Show
@@ -1290,7 +1304,7 @@ paste loc position (Text.pack -> text) = do
         nearestNode        <- findPreviousNodeInSequence oldSeq
             (def & NodeMeta.position .~ position) nodesWithMetas
         let text' = Code.removeMarkers text
-            code  = "\n" <> text'
+            code  = "\n" <> Text.stripEnd (indent indentation text')
         case nearestNode of
             Just ref -> do
                 Just beg <- Code.getAnyBeginningOf ref

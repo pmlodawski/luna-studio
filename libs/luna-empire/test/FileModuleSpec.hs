@@ -22,14 +22,17 @@ import qualified Empire.Commands.GraphBuilder    as GraphBuilder
 import qualified Empire.Commands.Library         as Library
 import qualified Empire.Data.BreadcrumbHierarchy as BH
 import qualified Empire.Data.Graph               as Graph
-import           LunaStudio.Data.Breadcrumb      (Breadcrumb (..), BreadcrumbItem (..))
+import           LunaStudio.Data.Breadcrumb      (Breadcrumb (..),
+                                                  BreadcrumbItem (..))
 import qualified LunaStudio.Data.Breadcrumb      as Breadcrumb
 import           LunaStudio.Data.Constants       (gapBetweenNodes)
 import qualified LunaStudio.Data.Graph           as APIGraph
-import           LunaStudio.Data.GraphLocation   (GraphLocation (..), (|>=), (|>-))
+import           LunaStudio.Data.GraphLocation   (GraphLocation (..), (|>-),
+                                                  (|>=))
 import qualified LunaStudio.Data.Node            as Node
 import           LunaStudio.Data.NodeMeta        (NodeMeta (..))
 import qualified LunaStudio.Data.NodeMeta        as NodeMeta
+import           LunaStudio.Data.Point           (Point (..))
 import           LunaStudio.Data.Port            (Port (..), PortState (..))
 import qualified LunaStudio.Data.Port            as Port
 import           LunaStudio.Data.PortDefault     (PortDefault (..))
@@ -37,18 +40,20 @@ import           LunaStudio.Data.PortRef         (AnyPortRef (..))
 import qualified LunaStudio.Data.PortRef         as PortRef
 import qualified LunaStudio.Data.Position        as Position
 import           LunaStudio.Data.Range           (Range (..))
+import           LunaStudio.Data.TextDiff        (TextDiff (..))
 import           LunaStudio.Data.TypeRep         (TypeRep (TStar))
 
-import           Empire.Empire
-import           Empire.Prelude                  as P
+import Empire.Empire
+import Empire.Prelude as P
 -- import           Luna.Prelude                    (forM, normalizeLunaCode)
 
-import           Test.Hspec                      (Expectation, Spec, around, describe, expectationFailure, it, parallel, shouldBe,
-                                                  shouldMatchList, shouldNotBe, shouldSatisfy, shouldStartWith, shouldThrow, xit)
+import Test.Hspec (Expectation, Spec, around, describe, expectationFailure, it,
+                   parallel, shouldBe, shouldMatchList, shouldNotBe,
+                   shouldSatisfy, shouldStartWith, shouldThrow, xit)
 
-import           EmpireUtils
+import EmpireUtils
 
-import           Text.RawString.QQ               (r)
+import Text.RawString.QQ (r)
 
 
 multiFunCode = [r|# Docs
@@ -887,7 +892,7 @@ spec = around withChannels $ parallel $ do
                 # Docs
                 def foo:
                     5
-                
+
                 def quux: None
                 # Docs
                 def bar:
@@ -980,7 +985,6 @@ spec = around withChannels $ parallel $ do
             in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
                 clipboard <- Graph.copyText loc [Range 14 25]
                 Graph.paste loc (Position.fromTuple (300, 0)) $ Text.unpack clipboard
-                Graph.substituteCode file [(32, 32, "    ")]
         it "pastes multiline code from text editor to node editor" $
             let initialCode = [r|
                     def main:
@@ -999,7 +1003,7 @@ spec = around withChannels $ parallel $ do
             in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
                 clipboard <- Graph.copyText loc [Range 14 36]
                 Graph.paste loc (Position.fromTuple (1000, 0)) $ Text.unpack clipboard
-                Graph.substituteCode file [(46, 46, "    ")]
+                Graph.substituteCodeFromPoints file [TextDiff (Just (Point 4 4, Point 8 4)) "" Nothing]
         it "pastes multiline code from text editor to node editor at the beginning" $
             let initialCode = [r|
                     def main:

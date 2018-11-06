@@ -4,6 +4,7 @@ module LunaStudio.Data.Node
     ) where
 
 import           Control.Arrow             ((&&&))
+import           Control.Lens              (makePrisms)
 import           Data.Aeson.Types          (FromJSON, ToJSON)
 import           Data.Binary               (Binary)
 import           Data.Map                  (Map)
@@ -15,7 +16,8 @@ import           LunaStudio.Data.NodeId    as X
 import           LunaStudio.Data.NodeLoc   (NodeLoc)
 import           LunaStudio.Data.NodeMeta  (NodeMeta)
 import qualified LunaStudio.Data.NodeMeta  as NodeMeta
-import           LunaStudio.Data.Port      (InPort, InPortTree, OutPort, OutPortTree)
+import           LunaStudio.Data.Port      (InPort, InPortTree, OutPort,
+                                            OutPortTree)
 import qualified LunaStudio.Data.Port      as Port
 import           LunaStudio.Data.Position  (Position, fromDoubles, x, y)
 import           LunaStudio.Data.TypeRep   (TypeRep (TStar))
@@ -29,15 +31,15 @@ data Node
     deriving (Eq, Generic, Show, Typeable)
 
 data ExpressionNode = ExpressionNode
-    { _exprNodeId       :: NodeId
-    , _expression       :: Text
-    , _isDefinition     :: Bool
-    , _name             :: Maybe Text
-    , _code             :: Text
-    , _inPorts          :: InPortTree  InPort
-    , _outPorts         :: OutPortTree OutPort
-    , _nodeMeta         :: NodeMeta
-    , _canEnter         :: Bool
+    { _exprNodeId   :: NodeId
+    , _expression   :: Text
+    , _isDefinition :: Bool
+    , _name         :: Maybe Text
+    , _code         :: Text
+    , _inPorts      :: InPortTree  InPort
+    , _outPorts     :: OutPortTree OutPort
+    , _nodeMeta     :: NodeMeta
+    , _canEnter     :: Bool
     } deriving (Eq, Generic, Show, Typeable)
 
 data InputSidebar = InputSidebar
@@ -58,6 +60,7 @@ data NodeTypecheckerUpdate
     | InputSidebarUpdate  { _tcNodeId   :: NodeId, _tcInputOutPorts :: [OutPortTree OutPort] }
     deriving (Eq, Generic, Show, Typeable)
 
+makePrisms ''Node
 makeLenses ''ExpressionNode
 makeLenses ''InputSidebar
 makeLenses ''OutputSidebar

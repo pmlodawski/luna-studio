@@ -7,12 +7,17 @@ import           Data.Aeson                           (ToJSON (toEncoding, toJSO
 import           Data.Convert                         (Convertible (convert))
 import           Data.Map                             (Map)
 import qualified Data.Map                             as Map
-import           NodeEditor.React.Model.Visualization (Mode, Mode (Default, Focused, FullScreen, Hidden, Preview), NodeVisualizations,
-                                                       Visualization, VisualizationId, Visualizer, VisualizerId,
+import           LunaStudio.Data.NodeLoc              (NodeLoc)
+import           NodeEditor.React.Model.Visualization (NodeVisualizations,
+                                                       RunningVisualization,
+                                                       VisualizationId,
+                                                       VisualizationMode (Default, Focused, FullScreen, Preview),
+                                                       Visualizer, VisualizerId,
                                                        VisualizerType (InternalVisualizer, LunaVisualizer, ProjectVisualizer))
 import qualified NodeEditor.React.Model.Visualization as Vis
-import           NodeEditor.View.Diff                 (DiffT, diffApply, diffConvert, diffMapWithKey)
-import           LunaStudio.Data.NodeLoc              (NodeLoc)
+import           NodeEditor.View.Diff                 (DiffT, diffApply,
+                                                       diffConvert,
+                                                       diffMapWithKey)
 import           NodeEditor.View.Key                  (Key)
 
 
@@ -33,11 +38,11 @@ data VisualizerView = VisualizerView
 makeLenses ''VisualizerView
 
 data VisualizationView = VisualizationView
-    { _key                  :: Key
-    , _iframeId             :: String
-    , _mode                 :: String
-    , _currentVisualizer    :: VisualizerView
-    , _selectedVisualizer   :: Maybe VisualizerIdView
+    { _key                :: Key
+    , _iframeId           :: String
+    , _mode               :: String
+    , _currentVisualizer  :: VisualizerView
+    , _selectedVisualizer :: Maybe VisualizerIdView
     } deriving (Eq, Generic, Show)
 
 makeLenses ''VisualizationView
@@ -64,7 +69,7 @@ instance ToJSON NodeVisualizationsView where
     toEncoding = Lens.toEncoding
     toJSON = Lens.toJSON
 
-instance Convertible Mode String where
+instance Convertible VisualizationMode String where
     convert Focused    = "Focused"
     convert Preview    = "Preview"
     convert FullScreen = "FullScreen"
@@ -85,19 +90,21 @@ instance Convertible Visualizer VisualizerView where
         {- visualizerId   -} (convert $ v ^. Vis.visualizerId)
         {- visualizerPath -} (convert $ v ^. Vis.visualizerRelPath)
 
-instance Convertible Visualization VisualizationView where
+instance Convertible RunningVisualization VisualizationView where
     convert v = VisualizationView
         {- key                -} (convert $ v ^. Vis.visualizationId)
-        {- iframeId           -} (convert $ v ^. Vis.iframeId)
-        {- mode               -} (convert $ v ^. Vis.mode)
-        {- currentVisualizer  -} (convert $ v ^. Vis.visualizer)
-        {- selectedVisualizer -} (convert $ v ^. Vis.selectedVisualizerId)
+        {- iframeId           -} (convert $ v ^. Vis.visualizationId)
+        {- mode               -} (convert $ v ^. Vis.visualizationMode)
+        {- currentVisualizer  -}
+            (convert $ v ^. Vis.visualizerProperties . Vis.runningVisualizer)
+        {- selectedVisualizer -}
+            (convert $ v ^. Vis.visualizerProperties . Vis.selectedVisualizerId)
 
 instance Convertible (NodeLoc, NodeVisualizations) NodeVisualizationsView where
     convert (nl, nv) = NodeVisualizationsView
         {- nodeKey        -} (convert nl)
         {- visualizations -} (convert
-            <$> Map.elems (nv ^. Vis.activeVisualizations))
+            <$> Map.elems (nv ^. Vis.visualizations))
         {- visualizers    -} (convert <$> Map.keys (nv ^. Vis.visualizers))
 
 

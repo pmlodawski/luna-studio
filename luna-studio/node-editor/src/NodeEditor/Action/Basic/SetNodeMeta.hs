@@ -1,11 +1,11 @@
 module NodeEditor.Action.Basic.SetNodeMeta where
 
-import           Common.Prelude
+import Common.Prelude
 
-import qualified LunaStudio.Data.NodeMeta                   as NodeMeta
-import qualified LunaStudio.Data.Project                    as Project
-import qualified NodeEditor.Action.Batch                    as Batch
-import qualified NodeEditor.Action.State.NodeEditor         as NodeEditor
+import qualified LunaStudio.Data.NodeMeta           as NodeMeta
+import qualified LunaStudio.Data.Project            as Project
+import qualified NodeEditor.Action.Batch            as Batch
+import qualified NodeEditor.Action.State.NodeEditor as NodeEditor
 
 import           Common.Action.Command                      (Command)
 import           Control.Monad                              (filterM)
@@ -13,7 +13,10 @@ import           Data.Map                                   (Map)
 import qualified Data.Map                                   as Map
 import           LunaStudio.Data.NodeMeta                   (NodeMeta (NodeMeta))
 import           LunaStudio.Data.Position                   (Position)
-import           NodeEditor.React.Model.Node.ExpressionNode (NodeLoc, defaultVisualizer, position, visEnabled)
+import           NodeEditor.React.Model.Node.ExpressionNode (NodeLoc,
+                                                             defaultVisualizer,
+                                                             position,
+                                                             visEnabled)
 import           NodeEditor.State.Global                    (State)
 
 
@@ -29,7 +32,7 @@ toMetaUpdate
         newMeta pos n = NodeMeta
             pos
             (n ^. visEnabled)
-            (n ^. defaultVisualizer)
+            (Project.toOldAPI <$> n ^. defaultVisualizer)
         toMeta nl pos = fmap ((nl,) . newMeta pos)
             <$> NodeEditor.getExpressionNode nl
 

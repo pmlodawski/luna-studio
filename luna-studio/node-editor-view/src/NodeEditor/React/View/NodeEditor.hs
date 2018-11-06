@@ -8,7 +8,10 @@ import           Data.Maybe                                 (mapMaybe)
 import qualified Data.Set                                   as Set
 import qualified LunaStudio.Data.CameraTransformation       as CameraTransformation
 import           LunaStudio.Data.Error                      (errorContent)
-import           LunaStudio.Data.Matrix                     (CameraScale, CameraTranslate, showCameraMatrix, showCameraTranslate)
+import           LunaStudio.Data.Matrix                     (CameraScale,
+                                                             CameraTranslate,
+                                                             showCameraMatrix,
+                                                             showCameraTranslate)
 import qualified LunaStudio.Data.Matrix                     as Matrix
 import qualified LunaStudio.Data.MonadPath                  as MonadPath
 import           LunaStudio.Data.NodeLoc                    (NodePath)
@@ -20,19 +23,28 @@ import qualified NodeEditor.React.Model.Node                as Node
 import           NodeEditor.React.Model.Node.ExpressionNode (ExpressionNode)
 import qualified NodeEditor.React.Model.Node.ExpressionNode as ExpressionNode
 import qualified NodeEditor.React.Model.Node.SidebarNode    as SidebarNode
-import           NodeEditor.React.Model.NodeEditor          (GraphStatus (..), NodeEditor)
+import           NodeEditor.React.Model.NodeEditor          (GraphStatus (..),
+                                                             NodeEditor)
 import qualified NodeEditor.React.Model.NodeEditor          as NodeEditor
 import           NodeEditor.React.Model.Port                (InPortIndex (Self))
 import qualified NodeEditor.React.Model.Searcher            as Searcher
 import           NodeEditor.React.Model.SearcherProperties  (toSearcherProperties)
-import           NodeEditor.React.Model.Visualization       (Mode (Focused, FullScreen, Preview), visPropNodeLoc,
-                                                             visPropVisualization, mode)
-import           NodeEditor.React.View.Connection           (connection_, halfConnection_)
+import           NodeEditor.React.Model.Visualization       (VisualizationMode (Focused, FullScreen, Preview),
+                                                             visPropNodeLoc,
+                                                             visPropVisualization,
+                                                             visualizationMode)
+import           NodeEditor.React.View.Connection           (connection_,
+                                                             halfConnection_)
 import           NodeEditor.React.View.ConnectionPen        (connectionPen_)
-import           NodeEditor.React.View.ExpressionNode       (filterOutEditedTextControlIfNotRelated, filterOutSearcherIfNotRelated,
-                                                             nodeDynamicStyles_, node_)
+import           NodeEditor.React.View.ExpressionNode       (filterOutEditedTextControlIfNotRelated,
+                                                             filterOutSearcherIfNotRelated,
+                                                             nodeDynamicStyles_,
+                                                             node_)
 import           NodeEditor.React.View.Monad                (monads_)
-import           NodeEditor.React.View.Plane                (planeCanvas_, planeConnections_, planeMonads_, planeNewConnection_,
+import           NodeEditor.React.View.Plane                (planeCanvas_,
+                                                             planeConnections_,
+                                                             planeMonads_,
+                                                             planeNewConnection_,
                                                              planeNodes_)
 import           NodeEditor.React.View.SelectionBox         (selectionBox_)
 import           NodeEditor.React.View.Sidebar              (sidebar_)
@@ -106,8 +118,8 @@ graph = React.defineView name $ \(ref, ne', isTopLevel) -> do
         visLibPaths      = ne ^. NodeEditor.visualizersLibPaths
         maySearcher      = maybe def (Just . flip toSearcherProperties visLibPaths) $ ne ^. NodeEditor.searcher
         visualizations   = NodeEditor.getVisualizations ne
-        isAnyVisActive   = any (\visProp -> elem (visProp ^. visPropVisualization . mode) [Preview, FullScreen, Focused]) visualizations
-        isAnyFullscreen  = any (\visProp -> elem (visProp ^. visPropVisualization . mode) [Preview, FullScreen]) visualizations
+        isAnyVisActive   = any (\visProp -> elem (visProp ^. visPropVisualization . visualizationMode) [Preview, FullScreen, Focused]) visualizations
+        isAnyFullscreen  = any (\visProp -> elem (visProp ^. visPropVisualization . visualizationMode) [Preview, FullScreen]) visualizations
         nodesWithVis     = Set.fromList $ map (^. visPropNodeLoc) visualizations
         visWithSelection = map (\vis -> (vis, NodeEditor.isVisualizationNodeSelected vis ne)) visualizations
         mayEditedTextPortControlPortRef = ne ^. NodeEditor.textControlEditedPortRef
