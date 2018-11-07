@@ -1,7 +1,11 @@
 import _ from 'lodash';
+import 'setimmediate';
 
+import * as analytics from './analytics';
+import * as config    from './config';
+import * as websocket from './websocket';
 
-console.log('running main.js');
-var n = nodeEditor();
-console.log('nodeEditor: ', n);
+var init = {websocket: websocket()}
+console.log(config)
+var n = nodeEditor({analytics, config, init});
 n.start();

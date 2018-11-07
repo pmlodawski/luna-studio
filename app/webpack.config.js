@@ -6,6 +6,20 @@ module.exports = {
 
   devtool: "eval-source-map",
   entry: './src/index.js',
+  resolve: {
+    modules: [
+      "node_modules",
+      path.resolve(__dirname, "dist")
+    ],
+    extensions: [".js", ".coffee"]
+  },
+  module: {
+    strictExportPresence: true,
+    rules: [
+      { use: [ 'coffee-loader' ], test: /\.coffee$/ }
+    ]
+  },
+
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist/lib')
