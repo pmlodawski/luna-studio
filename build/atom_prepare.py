@@ -54,6 +54,11 @@ def create_dirs():
     for path in ('../luna-studio/atom/lib/gen', '../luna-studio/atom/styles', '../luna-studio/atom/styles'):
         os.makedirs(prep_path(path), exist_ok=True)
 
+
+def create_dirs_atomless():
+    for path in ['../app/lib/gen']:
+        os.makedirs(prep_path(path), exist_ok=True)
+
 def ghcjs_code():
     node_editor = prep_path('../luna-studio/.stack-work/') + '/**/bin/node-editor.jsexe/all.js'
     text_editor = prep_path('../luna-studio/.stack-work/') + '/**/bin/text-editor.jsexe/all.js'
@@ -67,8 +72,9 @@ def ghcjs_code_atomless():
     text_editor = prep_path('../luna-studio/.stack-work/') + '/**/bin/text-editor.jsexe/all.js'
     node_editor_js = glob.glob(node_editor,recursive=True)
     text_editor_js = glob.glob(text_editor,recursive=True)
-    shutil.copy(node_editor_js[0], prep_path("../dist/bin/public/luna-studio-web/lib/node-editor.js"))
-    shutil.copy(text_editor_js[0], prep_path("../dist/bin/public/luna-studio-web/lib/text-editor.js"))
+    create_dirs_atomless()
+    shutil.copy(node_editor_js[0], prep_path("../app/lib/gen/node-editor.js"))
+    shutil.copy(text_editor_js[0], prep_path("../app/lib/gen/text-editor.js"))
 #     prepare_ghcjs("../dist/bin/public/luna-studio-web/lib/node-editor.js", '../luna-studio/node-editor/env-node-editor.ghcjs', node_editor_js[0])
 #     prepare_ghcjs("../dist/bin/public/luna-studio-web/lib/text-editor.js", '../luna-studio/text-editor/env-text-editor.ghcjs', text_editor_js[0])
 
