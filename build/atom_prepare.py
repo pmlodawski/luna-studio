@@ -6,7 +6,7 @@ import fileinput
 import glob
 import subprocess
 import shutil
-import scripts_build.system as system
+import system as system
 
 def prepare_holder(output, content_start, content_end, input1, input2, placeholder):
     with open(output, 'a+') as modified:
@@ -67,10 +67,10 @@ def ghcjs_code_atomless():
     text_editor = prep_path('../luna-studio/.stack-work/') + '/**/bin/text-editor.jsexe/all.js'
     node_editor_js = glob.glob(node_editor,recursive=True)
     text_editor_js = glob.glob(text_editor,recursive=True)
-    # shutil.copy(node_editor_js[0], prep_path("../dist/bin/public/luna-studio-web/lib/node-editor.js"))
-    # shutil.copy(text_editor_js[0], prep_path("../dist/bin/public/luna-studio-web/lib/text-editor.js"))
-    prepare_ghcjs(prep_path("../dist/bin/public/luna-studio-web/lib/node-editor.js"), '../luna-studio/node-editor/env-node-editor.ghcjs', node_editor_js[0])
-    prepare_ghcjs(prep_path("../dist/bin/public/luna-studio-web/lib/text-editor.js"), '../luna-studio/text-editor/env-text-editor.ghcjs', text_editor_js[0])
+    shutil.copy(node_editor_js[0], prep_path("../dist/bin/public/luna-studio-web/lib/node-editor.js"))
+    shutil.copy(text_editor_js[0], prep_path("../dist/bin/public/luna-studio-web/lib/text-editor.js"))
+#     prepare_ghcjs("../dist/bin/public/luna-studio-web/lib/node-editor.js", '../luna-studio/node-editor/env-node-editor.ghcjs', node_editor_js[0])
+#     prepare_ghcjs("../dist/bin/public/luna-studio-web/lib/text-editor.js", '../luna-studio/text-editor/env-text-editor.ghcjs', text_editor_js[0])
 
 
 
