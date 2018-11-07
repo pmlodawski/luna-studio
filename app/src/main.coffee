@@ -1,8 +1,8 @@
 import 'setimmediate'
 
-# import * as analytics from './analytics';
+import * as analytics from './analytics';
 import * as config    from './config';
-# import * as websocket from './websocket';
+import * as websocket from './websocket';
 
 # var init = {websocket: websocket()}
 console.log(config)

@@ -1,5 +1,7 @@
 const path = require('path');
 
+var distPath = path.resolve(__dirname, 'dist');
+
 function baseConfig(entryPath) {
   return {
     mode: "production" // "production" | "development" | "none" // Chosen mode tells webpack to use its built-in optimizations accordingly.
@@ -9,7 +11,7 @@ function baseConfig(entryPath) {
     , resolve:
       { modules: 
         [ "node_modules"
-        , path.resolve(__dirname, "dist")
+        , distPath
         ]
       , extensions: [".js", ".coffee"]
       }
@@ -20,10 +22,10 @@ function baseConfig(entryPath) {
       }
     , output: 
       { filename: '[name].js'
-      , path: path.resolve(__dirname, 'dist')
+      , path: distPath
       }
     , devServer: 
-      { contentBase: path.join(__dirname, 'dist')
+      { contentBase: distPath
       , publicPath: '/'
       , compress: true
       , port: 9000

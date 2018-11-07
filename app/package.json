@@ -9,7 +9,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "cp src/index.html dist && cp package.json dist && webpack",
-    "start": "cp src/index.html dist && cp package.json dist && webpack && webpack-dev-server --open"
+    "server": "npm run build && webpack-dev-server",
+    "start": "npm run build && webpack-dev-server --open",
+    "app": "electron dist"
   },
   "keywords": ["Luna Studio"],
   "author": "Luna Team",
