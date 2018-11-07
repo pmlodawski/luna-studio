@@ -40,5 +40,5 @@ text-editor/text-editor.cabal
 node-editor/node-editor.cabal
 node-editor-view/luna-node-editor-view.cabal
 
-.config-luna.yaml
-.config.luna
+dist/.config-luna.yaml
+dist/.config.luna

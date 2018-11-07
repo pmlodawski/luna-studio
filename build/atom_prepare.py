@@ -62,6 +62,15 @@ def ghcjs_code():
     prepare_ghcjs('../luna-studio/atom/lib/gen/node-editor-ghcjs.js', '../luna-studio/node-editor/env-node-editor.ghcjs', node_editor_js[0])
     prepare_ghcjs('../luna-studio/atom/lib/gen/text-editor-ghcjs.js', '../luna-studio/text-editor/env-text-editor.ghcjs', text_editor_js[0])
 
+def ghcjs_code_atomless():
+    node_editor = prep_path('../luna-studio/.stack-work/') + '/**/bin/node-editor.jsexe/all.js'
+    text_editor = prep_path('../luna-studio/.stack-work/') + '/**/bin/text-editor.jsexe/all.js'
+    node_editor_js = glob.glob(node_editor,recursive=True)
+    text_editor_js = glob.glob(text_editor,recursive=True)
+    shutil.copy(node_editor_js[0], prep_path("../dist/bin/public/luna-studio-web/lib/node-editor.js"))
+    shutil.copy(text_editor_js[0], prep_path("../dist/bin/public/luna-studio-web/lib/text-editor.js"))
+
+
 def cp_helper(input_path, output_path):
     distutils.dir_util.copy_tree(prep_path(input_path), prep_path(output_path))
 
