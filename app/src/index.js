@@ -2,6 +2,6 @@ import _ from 'lodash';
 
 
 console.log('running main.js');
-n = nodeEditor();
+var n = nodeEditor();
 console.log('nodeEditor: ', n);
 n.start();
