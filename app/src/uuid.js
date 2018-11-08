@@ -25,3 +25,5 @@ generateUUID = (typeof(window.crypto) != 'undefined' &&
             return v.toString(16);
         });
     };
+
+module.exports = { generateUUID: generateUUID }
