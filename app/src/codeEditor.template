@@ -1,4 +1,4 @@
-function codeEditor({analytics, atomCallbackTextEditor, config, init}) {
+function codeEditor({analytics, atomCallbackTextEditor, config, gzip, init}) {
 
 GHCJS_CODE_HERE
 

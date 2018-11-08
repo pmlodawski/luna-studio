@@ -52,7 +52,9 @@
   },
   "postinstall": "electron-builder install-app-deps",
   "dependencies": {
+    "luna-basegl-ui": "^0.3.4",
     "mixpanel-browser": "^2.23.0",
+    "path": "^0.12.7",
     "setimmediate": "^1.0.5"
   }
 }
