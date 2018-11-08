@@ -2,30 +2,48 @@
   "name": "luna-studio",
   "version": "1.0.0",
   "description": "Luna Studio",
-  "main": "index.js",
-  "directories": {
-    "lib": "lib"
-  },
+  "main": "dist/index.js",
+
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "cp src/index.html dist && cp package.json dist && webpack",
     "server": "npm run build && webpack-dev-server",
     "start": "npm run build && webpack-dev-server --open",
-    "app": "electron dist"
+    "app": "electron dist",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
-  "keywords": ["Luna Studio"],
+  "keywords": [
+    "Luna Studio"
+  ],
   "author": "Luna Team",
   "license": "AGPL-3.0-or-later",
+  "build": {
+    "appId": "org.luna-studio",
+    "productName": "Luna Studio",
+    "files": [
+      "dist/**/*",
+      "dist/index.js",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist2"
+    },
+    "extends": null,
+    "publish": null
+  },
   "devDependencies": {
     "coffee-loader": "^0.9.0",
     "coffeescript": "^2.3.2",
     "electron": "^3.0.8",
+    "electron-builder": "^20.31.2",
     "webpack": "^4.25.1",
     "webpack-cli": "^3.1.2",
     "webpack-dev-server": "^3.1.10"
   },
+  "postinstall": "electron-builder install-app-deps",
   "dependencies": {
-    "lodash": "^4.17.11",
     "mixpanel-browser": "^2.23.0",
     "setimmediate": "^1.0.5"
   }
