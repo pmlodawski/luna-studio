@@ -1,0 +1,5 @@
+function codeEditor({analytics, atomCallbackTextEditor, config, init}) {
+
+GHCJS_CODE_HERE
+
+}

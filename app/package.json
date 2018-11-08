@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Luna Studio",
   "main": "dist/index.js",
-
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "cp src/index.html dist && cp package.json dist && webpack",
