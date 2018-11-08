@@ -6,15 +6,19 @@ import * as callback     from './callback'
 import * as codeCallback from './codeCallback'
 import * as config       from './config'
 import * as gzip         from './gzip'
-import {NodeEditor}      from './NodeEditor'
 import * as uuid         from './uuid'
 import * as websocket    from './websocket'
+
+import {NodeEditor}      from './NodeEditor'
+
 
 window.listVisualizers = => [] #TODO
 window.getInternalVisualizersPath = => '' #TODO
 window.getLunaVisualizersPath = => '' #TODO
 window.getInternalVisualizers = => {} #TODO
 window.getLunaVisualizers = => [] #TODO
+window.getProjectVisualizers = => [] #TODO
+window.getImportedVisualizers = => {} #TODO
 
 init = websocket: websocket()
 generateUUID = uuid.generateUUID
@@ -48,9 +52,10 @@ codeBackend =
 
 class LunaStudio
     launch: =>
-        @projectPath = '/home/pmlodawski/luna/projects/UnsavedLunaProject'
+        @projectPath = '/home/pmlodawski/luna/projects/Test'
         codeBackend.connect nodeBackend.connector
         codeBackend.onStatus @__onStatus
+        nodeBackend.onNotification console.log
         codeBackend.start()
 
     __onStatus: (act, arg0, arg1) =>
@@ -62,10 +67,15 @@ class LunaStudio
                     _path: @projectPath
             when 'ProjectSet'
                 @openMain()
+            when 'FileOpened'
+                codeBackend.pushInternalEvent
+                    tag: "GetBuffer"
+                    _path: arg0
+
 
     openMain: =>
         mainLocation = path.join @projectPath, 'src', 'Main.luna'
-        @nodeEditor ?= new NodeEditor mainLocation, nodeBackend
+        @nodeEditor ?= new NodeEditor mainLocation, nodeBackend, codeBackend
 
 
 ls = new LunaStudio
