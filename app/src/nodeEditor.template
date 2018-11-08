@@ -1,5 +1,0 @@
-function nodeEditor({analytics, atomCallback, config, generateUUID, init}) {
-
-GHCJS_CODE_HERE
-
-}
