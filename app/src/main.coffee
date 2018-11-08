@@ -13,13 +13,13 @@ import * as Promise      from 'bluebird'
 import {NodeEditor}      from './NodeEditor'
 
 
-
-
 window.listVisualizers = => [] #TODO
 window.getInternalVisualizersPath = => '' #TODO
 window.getLunaVisualizersPath = => '' #TODO
 window.getInternalVisualizers = => {} #TODO
 window.getLunaVisualizers = => [] #TODO
+window.getProjectVisualizers = => [] #TODO
+window.getImportedVisualizers = => {} #TODO
 
 init = websocket: websocket()
 generateUUID = uuid.generateUUID
@@ -99,7 +99,7 @@ main = () ->
   globalRegistry = {}
 
   nodeBackend =
-      start:           fns['lib/node-editor.js']()
+      start:           fns['lib/node-editor.js']
       connector:       callback.connector
       setView:         callback.setNodeEditorView
       onNotification:  callback.onNotification
@@ -109,7 +109,7 @@ main = () ->
       onExpectedEvent: callback.onExpectedEvent
 
   codeBackend =
-      start:               fns['lib/text-editor.js']()
+      start:               fns['lib/text-editor.js']
       connect:             (connector)   => connector(globalRegistry)
       lex:                 (stack, data) => codeCallback.lex stack, data
       onInsertCode:        (callback)    => codeCallback.onInsertCode callback
@@ -120,12 +120,12 @@ main = () ->
       pushInternalEvent:   (data)        => codeCallback.pushInternalEvent data
       onStatus:            (callback)    => codeCallback.onStatus callback
 
-
   class LunaStudio
       launch: =>
-          @projectPath = '/home/pmlodawski/luna/projects/UnsavedLunaProject'
+          @projectPath = '/tmp/luna/Test'
           codeBackend.connect nodeBackend.connector
           codeBackend.onStatus @__onStatus
+          nodeBackend.onNotification console.log
           codeBackend.start()
 
       __onStatus: (act, arg0, arg1) =>
@@ -137,10 +137,14 @@ main = () ->
                       _path: @projectPath
               when 'ProjectSet'
                   @openMain()
+              when 'FileOpened'
+                  codeBackend.pushInternalEvent
+                      tag: 'GetBuffer'
+                      _path: arg0
 
       openMain: =>
           mainLocation = path.join @projectPath, 'src', 'Main.luna'
-          @nodeEditor ?= new NodeEditor mainLocation, nodeBackend
+          @nodeEditor ?= new NodeEditor mainLocation, nodeBackend, codeBackend
 
 
   ls = new LunaStudio
