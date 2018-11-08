@@ -6,6 +6,7 @@ import           Common.Action.Command                       (Command)
 import           Common.Prelude
 import           Common.Report                               (fatal)
 import qualified Data.DateTime                               as DT
+import qualified Data.Map                                    as Map
 import           Data.Set                                    (Set)
 import qualified Data.Set                                    as Set
 import qualified JS.Atom                                     as Atom
@@ -234,6 +235,8 @@ handle (Event.Batch ev) = Just $ case ev of
         requestId       = response ^. Response.requestId
         success result  = whenM (isCurrentLocation location') $ do
             putStrLn "GetProgram"
+            discoverVisualizers <- Map.null <$> use Global.internalVisualizers
+            when discoverVisualizers $ updateVisualizers def
             let location = result ^. GetProgram.currentLocation
             unless (location' == location) $ do
                 modifyApp
