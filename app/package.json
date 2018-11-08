@@ -2,16 +2,18 @@
   "name": "luna-studio",
   "version": "1.0.0",
   "description": "Luna Studio",
+  "homepage": "https://luna-lang.org",
+  "repository": "https://github.com/luna",
   "main": "dist/web/index.js",
 
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "cp src/index.html dist/web/index.html && webpack",
-    "server": "npm run build && webpack-dev-server",
-    "start": "npm run build && webpack-dev-server --open",
-    "app": "electron .",
-    "pack": "npm run build && electron-builder --dir",
-    "dist": "npm run build && electron-builder --mac --win --linux"
+    "build:native": "npm run build && electron-builder --mac --win --linux",
+    "build:native-pack": "npm run build && electron-builder --mac --win --linux --dir",
+    "start": "npm run build && webpack-dev-server",
+    "start:web": "npm run build && webpack-dev-server --open",
+    "open:native": "electron ."
   },
   "keywords": [
     "Luna Studio"
@@ -21,8 +23,6 @@
   "build": {
     "appId": "org.luna-studio",
     "productName": "Luna Studio",
-    "homepage": "https://luna-lang.org",
-    "repository": "https://github.com/luna",
     "files": [
       "dist/web/**/*",
       "node_modules/**/*",
