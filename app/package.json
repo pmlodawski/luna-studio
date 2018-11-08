@@ -2,16 +2,16 @@
   "name": "luna-studio",
   "version": "1.0.0",
   "description": "Luna Studio",
-  "main": "dist/index.js",
+  "main": "dist/web/index.js",
 
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cp src/index.html dist && cp package.json dist && webpack",
+    "build": "cp src/index.html dist/web/index.html && webpack",
     "server": "npm run build && webpack-dev-server",
     "start": "npm run build && webpack-dev-server --open",
-    "app": "electron dist",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "app": "electron .",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder --mac --win --linux"
   },
   "keywords": [
     "Luna Studio"
@@ -21,17 +21,25 @@
   "build": {
     "appId": "org.luna-studio",
     "productName": "Luna Studio",
+    "homepage": "https://luna-lang.org",
+    "repository": "https://github.com/luna",
     "files": [
-      "dist/**/*",
-      "dist/index.js",
+      "dist/web/**/*",
       "node_modules/**/*",
       "package.json"
     ],
     "directories": {
-      "output": "dist2"
+      "output": "dist/native"
     },
-    "extends": null,
-    "publish": null
+    "linux": {
+      "target": "AppImage"
+    },
+    "mac": {
+      "target": "zip"
+    },
+    "win": {
+      "target": "nsis"
+    }
   },
   "devDependencies": {
     "coffee-loader": "^0.9.0",

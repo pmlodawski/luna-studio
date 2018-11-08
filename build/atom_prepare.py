@@ -73,8 +73,8 @@ def ghcjs_code_atomless():
     node_editor_js = glob.glob(node_editor,recursive=True)
     text_editor_js = glob.glob(text_editor,recursive=True)
     create_dirs_atomless()
-    shutil.copy(node_editor_js[0], prep_path("../app/dist/lib/node-editor.js"))
-    shutil.copy(text_editor_js[0], prep_path("../app/dist/lib/text-editor.js"))
+    shutil.copy(node_editor_js[0], prep_path("../app/dist/web/lib/node-editor.js"))
+    shutil.copy(text_editor_js[0], prep_path("../app/dist/web/lib/text-editor.js"))
 #     prepare_ghcjs("../dist/bin/public/luna-studio-web/lib/node-editor.js", '../luna-studio/node-editor/env-node-editor.ghcjs', node_editor_js[0])
 #     prepare_ghcjs("../dist/bin/public/luna-studio-web/lib/text-editor.js", '../luna-studio/text-editor/env-text-editor.ghcjs', text_editor_js[0])
 

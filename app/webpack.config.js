@@ -1,6 +1,6 @@
 const path = require('path');
 
-var distPath = path.resolve(__dirname, 'dist');
+var distPath = path.resolve(__dirname, 'dist/web');
 
 function baseConfig(entryPath) {
   return {
