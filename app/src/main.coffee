@@ -1,28 +1,30 @@
 import 'setimmediate'
+import * as path from 'path'
 
 import * as analytics    from './analytics'
 import * as callback     from './callback'
 import * as codeCallback from './codeCallback'
 import * as config       from './config'
-import * as websocket    from './websocket'
+import * as gzip         from './gzip'
 import * as uuid         from './uuid'
+import * as websocket    from './websocket'
 import * as Promise      from 'bluebird'
 
-# init = websocket: websocket()
-# generateUUID = uuid.generateUUID
-# atomCallback = callback
-# n = nodeEditor({analytics, atomCallback, config, generateUUID, init})
-# atomCallbackTextEditor = codeCallback
-# c = codeEditor({analytics, atomCallbackTextEditor, config, init})
+import {NodeEditor}      from './NodeEditor'
 
-# n.start()
-# callback.connector
-# callback.setNodeEditorView
-# callback.onNotification
-# callback.pushEvent
-# callback.view.pushEvent
-# callback.setEventFilter
-# callback.onExpectedEvent
+
+
+
+window.listVisualizers = => [] #TODO
+window.getInternalVisualizersPath = => '' #TODO
+window.getLunaVisualizersPath = => '' #TODO
+window.getInternalVisualizers = => {} #TODO
+window.getLunaVisualizers = => [] #TODO
+
+init = websocket: websocket()
+generateUUID = uuid.generateUUID
+atomCallback = callback
+atomCallbackTextEditor = codeCallback
 
 
 ###################
@@ -34,8 +36,15 @@ libsConfig =
     analytics    : analytics
     atomCallback : callback
     config       : config
-    generateUUID : generateUUID
-    init         : websocket: websocket()
+    gzip         : gzip
+    init         : init
+
+  'lib/text-editor.js': 
+    analytics              : analytics
+    atomCallbackTextEditor : codeCallback
+    config                 : config
+    gzip                   : gzip
+    init                   : init
 
 
 
@@ -67,11 +76,85 @@ ajaxGetAsync = (url) ->
 fileNames = Object.keys(libsConfig)
 loader    = Promise.map fileNames, (fileName) -> ajaxGetAsync fileName
 loader.catch (e) -> console.error "ERROR loading scripts!"
-loader.then (srcs) ->
+
+loadLibs = () ->
+  srcs = await loader
+  fns  = {}
   for src in srcs
     console.log('Compiling ' + src.url)
     args   = libsConfig[src.url]
     argMap = '{' + Object.keys(args).join(",") + '}'
     fn = new Function argMap, src.text
-    console.log('Evaluating ' + src.url)
-    fn(args)
+    fns[src.url] = (() -> fn(args))
+  fns
+
+
+############
+### Main ###
+############
+
+main = () -> 
+  fns = await loadLibs()
+
+  globalRegistry = {}
+
+  nodeBackend =
+      start:           fns['lib/node-editor.js']()
+      connector:       callback.connector
+      setView:         callback.setNodeEditorView
+      onNotification:  callback.onNotification
+      pushEvent:       callback.pushEvent
+      pushViewEvent:   callback.view.pushEvent
+      setEventFilter:  callback.setEventFilter
+      onExpectedEvent: callback.onExpectedEvent
+
+  codeBackend =
+      start:               fns['lib/text-editor.js']()
+      connect:             (connector)   => connector(globalRegistry)
+      lex:                 (stack, data) => codeCallback.lex stack, data
+      onInsertCode:        (callback)    => codeCallback.onInsertCode callback
+      onInterpreterUpdate: (callback)    => codeCallback.onInterpreterUpdate callback
+      onSetBuffer:         (callback)    => codeCallback.onSetBuffer callback
+      onSetClipboard:      (callback)    => codeCallback.onSetClipboard callback
+      pushDiffs:           (diffs)       => codeCallback.pushDiffs diffs
+      pushInternalEvent:   (data)        => codeCallback.pushInternalEvent data
+      onStatus:            (callback)    => codeCallback.onStatus callback
+
+
+  class LunaStudio
+      launch: =>
+          @projectPath = '/home/pmlodawski/luna/projects/UnsavedLunaProject'
+          codeBackend.connect nodeBackend.connector
+          codeBackend.onStatus @__onStatus
+          codeBackend.start()
+
+      __onStatus: (act, arg0, arg1) =>
+          console.log 'status:', { act, arg0, arg1 }
+          switch act
+              when 'Init'
+                  codeBackend.pushInternalEvent
+                      tag: 'SetProject'
+                      _path: @projectPath
+              when 'ProjectSet'
+                  @openMain()
+
+      openMain: =>
+          mainLocation = path.join @projectPath, 'src', 'Main.luna'
+          @nodeEditor ?= new NodeEditor mainLocation, nodeBackend
+
+
+  ls = new LunaStudio
+  ls.launch()
+
+  # n.start();
+  # callback.connector
+  # callback.setNodeEditorView
+  # callback.onNotification
+  # callback.pushEvent
+  # callback.view.pushEvent
+  # callback.setEventFilter
+  # callback.onExpectedEvent
+
+
+
+main()

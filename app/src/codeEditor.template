@@ -1,0 +1,10 @@
+function codeEditor({analytics, atomCallbackTextEditor, config, gzip, init}) {
+
+var run = function() {
+
+GHCJS_CODE_HERE
+
+  }
+
+  return { start: run }
+}
