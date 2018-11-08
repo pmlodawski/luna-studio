@@ -33,9 +33,12 @@ atomCallbackTextEditor = codeCallback
 
 libsConfig = 
   'lib/node-editor.js': 
+    arg_url      : -> '/tmp/luna/Test/src/Main.luna'
+    arg_mount    : -> 'node-editor'
     analytics    : analytics
-    atomCallback : callback
+    atomCallback : atomCallback
     config       : config
+    generateUUID : generateUUID
     gzip         : gzip
     init         : init
 
@@ -45,8 +48,6 @@ libsConfig =
     config                 : config
     gzip                   : gzip
     init                   : init
-
-
 
 ####################
 ### Libs Loading ###
@@ -80,7 +81,7 @@ loader.catch (e) -> console.error "ERROR loading scripts!"
 loadLibs = () ->
   srcs = await loader
   fns  = {}
-  for src in srcs
+  srcs.forEach (src) ->
     console.log('Compiling ' + src.url)
     args   = libsConfig[src.url]
     argMap = '{' + Object.keys(args).join(",") + '}'
