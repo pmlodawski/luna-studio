@@ -10,24 +10,54 @@ import {NodeEditor}      from './NodeEditor'
 import * as uuid         from './uuid'
 import * as websocket    from './websocket'
 
+window.listVisualizers = => [] #TODO
+window.getInternalVisualizersPath = => '' #TODO
+window.getLunaVisualizersPath = => '' #TODO
+window.getInternalVisualizers = => {} #TODO
+window.getLunaVisualizers = => [] #TODO
 
 init = websocket: websocket()
 generateUUID = uuid.generateUUID
 atomCallback = callback
-n = nodeEditor({analytics, atomCallback, config, generateUUID, init})
 atomCallbackTextEditor = codeCallback
-c = codeEditor({analytics, atomCallbackTextEditor, config, gzip, init})
+
+globalRegistry = {}
+
+nodeBackend =
+    start:           nodeEditor({analytics, atomCallback, config, generateUUID, gzip, init}).start
+    connector:       callback.connector
+    setView:         callback.setNodeEditorView
+    onNotification:  callback.onNotification
+    pushEvent:       callback.pushEvent
+    pushViewEvent:   callback.view.pushEvent
+    setEventFilter:  callback.setEventFilter
+    onExpectedEvent: callback.onExpectedEvent
+
+codeBackend =
+    start:               codeEditor({analytics, atomCallbackTextEditor, config, gzip, init}).start
+    connect:             (connector) => connector(globalRegistry)
+    lex:                 (stack, data) => codeCallback.lex stack, data
+    onInsertCode:        (callback) => codeCallback.onInsertCode callback
+    onInterpreterUpdate: (callback) => codeCallback.onInterpreterUpdate callback
+    onSetBuffer:         (callback) => codeCallback.onSetBuffer callback
+    onSetClipboard:      (callback) => codeCallback.onSetClipboard callback
+    pushDiffs:           (diffs)    => codeCallback.pushDiffs diffs
+    pushInternalEvent:   (data)     => codeCallback.pushInternalEvent data
+    onStatus:            (callback) => codeCallback.onStatus callback
+
 
 class LunaStudio
     launch: =>
         @projectPath = '/home/pmlodawski/luna/projects/UnsavedLunaProject'
-        codeCallback.onStatus @__onStatus
+        codeBackend.connect nodeBackend.connector
+        codeBackend.onStatus @__onStatus
+        codeBackend.start()
 
     __onStatus: (act, arg0, arg1) =>
         console.log 'status:', { act, arg0, arg1 }
         switch act
             when 'Init'
-                codeCallback.pushInternalEvent
+                codeBackend.pushInternalEvent
                     tag: 'SetProject'
                     _path: @projectPath
             when 'ProjectSet'
@@ -35,7 +65,7 @@ class LunaStudio
 
     openMain: =>
         mainLocation = path.join @projectPath, 'src', 'Main.luna'
-        @nodeEditor ?= new NodeEditor
+        @nodeEditor ?= new NodeEditor mainLocation, nodeBackend
 
 
 ls = new LunaStudio
