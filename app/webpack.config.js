@@ -29,11 +29,6 @@ function baseConfig(entryPath) {
       , publicPath: '/'
       , compress: true
       , port: 9000
-      ,     headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': '*',
-      }
-  
       }
   }
 }

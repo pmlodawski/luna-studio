@@ -1,3 +1,4 @@
+import * as logger from 'luna-logger'
 {app, BrowserWindow} = require('electron')
 
 
@@ -57,7 +58,10 @@ createWindow = () ->
   addCrashHandler mainWindow
   addHangHandler  mainWindow
 
-  mainWindow.loadURL 'http://localhost:9000/'
+  address = 'http://localhost:9000/'
+  logger.info 'Window initialized'
+  logger.info 'Loading window content from', address
+  mainWindow.loadURL address
   
 
 app.on 'ready', createWindow

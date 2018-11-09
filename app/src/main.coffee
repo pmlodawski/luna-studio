@@ -8,9 +8,9 @@ import * as config       from './config'
 import * as gzip         from './gzip'
 import * as uuid         from './uuid'
 import * as websocket    from './websocket'
-import * as logger       from './logger'
 import * as Enum         from './enum'
 
+import * as logger       from 'luna-logger'
 import * as Promise      from 'bluebird'
 
 import {NodeEditor}      from './NodeEditor'
