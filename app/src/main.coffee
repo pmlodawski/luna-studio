@@ -1,17 +1,9 @@
-import 'setimmediate'
-import * as path from 'path'
+import * as path    from 'path'
+import * as logger  from 'luna-logger'
 
-import * as analytics    from './analytics'
-import * as callback     from './callback'
-import * as codeCallback from './codeCallback'
-import * as config       from './config'
-import * as Enum         from './enum'
-import * as gzip         from './gzip'
-import * as Libs         from './Libs'
-import * as uuid         from './uuid'
-import * as websocket    from './websocket'
+import * as Backend from './backend'
+import * as Enum    from './enum'
 
-import * as logger       from 'luna-logger'
 
 import {NodeEditor}      from './NodeEditor'
 
@@ -23,34 +15,6 @@ window.getInternalVisualizers = => {} #TODO
 window.getLunaVisualizers = => [] #TODO
 window.getProjectVisualizers = => [] #TODO
 window.getImportedVisualizers = => {} #TODO
-
-websocketConfig = websocket: websocket()
-
-###################
-### Libs Config ###
-###################
-
-libConfig =
-  nodeEditor :
-    path : 'lib/node-editor.js'
-    args :
-      arg_url      : -> '/tmp/luna/Test/src/Main.luna'
-      arg_mount    : -> 'node-editor'
-      analytics    : analytics
-      atomCallback : callback
-      config       : config
-      generateUUID : uuid.generateUUID
-      gzip         : gzip
-      init         : websocketConfig
-
-  codeEditor : 
-    path : 'lib/text-editor.js'
-    args : 
-      analytics              : analytics
-      atomCallbackTextEditor : codeCallback
-      config                 : config
-      gzip                   : gzip
-      init                   : websocketConfig
 
 ############
 ### Main ###
@@ -66,31 +30,10 @@ messages = Enum.make(
 )
 
 main = () -> 
-  libs = await Libs.load libConfig
+  backend = await Backend.initialize()
 
-  globalRegistry = {}
-
-  nodeBackend =
-    start:           libs.nodeEditor
-    connector:       callback.connector
-    setView:         callback.setNodeEditorView
-    onNotification:  callback.onNotification
-    pushEvent:       callback.pushEvent
-    pushViewEvent:   callback.view.pushEvent
-    setEventFilter:  callback.setEventFilter
-    onExpectedEvent: callback.onExpectedEvent
-
-  codeBackend =
-    start:               libs.codeEditor
-    connect:             (connector)   => connector(globalRegistry)
-    lex:                 (stack, data) => codeCallback.lex stack, data
-    onInsertCode:        (callback)    => codeCallback.onInsertCode callback
-    onInterpreterUpdate: (callback)    => codeCallback.onInterpreterUpdate callback
-    onSetBuffer:         (callback)    => codeCallback.onSetBuffer callback
-    onSetClipboard:      (callback)    => codeCallback.onSetClipboard callback
-    pushDiffs:           (diffs)       => codeCallback.pushDiffs diffs
-    pushInternalEvent:   (data)        => codeCallback.pushInternalEvent data
-    onStatus:            (callback)    => codeCallback.onStatus callback
+  nodeBackend = backend.node
+  codeBackend = backend.code
 
   class LunaStudio
     launch: =>
