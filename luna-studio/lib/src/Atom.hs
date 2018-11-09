@@ -10,7 +10,7 @@ import           Common.Prelude
 import           Text.Read                     (readMaybe)
 
 
-foreign import javascript safe "atomCallback.pushNotification($1, $2)"
+foreign import javascript safe "callback.pushNotification($1, $2)"
   pushNotification' :: Int -> JSString -> IO ()
 
 

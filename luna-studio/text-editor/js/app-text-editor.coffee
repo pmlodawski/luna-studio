@@ -1,8 +1,4 @@
-$$              = require('./common')
-config          = require('./config')
-atomCallbackTextEditor    = require('./atom-callback-text-editor')
-
-
+callback = require('./atom-callback-text-editor')
 
 start = ->
   $(document).ready ->

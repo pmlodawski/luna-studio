@@ -93,10 +93,10 @@ instance Convertible ExpressionNode ExpressionNodeView where
         {- expanded   -} (n ^. ExpressionNode.mode == ExpressionNode.Expanded ExpressionNode.Controls)
         {- selected   -} (n ^. ExpressionNode.isSelected)
 
-foreign import javascript safe "atomCallback.getNodeEditorView().setNode($1)"
+foreign import javascript safe "callback.getNodeEditorView().setNode($1)"
     setNode__ :: JSVal -> IO ()
 
-foreign import javascript safe "atomCallback.getNodeEditorView().unsetNode($1)"
+foreign import javascript safe "callback.getNodeEditorView().unsetNode($1)"
     unsetNode__ :: JSVal -> IO ()
 
 setNode :: MonadIO m => ExpressionNodeView -> m ()

@@ -19,16 +19,16 @@ import           NodeEditor.Event.Event        (Event (Atom, Shortcut, UI))
 import           NodeEditor.Event.UI           (UIEvent (SearcherEvent))
 
 
-foreign import javascript safe "atomCallback.onEvent($1)"
+foreign import javascript safe "callback.onEvent($1)"
     onEvent' :: Callback (JSVal -> IO ()) -> IO ()
 
 foreign import javascript safe "$1.unOnEvent()"
     unOnEvent' :: Callback (JSVal -> IO ()) -> IO ()
 
-foreign import javascript safe "atomCallback.setActiveLocation($1)"
+foreign import javascript safe "callback.setActiveLocation($1)"
     setActiveLocation' :: JSVal -> IO ()
 
-foreign import javascript safe "atomCallback.acceptEvent($1)"
+foreign import javascript safe "callback.acceptEvent($1)"
     acceptEvent' :: JSString -> Bool
 
 onEvent :: (Event -> IO ()) -> IO (IO ())

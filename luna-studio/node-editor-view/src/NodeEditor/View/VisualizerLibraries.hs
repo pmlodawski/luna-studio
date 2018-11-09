@@ -39,7 +39,7 @@ instance Convertible (Visualizers FilePath) VisualizerLibrariesView where
             .  Visualization.librariesVisualizers)
 
 foreign import javascript safe
-    "atomCallback.getNodeEditorView().setVisualizerLibraries($1)"
+    "callback.getNodeEditorView().setVisualizerLibraries($1)"
     setVisualizerLibraries__ :: JSVal -> IO ()
 
 setVisualizerLibraries :: MonadIO m => VisualizerLibrariesView -> m ()

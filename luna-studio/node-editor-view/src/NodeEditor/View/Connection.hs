@@ -34,10 +34,10 @@ instance Convertible Connection ConnectionView where
         {- dstNode    -} (c ^. Connection.dst . PortRef.dstNodeLoc . to convert)
         {- dstPort    -} (c ^. Connection.dst . PortRef.dstPortId  . to slicePortId . to convert)
 
-foreign import javascript safe "atomCallback.getNodeEditorView().setConnection($1)"
+foreign import javascript safe "callback.getNodeEditorView().setConnection($1)"
     setConnection__ :: JSVal -> IO ()
 
-foreign import javascript safe "atomCallback.getNodeEditorView().unsetConnection($1)"
+foreign import javascript safe "callback.getNodeEditorView().unsetConnection($1)"
     unsetConnection__ :: JSVal -> IO ()
 
 setConnection :: MonadIO m => ConnectionView -> m ()

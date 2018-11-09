@@ -109,11 +109,11 @@ instance Convertible (NodeLoc, NodeVisualizations) NodeVisualizationsView where
 
 
 foreign import javascript safe
-    "atomCallback.getNodeEditorView().setVisualization($1)"
+    "callback.getNodeEditorView().setVisualization($1)"
     setVisualization__ :: JSVal -> IO ()
 
 foreign import javascript safe
-    "atomCallback.getNodeEditorView().unsetVisualization($1)"
+    "callback.getNodeEditorView().unsetVisualization($1)"
     unsetVisualization__ :: JSVal -> IO ()
 
 

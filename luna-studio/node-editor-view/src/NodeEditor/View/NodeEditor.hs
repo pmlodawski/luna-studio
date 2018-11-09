@@ -17,11 +17,11 @@ import           NodeEditor.View.VisualizerLibraries     (visualizerLibrariesVie
 
 
 foreign import javascript safe
-    "atomCallback.getNodeEditorView().setDebugLayer($1)"
+    "callback.getNodeEditorView().setDebugLayer($1)"
     setDebugLayer__ :: JSVal -> IO ()
 
 foreign import javascript safe
-    "atomCallback.getNodeEditorView().unsetDebugLayer($1)"
+    "callback.getNodeEditorView().unsetDebugLayer($1)"
     unsetDebugLayer__ :: JSVal -> IO ()
 
 debugLayerView :: MonadIO m => DiffT (Maybe Int) m ()
@@ -49,5 +49,5 @@ nodeEditorView = do
 getMousePosition :: MonadIO m => m Position
 getMousePosition = fmap (maybe def fromTuple) . fromJSONVal =<< liftIO getMousePosition'
 
-foreign import javascript safe "atomCallback.getNodeEditorView().getMousePosition()"
+foreign import javascript safe "callback.getNodeEditorView().getMousePosition()"
     getMousePosition' :: IO JSVal

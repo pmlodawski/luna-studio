@@ -19,10 +19,10 @@ import           Luna.Syntax.Text.Analysis.Disabled (ColumnStack, tagDisabled')
 import           Luna.Syntax.Text.Lexer             (EntryPoint, EntryStack, StrType, Symbol, Token)
 import qualified Luna.Syntax.Text.Lexer             as Lexer
 
-foreign import javascript safe "atomCallbackTextEditor.setLexer($1)"
+foreign import javascript safe "callback.setLexer($1)"
     setLexer' :: Callback (JSVal -> JSVal -> IO JSVal) -> IO ()
 
-foreign import javascript safe "atomCallbackTextEditor.unsetLexer()"
+foreign import javascript safe "callback.unsetLexer()"
     unsetLexer :: IO ()
 
 foreign import javascript safe "{length: $1, tags: $2}"

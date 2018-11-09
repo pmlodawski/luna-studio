@@ -10,10 +10,10 @@ import           NodeEditor.Event.Event        (Event (View))
 import           Common.Data.JSON              (fromJSONVal)
 
 
-foreign import javascript safe "atomCallback.view.onEvent($1)"
+foreign import javascript safe "callback.view.onEvent($1)"
     onEvent' :: Callback (JSVal -> IO ()) -> IO ()
 
-foreign import javascript safe "atomCallback.view.unOnEvent($1)"
+foreign import javascript safe "callback.view.unOnEvent($1)"
     unOnEvent' :: Callback (JSVal -> IO ()) -> IO ()
 
 onEvent :: (Event -> IO ()) -> IO (IO ())

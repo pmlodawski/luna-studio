@@ -36,10 +36,10 @@ instance Convertible OutputNode SidebarNodeView where
         {- inPorts  -} (n ^. to SidebarNode.inPortsList . to convert)
         {- outPorts -} def
 
-foreign import javascript safe "atomCallback.getNodeEditorView().setInputNode($1)"
+foreign import javascript safe "callback.getNodeEditorView().setInputNode($1)"
     setInputNode__ :: JSVal -> IO ()
 
-foreign import javascript safe "atomCallback.getNodeEditorView().setOutputNode($1)"
+foreign import javascript safe "callback.getNodeEditorView().setOutputNode($1)"
     setOutputNode__ :: JSVal -> IO ()
 
 setInputNode :: MonadIO m => Maybe SidebarNodeView -> m ()

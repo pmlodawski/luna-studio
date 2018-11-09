@@ -31,28 +31,28 @@ import           TextEditor.Event.Text         (TextEvent (TextEvent))
 import qualified TextEditor.Event.Text         as TextEvent
 
 
-foreign import javascript safe "atomCallbackTextEditor.insertCode($1, $2)"
+foreign import javascript safe "callback.insertCode($1, $2)"
     insertCode' :: JSString -> JSVal -> IO ()
 
-foreign import javascript safe "atomCallbackTextEditor.setBuffer($1, $2)"
+foreign import javascript safe "callback.setBuffer($1, $2)"
     setBuffer :: JSString -> JSString -> IO ()
 
-foreign import javascript safe "atomCallbackTextEditor.setClipboard($1, $2)"
+foreign import javascript safe "callback.setClipboard($1, $2)"
     setClipboard :: JSString -> JSString -> IO ()
 
-foreign import javascript safe "atomCallbackTextEditor.pushStatus($1, $2, $3)"
+foreign import javascript safe "callback.pushStatus($1, $2, $3)"
     pushStatus :: JSString -> JSString -> JSString -> IO ()
 
-foreign import javascript safe "atomCallbackTextEditor.pushInterpreterUpdate($1, $2)"
+foreign import javascript safe "callback.pushInterpreterUpdate($1, $2)"
     pushInterpreterUpdate' :: JSString -> JSVal -> IO ()
 
-foreign import javascript safe "atomCallbackTextEditor.subscribeEventListenerInternal($1)"
+foreign import javascript safe "callback.subscribeEventListenerInternal($1)"
     subscribeEventListenerInternal' :: Callback (JSVal -> IO ()) -> IO ()
 
 foreign import javascript safe "($1).unsubscribeEventListenerInternal()"
     unsubscribeEventListenerInternal' :: Callback (JSVal -> IO ()) -> IO ()
 
-foreign import javascript safe "atomCallbackTextEditor.subscribeDiffs($1)"
+foreign import javascript safe "callback.subscribeDiffs($1)"
     subscribeDiffs' :: Callback (JSVal -> IO ()) -> IO ()
 
 foreign import javascript safe "($1).unsubscribeDiffs()"

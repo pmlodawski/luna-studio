@@ -89,7 +89,7 @@ nodeKey' = \case
     Searcher.NodeName nl _ -> Just $ convert nl
     _                      -> Nothing
 
-foreign import javascript safe "atomCallback.getNodeEditorView().setSearcher($1)"
+foreign import javascript safe "callback.getNodeEditorView().setSearcher($1)"
     setSearcher__ :: JSVal -> IO ()
 
 setSearcher :: MonadIO m => Maybe SearcherView -> m ()

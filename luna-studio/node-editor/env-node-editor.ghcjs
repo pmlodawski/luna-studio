@@ -1,12 +1,12 @@
-var analytics        = require('./analytics')
-    app              = require('./app'),
-    atomCallback     = require('./atom-callback'),
-    common           = require('./common'),
-    config           = require('./config'),
-    fontSize         = require('./font-size'),
-    gzip             = require('./gzip'),
-    init             = require('./init'),
-    lexerClasses     = require('./lexer-classes');
+var analytics    = require('./analytics')
+    app          = require('./app'),
+    callback     = require('./atom-callback'),
+    common       = require('./common'),
+    config       = require('./config'),
+    fontSize     = require('./font-size'),
+    gzip         = require('./gzip'),
+    init         = require('./init'),
+    lexerClasses = require('./lexer-classes');
 
 
 var run = function(maybe_url, maybe_mountPoint, websocket) {
@@ -17,12 +17,12 @@ GHCJS_CODE_BE_THERE
 
 };
 
-return { start:                run
-       , connector:            atomCallback.connector
-       , setView:              atomCallback.setNodeEditorView
-       , onNotification:       atomCallback.onNotification
-       , pushEvent:            atomCallback.pushEvent
-       , pushViewEvent:        atomCallback.view.pushEvent
-       , setEventFilter:       atomCallback.setEventFilter
-       , onExpectedEvent:      atomCallback.onExpectedEvent
+return { start:           run
+       , connector:       callback.connector
+       , setView:         callback.setNodeEditorView
+       , onNotification:  callback.onNotification
+       , pushEvent:       callback.pushEvent
+       , pushViewEvent:   callback.view.pushEvent
+       , setEventFilter:  callback.setEventFilter
+       , onExpectedEvent: callback.onExpectedEvent
        }

@@ -31,7 +31,7 @@ instance Convertible HalfConnection HalfConnectionView where
         {- srcPort  -} (c ^. HalfConnection.from . PortRef.portId  . to sliceAnyPortId . to convert)
         {- reversed -} (c ^. HalfConnection.from . to PortRef.isInPortRef)
 
-foreign import javascript safe "atomCallback.getNodeEditorView().setHalfConnections($1)"
+foreign import javascript safe "callback.getNodeEditorView().setHalfConnections($1)"
     setHalfConnections__ :: JSVal -> IO ()
 
 setHalfConnections :: MonadIO m => [HalfConnectionView] -> m ()

@@ -1,7 +1,4 @@
-$$              = require('./common')
-config          = require('./config')
-
-atomCallback            = require('./atom-callback')
+callback = require('./atom-callback')
 
 window.visualizerFramesManager = require('./visualizers')
 

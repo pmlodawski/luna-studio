@@ -33,7 +33,7 @@ instance Convertible App BreadcrumbView where
         {- modeuleName -} (a ^. App.moduleName)
         {- items       -} (a ^. App.breadcrumbs . to B.namedInits)
 
-foreign import javascript safe "atomCallback.getNodeEditorView().setBreadcrumb($1)"
+foreign import javascript safe "callback.getNodeEditorView().setBreadcrumb($1)"
     setBreadcrumb__ :: JSVal -> IO ()
 
 setBreadcrumb :: MonadIO m => BreadcrumbView -> m ()
