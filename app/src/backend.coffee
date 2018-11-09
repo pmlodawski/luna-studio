@@ -19,23 +19,23 @@ libConfig =
   nodeEditor :
     path : 'lib/node-editor.js'
     args :
-      arg_url      : -> '/tmp/luna/Test/src/Main.luna'
-      arg_mount    : -> 'node-editor'
+      arg_url      : -> '/tmp/luna/Test/src/Main.luna' #TODO remove
+      arg_mount    : -> 'node-editor' #TODO remove
       analytics    : analytics
-      atomCallback : callback
-      config       : config
+      atomCallback : callback #TODO rename
+      config       : config #TODO rename
       generateUUID : uuid.generateUUID
       gzip         : gzip
-      init         : websocketConfig
+      init         : websocketConfig #TODO rename
 
   codeEditor :
     path : 'lib/text-editor.js'
     args :
       analytics              : analytics
-      atomCallbackTextEditor : codeCallback
-      config                 : config
+      atomCallbackTextEditor : codeCallback #TODO rename
+      config                 : config #TODO rename
       gzip                   : gzip
-      init                   : websocketConfig
+      init                   : websocketConfig #TODO rename
 
 export initialize = =>
   libs = await Libs.load libConfig
