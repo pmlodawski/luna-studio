@@ -1,5 +1,3 @@
-"use strict";
-
 defaultBackend = () ->
     # var l = window.location;
     # if(typeof(l) != "undefined")

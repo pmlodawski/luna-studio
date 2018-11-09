@@ -8,11 +8,15 @@ import * as config       from './config'
 import * as gzip         from './gzip'
 import * as uuid         from './uuid'
 import * as websocket    from './websocket'
+import * as logger       from './logger'
+import * as Enum         from './enum'
+
 import * as Promise      from 'bluebird'
 
 import {NodeEditor}      from './NodeEditor'
 
 
+# TODO: We should never keep such functions attached to window.
 window.listVisualizers = => [] #TODO
 window.getInternalVisualizersPath = => '' #TODO
 window.getLunaVisualizersPath = => '' #TODO
@@ -21,6 +25,7 @@ window.getLunaVisualizers = => [] #TODO
 window.getProjectVisualizers = => [] #TODO
 window.getImportedVisualizers = => {} #TODO
 
+# TODO: the `init` line belowe looks strange 
 init = websocket: websocket()
 generateUUID = uuid.generateUUID
 atomCallback = callback
@@ -31,125 +36,149 @@ atomCallbackTextEditor = codeCallback
 ### Libs Config ###
 ###################
 
-libsConfig = 
-  'lib/node-editor.js': 
-    arg_url      : -> '/tmp/luna/Test/src/Main.luna'
-    arg_mount    : -> 'node-editor'
-    analytics    : analytics
-    atomCallback : atomCallback
-    config       : config
-    generateUUID : generateUUID
-    gzip         : gzip
-    init         : init
+libs =
+  nodeEditor :
+    path : 'lib/node-editor.js'
+    args :
+      arg_url      : -> '/tmp/luna/Test/src/Main.luna'
+      arg_mount    : -> 'node-editor'
+      analytics    : analytics
+      atomCallback : atomCallback
+      config       : config
+      generateUUID : generateUUID
+      gzip         : gzip
+      init         : init
 
-  'lib/text-editor.js': 
-    analytics              : analytics
-    atomCallbackTextEditor : codeCallback
-    config                 : config
-    gzip                   : gzip
-    init                   : init
+  codeEditor : 
+    path : 'lib/text-editor.js'
+    args : 
+      analytics              : analytics
+      atomCallbackTextEditor : codeCallback
+      config                 : config
+      gzip                   : gzip
+      init                   : init
+
+
 
 ####################
 ### Libs Loading ###
 ####################
 
-
-ajaxGetAsync = (url) ->
+ajaxGetAsync = (el, progress) ->
   return new Promise (resolve, reject) ->
-    console.log ('Downloading ' + url)
+    logger.info 'Downloading', el.id
     xhr = new XMLHttpRequest
     xhr.timeout = 5000
     xhr.onreadystatechange = (evt) ->
       if (xhr.readyState == 4)
         if (xhr.status == 200)
           resolve 
-            url  : url 
+            id   : el.id 
             text : xhr.responseText 
         else 
           reject (throw new Error xhr.statusText)
-    xhr.onprogress = (evt) ->
-       progress = Math.floor(evt.loaded / evt.total * 1000) / 10
-       console.log ('Progress ' + progress + '%')
+    xhr.onprogress = (evt) -> progress
+      id     : el.id
+      loaded : evt.loaded
     xhr.addEventListener "error", reject
-    xhr.open 'GET', url, true
+    xhr.open 'GET', el.url, true
     xhr.send null
 
-fileNames = Object.keys(libsConfig)
-loader    = Promise.map fileNames, (fileName) -> ajaxGetAsync fileName
-loader.catch (e) -> console.error "ERROR loading scripts!"
-
-loadLibs = () ->
+loadLibs = -> logger.group 'Loading libs', =>
+  loader = Promise.map Object.keys(libs), (lib) -> 
+    ajaxGetAsync {id: lib, url: libs[lib].path}, () ->
+  loader.catch (e) -> console.error "ERROR loading scripts!"
   srcs = await loader
   fns  = {}
   srcs.forEach (src) ->
-    console.log('Compiling ' + src.url)
-    args   = libsConfig[src.url]
-    argMap = '{' + Object.keys(args).join(",") + '}'
+    logger.info 'Compiling', src.id
+    lib      = libs[src.id]
+    args     = lib.args
+    argNames = Object.keys(args)
+    argMap   = '{' + argNames.join(",") + '}'
     fn = new Function argMap, src.text
-    fns[src.url] = (() -> fn(args))
+    fns[src.id] = (() -> fn(args))
   fns
+
 
 
 ############
 ### Main ###
 ############
 
+# TODO: This should be obtained from the backend, not hardcoded here
+messages = Enum.make(
+  'Init', 
+  'ProjectSet', 
+  'FileOpened',
+  'SetProject',
+  'GetBuffer'
+)
+
 main = () -> 
-  fns = await loadLibs()
+  libs = await loadLibs()
 
   globalRegistry = {}
 
   nodeBackend =
-      start:           fns['lib/node-editor.js']
-      connector:       callback.connector
-      setView:         callback.setNodeEditorView
-      onNotification:  callback.onNotification
-      pushEvent:       callback.pushEvent
-      pushViewEvent:   callback.view.pushEvent
-      setEventFilter:  callback.setEventFilter
-      onExpectedEvent: callback.onExpectedEvent
+    start:           libs.nodeEditor
+    connector:       callback.connector
+    setView:         callback.setNodeEditorView
+    onNotification:  callback.onNotification
+    pushEvent:       callback.pushEvent
+    pushViewEvent:   callback.view.pushEvent
+    setEventFilter:  callback.setEventFilter
+    onExpectedEvent: callback.onExpectedEvent
 
   codeBackend =
-      start:               fns['lib/text-editor.js']
-      connect:             (connector)   => connector(globalRegistry)
-      lex:                 (stack, data) => codeCallback.lex stack, data
-      onInsertCode:        (callback)    => codeCallback.onInsertCode callback
-      onInterpreterUpdate: (callback)    => codeCallback.onInterpreterUpdate callback
-      onSetBuffer:         (callback)    => codeCallback.onSetBuffer callback
-      onSetClipboard:      (callback)    => codeCallback.onSetClipboard callback
-      pushDiffs:           (diffs)       => codeCallback.pushDiffs diffs
-      pushInternalEvent:   (data)        => codeCallback.pushInternalEvent data
-      onStatus:            (callback)    => codeCallback.onStatus callback
+    start:               libs.codeEditor
+    connect:             (connector)   => connector(globalRegistry)
+    lex:                 (stack, data) => codeCallback.lex stack, data
+    onInsertCode:        (callback)    => codeCallback.onInsertCode callback
+    onInterpreterUpdate: (callback)    => codeCallback.onInterpreterUpdate callback
+    onSetBuffer:         (callback)    => codeCallback.onSetBuffer callback
+    onSetClipboard:      (callback)    => codeCallback.onSetClipboard callback
+    pushDiffs:           (diffs)       => codeCallback.pushDiffs diffs
+    pushInternalEvent:   (data)        => codeCallback.pushInternalEvent data
+    onStatus:            (callback)    => codeCallback.onStatus callback
 
   class LunaStudio
-      launch: =>
-          @projectPath = '/tmp/luna/Test'
-          codeBackend.connect nodeBackend.connector
-          codeBackend.onStatus @__onStatus
-          nodeBackend.onNotification console.log
-          codeBackend.start()
+    launch: =>
+      @projectPath = '/tmp/luna/Test'
+      codeBackend.connect nodeBackend.connector
+      codeBackend.onStatus @__onMessage
+      nodeBackend.onNotification (msg) ->
+        logger.warning 'Unhandled', msg
+      codeBackend.start()
 
-      __onStatus: (act, arg0, arg1) =>
-          console.log 'status:', { act, arg0, arg1 }
-          switch act
-              when 'Init'
-                  codeBackend.pushInternalEvent
-                      tag: 'SetProject'
-                      _path: @projectPath
-              when 'ProjectSet'
-                  @openMain()
-              when 'FileOpened'
-                  codeBackend.pushInternalEvent
-                      tag: 'GetBuffer'
-                      _path: arg0
+    # TODO: This design is to be changed. Having always 3 variables for 
+    #       different purposes is very bad.
+    __onMessage: (act, arg0, arg1) =>
+      logger.group ('Received ' + act), =>
+        logger.info 'args', { arg0, arg1 }
+        switch act
+          when messages.Init then @sendMessage
+              tag: messages.SetProject
+              _path: @projectPath
+          when messages.ProjectSet then @openMain()
+          when messages.FileOpened then @sendMessage
+              tag: messages.GetBuffer
+              _path: arg0
 
-      openMain: =>
-          mainLocation = path.join @projectPath, 'src', 'Main.luna'
-          @nodeEditor ?= new NodeEditor mainLocation, nodeBackend, codeBackend
+    sendMessage: (msg) -> 
+      logger.info 'Sending', msg
+      codeBackend.pushInternalEvent msg
 
+    openMain: => logger.group 'Launching Node Editor', =>
+      mainLocation = path.join @projectPath, 'src', 'Main.luna'
+      # TODO: NodeEditor should open and initialize immediately.
+      #       New file should be provided on demand. Initialization of 
+      #       WebGL etc when openning file is a very bad idea.
+      @nodeEditor ?= new NodeEditor mainLocation, nodeBackend, codeBackend
 
-  ls = new LunaStudio
-  ls.launch()
+  logger.group 'launching Luna Studio', =>
+    ls = new LunaStudio
+    ls.launch()
 
   # n.start();
   # callback.connector
