@@ -5,16 +5,15 @@ import * as analytics    from './analytics'
 import * as callback     from './callback'
 import * as codeCallback from './codeCallback'
 import * as config       from './config'
+import * as Enum         from './enum'
 import * as gzip         from './gzip'
+import * as Libs         from './Libs'
 import * as uuid         from './uuid'
 import * as websocket    from './websocket'
-import * as Enum         from './enum'
 
 import * as logger       from 'luna-logger'
-import * as Promise      from 'bluebird'
 
 import {NodeEditor}      from './NodeEditor'
-
 
 # TODO: We should never keep such functions attached to window.
 window.listVisualizers = => [] #TODO
@@ -25,29 +24,24 @@ window.getLunaVisualizers = => [] #TODO
 window.getProjectVisualizers = => [] #TODO
 window.getImportedVisualizers = => {} #TODO
 
-# TODO: the `init` line belowe looks strange 
-init = websocket: websocket()
-generateUUID = uuid.generateUUID
-atomCallback = callback
-atomCallbackTextEditor = codeCallback
-
+websocketConfig = websocket: websocket()
 
 ###################
 ### Libs Config ###
 ###################
 
-libs =
+libConfig =
   nodeEditor :
     path : 'lib/node-editor.js'
     args :
       arg_url      : -> '/tmp/luna/Test/src/Main.luna'
       arg_mount    : -> 'node-editor'
       analytics    : analytics
-      atomCallback : atomCallback
+      atomCallback : callback
       config       : config
-      generateUUID : generateUUID
+      generateUUID : uuid.generateUUID
       gzip         : gzip
-      init         : init
+      init         : websocketConfig
 
   codeEditor : 
     path : 'lib/text-editor.js'
@@ -56,51 +50,7 @@ libs =
       atomCallbackTextEditor : codeCallback
       config                 : config
       gzip                   : gzip
-      init                   : init
-
-
-
-####################
-### Libs Loading ###
-####################
-
-ajaxGetAsync = (el, progress) ->
-  return new Promise (resolve, reject) ->
-    logger.info 'Downloading', el.id
-    xhr = new XMLHttpRequest
-    xhr.timeout = 5000
-    xhr.onreadystatechange = (evt) ->
-      if (xhr.readyState == 4)
-        if (xhr.status == 200)
-          resolve 
-            id   : el.id 
-            text : xhr.responseText 
-        else 
-          reject (throw new Error xhr.statusText)
-    xhr.onprogress = (evt) -> progress
-      id     : el.id
-      loaded : evt.loaded
-    xhr.addEventListener "error", reject
-    xhr.open 'GET', el.url, true
-    xhr.send null
-
-loadLibs = -> logger.group 'Loading libs', =>
-  loader = Promise.map Object.keys(libs), (lib) -> 
-    ajaxGetAsync {id: lib, url: libs[lib].path}, () ->
-  loader.catch (e) -> console.error "ERROR loading scripts!"
-  srcs = await loader
-  fns  = {}
-  srcs.forEach (src) ->
-    logger.info 'Compiling', src.id
-    lib      = libs[src.id]
-    args     = lib.args
-    argNames = Object.keys(args)
-    argMap   = '{' + argNames.join(",") + '}'
-    fn = new Function argMap, src.text
-    fns[src.id] = (() -> fn(args))
-  fns
-
-
+      init                   : websocketConfig
 
 ############
 ### Main ###
@@ -116,7 +66,7 @@ messages = Enum.make(
 )
 
 main = () -> 
-  libs = await loadLibs()
+  libs = await Libs.load libConfig
 
   globalRegistry = {}
 
