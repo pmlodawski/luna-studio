@@ -4,7 +4,7 @@ var distPath = path.resolve(__dirname, 'dist/web');
 
 function baseConfig(entryPath) {
   return {
-    mode: "production" // "production" | "development" | "none" // Chosen mode tells webpack to use its built-in optimizations accordingly.
+    mode: "development" // "production" | "development" | "none" // Chosen mode tells webpack to use its built-in optimizations accordingly.
 
     , devtool: "eval-source-map"
     , entry: entryPath

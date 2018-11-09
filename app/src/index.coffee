@@ -1,6 +1,4 @@
-import * as logger from 'luna-logger'
 {app, BrowserWindow} = require('electron')
-
 
 ######################
 ### Error handling ###
@@ -47,7 +45,7 @@ addHangHandler = (win) ->
 # Global reference in order to prevent garbage collecting
 mainWindow = null
 
-createWindow = () ->
+createWindow = () ->  
   mainWindow = new BrowserWindow
     width       : 800
     height      : 600
@@ -59,8 +57,6 @@ createWindow = () ->
   addHangHandler  mainWindow
 
   address = 'http://localhost:9000/'
-  logger.info 'Window initialized'
-  logger.info 'Loading window content from', address
   mainWindow.loadURL address
   
 
