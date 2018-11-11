@@ -328,3 +328,12 @@ startReadyVisualizations nl = do
 --     modifyNodeEditor $ do
 --         visualizations %= delete (nl, visIx, oldPos)
 --         visualizations %= ((nl, visIx, pos) :)
+
+exitAnyVisualizationMode :: Command State ()
+exitAnyVisualizationMode
+    =  continue exitDocVisualizationMode
+    >> continue exitVisualizationMode where
+        exitDocVisualizationMode :: DocVisualizationActive -> Command State ()
+        exitDocVisualizationMode = end
+        exitVisualizationMode :: VisualizationActive -> Command State ()
+        exitVisualizationMode = end

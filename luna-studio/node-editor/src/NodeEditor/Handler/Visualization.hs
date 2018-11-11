@@ -1,36 +1,71 @@
-{-# LANGUAGE OverloadedStrings #-}
 module NodeEditor.Handler.Visualization where
 
 import           Common.Action.Command                (Command)
 import           Common.Prelude
 import qualified NodeEditor.Action.Visualization      as Visualization
 import           NodeEditor.Event.Event               (Event (Shortcut, UI))
+import           NodeEditor.Event.Event               (Event (View))
+import           NodeEditor.Event.Shortcut            (ShortcutEvent)
 import qualified NodeEditor.Event.Shortcut            as Shortcut
 import           NodeEditor.Event.UI                  (UIEvent (AppEvent, VisualizationEvent))
+import           NodeEditor.Event.View                (ViewEvent, base, path)
+import qualified NodeEditor.Event.View                as View
 import qualified NodeEditor.React.Event.App           as App
 import qualified NodeEditor.React.Event.Visualization as Visualization
-import           NodeEditor.React.Model.Visualization (VisualizationMode (Preview))
+import           NodeEditor.React.Model.Visualization (VisualizationMode (Preview),
+                                                       VisualizationParent (Node))
 import           NodeEditor.State.Action              (continue)
 import           NodeEditor.State.Global              (State)
 
 
 handle :: Event -> Maybe (Command State ())
-handle (UI (VisualizationEvent (Visualization.Event visParent (Visualization.Focus visId))))                    = Just $ Visualization.focusVisualization visParent visId
-handle (UI (VisualizationEvent (Visualization.Event visParent (Visualization.SelectVisualizer visId visName)))) = Just $ Visualization.selectVisualizer visParent visId visName
-handle (UI (VisualizationEvent (Visualization.Event visParent (Visualization.ToggleVisualizations))))           = Just $ Visualization.toggleVisualizations visParent
-handle (Shortcut (Shortcut.Event Shortcut.ZoomVisualization _))                                                 = Just $ Visualization.handleZoomVisualization
-handle (Shortcut (Shortcut.Event Shortcut.OpenVisualizationPreview _))                                          = Just $ Visualization.enterVisualizationMode Preview
-handle (Shortcut (Shortcut.Event Shortcut.CloseVisualizationPreview _))                                         = Just $ continue Visualization.exitPreviewMode
-                                                                                                                      >> continue Visualization.exitDocPreviewMode
-handle (UI (AppEvent (App.Wheel _ _)))                                                                          = Just $ continue Visualization.exitVisualizationMode
-                                                                                                                      >> continue Visualization.exitDocVisualizationMode
-handle _                                                                                                        = Nothing
+handle (UI (VisualizationEvent evt))   = Just $ handleVisualizationEvent evt
+handle (Shortcut evt)                  = handleShortcutEvent evt
+handle (UI (AppEvent (App.Wheel _ _))) = Just Visualization.exitAnyVisualizationMode
+handle (View evt)                      = handleViewEvent evt
+handle _                               = Nothing
 
--- handle :: Event -> Maybe (Command State ())
--- handle (UI (VisualizationEvent (Visualization.Pin   nodeLoc visIx         ))) = Just $ Visualization.pin   nodeLoc visIx
--- handle (UI (VisualizationEvent (Visualization.Unpin nodeLoc visIx position))) = Just $ Visualization.unpin nodeLoc visIx position
--- handle (UI (VisualizationEvent (Visualization.MouseDown evt nodeLoc visIx position))) = Just $
---     when (Mouse.withoutMods evt Mouse.leftButton) $ Visualization.startDrag nodeLoc visIx position evt
--- handle (UI (AppEvent (App.MouseMove mevt _))) = Just $ continue $ Visualization.drag mevt
--- handle (UI (AppEvent (App.MouseUp   mevt  ))) = Just $ continue $ Visualization.stopDrag mevt
--- handle _ = Nothing
+handleVisualizationEvent :: Visualization.Event -> Command State ()
+handleVisualizationEvent visEvt = let
+        visParent = visEvt ^. Visualization.visParent
+    in case visEvt ^. Visualization.evtType of
+        Visualization.Focus visId
+            -> Visualization.focusVisualization visParent visId
+        Visualization.SelectVisualizer visId visName
+            -> Visualization.selectVisualizer visParent visId visName
+        Visualization.ToggleVisualizations
+            -> Visualization.toggleVisualizations visParent
+
+handleShortcutEvent :: ShortcutEvent -> Maybe (Command State())
+handleShortcutEvent evt = case evt ^. Shortcut.shortcut of
+    Shortcut.ZoomVisualization -> Just $ Visualization.handleZoomVisualization
+    Shortcut.OpenVisualizationPreview
+        -> Just $ Visualization.enterVisualizationMode Preview
+    Shortcut.CloseVisualizationPreview -> Just $ do
+        continue Visualization.exitPreviewMode
+        continue Visualization.exitDocPreviewMode
+    _ -> Nothing
+
+unfocusesVisualization :: ViewEvent -> Bool
+unfocusesVisualization evt = case evt ^. base of
+    View.FocusVisualization {} -> False
+    View.Mouse mevt            -> not $ elem (mevt ^. View.type_)
+        ["mouseenter", "mouseleave", "mousemove", "mouseout", "mouseover"]
+    _                          -> True
+
+handleViewEvent :: ViewEvent -> Maybe (Command State ())
+handleViewEvent evt = case evt ^. base of
+    View.FocusVisualization evt' -> Just $ do
+        let parent = Node $ View.getNodeLoc evt
+            visualizationId = View.getVisualizationId evt
+        Visualization.focusVisualization parent visualizationId
+    View.SelectVisualizer evt' -> Just $ do
+        let parent = Node $ View.getNodeLoc evt
+            visualizerId = evt' ^. View.visualizerId
+            visualizationId = View.getVisualizationId evt
+        Visualization.selectVisualizer parent visualizationId visualizerId
+    View.ToggleVisualizations _ -> Just . Visualization.toggleVisualizations
+        . Node $ View.getNodeLoc evt
+    _ -> if unfocusesVisualization evt
+            then Just Visualization.exitAnyVisualizationMode
+            else Nothing

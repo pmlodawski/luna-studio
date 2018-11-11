@@ -13,7 +13,7 @@ import           NodeEditor.React.Model.Visualization (NodeVisualizations,
                                                        VisualizationId,
                                                        VisualizationMode (Default, Focused, FullScreen, Preview),
                                                        Visualizer, VisualizerId,
-                                                       VisualizerType (InternalVisualizer, LunaVisualizer, ProjectVisualizer))
+                                                       VisualizerType (ImportedVisualizer, InternalVisualizer, LunaVisualizer, ProjectVisualizer))
 import qualified NodeEditor.React.Model.Visualization as Vis
 import           NodeEditor.View.Diff                 (DiffT, diffApply,
                                                        diffConvert,
@@ -25,7 +25,7 @@ type VisualizerName = String
 
 data VisualizerIdView = VisualizerIdView
     { _visualizerName :: String
-    , _visualizerType :: String
+    , _visualizerType :: VisualizerType
     } deriving (Eq, Generic, Show)
 
 makeLenses ''VisualizerIdView
@@ -75,15 +75,10 @@ instance Convertible VisualizationMode String where
     convert FullScreen = "FullScreen"
     convert _          = "Default"
 
-instance Convertible VisualizerType String where
-    convert InternalVisualizer = "InternalVisualizer"
-    convert LunaVisualizer     = "LunaVisualizer"
-    convert ProjectVisualizer  = "ProjectVisualizer"
-
 instance Convertible VisualizerId VisualizerIdView where
     convert vid = VisualizerIdView
         {- visualizerName -} (convert $ vid ^. Vis.visualizerName)
-        {- visualizerType -} (convert $ vid ^. Vis.visualizerType)
+        {- visualizerType -} (vid ^. Vis.visualizerType)
 
 instance Convertible Visualizer VisualizerView where
     convert v = VisualizerView

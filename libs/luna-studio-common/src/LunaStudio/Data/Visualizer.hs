@@ -8,6 +8,7 @@ import qualified Data.Map                   as Map
 import qualified Data.Text                  as Text
 
 import Control.Lens            (Getter, makePrisms, to)
+import Control.Lens.Aeson      (parseDropUnary, toEncodingDropUnary)
 import Data.Aeson.Types        (FromJSON, ToJSON)
 import Data.Binary             (Binary)
 import Data.Map                (Map)
@@ -40,10 +41,10 @@ data VisualizerType
     deriving (Eq, Generic, Ord, Read, Show)
 
 makePrisms ''VisualizerType
-instance ToJSON   VisualizerType
 instance NFData   VisualizerType
-instance FromJSON VisualizerType
 instance Binary   VisualizerType
+instance FromJSON VisualizerType where parseJSON  = parseDropUnary
+instance ToJSON   VisualizerType where toEncoding = toEncodingDropUnary
 
 data VisualizerId = VisualizerId
     { _visualizerType :: VisualizerType
@@ -52,9 +53,9 @@ data VisualizerId = VisualizerId
 
 makeLenses ''VisualizerId
 instance Binary   VisualizerId
-instance FromJSON VisualizerId
 instance NFData   VisualizerId
-instance ToJSON   VisualizerId
+instance FromJSON VisualizerId where parseJSON  = parseDropUnary
+instance ToJSON   VisualizerId where toEncoding = toEncodingDropUnary
 
 data Visualizer = Visualizer
     { _visualizerId      :: VisualizerId
