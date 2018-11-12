@@ -142,8 +142,11 @@ search :: Input.Divided -> NodeSearcherData -> Maybe ClassName -> [Match Symbol]
 search input nsData mayClassName = do
     let query          = input ^. Input.query
         strippedPrefix = Text.strip $ input ^. Input.prefix
+        notNullInput   = not . Text.null $ convert input
         weights        = Just $ getWeights input mayClassName
-        searchResult   = NodeSearcher.search query nsData weights
+        searchResult   = if notNullInput || isJust mayClassName
+            then NodeSearcher.search                       query nsData weights
+            else NodeSearcher.notConnectedEmptyInputSearch query nsData weights
     if strippedPrefix == "def" then mempty
         else if query == "_"   then Searcher.wildcardMatch : searchResult
         else searchResult

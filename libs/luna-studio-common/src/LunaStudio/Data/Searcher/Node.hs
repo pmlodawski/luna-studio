@@ -25,6 +25,15 @@ import Data.Set         (Set)
 
 type LibraryName = Library.Name
 
+data SymbolPreference = SymbolPreference
+    { _symbolName    :: Symbol.Name
+    , _symbolLibrary :: LibraryName
+    , _symbolKind    :: Symbol.Kind
+    , _symbolBonus   :: Int
+    } deriving (Eq, Generic, Show)
+
+makeLenses ''SymbolPreference
+
 data TypePreference = TypePreference
     { _localFunctionsWeight         :: Weight
     , _globalFunctionsWeight        :: Weight
@@ -35,6 +44,11 @@ data TypePreference = TypePreference
 
 makeLenses ''TypePreference
 instance Default TypePreference where def = TypePreference 1 1 (def, 1) 1 1
+
+
+notConnectedEmptyInputPreference :: [SymbolPreference]
+notConnectedEmptyInputPreference =
+    [ SymbolPreference "now" "Std.Time" (Symbol.Method "Time") 100000 ]
 
 
 data ClassHints = ClassHints
@@ -125,6 +139,15 @@ search :: Query -> NodeSearcherData -> Maybe TypePreference -> [Match Symbol]
 search q nsData
     = Searcher.search q . nodeSearcherDataToSymbols nsData . fromJust def
 
+notConnectedEmptyInputSearch
+    :: Query -> NodeSearcherData -> Maybe TypePreference -> [Match Symbol]
+notConnectedEmptyInputSearch q nsData tp = Searcher.search q
+    $ toSymbolsWithSymbolsPreference
+        nsData
+        (fromJust def tp)
+        notConnectedEmptyInputPreference
+
+
 functionsToSymbols :: [(Name, Documentation)] -> Library -> TypePreference
     -> [Symbol]
 functionsToSymbols functions' lib typePreference =
@@ -187,6 +210,26 @@ nodeSearcherDataToSymbols nsData typePreference =
     let toSymbols name' hints
             = moduleToSymbols (getLibrary name' nsData) hints typePreference
     in concat . Map.elems . Map.mapWithKey toSymbols $ nsData ^. libraries
+
+matchesSymbolPreference :: Symbol -> SymbolPreference -> Bool
+matchesSymbolPreference symbol sp =
+    let nameMatches = sp ^. symbolName  == symbol ^. Symbol.name
+        libMatches
+            = sp ^. symbolLibrary == symbol ^. Symbol.library . Library.name
+        kindMatches = sp ^. symbolKind  == symbol ^. Symbol.kind
+    in nameMatches && libMatches && kindMatches
+
+toSymbolsWithSymbolsPreference
+    :: NodeSearcherData -> TypePreference -> [SymbolPreference] -> [Symbol]
+toSymbolsWithSymbolsPreference nsData typePreference symbolPreferences =
+    let symbols = nodeSearcherDataToSymbols nsData typePreference
+        getAdjustedBonus s = view symbolBonus
+            <$> (find (matchesSymbolPreference s) symbolPreferences)
+        adjust s = maybe
+            s
+            (\b -> s & Symbol.initialBonus .~ b)
+            $ getAdjustedBonus s
+    in map adjust symbols
 
 
 getWeights :: Bool -> Bool -> Maybe ClassName  -> Query -> TypePreference
