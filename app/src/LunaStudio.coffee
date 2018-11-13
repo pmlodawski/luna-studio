@@ -35,20 +35,14 @@ export class LunaStudio
     logger.group ('Received ' + act), =>
       logger.info 'args', { arg0, arg1 }
       switch act
-        when messages.Init then @sendMessage
+        when messages.Init then @backend.code.pushInternalEvent
           tag: messages.SetProject
           _path: @projectPath
         when messages.ProjectSet then @openMain()
-        when messages.FileOpened then @sendMessage
+        when messages.FileOpened then @backend.code.pushInternalEvent
           tag: messages.GetBuffer
           _path: arg0
 
-  sendMessage: (msg) ->
-    logger.info 'Sending', msg
-    @backend.code.pushInternalEvent msg
-
   openMain: => logger.group 'Opening Main.luna', =>
     mainLocation = path.join @projectPath, 'src', 'Main.luna'
-    # TODO: NodeEditor should open and initialize immediately.
-    #       New file should be provided on demand. Initialization of
-    #       WebGL etc when openning file is a very bad idea.
+    @nodeEditor.open mainLocation

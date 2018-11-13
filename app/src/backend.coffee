@@ -48,10 +48,12 @@ export initialize = =>
       connector:       nodeCallback.connector
       setView:         nodeCallback.setNodeEditorView
       onNotification:  nodeCallback.onNotification
-      pushEvent:       nodeCallback.pushEvent
       pushViewEvent:   nodeCallback.view.pushEvent
       setEventFilter:  nodeCallback.setEventFilter
       onExpectedEvent: nodeCallback.onExpectedEvent
+      pushEvent:       (msg) =>
+        logger.info 'Sending [node]', msg
+        nodeCallback.pushEvent msg
     code:
       start:               libs.codeEditor
       connect:             (connector)   => connector(globalRegistry)
@@ -61,5 +63,7 @@ export initialize = =>
       onSetBuffer:         (callback)    => codeCallback.onSetBuffer callback
       onSetClipboard:      (callback)    => codeCallback.onSetClipboard callback
       pushDiffs:           (diffs)       => codeCallback.pushDiffs diffs
-      pushInternalEvent:   (data)        => codeCallback.pushInternalEvent data
       onStatus:            (callback)    => codeCallback.onStatus callback
+      pushInternalEvent:   (msg)         =>
+        logger.info 'Sending [code]', msg
+        codeCallback.pushInternalEvent msg
