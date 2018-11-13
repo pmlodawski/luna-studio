@@ -13,21 +13,24 @@ newtype Color = Color
     { fromColor :: Int }
     deriving (Eq, Generic, Ord, Show, NFData)
 
-foreign import javascript safe "atom.config.get('luna-studio.typecolors_l')" colorL' :: JSVal -> JSVal
-foreign import javascript safe "atom.config.get('luna-studio.typecolors_c')" colorC' :: JSVal -> JSVal
-foreign import javascript safe "atom.config.get('luna-studio.typecolors_h')" colorH' :: JSVal -> JSVal
+-- foreign import javascript safe "atom.config.get('luna-studio.typecolors_l')" colorL' :: JSVal -> JSVal
+-- foreign import javascript safe "atom.config.get('luna-studio.typecolors_c')" colorC' :: JSVal -> JSVal
+-- foreign import javascript safe "atom.config.get('luna-studio.typecolors_h')" colorH' :: JSVal -> JSVal
 
 {-# NOINLINE colorC #-}
 colorC :: Int -> Float
-colorC = fromMaybe 45 . pFromJSVal . colorC' . pToJSVal
+colorC = const 45
+-- colorC = fromMaybe 45 . pFromJSVal . colorC' . pToJSVal
 
 {-# NOINLINE colorL #-}
 colorL :: Int -> Float
-colorL = fromMaybe 30 . pFromJSVal . colorL' . pToJSVal
+colorL = const 30
+-- colorL = fromMaybe 30 . pFromJSVal . colorL' . pToJSVal
 
 {-# NOINLINE colorH #-}
 colorH :: Int -> Float
-colorH = fromMaybe 100.7 . pFromJSVal . colorH' . pToJSVal
+colorH = const 100.7
+-- colorH = fromMaybe 100.7 . pFromJSVal . colorH' . pToJSVal
 
 data HSL a = HSL
     { _h :: a
