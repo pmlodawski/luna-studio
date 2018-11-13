@@ -36,7 +36,7 @@ instance Convertible Input Text where
 instance Convertible Divided Text where
     convert (Divided p q s) = p <> q <> s
 
-fromStream :: Text -> [Lexer.Token Lexer.Symbol] -> Int -> Input
+fromStream ::Text -> [Lexer.Token Lexer.Symbol] -> Int -> Input
 fromStream input' inputStream pos = getInput queryBegin pos where
     queryBegin = findQueryBegin inputStream pos
     isQuery :: Lexer.Symbol -> Bool
@@ -57,16 +57,24 @@ fromStream input' inputStream pos = getInput queryBegin pos where
     inString (Lexer.StrEsc {})           = True
     inString (Lexer.Quote _ Lexer.Begin) = True
     inString _                           = False
+    isAccessor :: Lexer.Symbol -> Bool
+    isAccessor (Lexer.Accessor {}) = True
+    isAccessor (Lexer.STX      {}) = True
+    isAccessor (Lexer.ETX      {}) = True
+    isAccessor _                   = False
     findQueryBegin :: [Lexer.Token Lexer.Symbol] -> Int -> Maybe Int
+    findQueryBegin []    0 = Just 0
     findQueryBegin []    _ = Nothing
     findQueryBegin (h:t) p = do
         let tokenLength = fromIntegral $ h ^. Lexer.span + h ^. Lexer.offset
-        if p > tokenLength
-            then (tokenLength +) <$> findQueryBegin t (p - tokenLength)
-        else if p <= (fromIntegral $ h ^. Lexer.span)
-            then if isQuery (h ^. Lexer.element) then Just 0 else Nothing
-        else if inString (h ^. Lexer.element)
-            then Nothing
+            skipToken   = (tokenLength +) <$> findQueryBegin t (p - tokenLength)
+            spanLength  = fromIntegral $ h ^. Lexer.span
+            getPositionInToken = if isQuery $ h ^. Lexer.element then Just 0
+                else if isAccessor $ h ^. Lexer.element          then Just p
+                else Nothing
+        if p > tokenLength                    then skipToken
+        else if p <= spanLength               then getPositionInToken
+        else if inString $ h ^. Lexer.element then Nothing
             else Just p
     getInput :: Maybe Int -> Int -> Input
     getInput Nothing    _   = RawInput input'
