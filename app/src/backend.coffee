@@ -1,5 +1,7 @@
 import 'setimmediate'
 
+import * as logger       from 'luna-logger'
+
 import * as analytics    from './analytics'
 import * as codeCallback from './codeCallback'
 import * as config       from './config'

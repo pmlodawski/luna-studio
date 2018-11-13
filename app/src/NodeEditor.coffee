@@ -1,6 +1,10 @@
 import * as logger  from 'luna-logger'
-
+import * as keypress from 'keypress.js'
 nodeEditorBaseGL = require 'luna-basegl-ui'
+
+import * as shortcuts from './shortcuts'
+import * as keymap from './keymap'
+
 
 mountPoint = 'node-editor'
 
@@ -21,6 +25,19 @@ export class NodeEditor
         logger.group 'Launching node backend', =>
           @backend.node.start()
       nodeEditorBaseGL.onEvent @_handleUIEvent
+      @listener = new keypress.Listener()
+      @_addShortcutListeners()
+
+  _addShortcutListeners: =>
+    s = shortcuts.shortcuts @_pushShortcut
+    for key, binding of keymap.keymap
+      if s[binding]?
+        @listener.simple_combo key, s[binding]
+
+  _pushShortcut: (name, arg = null) =>
+    @backend.node.pushEvent
+      _shortcut: name
+      _arg: arg
 
   open: (@uri) =>
     @backend.node.pushEvent(tag: "SetFile", path: @uri)

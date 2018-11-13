@@ -52,8 +52,9 @@
   },
   "postinstall": "electron-builder install-app-deps",
   "dependencies": {
-    "luna-logger": "^0.1.1",
+    "keypress.js": "^2.1.5",
     "luna-basegl-ui": "^0.3.8",
+    "luna-logger": "^0.1.1",
     "mixpanel-browser": "^2.23.0",
     "path": "^0.12.7",
     "setimmediate": "^1.0.5"
