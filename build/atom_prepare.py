@@ -56,7 +56,7 @@ def create_dirs():
 
 
 def create_dirs_atomless():
-    for path in ['../app/dist/lib']:
+    for path in ['../app/dist/web/lib']:
         os.makedirs(prep_path(path), exist_ok=True)
 
 def ghcjs_code():
