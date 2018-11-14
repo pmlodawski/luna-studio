@@ -5,6 +5,7 @@ module NodeEditor.React.Model.Searcher.Mode.Node
 
 import Common.Prelude
 import LunaStudio.Data.Searcher.Node as X (ClassHints (ClassHints), ClassName,
+                                           LibrariesHintsMap,
                                            LibraryHints (LibraryHints),
                                            LibraryName, Match, Name,
                                            NodeSearcherData (NodeSearcherData),
