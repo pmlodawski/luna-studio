@@ -32,7 +32,12 @@ export class NodeEditor
     s = shortcuts.shortcuts @_pushShortcut
     for key, binding of keymap.keymap
       if s[binding]?
-        @listener.simple_combo key, s[binding]
+        @listener.register_combo
+          keys: key
+          on_keydown: s[binding]
+          is_unordered: true
+          is_solitary: true
+
 
   _pushShortcut: (name, arg = null) =>
     @backend.node.pushEvent
