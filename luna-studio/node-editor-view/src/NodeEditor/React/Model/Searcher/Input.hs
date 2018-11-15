@@ -36,7 +36,7 @@ instance Convertible Input Text where
 instance Convertible Divided Text where
     convert (Divided p q s) = p <> q <> s
 
-fromStream ::Text -> [Lexer.Token Lexer.Symbol] -> Int -> Input
+fromStream :: Text -> [Lexer.Token Lexer.Symbol] -> Int -> Input
 fromStream input' inputStream pos = getInput queryBegin pos where
     queryBegin = findQueryBegin inputStream pos
     isQuery :: Lexer.Symbol -> Bool
