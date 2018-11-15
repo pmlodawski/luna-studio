@@ -75,9 +75,8 @@ import Data.Text.Position                   (Delta)
 import Data.Text.Span                       (SpacedSpan (..), leftSpacedSpan)
 import Data.Text.Strict.Lens                (packed)
 import Debug
-import Empire.ASTOp                         (ClassOp, GraphOp,
-                                             liftScheduler, runASTOp,
-                                             runAliasAnalysis)
+import Empire.ASTOp                         (ClassOp, GraphOp, liftScheduler,
+                                             runASTOp, runAliasAnalysis)
 import Empire.ASTOps.BreadcrumbHierarchy    (prepareChild)
 import Empire.ASTOps.Parse                  (FunctionParsing (..))
 import Empire.Commands.Code                 (addExprMapping, getExprMap,
@@ -111,9 +110,10 @@ import LunaStudio.Data.PortDefault          (PortDefault)
 import LunaStudio.Data.PortRef              (AnyPortRef (..), InPortRef (..),
                                              OutPortRef (..))
 import LunaStudio.Data.Position             (Position)
-import LunaStudio.Data.Searcher.Node        (ClassHints (..), LibraryName,
-                                             LibraryHints (LibraryHints))
 import LunaStudio.Data.Range                (Range (..))
+import LunaStudio.Data.Searcher.Node        (ClassHints (..), LibrariesHintsMap,
+                                             LibraryHints (LibraryHints),
+                                             LibraryName)
 
 
 addImports :: GraphLocation -> Set Text -> Empire ()
@@ -1409,9 +1409,9 @@ isPublicMethod :: IR.Name -> Bool
 isPublicMethod (nameToString -> n) = Safe.headMay n /= Just '_'
 
 importsToHints :: Unit.Unit -> LibraryHints
-importsToHints (Unit.Unit definitions classes) 
+importsToHints (Unit.Unit definitions classes)
     = LibraryHints funHints $ Map.mapKeys convert classHints where
-        funHints   = (convert *** (fromMaybe "" . view Def.documentation)) 
+        funHints   = (convert *** (fromMaybe "" . view Def.documentation))
             <$> Map.toList (unwrap definitions)
         classHints = (classToHints . view Def.documented) <$> classes
 
@@ -1438,7 +1438,7 @@ getImportPaths (GraphLocation file _) = do
     importPaths     <- Package.packageImportPaths currentProjPath
     return $ map (view _2) importPaths
 
-getSearcherHints :: GraphLocation -> Empire (Map LibraryName LibraryHints)
+getSearcherHints :: GraphLocation -> Empire LibrariesHintsMap
 getSearcherHints loc = do
     importPaths     <- liftIO $ getImportPaths loc
     availableSource <- liftIO $ forM importPaths $ \path -> do

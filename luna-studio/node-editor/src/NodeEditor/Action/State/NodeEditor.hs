@@ -34,7 +34,7 @@ import LunaStudio.Data.PortRef                    (AnyPortRef (..),
                                                    InPortRef (..),
                                                    OutPortRef (..))
 import LunaStudio.Data.Position                   (Position)
-import LunaStudio.Data.Searcher.Node              (LibraryHints, LibraryName)
+import LunaStudio.Data.Searcher.Node              (LibrariesHintsMap)
 import LunaStudio.Data.TypeRep                    (TypeRep (TStar),
                                                    toConstructorRep)
 import LunaStudio.Data.Visualizer                 (applyType,
@@ -324,7 +324,7 @@ setScreenTransform :: CameraTransformation -> Command State ()
 setScreenTransform camera
     = modifyNodeEditor $ NE.layout . Scene.screenTransform .= camera
 
-getNodeSearcherData :: Command State (Map LibraryName LibraryHints)
+getNodeSearcherData :: Command State LibrariesHintsMap
 getNodeSearcherData = getAvailableImports <$> use nodeSearcherData where
     getAvailableImports nsd = Map.filterWithKey
         (\k _ -> Set.member k $ nsd ^. NS.importedLibraries)

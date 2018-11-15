@@ -27,7 +27,7 @@ import LunaStudio.Data.TypeRep            (ConstructorRep (ConstructorRep))
 import NodeEditor.Action.Batch            (searchNodes)
 import NodeEditor.Action.State.NodeEditor (getLocalFunctions, getSearcher,
                                            inTopLevelBreadcrumb, modifySearcher)
-import NodeEditor.React.Model.Searcher    (ClassName, LibraryHints, LibraryName,
+import NodeEditor.React.Model.Searcher    (ClassName, LibrariesHintsMap, LibraryName,
                                            Match, NodeSearcherData, Searcher,
                                            Symbol, TypePreference, allCommands,
                                            localFunctionsLibraryName)
@@ -50,7 +50,7 @@ selectHint i = when (i >= 0) . modifySearcher $ do
     hLen <- use $ Searcher.hints . to length
     when (i <= hLen) $ Searcher.selected .= i
 
-localAddSearcherHints :: Map LibraryName LibraryHints -> Command State ()
+localAddSearcherHints :: LibrariesHintsMap -> Command State ()
 localAddSearcherHints libHints = do
     Global.nodeSearcherData . NodeSearcher.libraries %= Map.union libHints
     localUpdateSearcherHintsPreservingSelection
