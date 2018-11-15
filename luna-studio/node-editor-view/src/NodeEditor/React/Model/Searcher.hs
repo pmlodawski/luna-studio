@@ -71,7 +71,7 @@ getHint i m = m ^? to getHints . ix i
 
 takeHints :: Int -> Mode -> Mode
 takeHints limit (CommandSearcher cs) = CommandSearcher $ take limit cs
-takeHints limit (NodeSearcher    ns )= NodeSearcher $ ns & nodes %~ take limit
+takeHints limit (NodeSearcher    ns) = NodeSearcher $ ns & nodes %~ take limit
 
 dropHints :: Int -> Mode -> Mode
 dropHints offset (CommandSearcher cs) = CommandSearcher $ drop offset cs

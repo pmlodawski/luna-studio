@@ -72,8 +72,10 @@ instance Binary LibraryHints
 instance NFData LibraryHints
 instance ToJSON LibraryHints
 
+type LibrariesHintsMap = Map LibraryName LibraryHints
+
 data NodeSearcherData = NodeSearcherData
-    { _libraries         :: Map LibraryName LibraryHints
+    { _libraries         :: LibrariesHintsMap
     , _importedLibraries :: Set LibraryName
     } deriving (Eq, Generic, Show)
 
@@ -181,8 +183,8 @@ methodsToSymbols methods' className lib typePreference =
 
 classToSymbols
     :: ClassName -> ClassHints -> Library -> TypePreference -> [Symbol]
-classToSymbols className hints lib typePreference = let
-        constructors' = constructorsToSymbols
+classToSymbols className hints lib typePreference = 
+    let constructors' = constructorsToSymbols
             (hints ^. constructors)
             className
             lib

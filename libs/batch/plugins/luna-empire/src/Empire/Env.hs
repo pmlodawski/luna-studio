@@ -19,7 +19,7 @@ import Empire.Data.Graph             (ClsGraph, CommandState (..), Graph,
                                       defaultPMState)
 import LunaStudio.API.AsyncUpdate    (AsyncUpdate)
 import LunaStudio.Data.GraphLocation (GraphLocation (..))
-import LunaStudio.Data.Searcher.Node (LibraryHints, LibraryName)
+import LunaStudio.Data.Searcher.Node (LibrariesHintsMap)
 import ZMQ.Bus.Config                (Config)
 import ZMQ.Bus.Data.Message          (Message)
 
@@ -38,7 +38,7 @@ makeLenses ''Env
 make :: TChan Message
      -> TChan AsyncUpdate
      -> MVar Empire.TCRequest
-     -> MVar (Map LibraryName LibraryHints)
+     -> MVar LibrariesHintsMap
      -> FilePath
      -> IO Env
 make toBus fromEmpire tc imps fp = do
