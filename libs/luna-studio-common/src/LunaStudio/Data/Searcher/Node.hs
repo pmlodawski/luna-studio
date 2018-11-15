@@ -48,7 +48,8 @@ instance Default TypePreference where def = TypePreference 1 1 (def, 1) 1 1
 
 notConnectedEmptyInputPreference :: [SymbolPreference]
 notConnectedEmptyInputPreference =
-    [ SymbolPreference "now" "Std.Time" (Symbol.Method "Time") 100000 ]
+    [ --SymbolPreference "now" "Std.Time" (Symbol.Method "Time") 100000 
+    ]
 
 
 data ClassHints = ClassHints
