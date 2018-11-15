@@ -267,8 +267,9 @@ updateInput :: Text -> Int -> Int -> Searcher -> Command State ()
 updateInput input selectionStart selectionEnd action = do
     clearSearcherError
     let inputStream = evalDefLexer $ convert input
-        searcherInput = if selectionStart /= selectionEnd 
-            then Searcher.RawInput input
+        searcherInput
+            = if selectionStart /= selectionEnd then Searcher.RawInput input
+            else if Text.null input             then Searcher.DividedInput def
             else Input.fromStream input inputStream selectionStart
         inputDivided = has Searcher._DividedInput searcherInput
         mayLambdaArgsAndEndPos = Input.findLambdaArgsAndEndOfLambdaArgs
