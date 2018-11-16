@@ -1,8 +1,7 @@
 import * as logger  from 'luna-logger'
 import * as keypress from 'keypress.js'
-nodeEditorBaseGL = require 'luna-basegl-ui'
+baseglUI = require 'luna-basegl-ui'
 
-import * as shortcuts from './shortcuts'
 import * as keymap from './keymap'
 
 
@@ -16,20 +15,22 @@ window.getInternalVisualizers = => {} #TODO
 window.getLunaVisualizers = => [] #TODO
 window.getProjectVisualizers = => [] #TODO
 window.getImportedVisualizers = => {} #TODO
+window.visualizerFramesManager = require './visualizers' #TODO
+
 
 export class NodeEditor
   constructor: (@backend) ->
     logger.group 'Initializing BaseGL', =>
-      nodeEditorBaseGL.install mountPoint, 'rsc/', (ne) =>
-        @backend.node.setView ne
+      baseglUI.install mountPoint, 'rsc/', (@nodeEditor) =>
+        @backend.node.setView @nodeEditor
         logger.group 'Launching node backend', =>
           @backend.node.start()
-      nodeEditorBaseGL.onEvent @_handleUIEvent
+      baseglUI.onEvent @_handleUIEvent
       @listener = new keypress.Listener()
       @_addShortcutListeners()
 
   _addShortcutListeners: =>
-    s = shortcuts.shortcuts @_pushShortcut
+    s = @_shortcuts()
     for key, binding of keymap.keymap
       if s[binding]?
         @listener.register_combo
@@ -93,3 +94,72 @@ export class NodeEditor
           path:   path
           target: target
           base:   base
+
+  _shortcuts: =>
+    f = @_pushShortcut
+    'cancel': => f 'Cancel'
+    'accept': => f 'Accept'
+    # camera
+    'center-graph': => f 'CenterGraph'
+    'pan-down':     => f 'PanDown'
+    'pan-left':     => f 'PanLeft'
+    'pan-right':    => f 'PanRight'
+    'pan-up':       => f 'PanUp'
+    'reset-camera': => f 'ResetCamera'
+    'reset-pan':    => f 'ResetPan'
+    'reset-zoom':   => f 'ResetZoom'
+    'zoom-in':      => f 'ZoomIn'
+    'zoom-out':     => f 'ZoomOut'
+    # clipboard
+    'copy':  => f 'Copy'
+    'cut':   => f 'Cut'
+    'paste': => f 'Paste', atom.clipboard.read() #TODO
+    # navigation
+    'exit-graph':    => f 'ExitGraph'
+    'go-cone-down':  => f 'GoConeDown'
+    'go-cone-left':  => f 'GoConeLeft'
+    'go-cone-right': => f 'GoConeRight'
+    'go-cone-up':    => f 'GoConeUp'
+    'go-down':       => f 'GoDown'
+    'go-left':       => f 'GoLeft'
+    'go-next':       => f 'GoNext'
+    'go-prev':       => f 'GoPrev'
+    'go-right':      => f 'GoRight'
+    'go-up':         => f 'GoUp'
+    # nodes
+    'autolayout-all-nodes':        => f 'AutolayoutAllNodes'
+    'autolayout-selected-nodes':   => f 'AutolayoutSelectedNodes'
+    'close-visualization-preview': => f 'CloseVisualizationPreview'
+    'collapse-to-function':        => f 'CollapseToFunction'
+    'edit-selected-nodes':         => f 'EditSelectedNodes'
+    'expand-selected-nodes':       => f 'ExpandSelectedNodes'
+    'open-visualization-preview':  => f 'OpenVisualizationPreview'
+    'remove-selected-nodes':       => f 'RemoveSelectedNodes'
+    'select-all':                  => f 'SelectAll'
+    'unfold-selected-nodes':       => f 'UnfoldSelectedNodes'
+    'zoom-visualization':          => f 'ZoomVisualization'
+    # undo/redo
+    'core:redo': => f 'Redo'
+    'core:undo': => f 'Undo'
+    # MockMonads
+    'mock-add-monad':    => f 'MockAddMonad'
+    'mock-clear-monads': => f 'MockClearMonads'
+    # searcher
+    'searcher-open': (e)        =>
+      scene = @nodeEditor._scene
+      campos = scene.camera.position
+      y = scene.height/2 + campos.y + (-scene.screenMouse.y + scene.height/2) * campos.z
+      x = scene.width/2  + campos.x + (scene.screenMouse.x - scene.width/2) * campos.z
+      f 'SearcherOpen', '(' + x + ',' + y + ')'
+    'searcher-edit-expression': => f 'SearcherEditExpression'
+    # debug
+    'debug-layer-0': => f 'EnableDebugLayer', "0"
+    'debug-layer-1': => f 'EnableDebugLayer', "1"
+    'debug-layer-2': => f 'EnableDebugLayer', "3"
+    'debug-layer-3': => f 'EnableDebugLayer', "2"
+    'debug-layer-4': => f 'EnableDebugLayer', "4"
+    'debug-layer-5': => f 'EnableDebugLayer', "5"
+    'debug-layer-6': => f 'EnableDebugLayer', "6"
+    'debug-layer-7': => f 'EnableDebugLayer', "7"
+    'debug-layer-8': => f 'EnableDebugLayer', "8"
+    'debug-layer-9': => f 'EnableDebugLayer', "9"
