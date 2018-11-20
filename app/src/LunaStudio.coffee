@@ -27,7 +27,11 @@ export class LunaStudio
     logger.group 'Launching code backend', =>
       @backend.code.start()
     logger.group 'Creating node editor', =>
-      @nodeEditor = new NodeEditor @backend
+      @nodeEditor = new NodeEditor @, @backend
+
+  openProjectDialog: =>
+    projectPath = window.prompt "Enter project location", "/tmp/luna/Test"
+    @setProject projectPath
 
   # TODO: This design is to be changed. Having always 3 variables for
   #       different purposes is very bad.
@@ -35,14 +39,26 @@ export class LunaStudio
     logger.group ('Received ' + act), =>
       logger.info 'args', { arg0, arg1 }
       switch act
-        when messages.Init then @backend.code.pushInternalEvent
-          tag: messages.SetProject
-          _path: @projectPath
-        when messages.ProjectSet then @openMain()
-        when messages.FileOpened then @backend.code.pushInternalEvent
-          tag: messages.GetBuffer
-          _path: arg0
+        when messages.Init then @__onInit()
+        when messages.ProjectSet then @__onProjectSet()
+        when messages.FileOpened then @__onFileOpened arg0
 
-  openMain: => logger.group 'Opening Main.luna', =>
-    mainLocation = path.join @projectPath, 'src', 'Main.luna'
-    @nodeEditor.open mainLocation
+  __onInit: =>
+    @setProject @projectPath
+
+  setProject: (@projectPath) =>
+      @backend.code.pushInternalEvent
+        tag: messages.SetProject
+        _path: @projectPath
+
+  __onFileOpened: (filePath) =>
+    @nodeEditor.setFile filePath
+    @backend.code.pushInternalEvent
+      tag: messages.GetBuffer
+      _path: filePath
+
+  __onProjectSet: => logger.group 'Opening Main.luna', =>
+    filePath = path.join @projectPath, 'src', 'Main.luna'
+    @backend.code.pushInternalEvent
+      tag: "OpenFile"
+      _path: filePath

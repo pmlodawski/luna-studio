@@ -2,6 +2,8 @@ export keymap =
   # core
   'enter'             : 'accept'
   'esc'               : 'cancel'
+  'ctrl o'            : 'open'
+  'cmd o'             : 'open'
   # camera
   'ctrl -'            : 'zoom-out'                 # ZoomOut
   'cmd -'             : 'zoom-out'                 # ZoomOut
@@ -69,6 +71,11 @@ export keymap =
   # searcher
   'tab'               : 'searcher-open'             # SearcherOpen
   'shift tab'         : 'searcher-edit-expression'  # SearcherEditExpression
+  # undo/redo
+  'ctrl z'            : 'undo'
+  'ctrl y'            : 'redo'
+  'cmd z'             : 'undo'
+  'cmd y'             : 'redo'
   # MockMonads
   'cmd m'             : 'mock-add-monad'
   'ctrl m'            : 'mock-add-monad'

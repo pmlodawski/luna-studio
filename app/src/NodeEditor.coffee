@@ -19,7 +19,7 @@ window.visualizerFramesManager = require './visualizers' #TODO
 
 
 export class NodeEditor
-  constructor: (@backend) ->
+  constructor: (@lunaStudio, @backend) ->
     logger.group 'Initializing BaseGL', =>
       baseglUI.install mountPoint, 'rsc/', (@nodeEditor) =>
         @backend.node.setView @nodeEditor
@@ -45,9 +45,8 @@ export class NodeEditor
       _shortcut: name
       _arg: arg
 
-  open: (@uri) =>
-    @backend.node.pushEvent(tag: "SetFile", path: @uri)
-    @backend.code.pushInternalEvent(tag: "OpenFile", _path: @uri)
+  setFile: (@path) =>
+    @backend.node.pushEvent(tag: "SetFile", path: @path)
 
   _handleUIEvent: (path, event, target) =>
     if event.tag.endsWith "Event"
@@ -99,6 +98,7 @@ export class NodeEditor
     f = @_pushShortcut
     'cancel': => f 'Cancel'
     'accept': => f 'Accept'
+    'open':   => @lunaStudio.openProjectDialog()
     # camera
     'center-graph': => f 'CenterGraph'
     'pan-down':     => f 'PanDown'
@@ -139,8 +139,8 @@ export class NodeEditor
     'unfold-selected-nodes':       => f 'UnfoldSelectedNodes'
     'zoom-visualization':          => f 'ZoomVisualization'
     # undo/redo
-    'core:redo': => f 'Redo'
-    'core:undo': => f 'Undo'
+    'redo': => f 'Redo'
+    'undo': => f 'Undo'
     # MockMonads
     'mock-add-monad':    => f 'MockAddMonad'
     'mock-clear-monads': => f 'MockClearMonads'
