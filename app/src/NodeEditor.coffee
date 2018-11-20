@@ -146,7 +146,7 @@ export class NodeEditor
     'mock-clear-monads': => f 'MockClearMonads'
     # searcher
     'searcher-open': (e)        =>
-      scene = @nodeEditor._scene
+      scene = @nodeEditor.scene
       campos = scene.camera.position
       y = scene.height/2 + campos.y + (-scene.screenMouse.y + scene.height/2) * campos.z
       x = scene.width/2  + campos.x + (scene.screenMouse.x - scene.width/2) * campos.z
