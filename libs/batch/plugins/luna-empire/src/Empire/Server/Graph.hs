@@ -104,7 +104,7 @@ import Empire.Data.AST               (SomeASTException,
 import Empire.Empire                 (Empire)
 import Empire.Env                    (Env)
 import Empire.Server.Server          (defInverse, errorMessage, modifyGraph,
-                                      modifyGraphOk, prettyException, replyFail,
+                                      modifyGraphOk, replyFail,
                                       replyOk, replyResult, sendToBus',
                                       webGUIHack, withDefaultResult,
                                       withDefaultResultTC)
@@ -565,7 +565,7 @@ handleSetNodesMetaUpdate (SetNodesMeta.Update location updates) = do
         $ actionSetNodesMeta location updates
     case result of
         Left (exc :: SomeASTException) -> do
-            err <- liftIO $ prettyException exc
+            err <- liftIO $ Graph.prettyException exc
             logger Logger.error err
         Right (result, newEmpireEnv) -> Env.empireEnv .= newEmpireEnv
 
