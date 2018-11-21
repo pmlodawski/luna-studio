@@ -13,9 +13,33 @@ import * as websocket    from './websocket'
 
 websocketConfig = websocket: websocket()
 
+listeners =
+  notification: []
+
+pushNotification = (lvl, msg) =>
+    if listeners.notification.length == 0
+        switch lvl
+            when 0, 1
+                console.error msg
+                break
+            when 2
+                console.warn msg
+                break
+            else
+                console.log msg
+    else
+        listeners.notification.forEach (callback) ->
+            callback
+                level: lvl
+                message: msg
+onNotification = (listener) => listeners.notification.push listener
+
 ###################
 ### Libs Config ###
 ###################
+
+nodeCallback.pushNotification = pushNotification
+codeCallback.pushNotification = pushNotification
 
 libConfig =
   nodeEditor :
@@ -69,3 +93,4 @@ export initialize = =>
       pushInternalEvent:   (msg)         =>
         logger.info 'Sending [code]', msg
         codeCallback.pushInternalEvent msg
+    onNotification: onNotification

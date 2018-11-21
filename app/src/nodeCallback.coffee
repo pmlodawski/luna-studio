@@ -4,7 +4,6 @@ removeFromArray = (array, elt) =>
 
 listeners =
     onEvent: []
-    onNotification: []
     view: []
 
 globalRegistry = null
@@ -18,23 +17,6 @@ module.exports =
     setActiveLocation: (location) =>  globalRegistry.activeLocation = location
     setNodeEditorView: (@nodeEditorView) =>
     getNodeEditorView: => @nodeEditorView
-    pushNotification: (lvl, msg) =>
-        if listeners.onNotification.length == 0
-            switch lvl
-                when 0, 1
-                    console.error msg
-                    break
-                when 2
-                    console.warn msg
-                    break
-                else
-                    console.log msg
-        else
-            listeners.onNotification.forEach (callback) ->
-                callback
-                    level: lvl
-                    message: msg
-    onNotification: (listener) => listeners.onNotification.push listener
     onEvent: (listener) => listeners.onEvent.push listener
     unOnEvent: (listener) => removeFromArray listeners.onEvent, listener
     pushEvent: (data) =>

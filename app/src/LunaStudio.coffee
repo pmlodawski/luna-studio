@@ -22,8 +22,6 @@ export class LunaStudio
     @projectPath = '/tmp/luna/Test'
     @backend.code.connect @backend.node.connector
     @backend.code.onStatus @__onMessage
-    @backend.node.onNotification (msg) ->
-      logger.warning 'Unhandled', msg
     logger.group 'Launching code backend', =>
       @backend.code.start()
     logger.group 'Creating node editor', =>
