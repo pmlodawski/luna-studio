@@ -45,7 +45,6 @@ libConfig =
   nodeEditor :
     path : 'lib/node-editor.js'
     args :
-      arg_url      : -> '/tmp/luna/Test/src/Main.luna' #TODO remove
       arg_mount    : -> 'node-editor' #TODO remove
       analytics    : analytics
       callback     : nodeCallback

@@ -21,9 +21,6 @@ data App = App { _breadcrumbs       :: Breadcrumbs
 
 makeLenses ''App
 
-mk :: Maybe FilePath -> App
-mk = App def def . fmap Workspace.mk
-
 moduleName :: Getter App (Maybe String)
 moduleName = to moduleName' where
     moduleName' a = takeBaseName' . filePath <$> a ^. workspace

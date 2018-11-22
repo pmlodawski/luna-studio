@@ -3,15 +3,12 @@
 module JS.Scene where
 
 import           Common.Prelude
-import           Control.Exception              (handle)
 import           GHCJS.Foreign.Callback
 import           GHCJS.Marshal.Pure             (pFromJSVal)
-import           GHCJS.Types                    (JSException (JSException))
 import qualified JS.Mount                      as Mount
 import           LunaStudio.Data.ScreenPosition (ScreenPosition, fromDoubles)
 import qualified LunaStudio.Data.Size           as Size
-import           NodeEditor.React.Model.Layout  (Scene (Scene))
-import           NodeEditor.React.Model.Sidebar (InputSidebar (InputSidebar), OutputSidebar (OutputSidebar))
+import           NodeEditor.React.Model.Layout  (Scene)
 
 
 appId :: JSString

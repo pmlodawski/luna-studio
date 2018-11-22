@@ -3,7 +3,6 @@ module JS.Searcher where --TODO[basegl] Remove
 
 import           Common.Prelude
 import qualified JS.Mount       as Mount
-import qualified JS.UI          as UI
 
 
 searcherId :: JSString

@@ -57,7 +57,6 @@ import           NodeEditor.React.Model.Visualization       (RunningVisualizatio
                                                              VisualizerProperties (VisualizerProperties),
                                                              getMdVisualizer,
                                                              visualizerId)
-import qualified NodeEditor.React.View.App                  as App
 import           NodeEditor.State.Action                    (Action (begin, continue, end, update),
                                                              Searcher (Searcher),
                                                              searcherAction)
