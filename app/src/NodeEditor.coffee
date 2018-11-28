@@ -5,7 +5,7 @@ baseglUI = require 'luna-basegl-ui'
 import * as keymap from './keymap'
 
 
-mountPoint = 'node-editor'
+mountPointName = 'node-editor'
 
 # TODO: We should never keep such functions attached to window.
 window.listVisualizers = => [] #TODO
@@ -21,12 +21,16 @@ window.visualizerFramesManager = require './visualizers' #TODO
 export class NodeEditor
   constructor: (@lunaStudio, @backend) ->
     logger.group 'Initializing BaseGL', =>
-      baseglUI.install mountPoint, 'rsc/', (@nodeEditor) =>
+      baseglUI.install mountPointName, 'rsc/', (@nodeEditor) =>
         @backend.node.setView @nodeEditor
         logger.group 'Launching node backend', =>
           @backend.node.start()
       baseglUI.onEvent @_handleUIEvent
-      @listener = new keypress.Listener()
+      mountPoint = document.getElementById(mountPointName)
+      listenerDefaults =
+        is_unordered: true
+        is_solitary: true
+      @listener = new keypress.Listener mountPoint, listenerDefaults
       @_addShortcutListeners()
 
   _addShortcutListeners: =>
@@ -36,9 +40,6 @@ export class NodeEditor
         @listener.register_combo
           keys: key
           on_keydown: s[binding]
-          is_unordered: true
-          is_solitary: true
-
 
   _pushShortcut: (name, arg = null) =>
     @backend.node.pushEvent
