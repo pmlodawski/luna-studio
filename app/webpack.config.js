@@ -18,7 +18,9 @@ function baseConfig(entryPath) {
     , module: 
       { strictExportPresence: true
       , rules: 
-        [ { use: [ 'coffee-loader' ], test: /\.coffee$/ } ]
+        [ { use: [ 'coffee-loader' ], test: /\.coffee$/ }
+        , { use: [ 'cson-loader'], test: /\.cson$/ }
+        ]
       }
     , output: 
       { filename: '[name].js'

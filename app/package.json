@@ -44,6 +44,7 @@
     "bluebird": "^3.5.3",
     "coffee-loader": "^0.9.0",
     "coffeescript": "^2.3.2",
+    "cson-loader": "^0.1.0",
     "electron": "^3.0.8",
     "electron-builder": "^20.31.2",
     "webpack": "^4.25.1",

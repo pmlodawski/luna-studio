@@ -1,9 +1,6 @@
 import * as logger  from 'luna-logger'
-import * as keypress from 'keypress.js'
 baseglUI = require 'luna-basegl-ui'
-
-import * as keymap from './keymap'
-
+import {Keyboard} from './keyboard'
 
 mountPointName = 'node-editor'
 
@@ -26,12 +23,7 @@ export class NodeEditor
         logger.group 'Launching node backend', =>
           @backend.node.start()
       baseglUI.onEvent @_handleUIEvent
-      mountPoint = document.getElementById(mountPointName)
-      listenerDefaults =
-        is_unordered: true
-        is_solitary: true
-      @listener = new keypress.Listener mountPoint, listenerDefaults
-      @_addShortcutListeners()
+      @keyboard = new Keyboard @__shortcuts()
 
   _addShortcutListeners: =>
     s = @_shortcuts()
@@ -95,7 +87,7 @@ export class NodeEditor
           target: target
           base:   base
 
-  _shortcuts: =>
+  __shortcuts: =>
     f = @_pushShortcut
     'cancel': => f 'Cancel'
     'accept': => f 'Accept'

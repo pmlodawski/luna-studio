@@ -1,4 +1,4 @@
-export keymap =
+default:
   # core
   'enter'             : 'accept'
   'esc'               : 'cancel'
@@ -93,3 +93,7 @@ export keymap =
   'ctrl alt 8'        : 'debug-layer-8' # EnableDebugLayer
   'ctrl alt 9'        : 'debug-layer-9' # EnableDebugLayer
 
+searcher:
+  'enter'             : 'accept'
+  'esc'               : 'cancel'
+  'tab'               : 'continue'
