@@ -12,7 +12,7 @@ export class Keyboard
   setContext: (context, handlers) =>
     @listener.reset()
     for key, binding of keymap[context or 'default']
-      handler = handlers[binding]
+      handler = handlers?[binding]
       if handler?
         @listener.register_combo
           keys: key

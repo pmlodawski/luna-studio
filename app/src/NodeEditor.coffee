@@ -18,12 +18,12 @@ window.visualizerFramesManager = require './visualizers' #TODO
 export class NodeEditor
   constructor: (@lunaStudio, @backend) ->
     logger.group 'Initializing BaseGL', =>
-      baseglUI.install mountPointName, 'rsc/', (@nodeEditor) =>
+      @keyboard = new Keyboard @__shortcuts()
+      baseglUI.install mountPointName, 'rsc/', @keyboard, (@nodeEditor) =>
         @backend.node.setView @nodeEditor
         logger.group 'Launching node backend', =>
           @backend.node.start()
       baseglUI.onEvent @_handleUIEvent
-      @keyboard = new Keyboard @__shortcuts()
 
   _addShortcutListeners: =>
     s = @_shortcuts()
