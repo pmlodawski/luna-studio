@@ -19,7 +19,7 @@ data Request = Request
     } deriving (Eq, Generic, Show)
 
 data Result = Result
-    { _searcherHints :: Map ImportName ImportsHints
+    { _searcherHints :: ImportsHints
     } deriving (Eq, Generic, Show)
 
 makeLenses ''Request

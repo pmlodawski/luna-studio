@@ -55,7 +55,7 @@ import           LunaStudio.Data.PortRef                  (AnyPortRef (InPortRef
 import           LunaStudio.Data.Position                 (Position)
 import           LunaStudio.Data.Project                  (LocationSettings,
                                                            ProjectId)
-import           LunaStudio.Data.Searcher.Node            (ImportName)
+import           LunaStudio.Data.NodeSearcher             (ImportName)
 import           NodeEditor.Batch.Workspace               (Workspace)
 import           NodeEditor.Batch.Workspace               (currentLocation)
 import           NodeEditor.React.Model.Connection        (ConnectionId)

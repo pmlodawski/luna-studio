@@ -78,7 +78,7 @@ missingImports = to missingImports' where
             in Set.filter (`Set.notMember` neededImports) currentImps
 
 
-data TypePreferation = TypePreferation
+data TypePreference = TypePreference
     { _localFunctionsWeight         :: Double
     , _globalFunctionsWeight        :: Double
     , _specialWeightForClassMethods :: (Set ClassName, Double)
@@ -86,17 +86,17 @@ data TypePreferation = TypePreferation
     , _constructorsWeight           :: Double
     } deriving Show
 
-makeLenses ''TypePreferation
-instance Default TypePreferation where def = TypePreferation 1 1 (def, 1) 1 1
+makeLenses ''TypePreference
+instance Default TypePreference where def = TypePreference 1 1 (def, 1) 1 1
 
 searchCommands :: Query -> [Text] -> [Match]
 searchCommands q = fuzzySearch q . fmap (\c -> RawEntry c def Command 1 def)
 
-search :: Query -> NodeSearcherData -> Maybe TypePreferation -> [Match]
+search :: Query -> NodeSearcherData -> Maybe TypePreference -> [Match]
 search q nsData tp = fuzzySearch q $ toEntries nsData (fromJust def tp)
 
 
-toEntries :: NodeSearcherData -> TypePreferation -> [RawEntry]
+toEntries :: NodeSearcherData -> TypePreference -> [RawEntry]
 toEntries (NodeSearcherData ih currImps) tPref
     = concat . Map.elems $ Map.mapWithKey moduleHintsToEntries ih where
         moduleHintsToEntries :: ImportName -> ModuleHints -> [RawEntry]

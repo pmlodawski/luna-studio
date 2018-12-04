@@ -19,26 +19,27 @@ import NodeEditor.Action.Basic.RemoveNode          (localRemoveNodes)
 import NodeEditor.Action.Basic.UpdateNode          (localUpdateOrAddExpressionNode,
                                                     localUpdateOrAddInputNode,
                                                     localUpdateOrAddOutputNode)
-import NodeEditor.Action.Basic.UpdateSearcherHints (setImportedLibraries)
+import NodeEditor.Action.Basic.UpdateSearcherHints (setCurrentImports)
 import NodeEditor.Action.State.NodeEditor          (getExpressionNodes,
                                                     modifyNodeEditor,
                                                     setGraphStatus,
                                                     updateMonads)
 import NodeEditor.React.Model.Node                 (ExpressionNode, InputNode,
                                                     OutputNode, nodeLoc)
-import NodeEditor.React.Model.Searcher             (ImportName)
+import LunaStudio.Data.NodeSearcher                (ImportName)
 import NodeEditor.State.Global                     (State)
 
 
 
 updateWithAPIGraph :: NodePath -> Graph -> Command State ()
-updateWithAPIGraph p g = updateGraph nodes input output conns monads
+updateWithAPIGraph p g = updateGraph nodes input output conns monads imports
     >> setGraphStatus NE.GraphLoaded where
-        nodes  = convert . (p,) <$> g ^. API.nodes
-        input  = convert . (p,) <$> g ^. API.inputSidebar
-        output = convert . (p,) <$> g ^. API.outputSidebar
-        conns  = Connection.prependPath p <$> g ^. API.connections
-        monads = g ^. API.monads
+        nodes   = convert . (p,) <$> g ^. API.nodes
+        input   = convert . (p,) <$> g ^. API.inputSidebar
+        output  = convert . (p,) <$> g ^. API.outputSidebar
+        conns   = Connection.prependPath p <$> g ^. API.connections
+        monads  = g ^. API.monads
+        imports = g ^. API.imports
 
 
 updateGraph :: [ExpressionNode] -> Maybe InputNode -> Maybe OutputNode
@@ -62,5 +63,6 @@ updateGraph nodes input output connections monads imports = do
     void $ localAddConnections connections
 
     updateMonads monads
-    setImportedLibraries imports
+    setCurrentImports imports
     updateNodeZOrder
+    

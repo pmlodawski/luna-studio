@@ -24,13 +24,10 @@ import           Empire.Server.Server                    (defInverse,
                                                           errorMessage,
                                                           modifyGraph,
                                                           modifyGraphOk,
-                                                          prettyException,
                                                           replyFail, replyOk,
                                                           replyResult,
                                                           sendToBus',
-                                                          webGUIHack,
-                                                          withDefaultResult,
-                                                          withDefaultResultTC)
+                                                          webGUIHack)
 import           Luna.Package                            (findPackageFileForFile,
                                                           findPackageRootForFile,
                                                           getRelativePathForModule)
@@ -168,7 +165,6 @@ handleGetProgram = modifyGraph defInverse action replyResult where
             makeError e = pure $ (location', GUIState
                 (Breadcrumb [])
                 mempty
-                mempty
                 def
                 def
                 mempty
@@ -224,7 +220,6 @@ handleGetProgram = modifyGraph defInverse action replyResult where
                         in (visMap, cam)
             pure $ (location, GUIState
                 crumb
-                availableImports
                 typeRepToVisMap
                 camera
                 externalVisPaths

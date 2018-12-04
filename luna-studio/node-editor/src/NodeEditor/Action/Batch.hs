@@ -20,7 +20,7 @@ import LunaStudio.Data.PortRef           (AnyPortRef (InPortRef', OutPortRef'),
                                           nodeLoc)
 import LunaStudio.Data.Position          (Position)
 import LunaStudio.Data.Project           (LocationSettings)
-import LunaStudio.Data.Searcher.Node     (ImportName)
+import LunaStudio.Data.NodeSearcher      (ImportName)
 import NodeEditor.Action.State.App       (getWorkspace)
 import NodeEditor.Action.UUID            (registerRequest)
 import NodeEditor.Batch.Workspace        (Workspace)
