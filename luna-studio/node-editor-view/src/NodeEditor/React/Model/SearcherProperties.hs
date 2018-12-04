@@ -26,7 +26,9 @@ makeLenses ''SearcherProperties
 toSearcherProperties :: Searcher -> Visualizers FilePath -> SearcherProperties
 toSearcherProperties s vp = SearcherProperties (s ^. Searcher.selected)
                                                (s ^. Searcher.selectedMatch)
-                                               (s ^. Searcher.mode)
+                                               (Searcher.limitHints
+                                                    (max 0 $ (s ^. Searcher.selected) - 1 )
+                                                    $ s ^. Searcher.mode)
                                                (s ^. Searcher.inputText)
                                                (s ^. Searcher.replaceInput)
                                                (vp ^. Visualization.lunaVisualizers)

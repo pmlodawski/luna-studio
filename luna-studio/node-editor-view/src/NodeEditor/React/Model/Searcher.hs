@@ -58,6 +58,19 @@ data Mode = Command                       [Match]
           | PortName OutPortRef           [Match]
           deriving (Eq, Generic, Show)
 
+visibleHintsNumber :: Int
+visibleHintsNumber = 10
+
+limitHints :: Int -> Mode -> Mode
+limitHints low = let limit = take visibleHintsNumber . drop low 
+    in \case
+        (Command m)     -> Command     $ limit m
+        (Node nl nmi m) -> Node nl nmi $ limit m
+        (NodeName nl m) -> NodeName nl $ limit m
+        (PortName o m)  -> PortName o  $ limit m
+    
+
+
 data Searcher = Searcher
               { _selected      :: Int
               , _mode          :: Mode

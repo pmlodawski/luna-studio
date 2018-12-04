@@ -94,7 +94,7 @@ results_ ref selected results = if results == [] then return () else
         div_
             [ "key"       $= "searcherResultsList"
             , "className" $= Style.prefix "searcher__results__list"
-            ] $ forKeyed_ (drop (selected - 1) results) $ \(idx, result) -> do
+            ] $ forKeyed_ results $ \(idx, result) -> do
             let resultClasses i = Style.prefixFromList $ "searcher__results__item" : (if selected > 0 && i == 0 then [ "searcher__results__item--selected" ] else [])
             div_
                 [ "key"       $= jsShow idx
@@ -112,7 +112,7 @@ highlighted_ result = prefixElem >> highlighted_' 0 highlights where
     prefixElem = span_ [ "className" $= Style.prefix "searcher__pre"
                        , "key"       $= "searcherPre"]
                        $ elemString $ if prefix == "" then prefix else prefix <> " . "
-    highlights = result ^. NS.charsMatch
+    highlights = result ^. NS.match
     name'      = convert $ result ^. NS.name
     highlighted_' :: Int -> [Range] -> ReactElementM ViewEventHandler ()
     highlighted_' omit [] = span_ [ "key" $= "l" ] $ elemString $ snd $ splitAt omit name'
