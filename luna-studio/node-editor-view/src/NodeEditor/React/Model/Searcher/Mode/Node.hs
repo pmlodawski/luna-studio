@@ -5,13 +5,13 @@ module NodeEditor.React.Model.Searcher.Mode.Node
 
 import Common.Prelude
 import LunaStudio.Data.Searcher.Node as X (ClassHints (ClassHints), ClassName,
-                                           LibrariesHintsMap,
-                                           LibraryHints (LibraryHints),
-                                           LibraryName, Match, Name,
+                                           ImportName, LibrariesHintsMap,
+                                           LibraryHints (LibraryHints), Match,
+                                           Name,
                                            NodeSearcherData (NodeSearcherData),
                                            TypePreference (TypePreference),
                                            getWeights, importedLibraries,
-                                           libraries, localFunctionsLibraryName,
+                                           libraries, localFunctionsImportName,
                                            missingLibraries,
                                            mkLocalFunctionsLibrary,
                                            notConnectedEmptyInputSearch, search,

@@ -26,24 +26,23 @@ import NodeEditor.Action.State.NodeEditor          (getExpressionNodes,
                                                     updateMonads)
 import NodeEditor.React.Model.Node                 (ExpressionNode, InputNode,
                                                     OutputNode, nodeLoc)
-import NodeEditor.React.Model.Searcher             (LibraryName)
+import NodeEditor.React.Model.Searcher             (ImportName)
 import NodeEditor.State.Global                     (State)
 
 
 
 updateWithAPIGraph :: NodePath -> Graph -> Command State ()
-updateWithAPIGraph p g = updateGraph nodes input output conns monads imports
+updateWithAPIGraph p g = updateGraph nodes input output conns monads
     >> setGraphStatus NE.GraphLoaded where
-        nodes   = convert . (p,) <$> g ^. API.nodes
-        input   = convert . (p,) <$> g ^. API.inputSidebar
-        output  = convert . (p,) <$> g ^. API.outputSidebar
-        conns   = Connection.prependPath p <$> g ^. API.connections
-        monads  = g ^. API.monads
-        imports = g ^. API.imports
+        nodes  = convert . (p,) <$> g ^. API.nodes
+        input  = convert . (p,) <$> g ^. API.inputSidebar
+        output = convert . (p,) <$> g ^. API.outputSidebar
+        conns  = Connection.prependPath p <$> g ^. API.connections
+        monads = g ^. API.monads
 
 
 updateGraph :: [ExpressionNode] -> Maybe InputNode -> Maybe OutputNode
-    -> [Connection] -> [MonadPath] -> Set LibraryName -> Command State ()
+    -> [Connection] -> [MonadPath] -> Set ImportName -> Command State ()
 updateGraph nodes input output connections monads imports = do
     let nlsSet = Set.fromList $ map (view nodeLoc) nodes
     nlsToRemove <- filter (not . flip Set.member nlsSet) . map (view nodeLoc)

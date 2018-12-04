@@ -3,23 +3,37 @@ module Empire.Server.Graph where
 import Prologue hiding (Item, when)
 
 import qualified Compress
-import qualified Data.Binary                             as Bin
-import qualified Data.HashMap.Strict                     as HashMap
-import qualified Data.IntMap                             as IntMap
-import qualified Data.Map                                as Map
-import qualified Data.Set                                as Set
-import qualified Data.Text                               as Text
-import qualified Data.UUID.Types                         as UUID
-import qualified Data.UUID.V4                            as UUID
-import qualified Empire.ApiHandlers                      as Api
-import qualified Empire.ASTOps.Print                     as Print
-import qualified Empire.Commands.Graph                   as Graph
-import qualified Empire.Commands.GraphBuilder            as GraphBuilder
-import qualified Empire.Data.Graph                       as Graph (code,
-                                                                   nodeCache)
-import qualified Empire.Empire                           as Empire
-import qualified Empire.Env                              as Env
-import qualified Empire.Server.Server                    as Server
+import qualified Data.Binary                  as Bin
+import qualified Data.HashMap.Strict          as HashMap
+import qualified Data.IntMap                  as IntMap
+import qualified Data.Map                     as Map
+import qualified Data.Set                     as Set
+import qualified Data.Text                    as Text
+import qualified Data.UUID.Types              as UUID
+import qualified Data.UUID.V4                 as UUID
+import qualified Empire.ApiHandlers           as Api
+import qualified Empire.ASTOps.Print          as Print
+import qualified Empire.Commands.Graph        as Graph
+import qualified Empire.Commands.GraphBuilder as GraphBuilder
+import qualified Empire.Data.Graph            as Graph (code, nodeCache)
+import qualified Empire.Empire                as Empire
+import qualified Empire.Env                   as Env
+import qualified Empire.Server.Server         as Server
+
+import           Empire.Server.Server                    (defInverse,
+                                                          errorMessage,
+                                                          modifyGraph,
+                                                          modifyGraphOk,
+                                                          prettyException,
+                                                          replyFail, replyOk,
+                                                          replyResult,
+                                                          sendToBus',
+                                                          webGUIHack,
+                                                          withDefaultResult,
+                                                          withDefaultResultTC)
+import           Luna.Package                            (findPackageFileForFile,
+                                                          findPackageRootForFile,
+                                                          getRelativePathForModule)
 import qualified LunaStudio.API.Atom.GetBuffer           as GetBuffer
 import qualified LunaStudio.API.Atom.Substitute          as Substitute
 import qualified LunaStudio.API.Control.Interpreter      as Interpreter
@@ -106,9 +120,8 @@ import Empire.Data.AST               (SomeASTException,
 import Empire.Empire                 (Empire)
 import Empire.Env                    (Env)
 import Empire.Server.Server          (defInverse, errorMessage, modifyGraph,
-                                      modifyGraphOk, replyFail,
-                                      replyOk, replyResult, sendToBus',
-                                      webGUIHack)
+                                      modifyGraphOk, replyFail, replyOk,
+                                      replyResult, sendToBus', webGUIHack)
 import Luna.Package                  (findPackageFileForFile,
                                       findPackageRootForFile,
                                       getRelativePathForModule, includedLibs)
@@ -154,6 +167,7 @@ handleGetProgram = modifyGraph defInverse action replyResult where
                 => SomeASTException -> m (GraphLocation, GUIState)
             makeError e = pure $ (location', GUIState
                 (Breadcrumb [])
+                mempty
                 mempty
                 def
                 def
@@ -210,6 +224,7 @@ handleGetProgram = modifyGraph defInverse action replyResult where
                         in (visMap, cam)
             pure $ (location, GUIState
                 crumb
+                availableImports
                 typeRepToVisMap
                 camera
                 externalVisPaths
