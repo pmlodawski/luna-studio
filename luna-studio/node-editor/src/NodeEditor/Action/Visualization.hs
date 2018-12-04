@@ -98,19 +98,19 @@ instance Action (Command State) DocVisualizationActive where
         beginActionWithKey docVisualizationActiveAction action
         let updateMode (Searcher.Node nl nmi r) v = Searcher.Node 
                 nl 
-                (nmi & Searcher.docVisInfo .~ v) 
+                (nmi & Searcher.docVisInfo . _Just . visualizationMode .~ v) 
                 r
             updateMode m _ = m  
-        modifySearcher $ Searcher.mode %= updateMode (action ^. docVisualizationActiveSelectedMode)
+        modifySearcher $ Searcher.mode %= flip updateMode (action ^. docVisualizationActiveSelectedMode)
     continue     = continueActionWithKey docVisualizationActiveAction
     update       = updateActionWithKey   docVisualizationActiveAction
     end action   = do
         let updateMode (Searcher.Node nl nmi r) v = Searcher.Node 
                 nl 
-                (nmi & Searcher.docVisInfo .~ v) 
+                (nmi & Searcher.docVisInfo . _Just . visualizationMode .~ v) 
                 r
             updateMode m _ = m  
-        modifySearcher $ Searcher.mode %= updateMode def
+        modifySearcher $ Searcher.mode %= flip updateMode def
         removeActionFromState docVisualizationActiveAction
         when (action ^. docVisualizationActiveTriggeredByVis) $ begin $ action
             & docVisualizationActiveSelectedMode   .~ Focused
