@@ -94,6 +94,29 @@ default:
   'ctrl alt 9'        : 'debug-layer-9' # EnableDebugLayer
 
 searcher:
-  'enter'             : 'accept'
-  'esc'               : 'cancel'
-  'tab'               : 'continue'
+  'ctrl 0'     : 'searcher-accept-0'     # Searcher HintShortcut 0
+  'cmd 0'      : 'searcher-accept-0'     # Searcher HintShortcut 0
+  'ctrl 1'     : 'searcher-accept-1'     # Searcher HintShortcut 1
+  'cmd 1'      : 'searcher-accept-1'     # Searcher HintShortcut 1
+  'ctrl 2'     : 'searcher-accept-2'     # Searcher HintShortcut 2
+  'cmd 2'      : 'searcher-accept-2'     # Searcher HintShortcut 2
+  'ctrl 3'     : 'searcher-accept-3'     # Searcher HintShortcut 3
+  'cmd 3'      : 'searcher-accept-3'     # Searcher HintShortcut 3
+  'ctrl 4'     : 'searcher-accept-4'     # Searcher HintShortcut 4
+  'cmd 4'      : 'searcher-accept-4'     # Searcher HintShortcut 4
+  'ctrl 5'     : 'searcher-accept-5'     # Searcher HintShortcut 5
+  'cmd 5'      : 'searcher-accept-5'     # Searcher HintShortcut 5
+  'ctrl 6'     : 'searcher-accept-6'     # Searcher HintShortcut 6
+  'cmd 6'      : 'searcher-accept-6'     # Searcher HintShortcut 6
+  'ctrl 7'     : 'searcher-accept-7'     # Searcher HintShortcut 7
+  'cmd 7'      : 'searcher-accept-7'     # Searcher HintShortcut 7
+  'ctrl 8'     : 'searcher-accept-8'     # Searcher HintShortcut 8
+  'cmd 8'      : 'searcher-accept-8'     # Searcher HintShortcut 8
+  'ctrl 9'     : 'searcher-accept-9'     # Searcher HintShortcut 9
+  'cmd 9'      : 'searcher-accept-9'     # Searcher HintShortcut 9
+  'ctrl enter' : 'searcher-accept-input' # Searcher AcceptInput
+  'cmd enter'  : 'searcher-accept-input' # Searcher AcceptInput
+  'down'       : 'searcher-move-down'    # Searcher MoveDown
+  'enter'      : 'searcher-accept'       # Searcher Accept
+  'tab'        : 'searcher-tab-pressed'  # Searcher TabPressed
+  'up'         : 'searcher-move-up'      # Searcher MoveUp

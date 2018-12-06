@@ -25,18 +25,15 @@ export class NodeEditor
           @backend.node.start()
       baseglUI.onEvent @_handleUIEvent
 
-  _addShortcutListeners: =>
-    s = @_shortcuts()
-    for key, binding of keymap.keymap
-      if s[binding]?
-        @listener.register_combo
-          keys: key
-          on_keydown: s[binding]
-
-  _pushShortcut: (name, arg = null) =>
+  __pushShortcutEvent: (name, arg = null) =>
     @backend.node.pushEvent
       _shortcut: name
       _arg: arg
+
+  __pushSearcherEvent: (name, arg = null) =>
+    @backend.node.pushEvent
+      tag: name
+      contents: arg if arg?
 
   setFile: (@path) =>
     @backend.node.pushEvent(tag: "SetFile", path: @path)
@@ -88,71 +85,89 @@ export class NodeEditor
           base:   base
 
   __shortcuts: =>
-    f = @_pushShortcut
-    'cancel': => f 'Cancel'
-    'accept': => f 'Accept'
-    'open':   => @lunaStudio.openProjectDialog()
-    # camera
-    'center-graph': => f 'CenterGraph'
-    'pan-down':     => f 'PanDown'
-    'pan-left':     => f 'PanLeft'
-    'pan-right':    => f 'PanRight'
-    'pan-up':       => f 'PanUp'
-    'reset-camera': => f 'ResetCamera'
-    'reset-pan':    => f 'ResetPan'
-    'reset-zoom':   => f 'ResetZoom'
-    'zoom-in':      => f 'ZoomIn'
-    'zoom-out':     => f 'ZoomOut'
-    # clipboard
-    'copy':  => f 'Copy'
-    'cut':   => f 'Cut'
-    'paste': => f 'Paste', atom.clipboard.read() #TODO
-    # navigation
-    'exit-graph':    => f 'ExitGraph'
-    'go-cone-down':  => f 'GoConeDown'
-    'go-cone-left':  => f 'GoConeLeft'
-    'go-cone-right': => f 'GoConeRight'
-    'go-cone-up':    => f 'GoConeUp'
-    'go-down':       => f 'GoDown'
-    'go-left':       => f 'GoLeft'
-    'go-next':       => f 'GoNext'
-    'go-prev':       => f 'GoPrev'
-    'go-right':      => f 'GoRight'
-    'go-up':         => f 'GoUp'
-    # nodes
-    'autolayout-all-nodes':        => f 'AutolayoutAllNodes'
-    'autolayout-selected-nodes':   => f 'AutolayoutSelectedNodes'
-    'close-visualization-preview': => f 'CloseVisualizationPreview'
-    'collapse-to-function':        => f 'CollapseToFunction'
-    'edit-selected-nodes':         => f 'EditSelectedNodes'
-    'expand-selected-nodes':       => f 'ExpandSelectedNodes'
-    'open-visualization-preview':  => f 'OpenVisualizationPreview'
-    'remove-selected-nodes':       => f 'RemoveSelectedNodes'
-    'select-all':                  => f 'SelectAll'
-    'unfold-selected-nodes':       => f 'UnfoldSelectedNodes'
-    'zoom-visualization':          => f 'ZoomVisualization'
-    # undo/redo
-    'redo': => f 'Redo'
-    'undo': => f 'Undo'
-    # MockMonads
-    'mock-add-monad':    => f 'MockAddMonad'
-    'mock-clear-monads': => f 'MockClearMonads'
-    # searcher
-    'searcher-open': (e)        =>
-      scene = @nodeEditor.scene
-      campos = scene.camera.position
-      y = scene.height/2 + campos.y + (-scene.screenMouse.y + scene.height/2) * campos.z
-      x = scene.width/2  + campos.x + (scene.screenMouse.x - scene.width/2) * campos.z
-      f 'SearcherOpen', '(' + x + ',' + y + ')'
-    'searcher-edit-expression': => f 'SearcherEditExpression'
-    # debug
-    'debug-layer-0': => f 'EnableDebugLayer', "0"
-    'debug-layer-1': => f 'EnableDebugLayer', "1"
-    'debug-layer-2': => f 'EnableDebugLayer', "3"
-    'debug-layer-3': => f 'EnableDebugLayer', "2"
-    'debug-layer-4': => f 'EnableDebugLayer', "4"
-    'debug-layer-5': => f 'EnableDebugLayer', "5"
-    'debug-layer-6': => f 'EnableDebugLayer', "6"
-    'debug-layer-7': => f 'EnableDebugLayer', "7"
-    'debug-layer-8': => f 'EnableDebugLayer', "8"
-    'debug-layer-9': => f 'EnableDebugLayer', "9"
+    shortcut = @__pushShortcutEvent
+    searcher = @__pushSearcherEvent
+    default:
+      'cancel': => shortcut 'Cancel'
+      'accept': => shortcut 'Accept'
+      'open':   => @lunaStudio.openProjectDialog()
+      # camera
+      'center-graph': => shortcut 'CenterGraph'
+      'pan-down':     => shortcut 'PanDown'
+      'pan-left':     => shortcut 'PanLeft'
+      'pan-right':    => shortcut 'PanRight'
+      'pan-up':       => shortcut 'PanUp'
+      'reset-camera': => shortcut 'ResetCamera'
+      'reset-pan':    => shortcut 'ResetPan'
+      'reset-zoom':   => shortcut 'ResetZoom'
+      'zoom-in':      => shortcut 'ZoomIn'
+      'zoom-out':     => shortcut 'ZoomOut'
+      # clipboard
+      'copy':  => shortcut 'Copy'
+      'cut':   => shortcut 'Cut'
+      'paste': => shortcut 'Paste', atom.clipboard.read() #TODO
+      # navigation
+      'exit-graph':    => shortcut 'ExitGraph'
+      'go-cone-down':  => shortcut 'GoConeDown'
+      'go-cone-left':  => shortcut 'GoConeLeft'
+      'go-cone-right': => shortcut 'GoConeRight'
+      'go-cone-up':    => shortcut 'GoConeUp'
+      'go-down':       => shortcut 'GoDown'
+      'go-left':       => shortcut 'GoLeft'
+      'go-next':       => shortcut 'GoNext'
+      'go-prev':       => shortcut 'GoPrev'
+      'go-right':      => shortcut 'GoRight'
+      'go-up':         => shortcut 'GoUp'
+      # nodes
+      'autolayout-all-nodes':        => shortcut 'AutolayoutAllNodes'
+      'autolayout-selected-nodes':   => shortcut 'AutolayoutSelectedNodes'
+      'close-visualization-preview': => shortcut 'CloseVisualizationPreview'
+      'collapse-to-function':        => shortcut 'CollapseToFunction'
+      'edit-selected-nodes':         => shortcut 'EditSelectedNodes'
+      'expand-selected-nodes':       => shortcut 'ExpandSelectedNodes'
+      'open-visualization-preview':  => shortcut 'OpenVisualizationPreview'
+      'remove-selected-nodes':       => shortcut 'RemoveSelectedNodes'
+      'select-all':                  => shortcut 'SelectAll'
+      'unfold-selected-nodes':       => shortcut 'UnfoldSelectedNodes'
+      'zoom-visualization':          => shortcut 'ZoomVisualization'
+      # undo/redo
+      'redo': => shortcut 'Redo'
+      'undo': => shortcut 'Undo'
+      # MockMonads
+      'mock-add-monad':    => shortcut 'MockAddMonad'
+      'mock-clear-monads': => shortcut 'MockClearMonads'
+      # searcher
+      'searcher-open': (e)        =>
+        scene = @nodeEditor.scene
+        campos = scene.camera.position
+        y = scene.height/2 + campos.y + (-scene.screenMouse.y + scene.height/2) * campos.z
+        x = scene.width/2  + campos.x + (scene.screenMouse.x - scene.width/2) * campos.z
+        shortcut 'SearcherOpen', '(' + x + ',' + y + ')'
+      'searcher-edit-expression': => shortcut 'SearcherEditExpression'
+      # debug
+      'debug-layer-0': => shortcut 'EnableDebugLayer', "0"
+      'debug-layer-1': => shortcut 'EnableDebugLayer', "1"
+      'debug-layer-2': => shortcut 'EnableDebugLayer', "3"
+      'debug-layer-3': => shortcut 'EnableDebugLayer', "2"
+      'debug-layer-4': => shortcut 'EnableDebugLayer', "4"
+      'debug-layer-5': => shortcut 'EnableDebugLayer', "5"
+      'debug-layer-6': => shortcut 'EnableDebugLayer', "6"
+      'debug-layer-7': => shortcut 'EnableDebugLayer', "7"
+      'debug-layer-8': => shortcut 'EnableDebugLayer', "8"
+      'debug-layer-9': => shortcut 'EnableDebugLayer', "9"
+    searcher:
+      'searcher-accept-0'     : => searcher 'HintShortcut', '0'
+      'searcher-accept-1'     : => searcher 'HintShortcut', '1'
+      'searcher-accept-2'     : => searcher 'HintShortcut', '2'
+      'searcher-accept-3'     : => searcher 'HintShortcut', '3'
+      'searcher-accept-4'     : => searcher 'HintShortcut', '4'
+      'searcher-accept-5'     : => searcher 'HintShortcut', '5'
+      'searcher-accept-6'     : => searcher 'HintShortcut', '6'
+      'searcher-accept-7'     : => searcher 'HintShortcut', '7'
+      'searcher-accept-8'     : => searcher 'HintShortcut', '8'
+      'searcher-accept-9'     : => searcher 'HintShortcut', '9'
+      'searcher-accept-input' : => searcher 'AcceptInput'
+      'searcher-move-down'    : => searcher 'MoveDown'
+      'searcher-accept'       : => searcher 'Accept'
+      'searcher-tab-pressed'  : => searcher 'TabPressed'
+      'searcher-move-up'      : => searcher 'MoveUp'

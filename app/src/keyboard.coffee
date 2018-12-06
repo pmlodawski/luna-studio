@@ -2,16 +2,15 @@ import * as keypress from 'keypress.js'
 import * as keymap from './keymap.cson'
 
 export class Keyboard
-  constructor: (@defaultHandlers) ->
+  constructor: (@handlers) ->
+    window.k = @
     @listener = new keypress.Listener()
-    @unsetContext()
+    @setContext()
 
-  unsetContext: =>
-    @setContext null, @defaultHandlers
-
-  setContext: (context, handlers) =>
+  setContext: (context = 'default') =>
     @listener.reset()
-    for key, binding of keymap[context or 'default']
+    handlers = @handlers?[context]
+    for key, binding of keymap[context]
       handler = handlers?[binding]
       if handler?
         @listener.register_combo

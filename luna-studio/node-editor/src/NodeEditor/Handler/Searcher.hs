@@ -3,6 +3,7 @@
 module NodeEditor.Handler.Searcher where
 
 import           Common.Prelude
+import qualified Data.Text                          as Text
 
 import           Common.Action.Command              (Command)
 import           LunaStudio.Data.Position           (fromTuple)
@@ -70,7 +71,9 @@ handleViewEvent scheduleEvent evt = case evt ^. base of
     EditNodeExpression  {} -> Just $ Searcher.editExpression nl
     SearcherEdit (SearcherEditEvent ss se input) ->
            jc $ Searcher.updateInput input ss se
-    SearcherAccept      {} -> jc   $ Searcher.accept scheduleEvent
+    SearcherAccept searcher -> jc   $ if Text.null $ searcher ^. View.acceptValue
+        then Searcher.close
+        else Searcher.accept scheduleEvent
     SearcherTabPressed  {} -> jc     Searcher.handleTabPressed
     SearcherMoveDown    {} -> jc     Searcher.selectPreviousHint
     SearcherMoveUp      {} -> jc     Searcher.selectNextHint
