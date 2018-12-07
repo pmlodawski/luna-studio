@@ -1,6 +1,6 @@
 import * as logger  from 'luna-logger'
 
-import * as Backend from './backend'
+import * as Backend from './backend/backend'
 
 import {LunaStudio} from './LunaStudio'
 

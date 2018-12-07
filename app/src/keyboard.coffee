@@ -3,7 +3,6 @@ import * as keymap from './keymap.cson'
 
 export class Keyboard
   constructor: (@handlers) ->
-    window.k = @
     @listener = new keypress.Listener()
     @setContext()
 
@@ -16,3 +15,4 @@ export class Keyboard
         @listener.register_combo
           keys: key
           on_keydown: handler
+          prevent_default: true
