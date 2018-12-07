@@ -39,8 +39,9 @@ function baseConfig(entryPath) {
 }
 
 
-serverConfig = baseConfig({index:'./src/index.coffee', main:"./src/main.coffee"});
+serverConfig = baseConfig({index:'./src/index.coffee'});
+clientConfig = baseConfig({main:'./src/main.coffee'});
 
 serverConfig.target = 'electron-main';
 
-module.exports = serverConfig;
+module.exports = [serverConfig, clientConfig];
