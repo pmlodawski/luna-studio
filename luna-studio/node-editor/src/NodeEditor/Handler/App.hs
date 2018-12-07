@@ -10,7 +10,7 @@ import qualified NodeEditor.Action.Batch        as Batch
 import qualified NodeEditor.Action.Port         as PortControl
 import           NodeEditor.Action.State.Action (checkIfActionPerfoming, endActions, endAllActions)
 import qualified NodeEditor.Event.Atom          as Atom
-import           NodeEditor.Event.Event         (Event (Atom, Init, Shortcut, UI, View))
+import           NodeEditor.Event.Event         (Event (Atom, Init, Shortcut, View))
 import qualified NodeEditor.Event.Shortcut      as Shortcut
 import           NodeEditor.Event.View          (ViewEvent (ViewEvent))
 import qualified NodeEditor.Event.View          as View

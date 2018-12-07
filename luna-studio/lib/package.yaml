@@ -50,7 +50,6 @@ dependencies:
   - mtl
   - placeholders
   - prologue
-  - react-flux
   - text
   - time
   - transformers

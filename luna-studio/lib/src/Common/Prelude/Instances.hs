@@ -13,21 +13,11 @@ import qualified Data.JSString              as JSString
 import qualified Data.JSString.Text         as JSString
 import           Development.Placeholders
 import           Prologue
-import           React.Flux
-import           React.Flux.Store           (ReactStoreRef)
 
 import           LunaStudio.Data.Breadcrumb (Breadcrumb, BreadcrumbItem)
 import           LunaStudio.Data.NodeLoc    (NodeLoc, NodePath)
 import           LunaStudio.Data.Port       (InPortIndex, OutPortIndex)
 import           LunaStudio.Data.PortRef    (AnyPortRef, InPortRef, OutPortRef)
-
--- ======= React.Flux ==========================================================
-
-instance Eq (ReactStore a) where _ == _ = True
-instance NFData a => NFData (ReactStoreRef a)
-instance NFData a => NFData (ReactStore a)
-
-instance FromJSON KeyboardEvent where parseJSON = $(placeholder "Read KeyboardEvent")
 
 -- ======= GHCJS ===============================================================
 

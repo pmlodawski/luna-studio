@@ -17,15 +17,12 @@ import           LunaStudio.Data.NodeLoc                  (NodeLoc)
 import           LunaStudio.Data.NodeSearcher             (NodeSearcherData)
 import           LunaStudio.Data.TypeRep                  (TypeRep)
 import           NodeEditor.Event.Event                   (Event)
-import           NodeEditor.React.Model.App               (App)
 import qualified NodeEditor.React.Model.App               as App
 import           NodeEditor.React.Model.NodeEditor        (NodeEditor)
 import           NodeEditor.React.Model.Visualization     (Visualizer,
                                                            VisualizerId,
                                                            VisualizerMatcher,
                                                            VisualizerPath)
-import           NodeEditor.React.Store                   (Ref)
-import qualified NodeEditor.React.Store.Ref               as Ref
 import           NodeEditor.State.Action                  (ActionRep, Connect,
                                                            SomeAction)
 import qualified NodeEditor.State.Collaboration           as Collaboration
@@ -75,9 +72,9 @@ makeLenses ''BackendState
 makeLenses ''State
 makeLenses ''DebugState
 
-mkState :: Ref App -> ClientId -> StdGen -> State
-mkState ref clientId' = State
-    {- react                -} (UI.mkState ref)
+mkState :: ClientId -> StdGen -> State
+mkState clientId' = State
+    {- ui                   -} def
     {- backend              -} (BackendState def clientId')
     {- actions              -} def
     {- collaboration        -} def
@@ -93,8 +90,8 @@ mkState ref clientId' = State
 nextRandom :: Command State Word8
 nextRandom = uses random Random.random >>= \(val, rnd) -> random .= rnd >> return val
 
-getNodeEditor :: MonadIO m => State -> m NodeEditor
-getNodeEditor state = view App.nodeEditor <$> Ref.get (state ^. ui . UI.app)
+getNodeEditor :: State -> NodeEditor
+getNodeEditor = view (ui . UI.app . App.nodeEditor)
 
 instance HasRequestTimes State where
     requestTimes = backend . pendingRequests

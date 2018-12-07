@@ -8,7 +8,6 @@ import           Control.Concurrent.MVar
 import           JS.UUID                    (generateUUID)
 import           NodeEditor.Event.Engine    (LoopRef (LoopRef))
 import qualified NodeEditor.Event.Engine    as Engine
-import qualified NodeEditor.React.Store     as Store
 import           NodeEditor.State.Global    (mkState)
 import           System.Random              (newStdGen)
 import           WebSocket                  (WebSocket)
@@ -21,8 +20,7 @@ runApp chan socket = do
     mdo
         let loop = LoopRef chan state
         Engine.scheduleInit loop
-        appRef <- Store.createApp def $ Engine.scheduleEvent loop
-        let initState = mkState appRef clientId random
+        let initState = mkState clientId random
         state <- newMVar initState
         Engine.connectEventSources socket loop
     pure ()

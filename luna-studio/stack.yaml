@@ -61,8 +61,6 @@ packages:
 - extra-dep: true
   location: {commit: c1c525d71b5e749f24e26f71d2d1a68019cae850, git: 'git@github.com:luna/prologue.git'}
 - extra-dep: true
-  location: {commit: ad94b1f2e4bc87b81853ff746b64c59b3eae7f09, git: 'git@github.com:luna/react-flux'}
-- extra-dep: true
   location: {commit: fe9834f3f5583086d76b12779a1c2a5290c72b0d, git: 'git@github.com:luna/text-processing.git'}
 - extra-dep: true
   location: {commit: 107db9368e95e192d70c0dec274ecfe3592101d2, git: 'git@github.com:luna/typelevel.git'}

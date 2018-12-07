@@ -4,8 +4,7 @@ module NodeEditor.Handler.Connect
 
 import           Common.Action.Command             (Command)
 import           Common.Prelude
-import           LunaStudio.Data.PortRef           (AnyPortRef (InPortRef', OutPortRef'))
-import           NodeEditor.Action.Connect         (cancelSnapToPort, handleConnectionMouseDown, handleMouseUp, handleMove,
+import           NodeEditor.Action.Connect         (cancelSnapToPort, handleConnectionMouseDown, handleMouseUp,
                                                     handlePortMouseUp, snapToPort)
 import           NodeEditor.Event.Event            (Event (View))
 import           NodeEditor.Event.View             (BaseEvent (Disconnect, Mouse), ViewEvent, base)
