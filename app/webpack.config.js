@@ -8,9 +8,6 @@ function baseConfig(entryPath) {
 
     , devtool: "eval-source-map"
     , entry: entryPath
-    , node: {
-	    __dirname: false
-    }
     , resolve:
       { modules: 
         [ "node_modules"
@@ -39,8 +36,9 @@ function baseConfig(entryPath) {
 }
 
 
-serverConfig = baseConfig({index:'./src/index.coffee', main:"./src/main.coffee"});
+serverConfig = baseConfig({index:'./src/index.coffee'});
+clientConfig = baseConfig({main:'./src/main.coffee'});
 
 serverConfig.target = 'electron-main';
 
-module.exports = serverConfig;
+module.exports = [serverConfig, clientConfig];
