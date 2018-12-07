@@ -14,7 +14,7 @@ data Event = InputChanged Text Int Int
            | AcceptInput
            | HintShortcut   Int
            | AcceptWithHint Int
-           | TabPressed
+           | Continue
            | MoveDown
            | MoveUp
            | MoveLeft

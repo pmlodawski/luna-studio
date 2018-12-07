@@ -118,5 +118,5 @@ searcher:
   'cmd enter'  : 'searcher-accept-input' # Searcher AcceptInput
   'down'       : 'searcher-move-down'    # Searcher MoveDown
   'enter'      : 'searcher-accept'       # Searcher Accept
-  'tab'        : 'searcher-tab-pressed'  # Searcher TabPressed
+  'tab'        : 'searcher-continue'     # Searcher Continue
   'up'         : 'searcher-move-up'      # Searcher MoveUp

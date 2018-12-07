@@ -49,7 +49,7 @@ handleSearcherEvent scheduleEvent = \case
     Searcher.AcceptWithHint i
         -> Just . continue $ Searcher.acceptWithHint scheduleEvent i
     Searcher.HintShortcut i -> Just . continue $ Searcher.updateInputWithHint i
-    Searcher.TabPressed     -> Just $ continue Searcher.handleTabPressed
+    Searcher.Continue       -> Just $ continue Searcher.handleTabPressed
     Searcher.MoveDown       -> Just $ continue Searcher.selectPreviousHint
     Searcher.MoveUp         -> Just $ continue Searcher.selectNextHint
     _                       -> Nothing

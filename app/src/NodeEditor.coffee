@@ -169,5 +169,5 @@ export class NodeEditor
       'searcher-accept-input' : => searcher 'AcceptInput'
       'searcher-move-down'    : => searcher 'MoveDown'
       'searcher-accept'       : => searcher 'Accept'
-      'searcher-tab-pressed'  : => searcher 'TabPressed'
+      'searcher-continue'     : => searcher 'Continue'
       'searcher-move-up'      : => searcher 'MoveUp'
