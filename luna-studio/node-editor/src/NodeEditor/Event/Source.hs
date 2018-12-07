@@ -3,7 +3,6 @@
 module NodeEditor.Event.Source
     ( AddHandler(..)
     , atomHandler
-    , movementHandler
     , viewHandler
     , webSocketHandler
     ) where
@@ -16,8 +15,6 @@ import qualified JS.Scene                          as Scene
 import qualified JS.View                           as View
 import qualified NodeEditor.Event.Connection       as Connection
 import           NodeEditor.Event.Event            (Event (Connection, UI))
-import           NodeEditor.Event.UI               (UIEvent (AppEvent))
-import qualified NodeEditor.React.Event.App        as App
 import qualified WebSocket                         as WebSocket
 
 
@@ -25,10 +22,6 @@ data AddHandler a = AddHandler ((a -> IO ()) -> IO (IO ()))
 
 atomHandler :: AddHandler Event
 atomHandler = AddHandler Atom.onEvent
-
-movementHandler :: AddHandler Event
-movementHandler = AddHandler $ \h ->
-    Scene.onMovement $ h . UI . AppEvent . App.Movement
 
 viewHandler :: AddHandler Event
 viewHandler = AddHandler View.onEvent

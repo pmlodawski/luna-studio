@@ -11,11 +11,10 @@ import qualified NodeEditor.Action.Searcher         as Searcher
 import           NodeEditor.Action.State.NodeEditor (whenGraphLoaded)
 import           NodeEditor.Event.Event             (Event (Shortcut, UI, View))
 import qualified NodeEditor.Event.Shortcut          as Shortcut
-import           NodeEditor.Event.UI                (UIEvent (AppEvent, SearcherEvent))
+import           NodeEditor.Event.UI                (UIEvent (SearcherEvent))
 import           NodeEditor.Event.View              (BaseEvent (EditNodeExpression, EditNodeName, SearcherAccept, SearcherEdit, SearcherMoveDown, SearcherMoveUp, SearcherTabPressed),
                                                      SearcherEditEvent (SearcherEditEvent), ViewEvent, base)
 import qualified NodeEditor.Event.View              as View
-import qualified NodeEditor.React.Event.App         as App
 import qualified NodeEditor.React.Event.Searcher    as Searcher
 import           NodeEditor.State.Action            (Action (continue))
 import           NodeEditor.State.Global            (State)
@@ -27,14 +26,7 @@ handle scheduleEvent (UI (SearcherEvent evt))
     = handleSearcherEvent scheduleEvent evt
 handle scheduleEvent (View evt) = handleViewEvent scheduleEvent evt
 handle _ (Shortcut evt)         = handleShortcutEvent evt
-handle _ (UI (AppEvent evt))    = handleAppEvent evt
 handle _ _                      = Nothing
-
-
-handleAppEvent :: App.Event -> Maybe (Command State ())
-handleAppEvent App.ContextMenu = Just $ whenGraphLoaded $ Searcher.open def
-handleAppEvent App.MouseDown{} = Just $ continue Searcher.close
-handleAppEvent _               = Nothing
 
 handleShortcutEvent :: Shortcut.ShortcutEvent -> Maybe (Command State ())
 handleShortcutEvent evt = case evt ^. Shortcut.shortcut of

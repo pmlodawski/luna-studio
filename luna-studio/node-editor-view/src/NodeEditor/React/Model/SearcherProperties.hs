@@ -12,7 +12,7 @@ import qualified NodeEditor.React.Model.Searcher as Searcher
 import LunaStudio.Data.NodeLoc              (NodeLoc)
 import NodeEditor.React.Model.NodeEditor    ()
 import NodeEditor.React.Model.Searcher      (Match, Mode (..), Searcher,
-                                             docVisInfo, selectedMatch)
+                                             docVisInfo)
 import NodeEditor.React.Model.Visualization (RunningVisualization, Visualizers,
                                              lunaVisualizers)
 

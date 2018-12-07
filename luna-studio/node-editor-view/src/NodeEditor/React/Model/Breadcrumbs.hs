@@ -5,7 +5,6 @@ module NodeEditor.React.Model.Breadcrumbs (
 
 import           Common.Prelude
 import           LunaStudio.Data.Breadcrumb         as X
-import           NodeEditor.React.Event.Breadcrumbs as X
 
 
 

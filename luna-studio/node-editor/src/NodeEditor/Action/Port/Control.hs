@@ -13,7 +13,6 @@ import           Common.Action.Command              (Command)
 import           Common.Prelude
 import           Data.Time.Clock                    (UTCTime)
 import qualified Data.Time.Clock                    as Clock
-import           JS.Scene                           (appId)
 import qualified JS.UI                              as JS
 import           LunaStudio.Data.PortDefault        (PortDefault (Constant), PortValue (IntValue, RealValue, TextValue))
 import           LunaStudio.Data.PortRef            (InPortRef)

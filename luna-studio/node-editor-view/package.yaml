@@ -78,7 +78,6 @@ dependencies:
   - mtl
   - prologue
   - random
-  - react-flux
   - split
   - text
   - time

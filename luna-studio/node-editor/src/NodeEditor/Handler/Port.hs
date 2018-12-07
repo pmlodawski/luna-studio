@@ -3,20 +3,14 @@ module NodeEditor.Handler.Port where
 import           Common.Action.Command       (Command)
 import           Common.Prelude
 import           NodeEditor.Action.Basic     (setPortDefault)
-import           NodeEditor.Action.Port      (acceptEditTextPortControl, editTextPortControl, handleClick, handleMouseDown,
-                                              handleMouseEnter, handleMouseLeave, startMoveSlider)
-import           NodeEditor.Event.Event      (Event (UI, View))
-import           NodeEditor.Event.UI         (UIEvent, _PortEvent)
+import           NodeEditor.Action.Port      (handleClick, handleMouseDown)
+import           NodeEditor.Event.Event      (Event (View))
 import           NodeEditor.Event.View       (BaseEvent (Mouse, PortControl), ViewEvent, mousePosition)
 import qualified NodeEditor.Event.View       as View
-import qualified NodeEditor.React.Event.Port as Port
-import           NodeEditor.State.Action     (Action (continue))
 import           NodeEditor.State.Global     (State)
-import qualified NodeEditor.State.Mouse      as State
 
 
 handle :: Event -> Maybe (Command State ())
-handle (UI   evt) = handleUIEvent evt
 handle (View evt) = handleViewEvent evt
 handle _          = Nothing
 
@@ -38,22 +32,3 @@ handleViewEvent evt = case evt ^. View.base of
             content = e ^. View.content
         Just $ setPortDefault inPortRef $ convert content
     _ -> Nothing
-
-handleUIEvent :: UIEvent -> Maybe (Command State ())
-handleUIEvent evt = maybe Nothing handlePortEvent $ evt ^? _PortEvent where
-    handlePortEvent = \case
-        Port.MouseDown evt' portRef
-            -> Just $ State.mousePosition evt' >>= flip handleMouseDown portRef
-        Port.Click evt' portRef
-            -> Just $ State.mousePosition evt' >>= flip handleClick portRef
-        Port.MouseEnter portRef -> Just $ handleMouseEnter portRef
-        Port.MouseLeave portRef -> Just $ handleMouseLeave portRef
-        Port.EditTextPortControlBlur _
-            -> Just $ continue acceptEditTextPortControl
-        Port.EditTextPortControl portRef val
-            -> Just $ editTextPortControl portRef val
-        Port.PortSetPortDefault portRef portDef
-            -> Just $ setPortDefault portRef portDef
-        Port.PortInitSlider _ portRef sliderInit
-            -> Just $ startMoveSlider portRef sliderInit
-        _   -> Nothing

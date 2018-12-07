@@ -12,13 +12,13 @@ import qualified NodeEditor.React.Model.Connection          as Connection
 import qualified NodeEditor.React.Model.Layout              as Layout
 import qualified NodeEditor.React.Model.Node.ExpressionNode as ExpressionNode
 import qualified NodeEditor.React.Model.Port                as Port
+import qualified NodeEditor.React.Model.Searcher            as Searcher
 import qualified NodeEditor.React.Model.Visualization       as Visualization
-
 
 import Data.Map                             (Map)
 import LunaStudio.Data.CameraTransformation (CameraTransformation)
 import LunaStudio.Data.MonadPath            (MonadPath)
-import LunaStudio.Data.MonadPath            (MonadPath)
+import LunaStudio.Data.NodeLoc              (NodePath)
 import NodeEditor.Data.Color                (Color (Color))
 import NodeEditor.React.Model.Connection    (Connection, ConnectionsMap,
                                              HalfConnection (HalfConnection),
@@ -247,3 +247,16 @@ getVisualizations ne = concatMap getVisualizationsForNode . Map.toList $ ne ^. n
 
 isVisualizationNodeSelected :: VisualizationProperties -> NodeEditor -> Bool
 isVisualizationNodeSelected visProp = maybe False (view ExpressionNode.isSelected) . getExpressionNode (visProp ^. Visualization.visPropNodeLoc)
+
+applySearcherHints :: NodeEditor -> NodeEditor
+applySearcherHints ne = maybe ne replaceNode $ ne ^. searcher where
+    connect srcPortRef dstPortRef ne' = ne' & connections . at dstPortRef ?~ Connection.Connection srcPortRef dstPortRef False Connection.Normal
+    tryConnect    nl nn ne'           = maybe ne' (\srcPortRef -> connect srcPortRef (Port.InPortRef nl [Port.Self]) ne') $ nn ^. Searcher.predPortRef
+    toModel       n  nl pos           = moveNodeToTop $ (convert (def :: NodePath, n)) & ExpressionNode.nodeLoc  .~ nl
+                                                                                       & ExpressionNode.position .~ pos
+    updateNode    nl n ne'            = maybe ne' (flip updateExpressionNode ne . Searcher.applyExpressionHint n) $ getExpressionNode nl ne'
+    moveNodeToTop n                   = n & ExpressionNode.zPos .~ (ne ^. topZIndex) + 1
+    replaceNode   s                   = case (s ^. Searcher.mode, s ^. Searcher.selectedNode) of
+        (Searcher.Node nl (Searcher.NodeModeInfo _ Nothing   _ _) _, Just n) -> updateNode nl n ne
+        (Searcher.Node nl (Searcher.NodeModeInfo _ (Just nn) _ _) _, Just n) -> tryConnect nl nn $ updateExpressionNode (toModel n nl (nn ^. Searcher.position)) ne
+        (Searcher.Node nl (Searcher.NodeModeInfo _ (Just nn) _ _) _, _)      -> tryConnect nl nn $ updateExpressionNode (moveNodeToTop $ ExpressionNode.mkExprNode nl (s ^. Searcher.inputText) (nn ^. Searcher.position)) ne
