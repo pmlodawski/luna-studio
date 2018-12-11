@@ -7,15 +7,13 @@ import           Empire.Prelude
 
 import           LunaStudio.Data.Node              (NodeId)
 import           LunaStudio.Data.NodeMeta          (NodeMeta)
-import qualified LunaStudio.Data.NodeMeta          as NodeMeta
 import           Empire.Data.AST                   (NodeRef, NotLambdaException(..))
-import           Empire.Data.Layers                (Meta, SpanOffset, SpanLength)
+import           Empire.Data.Layers                (Meta)
 
 import           Empire.ASTOp                      (ASTOp, GraphOp, match)
 import qualified Empire.ASTOps.Builder             as ASTBuilder
 import qualified Empire.ASTOps.Deconstruct         as ASTDeconstruct
 import qualified Empire.ASTOps.Read                as ASTRead
-import           Data.Text.Position                (Delta(..))
 
 import qualified Luna.IR as IR
 -- import qualified OCI.IR.Repr.Vis as Vis
@@ -60,24 +58,24 @@ readSeq node = match node $ \case
 
 getSeqs' :: NodeRef -> GraphOp [NodeRef]
 getSeqs' node = match node $ \case
-    Seq l r -> do
+    Seq l _ -> do
         previous <- source l >>= getSeqs'
         pure $ previous <> [node]
     _ -> pure []
 
 getSeqs :: NodeRef -> GraphOp [NodeRef]
 getSeqs node = match node $ \case
-    Seq l r -> do
+    Seq l _ -> do
         previous <- source l >>= getSeqs'
         pure $ previous <> [node]
     _ -> pure [node]
 
 previousNodeForSeq :: NodeRef -> GraphOp (Maybe NodeRef)
 previousNodeForSeq node = match node $ \case
-    Seq l r -> do
+    Seq l _ -> do
         previousNode <- source l
         match previousNode $ \case
-            Seq l r -> Just <$> source r
+            Seq _ r -> Just <$> source r
             _       -> pure $ Just previousNode
     _ -> pure Nothing
 

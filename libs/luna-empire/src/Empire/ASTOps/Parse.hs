@@ -18,9 +18,8 @@ import           Data.Convert
 import           Data.IORef
 import           Empire.Empire
 import           Empire.Prelude hiding (mempty)
-import           Prologue (convert, convertVia, mempty, wrap)
+import           Prologue (convert, convertVia)
 
-import           Control.Exception.Safe       (catchAny, throwString)
 import           Data.Char                    (digitToInt)
 import qualified Data.List.Split              as Split
 import qualified Data.Text                    as Text
@@ -28,37 +27,23 @@ import qualified Data.Scientific              as Scientific
 
 import           Empire.ASTOp                    (EmpirePass, GraphOp, liftScheduler, runASTOp)
 import           Empire.Data.AST                 (NodeRef, astExceptionFromException, astExceptionToException)
-import           Empire.Data.Graph               (ClsGraph, Graph)
-import qualified Empire.Data.Graph               as Graph (codeMarkers)
+import           Empire.Data.Graph               (Graph)
 import           Empire.Data.Layers              (SpanLength)
 import qualified Empire.Commands.Code            as Code
 import qualified Control.Monad.State.Layered as State
 
 import           LunaStudio.Data.PortDefault     (PortDefault (..), PortValue (..))
 
-import qualified Data.Text.Position              as Pos
 import qualified Data.Mutable.Class              as Mutable
-import qualified Data.Vector.Storable.Foreign    as Vector
-import qualified Luna.IR.Layer as Layer
 import qualified Luna.IR                         as IR
-import qualified OCI.Pass.Definition.Declaration      as Pass
 import qualified Luna.Pass                         as Pass
 import qualified Luna.Pass.Scheduler as Scheduler
-import           Luna.Syntax.Text.Parser.Ast.CodeSpan (CodeSpan)
-import qualified Luna.Syntax.Text.Parser.Ast.CodeSpan as CodeSpan
-import           Luna.Syntax.Text.Parser.State.Invalid  (Invalids)
 import qualified Luna.Syntax.Text.Parser.Lexer.Names   as Parser (uminus)
 import qualified Data.Graph.Data.Graph.Class as LunaGraph
 import           Luna.Pass.Data.Stage (Stage)
 
-import qualified Empire.Pass.PatternTransformation            as PT
-import qualified Luna.Pass.Attr as Attr
-import qualified Luna.Syntax.Prettyprint as Prettyprint
 import qualified Luna.Syntax.Text.Parser.Ast           as Parsing
-import Luna.Syntax.Text.Scope (Scope)
 import qualified Luna.Syntax.Text.Source         as Source
-import qualified Luna.IR.Term.Literal            as Lit
-import Luna.Syntax.Text.Parser.State.Result (Result (Result))
 import qualified Luna.Syntax.Text.Parser.State.Marker      as Marker
 import qualified Luna.Syntax.Text.Parser.Lexer         as Lexer
 
@@ -77,16 +62,13 @@ instance Exception SomeParserException where
     fromException = astExceptionFromException
     displayException exc = case exc of SomeParserException e -> "SomeParserException (" <> displayException e <> ")"
 
-
-parseExpr' :: Text -> IO NodeRef
-parseExpr' s = error "parseExpr'" -- view _1 <$> runParser Parsing.expr s `catchAll` (\e -> throwM $ SomeParserException e)
-
 parsePattern :: Text -> Command g NodeRef
 parsePattern s = view _1 <$> parse3 Macro.expr s `catchAll` (\e -> throwM $ SomeParserException e)
 
 passConverter :: (stage1 ~ stage2) => Pass.Pass stage1 pass1 a -> Pass.Pass stage2 pass2 a
 passConverter = unsafeCoerce
 
+parseExpr :: Text -> Command g NodeRef
 parseExpr s = view _1 <$> parse3 Macro.expr s
 
 parse3 :: Macro.Parser (Parsing.Spanned Parsing.Ast) -> Text -> Command g (NodeRef, MarkedExprMap)
@@ -102,7 +84,7 @@ parse3 parser input = do
         return foo
     return (ir, m)
 
-runWith :: Macro.Parser (Parsing.Spanned Parsing.Ast) -> _ -> (Parsing.Spanned Parsing.Ast)
+runWith :: Macro.Parser (Parsing.Spanned Parsing.Ast) -> Lexer.Source -> (Parsing.Spanned Parsing.Ast)
 runWith = \p src -> let
     toks = Lexer.eval Syntax.Version1 src
     foo = Macro.evalStack toks $ do
@@ -115,11 +97,11 @@ runWith = \p src -> let
 {-# NOINLINE runWith #-}
 
 run :: Parser3.ParserPass (Pass.Pass stage Parser3.Parser)
-    => Macro.Parser (Parsing.Spanned Parsing.Ast) -> _ -> Pass.Pass stage Parser3.Parser (IR.SomeTerm, Marker.TermMap)
+    => Macro.Parser (Parsing.Spanned Parsing.Ast) -> Lexer.Source -> Pass.Pass stage Parser3.Parser (IR.SomeTerm, Marker.TermMap)
 run parser src = do
-    ((ref, unmarked), gidMap) <- State.runDefT @Marker.TermMap
-                               $ State.runDefT @Marker.TermOrphanList
-                               $ Parser3.buildIR $ runWith parser src
+    ((ref, _unmarked), gidMap) <- State.runDefT @Marker.TermMap
+                                $ State.runDefT @Marker.TermOrphanList
+                                $ Parser3.buildIR $ runWith parser src
     pure (ref, gidMap)
 
 runParser :: Macro.Parser (Parsing.Spanned Parsing.Ast) -> Text -> IO (NodeRef, LunaGraph.State Stage, Scheduler.State, MarkedExprMap)
@@ -155,23 +137,10 @@ runProperPatternParser code = do
         True -> return ()
         _    -> error ("incorrect pattern " <> convert code)) `catchAll` (\e -> throwM $ SomeParserException e)
 
-
-prepareInput :: Text.Text -> FunctionParsing -> Text.Text
-prepareInput expr parsing = Text.concat $ header : case parsing of
-    AppendNone -> [":\n    None"]
-    ParseAsIs  -> []
-    where
-        stripped = Text.strip expr
-        header   = case Text.splitOn " " stripped of
-            (def:var:args) -> Text.intercalate " " (def:var:args)
-            i              -> Text.concat i
-
-
 data FunctionParsing = AppendNone | ParseAsIs
 
 runFunHackParser :: Text.Text -> FunctionParsing -> Command g (NodeRef, Text.Text)
-runFunHackParser expr parsing = do
-    -- let input = prepareInput expr parsing
+runFunHackParser expr _ = do
     parse <- runFunParser expr
     return (view _1 parse, expr)
 
@@ -231,14 +200,17 @@ parsePortDefault (Expression expr) = do
 parsePortDefault (Constant (IntValue  i))
     | i >= 0     = runASTOp $ do
         intPart <- Mutable.fromList $ map (fromIntegral . digitToInt) $ show i
-        empty   <- Mutable.new
-        generalize <$> IR.number 10 intPart empty `withLength` (length $ show i)
+        empty'  <- Mutable.new
+        generalize <$> IR.number 10 intPart empty' `withLength` (length $ show i)
     | otherwise = runASTOp $ do
         intPart <- Mutable.fromList $ map (fromIntegral . digitToInt) $ show (abs i)
-        empty   <- Mutable.new
-        number <- generalize <$> IR.number 10 intPart empty `withLength` (length $ show $ abs i)
-        minus  <- generalize <$> IR.var Parser.uminus `withLength` 1
-        app    <- generalize <$> IR.app minus number `withLength` (1 + length (show (abs i)))
+        empty'  <- Mutable.new
+        number  <- generalize <$>
+            IR.number 10 intPart empty' `withLength` (length $ show $ abs i)
+        minus   <- generalize <$>
+            IR.var Parser.uminus `withLength` 1
+        app     <- generalize <$>
+            IR.app minus number `withLength` (1 + length (show (abs i)))
         return app
 parsePortDefault (Constant (TextValue s)) = runASTOp $ do
     l <- Mutable.fromList s
@@ -258,12 +230,13 @@ parsePortDefault (Constant (RealValue d)) = runASTOp $ do
             number   <- generalize <$> IR.number 10 intPart fracPart `withLength`
                 (intLength + dotLength + fracLength)
             if negative then do
-                minus <- generalize <$> IR.var Parser.uminus `withLength` minusLength
+                minus <- generalize <$>
+                    IR.var Parser.uminus `withLength` minusLength
                 app   <- generalize <$> IR.app minus number `withLength`
                     (minusLength + intLength + dotLength + fracLength)
                 return app
             else
                 return number
         _ -> throwM $ PortDefaultNotConstructibleException (Constant (RealValue d))
-parsePortDefault (Constant (BoolValue b)) = runASTOp $ generalize <$> IR.cons (convert $ show b) []  `withLength` (length $ show b)
-parsePortDefault d = throwM $ PortDefaultNotConstructibleException d
+parsePortDefault (Constant (BoolValue b)) = runASTOp $ generalize <$>
+    IR.cons (convert $ show b) [] `withLength` length (show b)

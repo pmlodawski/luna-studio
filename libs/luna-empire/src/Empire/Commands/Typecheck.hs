@@ -1,6 +1,6 @@
 module Empire.Commands.Typecheck where
 
-import Empire.Prelude
+import Empire.Prelude hiding (mod)
 
 import qualified Control.Concurrent.Async           as Async
 import qualified Data.Bimap                         as Bimap
@@ -28,6 +28,7 @@ import qualified Luna.Pass.Flow.ProcessUnits        as ProcessUnits
 import qualified Luna.Pass.Preprocess.PreprocessDef as Prep
 import qualified Luna.Pass.Resolve.Data.Resolution  as Resolution
 import qualified Luna.Pass.Scheduler                as Scheduler
+import qualified Luna.Pass.Sourcing.Data.Class      as Class
 import qualified Luna.Pass.Sourcing.Data.Def        as Def
 import qualified Luna.Pass.Sourcing.Data.Unit       as Unit
 import qualified Luna.Pass.Sourcing.ImportsPlucker  as ImportsPlucker
@@ -42,54 +43,57 @@ import qualified LunaStudio.Data.GraphLocation      as GraphLocation
 import qualified Memory                             as Memory
 import qualified Path
 
-import Control.Concurrent.Async        (Async)
-import Control.Exception.Safe          (mask_)
-import Control.Lens                    (uses)
-import Control.Monad.Reader            (ask, runReaderT)
-import Data.Graph.Component.Node.Class (Nodes)
-import Data.Graph.Data.Component.Class (Component (Component))
-import Data.Map                        (Map)
-import Data.Maybe                      (catMaybes)
-import Empire.ASTOp                    (liftScheduler, runASTOp)
-import Empire.Commands.Breadcrumb      (runInternalBreadcrumb,
-                                        withRootedFunction)
-import Empire.Data.AST                 (NodeRef)
-import Empire.Data.BreadcrumbHierarchy (topLevelIDs)
-import Empire.Data.Graph               (Graph)
-import Empire.Empire                   (Command, InterpreterEnv, zoomCommand)
-import Empire.Utils.ValueListener      (SingleRep (ErrorRep, SuccessRep),
-                                        ValueRep (OneTime, Streaming))
-import Foreign.Ptr                     (plusPtr)
-import Luna.Pass.Data.Stage            (Stage)
-import Luna.Pass.Evaluation.Data.Scope (LocalScope)
-import LunaStudio.Data.Breadcrumb      (Breadcrumb (Breadcrumb),
-                                        BreadcrumbItem (Definition))
-import LunaStudio.Data.GraphLocation   (GraphLocation (GraphLocation))
-import LunaStudio.Data.NodeValue       (NodeValue (NodeError, NodeValue))
-import LunaStudio.Data.Visualization   (VisualizationValue (StreamDataPoint, StreamStart, Value))
-import System.Directory                (canonicalizePath, withCurrentDirectory)
-import System.Environment              (getEnv)
-import System.FilePath                 (takeDirectory)
+import Control.Concurrent.Async         (Async)
+import Control.Exception.Safe           (mask_, tryAny)
+import Control.Lens                     (uses)
+import Control.Monad.Reader             (ask, runReaderT)
+import Data.Graph.Component.Node.Class  (Nodes)
+import Data.Graph.Data.Component.Class  (Component (Component))
+import Data.Map                         (Map)
+import Data.Maybe                       (catMaybes)
+import Empire.ASTOp                     (liftScheduler, runASTOp)
+import Empire.Commands.Breadcrumb (runInternalBreadcrumb,
+                                         withRootedFunction)
+import Empire.Data.AST                  (NodeRef)
+import Empire.Data.BreadcrumbHierarchy  (topLevelIDs)
+import Empire.Data.Graph                (Graph)
+import Empire.Empire                    (Command, InterpreterEnv, zoomCommand)
+import Empire.Utils.ValueListener       (SingleRep (ErrorRep, SuccessRep),
+                                         ValueRep (OneTime, Streaming))
+import Foreign.Ptr                      (plusPtr)
+import Luna.Pass.Data.Stage             (Stage)
+import Luna.Pass.Evaluation.Data.Scope  (LocalScope)
+import LunaStudio.Data.Breadcrumb       (Breadcrumb (Breadcrumb),
+                                         BreadcrumbItem (Definition))
+import LunaStudio.Data.GraphLocation    (GraphLocation (GraphLocation))
+import LunaStudio.Data.NodeValue        (NodeValue (NodeError, NodeValue))
+import LunaStudio.Data.Visualization    (VisualizationValue (StreamDataPoint, StreamStart, Value))
+import System.Directory                 (canonicalizePath, withCurrentDirectory)
+import System.Environment               (getEnv)
+import System.FilePath                  (takeDirectory)
 
 
 
 runTC :: IR.Qualified -> GraphLocation -> Command InterpreterEnv ()
-runTC modName (GraphLocation file br) = do
+runTC modName (GraphLocation _ br) = do
     typed <- use $ Graph.userState . Empire.typedUnits
-    root  <- use $ Graph.userState . Empire.clsGraph . Graph.clsClass
-    imps  <- liftScheduler $ ImportsPlucker.run root
+    unit  <- use $ Graph.userState . Empire.clsGraph . Graph.clsClass
+    imps  <- liftScheduler $ ImportsPlucker.run unit
     ress  <- use $ Graph.userState . Empire.resolvers
-    let relevantResolvers = Map.restrictKeys ress (Set.fromList $ essentialImports <> [modName] <> imps)
-        resolver = mconcat . Map.elems $ relevantResolvers
+    let relevantResolvers = Map.restrictKeys ress
+            (Set.fromList $ essentialImports <> [modName] <> imps)
+        resolver          = mconcat . Map.elems $ relevantResolvers
     zoomCommand Empire.clsGraph $ case br of
         Breadcrumb (Definition uuid:_) -> do
-            cls <- use $ Graph.userState
-            let Just root = cls ^? Graph.clsFuns . ix uuid . Graph._FunctionDefinition . Graph.funGraph . Graph.breadcrumbHierarchy . BH.self
-            liftScheduler $ do
-                Prep.preprocessDef resolver root
-                TC.runTypechecker def root typed
-            return ()
-        Breadcrumb _                   -> return ()
+            root <- preuse $ Graph.userState . Graph.clsFuns
+                . ix uuid . Graph._FunctionDefinition . Graph.funGraph . Graph.breadcrumbHierarchy . BH.self
+            case root of
+                Just r -> liftScheduler $ do
+                    Prep.preprocessDef resolver r
+                    TC.runTypechecker def r typed
+                _      -> error $ "runTC: wrong breadcrumb " <> show br
+            pure ()
+        Breadcrumb _                   -> pure ()
  -- do
     -- let currentTarget = TgtDef (convert moduleName) (convert functionName)
     -- runTypecheck currentTarget imports
@@ -106,7 +110,6 @@ withPackageCurrentDirectory currentFile act = do
 
 runInterpreter :: FilePath -> Runtime.Units -> Command Graph (Maybe LocalScope)
 runInterpreter path imports = do
-    rootPath   <- liftIO $ Package.findPackageRootForFile =<< Path.parseAbsFile path
     selfRef    <- use    $ Graph.userState . Graph.breadcrumbHierarchy . BH.self
     bodyRefMay <- runASTOp $ matchExpr selfRef $ \case
         Uni.Function _ as b -> do
@@ -117,37 +120,75 @@ runInterpreter path imports = do
     liftIO $ for interpreted $ \res ->
         mask_ $ withPackageCurrentDirectory path res
 
+resolveSymbol :: Map IR.Qualified Unit.Unit -> Target.Target
+    -> Maybe (IR.Term IR.Function)
+resolveSymbol units tgt = do
+    symbolRef <- case tgt of
+        Target.Function mod function   -> do
+            moduleDefs <- units ^? ix mod . Unit.definitions
+            defRef     <- moduleDefs ^? wrapped . ix function
+            pure defRef
+        Target.Method mod klass method -> do
+            moduleClasses <- units ^? ix mod . Unit.classes
+            classRef      <- moduleClasses ^? ix klass . Def.documented
+            methodRef     <- classRef ^? Class.methods . wrapped . ix method
+            pure methodRef
+        Target.Unknown                 -> Nothing
+    symbolBody <- symbolRef ^? Def.documented . Def._Body
+    pure symbolBody
+
+makeError :: Error.CompileError -> NodeValue
+makeError err =
+    let toSrcLoc (Target.Method   mod klass method) =
+            APIError.SourceLocation
+                (convertVia @String mod)
+                (Just (convert klass))
+                (convert method)
+        toSrcLoc (Target.Function mod function)     =
+            APIError.SourceLocation
+                (convertVia @String mod)
+                Nothing
+                (convert function)
+        toSrcLoc Target.Unknown                     =
+            APIError.SourceLocation
+                "unknown module"
+                Nothing
+                "unknown function"
+        errorDetails =
+            APIError.CompileErrorDetails
+                (map toSrcLoc (err ^. Error.failedAt))
+                (map toSrcLoc (err ^. Error.arisingFrom))
+        nodeError    = NodeError $
+            APIError.Error
+                (APIError.CompileError errorDetails)
+                (err ^. Error.contents)
+    in nodeError
+
 updateNodes :: GraphLocation -> GraphLocation -> Command InterpreterEnv ()
 updateNodes loc@(GraphLocation _ br) updateLoc = case br of
     Breadcrumb (Definition uuid:rest) -> do
         units <- use $ Graph.userState . Empire.mappedUnits
-        let resolveFun mod n =
-                let moduleDefs = units ^? ix mod . to Unit._definitions
-                    defRef     = moduleDefs >>= \a -> a ^? wrapped . ix n
-                    docTerm    = view Def.documented <$> defRef
-                    defBody    = docTerm >>= \a -> a ^? Def._Body
-                in defBody
-        zoomCommand Empire.clsGraph $ withRootedFunction uuid $ runInternalBreadcrumb (Breadcrumb rest) $ do
+        zoomCommand Empire.clsGraph $ withRootedFunction uuid Graph._FunctionDefinition $ runInternalBreadcrumb (Breadcrumb rest) $ do
             (inEdge, outEdge) <- use $ Graph.userState . Graph.breadcrumbHierarchy . BH.portMapping
             (updates, errors) <- runASTOp $ do
-                sidebarUpdates <- (\x y -> [x, y]) <$> GraphBuilder.buildInputSidebarTypecheckUpdate  inEdge
-                                                   <*> GraphBuilder.buildOutputSidebarTypecheckUpdate outEdge
-                allNodeIds  <- uses Graph.breadcrumbHierarchy topLevelIDs
-                nodeUpdates <- forM allNodeIds $ GraphBuilder.buildNodeTypecheckUpdate resolveFun
-                errors      <- forM allNodeIds $ \nid -> do
-                    err <- Error.getError =<< ASTRead.getASTRef nid
-                    case err of
-                        Nothing -> return Nothing
-                        Just e  -> do
-                            let toSrcLoc (Target.Method   mod klass method) = APIError.SourceLocation (convertVia @String mod) (Just (convert klass)) (convert method)
-                                toSrcLoc (Target.Function mod function)     = APIError.SourceLocation (convertVia @String mod) Nothing (convert function)
-                                errorDetails = APIError.CompileErrorDetails (map toSrcLoc (e ^. Error.failedAt)) (map toSrcLoc (e ^. Error.arisingFrom))
-                            return $ Just $ (nid, NodeError $ APIError.Error (APIError.CompileError errorDetails) $ e ^. Error.contents)
-                return (sidebarUpdates <> nodeUpdates, errors)
+                inputUpdate  <-
+                    GraphBuilder.buildInputSidebarTypecheckUpdate  inEdge
+                outputUpdate <-
+                    GraphBuilder.buildOutputSidebarTypecheckUpdate outEdge
+                allNodeIds   <- uses Graph.breadcrumbHierarchy topLevelIDs
+                let resolveFun = resolveSymbol units
+                (updates, errors) <- unzip <$> forM allNodeIds (\nid -> do
+                    err      <- Error.getError =<< ASTRead.getASTRef nid
+                    tcUpdate <- GraphBuilder.buildNodeTypecheckUpdate
+                        resolveFun nid
+                    let nodeError = ((nid,) . makeError) <$> err
+                    pure (tcUpdate, nodeError))
+                pure (inputUpdate : outputUpdate : updates, errors)
             mask_ $ do
-                traverse_ (Publisher.notifyNodeTypecheck updateLoc) updates
-                for_ (catMaybes errors) $ \(nid, e) -> Publisher.notifyResultUpdate updateLoc nid e 0
-    Breadcrumb _ -> return ()
+                traverse_ (Publisher.notifyNodeTypecheck loc) updates
+                for_ (catMaybes errors) $ \(nid, e) ->
+                    Publisher.notifyResultUpdate loc nid e 0
+    Breadcrumb _ -> pure ()
 
 updateValues :: GraphLocation
              -> LocalScope
@@ -156,7 +197,7 @@ updateValues loc@(GraphLocation path _) scope = do
     childrenMap <- use $ Graph.userState . Graph.breadcrumbHierarchy . BH.children
     let allNodes = Map.assocs $ view BH.self <$> childrenMap
     env     <- ask
-    nodes <- runASTOp $ fmap catMaybes $ forM allNodes $ \(nid, tgt) -> do
+    nodes <- runASTOp $ fmap catMaybes $ forM allNodes $ \(nid, _tgt) -> do
         pointer <- ASTRead.getASTPointer nid
         matchExpr pointer $ \case
             Uni.Unify{} -> Just . (nid,) <$> ASTRead.getVarNode pointer
@@ -224,40 +265,37 @@ primStdModuleName = "Std.Primitive"
 makePrimStdIfMissing :: Command InterpreterEnv ()
 makePrimStdIfMissing = do
     existingStd <- use $ Graph.userState . Empire.resolvers . at primStdModuleName
-    case existingStd of
-        Just _ -> return ()
-        Nothing -> do
-            (mods, finalizer, typed, computed, ress, units) <- liftScheduler $ do
-                (fin, stdUnitRef) <- Std.stdlib @Stage
-                lunaroot <- liftIO $ canonicalizePath =<< getEnv Package.lunaRootEnv
-                stdPath <- Path.parseAbsDir $ lunaroot <> "/Std/"
-                srcs    <- fmap Path.toFilePath . Bimap.toMapR <$> Package.findPackageSources stdPath
-                UnitLoader.init
-                Scheduler.registerAttr @Unit.UnitRefsMap
-                Scheduler.setAttr $ Unit.UnitRefsMap $ Map.singleton "Std.Primitive" stdUnitRef
-                for Std.stdlibImports $ UnitLoader.loadUnit def srcs []
-                Unit.UnitRefsMap mods <- Scheduler.getAttr
-                units <- flip Map.traverseWithKey mods $ \n u -> case u ^. Unit.root of
-                    Unit.Graph r       -> UnitMapper.mapUnit n r
-                    Unit.Precompiled u -> pure u
-                let unitResolvers   = Map.mapWithKey Resolution.resolverFromUnit units
-                    importResolvers = Map.mapWithKey (Resolution.resolverForUnit unitResolvers) $ over wrapped (essentialImports <>)
-                                                                                                . view Unit.imports <$> mods
-                    unitsWithResolvers = Map.mapWithKey (\n u -> (importResolvers Map.! n, u)) units
-                (typed, evald) <- ProcessUnits.processUnits def def unitsWithResolvers
-                return (mods, fin, typed, evald, unitResolvers, units)
-            zoomCommand Empire.clsGraph $ runASTOp $ for mods $ \u -> case u ^. Unit.root of
-                Unit.Graph r -> IR.deleteSubtree r
-                _            -> return ()
-            Graph.userState . Empire.cleanUp      .= finalizer
-            Graph.userState . Empire.typedUnits   .= typed
-            Graph.userState . Empire.mappedUnits  .= units
-            Graph.userState . Empire.runtimeUnits .= computed
-            Graph.userState . Empire.resolvers    .= ress
+    when_ (isNothing existingStd) $ tryAny $ do
+        (mods, finalizer, typed, computed, ress, units) <- liftScheduler $ do
+            (fin, stdUnitRef) <- Std.stdlib @Stage
+            lunaroot <- liftIO $ canonicalizePath =<< getEnv Package.lunaRootEnv
+            stdPath <- Path.parseAbsDir $ lunaroot <> "/Std/"
+            srcs    <- fmap Path.toFilePath . Bimap.toMapR <$> Package.findPackageSources stdPath
+            UnitLoader.init
+            Scheduler.registerAttr @Unit.UnitRefsMap
+            Scheduler.setAttr $ Unit.UnitRefsMap $ Map.singleton "Std.Primitive" stdUnitRef
+            for Std.stdlibImports $ UnitLoader.loadUnit def srcs []
+            Unit.UnitRefsMap mods <- Scheduler.getAttr
+            units <- flip Map.traverseWithKey mods $ \n u -> case u ^. Unit.root of
+                Unit.Graph r       -> UnitMapper.mapUnit n r
+                Unit.Precompiled p -> pure p
+            let unitResolvers   = Map.mapWithKey Resolution.resolverFromUnit units
+                importResolvers = Map.mapWithKey (Resolution.resolverForUnit unitResolvers) $ over wrapped (essentialImports <>)
+                                                                                            . view Unit.imports <$> mods
+                unitsWithResolvers = Map.mapWithKey (\n u -> (importResolvers Map.! n, u)) units
+            (typed, evald) <- ProcessUnits.processUnits def def unitsWithResolvers
+            return (mods, fin, typed, evald, unitResolvers, units)
+        zoomCommand Empire.clsGraph $ runASTOp $ for mods $ \u -> case u ^. Unit.root of
+            Unit.Graph r -> IR.deleteSubtree r
+            _            -> return ()
+        Graph.userState . Empire.cleanUp      .= finalizer
+        Graph.userState . Empire.typedUnits   .= typed
+        Graph.userState . Empire.mappedUnits  .= units
+        Graph.userState . Empire.runtimeUnits .= computed
+        Graph.userState . Empire.resolvers    .= ress
 
 ensureCurrentScope :: Bool -> IR.Qualified -> FilePath -> NodeRef -> Command InterpreterEnv ()
 ensureCurrentScope recompute modName path root = do
-    modName <- filePathToQualName path
     existing <- use $ Graph.userState . Empire.resolvers . at modName
     when (recompute || isNothing existing) $ do
         compileCurrentScope modName path root
@@ -279,7 +317,7 @@ compileCurrentScope modName path root = do
         Unit.UnitRefsMap mods <- Scheduler.getAttr
         units <- flip Map.traverseWithKey mods $ \n u -> case u ^. Unit.root of
             Unit.Graph r       -> UnitMapper.mapUnit n r
-            Unit.Precompiled u -> pure u
+            Unit.Precompiled p -> pure p
 
         let unitResolvers   = Map.union (Map.mapWithKey Resolution.resolverFromUnit units) ress
             importResolvers = Map.mapWithKey (Resolution.resolverForUnit unitResolvers) $ over wrapped (essentialImports <>)
@@ -332,7 +370,7 @@ runNoCleanUp gl updateGl clsGraph rooted interpret recompute = do
     updateNodes gl updateGl
     let processBC evald (Breadcrumb (Definition uuid:r))
             = zoomCommand Empire.clsGraph
-            . withRootedFunction uuid
+            . withRootedFunction uuid Graph._FunctionDefinition
             . runInternalBreadcrumb (Breadcrumb r) $ do
                 scope <- runInterpreter filePath evald
                 traverse (updateValues gl) scope

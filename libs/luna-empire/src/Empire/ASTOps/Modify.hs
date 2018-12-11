@@ -6,12 +6,9 @@
 module Empire.ASTOps.Modify where
 
 import           Control.Monad (forM)
-import           Control.Lens  (folded, ifiltered)
 import           Data.List     (find)
-import qualified Data.Text.IO  as Text
-import qualified Safe
 
-import           Empire.Prelude hiding (substitute)
+import           Empire.Prelude hiding (from, substitute, to)
 import qualified Empire.Prelude as P
 
 import qualified Data.Graph.Data.Component.Vector   as PtrList
@@ -29,9 +26,9 @@ import           Empire.Data.AST                    (EdgeRef, NodeRef, NotLambda
 import           Empire.Data.Layers                 (SpanLength, SpanOffset)
 import qualified Empire.Data.BreadcrumbHierarchy    as BH
 import qualified Empire.Data.Graph                  as Graph
-import           Data.Text.Span          (SpacedSpan(..), leftSpacedSpan)
+import           Data.Text.Span                     (SpacedSpan(..))
 import qualified Luna.Syntax.Text.Parser.Ast.CodeSpan as CodeSpan
-import           Luna.Syntax.Text.Parser.Ast.CodeSpan (CodeSpan, realSpan)
+import           Luna.Syntax.Text.Parser.Ast.CodeSpan (CodeSpan)
 import qualified Luna.IR                            as IR
 
 import qualified Data.List as L (take, head, drop, tail)
@@ -48,7 +45,6 @@ addLambdaArg position lambda name varNames = do
             _      -> placeholderName
     match lambda $ \case
         Lam _arg _body -> do
-            out'  <- ASTRead.getFirstNonLambdaRef lambda
             addLambdaArg' position nameForNewArg Nothing lambda
         Grouped g -> source g >>= \k -> addLambdaArg position k name varNames
         ASGFunction n as' _ -> do
@@ -69,9 +65,9 @@ addLambdaArg position lambda name varNames = do
                 return $ funBeg + lastOff + lastLen
             Code.insertAt insertPosition (" " <> convert nameForNewArg)
             Just (lam' :: Expr (P.ASGFunction)) <- narrowTerm lambda
-            l <- PtrList.fromList $ coerce $ argsBefore <> (l : argsAfter)
+            ptrList <- PtrList.fromList $ coerce $ argsBefore <> (l : argsAfter)
             IR.UniTermFunction a <- getLayer @IR.Model lam'
-            let a' = a & IR.args_Function .~ l
+            let a' = a & IR.args_Function .~ ptrList
             putLayer @IR.Model lam' $ IR.UniTermFunction a'
             -- IR.modifyExprTerm lam' $ wrapped . IR.termASGFunction_args .~ fmap coerce (argsBefore <> (l : argsAfter))
             Code.gossipUsesChangedBy (1 + fromIntegral (length nameForNewArg)) v
@@ -122,9 +118,8 @@ replaceWithLam parent name lam = do
             replaceSource newLam $ coerce e
         Nothing -> substitute newLam lam
     P.replace lam tmpBlank
-    Code.gossipLengthsChangedBy (argLen + 2) $ case parent of
-        Just e -> newLam
-        _      -> lam
+    Code.gossipLengthsChangedBy (argLen + 2) $
+        if isJust parent then newLam else lam
     return ()
 
 addLambdaArg' :: Int -> String -> Maybe EdgeRef -> NodeRef -> GraphOp ()
@@ -202,14 +197,17 @@ removeLambdaArg p@(Port.Projection port : []) lambda = match lambda $ \case
             deleteSubtree arg
             Code.gossipLengthsChangedBy (-(ownOff + ownLen)) lambda
     _ -> throwM $ NotLambdaException lambda
+removeLambdaArg _ _ = throwM CannotRemovePortException
 
 shiftPosition :: Int -> Int -> [a] -> [a]
 shiftPosition from to lst = uncurry (insertAt to) $ getAndRemove from lst where
     insertAt 0 e l        = e : l
     insertAt i e (x : xs) = x : insertAt (i - 1) e xs
+    insertAt _ _ []       = error "shiftPosition: insertAt: empty list"
 
     getAndRemove 0 (x : xs) = (x, xs)
     getAndRemove i (x : xs) = let (r, rs) = getAndRemove (i - 1) xs in (r, x : rs)
+    getAndRemove _ []       = error "shiftPosition: getAndRemove: empty list"
 
 swapLamVars :: Delta -> (Delta, EdgeRef) -> (Delta, EdgeRef) -> GraphOp Int
 swapLamVars lamBeg one two = do
@@ -224,10 +222,10 @@ swapLamVars lamBeg one two = do
                    ]
     replaceSource two' $ coerce (snd one)
     replaceSource one' $ coerce (snd two)
-    one'      <- source $ snd one
-    two'      <- source $ snd two
-    putLayer @SpanLength one' twoLength
-    putLayer @SpanLength two' oneLength
+    oneAfter' <- source $ snd one
+    twoAfter' <- source $ snd two
+    putLayer @SpanLength oneAfter' twoLength
+    putLayer @SpanLength twoAfter' oneLength
     let change = if fst one > fst two then fromIntegral oneLength - fromIntegral twoLength else fromIntegral twoLength - fromIntegral oneLength
     return change
 
@@ -238,7 +236,6 @@ moveLambdaArg p@(Port.Projection port : []) newPosition lambda = match lambda $ 
     Lam _ _   -> do
         Just lamBeg   <- Code.getOffsetRelativeToFile lambda
         args <- ASTDeconstruct.extractLamArgLinks lambda
-        out  <- ASTRead.getFirstNonLambdaRef    lambda
         let moveStart = min port newPosition
             moveEnd   = max port newPosition
             moveRange = moveEnd - moveStart + 1
@@ -264,14 +261,21 @@ moveLambdaArg p@(Port.Projection port : []) newPosition lambda = match lambda $ 
             newOffset <- (+(funBeg)) <$> Code.getOffsetRelativeToTarget (coerce alink)
             ownOff    <- getLayer @SpanOffset alink
             ownLen    <- getLayer @SpanLength =<< source alink
-            landingLen <- do
+            _landingLen <- do
                 let landingVar = as ^? ix newPosition
-                landingLenMay <- for landingVar (\l -> source l >>= getLayer @SpanLength)
+                landingLenMay <- for landingVar (\l' -> source l' >>= getLayer @SpanLength)
                 maybe (throwM $ PortDoesNotExistException [Port.Projection newPosition]) pure landingLenMay
             code      <- Code.getAt (initialOffset - ownOff) (initialOffset + ownLen)
             Code.applyDiff (initialOffset - ownOff) (initialOffset + ownLen) ""
             Code.applyDiff (newOffset     - ownOff) (newOffset - ownOff) code
     _ -> throwM $ NotLambdaException lambda
+moveLambdaArg _ _ _ = throwM CannotRemovePortException
+
+renameVarAndReplaceInCode :: NodeRef -> String -> GraphOp ()
+renameVarAndReplaceInCode var newName = do
+    oldLen <- getLayer @SpanLength var
+    renameVar var newName
+    Code.replaceAllUses var oldLen $ convert newName
 
 renameLambdaArg :: Port.OutPortId -> String -> NodeRef -> GraphOp ()
 renameLambdaArg [] _ _ = throwM CannotRemovePortException
@@ -280,15 +284,14 @@ renameLambdaArg p@(Port.Projection port : []) newName lam = match lam $ \case
     Lam _ _ -> do
         args <- ASTDeconstruct.extractArguments lam
         let arg = args !! port
-        renameVar arg newName
-        Code.replaceAllUses arg $ convert newName
+        renameVarAndReplaceInCode arg newName
     ASGFunction _ as' _ -> do
         as <- ptrListToList as'
         for_ (as ^? ix port) $ \alink -> do
             arg <- source alink
-            renameVar arg newName
-            Code.replaceAllUses arg $ convert newName
+            renameVarAndReplaceInCode arg newName
     _ -> throwM $ NotLambdaException lam
+renameLambdaArg _ _ _ = throwM CannotRemovePortException
 
 redirectLambdaOutput :: NodeRef -> NodeRef -> GraphOp NodeRef
 redirectLambdaOutput lambda newOutputRef = do
@@ -358,14 +361,14 @@ renameVar vref name = do
                 IR.UniTermVar a -> do
                     let a' = a & IR.name_Var .~ stringToName name
                     putLayer @IR.Model var' $ IR.UniTermVar a'
-                    LeftSpacedSpan (SpacedSpan off len) <-
+                    LeftSpacedSpan (SpacedSpan off _len) <-
                         view CodeSpan.realSpan <$> getLayer @CodeSpan vref
                     putLayer @CodeSpan vref $ CodeSpan.mkRealSpan
                         (LeftSpacedSpan (SpacedSpan off (fromIntegral $ length name)))
                 IR.UniTermInvalid{} -> do
                     v <- IR.var $ convert name
                     putLayer @SpanLength v $ fromIntegral $ length name
-                    LeftSpacedSpan (SpacedSpan off len) <-
+                    LeftSpacedSpan (SpacedSpan off _len) <-
                         view CodeSpan.realSpan <$> getLayer @CodeSpan vref
                     putLayer @CodeSpan v $ CodeSpan.mkRealSpan
                         (LeftSpacedSpan (SpacedSpan off (fromIntegral $ length name)))
@@ -373,7 +376,6 @@ renameVar vref name = do
                     return ()
         _ -> return ()
     -- mapM_ (flip IR.modifyExprTerm $ IR.name .~ (stringToName name)) var
-    -- return ()
 
 replaceWhenBHSelf :: NodeRef -> NodeRef -> GraphOp ()
 replaceWhenBHSelf to from = do

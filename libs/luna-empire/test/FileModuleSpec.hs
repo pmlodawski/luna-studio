@@ -7,50 +7,46 @@
 module FileModuleSpec (spec) where
 
 import           Control.Lens                    (toListOf)
-import           Data.Char                       (isSpace)
-import           Data.List                       (dropWhileEnd, find)
+import           Data.List                       (find)
 import qualified Data.Map                        as Map
 import qualified Data.Set                        as Set
 import qualified Data.Text                       as Text
-import qualified Data.Text.IO                    as Text
 import           Empire.ASTOp                    (runASTOp)
 import           Empire.ASTOps.Parse             (SomeParserException)
-import qualified Empire.Commands.AST             as AST
 import qualified Empire.Commands.Code            as Code
 import qualified Empire.Commands.Graph           as Graph
 import qualified Empire.Commands.GraphBuilder    as GraphBuilder
 import qualified Empire.Commands.Library         as Library
-import qualified Empire.Data.BreadcrumbHierarchy as BH
 import qualified Empire.Data.Graph               as Graph
 import           LunaStudio.Data.Breadcrumb      (Breadcrumb (..), BreadcrumbItem (..))
 import qualified LunaStudio.Data.Breadcrumb      as Breadcrumb
 import           LunaStudio.Data.Constants       (gapBetweenNodes)
 import qualified LunaStudio.Data.Graph           as APIGraph
-import           LunaStudio.Data.GraphLocation   (GraphLocation (..))
+import           LunaStudio.Data.GraphLocation   (GraphLocation (..), (|>=))
 import qualified LunaStudio.Data.Node            as Node
-import           LunaStudio.Data.NodeMeta        (NodeMeta (..))
 import qualified LunaStudio.Data.NodeMeta        as NodeMeta
+import           LunaStudio.Data.Point           (Point (..))
 import           LunaStudio.Data.Port            (Port (..), PortState (..))
 import qualified LunaStudio.Data.Port            as Port
 import           LunaStudio.Data.PortDefault     (PortDefault (..))
 import           LunaStudio.Data.PortRef         (AnyPortRef (..))
-import qualified LunaStudio.Data.PortRef         as PortRef
 import qualified LunaStudio.Data.Position        as Position
 import           LunaStudio.Data.Range           (Range (..))
+import           LunaStudio.Data.TextDiff        (TextDiff (..))
 import           LunaStudio.Data.TypeRep         (TypeRep (TStar))
 
-import           Empire.Empire
 import           Empire.Prelude                  as P
--- import           Luna.Prelude                    (forM, normalizeLunaCode)
 
-import           Test.Hspec                      (Expectation, Spec, around, describe, expectationFailure, it, parallel, shouldBe,
-                                                  shouldMatchList, shouldNotBe, shouldSatisfy, shouldStartWith, shouldThrow, xit)
+import           Test.Hspec                      (Spec, around, describe, it,
+                                                  parallel, shouldBe,
+                                                  shouldMatchList, shouldSatisfy)
 
 import           EmpireUtils
 
 import           Text.RawString.QQ               (r)
 
 
+multiFunCode :: Text
 multiFunCode = [r|# Docs
 def foo:
     5
@@ -64,17 +60,7 @@ def main:
     print bar
 |]
 
-multiFunCodeWithoutMarkers = [r|def foo:
-    5
-
-def bar:
-    "bar"
-
-# Docs
-def main:
-    print bar
-|]
-
+codeWithImport :: Text
 codeWithImport = [r|import Std
 
 def foo:
@@ -87,7 +73,7 @@ def main:
     print bar
 |]
 
-
+atXPos :: Double -> NodeMeta.NodeMeta
 atXPos = ($ def) . (NodeMeta.position . Position.x .~)
 
 
@@ -227,7 +213,8 @@ spec = around withChannels $ parallel $ do
             length nodes `shouldBe` 4
             find (\n -> n ^. Node.name == Just "quux") nodes `shouldSatisfy` isJust
             normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
-                def quux a b c
+                def quux a b c:
+                    None
 
                 # Docs
                 def foo:
@@ -260,7 +247,8 @@ spec = around withChannels $ parallel $ do
                 def bar:
                     "bar"
 
-                def quux
+                def quux:
+                    None
 
                 # Docs
                 def main:
@@ -289,7 +277,8 @@ spec = around withChannels $ parallel $ do
                 def main:
                     print bar
 
-                def quux
+                def quux:
+                    None
                 |]
         it "adds function at top-level as def" $ \env -> do
             u1 <- mkUUID
@@ -302,7 +291,8 @@ spec = around withChannels $ parallel $ do
             length nodes `shouldBe` 4
             find (\n -> n ^. Node.name == Just "quux") nodes `shouldSatisfy` isJust
             normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
-                def quux
+                def quux:
+                    None
 
                 # Docs
                 def foo:
@@ -326,7 +316,7 @@ spec = around withChannels $ parallel $ do
                 Graph.getGraph (GraphLocation "TestPath" (Breadcrumb [Definition (n ^. Node.nodeId)]))
             length (graph ^. APIGraph.nodes) `shouldBe` 0
             let Just (Node.OutputSidebar _ ports) = graph ^. APIGraph.outputSidebar
-            toListOf traverse ports `shouldBe` [Port [] "output" TStar (WithDefault (Expression "(MissingSection)"))]
+            toListOf traverse ports `shouldBe` [Port [] "output" TStar (WithDefault (Expression "None"))]
         it "removes function at top-level" $ \env -> do
             (nodes, code) <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"
@@ -427,7 +417,7 @@ spec = around withChannels $ parallel $ do
                 |]
         it "renames function at top-level and inserts a node in another function" $ \env -> do
             u1 <- mkUUID
-            (nodes, code) <- evalEmp env $ do
+            code <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"
                 let loc = GraphLocation "TestPath" $ Breadcrumb []
                 Graph.loadCode loc multiFunCode
@@ -436,7 +426,7 @@ spec = around withChannels $ parallel $ do
                 let Just main = find (\n -> n ^. Node.name == Just "main") nodes
                 Graph.renameNode loc (bar ^. Node.nodeId) "qwerty"
                 Graph.addNode (loc |>= main ^. Node.nodeId) u1 "1" (atXPos (-10))
-                (,) <$> Graph.getNodes loc <*> Graph.getCode loc
+                Graph.getCode loc
             normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                 # Docs
                 def foo:
@@ -535,8 +525,8 @@ spec = around withChannels $ parallel $ do
                 nodes <- Graph.getNodes loc'
                 let Just foo = find (\n -> n ^. Node.name == Just "foo") nodes
                 let loc'' = GraphLocation "TestPath" $ Breadcrumb [Definition (main ^. Node.nodeId), Lambda (foo ^. Node.nodeId)]
-                nodes <- Graph.getNodes loc''
-                let Just buzz = find (\n -> n ^. Node.name == Just "buzz") nodes
+                nodesFoo <- Graph.getNodes loc''
+                let Just buzz = find (\n -> n ^. Node.name == Just "buzz") nodesFoo
                 let loc''' = GraphLocation "TestPath" $ Breadcrumb [Definition (main ^. Node.nodeId), Lambda (foo ^. Node.nodeId), Lambda (buzz ^. Node.nodeId)]
                 Graph.decodeLocation loc'''
             let names = map (view Breadcrumb.name) location
@@ -659,7 +649,7 @@ spec = around withChannels $ parallel $ do
                     «5»print bar
                 |]
         it "connects anonymous node" $ \env -> do
-            let code = normalizeLunaCode [r|
+            let initialCode = normalizeLunaCode [r|
                     def foo:
                         n1 = _ * 5
                         5
@@ -673,7 +663,7 @@ spec = around withChannels $ parallel $ do
             code <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"
                 let loc = GraphLocation "TestPath" $ Breadcrumb []
-                Graph.loadCode loc code
+                Graph.loadCode loc initialCode
                 nodes <- Graph.getNodes loc
                 let Just foo = view Node.nodeId <$> find (\n -> n ^. Node.name == Just "foo") nodes
                 fooNodes <- Graph.getNodes (loc |>= foo)
@@ -790,7 +780,6 @@ spec = around withChannels $ parallel $ do
                 let Just foo = view Node.nodeId <$> find (\n -> n ^. Node.name == Just "foo") nodes
                 u1 <- mkUUID
                 Graph.addNode (loc |>= foo) u1 "5" (atXPos (-10))
-                funIds <- (map (view Node.nodeId)) <$> Graph.getNodes loc
                 offsets <- Graph.withUnit loc $ do
                     funs <- use $ Graph.userState . Graph.clsFuns
                     return $ map (\fun -> (fun ^. Graph._FunctionDefinition . Graph.funName, fun ^? Graph._FunctionDefinition . Graph.funGraph . Graph.fileOffset)) $ Map.elems funs
@@ -801,16 +790,13 @@ spec = around withChannels $ parallel $ do
                 Library.createLibrary Nothing "TestPath"
                 let loc = GraphLocation "TestPath" $ Breadcrumb []
                 Graph.loadCode loc multiFunCode
-                nodes <- Graph.getNodes loc
-                let Just foo = view Node.nodeId <$> find (\n -> n ^. Node.name == Just "foo") nodes
                 u1 <- mkUUID
                 Graph.addNode loc u1 "def aaa" (atXPos $ 1.5 * gapBetweenNodes)
-                funIds <- (map (view Node.nodeId)) <$> Graph.getNodes loc
                 offsets <- Graph.withUnit loc $ do
                     funs <- use $ Graph.userState . Graph.clsFuns
                     return $ map (\fun -> (fun ^. Graph._FunctionDefinition . Graph.funName, fun ^? Graph._FunctionDefinition . Graph.funGraph . Graph.fileOffset)) $ Map.elems funs
                 return offsets
-            offsets `shouldMatchList` [("foo",Just 10), ("bar",Just 39), ("aaa",Just 65), ("main",Just 84)]
+            offsets `shouldMatchList` [("foo",Just 10), ("bar",Just 39), ("aaa",Just 65), ("main",Just 94)]
         it "maintains proper function file offsets after removing a function" $ \env -> do
             offsets <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"
@@ -819,14 +805,12 @@ spec = around withChannels $ parallel $ do
                 nodes <- Graph.getNodes loc
                 let Just bar = view Node.nodeId <$> find (\n -> n ^. Node.name == Just "bar") nodes
                 Graph.removeNodes loc [bar]
-                funIds <- (map (view Node.nodeId)) <$> Graph.getNodes loc
                 offsets <- Graph.withUnit loc $ do
                     funs <- use $ Graph.userState . Graph.clsFuns
                     return $ map (\fun -> (fun ^. Graph._FunctionDefinition . Graph.funName, fun ^? Graph._FunctionDefinition . Graph.funGraph . Graph.fileOffset)) $ Map.elems funs
                 return offsets
             offsets `shouldMatchList` [("foo",Just 10), ("main",Just 39)]
         it "maintains proper function file offsets after renaming a function" $ \env -> do
-            u1 <- mkUUID
             offsets <- evalEmp env $ do
                 Library.createLibrary Nothing "TestPath"
                 let loc = GraphLocation "TestPath" $ Breadcrumb []
@@ -834,7 +818,6 @@ spec = around withChannels $ parallel $ do
                 nodes <- Graph.getNodes loc
                 let Just bar = find (\n -> n ^. Node.name == Just "bar") nodes
                 Graph.renameNode loc (bar ^. Node.nodeId) "qwerty"
-                funIds <- (map (view Node.nodeId)) <$> Graph.getNodes loc
                 offsets <- Graph.withUnit loc $ do
                     funs <- use $ Graph.userState . Graph.clsFuns
                     return $ map (\fun -> (fun ^. Graph._FunctionDefinition . Graph.funName, fun ^? Graph._FunctionDefinition . Graph.funGraph . Graph.fileOffset)) $ Map.elems funs
@@ -851,7 +834,8 @@ spec = around withChannels $ parallel $ do
             length nodes `shouldBe` 1
             find (\n -> n ^. Node.name == Just "main") nodes `shouldSatisfy` isJust
             normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
-                def main
+                def main:
+                    None
                 |]
         it "adds the first function in a file with imports" $ \env -> do
             u1 <- mkUUID
@@ -867,7 +851,8 @@ spec = around withChannels $ parallel $ do
                 import Std
                 import Foo
 
-                def main
+                def main:
+                    None
                 |]
         it "pastes top level function" $ \env -> do
             (nodes, code) <- evalEmp env $ do
@@ -971,10 +956,9 @@ spec = around withChannels $ parallel $ do
                         number1 = 3
                         number1
                     |]
-            in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
+            in specifyCodeChange initialCode expectedCode $ \loc -> do
                 clipboard <- Graph.copyText loc [Range 14 25]
                 Graph.paste loc (Position.fromTuple (300, 0)) $ Text.unpack clipboard
-                Graph.substituteCode file [(32, 32, "    ")]
         it "pastes multiline code from text editor to node editor" $
             let initialCode = [r|
                     def main:
@@ -993,7 +977,7 @@ spec = around withChannels $ parallel $ do
             in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
                 clipboard <- Graph.copyText loc [Range 14 36]
                 Graph.paste loc (Position.fromTuple (1000, 0)) $ Text.unpack clipboard
-                Graph.substituteCode file [(46, 46, "    ")]
+                Graph.substituteCodeFromPoints file [TextDiff (Just (Point 4 4, Point 8 4)) "" Nothing]
         it "pastes multiline code from text editor to node editor at the beginning" $
             let initialCode = [r|
                     def main:
@@ -1032,7 +1016,8 @@ spec = around withChannels $ parallel $ do
         it "adds def" $
             let initialCode = ""
                 expectedCode = [r|
-                    def
+                    def func:
+                        None
                     |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 u1 <- mkUUID
@@ -1041,7 +1026,8 @@ spec = around withChannels $ parallel $ do
         it "adds def name" $
             let initialCode = ""
                 expectedCode = [r|
-                    def foo
+                    def foo:
+                        None
                     |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 u1 <- mkUUID
@@ -1050,7 +1036,8 @@ spec = around withChannels $ parallel $ do
         it "adds def with invalid name" $
             let initialCode = ""
                 expectedCode = [r|
-                    def 4
+                    def 4:
+                        None
                     |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 u1 <- mkUUID
@@ -1059,7 +1046,8 @@ spec = around withChannels $ parallel $ do
         it "adds def with invalid name and renames it from graph" $
             let initialCode = ""
                 expectedCode = [r|
-                    def foo
+                    def foo:
+                        None
                     |]
             in specifyCodeChange initialCode expectedCode $ \loc -> do
                 u1 <- mkUUID
@@ -1075,16 +1063,16 @@ spec = around withChannels $ parallel $ do
                             None
                         |]
                 Library.createLibrary Nothing "TestPath"
-                let top = GraphLocation "TestPath" $ Breadcrumb []
-                Graph.loadCode top initialCode
+                let loc = GraphLocation "TestPath" $ Breadcrumb []
+                Graph.loadCode loc initialCode
                 u1 <- mkUUID
                 u2 <- mkUUID
-                Graph.addNode top u1 "def foo" def
-                Graph.addNode (top |>= u1) u2 "4" def
-                (_, output) <- Graph.withGraph (top |>= u1) $ runASTOp GraphBuilder.getEdgePortMapping
-                Graph.connect (top |>= u1) (outPortRef u2 [])
+                Graph.addNode loc u1 "def foo" def
+                Graph.addNode (loc |>= u1) u2 "4" def
+                (_, output) <- Graph.withGraph (loc |>= u1) $ runASTOp GraphBuilder.getEdgePortMapping
+                Graph.connect (loc |>= u1) (outPortRef u2 [])
                     (InPortRef' $ inPortRef output [])
-                code <- Graph.getCode top
+                code <- Graph.getCode loc
                 liftIO $ normalizeLunaCode code `shouldBe` normalizeLunaCode [r|
                     def foo:
                         number1 = 4
@@ -1117,7 +1105,7 @@ spec = around withChannels $ parallel $ do
                         Foo.baz
                         None
                     |]
-            in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
+            in specifyCodeChange initialCode expectedCode $ \(GraphLocation file _) -> do
                 Graph.substituteCode file [(102, 102, "\n    Foo.baz")]
         it "uses defined class with list of fields in main" $
             let initialCode = [r|
@@ -1143,7 +1131,7 @@ spec = around withChannels $ parallel $ do
                         Foo.baz
                         None
                     |]
-            in specifyCodeChange initialCode expectedCode $ \loc@(GraphLocation file _) -> do
+            in specifyCodeChange initialCode expectedCode $ \(GraphLocation file _) -> do
                 Graph.substituteCode file [(111, 111, "\n    Foo.baz")]
         it "does not error on incomplete import" $
             let initialCode = [r|
@@ -1154,7 +1142,7 @@ spec = around withChannels $ parallel $ do
                         test = "Hello"
                         None
                     |]
-            in specifyCodeChange initialCode initialCode $ \loc@(GraphLocation file _) -> do
+            in specifyCodeChange initialCode initialCode $ \(GraphLocation file _) -> do
                 imports <- Graph.getAvailableImports (GraphLocation file def)
                 liftIO $ toList imports `shouldMatchList` ["Native", "Std.Base"]
         it "creates and uses invalid top-level function" $
@@ -1169,13 +1157,13 @@ spec = around withChannels $ parallel $ do
                         None
                     |]
             in specifyCodeChange initialCode expectedCode $
-                \loc@(GraphLocation file (Breadcrumb [main])) -> do
+                \(GraphLocation file (Breadcrumb [main])) -> do
                     u1 <- mkUUID
-                    let top = GraphLocation file def
-                    Graph.addNode top u1 "def foo" def
-                    names <- fmap (view Node.name) <$> Graph.getNodes top
+                    let loc = GraphLocation file def
+                    Graph.addNode loc u1 "def foo" def
+                    names <- fmap (view Node.name) <$> Graph.getNodes loc
                     liftIO $ names `shouldMatchList` [Just "foo", Just "main"]
                     u2 <- mkUUID
-                    Graph.addNode (top |>= u1) u2 "15" def
-                    Graph.removeNodes top [main ^. Breadcrumb.nodeId]
+                    Graph.addNode (loc |>= u1) u2 "15" def
+                    Graph.removeNodes loc [main ^. Breadcrumb.nodeId]
 

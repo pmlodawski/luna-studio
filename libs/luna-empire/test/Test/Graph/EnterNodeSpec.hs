@@ -13,7 +13,7 @@ import qualified LunaStudio.Data.PortRef      as PortRef
 
 import Empire.ASTOp                   (runASTOp)
 import LunaStudio.Data.Connection     (Connection (Connection))
-import LunaStudio.Data.GraphLocation  (GraphLocation (GraphLocation))
+import LunaStudio.Data.GraphLocation  (GraphLocation (GraphLocation), (|>))
 import LunaStudio.Data.LabeledTree    (LabeledTree (LabeledTree))
 import LunaStudio.Data.Port           (InPortIndex (Arg), InPorts (InPorts),
                                        OutPortIndex (Projection),
@@ -28,7 +28,7 @@ import Test.Hspec.Empire              (addNode, connectToInput,
                                        findNodeIdByName, inPortRef, mkAliasPort,
                                        mkAllPort, mkSelfPort, noAction,
                                        outPortRef, runTests, testCase,
-                                       testCaseWithTC, xitWithReason, (|>))
+                                       testCaseWithTC, xitWithReason)
 import Test.Hspec.Expectations.Lifted (shouldBe, shouldMatchList, shouldSatisfy)
 import Text.RawString.QQ              (r)
 
@@ -44,7 +44,7 @@ spec = runTests "entering nodes at use-site" $ do
                 bar = foo 1
                 None
             |]
-        in testCaseWithTC initialCode initialCode noAction $ \gl -> do
+        in testCaseWithTC initialCode initialCode noAction $ \gl _ -> do
             Just bar <- findNodeIdByName gl "bar"
             let GraphLocation file (coerce -> bc) = gl
                 barGL = GraphLocation file $ coerce $ bc
@@ -60,7 +60,7 @@ spec = runTests "entering nodes at use-site" $ do
                 bar = id 1
                 None
             |]
-        in testCaseWithTC initialCode initialCode noAction $ \gl -> do
+        in testCaseWithTC initialCode initialCode noAction $ \gl _ -> do
             Just bar <- findNodeIdByName gl "bar"
             let GraphLocation file (coerce -> bc) = gl
                 barGL = GraphLocation file $ coerce $ bc

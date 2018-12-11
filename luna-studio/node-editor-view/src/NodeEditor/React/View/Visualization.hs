@@ -1,31 +1,49 @@
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
 module NodeEditor.React.View.Visualization where
 
-import           Common.Prelude
-import qualified Data.Aeson                                 as Aeson
-import           Data.Map                                   (Map)
-import qualified Data.Map                                   as Map
-import qualified JS.Mount                                   as Mount
-import qualified LunaStudio.Data.NodeLoc                    as NodeLoc
-import qualified NodeEditor.Event.UI                        as UI
-import qualified NodeEditor.React.Event.Visualization       as Visualization
-import           NodeEditor.React.IsRef                     (IsRef, dispatch)
-import           NodeEditor.React.Model.Constants           (lineHeight)
-import           NodeEditor.React.Model.Node.ExpressionNode (NodeLoc)
-import           NodeEditor.React.Model.NodeEditor          (VisualizersPaths)
-import qualified NodeEditor.React.Model.NodeEditor          as NE
-import           NodeEditor.React.Model.Visualization       (RunningVisualization, VisualizationId,
-                                                             VisualizationMode (Default, Focused, FullScreen, Preview),
-                                                             VisualizationParent (Node, Searcher), VisualizationProperties, Visualizer,
-                                                             VisualizerId, VisualizerName, VisualizerPath, VisualizerType (..),
-                                                             runningVisualizer, selectedVisualizerId, visPropArgPortsNumber,
-                                                             visPropIsNodeExpanded, visPropNodeLoc, visPropVisualization,
-                                                             visPropVisualizers, visualizationId, visualizationMode, visualizerId,
-                                                             visualizerName, visualizerProperties, visualizerRelPath, visualizerType)
-import qualified NodeEditor.React.View.Style                as Style
-import           React.Flux                                 hiding (image_)
-import qualified React.Flux                                 as React
+import Common.Prelude
+import React.Flux     hiding (image_)
+
+import qualified Data.Aeson                           as Aeson
+import qualified Data.Map                             as Map
+import qualified JS.Mount                             as Mount
+import qualified LunaStudio.Data.NodeLoc              as NodeLoc
+import qualified NodeEditor.Event.UI                  as UI
+import qualified NodeEditor.React.Event.Visualization as Visualization
+import qualified NodeEditor.React.View.Style          as Style
+import qualified React.Flux                           as React
+
+import Data.Map                                   (Map)
+import NodeEditor.React.IsRef                     (IsRef, dispatch)
+import NodeEditor.React.Model.Constants           (lineHeight)
+import NodeEditor.React.Model.Node.ExpressionNode (NodeLoc)
+import NodeEditor.React.Model.Visualization       (RunningVisualization,
+                                                   VisualizationId,
+                                                   VisualizationMode (Default, Focused, FullScreen, Preview),
+                                                   VisualizationParent (Node, Searcher),
+                                                   VisualizationProperties,
+                                                   Visualizer, VisualizerId,
+                                                   VisualizerName,
+                                                   VisualizerPath,
+                                                   VisualizerType (ImportedVisualizer, InternalVisualizer, LunaVisualizer, ProjectVisualizer),
+                                                   Visualizers,
+                                                   externalVisualizers,
+                                                   internalVisualizers,
+                                                   librariesVisualizers,
+                                                   lunaVisualizers,
+                                                   projectVisualizers,
+                                                   runningVisualizer,
+                                                   selectedVisualizerId,
+                                                   visPropArgPortsNumber,
+                                                   visPropIsNodeExpanded,
+                                                   visPropNodeLoc,
+                                                   visPropVisualization,
+                                                   visPropVisualizers,
+                                                   visualizationId,
+                                                   visualizationMode,
+                                                   visualizerId, visualizerName,
+                                                   visualizerProperties,
+                                                   visualizerRelPath,
+                                                   visualizerType)
 
 
 nodePrefix :: JSString
@@ -42,16 +60,19 @@ visMenuName     = "visualizers"
 objNameVis      = "node-vis"
 objNameShortVal = "node-short-value"
 
-getVisualizerPath :: VisualizerType -> VisualizersPaths -> Maybe FilePath
-getVisualizerPath InternalVisualizer = Just . (^. NE.internalVisualizersPath)
-getVisualizerPath LunaVisualizer     = Just . (^. NE.lunaVisualizersPath)
-getVisualizerPath ProjectVisualizer  = (^. NE.projectVisualizersPath)
+getVisualizerPath :: VisualizerType -> Visualizers FilePath -> Maybe FilePath
+getVisualizerPath tpe vp = case tpe of
+    InternalVisualizer         -> Just $ vp ^. internalVisualizers
+    LunaVisualizer             -> Just $ vp ^. lunaVisualizers
+    ProjectVisualizer          -> vp ^. externalVisualizers . projectVisualizers
+    ImportedVisualizer libName
+        -> vp ^? externalVisualizers . librariesVisualizers . ix libName
 
 
-nodeVisualization_ :: IsRef r => r -> VisualizersPaths -> VisualizationProperties -> Bool -> ReactElementM ViewEventHandler ()
+nodeVisualization_ :: IsRef r => r -> Visualizers FilePath -> VisualizationProperties -> Bool -> ReactElementM ViewEventHandler ()
 nodeVisualization_ ref visLibPaths visProp isNodeSelected = React.viewWithSKey nodeVisualization (visKey $ visProp ^. visPropVisualization) (ref, visLibPaths, visProp, isNodeSelected) mempty
 
-nodeVisualization :: IsRef r => ReactView (r, VisualizersPaths, VisualizationProperties, Bool)
+nodeVisualization :: IsRef r => ReactView (r, Visualizers FilePath, VisualizationProperties, Bool)
 nodeVisualization = React.defineView objNameVis $ \(ref, visLibPaths, visProp, isNodeSelected) -> do
     let nl             = visProp ^. visPropNodeLoc
         nid            = nl ^. NodeLoc.nodeId
@@ -67,14 +88,14 @@ nodeVisualization = React.defineView objNameVis $ \(ref, visLibPaths, visProp, i
     withJust mayVisLibPath $ \visLibPath -> div_
         [ "key"       $= visKey vis
         , "id"        $= (nodePrefix <> fromString (show nid))
-        , "className" $= Style.prefixFromList (classes <> activeClass <> nSelectedClass )
+        , "className" $= ("native-key-bindings " <> Style.prefixFromList (classes <> activeClass <> nSelectedClass ))
         , "style"     @= Aeson.object [ "transform" Aeson..= ("translate(-150px," <> visShift <> "rem)"::String) ]
         , onDoubleClick $ \e _ -> [stopPropagation e]
         ] $
         div_
             [ "className" $= Style.prefix "node-translate"
             ] $ do
-            visualization_   ref visLibPath (Node nl) vis True
+            visualization_   ref visLibPath (Node nl) vis True False
             visualizersMenu_ ref (Node nl) vis visualizers' menuVisible
 
 docVisualization_ :: IsRef r => r -> Bool -> FilePath -> RunningVisualization -> ReactElementM ViewEventHandler ()
@@ -89,8 +110,8 @@ docVisualization = React.defineView docViewName $ \(ref, docPresent, visLibPath,
         classes      = "searcher__doc" : visibleClass <> fsModeClass <> activeClass
     div_
         [ "key"       $= "doc"
-        , "className" $= Style.prefixFromList classes
-        ] $ visualization_ ref visLibPath Searcher vis docPresent
+        , "className" $= ("native-key-bindings " <> Style.prefixFromList classes)
+        ] $ visualization_ ref visLibPath Searcher (vis & visualizationMode .~ Preview) docPresent True
 
 
 visualizersMenu_ :: IsRef r => r -> VisualizationParent -> RunningVisualization -> Map VisualizerId VisualizerPath -> Bool -> ReactElementM ViewEventHandler ()
@@ -102,8 +123,11 @@ visualizersMenu = React.defineView visMenuName $ \(ref, visParent, vis, visualiz
         visId         = vis ^. visualizationId
     when (Map.size visualizersMap > 1 && Map.keys visualizersMap /= maybeToList selectedVisId) $ do
         let getVisualizerName visualizerId = case visualizerId ^. visualizerType of
-                ProjectVisualizer -> "project: " <> (visualizerId ^. visualizerName)
-                LunaVisualizer    -> visualizerId ^. visualizerName
+                ProjectVisualizer
+                    -> "project: " <> (visualizerId ^. visualizerName)
+                ImportedVisualizer libName
+                    -> libName <> ": " <> visualizerId ^. visualizerName
+                _   -> visualizerId ^. visualizerName
             menuEntry :: VisualizerId -> ReactElementM ViewEventHandler ()
             menuEntry visualizerId = when (Just visualizerId /= selectedVisId) $
                 li_ [ onClick $ \_ _ -> dispatch ref $ UI.VisualizationEvent $ Visualization.Event visParent $ Visualization.SelectVisualizer visId visualizerId ] . elemString . convert $ getVisualizerName visualizerId
@@ -113,11 +137,11 @@ visualizersMenu = React.defineView visMenuName $ \(ref, visParent, vis, visualiz
                 span_ $ elemString $ "▾"--convert actVisName
                 ul_ [ "className" $= Style.prefix "dropdown__menu" ] $ mapM_ menuEntry $ Map.keys visualizersMap
 
-visualization_ :: IsRef r => r -> FilePath -> VisualizationParent -> RunningVisualization -> Bool -> ReactElementM ViewEventHandler ()
-visualization_ ref visLibPath visParent vis isVisible = React.view visualization (ref, visLibPath, visParent, vis, isVisible) mempty
+visualization_ :: IsRef r => r -> FilePath -> VisualizationParent -> RunningVisualization -> Bool -> Bool -> ReactElementM ViewEventHandler ()
+visualization_ ref visLibPath visParent vis isVisible noCover = React.view visualization (ref, visLibPath, visParent, vis, isVisible, noCover) mempty
 
-visualization :: IsRef r => ReactView (r, FilePath, VisualizationParent, RunningVisualization, Bool)
-visualization = React.defineView viewName $ \(ref, visLibPath, visParent, vis, isVisible) -> do
+visualization :: IsRef r => ReactView (r, FilePath, VisualizationParent, RunningVisualization, Bool, Bool)
+visualization = React.defineView viewName $ \(ref, visLibPath, visParent, vis, isVisible, noCover) -> do
     let visId         = vis ^. visualizationId
         vmode         = vis ^. visualizationMode
         visualizer    = vis ^. visualizerProperties . runningVisualizer
@@ -127,7 +151,8 @@ visualization = React.defineView viewName $ \(ref, visLibPath, visParent, vis, i
     div_
         [ "className" $= Style.prefixFromList [ "noselect", "visualization-container" ]
         ] $ do
-        div_ ([ "className" $= Style.prefix "visualization-cover" ] <> coverHandler) mempty
+        unless noCover $
+            div_ ([ "className" $= Style.prefix "visualization-cover" ] <> coverHandler) mempty
         visualizationIframe_ visLibPath visId visualizer isVisible
 
 visualizationIframe_ :: FilePath -> VisualizationId -> Visualizer -> Bool -> ReactElementM ViewEventHandler ()

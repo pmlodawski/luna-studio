@@ -5,7 +5,7 @@
 
 module Empire.ASTOps.BreadcrumbHierarchy where
 
-import Empire.Prelude
+import Empire.Prelude hiding (seq)
 
 import           Control.Arrow                 ((&&&))
 import           Control.Monad                 (forM)
@@ -25,13 +25,10 @@ import qualified Empire.Data.BreadcrumbHierarchy as BH
 import           Empire.Data.Graph               as Graph (nodeCache, breadcrumbHierarchy)
 import           Empire.Data.Layers              (Marker)
 import           LunaStudio.Data.NodeId          (NodeId)
-import           LunaStudio.Data.NodeCache       (NodeCache, nodeIdMap, nodeMetaMap)
-import           LunaStudio.Data.NodeLoc         (NodeLoc (..))
-import qualified LunaStudio.Data.NodeMeta        as NodeMeta
+import           LunaStudio.Data.NodeCache       (nodeIdMap, nodeMetaMap)
 import           LunaStudio.Data.PortRef         (OutPortRef (..))
 import qualified LunaStudio.Data.Port            as Port
 
-import qualified Luna.IR as IR
 
 makeTopBreadcrumbHierarchy :: NodeRef -> GraphOp ()
 makeTopBreadcrumbHierarchy ref = do
@@ -44,13 +41,15 @@ getMarker marker = do
     matchExpr marker $ \case
         Marker index -> return index
 
-childrenFromSeq :: Delta -> EdgeRef -> GraphOp (Map NodeId BH.BChild)
-childrenFromSeq tgtBeg edge = do
+childrenFromSeq :: NodeRef -> Delta -> EdgeRef -> GraphOp (Map NodeId BH.BChild)
+childrenFromSeq currentFun tgtBeg edge = do
     ref <- source edge
     off <- Code.getOffsetRelativeToTarget edge
     let beg = tgtBeg + off
     matchExpr ref $ \case
-        Seq    l r    -> Map.union <$> (childrenFromSeq beg (coerce l)) <*> (lambdaChildren beg (coerce r))
+        Seq    l r    -> Map.union
+            <$> childrenFromSeq currentFun beg (coerce l)
+            <*> lambdaChildren  currentFun beg (coerce r)
         Marked m expr -> do
             expr'      <- source expr
             index      <- getMarker =<< source m
@@ -61,37 +60,51 @@ childrenFromSeq tgtBeg edge = do
                 Unify l r -> do
                     ASTBuilder.attachNodeMarkers uid [] =<< source l
                     source r
-                ASGFunction n _ b -> do
+                ASGFunction n _ _ -> do
                     ASTBuilder.attachNodeMarkers uid [] =<< source n
-                    return expr'
+                    pure expr'
                 _ -> do
-                    putLayer @Marker expr' . Just =<< toPortMarker (OutPortRef (convert uid) [])
-                    return expr'
+                    putLayer @Marker expr' . Just
+                        =<< toPortMarker (OutPortRef (convert uid) [])
+                    pure expr'
             child    <- prepareChild ref childTarget
             nodeMeta <- use $ Graph.nodeCache . nodeMetaMap . at index
             forM nodeMeta $ AST.writeMeta ref
-            return $ Map.singleton uid child
-        Invalid{} -> return def
+            pure $ Map.singleton uid child
+        Invalid{} -> pure def
         _ -> do
-            Code.addCodeMarker beg edge
-            childrenFromSeq tgtBeg edge
+            void $ Code.addCodeMarker beg edge
+            childrenFromSeq currentFun tgtBeg edge
 
-isNone :: NodeRef -> GraphOp Bool
-isNone = flip matchExpr $ \case
-    Cons n _ -> return $ n == "None"
-    _           -> return False
-
-lambdaChildren :: Delta -> EdgeRef -> GraphOp (Map NodeId BH.BChild)
-lambdaChildren tgtBeg edge = do
+lambdaChildren :: NodeRef -> Delta -> EdgeRef -> GraphOp (Map NodeId BH.BChild)
+lambdaChildren currentFun tgtBeg edge = do
     ref <- source edge
     off <- Code.getOffsetRelativeToTarget edge
     let beg = tgtBeg + off
     matchExpr ref $ \case
-        Seq l r -> Map.union <$> (childrenFromSeq beg (coerce l)) <*> (lambdaChildren beg (coerce r))
+        Seq l r -> Map.union
+            <$> childrenFromSeq currentFun beg (coerce l)
+            <*> lambdaChildren  currentFun beg (coerce r)
+        Var{}   -> do
+            output <- ASTRead.getLambdaOutputRef currentFun
+            if output == ref
+            then do
+                marker <- getLayer @Marker ref
+                if isJust marker
+                then pure Map.empty
+                else childrenFromSeq currentFun tgtBeg edge
+            else do
+                tgt    <- target edge
+                seq    <- ASTRead.isSeq tgt
+                if seq
+                then childrenFromSeq currentFun tgtBeg edge
+                else pure Map.empty
         _          -> do
             marker <- getLayer @Marker ref
-            isN    <- isNone ref
-            if isJust marker || isN then return Map.empty else childrenFromSeq tgtBeg edge
+            none   <- ASTRead.isNone ref
+            if isJust marker || none
+            then pure Map.empty
+            else childrenFromSeq currentFun tgtBeg edge
 
 prepareChild :: NodeRef -> NodeRef -> GraphOp BH.BChild
 prepareChild marked ref = go ref where
@@ -99,7 +112,7 @@ prepareChild marked ref = go ref where
         Lam {}         -> BH.LambdaChild <$> prepareLambdaChild   marked ref
         ASGFunction {} -> BH.LambdaChild <$> prepareFunctionChild marked ref
         Grouped g      -> go =<< source g
-        _                 -> prepareExprChild marked ref
+        _              -> prepareExprChild marked ref
 
 prepareChildWhenLambda :: NodeRef -> NodeRef -> GraphOp (Maybe BH.LamItem)
 prepareChildWhenLambda marked ref = do
@@ -110,25 +123,22 @@ prepareLambdaChild :: NodeRef -> NodeRef -> GraphOp BH.LamItem
 prepareLambdaChild marked ref = do
     portMapping <- liftIO $ (,) <$> UUID.nextRandom <*> UUID.nextRandom
     Just lambdaBodyLink <- ASTRead.getFirstNonLambdaLink ref
-    lambdaBody          <- source lambdaBodyLink
     Just lambdaCodeBeg  <- Code.getOffsetRelativeToFile =<< target lambdaBodyLink
     ASTBuilder.attachNodeMarkersForArgs (fst portMapping) [] ref
-    children            <- lambdaChildren lambdaCodeBeg lambdaBodyLink
-    newBody             <- ASTRead.getFirstNonLambdaRef ref
+    children            <- lambdaChildren ref lambdaCodeBeg lambdaBodyLink
     return $ BH.LamItem portMapping marked children
 
 prepareFunctionChild :: NodeRef -> NodeRef -> GraphOp BH.LamItem
 prepareFunctionChild marked ref = do
     portMapping      <- liftIO $ (,) <$> UUID.nextRandom <*> UUID.nextRandom
     (args, bodyLink) <- matchExpr ref $ \case
-        ASGFunction n as b -> do
+        ASGFunction _ as b -> do
             args <- mapM source =<< ptrListToList as
             return (args, coerce b)
-    body         <- source bodyLink
     Just codeBeg <- Code.getOffsetRelativeToFile ref
-    for_ (zip args [0..]) $ \(a, i) -> ASTBuilder.attachNodeMarkers (fst portMapping) [Port.Projection i] a
-    children <- lambdaChildren codeBeg bodyLink
-    newBody  <- ASTRead.getFirstNonLambdaRef ref
+    for_ (zip args [0..]) $ \(a, i) ->
+        ASTBuilder.attachNodeMarkers (fst portMapping) [Port.Projection i] a
+    children <- lambdaChildren marked codeBeg bodyLink
     return $ BH.LamItem portMapping marked children
 
 prepareExprChild :: NodeRef -> NodeRef -> GraphOp BH.BChild
@@ -141,11 +151,11 @@ prepareExprChild marked ref = do
           _       -> par
     return $ BH.ExprChild $ foldl addItem bareItem $ zip [0..] items
 
-restorePortMappings :: Map (NodeId, Maybe Int) (NodeId, NodeId) -> GraphOp ()
-restorePortMappings previousPortMappings = do
+restorePortMappings :: NodeId -> Map (NodeId, Maybe Int) (NodeId, NodeId) -> GraphOp ()
+restorePortMappings funId previousPortMappings = do
     hierarchy <- use breadcrumbHierarchy
 
-    let goParent lamItem = goLamItem Nothing lamItem
+    let goParent lamItem = goLamItem (Just (funId, Nothing)) lamItem
 
         goBChild nodeId (BH.ExprChild exprItem)  = BH.ExprChild <$> goExprItem nodeId exprItem
         goBChild nodeId (BH.LambdaChild lamItem) = BH.LambdaChild <$> goLamItem (Just (nodeId, Nothing)) lamItem

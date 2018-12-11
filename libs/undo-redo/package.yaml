@@ -1,4 +1,4 @@
-name:               undo-redo
+name:               luna-undo-redo
 version:            0.1.0.0
 author:             New Byte Order <contact@luna-lang.org>
 maintainer:         New Byte Order <contact@luna-lang.org>
@@ -32,6 +32,7 @@ default-extensions:
   - MultiParamTypeClasses
   - NoImplicitPrelude
   - TemplateHaskell
+  - TypeApplications
 
 library:
     source-dirs: src
@@ -39,10 +40,10 @@ library:
 
 
 executables:
- undo-redo:
+ luna-undo-redo:
    dependencies:
      - m-logger
-     - undo-redo
+     - luna-undo-redo
 
 
    source-dirs: app
@@ -55,4 +56,4 @@ tests:
        source-dirs: test
        dependencies:
            - hspec
-           - undo-redo
+           - luna-undo-redo

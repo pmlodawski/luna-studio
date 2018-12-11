@@ -35,9 +35,11 @@ import           LunaStudio.Data.Breadcrumb     (Breadcrumb (..))
 import qualified LunaStudio.Data.Error          as Error
 import           LunaStudio.Data.GraphLocation  (GraphLocation(..))
 import qualified LunaStudio.Data.GraphLocation  as GraphLocation
+import qualified Luna.Package                   as Package
 import qualified Luna.Package.Structure.Generate as PackageGen
 
 import           Debug
+import qualified Empire.ApiHandlers             as Api
 import qualified Empire.Commands.Graph          as Graph
 import qualified Empire.Commands.Package        as Package
 import qualified Empire.Commands.Publisher      as Publisher
@@ -47,7 +49,7 @@ import qualified Empire.Data.Library            as Library
 import           Empire.Empire                  (Empire)
 import qualified Empire.Empire                  as Empire
 import           Empire.Server.Server           (errorMessage, defInverse, modifyGraph, replyFail,
-                                                replyOk, replyResult, withDefaultResult)
+                                                replyOk, replyResult)
 import qualified System.Log.MLogger             as Logger
 import qualified ZMQ.Bus.EndPoint               as EP
 import           ZMQ.Bus.Trans                  (BusT (..))
@@ -88,22 +90,10 @@ partitionM f (x:xs) = do
 
 handleMoveProject :: Request MoveProject.Request -> StateT Env BusT ()
 handleMoveProject req@(Request _ _ (MoveProject.Request oldPath newPath)) = do
-    result <- liftIO $ do
-        r <- try $ do
-            let listDirRecursively d = do
-                    contents      <- map (d </>) <$> Dir.listDirectory d
-                    (files, dirs) <- partitionM Dir.doesFileExist contents
-                    (recFiles, recDirs) <- fmap unzip $ mapM listDirRecursively dirs
-                    return (files ++ concat recFiles, dirs ++ concat recDirs)
-            (filesToCopy, dirsToCreate) <- listDirRecursively oldPath
-            forM_ dirsToCreate $ \d -> do 
-                let relPath = makeRelative oldPath d 
-                Dir.createDirectoryIfMissing True $ newPath </> relPath
-            forM_ filesToCopy $ \f -> do
-                let relPath = makeRelative oldPath f
-                Dir.copyFile f (newPath </> relPath)
-        Dir.removeDirectoryRecursive oldPath `catchAny` (\e -> logger Logger.error $ "couldn't remove directory" <> oldPath)
-        return r
+    result <- liftIO $ try $ do
+        src    <- Path.parseAbsDir oldPath
+        target <- Path.parseAbsDir newPath
+        Package.rename src target
     case result of
         Left (e :: SomeException) -> do
             err <- liftIO $ Graph.prepareLunaError e
@@ -122,7 +112,7 @@ handleOpenFile req@(Request _ _ (OpenFile.Request path)) = timeIt "handleOpenFil
     empireNotifEnv   <- use Env.empireNotif
     result <- liftIO $ try $ Empire.runEmpire empireNotifEnv currentEmpireEnv $ Graph.openFile path
     case result of
-        Left (exc :: SomeASTException) -> do
+        Left (exc :: SomeException) -> do
             err <- liftIO $ Graph.prepareLunaError $ toException exc
             replyFail logger err req (Response.Error err)
         Right (_, newEmpireEnv)  -> do
@@ -162,10 +152,7 @@ handleSaveFile req@(Request _ _ (SaveFile.Request inPath)) = do
                 file = Path.toFilePath $ Path.filename path
             liftIO $ withClosedTempFile dir (file <> ".tmp") $ \tmpFile -> do
                 Text.writeFile tmpFile source
-                let backupFile = Path.toFilePath path <> ".backup"
-                Dir.renameFile (Path.toFilePath path) backupFile
                 Dir.renameFile tmpFile (Path.toFilePath path)
-                Dir.removeFile backupFile
             replyOk req ()
 
 handleCloseFile :: Request CloseFile.Request -> StateT Env BusT ()
@@ -180,7 +167,7 @@ handleIsSaved (Request _ _ _) = $_NOT_IMPLEMENTED
 
 handlePasteText :: Request Paste.Request -> StateT Env BusT ()
 handlePasteText = modifyGraph defInverse action replyResult where
-    action (Paste.Request loc spans text) = withDefaultResult loc $ do
+    action (Paste.Request loc spans text) = Api.withDiff loc $ do
         Graph.pasteText loc spans text
 
 instance G.GraphRequest Copy.Request where

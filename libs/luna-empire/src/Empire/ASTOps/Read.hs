@@ -8,7 +8,6 @@ AST, without modifying it. They can still throw exceptions though.
 
 module Empire.ASTOps.Read where
 
-import           Control.Monad                      ((>=>), (<=<), forM)
 import           Control.Monad.Catch                (Handler(..), catches)
 import           Data.Maybe                         (isJust)
 import           Empire.Prelude
@@ -16,14 +15,12 @@ import           Control.Lens                       (preview)
 import qualified Safe
 
 import           LunaStudio.Data.NodeId             (NodeId)
-import qualified LunaStudio.Data.PortRef            as PortRef
-import           Data.Graph.Component.Node.Class    (Node, Nodes)
+import           Data.Graph.Component.Node.Class    (Nodes)
 import qualified Luna.Pass.Data.Layer.PortMarker    as PortMarker
 import           Data.Graph.Data.Component.Class    (Component)
 import qualified Data.Graph.Data.Layer.Class        as Layer
 
-import           LunaStudio.Data.Port               (OutPortId(..), OutPortIndex(..))
-import qualified LunaStudio.Data.NodeLoc            as NodeLoc
+import           LunaStudio.Data.Port               (OutPortId, OutPortIndex(..))
 import           Empire.ASTOp                       (ClassOp, GraphOp, ASTOp, match)
 import           Empire.Data.AST                    (NodeRef, EdgeRef, NotUnifyException(..),
                                                      NotLambdaException(..), PortDoesNotExistException (..),
@@ -35,7 +32,6 @@ import           Empire.Data.Layers                 (Marker)
 import qualified Luna.IR as IR
 import qualified Luna.IR.Term.Ast.Invalid as IR
 
-import qualified System.IO as IO
 
 cutThroughGroups :: NodeRef -> GraphOp NodeRef
 cutThroughGroups r = match r $ \case
@@ -44,7 +40,7 @@ cutThroughGroups r = match r $ \case
 
 cutThroughMarked :: NodeRef -> ClassOp NodeRef
 cutThroughMarked r = match r $ \case
-    Marked m expr -> cutThroughMarked =<< source expr
+    Marked _ expr -> cutThroughMarked =<< source expr
     _             -> return r
 
 cutThroughDoc :: NodeRef -> ClassOp NodeRef
@@ -71,7 +67,7 @@ getASTOutForPort nodeId port = do
       else getOutputForPort      port =<< getASTVar nodeId
 
 getLambdaInputForPort :: OutPortId -> NodeRef -> GraphOp NodeRef
-getLambdaInputForPort []                           lam = throwM $ PortDoesNotExistException []
+getLambdaInputForPort []                           _   = throwM $ PortDoesNotExistException []
 getLambdaInputForPort portId@(Projection 0 : rest) lam = cutThroughGroups lam >>= flip match `id` \case
     Lam i _             -> getOutputForPort rest =<< source i
     ASGFunction _ as' _ -> do
@@ -235,8 +231,8 @@ getTargetFromMarked marked = match marked $ \case
     Marked _m expr -> do
         expr' <- source expr
         match expr' $ \case
-            Unify l r -> source r
-            _            -> return expr'
+            Unify _ r -> source r
+            _         -> return expr'
     _ -> return marked
 
 
@@ -247,8 +243,8 @@ getVarEdge nid = do
         Marked _m expr -> do
             expr' <- source expr
             match expr' $ \case
-                Unify l r -> return $ generalize l
-                _            -> throwM $ NotUnifyException expr'
+                Unify l _ -> return $ generalize l
+                _         -> throwM $ NotUnifyException expr'
         _ -> throwM $ MalformedASTRef ref
 
 getTargetEdge :: NodeId -> GraphOp EdgeRef
@@ -258,8 +254,8 @@ getTargetEdge nid = do
         Marked _m expr -> do
             expr' <- source expr
             match expr' $ \case
-                Unify l r -> return $ generalize r
-                _            -> return $ generalize expr
+                Unify _ r -> return $ generalize r
+                _         -> return $ generalize expr
         _ -> throwM $ MalformedASTRef ref
 
 getNameOf :: NodeRef -> GraphOp (Maybe Text)
@@ -273,8 +269,8 @@ getASTMarkerPosition :: NodeId -> GraphOp NodeRef
 getASTMarkerPosition nodeId = do
     ref <- getASTPointer nodeId
     match ref $ \case
-        Unify l r -> source l
-        _            -> return ref
+        Unify l _ -> source l
+        _         -> return ref
 
 getMarkerNode :: NodeRef -> GraphOp (Maybe NodeRef)
 getMarkerNode ref = match ref $ \case
@@ -311,11 +307,6 @@ getSelfNodeRef' seenAcc node = match node $ \case
     App t _ -> source t >>= getSelfNodeRef' seenAcc
     _       -> return $ if seenAcc then Just node else Nothing
 
-getLambdaBodyRef :: NodeRef -> GraphOp (Maybe NodeRef)
-getLambdaBodyRef lam = match lam $ \case
-    Lam _ o -> getLambdaBodyRef =<< source o
-    _       -> return $ Just lam
-
 getLambdaSeqRef :: NodeRef -> GraphOp (Maybe NodeRef)
 getLambdaSeqRef = getLambdaSeqRef' False
 
@@ -339,8 +330,8 @@ getLambdaOutputRef node = match node $ \case
 
 getFirstNonLambdaRef :: NodeRef -> GraphOp NodeRef
 getFirstNonLambdaRef ref = do
-    link <- getFirstNonLambdaLink ref
-    maybe (return ref) (source) link
+    link' <- getFirstNonLambdaLink ref
+    maybe (return ref) (source) link'
 
 getFirstNonLambdaLink :: NodeRef -> GraphOp (Maybe EdgeRef)
 getFirstNonLambdaLink node = match node $ \case
@@ -414,6 +405,16 @@ isRecord expr = match expr $ \case
     ClsASG{} -> return True
     _     -> return False
 
+isNone :: NodeRef -> GraphOp Bool
+isNone = flip matchExpr $ \case
+    Cons n _ -> pure $ n == "None"
+    _        -> pure False
+
+isSeq :: NodeRef -> GraphOp Bool
+isSeq = flip matchExpr $ \case
+    Seq{} -> pure True
+    _     -> pure False
+
 isAnonymous :: NodeRef -> GraphOp Bool
 isAnonymous expr = match expr $ \case
     Marked _ e -> isAnonymous =<< source e
@@ -432,8 +433,8 @@ nodeIsPatternMatch :: NodeId -> GraphOp Bool
 nodeIsPatternMatch nid = (do
     root <- getASTPointer nid
     varIsPatternMatch root) `catches` [
-          Handler (\(e :: NotUnifyException)         -> return False)
-        , Handler (\(e :: NodeDoesNotExistException) -> return False)
+          Handler (\(_ :: NotUnifyException)         -> return False)
+        , Handler (\(_ :: NodeDoesNotExistException) -> return False)
         ]
 
 varIsPatternMatch :: NodeRef -> GraphOp Bool
@@ -466,6 +467,7 @@ unitDefinitions unit = do
 classFromUnit :: NodeRef -> ClassOp NodeRef
 classFromUnit unit = match unit $ \case
     Unit _ _ c -> source c
+    _ -> error "dupa3"
 
 getMetadataRef :: NodeRef -> ClassOp (Maybe NodeRef)
 getMetadataRef unit = do
