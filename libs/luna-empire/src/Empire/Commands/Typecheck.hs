@@ -185,7 +185,7 @@ updateNodes loc@(GraphLocation _ br) updateLoc = case br of
                     pure (tcUpdate, nodeError))
                 pure (inputUpdate : outputUpdate : updates, errors)
             mask_ $ do
-                traverse_ (Publisher.notifyNodeTypecheck loc) updates
+                traverse_ (Publisher.notifyNodeTypecheck updateLoc) updates
                 for_ (catMaybes errors) $ \(nid, e) ->
                     Publisher.notifyResultUpdate loc nid e 0
     Breadcrumb _ -> pure ()
