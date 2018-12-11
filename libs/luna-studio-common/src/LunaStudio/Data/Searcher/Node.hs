@@ -15,6 +15,10 @@ import qualified Searcher.Engine                     as Searcher
 import qualified Searcher.Engine.Data.Symbol         as Symbol
 import qualified Searcher.Engine.Data.Symbol.Library as Library
 
+import qualified Searcher.Engine.Data       as Data
+import qualified Searcher.Engine.Data.Match as Data
+import qualified Searcher.Engine.Prelude    as Data
+
 import Control.Lens     (Getter, to)
 import Data.Aeson.Types (ToJSON)
 import Data.Binary      (Binary)
@@ -140,11 +144,11 @@ getLibrary libName nsData = Library libName $ isImported libName nsData
 
 search :: Query -> NodeSearcherData -> Maybe TypePreference -> [Match Symbol]
 search q nsData
-    = Searcher.search q . nodeSearcherDataToSymbols nsData . fromJust def
+    = search' q . nodeSearcherDataToSymbols nsData . fromJust def
 
 notConnectedEmptyInputSearch
     :: Query -> NodeSearcherData -> Maybe TypePreference -> [Match Symbol]
-notConnectedEmptyInputSearch q nsData tp = Searcher.search q
+notConnectedEmptyInputSearch q nsData tp = search' q
     $ toSymbolsWithSymbolsPreference
         nsData
         (fromJust def tp)
@@ -248,3 +252,5 @@ getWeights isFirstSearch searchForMethodsOnly mayClassName q = do
         Just cn -> TypePreference 0.2 0.3 (Set.singleton cn, 0.7) 0.5 0.1
         _       -> TypePreference 0.5 0.7 (def, def) 0.3 $ constructorWeight 0.9 0.2
 
+search' :: Data.SearcherData a => Data.Query -> [a] -> [Data.Match a]
+search' _ = map (\a -> Data.Match a Data.CaseSensitiveEquality 0 [])
