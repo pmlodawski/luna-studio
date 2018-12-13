@@ -9,15 +9,27 @@ setup-info:
         url: https://github.com/matchwood/ghcjs-stack-dist/raw/master/ghcjs-0.2.1.9008011.tar.gz
         sha1: a72a5181124baf64bcd0e68a8726e65914473b3b
 
+allow-newer: true
+
 ghc-options:
   node-editor: -DGHCJS_BROWSER
   text-editor: -DGHCJS_BROWSER
 extra-deps:
+  - base-4.10
   - cond-0.4.1.1
   - datetime-0.3.1
   - ghcjs-dom-0.7.0.4
   - ghcjs-dom-jsffi-0.7.0.4
   - foundation-0.0.7
+  - layered-state-1.1.4
+  - prologue-3.2.4
+  - git: 'git@github.com:luna/luna.git'
+    commit: 1f5f7194f371ea17df3c2f56f1c85a8eb6f3a320
+    subdirs:
+      - lib/data-typemap
+      - lib/th-builder
+      - lib/tuple-utils
+      - lib/typelevel
 
 packages:
 - {location: ./node-editor}
@@ -44,7 +56,8 @@ packages:
 - extra-dep: true
   location: {commit: 1c6a4fd165e4b15cad114b0a554e0974fd119223, git: 'git@github.com:luna/functor-utils.git'}
 - extra-dep: true
-  location: {commit: a846dd3481b24ff1933db1e121db9c511f4c6edf, git: 'git@github.com:luna/fuzzy-text.git'}
+  location: ../../fuzzy-text 
+  # location: {commit: a846dd3481b24ff1933db1e121db9c511f4c6edf, git: 'git@github.com:luna/fuzzy-text.git'}
 - extra-dep: true
   location: {commit: a1606cccc12cb521acbc598e52c481b9054b42a7, git: 'git@github.com:luna/impossible.git'}
 - extra-dep: true
@@ -58,8 +71,6 @@ packages:
   location: {commit: 7c7a6d657e7db8c3dcd80fbed0a7e02e02f43ae3, git: 'git@github.com:luna/monad-branch'}
 - extra-dep: true
   location: {commit: cbcd88c87e8888ebfeacd258cca96b3d6d489d35, git: 'git@github.com:luna/parsert'}
-- extra-dep: true
-  location: {commit: c1c525d71b5e749f24e26f71d2d1a68019cae850, git: 'git@github.com:luna/prologue.git'}
 - extra-dep: true
   location: {commit: ad94b1f2e4bc87b81853ff746b64c59b3eae7f09, git: 'git@github.com:luna/react-flux'}
 - extra-dep: true

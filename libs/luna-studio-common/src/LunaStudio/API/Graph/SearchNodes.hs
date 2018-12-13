@@ -12,7 +12,6 @@ import Data.Set                      (Set)
 import LunaStudio.Data.GraphLocation (GraphLocation)
 import LunaStudio.Data.Searcher.Node (LibraryHints, LibraryName)
 
-
 data Request = Request
     { _location         :: GraphLocation
     , _missingLibraries :: Set LibraryName

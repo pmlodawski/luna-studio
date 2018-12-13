@@ -1,15 +1,16 @@
 module LunaStudio.Data.Searcher.Command
     ( module LunaStudio.Data.Searcher.Command
-    , module X
+    -- , module X
     ) where
 
-import Searcher.Engine as X hiding (search)
+import Searcher.Engine.Search
+-- import Searcher.Engine as X hiding (search)
 
-import Prologue
+-- import Prologue
 
-import qualified Searcher.Engine              as Searcher
-import qualified Searcher.Engine.Data.Command as Command
+-- import qualified Searcher.Engine              as Searcher
+-- import qualified Searcher.Engine.Data.Command as Command
 
 
-search :: Query -> [Command.Name] -> [Match Command]
-search q = Searcher.search q . fmap (flip Command def)
+-- search :: Query -> [Command.Name] -> [Match Command]
+-- search q = Searcher.search q . fmap (flip Command def)
