@@ -1,24 +1,27 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module NodeEditor.Handler.Searcher where
 
-import           Common.Prelude
-import qualified Data.Text                          as Text
+import Common.Prelude
 
-import           Common.Action.Command              (Command)
-import           LunaStudio.Data.Position           (fromTuple)
-import qualified NodeEditor.Action.Searcher         as Searcher
-import           NodeEditor.Action.State.NodeEditor (whenGraphLoaded)
-import           NodeEditor.Event.Event             (Event (Shortcut, UI, View))
-import qualified NodeEditor.Event.Shortcut          as Shortcut
-import           NodeEditor.Event.UI                (UIEvent (SearcherEvent))
-import           NodeEditor.Event.View              (BaseEvent (EditNodeExpression, EditNodeName, SearcherAccept, SearcherEdit, SearcherMoveDown, SearcherMoveUp, SearcherTabPressed),
-                                                     SearcherEditEvent (SearcherEditEvent), ViewEvent, base)
-import qualified NodeEditor.Event.View              as View
-import qualified NodeEditor.React.Event.Searcher    as Searcher
-import           NodeEditor.State.Action            (Action (continue))
-import           NodeEditor.State.Global            (State)
-import           Text.Read                          (readMaybe)
+import qualified Data.Text                       as Text
+import qualified NodeEditor.Action.Searcher      as Searcher
+import qualified NodeEditor.Event.Shortcut       as Shortcut
+import qualified NodeEditor.Event.View           as View
+import qualified NodeEditor.React.Event.Searcher as Searcher
+
+import Common.Action.Command              (Command)
+import LunaStudio.Data.Position           (fromTuple)
+import NodeEditor.Action.State.NodeEditor (whenGraphLoaded)
+import NodeEditor.Event.Event             (Event (Shortcut, UI, View))
+import NodeEditor.Event.UI                (UIEvent (SearcherEvent))
+import NodeEditor.State.Action            (Action (continue))
+import NodeEditor.State.Global            (State)
+import Text.Read                          (readMaybe)
+import NodeEditor.Event.View              (BaseEvent (EditNodeExpression, EditNodeName,
+                                           SearcherAccept, SearcherEdit, SearcherMoveDown,
+                                           SearcherMoveUp, SearcherTabPressed),
+                                           SearcherEditEvent (SearcherEditEvent),
+                                           ViewEvent, base)
+
 
 
 handle :: (Event -> IO ()) -> Event -> Maybe (Command State ())
@@ -45,10 +48,10 @@ handleSearcherEvent scheduleEvent = \case
     Searcher.Accept
         -> Just . continue $ Searcher.accept scheduleEvent
     Searcher.AcceptInput
-        -> Just . continue $ Searcher.acceptWithHint scheduleEvent 0
+        -> Just . continue $ Searcher.withHint 0 (Searcher.accept scheduleEvent)
     Searcher.AcceptWithHint i
-        -> Just . continue $ Searcher.acceptWithHint scheduleEvent i
-    Searcher.HintShortcut i -> Just . continue $ Searcher.updateInputWithHint i
+        -> Just . continue $ Searcher.withHint i Searcher.updateInputWithSelectedHint
+    Searcher.HintShortcut i -> Just . continue $ Searcher.withHint i Searcher.updateInputWithSelectedHint
     Searcher.Continue       -> Just $ continue Searcher.handleTabPressed
     Searcher.MoveDown       -> Just $ continue Searcher.selectPreviousHint
     Searcher.MoveUp         -> Just $ continue Searcher.selectNextHint

@@ -13,6 +13,8 @@ import qualified NodeEditor.React.Model.Layout              as Layout
 import qualified NodeEditor.React.Model.Node.ExpressionNode as ExpressionNode
 import qualified NodeEditor.React.Model.Port                as Port
 import qualified NodeEditor.React.Model.Searcher            as Searcher
+import qualified NodeEditor.React.Model.Searcher.Mode       as SearcherMode
+import qualified NodeEditor.React.Model.Searcher.Mode.Node  as SearcherNode
 import qualified NodeEditor.React.Model.Visualization       as Visualization
 
 import Data.Map                             (Map)
@@ -20,6 +22,7 @@ import LunaStudio.Data.CameraTransformation (CameraTransformation)
 import LunaStudio.Data.MonadPath            (MonadPath)
 import LunaStudio.Data.NodeLoc              (NodePath)
 import NodeEditor.Data.Color                (Color (Color))
+import LunaStudio.Data.Position             (Position)
 import NodeEditor.React.Model.Connection    (Connection, ConnectionsMap,
                                              HalfConnection (HalfConnection),
                                              PosConnection (PosConnection),
@@ -41,6 +44,8 @@ import NodeEditor.React.Model.SelectionBox  (SelectionBox)
 import NodeEditor.React.Model.Visualization (NodeVisualizations, VisualizationProperties (VisualizationProperties),
                                              VisualizationsBackupMap,
                                              Visualizers)
+import NodeEditor.React.Model.SearcherProperties (SearcherProperties,
+                                                  toSearcherProperties)
 
 
 data GraphStatus = GraphLoaded
@@ -102,6 +107,10 @@ returnsGraphError = to (has (graphStatus . _GraphError))
 
 screenTransform :: Lens' NodeEditor CameraTransformation
 screenTransform = layout . Layout.screenTransform
+
+searcherProperties :: Getter NodeEditor (Maybe SearcherProperties)
+searcherProperties = to $ \ne -> flip
+    toSearcherProperties (ne ^. visualizersLibPaths) <$> ne ^. searcher
 
 expressionNodesRecursive :: Getter NodeEditor [ExpressionNode]
 expressionNodesRecursive = to (concatMap expressionNodesRecursive' . HashMap.elems . view expressionNodes) where
@@ -249,14 +258,45 @@ isVisualizationNodeSelected :: VisualizationProperties -> NodeEditor -> Bool
 isVisualizationNodeSelected visProp = maybe False (view ExpressionNode.isSelected) . getExpressionNode (visProp ^. Visualization.visPropNodeLoc)
 
 applySearcherHints :: NodeEditor -> NodeEditor
-applySearcherHints ne = maybe ne replaceNode $ ne ^. searcher where
+applySearcherHints ne' = maybe ne' (flip replaceNode ne') $ ne' ^. searcher where
+
     connect srcPortRef dstPortRef ne' = ne' & connections . at dstPortRef ?~ Connection.Connection srcPortRef dstPortRef False Connection.Normal
-    tryConnect    nl nn ne'           = maybe ne' (\srcPortRef -> connect srcPortRef (Port.InPortRef nl [Port.Self]) ne') $ nn ^. Searcher.predPortRef
-    toModel       n  nl pos           = moveNodeToTop $ (convert (def :: NodePath, n)) & ExpressionNode.nodeLoc  .~ nl
-                                                                                       & ExpressionNode.position .~ pos
-    updateNode    nl n ne'            = maybe ne' (flip updateExpressionNode ne . Searcher.applyExpressionHint n) $ getExpressionNode nl ne'
-    moveNodeToTop n                   = n & ExpressionNode.zPos .~ (ne ^. topZIndex) + 1
-    replaceNode   s                   = case (s ^. Searcher.mode, s ^. Searcher.selectedNode) of
-        (Searcher.Node nl (Searcher.NodeModeInfo _ Nothing   _ _) _, Just n) -> updateNode nl n ne
-        (Searcher.Node nl (Searcher.NodeModeInfo _ (Just nn) _ _) _, Just n) -> tryConnect nl nn $ updateExpressionNode (toModel n nl (nn ^. Searcher.position)) ne
-        (Searcher.Node nl (Searcher.NodeModeInfo _ (Just nn) _ _) _, _)      -> tryConnect nl nn $ updateExpressionNode (moveNodeToTop $ ExpressionNode.mkExprNode nl (s ^. Searcher.inputText) (nn ^. Searcher.position)) ne
+
+    tryConnect :: Searcher.NodesData a -> NodeEditor -> NodeEditor
+    tryConnect nd = let
+        mayConnectionSrc = do
+            expressionMode <- nd ^? Searcher.modeData
+                                  . SearcherNode._ExpressionMode
+            newNodeData <- expressionMode ^. SearcherNode.newNodeData
+            newNodeData ^. SearcherNode.connectionSource
+        connectionDst = Port.InPortRef (nd ^. SearcherNode.nodeLoc) [Port.Self]
+        in case mayConnectionSrc of
+            Just connectionSrc -> connect connectionSrc connectionDst
+            Nothing -> id
+
+    updateCreateNode :: Searcher.NodesData a -> Text -> NodeEditor -> NodeEditor
+    updateCreateNode nd input ne = let
+        nodeLoc = nd ^. SearcherNode.nodeLoc
+        mayNode :: Maybe ExpressionNode
+        mayNode = case nd ^. Searcher.modeData of
+            SearcherNode.ExpressionMode expressionData ->
+                case expressionData ^. SearcherNode.newNodeData of
+                    Just newNodeData -> Just $ ExpressionNode.mkExprNode
+                        nodeLoc
+                        input
+                        (newNodeData ^. SearcherNode.position)
+                    Nothing          -> (ExpressionNode.expression .~ input) <$>
+                        getExpressionNode nodeLoc ne
+            SearcherNode.NodeNameMode -> (ExpressionNode.name .~ Just input) <$>
+                getExpressionNode nodeLoc ne
+            SearcherNode.PortNameMode portNameData -> Nothing --TODO
+        in maybe ne (flip updateExpressionNode ne . moveNodeToTop ne) mayNode
+
+    moveNodeToTop :: NodeEditor -> ExpressionNode -> ExpressionNode
+    moveNodeToTop ne = ExpressionNode.zPos .~ (ne ^. topZIndex) + 1
+
+    replaceNode :: Searcher -> NodeEditor -> NodeEditor
+    replaceNode s = case s ^. Searcher.searcherMode of
+        Searcher.CommandSearcher _ -> id
+        Searcher.NodeSearcher   nd ->
+            tryConnect nd . updateCreateNode nd (s ^. Searcher.inputText)

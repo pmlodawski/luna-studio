@@ -67,6 +67,7 @@ import Data.Char                            (isSeparator, isUpper)
 import Data.Coerce                          (coerce)
 import Data.Foldable                        (toList)
 import Data.List                            (find, nub, sortBy, sortOn, (++))
+import Data.Map                             (Map)
 import Data.Maybe                           (fromMaybe, maybeToList)
 import Data.Set                             (Set)
 import Data.Text                            (Text)
@@ -74,9 +75,8 @@ import Data.Text.Position                   (Delta)
 import Data.Text.Span                       (SpacedSpan (..), leftSpacedSpan)
 import Data.Text.Strict.Lens                (packed)
 import Debug
-import Empire.ASTOp                         (ClassOp, GraphOp,
-                                             liftScheduler, runASTOp,
-                                             runAliasAnalysis)
+import Empire.ASTOp                         (ClassOp, GraphOp, liftScheduler,
+                                             runASTOp, runAliasAnalysis)
 import Empire.ASTOps.BreadcrumbHierarchy    (prepareChild)
 import Empire.ASTOps.Parse                  (FunctionParsing (..))
 import Empire.Commands.Code                 (addExprMapping, getExprMap,
@@ -104,8 +104,6 @@ import LunaStudio.Data.GraphLocation        (GraphLocation (..), (|>))
 import LunaStudio.Data.Node                 (ExpressionNode (..), NodeId)
 import LunaStudio.Data.NodeLoc              (NodeLoc (..))
 import LunaStudio.Data.NodeMeta             (NodeMeta)
-import LunaStudio.Data.NodeSearcher         (ClassHints (..), ImportName,
-                                             ImportsHints, ModuleHints (..))
 import LunaStudio.Data.Port                 (InPortId, InPortIndex (..),
                                              getPortNumber)
 import LunaStudio.Data.PortDefault          (PortDefault)
@@ -113,6 +111,9 @@ import LunaStudio.Data.PortRef              (AnyPortRef (..), InPortRef (..),
                                              OutPortRef (..))
 import LunaStudio.Data.Position             (Position)
 import LunaStudio.Data.Range                (Range (..))
+import LunaStudio.Data.Searcher.Node        (ClassHints (..), LibrariesHintsMap,
+                                             LibraryHints (LibraryHints),
+                                             LibraryName)
 
 
 addImports :: GraphLocation -> Set Text -> Empire ()
@@ -497,7 +498,7 @@ addPortNoTC loc (OutPortRef nl pid) name = runASTOp $ do
     let nid      = convert nl
         position = getPortNumber (pid)
     (inE, _) <- GraphBuilder.getEdgePortMapping
-    when (inE /= nid) $ throwM NotInputEdgeException
+    when (inE /= nid) $ throwM $ NotInputEdgeException inE nid
     ref <- ASTRead.getCurrentASTTarget
     ASTBuilder.detachNodeMarkersForArgs ref
     ids      <- uses Graph.breadcrumbHierarchy BH.topLevelIDs
@@ -646,7 +647,7 @@ removePort loc portRef = do
         ASTBuilder.detachNodeMarkersForArgs ref
         (inE, _) <- GraphBuilder.getEdgePortMapping
         if nodeId == inE then ASTModify.removeLambdaArg (portRef ^. PortRef.srcPortId) ref
-                         else throwM NotInputEdgeException
+                         else throwM $ NotInputEdgeException inE nodeId
         newLam <- ASTRead.getCurrentASTTarget
         ASTBuilder.attachNodeMarkersForArgs nodeId [] newLam
         GraphBuilder.buildInputSidebar nodeId
@@ -659,7 +660,7 @@ movePort loc portRef newPosition = do
         ref        <- ASTRead.getCurrentASTTarget
         (input, _) <- GraphBuilder.getEdgePortMapping
         if nodeId == input then ASTModify.moveLambdaArg (portRef ^. PortRef.srcPortId) newPosition ref
-                           else throwM NotInputEdgeException
+                           else throwM $ NotInputEdgeException input nodeId
         ref        <- ASTRead.getCurrentASTTarget
         ASTBuilder.attachNodeMarkersForArgs nodeId [] ref
         GraphBuilder.buildInputSidebar nodeId
@@ -672,7 +673,7 @@ renamePort loc portRef newName = do
         ref        <- ASTRead.getCurrentASTTarget
         (input, _) <- GraphBuilder.getEdgePortMapping
         if nodeId == input then ASTModify.renameLambdaArg (portRef ^. PortRef.srcPortId) (Text.unpack newName) ref
-                           else throwM NotInputEdgeException
+                           else throwM $ NotInputEdgeException input nodeId
         GraphBuilder.buildInputSidebar nodeId
     resendCode loc
 
@@ -687,7 +688,7 @@ getPortName loc portRef = do
         portsNames <- GraphBuilder.getPortsNames ref Nothing
         if nodeId == input
             then maybe (throwM $ PortDoesNotExistException portId) (return . convert) $ Safe.atMay portsNames arg
-            else throwM NotInputEdgeException
+            else throwM $ NotInputEdgeException input nodeId
 
 setNodeExpression :: GraphLocation -> NodeId -> Text -> Empire Node.Node
 setNodeExpression loc@(GraphLocation file _) nodeId expr' = do
@@ -1390,7 +1391,7 @@ getImportsInFile = do
     imports <- matchUnit unit
     return $ catMaybes imports
 
-getAvailableImports :: GraphLocation -> Empire (Set ImportName)
+getAvailableImports :: GraphLocation -> Empire (Set LibraryName)
 getAvailableImports gl = withUnit pureGl mkImports where
     pureGl = GraphLocation (gl ^. GraphLocation.filePath) mempty
     implicitImports = [nativeModuleName, "Std.Base"]
@@ -1407,10 +1408,11 @@ classToHints (Class.Class constructors methods _)
 isPublicMethod :: IR.Name -> Bool
 isPublicMethod (nameToString -> n) = Safe.headMay n /= Just '_'
 
-importsToHints :: Unit.Unit -> ModuleHints
-importsToHints (Unit.Unit definitions classes) = ModuleHints funHints (Map.mapKeys convert classHints)
-    where
-        funHints   = (convert *** (fromMaybe "" . view Def.documentation)) <$> Map.toList (unwrap definitions)
+importsToHints :: Unit.Unit -> LibraryHints
+importsToHints (Unit.Unit definitions classes)
+    = LibraryHints funHints $ Map.mapKeys convert classHints where
+        funHints   = (convert *** (fromMaybe "" . view Def.documentation))
+            <$> Map.toList (unwrap definitions)
         classHints = (classToHints . view Def.documented) <$> classes
 
 data ModuleCompilationException = ModuleCompilationException ModLoader.UnitLoadingError
@@ -1436,7 +1438,7 @@ getImportPaths (GraphLocation file _) = do
     importPaths     <- Package.packageImportPaths currentProjPath
     return $ map (view _2) importPaths
 
-getSearcherHints :: GraphLocation -> Empire ImportsHints
+getSearcherHints :: GraphLocation -> Empire LibrariesHintsMap
 getSearcherHints loc = do
     importPaths     <- liftIO $ getImportPaths loc
     availableSource <- liftIO $ forM importPaths $ \path -> do
@@ -1584,9 +1586,9 @@ makeWhole srcAst dst = do
         dstPointer <- ASTRead.getASTPointer dst
         Code.gossipLengthsChangedBy lenDiff dstPointer
 
-prepareGraphError :: SomeException -> ErrorAPI.Error ErrorAPI.GraphError
-prepareGraphError e | Just (BH.BreadcrumbDoesNotExistException content) <- fromException e = ErrorAPI.Error ErrorAPI.BreadcrumbDoesNotExist . convert $ show content
-                    | otherwise                                                            = ErrorAPI.Error ErrorAPI.OtherGraphError        . convert $ displayException e
+prepareGraphError :: SomeException -> IO (ErrorAPI.Error ErrorAPI.GraphError)
+prepareGraphError e | Just (BH.BreadcrumbDoesNotExistException content) <- fromException e = pure $ ErrorAPI.Error ErrorAPI.BreadcrumbDoesNotExist . convert $ show content
+                    | otherwise                                                            = pure . ErrorAPI.Error ErrorAPI.OtherGraphError        . convert =<< prettyException e
 
 prettyException :: Exception e => e -> IO String
 prettyException e = do
@@ -1594,7 +1596,9 @@ prettyException e = do
     return $ displayException e ++ "\n" ++ renderStack stack
 
 prepareLunaError :: SomeException -> IO (ErrorAPI.Error ErrorAPI.LunaError)
-prepareLunaError e = case prepareGraphError e of
-    ErrorAPI.Error ErrorAPI.OtherGraphError _ -> (ErrorAPI.Error ErrorAPI.OtherLunaError . convert) <$> prettyException e
-    ErrorAPI.Error tpe content                -> return $ ErrorAPI.Error (ErrorAPI.Graph tpe) content
+prepareLunaError e = do
+    err <- prepareGraphError e
+    case err of
+        ErrorAPI.Error ErrorAPI.OtherGraphError _ -> (ErrorAPI.Error ErrorAPI.OtherLunaError . convert) <$> prettyException e
+        ErrorAPI.Error tpe content                -> return $ ErrorAPI.Error (ErrorAPI.Graph tpe) content
 

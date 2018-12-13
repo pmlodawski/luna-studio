@@ -1,28 +1,35 @@
 module NodeEditor.Action.Batch  where
 
-import           Common.Action.Command               (Command)
-import           Common.Prelude
-import           Data.Map                            (Map)
+import Common.Prelude
+import Prelude (error)
+
 import qualified Data.Map                            as Map
-import           Data.Set                            (Set)
 import qualified Data.Set                            as Set
-import           Data.UUID.Types                     (UUID)
-import           LunaStudio.Data.Connection          (Connection)
-import           LunaStudio.Data.GraphLocation       (GraphLocation)
-import           LunaStudio.Data.NodeMeta            (NodeMeta)
-import           LunaStudio.Data.NodeSearcher        (ImportName)
-import           LunaStudio.Data.PortDefault         (PortDefault)
-import           LunaStudio.Data.PortRef             (AnyPortRef (InPortRef', OutPortRef'), InPortRef (InPortRef), OutPortRef (OutPortRef),
-                                                      dstNodeLoc, nodeLoc)
-import           LunaStudio.Data.Position            (Position)
-import           LunaStudio.Data.Project             (LocationSettings)
-import           NodeEditor.Action.State.App         (getWorkspace)
-import           NodeEditor.Action.UUID              (registerRequest)
+import qualified LunaStudio.API.Graph.AddConnection  as AddConnection
+import qualified LunaStudio.API.Graph.SetNodesMeta   as SetNodesMeta
 import qualified NodeEditor.Batch.Connector.Commands as BatchCmd
-import           NodeEditor.Batch.Workspace          (Workspace)
-import           NodeEditor.React.Model.Connection   (ConnectionId)
-import           NodeEditor.React.Model.Node         (ExpressionNode, NodeLoc)
-import           NodeEditor.State.Global             (State, backend, clientId)
+
+import Common.Action.Command             (Command)
+import Data.Map                          (Map)
+import Data.Set                          (Set)
+import Data.UUID.Types                   (UUID)
+import LunaStudio.Data.Connection        (Connection)
+import LunaStudio.Data.GraphLocation     (GraphLocation)
+import LunaStudio.Data.NodeMeta          (NodeMeta)
+import LunaStudio.Data.PortDefault       (PortDefault)
+import LunaStudio.Data.PortRef           (AnyPortRef (InPortRef', OutPortRef'),
+                                          InPortRef (InPortRef),
+                                          OutPortRef (OutPortRef), dstNodeLoc,
+                                          nodeLoc)
+import LunaStudio.Data.Position          (Position)
+import LunaStudio.Data.Project           (LocationSettings)
+import LunaStudio.Data.Searcher.Node     (LibraryName)
+import NodeEditor.Action.State.App       (getWorkspace)
+import NodeEditor.Action.UUID            (registerRequest)
+import NodeEditor.Batch.Workspace        (Workspace)
+import NodeEditor.React.Model.Connection (ConnectionId)
+import NodeEditor.React.Model.Node       (ExpressionNode, NodeLoc)
+import NodeEditor.State.Global           (State, backend, clientId)
 
 
 withWorkspace :: (Workspace -> UUID -> Maybe UUID -> IO ()) -> Command State ()
@@ -71,10 +78,23 @@ addConnection src dst = do
     collaborativeModify [nl]
     withWorkspace $ BatchCmd.addConnection src dst
 
-addImport :: ImportName -> Command State ()
+addConnectionRequest :: Either OutPortRef NodeLoc -> Either AnyPortRef NodeLoc
+    -> Command State AddConnection.Request
+addConnectionRequest src dst = do
+    let nl = case dst of
+            Left (OutPortRef' (OutPortRef nl' _)) -> nl'
+            Left (InPortRef'  (InPortRef  nl' _)) -> nl'
+            Right nl'                             -> nl'
+    collaborativeModify [nl]
+    mayWorkspace <- getWorkspace
+    case mayWorkspace of
+        Just w -> pure $ BatchCmd.addConnectionRequest src dst w
+        _      -> error "no workspace"
+
+addImport :: LibraryName -> Command State ()
 addImport = addImports . Set.singleton
 
-addImports :: Set ImportName -> Command State ()
+addImports :: Set LibraryName -> Command State ()
 addImports = withWorkspace . BatchCmd.addImports
 
 addNode :: NodeLoc -> Text -> NodeMeta -> Maybe NodeLoc -> Command State ()
@@ -108,6 +128,13 @@ getSubgraph nl = withWorkspace (BatchCmd.getSubgraph nl)
 movePort :: OutPortRef -> Int -> Command State ()
 movePort = withWorkspace .: BatchCmd.movePort
 
+moveNodeRequest :: Map NodeLoc NodeMeta -> Command State SetNodesMeta.Request
+moveNodeRequest updates = do
+    mayWorkspace <- getWorkspace
+    case mayWorkspace of
+        Just w -> pure $ BatchCmd.setNodesMetaRequest updates w
+        _      -> error "no workspace"
+
 redo :: Command State ()
 redo = withUUID BatchCmd.redo
 
@@ -135,7 +162,7 @@ paste = withWorkspace .: BatchCmd.paste
 saveSettings :: LocationSettings -> Command State ()
 saveSettings = withWorkspace . BatchCmd.saveSettings
 
-searchNodes :: Set ImportName -> Command State ()
+searchNodes :: Set LibraryName -> Command State ()
 searchNodes = withWorkspace . BatchCmd.searchNodes
 
 setNodeExpression :: NodeLoc -> Text -> Command State ()

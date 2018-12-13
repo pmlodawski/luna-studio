@@ -1,34 +1,32 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 module NodeEditor.State.Global where
 
-import           Common.Action.Command                    (Command)
-import           Common.Debug                             (HasRequestTimes,
-                                                           requestTimes)
-import           Common.Prelude
-import           Data.HashMap.Lazy                        (HashMap)
-import           Data.Map                                 (Map)
-import           Data.Set                                 (Set)
-import           Data.Time.Clock                          (UTCTime)
-import           Data.UUID.Types                          (UUID)
-import           Data.Word                                (Word8)
-import           LunaStudio.API.Graph.CollaborationUpdate (ClientId)
-import           LunaStudio.Data.NodeLoc                  (NodeLoc)
-import           LunaStudio.Data.NodeSearcher             (NodeSearcherData)
-import           LunaStudio.Data.TypeRep                  (TypeRep)
-import           NodeEditor.Event.Event                   (Event)
-import qualified NodeEditor.React.Model.App               as App
-import           NodeEditor.React.Model.NodeEditor        (NodeEditor)
-import           NodeEditor.React.Model.Visualization     (Visualizer,
-                                                           VisualizerId,
-                                                           VisualizerMatcher,
-                                                           VisualizerPath)
-import           NodeEditor.State.Action                  (ActionRep, Connect,
-                                                           SomeAction)
-import qualified NodeEditor.State.Collaboration           as Collaboration
-import qualified NodeEditor.State.UI                      as UI
-import           System.Random                            (StdGen)
-import qualified System.Random                            as Random
+import Common.Prelude
+
+import qualified NodeEditor.React.Model.App     as App
+import qualified NodeEditor.State.Collaboration as Collaboration
+import qualified NodeEditor.State.UI            as UI
+import qualified System.Random                  as Random
+
+import Common.Action.Command                    (Command)
+import Common.Debug                             (HasRequestTimes, requestTimes)
+import Data.HashMap.Lazy                        (HashMap)
+import Data.Map                                 (Map)
+import Data.Set                                 (Set)
+import Data.Time.Clock                          (UTCTime)
+import Data.UUID.Types                          (UUID)
+import Data.Word                                (Word8)
+import LunaStudio.API.Graph.CollaborationUpdate (ClientId)
+import LunaStudio.Data.NodeLoc                  (NodeLoc)
+import LunaStudio.Data.Searcher.Node            (NodeSearcherData)
+import LunaStudio.Data.TypeRep                  (TypeRep)
+import NodeEditor.Event.Event                   (Event)
+import NodeEditor.React.Model.App               (App)
+import NodeEditor.React.Model.NodeEditor        (NodeEditor)
+import NodeEditor.React.Model.Visualization     (Visualizer, VisualizerId,
+                                                 VisualizerMatcher,
+                                                 VisualizerPath)
+import NodeEditor.State.Action                  (ActionRep, Connect, SomeAction)
+import System.Random                            (StdGen)
 
 
 -- TODO: Reconsider our design. @wdanilo says that we shouldn't use MonadState at all

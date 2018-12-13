@@ -44,7 +44,8 @@ def build_runner(args):
 def build_backend(args):
     with working_directory(backend_dir):
         subprocess.check_output(['stack', 'build', 'luna-empire', '--test', '--no-run-tests'])
-        subprocess.check_output(['stack', 'build'] + args)
+        sys_opts = ['--ghc-options=-fexternal-interpreter'] if system.windows() else []
+        subprocess.check_output(['stack', 'build'] + sys_opts + args)
 
 def mv_runner(runner):
     if system.windows():

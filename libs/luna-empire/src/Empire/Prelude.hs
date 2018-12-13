@@ -1,7 +1,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 
 module Empire.Prelude (
-  module X, nameToString, nameToText, pathNameToString, stringToName, (<?!>),
+  module X, nameToString, nameToText, stringToName, (<?!>),
   -- lens
   use, preuse, (?=), (.=), (%=), to, _Just, (?~), makeWrapped, makePrisms, zoom,
   -- luna compat
@@ -65,66 +65,48 @@ module Empire.Prelude (
   toNodeMeta, fromNodeMeta, toPortMarker, fromPortMarker
   ) where
 
-import qualified Control.Monad.State.Layered as Layered
-import qualified Data.Convert                as Convert
-import qualified Data.Text                   as Text
-import qualified Data.Typeable               as Typeable
--- import qualified Data.PtrList.Mutable as PtrList
 import qualified Data.Graph.Data.Component.Set as PtrSet
-import qualified Data.PtrSet.Mutable           as PtrSet
--- import qualified Data.Graph.Component.Container as PtrSet
 import qualified Data.Graph.Data.Component.Vector as PtrList
-import qualified Data.Set                         as Set
-import qualified Data.Text.Span                   as Span
--- import qualified Data.Graph.Component as Component
+import qualified Data.Text.Span as Span
+import qualified Data.Set as Set
+import qualified Data.Graph.Component.Node.Class    as Node
+import qualified Data.Graph.Data.Layer.Class as Layer
+import qualified Data.Graph.Data.Layer.Layout as Layout
 import qualified Data.Graph.Component.Edge.Destruction as DestructEdge
 import qualified Data.Graph.Component.Node.Class       as Node
 import qualified Data.Graph.Component.Node.Destruction as Destruct
-import qualified Data.Graph.Component.Node.Layer       as Layer
-import qualified Data.Graph.Data.Layer.Class           as Layer
-import qualified Data.Graph.Data.Layer.Layout          as Layout
-import qualified Data.Mutable.Class                    as Mutable
--- import qualified OCI.Pass.Registry as Registry
-import qualified Data.Generics.Traversable.Deriving     as GTraversable
-import qualified Data.Graph.Component.Edge              as Edge
+
+import qualified Data.Mutable.Class as Mutable
+import qualified Luna.IR as IR
+import OCI.IR.Link.Class (type (*-*), Links)
+import OCI.IR.Term.Class (Term, Terms)
+import qualified Luna.IR.Term.Core as Ast
+import qualified Luna.IR.Term.Literal as Ast
+import qualified Luna.IR.Term.Ast.Class as Ast
+import Data.Graph.Data.Component.Class (Component)
+import qualified Data.Graph.Data.Component.Class as Component
+import qualified Data.Graph.Transform.Substitute as Substitute
+import qualified Data.Graph.Data.Component.List as List (ComponentList(..))
+import qualified Data.Graph.Component.Edge as Edge
 import qualified Data.Graph.Component.Edge.Construction as Construction
-import           Data.Graph.Data.Component.Class        (Component)
-import qualified Data.Graph.Data.Component.Class        as Component
-import qualified Data.Graph.Data.Component.List         as List (ComponentList (..))
-import qualified Data.Graph.Fold.SubComponents          as Traversal
-import qualified Data.Graph.Transform.Substitute        as Substitute
-import qualified Data.Mutable.Class                     as Foreign
-import           Foreign.Info.ByteSize                  (ByteSize)
-import           Foreign.Memory.Pool                    (MemPool)
-import qualified Luna.IR                                as IR
-import qualified Luna.IR.Term.Ast.Class                 as Ast
-import qualified Luna.IR.Term.Core                      as Ast
-import qualified Luna.IR.Term.Literal                   as Ast
-import           Luna.Pass                              (Pass)
-import qualified Luna.Pass.Attr                         as Attr
-import           Luna.Pass.Data.Layer.NodeMeta          (Meta,
-                                                         NodeMetaLike (..))
-import qualified Luna.Pass.Data.Layer.NodeMeta          as NM
-import           Luna.Pass.Data.Layer.PortMarker        (OutPortRefLike (..),
-                                                         PortMarker)
-import           Luna.Syntax.Text.Parser.State.Marker   (TermMap (..))
-import           LunaStudio.Data.Port                   (AnyPortId (..),
-                                                         InPortId, OutPortId,
-                                                         OutPortIndex (Projection))
-import           OCI.IR.Link.Class                      (type (*-*), Links)
-import           OCI.IR.Term.Class                      (Term, Terms)
-import           System.IO.Unsafe                       (unsafePerformIO)
+import Luna.Syntax.Text.Parser.State.Marker (TermMap(..))
+import Luna.Pass (Pass)
+import qualified Luna.Pass.Attr as Attr
+import qualified Data.Mutable.Class as Foreign
+import           LunaStudio.Data.Port    (OutPortIndex(Projection))
+import Luna.Pass.Data.Layer.PortMarker (OutPortRefLike(..))
+import Luna.Pass.Data.Layer.NodeMeta (NodeMetaLike(..))
+import qualified Luna.Pass.Data.Layer.NodeMeta as NM
 
-import Data.UUID                  (UUID (..))
-import LunaStudio.Data.NodeMeta   (NodeMeta (..))
-import LunaStudio.Data.PortRef    (OutPortRef (..))
-import LunaStudio.Data.Position   (Position (..))
-import LunaStudio.Data.Vector2    (Vector2 (..))
-import LunaStudio.Data.Visualizer (VisualizerId (..), VisualizerType (..))
+import LunaStudio.Data.PortRef (OutPortRef(..))
+import LunaStudio.Data.NodeMeta (NodeMeta(..))
+import LunaStudio.Data.Position (Position(..))
+import LunaStudio.Data.Vector2 (Vector2(..))
 
-import Control.Lens        (makePrisms, makeWrapped, mapMOf, preuse, to, use,
-                            zoom, (%=), (.=), (?=), (?~), _Just)
-import Control.Monad       as X (forM, mapM, mapM_, return, when)
+import Control.Lens ((?=), (.=), (%=), to, makeWrapped, makePrisms, use, preuse,
+                     _Just, (?~), zoom, mapMOf)
+import Prologue as X hiding (TypeRep, head, tail, init, last, return, liftIO, fromMaybe, fromJust, when, mapM, mapM_, minimum)
+import Control.Monad       as X (return, when, mapM, mapM_, forM)
 import Control.Monad.Trans as X (liftIO)
 import Data.List           as X (head, init, last, minimum, sort, tail)
 import Data.Maybe          as X (fromJust, fromMaybe)
@@ -143,9 +125,6 @@ nameToString = convertTo @String
 nameToText :: IR.Name -> Text
 nameToText = convert . convertTo @String
 
--- pathNameToString :: IR.QualName -> String
-pathNameToString = error "pathNameToString"
-
 stringToName :: String -> IR.Name
 stringToName = convert
 
@@ -158,9 +137,6 @@ getLayer = Layer.read @layer
 modifyLayer_ :: forall layer t layout m. (Layer.Reader t layer m, Layer.Writer t layer m) => t layout -> (Layer.Data layer layout -> Layer.Data layer layout) -> m ()
 modifyLayer_ comp f = getLayer @layer comp >>= putLayer @layer comp . f
 
-
-getTypeDesc_ :: forall a. (KnownType a, Typeable a) => Typeable.TypeRep
-getTypeDesc_ = Typeable.typeRep (Proxy @a)
 
 type AnyExpr = Terms
 type AnyExprLink = Links
@@ -256,7 +232,7 @@ narrowTerm e = return $ Just (coerce e)
 --           ) => Node.Node layout -> m ()
 deepDelete e = Destruct.deleteSubtree e
 deepDeleteWithWhitelist :: forall m layout. Destruct.DeleteSubtree m => Node.Node layout -> Set.Set Node.Some -> m ()
-deepDeleteWithWhitelist e set = Destruct.deleteSubtreeWithWhitelist set e
+deepDeleteWithWhitelist = flip Destruct.deleteSubtreeWithWhitelist
 
 
 link :: Construction.Creator m => Term src -> Term tgt -> m (Link src tgt)
@@ -268,11 +244,7 @@ compListToList :: List.ComponentList a -> [Component.Some a]
 compListToList List.Nil        = []
 compListToList (List.Cons a l) = a : compListToList l
 
--- inputs :: ( Layer.Reader Node.Node IR.Model m
---           , Layer.IsUnwrapped Node.Uni
---           , Traversal.SubComponents Edge.Edges m (Node.Uni layout)
---           , MonadIO m
---           ) => Node.Node layout -> m [Component.Some Edge.Edges]
+inputs :: Layer.Reader Node.Node IR.Model f => Node.Node layout -> f [Component.Some Edge.Edges]
 inputs ref = compListToList <$> IR.inputs ref
 
 fromNodeMeta :: MonadIO m => NodeMeta -> m NodeMetaLike

@@ -22,15 +22,13 @@ default-extensions:
   - NoImplicitPrelude
   - ScopedTypeVariables
   - TemplateHaskell
+  - TypeApplications
 
 ghc-options:
-    - -O2
-    - -Wall
-    # - -DDEBUG_PERF
+  - -O2
+  - -Wall
+  # - -DDEBUG_PERF
 
-#
-# ACHTUNG! Zmieniasz tu - zmien w interactive
-#
 dependencies:
   - "base >= 4.9 && < 4.10"
   - aeson
@@ -51,6 +49,7 @@ dependencies:
   - text-processing
   - time
   - transformers
+  - uuid
   - uuid-types
   - vector-text
 
