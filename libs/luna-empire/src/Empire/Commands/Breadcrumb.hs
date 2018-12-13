@@ -372,7 +372,6 @@ zoomBreadcrumb' breadcrumb@(Breadcrumb (Definition uuid : rest)) actG _actC = do
         Graph.ClassDefinition _    ->
             case rest of
                 Definition funUUID : rest' ->
-                    let prism a = Graph._ClassDefinition (Graph.classMethods (ix funUUID a))
-                    in withRootedFunction uuid prism $ runInternalBreadcrumb (Breadcrumb rest') actG
+                    withRootedFunction uuid (Graph._ClassDefinition . Graph.classMethods . ix funUUID) $ runInternalBreadcrumb (Breadcrumb rest') actG
                 rest' -> (print =<< use Graph.code) >> error "foo"
 zoomBreadcrumb' breadcrumb _ _ = throwM $ BH.BreadcrumbDoesNotExistException breadcrumb
