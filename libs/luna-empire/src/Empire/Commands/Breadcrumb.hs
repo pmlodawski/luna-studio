@@ -10,7 +10,7 @@ module Empire.Commands.Breadcrumb where
 import           Empire.Prelude
 
 import           Control.Exception.Safe          (handle)
-import           Control.Lens                    (Prism')
+import           Control.Lens                    (Prism', imap, (^?!))
 import           Control.Monad                   (forM)
 import           Control.Monad.Except            (throwError)
 import           Control.Monad.Reader            (ask)
@@ -149,14 +149,16 @@ makeGraphCls fun lastUUID = do
         Graph.userState . Graph.clsNodeCache .= updatedCache
         return (uuid, graph)
     else do
-        (className, ref, fileOffset) <- runASTOp $ do
+        (className, ref, fileOffset, meths) <- runASTOp $ do
             putLayer @Marker fun . Just =<< toPortMarker (OutPortRef (convert uuid) [])
             asgFun    <- ASTRead.cutThroughDocAndMarked fun
             matchExpr asgFun $ \case
-                ClsASG _ n _ _ _ -> do
+                ClsASG _ n _ _ decls -> do
                     offset <- functionBlockStartRef asgFun
-                    return (nameToString n, asgFun, offset)
-        let graph = Graph.ClassDefinition (Graph.ClassGraph className Map.empty)
+                    meths <- ptrListToList decls >>= mapM source
+                    return (nameToString n, asgFun, offset, meths)
+        mets <- forM meths $ \a -> makeGraphCls a Nothing
+        let graph = Graph.ClassDefinition (Graph.ClassGraph className (Map.fromList $ map (over _2 (^?! Graph._FunctionDefinition)) mets))
         Graph.userState . Graph.clsFuns . at uuid ?= graph
         return (uuid, graph)
 
@@ -276,7 +278,8 @@ zoomBreadcrumb = zoomCommand Library.body .:. zoomBreadcrumb' -- where
     --     = throwM $ BH.BreadcrumbDoesNotExistException breadcrumb
 
 
-withRootedFunction :: NodeId -> Prism' Graph.TopLevelGraph Graph.FunctionGraph -> Command Graph.Graph a -> Command Graph.ClsGraph a
+withRootedFunction :: NodeId -> Prism' Graph.TopLevelGraph Graph.FunctionGraph
+    -> Command Graph.Graph a -> Command Graph.ClsGraph a
 withRootedFunction uuid funLens act = do
     graph    <- preuse (Graph.userState . Graph.clsFuns . ix uuid . funLens . Graph.funGraph) <?!> BH.BreadcrumbDoesNotExistException (Breadcrumb [Definition uuid])
     env      <- ask
@@ -364,11 +367,12 @@ zoomBreadcrumb' breadcrumb@(Breadcrumb (Definition uuid : rest)) actG _actC = do
     topLvlGraph <- preuse (Graph.userState . Graph.clsFuns . ix uuid)
         <?!> BH.BreadcrumbDoesNotExistException (Breadcrumb [Definition uuid])
     case topLvlGraph of
-        -- Graph.ClassDefinition _    ->
-        --     case rest of
-        --         Definition funUUID : rest' -> withRootedFunction uuid (Graph._ClassDefinition . Graph.classMethods . ix funUUID) $
-        --             runInternalBreadcrumb (Breadcrumb rest') actG
-        --         rest' -> (print =<< use Graph.code) >> error "foo"
-        Graph.FunctionDefinition _ -> withRootedFunction uuid (Graph._FunctionDefinition) $
+        Graph.FunctionDefinition _ -> withRootedFunction uuid (Graph._FunctionDefinition :: Prism' Graph.TopLevelGraph Graph.FunctionGraph) $
             runInternalBreadcrumb (Breadcrumb rest) actG
+        Graph.ClassDefinition _    ->
+            case rest of
+                Definition funUUID : rest' ->
+                    let prism a = Graph._ClassDefinition (Graph.classMethods (ix funUUID a))
+                    in withRootedFunction uuid prism $ runInternalBreadcrumb (Breadcrumb rest') actG
+                rest' -> (print =<< use Graph.code) >> error "foo"
 zoomBreadcrumb' breadcrumb _ _ = throwM $ BH.BreadcrumbDoesNotExistException breadcrumb

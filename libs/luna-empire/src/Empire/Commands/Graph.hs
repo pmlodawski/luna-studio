@@ -1036,19 +1036,37 @@ resolveRedirection loc@(GraphLocation file (Breadcrumb bc)) =
                 (redirection:_) -> (Just redirection, coerce $ reverse end)
     in case afterRedirect of
         (Nothing, b) -> return loc
-        (Just (Redirection nodeId mod fun), bc) -> do
-            visibleImports <- fileImportPaths file
-            let pathToOpen = visibleImports ^. at (convertVia @String mod)
-            case pathToOpen of
-                Just path -> do
-                    lib <- getLibrary file mod
-                    let funs = lib ^. Library.body . Graph.clsFuns
-                        funGraph = find (\a -> a ^. _2 . Graph._FunctionDefinition . Graph.funName == convert fun) $ Map.toList funs
-                    case funGraph of
-                        Just (funId, _) -> return $
-                            GraphLocation path (coerce $ Definition funId : bc)
-                        _               -> error $ "resolveRedirection1: " <> show funs
-                _         -> error $ "resolveRedirection2: " <> show bc
+        (Just (Redirection nodeId tgt), bc) -> case tgt of
+            Breadcrumb.Function mod fun -> do
+                visibleImports <- fileImportPaths file
+                let pathToOpen = visibleImports ^. at (convertVia @String mod)
+                case pathToOpen of
+                    Just path -> do
+                        lib <- getLibrary file mod
+                        let funs = lib ^. Library.body . Graph.clsFuns
+                            funGraph = find (\a -> a ^. _2 . Graph._FunctionDefinition . Graph.funName == convert fun) $ Map.toList funs
+                        case funGraph of
+                            Just (funId, _) -> return $
+                                GraphLocation path (coerce $ Definition funId : bc)
+                            _               -> error $ "resolveRedirection1: " <> show funs
+                    _         -> error $ "resolveRedirection2: " <> show bc
+            Breadcrumb.Method mod cls met -> do
+                visibleImports <- fileImportPaths file
+                let pathToOpen = visibleImports ^. at (convertVia @String mod)
+                case pathToOpen of
+                    Just path -> do
+                        lib <- getLibrary file mod
+                        let funs = lib ^. Library.body . Graph.clsFuns :: Map NodeId Graph.TopLevelGraph
+                            funGraph = find (\a -> a ^. _2 . Graph._ClassDefinition . Graph.className == convert cls) $ Map.toList funs
+                        case funGraph of
+                            Just (funId, clsGraph) -> do
+                                let fun = find (\a -> a ^. _2 . Graph.funName == convert met) $ Map.toList $ clsGraph ^?! Graph._ClassDefinition . Graph.classMethods
+                                case fun of
+                                    Just (funId2, _) -> return $
+                                        GraphLocation path (coerce $ Definition funId : Definition funId2 : coerce bc)
+                            _ -> error $ "resolveRedirection3: " <> show bc
+                    _         -> error $ "resolveRedirection2: " <> show bc
+
 
 withBreadcrumb :: GraphLocation -> Command Graph.Graph a -> Command Graph.ClsGraph a -> Empire a
 withBreadcrumb (GraphLocation file breadcrumb) actG actC = do
@@ -1059,32 +1077,83 @@ withBreadcrumb (GraphLocation file breadcrumb) actG actC = do
                 (redirection:_) -> (Just redirection, coerce $ reverse end)
     case afterRedirect of
         (Nothing, b) -> Library.withLibrary file $ zoomBreadcrumb breadcrumb actG actC
-        (Just red@(Redirection nodeId mod fun), bc) -> do
-            active        <- use $ Graph.userState . activeFiles
-            let libOpened  = find (\a -> a ^. Library.name == Just mod) $ Map.elems active
-            case libOpened of
-                Just f -> do
-                    let funs = f ^. Library.body . Graph.clsFuns
-                        funGraph = find (\a -> a ^. _2 . Graph._FunctionDefinition . Graph.funName == convert fun) $ Map.toList funs
-                    case funGraph of
-                        Just (funId, _) -> Library.withLibrary (f ^. Library.path) $
-                            zoomBreadcrumb (coerce $ Definition funId : coerce bc) actG actC
-                        _ -> throwM $ BH.BreadcrumbDoesNotExistException breadcrumb
-                _      -> do
-                    visibleImports <- fileImportPaths file
-                    let pathToOpen = visibleImports ^. at (convertVia @String mod)
-                    case pathToOpen of
-                        Just path -> do
-                            openFile path
-                            active <- use $ Graph.userState . activeFiles
-                            let Just modOpened  = find (\a -> a ^. Library.path == path) $ Map.elems active
-                            let funs = modOpened ^. Library.body . Graph.clsFuns
-                                funGraph = find (\a -> a ^. _2 . Graph._FunctionDefinition . Graph.funName == convert fun) $ Map.toList funs
-                            case funGraph of
-                                Just (funId, _) -> Library.withLibrary path $
-                                    zoomBreadcrumb (coerce $ Definition funId : coerce bc) actG actC
-                                _ -> error $ "dupa2 " <> show funs <> show fun
-                        _ -> error $ "dupa: " <> show visibleImports <> " " <> show red
+        (Just red@(Redirection nodeId tgt), bc) -> case tgt of
+            Breadcrumb.Method mod cls met -> do
+                active        <- use $ Graph.userState . activeFiles
+                let libOpened  = find (\a -> a ^. Library.name == Just mod) $ Map.elems active
+                case libOpened of
+                    Just f -> do
+                        let funs = f ^. Library.body . Graph.clsFuns :: Map NodeId Graph.TopLevelGraph
+                            funGraph = find (\a -> a ^. _2 . Graph._ClassDefinition . Graph.className == convert cls) $ Map.toList funs
+                        case funGraph of
+                            Just (_, clsGraph) -> do
+                                let fun = find (\a -> a ^. _2 . Graph.funName == convert met) $ Map.toList $ clsGraph ^?! Graph._ClassDefinition . Graph.classMethods
+                                case fun of
+                                    Just (funId, _) -> Library.withLibrary (f ^. Library.path) $
+                                        zoomBreadcrumb (coerce $ Definition funId : coerce bc) actG actC
+                            _ -> throwM $ BH.BreadcrumbDoesNotExistException breadcrumb
+                    _      -> do
+                        -- error "dupa4"
+                        visibleImports <- fileImportPaths file
+                        let pathToOpen = visibleImports ^. at (convertVia @String mod)
+                        case pathToOpen of
+                            Just path -> do
+                                openFile path
+                                active        <- use $ Graph.userState . activeFiles
+                                let libOpened  = find (\a -> a ^. Library.name == Just mod) $ Map.elems active
+                                case libOpened of
+                                    Just f -> do
+                                        let funs = f ^. Library.body . Graph.clsFuns :: Map NodeId Graph.TopLevelGraph
+                                            funGraph = find (\a -> a ^. _2 . Graph._ClassDefinition . Graph.className == convert cls) $ Map.toList funs
+                                        case funGraph of
+                                            Just (_, clsGraph) -> do
+                                                let fun = find (\a -> a ^. _2 . Graph.funName == convert met) $ Map.toList $ clsGraph ^?! Graph._ClassDefinition . Graph.classMethods
+                                                case fun of
+                                                    Just (funId, _) -> Library.withLibrary (f ^. Library.path) $
+                                                        zoomBreadcrumb (coerce $ Definition funId : coerce bc) actG actC
+                                                    _ -> error $ "fun not found: "
+                                                        <> show (clsGraph ^.. Graph._ClassDefinition . Graph.classMethods . traverse . Graph.funName)
+                                                        <> " " <> show mod
+                                                        <> " " <> show cls
+                                                        <> " " <> show met
+                                                        <> " " <> show clsGraph
+                                            _ -> throwM $ BH.BreadcrumbDoesNotExistException breadcrumb
+                        --         active <- use $ Graph.userState . activeFiles
+                        --         let Just modOpened  = find (\a -> a ^. Library.path == path) $ Map.elems active
+                        --         let funs = modOpened ^. Library.body . Graph.clsFuns
+                        --             funGraph = find (\a -> a ^. _2 . Graph._ClassDefinition . Graph.classMethods . traverse . Graph.funName == convert fun) $ Map.toList funs
+                        --         case funGraph of
+                        --             Just (funId, _) -> Library.withLibrary path $
+                        --                 zoomBreadcrumb (coerce $ Definition funId : coerce bc) actG actC
+                        --             _ -> error $ "dupa2 " <> show funs <> show met
+                            _ -> error $ "dupa: " <> show visibleImports <> " " <> show red
+
+            Breadcrumb.Function mod fun -> do
+                active        <- use $ Graph.userState . activeFiles
+                let libOpened  = find (\a -> a ^. Library.name == Just mod) $ Map.elems active
+                case libOpened of
+                    Just f -> do
+                        let funs = f ^. Library.body . Graph.clsFuns
+                            funGraph = find (\a -> a ^. _2 . Graph._FunctionDefinition . Graph.funName == convert fun) $ Map.toList funs
+                        case funGraph of
+                            Just (funId, _) -> Library.withLibrary (f ^. Library.path) $
+                                zoomBreadcrumb (coerce $ Definition funId : coerce bc) actG actC
+                            _ -> throwM $ BH.BreadcrumbDoesNotExistException breadcrumb
+                    _      -> do
+                        visibleImports <- fileImportPaths file
+                        let pathToOpen = visibleImports ^. at (convertVia @String mod)
+                        case pathToOpen of
+                            Just path -> do
+                                openFile path
+                                active <- use $ Graph.userState . activeFiles
+                                let Just modOpened  = find (\a -> a ^. Library.path == path) $ Map.elems active
+                                let funs = modOpened ^. Library.body . Graph.clsFuns
+                                    funGraph = find (\a -> a ^. _2 . Graph._FunctionDefinition . Graph.funName == convert fun) $ Map.toList funs
+                                case funGraph of
+                                    Just (funId, _) -> Library.withLibrary path $
+                                        zoomBreadcrumb (coerce $ Definition funId : coerce bc) actG actC
+                                    _ -> error $ "dupa2 " <> show funs <> show fun
+                            _ -> error $ "dupa: " <> show visibleImports <> " " <> show red
 
 dumpMetadata :: FilePath -> Empire [MarkerNodeMeta]
 dumpMetadata file = do

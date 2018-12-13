@@ -83,7 +83,7 @@ getBreadcrumbItems item (Breadcrumb bc) = go bc item where
         Just (LambdaChild c) -> LambdaChild c : go crumbs c
         Just (ExprChild   c) -> ExprChild   c : []
         Nothing              -> []
-    go (Redirection id _ _ : crumbs) b = case b ^? children . ix id of
+    go (Redirection id _ : crumbs) b = case b ^? children . ix id of
         Just (LambdaChild c) -> LambdaChild c : go crumbs c
         Just (ExprChild   c) -> ExprChild   c : []
         Nothing              -> []

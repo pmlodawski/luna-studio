@@ -38,6 +38,7 @@ import qualified Luna.Pass.Typing.Data.Target       as Target
 import qualified Luna.Pass.Typing.Typechecker       as TC
 import qualified Luna.Runtime                       as Runtime
 import qualified Luna.Std                           as Std
+import qualified LunaStudio.Data.Breadcrumb         as Breadcrumb
 import qualified LunaStudio.Data.Error              as APIError
 import qualified LunaStudio.Data.GraphLocation      as GraphLocation
 import qualified Memory                             as Memory
@@ -45,7 +46,7 @@ import qualified Path
 
 import Control.Concurrent.Async         (Async)
 import Control.Exception.Safe           (mask_, tryAny)
-import Control.Lens                     (uses)
+import Control.Lens                     (_head, uses)
 import Control.Monad.Reader             (ask, runReaderT)
 import Data.Graph.Component.Node.Class  (Nodes)
 import Data.Graph.Data.Component.Class  (Component (Component))
@@ -64,7 +65,8 @@ import Foreign.Ptr                      (plusPtr)
 import Luna.Pass.Data.Stage             (Stage)
 import Luna.Pass.Evaluation.Data.Scope  (LocalScope)
 import LunaStudio.Data.Breadcrumb       (Breadcrumb (Breadcrumb),
-                                         BreadcrumbItem (Definition))
+                                         BreadcrumbItem (Definition),
+                                         _Definition)
 import LunaStudio.Data.GraphLocation    (GraphLocation (GraphLocation))
 import LunaStudio.Data.NodeValue        (NodeValue (NodeError, NodeValue))
 import LunaStudio.Data.Visualization    (VisualizationValue (StreamDataPoint, StreamStart, Value))
@@ -84,14 +86,28 @@ runTC modName (GraphLocation _ br) = do
             (Set.fromList $ essentialImports <> [modName] <> imps)
         resolver          = mconcat . Map.elems $ relevantResolvers
     zoomCommand Empire.clsGraph $ case br of
-        Breadcrumb (Definition uuid:_) -> do
-            root <- preuse $ Graph.userState . Graph.clsFuns
-                . ix uuid . Graph._FunctionDefinition . Graph.funGraph . Graph.breadcrumbHierarchy . BH.self
-            case root of
-                Just r -> liftScheduler $ do
-                    Prep.preprocessDef resolver r
-                    TC.runTypechecker def r typed
-                _      -> error $ "runTC: wrong breadcrumb " <> show br
+        Breadcrumb (Definition uuid:rest) -> do
+            topLevelGraph <- preuse $ Graph.userState . Graph.clsFuns
+                . ix uuid
+            case topLevelGraph of
+                Just (Graph.FunctionDefinition funGraph) -> do
+                    let root = funGraph ^. Graph.funGraph . Graph.breadcrumbHierarchy . BH.self
+                    liftScheduler $ do
+                        Prep.preprocessDef resolver root
+                        TC.runTypechecker def root typed
+                Just (Graph.ClassDefinition clsGraph) -> do
+                    let meth = rest ^? _head . _Definition
+                    case meth of
+                        Just uuid -> do
+                            let root = clsGraph ^? Graph.classMethods . ix uuid . Graph.funGraph . Graph.breadcrumbHierarchy . BH.self
+                            case root of
+                                Just r -> do
+                                    liftScheduler $ do
+                                        Prep.preprocessDef resolver r
+                                        TC.runTypechecker def r typed
+                                _ -> error $ "runTC: wrong breadcrumb4 " <> show br
+                        _ -> error $ "runTC: wrong breadcrumb3 " <> show br
+                _ -> error $ "runTC: wrong breadcrumb2 " <> show br
             pure ()
         Breadcrumb _                   -> pure ()
  -- do

@@ -88,6 +88,7 @@ data ClassGraph =
       , _classMethods :: Map NodeId FunctionGraph
     } deriving Show
 
+
 data ClsGraph = ClsGraph { _clsClass       :: NodeRef
                          , _clsCodeMarkers :: Map MarkerId NodeRef
                          , _clsCode        :: Text

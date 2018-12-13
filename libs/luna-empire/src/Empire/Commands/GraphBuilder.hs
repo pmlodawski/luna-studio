@@ -271,12 +271,17 @@ buildNodeTypecheckUpdate funResolver nid = do
     ref         <- GraphUtils.getASTTarget  nid
     inPorts     <- buildInPorts nid ref [] aliasPortName (Just funResolver)
     outPorts    <- buildOutPorts root
-    resolvedDef <- extractResolvedDef ref
+    resolvedDef <- extractResolvedDef ref (Just funResolver)
     let breadcrumbToEnter = join $ forM resolvedDef $
-            \(FunctionRef (convertVia @String -> mod) (convert -> name)) ->
-                if mod == "Std.Primitive"
-                then Nothing 
-                else return $ Breadcrumb.Redirection nid mod name
+            \x -> case x of
+                Breadcrumb.Function mod _ ->
+                    if mod == "Std.Primitive"
+                    then Nothing
+                    else return $ Breadcrumb.Redirection nid x
+                Breadcrumb.Method mod _ _ ->
+                    if mod == "Std.Primitive"
+                    then Nothing
+                    else return $ Breadcrumb.Redirection nid x
     pure $ API.ExpressionUpdate nid inPorts outPorts breadcrumbToEnter
 
 getUniName :: NodeRef -> GraphOp (Maybe Text)
@@ -425,25 +430,29 @@ extractAppArgNames node funResolve = go [] node where
             pure $ Safe.tailSafe names
         _       -> pure []
 
-data FunctionRef = FunctionRef IR.Qualified IR.Name
-
-extractResolvedDef :: NodeRef -> GraphOp (Maybe FunctionRef)
-extractResolvedDef node = do
+extractResolvedDef :: NodeRef -> Maybe TCFunResolver -> GraphOp (Maybe Breadcrumb.CodeTarget)
+extractResolvedDef node funResolve = do
     match node $ \case
-        Grouped g -> source g >>= \a -> extractResolvedDef a
+        Grouped g -> source g >>= \a -> extractResolvedDef a funResolve
         -- App is Lam that has some args applied
-        App{}  -> extractAppResolvedDef node
-        ResolvedDef mod n -> return . Just $ FunctionRef mod n
+        App{}  -> extractAppResolvedDef node funResolve
+        ResolvedDef mod n -> return . Just $ Breadcrumb.Function (convertVia @String mod) (convertVia @String n)
+        Acc t a -> do
+            argTp  <- source t >>= getLayer @TypeLayer >>= source
+            method <- source a >>= ASTRead.getVarName'
+            tgt    <- targetForType argTp method
+            case tgt of
+                Target.Method mod cls met -> pure $ Just $ Breadcrumb.Method (convertVia @String mod) (convertVia @String cls) (convertVia @String met)
         _ -> pure Nothing
 
-extractAppResolvedDef :: NodeRef -> GraphOp (Maybe FunctionRef)
-extractAppResolvedDef node = go node
+extractAppResolvedDef :: NodeRef -> Maybe TCFunResolver -> GraphOp (Maybe Breadcrumb.CodeTarget)
+extractAppResolvedDef node funResolve = go node
     where
-        go :: NodeRef -> GraphOp (Maybe FunctionRef)
+        go :: NodeRef -> GraphOp (Maybe Breadcrumb.CodeTarget)
         go node = match node $ \case
-            ResolvedDef mod n -> return . Just $ FunctionRef mod n
+            ResolvedDef mod n -> return . Just $ Breadcrumb.Function (convertVia @String mod) (convertVia @String n)
             App f a -> go =<< source f
-            Lam{}   -> extractResolvedDef node
+            Lam{}   -> extractResolvedDef node funResolve
             _       -> pure Nothing
 
 insideThisNode :: NodeRef -> GraphOp Bool

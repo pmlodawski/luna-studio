@@ -19,7 +19,7 @@ import qualified Empire.Data.Library as Library
 import qualified Path
 
 import Data.List (find)
-import Empire.Commands.Graph.Breadcrumb (zoomBreadcrumb)
+-- import Empire.Commands.Graph.Breadcrumb (zoomBreadcrumb)
 import Empire.Data.AST                  (astExceptionFromException,
                                          astExceptionToException)
 import Empire.Data.Library (Library)
