@@ -19,6 +19,7 @@ dependencies:
     - exceptions
     - optparse-applicative
     - path
+    - process
     - safe-exceptions
     - split
     - shelly

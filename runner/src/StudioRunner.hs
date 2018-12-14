@@ -30,8 +30,9 @@ import qualified Data.Text                     as T
 import           Filesystem.Path
 import           Filesystem.Path.CurrentOS     (decodeString, encodeString, fromText)
 import           Options.Applicative
-import           System.Directory              (doesDirectoryExist, setCurrentDirectory, getHomeDirectory, getCurrentDirectory, createDirectoryIfMissing, getTemporaryDirectory, getXdgDirectory, XdgDirectory(..), removeDirectoryRecursive)
+import           System.Directory              (doesDirectoryExist, withCurrentDirectory, getHomeDirectory, getCurrentDirectory, createDirectoryIfMissing, getTemporaryDirectory, getXdgDirectory, XdgDirectory(..), removeDirectoryRecursive)
 import           System.Exit                   (ExitCode)
+import qualified System.Process                as Process
 import           System.Process.Typed          (shell, runProcess, runProcess_, setWorkingDir, readProcess_)
 import           System.Environment            (getExecutablePath, getArgs)
 import qualified System.Environment            as Environment
@@ -74,6 +75,7 @@ data RunnerConfig = RunnerConfig { _versionFile            :: FilePath
                                  , _resourcesFolder        :: FilePath
                                  , _shareFolder            :: FilePath
                                  , _windowsFolder          :: FilePath
+                                 , _electronAppFolder      :: FilePath
                                  }
 
 makeLenses ''RunnerConfig
@@ -112,6 +114,7 @@ instance Monad m => MonadHostConfig RunnerConfig 'Linux arch m where
         , _resourcesFolder        = "public" </> "luna-studio" </> "resources"
         , _shareFolder            = ".local" </> "share"
         , _windowsFolder          = "windows"
+        , _electronAppFolder      = "../app"
         }
 
 instance Monad m => MonadHostConfig RunnerConfig 'Darwin arch m where
@@ -168,6 +171,7 @@ resourcesDirectory, windowsLogsDirectory                                       :
 userLogsDirectory, userdataStorageDirectory, localdataStorageDirectory         :: MonadRun m => m FilePath
 lunaTmpPath, lunaProjectsPath, lunaTutorialsPath, userInfoPath                 :: MonadRun m => m FilePath
 sharePath, windowsScriptsPath, backendLdLibraryPath                            :: MonadRun m => m FilePath
+electronAppPath                                                                :: MonadRun m => m FilePath
 
 backendBinsPath           = relativeToMainDir [binsFolder, backendBinsFolder]
 configPath                = relativeToMainDir [configFolder]
@@ -187,6 +191,7 @@ localdataStorageDirectory = relativeToHomeDir [storageDataHomeFolder]
 userInfoPath              = relativeToHomeDir [userInfoFile]
 sharePath                 = relativeToDir (decodeString <$> (liftIO getHomeDirectory)) [shareFolder]
 windowsScriptsPath        = relativeToMainDir [configFolder, windowsFolder]
+electronAppPath           = relativeToMainDir [electronAppFolder]
 userStudioAtomHome = do
     runnerCfg <- get @RunnerConfig
     baseDir   <- relativeToHomeDir [configHomeFolder, appName] >>= (\p -> (fmap (p </>) version))
@@ -315,17 +320,18 @@ runLunaEmpire logs configFile forceRun = do
 
 runFrontend :: MonadRun m => Maybe T.Text -> m ()
 runFrontend args = do
-    atom <- atomAppPath
+    electronApp <- electronAppPath
     createStorageDataDirectory True
     liftIO $ Environment.setEnv "LUNA_STUDIO_DEVELOP" "True"
-    setEnv "ATOM_HOME"             =<< packageStudioAtomHome
     setEnv "LUNA_STUDIO_DATA_PATH" =<< dataStorageDirectory True
     setEnv "LUNA_TMP"              =<< lunaTmpPath
     setEnv "LUNA_PROJECTS"         =<< lunaProjectsPath
     setEnv "LUNA_TUTORIALS"        =<< lunaTutorialsPath
     setEnv "LUNA_USER_INFO"        =<< userInfoPath
     setEnv "LUNA_VERSION_PATH"     =<< versionFilePath
-    unixOnly $ Shelly.shelly $ Shelly.run_ atom $ "-w" : maybeToList args
+    runProcess_ $ setWorkingDir (encodeString electronApp)
+                $ shell $ "npm run open:native"
+   
 
 runBackend :: MonadRun m => Bool -> m ()
 runBackend forceRun = do
@@ -356,28 +362,26 @@ stopServices = case currentHost of
 runPackage :: MonadRun m => Bool -> Bool -> m ()
 runPackage develop forceRun = case currentHost of
     Windows -> do
-        atom <- atomAppPath
-        checkLunaHome
+        electronApp <- electronAppPath
         setEnv "LUNA_STUDIO_DATA_PATH" =<< dataStorageDirectory develop
         setEnv "LUNA_STUDIO_LOG_PATH"  =<< windowsLogsDir       develop
-        setEnv "ATOM_HOME"             =<< userStudioAtomHome
         setEnv "LUNA_TMP"              =<< lunaTmpPath
         setEnv "LUNA_PROJECTS"         =<< lunaProjectsPath
         setEnv "LUNA_TUTORIALS"        =<< lunaTutorialsPath
         setEnv "LUNA_USER_INFO"        =<< userInfoPath
         setEnv "LUNA_VERSION_PATH"     =<< versionFilePath
         createStorageDataDirectory develop
-        bracket_ startServices stopServices $ Shelly.shelly $ Shelly.cmd atom
+        bracket_ startServices stopServices $ runProcess_ $ setWorkingDir (encodeString electronApp)
+            $ shell $ "npm run open:native"
 
     _ -> do
         runnerCfg <- get @RunnerConfig
         logs      <- logsDir develop
+        electronApp <- electronAppPath
         let supervisorConf = runnerCfg ^. supervisordConfig
         setEnv "LUNA_STUDIO_DATA_PATH"       =<< dataStorageDirectory develop
-        setEnv "LUNA_STUDIO_GUI_CONFIG_PATH" =<< atomHomeDir          develop
         setEnv "LUNA_STUDIO_LOG_PATH"        =<< logsDir              develop
         setEnv "LUNA_STUDIO_BACKEND_PATH"    =<< backendBinsPath
-        setEnv "LUNA_STUDIO_GUI_PATH"        =<< atomAppPath
         setEnv "LUNA_STUDIO_CONFIG_PATH"     =<< configPath
         setEnv "LUNA_STUDIO_KILL_PATH"       =<< killSupervisorBinPath
         setEnv "LUNA_TMP"                    =<< lunaTmpPath
@@ -391,9 +395,11 @@ runPackage develop forceRun = case currentHost of
             else setEnv "LUNA_STUDIO_BACKEND_LD_LIBRARY_PATH" =<< backendLdLibraryPath
         createStorageDataDirectory develop
         unless develop $ do
-            checkLunaHome
             copyResourcesLinux
-        runLunaEmpire logs supervisorConf forceRun
+        if develop then do
+            p <- liftIO $ withCurrentDirectory (encodeString electronApp) $ Process.spawnCommand "npm run open:native"
+            runLunaEmpire logs "supervisord.conf" forceRun
+            else runLunaEmpire logs supervisorConf forceRun
 
 runApp :: MonadRun m => Bool -> Bool -> Maybe String -> m ()
 runApp develop forceRun atom = do
