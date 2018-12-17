@@ -301,7 +301,7 @@ addFunNode loc parsing uuid expr meta = withUnit loc $ do
         return (fromIntegral insertedCharacters, codePosition)
 
     Graph.userState . Graph.clsFuns . traverse . Graph._FunctionDefinition . Graph.funGraph . Graph.fileOffset %= (\off -> if off >= codePosition then off + insertedCharacters else off)
-    (uuid', graph) <- makeGraphCls markedFunction (Just uuid)
+    (uuid', graph) <- makeGraphCls markedFunction Nothing (Just uuid)
 
     runASTOp $ GraphBuilder.buildClassNode uuid' graph
 
@@ -1086,11 +1086,11 @@ withBreadcrumb (GraphLocation file breadcrumb) actG actC = do
                         let funs = f ^. Library.body . Graph.clsFuns :: Map NodeId Graph.TopLevelGraph
                             funGraph = find (\a -> a ^. _2 . Graph._ClassDefinition . Graph.className == convert cls) $ Map.toList funs
                         case funGraph of
-                            Just (_, clsGraph) -> do
+                            Just (clsId, clsGraph) -> do
                                 let fun = find (\a -> a ^. _2 . Graph.funName == convert met) $ Map.toList $ clsGraph ^?! Graph._ClassDefinition . Graph.classMethods
                                 case fun of
                                     Just (funId, _) -> Library.withLibrary (f ^. Library.path) $
-                                        zoomBreadcrumb (coerce $ Definition funId : coerce bc) actG actC
+                                        zoomBreadcrumb (coerce $ Definition clsId : Definition funId : coerce bc) actG actC
                             _ -> throwM $ BH.BreadcrumbDoesNotExistException breadcrumb
                     _      -> do
                         -- error "dupa4"
@@ -1106,11 +1106,11 @@ withBreadcrumb (GraphLocation file breadcrumb) actG actC = do
                                         let funs = f ^. Library.body . Graph.clsFuns :: Map NodeId Graph.TopLevelGraph
                                             funGraph = find (\a -> a ^. _2 . Graph._ClassDefinition . Graph.className == convert cls) $ Map.toList funs
                                         case funGraph of
-                                            Just (_, clsGraph) -> do
+                                            Just (clsId, clsGraph) -> do
                                                 let fun = find (\a -> a ^. _2 . Graph.funName == convert met) $ Map.toList $ clsGraph ^?! Graph._ClassDefinition . Graph.classMethods
                                                 case fun of
                                                     Just (funId, _) -> Library.withLibrary (f ^. Library.path) $
-                                                        zoomBreadcrumb (coerce $ Definition funId : coerce bc) actG actC
+                                                        zoomBreadcrumb (coerce $ Definition clsId : Definition funId : coerce bc) actG actC
                                                     _ -> error $ "fun not found: "
                                                         <> show (clsGraph ^.. Graph._ClassDefinition . Graph.classMethods . traverse . Graph.funName)
                                                         <> " " <> show mod

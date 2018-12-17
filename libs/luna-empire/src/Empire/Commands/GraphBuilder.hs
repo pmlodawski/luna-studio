@@ -245,7 +245,7 @@ buildNode :: NodeId -> GraphOp API.ExpressionNode
 buildNode nid = do
     root      <- GraphUtils.getASTPointer nid
     ref       <- GraphUtils.getASTTarget  nid
-    expr      <- Text.pack <$> Print.printExpression ref
+    expr      <- Text.pack <$> (Print.printExpression ref `catch` (\(e::SomeException) -> pure $ displayException e))
     marked    <- ASTRead.getASTRef nid
     meta      <- fromMaybe def <$> AST.readMeta marked
     name      <- getNodeName nid
@@ -256,7 +256,7 @@ buildNode nid = do
             else Nothing
     inports   <- buildInPorts nid ref [] aliasPortName Nothing
     outports  <- buildOutPorts root
-    code      <- Code.removeMarkers <$> getNodeCode nid
+    code      <- Code.removeMarkers <$> (getNodeCode nid `catch` (\(e::SomeException) -> pure $ convert $ displayException e))
     pure $ API.ExpressionNode
         nid expr False name code inports outports meta breadcrumbToEnter
 
@@ -353,7 +353,7 @@ getPortState node = do
             else WithDefault . Expression . Text.unpack
                 <$> Print.printFullExpression node
         _ -> WithDefault . Expression . Text.unpack
-            <$> Print.printFullExpression node
+            <$> (Print.printFullExpression node `catch` (\(e::SomeException) -> pure $ convert $ displayException e))
 
 extractArgTypes :: NodeRef -> GraphOp [TypeRep]
 extractArgTypes node = do
@@ -443,6 +443,8 @@ extractResolvedDef node funResolve = do
             tgt    <- targetForType argTp method
             case tgt of
                 Target.Method mod cls met -> pure $ Just $ Breadcrumb.Method (convertVia @String mod) (convertVia @String cls) (convertVia @String met)
+                Target.Function mod fun -> pure $ Just $ Breadcrumb.Function (convertVia @String mod) (convertVia @String fun)
+                Target.Unknown -> pure Nothing
         _ -> pure Nothing
 
 extractAppResolvedDef :: NodeRef -> Maybe TCFunResolver -> GraphOp (Maybe Breadcrumb.CodeTarget)

@@ -166,7 +166,9 @@ startTCWorker env = liftIO $ do
                         Typecheck.stop
                 res <- AsyncL.waitCatch as
                 case res of
-                    Left exc -> logger Logger.warning $ "TCWorker: TC failed with: " <> displayException exc
+                    Left exc -> do
+                        ex <- liftIO $ Graph.prettyException exc
+                        logger Logger.warning $ "TCWorker: TC failed with: " <> ex
                     Right _  -> return ()
 
 --     tcAsync <- newEmptyMVar

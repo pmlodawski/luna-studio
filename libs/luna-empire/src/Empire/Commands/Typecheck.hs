@@ -54,7 +54,7 @@ import Data.Map                         (Map)
 import Data.Maybe                       (catMaybes)
 import Empire.ASTOp                     (liftScheduler, runASTOp)
 import Empire.Commands.Breadcrumb (runInternalBreadcrumb,
-                                         withRootedFunction)
+                                         withRootedFunction, zoomBreadcrumb')
 import Empire.Data.AST                  (NodeRef)
 import Empire.Data.BreadcrumbHierarchy  (topLevelIDs)
 import Empire.Data.Graph                (Graph)
@@ -73,7 +73,7 @@ import LunaStudio.Data.Visualization    (VisualizationValue (StreamDataPoint, St
 import System.Directory                 (canonicalizePath, withCurrentDirectory)
 import System.Environment               (getEnv)
 import System.FilePath                  (takeDirectory)
-
+import qualified System.IO as IO
 
 
 runTC :: IR.Qualified -> GraphLocation -> Command InterpreterEnv ()
@@ -181,10 +181,9 @@ makeError err =
     in nodeError
 
 updateNodes :: GraphLocation -> GraphLocation -> Command InterpreterEnv ()
-updateNodes loc@(GraphLocation _ br) updateLoc = case br of
-    Breadcrumb (Definition uuid:rest) -> do
-        units <- use $ Graph.userState . Empire.mappedUnits
-        zoomCommand Empire.clsGraph $ withRootedFunction uuid Graph._FunctionDefinition $ runInternalBreadcrumb (Breadcrumb rest) $ do
+updateNodes loc@(GraphLocation _ br) updateLoc = do
+    units <- use $ Graph.userState . Empire.mappedUnits
+    let act = do
             (inEdge, outEdge) <- use $ Graph.userState . Graph.breadcrumbHierarchy . BH.portMapping
             (updates, errors) <- runASTOp $ do
                 inputUpdate  <-
@@ -199,12 +198,16 @@ updateNodes loc@(GraphLocation _ br) updateLoc = case br of
                         resolveFun nid
                     let nodeError = ((nid,) . makeError) <$> err
                     pure (tcUpdate, nodeError))
+                liftIO $ print inputUpdate >> IO.hFlush IO.stdout
+                liftIO $ print outputUpdate >> IO.hFlush IO.stdout
+                liftIO $ print loc >> IO.hFlush IO.stdout
+                liftIO $ print updates >> IO.hFlush IO.stdout
                 pure (inputUpdate : outputUpdate : updates, errors)
             mask_ $ do
                 traverse_ (Publisher.notifyNodeTypecheck updateLoc) updates
                 for_ (catMaybes errors) $ \(nid, e) ->
                     Publisher.notifyResultUpdate loc nid e 0
-    Breadcrumb _ -> pure ()
+    zoomCommand Empire.clsGraph $ zoomBreadcrumb' br act (error "updateNodes: clsGraph")
 
 updateValues :: GraphLocation
              -> LocalScope
@@ -382,17 +385,19 @@ runNoCleanUp gl updateGl clsGraph rooted interpret recompute = do
     modName <- filePathToQualName filePath
     makePrimStdIfMissing
     ensureCurrentScope recompute modName filePath root
+    liftIO $ print "scope" >> IO.hFlush IO.stdout
     runTC modName gl
+    liftIO $ print "runTC" >> IO.hFlush IO.stdout
     updateNodes gl updateGl
-    let processBC evald (Breadcrumb (Definition uuid:r))
+    liftIO $ print "updateNodes" >> IO.hFlush IO.stdout
+    let processBC evald br
             = zoomCommand Empire.clsGraph
-            . withRootedFunction uuid Graph._FunctionDefinition
-            . runInternalBreadcrumb (Breadcrumb r) $ do
-                scope <- runInterpreter filePath evald
-                traverse (updateValues gl) scope
-        processBC _ _ = pure Nothing
+            $ zoomBreadcrumb' br (do
+                            scope <- runInterpreter filePath evald
+                            traverse (updateValues gl) scope) (error "processBC: clsGraph")
     when interpret $ do
         evald  <- use $ Graph.userState . Empire.runtimeUnits
         asyncs <- processBC evald $ gl ^. GraphLocation.breadcrumb
+        liftIO $ print "processBC" >> IO.hFlush IO.stdout
         Graph.userState . Empire.listeners .= fromMaybe mempty asyncs
     pure root

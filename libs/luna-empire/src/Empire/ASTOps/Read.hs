@@ -258,7 +258,7 @@ getTargetEdge nid = do
                 _         -> return $ generalize expr
         _ -> throwM $ MalformedASTRef ref
 
-getNameOf :: NodeRef -> GraphOp (Maybe Text)
+getNameOf :: NodeRef -> ASTOp g (Maybe Text)
 getNameOf ref = match ref $ \case
     Marked _ e -> getNameOf =<< source e
     Unify  l _ -> getNameOf =<< source l

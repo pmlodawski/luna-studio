@@ -10,7 +10,7 @@ module Empire.Commands.Breadcrumb where
 import           Empire.Prelude
 
 import           Control.Exception.Safe          (handle)
-import           Control.Lens                    (Prism', imap, (^?!))
+import           Control.Lens                    (Traversal', imap, (^?!))
 import           Control.Monad                   (forM)
 import           Control.Monad.Except            (throwError)
 import           Control.Monad.Reader            (ask)
@@ -53,11 +53,12 @@ import           Empire.Empire                   (Command, CommunicationEnv,
 import qualified Path
 
 import qualified Luna.IR              as IR
+import qualified System.IO              as IO
 
 
 makeGraph
     :: NodeRef -> Maybe NodeId-> Command Library.Library (NodeId, Graph.TopLevelGraph)
-makeGraph fun lastUUID = zoomCommand Library.body $ makeGraphCls fun lastUUID
+makeGraph fun lastUUID = zoomCommand Library.body $ makeGraphCls fun Nothing lastUUID
 
 extractMarkers :: NodeRef -> GraphOp [Word64]
 extractMarkers root = matchExpr root $ \case
@@ -109,8 +110,8 @@ extractMarkers root = matchExpr root $ \case
 --     Graph.userState . Graph.clsNodeCache .= updatedCache
 --     pure (uuid, graph)
 
-makeGraphCls :: NodeRef -> Maybe NodeId -> Command Graph.ClsGraph (NodeId, Graph.TopLevelGraph)
-makeGraphCls fun lastUUID = do
+makeGraphCls :: NodeRef -> Maybe (String, NodeId) -> Maybe NodeId -> Command Graph.ClsGraph (NodeId, Graph.TopLevelGraph)
+makeGraphCls fun className lastUUID = do
     isFun <- runASTOp $ do
         asgFun    <- ASTRead.cutThroughDocAndMarked fun
         matchExpr asgFun $ \case
@@ -147,7 +148,13 @@ makeGraphCls fun lastUUID = do
                 ASTBreadcrumb.restorePortMappings uuid (nodeCache ^. portMappingMap)
                 use Graph.graphNodeCache
         Graph.userState . Graph.clsNodeCache .= updatedCache
-        return (uuid, graph)
+        graph' <- case className of
+            Nothing -> pure graph
+            Just (n, clsId) -> do
+                Just newGraph <- use $ Graph.userState . Graph.clsFuns . at uuid
+                Graph.userState . Graph.clsFuns . at uuid .= Nothing
+                return newGraph
+        return (uuid, graph')
     else do
         (className, ref, fileOffset, meths) <- runASTOp $ do
             putLayer @Marker fun . Just =<< toPortMarker (OutPortRef (convert uuid) [])
@@ -157,7 +164,10 @@ makeGraphCls fun lastUUID = do
                     offset <- functionBlockStartRef asgFun
                     meths <- ptrListToList decls >>= mapM source
                     return (nameToString n, asgFun, offset, meths)
-        mets <- forM meths $ \a -> makeGraphCls a Nothing
+        mets <- forM meths $ \a -> makeGraphCls a (Just (className, uuid)) Nothing
+        liftIO $ print className >>
+            print (mets & traverse . _2 %~ (^?! (Graph._FunctionDefinition . Graph.funName))) >>
+            IO.hFlush IO.stdout
         let graph = Graph.ClassDefinition (Graph.ClassGraph className (Map.fromList $ map (over _2 (^?! Graph._FunctionDefinition)) mets))
         Graph.userState . Graph.clsFuns . at uuid ?= graph
         return (uuid, graph)
@@ -278,9 +288,10 @@ zoomBreadcrumb = zoomCommand Library.body .:. zoomBreadcrumb' -- where
     --     = throwM $ BH.BreadcrumbDoesNotExistException breadcrumb
 
 
-withRootedFunction :: NodeId -> Prism' Graph.TopLevelGraph Graph.FunctionGraph
+withRootedFunction :: NodeId -> Traversal' Graph.TopLevelGraph Graph.FunctionGraph
     -> Command Graph.Graph a -> Command Graph.ClsGraph a
 withRootedFunction uuid funLens act = do
+    liftIO $ print $ "rooting on " <> show uuid
     graph    <- preuse (Graph.userState . Graph.clsFuns . ix uuid . funLens . Graph.funGraph) <?!> BH.BreadcrumbDoesNotExistException (Breadcrumb [Definition uuid])
     env      <- ask
     state    <- get
@@ -306,6 +317,8 @@ withRootedFunction uuid funLens act = do
         forM funs $ \fun -> ASTRead.cutThroughDocAndMarked fun >>= \f -> matchExpr f $ \case
             ASGFunction n _ _ -> do
                 nodeId <- ASTRead.getNodeId fun
+                n' <- ASTRead.getNameOf =<< source n
+                -- liftIO $ print ("fun: " <> show n' <> " " <> show nodeId) >> IO.hFlush IO.stdout
                 if (nodeId == Just uuid) then do
                     lenDiff <- if fun == f then do
                         LeftSpacedSpan (SpacedSpan off prevLen) <- view CodeSpan.realSpan <$> getLayer @CodeSpan.CodeSpan f
@@ -323,8 +336,9 @@ withRootedFunction uuid funLens act = do
                     -- IR.modifyExprTerm funExpr $ wrapped . IR.termASGRootedFunction_body .~ newRooted
                     return $ Just lenDiff
                     else return Nothing
-            ClsASG{} -> do
+            ClsASG _ n _ _ _ -> do
                 nodeId <- ASTRead.getNodeId fun
+                -- liftIO $ print ("cls: " <> nameToString n <> " " <> show nodeId) >> IO.hFlush IO.stdout
                 if (nodeId == Just uuid) then do
                     lenDiff <- if fun == f then do
                         LeftSpacedSpan (SpacedSpan off prevLen) <- view CodeSpan.realSpan <$> getLayer @CodeSpan.CodeSpan f
@@ -342,7 +356,7 @@ withRootedFunction uuid funLens act = do
                     -- IR.modifyExprTerm funExpr $ wrapped . IR.termASGRootedFunction_body .~ newRooted
                     return $ Just lenDiff
                     else return Nothing
-    let diff = fromMaybe (error "function not in AST?") $ listToMaybe $ catMaybes diffs
+    let diff = fromMaybe 0 $ listToMaybe $ catMaybes diffs
         funOffset = properGraph ^. Graph.fileOffset
     Graph.userState . Graph.clsFuns . traverse . funLens . Graph.funGraph . Graph.fileOffset %= (\a -> if a > funOffset then a + diff else a)
     Graph.userState . Graph.clsFuns . ix uuid . funLens . Graph.funMarkers .= newGraph ^. Graph.userState . Graph.codeMarkers
@@ -364,10 +378,11 @@ withRootedFunction uuid funLens act = do
 zoomBreadcrumb' :: Breadcrumb BreadcrumbItem -> Command Graph.Graph a -> Command Graph.ClsGraph a -> Command Graph.ClsGraph a
 zoomBreadcrumb' (Breadcrumb []) _actG actC = actC
 zoomBreadcrumb' breadcrumb@(Breadcrumb (Definition uuid : rest)) actG _actC = do
+    liftIO $ print $ "zooming on " <> show breadcrumb
     topLvlGraph <- preuse (Graph.userState . Graph.clsFuns . ix uuid)
-        <?!> BH.BreadcrumbDoesNotExistException (Breadcrumb [Definition uuid])
+        <?!> BH.BreadcrumbDoesNotExistException breadcrumb
     case topLvlGraph of
-        Graph.FunctionDefinition _ -> withRootedFunction uuid (Graph._FunctionDefinition :: Prism' Graph.TopLevelGraph Graph.FunctionGraph) $
+        Graph.FunctionDefinition _ -> withRootedFunction uuid (Graph._FunctionDefinition :: Traversal' Graph.TopLevelGraph Graph.FunctionGraph) $
             runInternalBreadcrumb (Breadcrumb rest) actG
         Graph.ClassDefinition _    ->
             case rest of
