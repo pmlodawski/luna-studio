@@ -48,7 +48,7 @@ spec = runTests "entering nodes at use-site" $ do
             Just bar <- findNodeIdByName gl "bar"
             let GraphLocation file (coerce -> bc) = gl
                 barGL = GraphLocation file $ coerce $ bc
-                    <> [Breadcrumb.Redirection bar "TestProject.Main" "foo"]
+                    <> [Breadcrumb.Redirection bar (Breadcrumb.Function "TestProject.Main" "foo")]
             graph <- Graph.getGraph barGL
             graph ^. Graph.connections `shouldSatisfy` (not . null)
 
@@ -64,7 +64,23 @@ spec = runTests "entering nodes at use-site" $ do
             Just bar <- findNodeIdByName gl "bar"
             let GraphLocation file (coerce -> bc) = gl
                 barGL = GraphLocation file $ coerce $ bc
-                    <> [Breadcrumb.Redirection bar "Std.Base" "id"]
+                    <> [Breadcrumb.Redirection bar (Breadcrumb.Function "Std.Base" "id")]
+            graph <- Graph.getGraph barGL
+            graph ^. Graph.connections `shouldSatisfy` (not . null)
+
+    it "enters method from stdlib" $ let
+        initialCode = [r|
+            import Std.Base
+
+            def main:
+                bar = 1.negate
+                None
+            |]
+        in testCaseWithTC initialCode initialCode noAction $ \gl _ -> do
+            Just bar <- findNodeIdByName gl "bar"
+            let GraphLocation file (coerce -> bc) = gl
+                barGL = GraphLocation file $ coerce $ bc
+                    <> [Breadcrumb.Redirection bar (Breadcrumb.Method "Std.Base" "Int" "negate")]
             graph <- Graph.getGraph barGL
             graph ^. Graph.connections `shouldSatisfy` (not . null)
 
