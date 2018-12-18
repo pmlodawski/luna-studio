@@ -1053,7 +1053,9 @@ spec = around withChannels $ parallel $ do
                 u1 <- mkUUID
                 Graph.addNode loc u1 "def 4" def
                 Graph.renameNode loc u1 "foo"
-                node <- Graph.withUnit loc $ runASTOp $ GraphBuilder.buildClassNode u1 (error "FileModuleSpec.hs:1068 error")
+                let funGraph = Graph.FunctionGraph "foo" (error "FileModuleSpec:1056") def
+                    funDef   = Graph.FunctionDefinition funGraph
+                node <- Graph.withUnit loc $ runASTOp $ GraphBuilder.buildClassNode u1 funDef
                 liftIO $ node ^. Node.name `shouldBe` Just "foo"
                 return ()
         it "adds invalid def, another node inside and connects to output" $ \env -> do
@@ -1106,7 +1108,7 @@ spec = around withChannels $ parallel $ do
                         None
                     |]
             in specifyCodeChange initialCode expectedCode $ \(GraphLocation file _) -> do
-                Graph.substituteCode file [(102, 102, "\n    Foo.baz")]
+                Graph.substituteCode file [(108, 108, "\n    Foo.baz")]
         it "uses defined class with list of fields in main" $
             let initialCode = [r|
                     class Foo:
@@ -1132,7 +1134,7 @@ spec = around withChannels $ parallel $ do
                         None
                     |]
             in specifyCodeChange initialCode expectedCode $ \(GraphLocation file _) -> do
-                Graph.substituteCode file [(111, 111, "\n    Foo.baz")]
+                Graph.substituteCode file [(117, 117, "\n    Foo.baz")]
         it "does not error on incomplete import" $
             let initialCode = [r|
                     import Std.Base
