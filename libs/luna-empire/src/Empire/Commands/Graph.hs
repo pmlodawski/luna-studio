@@ -1361,8 +1361,8 @@ autolayoutTopLevel gl = withUnit gl $ runASTOp $ do
     needLayout <- fmap catMaybes $ forM (Map.assocs clsFuns) $ \(nid, fun) -> do
         f    <- ASTRead.getFunByNodeId nid
         meta <- AST.readMeta f
-        let fileOffset = fun ^?! Graph._FunctionDefinition . Graph.funGraph . Graph.fileOffset
-        pure $ if meta /= def then Nothing else Just (nid, fileOffset)
+        let fileOffset = fun ^? Graph._FunctionDefinition . Graph.funGraph . Graph.fileOffset
+        pure $ if meta /= def then Nothing else (nid,) <$> fileOffset
 
     let sortedNeedLayout = sortOn snd needLayout
         positions    = map (Position.fromTuple . (,0)) [0,gapBetweenNodes..]
@@ -1576,10 +1576,13 @@ loadCode gl code = do
         uuid <- withLibrary file $ fst <$> makeGraph fun lastUUID
         let glToAutolayout = gl & GraphLocation.breadcrumb
                 .~ Breadcrumb [Definition uuid]
-        -- void $ autolayout glToAutolayout
-        return ()
-    return ()
-    -- void $ autolayoutTopLevel topGl
+        isFun <- withUnit topGl $ runASTOp $
+            (ASTRead.cutThroughDocAndMarked >=> ASTRead.isASGFunction) fun
+        when_ isFun $
+            autolayout glToAutolayout
+        pure ()
+    void $ autolayoutTopLevel topGl
+    pure ()
 
 
 reloadCode :: GraphLocation -> Text -> Empire ()

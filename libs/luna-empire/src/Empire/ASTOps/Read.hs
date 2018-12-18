@@ -467,7 +467,6 @@ unitDefinitions unit = do
 classFromUnit :: NodeRef -> ClassOp NodeRef
 classFromUnit unit = match unit $ \case
     Unit _ _ c -> source c
-    _ -> error "dupa3"
 
 getMetadataRef :: NodeRef -> ClassOp (Maybe NodeRef)
 getMetadataRef unit = do
