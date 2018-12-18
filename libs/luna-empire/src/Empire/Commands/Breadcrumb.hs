@@ -53,7 +53,6 @@ import           Empire.Empire                   (Command, CommunicationEnv,
 import qualified Path
 
 import qualified Luna.IR              as IR
-import qualified System.IO              as IO
 
 
 makeGraph

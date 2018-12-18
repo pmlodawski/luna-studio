@@ -198,10 +198,6 @@ updateNodes loc@(GraphLocation _ br) updateLoc = do
                         resolveFun nid
                     let nodeError = ((nid,) . makeError) <$> err
                     pure (tcUpdate, nodeError))
-                liftIO $ print inputUpdate >> IO.hFlush IO.stdout
-                liftIO $ print outputUpdate >> IO.hFlush IO.stdout
-                liftIO $ print loc >> IO.hFlush IO.stdout
-                liftIO $ print updates >> IO.hFlush IO.stdout
                 pure (inputUpdate : outputUpdate : updates, errors)
             mask_ $ do
                 traverse_ (Publisher.notifyNodeTypecheck updateLoc) updates
@@ -385,19 +381,15 @@ runNoCleanUp gl updateGl clsGraph rooted interpret recompute = do
     modName <- filePathToQualName filePath
     makePrimStdIfMissing
     ensureCurrentScope recompute modName filePath root
-    liftIO $ print "scope" >> IO.hFlush IO.stdout
     runTC modName gl
-    liftIO $ print "runTC" >> IO.hFlush IO.stdout
     updateNodes gl updateGl
-    liftIO $ print "updateNodes" >> IO.hFlush IO.stdout
     let processBC evald br
             = zoomCommand Empire.clsGraph
             $ zoomBreadcrumb' br (do
-                            scope <- runInterpreter filePath evald
-                            traverse (updateValues gl) scope) (error "processBC: clsGraph")
+                scope <- runInterpreter filePath evald
+                traverse (updateValues gl) scope) (error "processBC: clsGraph")
     when interpret $ do
         evald  <- use $ Graph.userState . Empire.runtimeUnits
         asyncs <- processBC evald $ gl ^. GraphLocation.breadcrumb
-        liftIO $ print "processBC" >> IO.hFlush IO.stdout
         Graph.userState . Empire.listeners .= fromMaybe mempty asyncs
     pure root
