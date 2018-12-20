@@ -33,7 +33,7 @@ import           Options.Applicative
 import           System.Directory              (doesDirectoryExist, withCurrentDirectory, getHomeDirectory, getCurrentDirectory, createDirectoryIfMissing, getTemporaryDirectory, getXdgDirectory, XdgDirectory(..), removeDirectoryRecursive)
 import           System.Exit                   (ExitCode)
 import qualified System.Process                as Process
-import           System.Process.Typed          (shell, runProcess, runProcess_, setWorkingDir, readProcess_)
+import           System.Process.Typed          (shell, runProcess, runProcess_, setWorkingDir, readProcess_, proc)
 import           System.Environment            (getExecutablePath, getArgs)
 import qualified System.Environment            as Environment
 import qualified System.IO                     as IO
@@ -330,7 +330,7 @@ runFrontend args = do
     setEnv "LUNA_USER_INFO"        =<< userInfoPath
     setEnv "LUNA_VERSION_PATH"     =<< versionFilePath
     runProcess_ $ setWorkingDir (encodeString electronApp)
-                $ shell $ "npm run open:native"
+                $ proc "npm" ["run", "open:native"]
    
 
 runBackend :: MonadRun m => Bool -> m ()
@@ -372,7 +372,7 @@ runPackage develop forceRun = case currentHost of
         setEnv "LUNA_VERSION_PATH"     =<< versionFilePath
         createStorageDataDirectory develop
         bracket_ startServices stopServices $ runProcess_ $ setWorkingDir (encodeString electronApp)
-            $ shell $ "npm run open:native"
+            $ proc "npm" ["run", "open:native"] --actually this should be electron process run probably - to be fixed with the next iteration 
 
     _ -> do
         runnerCfg <- get @RunnerConfig
@@ -397,7 +397,7 @@ runPackage develop forceRun = case currentHost of
         unless develop $ do
             copyResourcesLinux
         if develop then do
-            p <- liftIO $ withCurrentDirectory (encodeString electronApp) $ Process.spawnCommand "npm run open:native"
+            p <- liftIO $ withCurrentDirectory (encodeString electronApp) $ Process.spawnProcess "npm" ["run", "open:native"]
             runLunaEmpire logs "supervisord.conf" forceRun
             else runLunaEmpire logs supervisorConf forceRun
 
