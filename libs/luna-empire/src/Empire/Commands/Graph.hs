@@ -1,23 +1,5 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 module Empire.Commands.Graph (module Empire.Commands.Graph) where
--- <<<<<<< HEAD
--- import           Empire.Commands.Breadcrumb       (makeGraph, makeGraphCls, zoomBreadcrumb, fileImportPaths)
--- import           Empire.Data.AST                  (InvalidConnectionException (..), EdgeRef, NodeRef, NotInputEdgeException (..),
---                                                    NotUnifyException, PortDoesNotExistException(..), ConnectionException(..),
---                                                    SomeASTException, astExceptionFromException, astExceptionToException)
--- import           Empire.Data.Layers               (SpanLength, SpanOffset)
--- import           Empire.Data.Library              (Library)
--- import           Luna.Syntax.Text.Parser.State.Marker (TermMap(..))
--- import           LunaStudio.Data.Breadcrumb       (Breadcrumb (..), BreadcrumbItem(Redirection, Definition), Named, _Redirection)
--- import           LunaStudio.Data.NodeSearcher     (ImportName, ImportsHints, ClassHints(..), ModuleHints(..))
--- =======
-
--- import Empire.Commands.Graph.Autolayout as X
--- import Empire.Commands.Graph.Breadcrumb as X
--- import Empire.Commands.Graph.Code       as X
--- import Empire.Commands.Graph.Context    as X
--- import Empire.Commands.Graph.Metadata   as X
--- import Empire.Commands.Graph.NodeMeta   as X
 
 import Empire.Prelude hiding (head)
 
@@ -89,13 +71,12 @@ import qualified Safe
 import Control.Arrow                        ((***))
 import Control.Concurrent                   (readMVar, swapMVar)
 import Control.Exception.Safe               (tryAny)
-import Control.Lens                         (Prism', re, traverseOf_, uses, (^..), (^?!))
+import Control.Lens                         (Prism', hasn't, re, traverseOf_, uses, (^..), (^?!))
 import Control.Monad                        (forM)
 import Control.Monad.Catch                  (handle, try)
 import Control.Monad.State                  hiding (forM_, void, when)
 import Data.Char                            (isDigit, isSeparator, isSpace, isUpper)
 import Data.Coerce                          (coerce)
--- import Data.Foldable                        (toList)
 import Data.List                            (find, nub, sortBy, sortOn, (++), findIndices)
 import Data.Map                             (Map)
 import Data.Maybe                           (fromMaybe, maybeToList)
@@ -1225,8 +1206,10 @@ markFunctions unit = let
         replaceSource (coerce markedFun) (coerce asgLink)
         Code.gossipLengthsChangedByCls markerLength markedFun
     in matchExpr unit $ \case
-        ClsASG _ _ _ _ funs' -> do
+        ClsASG nat name params conses funs' -> do
             funs <- map generalize <$> ptrListToList funs'
+            [succs] <- ociSetToList =<< getLayer @IR.Users unit
+            markASGFunction unit (generalize succs)
             for_ funs $ \fun -> source fun >>= \asgFun ->
                 ASTRead.cutThroughDoc asgFun >>= \f -> matchExpr f $ \case
                     ASGFunction{} -> markASGFunction f fun
@@ -1264,7 +1247,8 @@ prepareNodeCache gl = do
     (funs, topMarkers) <- withUnit (GraphLocation.top gl) $ do
         funs       <- use $ Graph.userState . Graph.clsFuns
         topMarkers <- runASTOp $ extractMarkedMetasAndIds =<< use Graph.clsClass
-        pure (Map.keys funs, Map.fromList topMarkers)
+        pure (Map.keys (Map.filter (hasn't Graph._ClassDefinition) funs),
+            Map.fromList topMarkers)
     oldMetasAndIds
         <- forM funs $ \fun -> withGraph (toGraphLocation fun) $ runASTOp $ do
             root       <- ASTRead.getCurrentBody

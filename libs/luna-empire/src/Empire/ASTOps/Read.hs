@@ -263,6 +263,8 @@ getNameOf ref = match ref $ \case
     Marked _ e -> getNameOf =<< source e
     Unify  l _ -> getNameOf =<< source l
     Var    n   -> return $ Just $ convert $ convertTo @String n
+    ASGFunction n _ _ -> pure . Just . convert =<< getVarName =<< source n
+    ClsASG _ n _ _ _ -> pure $ Just $ convert n
     _             -> return Nothing
 
 getASTMarkerPosition :: NodeId -> GraphOp NodeRef
@@ -399,7 +401,7 @@ isASGFunction expr = match expr $ \case
     ASGFunction{} -> return True
     _     -> return False
 
-isRecord :: NodeRef -> GraphOp Bool
+isRecord :: NodeRef -> ASTOp g Bool
 -- isRecord expr = isJust <$> narrowTerm @IR.Record expr
 isRecord expr = match expr $ \case
     ClsASG{} -> return True

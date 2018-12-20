@@ -173,7 +173,8 @@ zoomBreadcrumb = zoomCommand Library.body .:. zoomBreadcrumb'
 withRootedFunction :: NodeId -> Traversal' Graph.TopLevelGraph Graph.FunctionGraph
     -> Command Graph.Graph a -> Command Graph.ClsGraph a
 withRootedFunction uuid funLens act = do
-    graph    <- preuse (Graph.userState . Graph.clsFuns . ix uuid . funLens . Graph.funGraph) <?!> BH.BreadcrumbDoesNotExistException (Breadcrumb [Definition uuid])
+    graph    <- preuse (Graph.userState . Graph.clsFuns . ix uuid . funLens . Graph.funGraph)
+        <?!> BH.BreadcrumbDoesNotExistException (Breadcrumb [Definition uuid])
     env      <- ask
     state    <- get
     clsGraph <- use Graph.userState

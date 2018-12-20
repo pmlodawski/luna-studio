@@ -1108,7 +1108,7 @@ spec = around withChannels $ parallel $ do
                         None
                     |]
             in specifyCodeChange initialCode expectedCode $ \(GraphLocation file _) -> do
-                Graph.substituteCode file [(108, 108, "\n    Foo.baz")]
+                Graph.substituteCode file [(111, 111, "\n    Foo.baz")]
         it "uses defined class with list of fields in main" $
             let initialCode = [r|
                     class Foo:
@@ -1134,7 +1134,7 @@ spec = around withChannels $ parallel $ do
                         None
                     |]
             in specifyCodeChange initialCode expectedCode $ \(GraphLocation file _) -> do
-                Graph.substituteCode file [(117, 117, "\n    Foo.baz")]
+                Graph.substituteCode file [(120, 120, "\n    Foo.baz")]
         it "does not error on incomplete import" $
             let initialCode = [r|
                     import Std.Base
