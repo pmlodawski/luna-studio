@@ -116,7 +116,7 @@ searcher:
   'cmd 9'      : 'searcher-accept-9'     # Searcher HintShortcut 9
   'ctrl enter' : 'searcher-accept-input' # Searcher AcceptInput
   'cmd enter'  : 'searcher-accept-input' # Searcher AcceptInput
-  'down'       : 'searcher-move-down'    # Searcher MoveDown
+  'up'         : 'searcher-scroll-prev'  # Searcher ScrollPrev
+  'down'       : 'searcher-scroll-next'  # Searcher ScrollNext
   'enter'      : 'searcher-accept'       # Searcher Accept
   'tab'        : 'searcher-continue'     # Searcher Continue
-  'up'         : 'searcher-move-up'      # Searcher MoveUp

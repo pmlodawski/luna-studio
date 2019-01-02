@@ -15,8 +15,8 @@ data Event = InputChanged Text Int Int
            | HintShortcut   Int
            | AcceptWithHint Int
            | Continue
-           | MoveDown
-           | MoveUp
+           | ScrollPrev
+           | ScrollNext
            | MoveLeft
             deriving (FromJSON, Generic, NFData, Show, Typeable)
 

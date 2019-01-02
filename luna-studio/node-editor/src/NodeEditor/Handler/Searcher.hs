@@ -17,8 +17,8 @@ import NodeEditor.State.Action            (Action (continue))
 import NodeEditor.State.Global            (State)
 import Text.Read                          (readMaybe)
 import NodeEditor.Event.View              (BaseEvent (EditNodeExpression, EditNodeName,
-                                           SearcherAccept, SearcherEdit, SearcherMoveDown,
-                                           SearcherMoveUp, SearcherTabPressed),
+                                           SearcherAccept, SearcherEdit, SearcherScrollPrev,
+                                           SearcherScrollNext, SearcherTabPressed),
                                            SearcherEditEvent (SearcherEditEvent),
                                            ViewEvent, base)
 
@@ -53,8 +53,8 @@ handleSearcherEvent scheduleEvent = \case
         -> Just . continue $ Searcher.withHint i Searcher.updateInputWithSelectedHint
     Searcher.HintShortcut i -> Just . continue $ Searcher.withHint i Searcher.updateInputWithSelectedHint
     Searcher.Continue       -> Just $ continue Searcher.handleTabPressed
-    Searcher.MoveDown       -> Just $ continue Searcher.selectPreviousHint
-    Searcher.MoveUp         -> Just $ continue Searcher.selectNextHint
+    Searcher.ScrollPrev     -> Just $ continue Searcher.selectPreviousHint
+    Searcher.ScrollNext     -> Just $ continue Searcher.selectNextHint
     _                       -> Nothing
 
     -- Searcher.KeyUp k                  -> when (Keys.withoutMods k Keys.backspace) $ continue Searcher.enableRollback
@@ -69,9 +69,9 @@ handleViewEvent scheduleEvent evt = case evt ^. base of
     SearcherAccept searcher -> jc   $ if Text.null $ searcher ^. View.acceptValue
         then Searcher.close
         else Searcher.accept scheduleEvent
-    SearcherTabPressed  {} -> jc     Searcher.handleTabPressed
-    SearcherMoveDown    {} -> jc     Searcher.selectPreviousHint
-    SearcherMoveUp      {} -> jc     Searcher.selectNextHint
+    SearcherTabPressed  {} -> jc Searcher.handleTabPressed
+    SearcherScrollPrev  {} -> jc Searcher.selectPreviousHint
+    SearcherScrollNext  {} -> jc Searcher.selectNextHint
     _ -> Nothing
     where
         nl = View.getNodeLoc evt

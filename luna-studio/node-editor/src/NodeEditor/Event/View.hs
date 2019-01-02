@@ -113,19 +113,19 @@ data SearcherEditEvent = SearcherEditEvent
 
 makeLenses ''SearcherEditEvent
 
-data SearcherMoveUpEvent = SearcherMoveUpEvent
+data SearcherScrollNextEvent = SearcherScrollNextEvent
     { _aesonTooOld15 :: Maybe () --FIXME: replace with tagSingleConstructors when Aeson bumped
     , _aesonTooOld16 :: Maybe () --FIXME: replace with tagSingleConstructors when Aeson bumped
     } deriving (Generic, Show)
 
-makeLenses ''SearcherMoveUpEvent
+makeLenses ''SearcherScrollNextEvent
 
-data SearcherMoveDownEvent = SearcherMoveDownEvent
+data SearcherScrollPrevEvent = SearcherScrollPrevEvent
     { _aesonTooOld17 :: Maybe () --FIXME: replace with tagSingleConstructors when Aeson bumped
     , _aesonTooOld18 :: Maybe () --FIXME: replace with tagSingleConstructors when Aeson bumped
     } deriving (Generic, Show)
 
-makeLenses ''SearcherMoveDownEvent
+makeLenses ''SearcherScrollPrevEvent
 
 data SearcherTabPressedEvent = SearcherTabPressedEvent
     { _aesonTooOld19 :: Maybe () --FIXME: replace with tagSingleConstructors when Aeson bumped
@@ -173,8 +173,8 @@ data BaseEvent
     | EditNodeExpression   EditNodeExpressionEvent
     | SearcherAccept       SearcherAcceptEvent
     | SearcherEdit         SearcherEditEvent
-    | SearcherMoveUp       SearcherMoveUpEvent
-    | SearcherMoveDown     SearcherMoveDownEvent
+    | SearcherScrollNext   SearcherScrollNextEvent
+    | SearcherScrollPrev   SearcherScrollPrevEvent
     | SearcherTabPressed   SearcherTabPressedEvent
     | SelectVisualizer     SelectVisualizerEvent
     | FocusVisualization   FocusVisualizationEvent
@@ -203,8 +203,8 @@ instance NFData EditNodeNameEvent
 instance NFData EditNodeExpressionEvent
 instance NFData SearcherAcceptEvent
 instance NFData SearcherEditEvent
-instance NFData SearcherMoveUpEvent
-instance NFData SearcherMoveDownEvent
+instance NFData SearcherScrollNextEvent
+instance NFData SearcherScrollPrevEvent
 instance NFData SearcherTabPressedEvent
 instance NFData SelectVisualizerEvent
 instance NFData Target
@@ -223,8 +223,8 @@ instance FromJSON EditNodeNameEvent         where parseJSON = parseDropUnary
 instance FromJSON EditNodeExpressionEvent   where parseJSON = parseDropUnary
 instance FromJSON SearcherAcceptEvent       where parseJSON = parseDropUnary
 instance FromJSON SearcherEditEvent         where parseJSON = parseDropUnary
-instance FromJSON SearcherMoveUpEvent       where parseJSON = parseDropUnary
-instance FromJSON SearcherMoveDownEvent     where parseJSON = parseDropUnary
+instance FromJSON SearcherScrollNextEvent   where parseJSON = parseDropUnary
+instance FromJSON SearcherScrollPrevEvent   where parseJSON = parseDropUnary
 instance FromJSON SearcherTabPressedEvent   where parseJSON = parseDropUnary
 instance FromJSON SelectVisualizerEvent     where parseJSON = parseDropUnary
 instance FromJSON Target                    where parseJSON = parseDropUnary
@@ -244,8 +244,8 @@ instance ToJSON EditNodeNameEvent         where toEncoding = toEncodingDropUnary
 instance ToJSON EditNodeExpressionEvent   where toEncoding = toEncodingDropUnary
 instance ToJSON SearcherAcceptEvent       where toEncoding = toEncodingDropUnary
 instance ToJSON SearcherEditEvent         where toEncoding = toEncodingDropUnary
-instance ToJSON SearcherMoveUpEvent       where toEncoding = toEncodingDropUnary
-instance ToJSON SearcherMoveDownEvent     where toEncoding = toEncodingDropUnary
+instance ToJSON SearcherScrollNextEvent   where toEncoding = toEncodingDropUnary
+instance ToJSON SearcherScrollPrevEvent   where toEncoding = toEncodingDropUnary
 instance ToJSON SearcherTabPressedEvent   where toEncoding = toEncodingDropUnary
 instance ToJSON SelectVisualizerEvent     where toEncoding = toEncodingDropUnary
 instance ToJSON Target                    where toEncoding = toEncodingDropUnary
