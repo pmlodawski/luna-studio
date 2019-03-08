@@ -4,7 +4,6 @@ config          = require('./config')
 atomCallback            = require('./atom-callback')
 
 window.visualizerFramesManager = require('./visualizers')
-window.searcherEngine = require('fuzzly')
 
 start = ->
   $(document).ready ->

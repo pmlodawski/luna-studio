@@ -2,199 +2,169 @@ module NodeEditor.Action.Basic.UpdateSearcherHints where
 
 import Common.Prelude
 
-import qualified Data.Aeson                                 as Aeson
-import qualified Data.ByteString.Lazy.Char8                 as BS
-import qualified Data.JSString                              as JSString
-import qualified Data.Map                                   as Map
-import qualified Data.Set                                   as Set
-import qualified Data.Text                                  as Text
-import qualified IdentityString                             as IS
-import qualified LunaStudio.Data.Searcher.Hint              as Hint
-import qualified LunaStudio.Data.Searcher.Hint.Library      as Library
-import qualified LunaStudio.Data.Searcher.Hint.Class        as Class
-import qualified NodeEditor.React.Model.Searcher            as Searcher
-import qualified NodeEditor.React.Model.Searcher.Hint.Node  as NodeHint
-import qualified NodeEditor.React.Model.Searcher.Hint       as Hint
-import qualified NodeEditor.React.Model.Searcher.Input      as Input
-import qualified NodeEditor.React.Model.Searcher.Mode       as Mode
-import qualified NodeEditor.React.Model.Searcher.Mode.Node  as NodeMode
-import qualified NodeEditor.React.Model.Searcher.Mode.Node  as NodeSearcher
-import qualified NodeEditor.React.Model.Visualization       as Visualization
-import qualified NodeEditor.State.Global                    as Global
-import qualified Searcher.Data.Class                        as Searcher
-import qualified Searcher.Data.Database                     as Database
-import qualified Searcher.Data.Result                       as Result
-import qualified Searcher.Engine                            as SearcherEngine
+import qualified Data.Aeson                                   as Aeson
+import qualified Data.ByteString.Lazy.Char8                   as BS
+import qualified Data.JSString                                as JSString
+import qualified Data.Map                                     as Map
+import qualified Data.Set                                     as Set
+import qualified Data.Text                                    as Text
+import qualified IdentityString                               as IS
+import qualified LunaStudio.Data.Searcher.Node                as NS
+import qualified NodeEditor.React.Model.Searcher              as Searcher
+import qualified NodeEditor.React.Model.Searcher.Input        as Input
+import qualified NodeEditor.React.Model.Searcher.Mode.Command as CommandSearcher
+import qualified NodeEditor.React.Model.Searcher.Mode.Node    as NodeSearcher
+import qualified NodeEditor.React.Model.Visualization         as Visualization
+import qualified NodeEditor.State.Global                      as Global
+import qualified Searcher.Engine.Data.Match                   as Match
 
-import Common.Action.Command                 (Command)
-import Common.Debug                          (timeAction)
-import Control.DeepSeq                       (force)
-import Control.Exception.Base                (evaluate)
-import Data.Map                              (Map)
-import Data.Ord                              (comparing)
-import Data.Set                              (Set)
-import Data.Text                             (Text)
-import JS.Visualizers                        (sendVisualizationData)
-import LunaStudio.Data.PortRef               (OutPortRef)
-import LunaStudio.Data.Searcher.Hint.Library (SearcherLibraries)
-import LunaStudio.Data.TypeRep               (ConstructorRep (ConstructorRep))
-import NodeEditor.Action.Batch               (searchNodes)
-import NodeEditor.Action.State.NodeEditor    (getLocalFunctions, getSearcher,
-                                              inTopLevelBreadcrumb,
-                                              modifySearcher)
-import NodeEditor.React.Model.Searcher       (Searcher)
-import NodeEditor.State.Global               (State)
-import Searcher.Data.Result                  (Result (Result),
-                                              Match (Match))
+import Common.Action.Command              (Command)
+import Data.Map                           (Map)
+import Data.Set                           (Set)
+import Data.Text                          (Text)
+import JS.Visualizers                     (sendVisualizationData)
+import LunaStudio.Data.TypeRep            (ConstructorRep (ConstructorRep))
+import NodeEditor.Action.Batch            (searchNodes)
+import NodeEditor.Action.State.NodeEditor (getLocalFunctions, getSearcher,
+                                           inTopLevelBreadcrumb, modifySearcher)
+import NodeEditor.React.Model.Searcher    (ClassName, LibrariesHintsMap,
+                                           LibraryName, Match, NodeSearcherData,
+                                           Searcher, Symbol, TypePreference,
+                                           allCommands,
+                                           localFunctionsLibraryName)
+import NodeEditor.State.Global            (State)
 
 
-positionSucc :: Maybe Int -> Maybe Int
-positionSucc = \case
-    Just i  -> Just $ i + 1
-    Nothing -> Just 0
+type IsFirstQuery         = Bool
+type SearchForMethodsOnly = Bool
 
-positionPred :: Maybe Int -> Maybe Int
-positionPred = \case
-    Nothing -> Nothing
-    Just 0  -> Nothing
-    Just i  -> Just $ i - 1
+selectNextHint :: Searcher -> Command State ()
+selectNextHint _ = modifySearcher $ use (Searcher.hints . to length)
+    >>= \hintsLen -> Searcher.selected %= min hintsLen . succ
 
-selectNextHint :: Command State ()
-selectNextHint = modifySearcher $ do
-    hintsLen <- use (Searcher.results . to length)
-    Searcher.selectedPosition %= fmap (min hintsLen) . positionSucc
+selectPreviousHint :: Searcher -> Command State ()
+selectPreviousHint _
+    = modifySearcher $ Searcher.selectedPosition %= max 0 . pred
 
-selectPreviousHint :: Command State ()
-selectPreviousHint = modifySearcher $ Searcher.selectedPosition %= positionPred
+selectHint :: Int -> Command State ()
+selectHint i = when (i >= 0) . modifySearcher $ do
+    hLen <- use $ Searcher.hints . to length
+    when (i <= hLen) $ Searcher.selected .= i
 
-selectHint :: Maybe Int -> Command State ()
-selectHint i = modifySearcher $ do
-    hLen <- fmap Just $ use $ Searcher.results . to length
-    when (i <= hLen) $ Searcher.selectedPosition .= i
+localAddSearcherHints :: LibrariesHintsMap -> Command State ()
+localAddSearcherHints libHints = do
+    Global.nodeSearcherData . NodeSearcher.libraries %= Map.union libHints
+    localUpdateSearcherHintsPreservingSelection
+    Global.waitingForTc .= False
+    modifySearcher $ Searcher.waitingForTc .= False
 
-addDatabaseHints :: SearcherLibraries -> Command State ()
-addDatabaseHints libHints = do
-    oldDb <- use Global.searcherDatabase
-    let newDb = NodeHint.insertSearcherLibraries libHints oldDb
-    Global.searcherDatabase .= newDb
-    updateHintsPreservingSelection
-
-setImportedLibraries :: Set Library.Name -> Command State ()
+setImportedLibraries :: Set LibraryName -> Command State ()
 setImportedLibraries libs = do
-    Global.searcherDatabase . NodeHint.imported .= libs
-    missingLibs <- use $ Global.searcherDatabase . NodeHint.missingLibraries
+    Global.nodeSearcherData . NodeSearcher.importedLibraries .= libs
+    missingLibs <- use $ Global.nodeSearcherData . Searcher.missingLibraries
     unless (null missingLibs) $ do
+        Global.waitingForTc                    .= True
+        modifySearcher $ Searcher.waitingForTc .= True
         searchNodes missingLibs
 
 updateDocumentation :: Command State ()
 updateDocumentation = withJustM getSearcher $ \s -> do
-    let mayDocVis = s ^? Searcher.documentationVisualization
-        mayDoc = s ^? Searcher.selectedResult . _Just . Searcher.documentation
+    let mayDocVis = s ^. Searcher.documentationVisualization
+        mayDoc = s ^? Searcher.selectedHint . _Just . Match.documentation . _Just
         mayDocData = (,) <$> mayDocVis <*> mayDoc
     withJust mayDocData $ \(docVis, doc) -> liftIO $ sendVisualizationData
         (docVis ^. Visualization.visualizationId)
         (ConstructorRep "Text" def)
         =<< (IS.fromJSString . JSString.pack . BS.unpack $ Aeson.encode doc)
 
-updateHintsPreservingSelection :: Command State ()
-updateHintsPreservingSelection = do
-    maySelected <- maybe def (view Searcher.selectedResult) <$> getSearcher
-    updateHints'
+localUpdateSearcherHintsPreservingSelection :: Command State ()
+localUpdateSearcherHintsPreservingSelection = do
+    maySelected <- maybe def (view Searcher.selectedHint) <$> getSearcher
+    localUpdateSearcherHints'
     withJust maySelected $ \selected -> do
-        let equals = (==) `on` view Searcher.text
-        hints <- maybe def (view Searcher.results) <$> getSearcher
-        withJust (findIndex (equals selected) hints) $ selectHint . Just
+        let equalsType (Searcher.CommandHint _) (Searcher.CommandHint _) = True
+            equalsType (Searcher.NodeHint    _) (Searcher.NodeHint    _) = True
+            equalsType _                       _                         = False
+            equalsName h1 h2 = h1 ^. Match.name == h2 ^. Match.name
+            equals h1 h2 = equalsType h1 h2 && equalsName h1 h2
+        hints <- maybe def (view Searcher.hints) <$> getSearcher
+        withJust (findIndex (equals selected) hints) $ selectHint . (+1)
     updateDocumentation
 
-updateHints :: Command State ()
-updateHints = updateHints' >> updateDocumentation
+localUpdateSearcherHints :: Command State ()
+localUpdateSearcherHints = localUpdateSearcherHints' >> updateDocumentation
 
-updateHints' :: Command State ()
-updateHints' = unlessM inTopLevelBreadcrumb $ do
-    nsData    <- use Global.searcherDatabase
-    localFuns <- getLocalFunctions
+localUpdateSearcherHints' :: Command State ()
+localUpdateSearcherHints' = unlessM inTopLevelBreadcrumb $ do
+    nsData'        <- use Global.nodeSearcherData
+    localFunctions <- getLocalFunctions
+    let nsData :: NodeSearcherData
+        nsData = nsData'
+            & Searcher.libraries %~ Map.insert
+                localFunctionsLibraryName
+                (Searcher.mkLocalFunctionsLibrary localFunctions)
+            & Searcher.importedLibraries %~ Set.insert localFunctionsLibraryName
     modifySearcher $ do
-        mayQuery <- preuse $ Searcher.input . Input._DividedInput
-        let query = fromMaybe def mayQuery
-        isExprSearcher <- uses Searcher.mode Mode.isExpressionSearcher
-        newHints <- case isExprSearcher of
-            True -> do
-                let localFunctionsDb = NodeHint.mkLocalFunctionsDb localFuns
-                mayClassName <- preuse $ Searcher.mode
-                    . Mode._Node . NodeMode.mode . NodeMode._ExpressionMode
-                    . NodeMode.parent . _Just
-                pure $ search query localFunctionsDb nsData mayClassName
-            False -> pure mempty
-        Searcher.results .= newHints
-        let selectInput = maybe True (Text.null . view Input.query) mayQuery
-        hintsLen <- use $ Searcher.results . to length
-        Searcher.selectedPosition .= if selectInput || hintsLen == 0
-                                         then Nothing
-                                         else Just 0
+        mayQuery <- preuse $ Searcher.input . Searcher._DividedInput
+        let updateCommands s = do
+                let hints input = CommandSearcher.search
+                        (input ^. Input.query)
+                        allCommands
+                maybe mempty hints mayQuery
+            updateNodeSearcher s = do
+                let mayClassName = s ^? Searcher.modeData
+                        . Searcher._ExpressionMode . Searcher.className . _Just
+                    hints input
+                        = if has (Searcher.modeData . Searcher._ExpressionMode) s
+                            then search input nsData mayClassName
+                            else mempty
+                s & Searcher.nodes .~ maybe mempty hints mayQuery
+            updateMode (Searcher.CommandSearcher s)
+                = Searcher.CommandSearcher $ updateCommands s
+            updateMode (Searcher.NodeSearcher s)
+                = Searcher.NodeSearcher $ updateNodeSearcher s
+            selectInput = maybe True (Text.null . view Input.query) mayQuery
+        Searcher.mode          %= updateMode
+        hintsLen <- use $ Searcher.hints . to length
+        Searcher.selected      .= if selectInput then 0 else min 1 hintsLen
+        Searcher.rollbackReady .= False
 
-clearHints :: Command State ()
-clearHints = do
+localClearSearcherHints :: Command State ()
+localClearSearcherHints = do
     modifySearcher $ do
-        Searcher.selectedPosition .= def
-        Searcher.results          .= mempty
+        let updateMode (Searcher.CommandSearcher m)
+                = Searcher.CommandSearcher mempty
+            updateMode (Searcher.NodeSearcher m)
+                = Searcher.NodeSearcher $ m & Searcher.nodes .~ mempty
+        Searcher.selected      .= def
+        Searcher.rollbackReady .= False
+        Searcher.mode          %= updateMode
     updateDocumentation
 
-getConnectedPortRef :: Command State (Maybe OutPortRef)
-getConnectedPortRef = do
-    s <- getSearcher
-    pure $ s ^? _Just . Searcher.mode . Mode._Node . NodeMode.mode
-              . NodeMode._ExpressionMode . NodeMode.newNode . _Just
-              . NodeMode.connectionSource . _Just
 
-updateClassName :: Maybe Class.Name -> Command State ()
-updateClassName cl = do
-    modifySearcher $ do
-        Searcher.mode . Mode._Node . NodeMode.mode
-            . NodeMode._ExpressionMode . NodeMode.parent .= cl
-    updateHintsPreservingSelection
+search :: Input.Divided -> NodeSearcherData -> Maybe ClassName -> [Match Symbol]
+search input nsData mayClassName = do
+    let query          = input ^. Input.query
+        strippedPrefix = Text.strip $ input ^. Input.prefix
+        notNullInput   = not . Text.null $ convert input
+        weights        = Just $ getWeights input mayClassName
+        searchResult   = if notNullInput || isJust mayClassName
+            then NodeSearcher.search                       query nsData weights
+            else NodeSearcher.notConnectedEmptyInputSearch query nsData weights
+    if strippedPrefix == "def" then mempty
+        else if query == "_"   then Searcher.wildcardMatch : searchResult
+        else searchResult
 
-scoreTextMatch :: Text -> NodeHint.Database -> [Result NodeHint.Node]
-scoreTextMatch query nsData = case Text.null query of
-    True ->
-        let mkResult r = Result r 0 $ Match []
-            db = nsData ^. NodeHint.database
-        in mkResult <$> Database.elems db
-    False ->
-        let db = nsData ^. NodeHint.database
-        in SearcherEngine.query db query
+getWeights :: Input.Divided -> Maybe ClassName  -> TypePreference
+getWeights input mayClassName = do
+    let query = input ^. Input.query
+        strippedPrefix = Text.strip $ input ^. Input.prefix
+        isFirstQuery = Text.null strippedPrefix
+        searchForMethodsOnly = not (Text.null strippedPrefix)
+            && Text.last strippedPrefix == '.'
+    Searcher.getWeights isFirstQuery searchForMethodsOnly mayClassName query
 
-scoreClassMembership :: Maybe Class.Name -> [Result NodeHint.Node]
-                     -> [Result NodeHint.Node]
-scoreClassMembership Nothing = id
-scoreClassMembership (Just clName) = fmap adjustMethodScore where
-    adjustMethodScore result
-        = result & Result.score
-            +~ classScore (result ^. Result.hint)
-    classScore node = if node ^. NodeHint.kind == NodeHint.Method clName
-                      then 1
-                      else 0
 
-scoreLocalFuns :: Maybe Class.Name -> [Result NodeHint.Node]
-               -> [Result NodeHint.Node]
-scoreLocalFuns Nothing   = fmap (Result.score +~ 1)
-scoreLocalFuns (Just cl) = id
 
-fullDbSearch :: Input.Divided -> NodeHint.Database -> NodeHint.Database
-             -> Maybe Class.Name -> [Result Hint.Hint]
-fullDbSearch input localDb nsData mayClassName = let
-    query = input ^. Input.query
-    scoredText = scoreTextMatch query nsData
-    scoredLocal = scoreTextMatch query localDb
-    classBonus    = scoreClassMembership mayClassName scoredText
-    localFunBonus = scoreLocalFuns mayClassName scoredLocal
-    allHints      = localFunBonus <> classBonus
-    sorted        = sortBy (comparing $ negate . view Result.score) allHints
-    in Hint.Node <<$>> sorted
 
-search :: Input.Divided -> NodeHint.Database -> NodeHint.Database
-       -> Maybe Class.Name -> [Result Hint.Hint]
-search input localDb nsData mayClassName =
-    if Text.strip (input ^. Input.prefix) == "def"
-        then mempty
-        else fullDbSearch input localDb nsData mayClassName
 

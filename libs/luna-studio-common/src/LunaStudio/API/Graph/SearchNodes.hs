@@ -2,25 +2,24 @@ module LunaStudio.API.Graph.SearchNodes where
 
 import Prologue
 
-import qualified LunaStudio.API.Graph.Request          as G
-import qualified LunaStudio.API.Topic                  as T
-import qualified LunaStudio.Data.Searcher.Hint.Library as Library
+import qualified LunaStudio.API.Graph.Request as G
+import qualified LunaStudio.API.Topic         as T
 
-import Data.Aeson.Types                      (ToJSON)
-import Data.Binary                           (Binary)
-import Data.Map                              (Map)
-import Data.Set                              (Set)
-import LunaStudio.Data.GraphLocation         (GraphLocation)
-import LunaStudio.Data.Searcher.Hint.Library (SearcherLibraries)
+import Data.Aeson.Types              (ToJSON)
+import Data.Binary                   (Binary)
+import Data.Map                      (Map)
+import Data.Set                      (Set)
+import LunaStudio.Data.GraphLocation (GraphLocation)
+import LunaStudio.Data.Searcher.Node (LibraryHints, LibraryName)
 
 
 data Request = Request
     { _location         :: GraphLocation
-    , _missingLibraries :: Set Library.Name
+    , _missingLibraries :: Set LibraryName
     } deriving (Eq, Generic, Show)
 
 data Result = Result
-    { _searcherHints :: SearcherLibraries
+    { _searcherHints :: Map LibraryName LibraryHints
     } deriving (Eq, Generic, Show)
 
 makeLenses ''Request

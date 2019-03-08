@@ -19,6 +19,7 @@ dependencies:
   - convert
   - deepseq
   - filepath
+  - fuzzy-text
   - hashable
   - lens
   - lens-utils

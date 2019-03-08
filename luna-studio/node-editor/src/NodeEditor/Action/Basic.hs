@@ -99,12 +99,10 @@ import NodeEditor.Action.Basic.UpdateNode          as X (NodeUpdateModification 
                                                          localUpdateOrAddOutputNode,
                                                          localUpdateOutputNode)
 import NodeEditor.Action.Basic.UpdateNodeValue     as X (updateNodeValueAndVisualization)
-import NodeEditor.Action.Basic.UpdateSearcherHints as X (addDatabaseHints,
-                                                         clearHints,
-                                                         updateHints,
+import NodeEditor.Action.Basic.UpdateSearcherHints as X (localAddSearcherHints,
+                                                         localClearSearcherHints,
+                                                         localUpdateSearcherHints,
                                                          selectHint,
-                                                         selectNextHint,
-                                                         selectPreviousHint,
                                                          setImportedLibraries,
                                                          updateDocumentation)
 import NodeEditor.Action.State.Model               as X (isArgConstructorConnectSrc,
@@ -143,3 +141,5 @@ moveNodeOnConnection nl conn metaUpdate = do
          (Topic.topic' leftConnect, Binary.encode leftConnect),
          (Topic.topic' rightConnect, Binary.encode rightConnect)
          ]
+  -- connect (Left $ conn ^. src) $ Right nl
+  -- connect (Right nl)           $ Left $ conn ^. dst

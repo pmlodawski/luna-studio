@@ -2,11 +2,10 @@ module LunaStudio.Data.Diff where
 
 import Prologue hiding (TypeRep, mod)
 
-import qualified Data.Map                              as Map
-import qualified LunaStudio.Data.Graph                 as Graph
-import qualified LunaStudio.Data.GUIState              as GUIState
-import qualified LunaStudio.Data.Node                  as Node
-import qualified LunaStudio.Data.Searcher.Hint.Library as Library
+import qualified Data.Map                 as Map
+import qualified LunaStudio.Data.Graph    as Graph
+import qualified LunaStudio.Data.GUIState as GUIState
+import qualified LunaStudio.Data.Node     as Node
 
 import Control.Lens                         (makePrisms, _Right)
 import Data.Aeson.Types                     (ToJSON)
@@ -30,6 +29,7 @@ import LunaStudio.Data.NodeLoc              (HasNodeLoc (nodeLoc), NodeLoc)
 import LunaStudio.Data.NodeMeta             (NodeMeta)
 import LunaStudio.Data.Port                 (InPort, InPortTree, OutPort,
                                              OutPortTree)
+import LunaStudio.Data.Searcher.Node        (LibraryName)
 import LunaStudio.Data.TypeRep              (TypeRep)
 import LunaStudio.Data.Visualizer           (ExternalVisualizers, Visualizer)
 
@@ -116,7 +116,7 @@ data ModificationSetGraphError = ModificationSetGraphError
     } deriving (Eq, Generic, Show)
 
 data ModificationSetImports = ModificationSetImports
-    { _newImports :: Set Library.Name
+    { _newImports :: Set LibraryName
     } deriving (Eq, Generic, Show)
 
 data ModificationSetInPorts = ModificationSetInPorts
@@ -502,7 +502,7 @@ instance Diffable (Either (Error GraphError) Graph) where
     diff (Left _)   (Right g)  = Diff . pure . toModification $ ModificationSetGraph      g
     diff (Right g1) (Right g2) = diff g1 g2
 
-instance Diffable (Set Library.Name) where
+instance Diffable (Set LibraryName) where
     patch (SetImports m) = const $ m ^. newImports
     patch _              = id
     diff imps1 imps2 = if imps1 == imps2

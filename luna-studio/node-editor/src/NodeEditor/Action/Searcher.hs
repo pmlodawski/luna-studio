@@ -6,7 +6,6 @@ import qualified Data.Text                                  as Text
 import qualified JS.Searcher                                as Searcher
 import qualified LunaStudio.Data.NodeLoc                    as NodeLoc
 import qualified LunaStudio.Data.PortRef                    as PortRef
-import qualified LunaStudio.Data.Searcher.Hint.Library      as Library
 import qualified LunaStudio.Data.TypeRep                    as TypeRep
 import qualified NodeEditor.Action.Basic                    as Basic
 import qualified NodeEditor.Event.Shortcut                  as Shortcut
@@ -14,20 +13,16 @@ import qualified NodeEditor.React.Model.Node.ExpressionNode as Node
 import qualified NodeEditor.React.Model.NodeEditor          as NodeEditor
 import qualified NodeEditor.React.Model.Port                as Port
 import qualified NodeEditor.React.Model.Searcher            as Searcher
-import qualified NodeEditor.React.Model.Searcher.Hint       as Hint
-import qualified NodeEditor.React.Model.Searcher.Hint.Node  as NodeHint
 import qualified NodeEditor.React.Model.Searcher.Input      as Input
-import qualified NodeEditor.React.Model.Searcher.Mode       as Mode
-import qualified NodeEditor.React.Model.Searcher.Mode.Node  as NodeMode
 import qualified NodeEditor.React.Model.Visualization       as Visualization
 import qualified NodeEditor.React.View.App                  as App
 import qualified NodeEditor.State.Global                    as Global
 import qualified NodeEditor.State.UI                        as UI
-import qualified Searcher.Data.Class                        as SearcherData
-import qualified Searcher.Data.Result                       as Result
+import qualified Searcher.Engine.Data.Match                 as Match
+import qualified Searcher.Engine.Data.Symbol                as Symbol
+import qualified Searcher.Engine.Data.Symbol.Library        as Library
 
 import Common.Action.Command                (Command)
-import Common.Debug                         (timeAction)
 import Common.Report                        (warning)
 import Control.Arrow                        ((&&&))
 import JS.Visualizers                       (registerVisualizerFrame)
@@ -46,8 +41,8 @@ import LunaStudio.Data.Size                 (height, width)
 import LunaStudio.Data.TypeRep              (TypeRep (TCons))
 import LunaStudio.Data.Vector2              (Vector2 (Vector2))
 import NodeEditor.Action.Basic              (createNode,
-                                             clearHints,
-                                             updateHints,
+                                             localClearSearcherHints,
+                                             localUpdateSearcherHints,
                                              modifyCamera, renameNode,
                                              renamePort, setNodeExpression,
                                              updateDocumentation)
@@ -66,13 +61,11 @@ import NodeEditor.Action.State.Scene        (getScreenSize, translateToScreen,
 import NodeEditor.Action.UUID               (getUUID)
 import NodeEditor.Event.Event               (Event (Shortcut))
 import NodeEditor.React.Model.Constants     (searcherHeight, searcherWidth)
-import NodeEditor.React.Model.Visualization (RunningVisualization
-                                             (RunningVisualization),
-                                             VisualizerProperties
-                                             (VisualizerProperties),
+import NodeEditor.React.Model.Searcher      (Match, Symbol)
+import NodeEditor.React.Model.Visualization (RunningVisualization (RunningVisualization),
+                                             VisualizerProperties (VisualizerProperties),
                                              getMdVisualizer)
-import NodeEditor.State.Action              (Action
-                                             (begin, continue, end, update),
+import NodeEditor.State.Action              (Action (begin, continue, end, update),
                                              Searcher (Searcher),
                                              searcherAction)
 import NodeEditor.State.Global              (State, visualizers)
@@ -80,8 +73,6 @@ import Text.Read                            (readMaybe)
 
 import LunaStudio.Data.ScreenPosition (ScreenPosition)
 import LunaStudio.Data.Size           (Size)
-
-import NodeEditor.React.Model.Searcher.Mode (Mode)
 
 instance Action (Command State) Searcher where
     begin    = beginActionWithKey    searcherAction
@@ -105,6 +96,19 @@ mkDocumentationVisualization = getUUID >>= \uuid -> do
         liftIO $ registerVisualizerFrame uuid
         pure $ RunningVisualization uuid def vp
 
+emptyInputError :: Searcher.Mode -> Text
+emptyInputError m = fieldName <> errSuffix where
+    errSuffix = " cannot be empty."
+    fieldName = case m of
+        Searcher.CommandSearcher {} -> "Command"
+        Searcher.NodeSearcher    ns -> case ns ^. Searcher.modeData of
+            Searcher.ExpressionMode {} -> "Node expression"
+            Searcher.NodeNameMode   {} -> "Node name"
+            Searcher.PortNameMode   {} -> "Port name"
+
+clearSearcherError :: Command State ()
+clearSearcherError = modifySearcher $ Searcher.searcherError .= def
+
 editSelectedNodeExpression :: Command State ()
 editSelectedNodeExpression = getSelectedNodes >>= \case
     [n] -> editExpression $ n ^. Node.nodeLoc
@@ -114,15 +118,17 @@ editExpression :: NodeLoc -> Command State ()
 editExpression nl =
     let getClassName n = convert <$> n ^? Node.inPortAt [Port.Self]
             . Port.valueType . TypeRep._TCons . _1
-        mkExpressionData n = NodeMode.ExpressionMode $ NodeMode.Expression
+        mkExpressionData n = Searcher.ExpressionMode $ Searcher.ExpressionData
             Nothing
             (getClassName n)
             mempty
-        mkExpressionNodesDataM n = do
-            docVis <- mkDocumentationVisualization
-            pure $ NodeMode.Node nl docVis $ mkExpressionData n
+        mkExpressionNodesDataM n = Searcher.NodesData
+            nl
+            def
+            (mkExpressionData n)
+            <$> mkDocumentationVisualization
         mkExpressionSearcherModeM n
-            = Mode.Node <$> mkExpressionNodesDataM n
+            = Searcher.NodeSearcher <$> mkExpressionNodesDataM n
     in withJustM (getExpressionNode nl) $ \n -> openWith
         (n ^. Node.code)
         =<< mkExpressionSearcherModeM n
@@ -130,16 +136,17 @@ editExpression nl =
 editName :: NodeLoc -> Command State ()
 editName nl = withJustM (getExpressionNode nl) $ \n -> openWith
     (maybe mempty id $ n ^. Node.name)
-    $ Mode.Node $ NodeMode.Node nl def NodeMode.NodeNameMode
+    $ Searcher.NodeSearcher $ Searcher.NodesData nl def Searcher.NodeNameMode def
 
 editPortName :: OutPortRef -> Command State ()
 editPortName portRef = withJustM (getPort portRef) $ \p -> openWith
     (p ^. Port.name)
-    $ Mode.Node $ NodeMode.Node
+    $ Searcher.NodeSearcher $ Searcher.NodesData
         (portRef ^. PortRef.nodeLoc)
         def
-        (NodeMode.PortNameMode
-            $ NodeMode.PortName $ portRef ^. PortRef.srcPortId)
+        (Searcher.PortNameMode
+            $ Searcher.PortNameData $ portRef ^. PortRef.srcPortId)
+        def
 
 open :: Maybe Position -> Command State ()
 open mayPosition = do
@@ -163,35 +170,36 @@ open mayPosition = do
             notConnectedSearcherPositionM
             findSuccessorPosition
             =<< mayConnectedNodeM
-        newNodeDataM = NodeMode.New
+        newNodeDataM = Searcher.NewNodeData
             <$> positionM
             <*> mayConnectedPortRefM
         getPortClassName p = convert
             <$> p ^? Port.valueType . TypeRep._TCons . _1
         mayClassNameM = maybe mempty getPortClassName <$> mayConnectedPortM
-        expressionModeM = NodeMode.ExpressionMode .:. NodeMode.Expression
+        expressionModeM = Searcher.ExpressionMode .:. Searcher.ExpressionData
             <$> (Just <$> newNodeDataM)
             <*> mayClassNameM
             <*> pure mempty
-        mkNodesDataM nl = NodeMode.Node
+        mkNodesDataM nl = Searcher.NodesData
             nl
-            <$> mkDocumentationVisualization
-            <*> expressionModeM
-        mkNodeSearcherM nl = Mode.Node <$> mkNodesDataM nl
+            mempty
+            <$> expressionModeM
+            <*> mkDocumentationVisualization
+        mkNodeSearcherM nl = Searcher.NodeSearcher <$> mkNodesDataM nl
 
     nl <- convert . ((def :: NodePath), ) <$> getUUID
     openWith mempty =<< mkNodeSearcherM nl
 
-adjustCameraToSearcher :: Mode.Mode -> Command State ()
+adjustCameraToSearcher :: Searcher.Mode -> Command State ()
 adjustCameraToSearcher mode = do
-    let mayNodesData      = mode         ^? Mode._Node
-        mayModeData       = mayNodesData ^? _Just . NodeMode.mode
-        maySearcherNl     = mayNodesData ^? _Just . NodeMode.nodeLoc
-        mayExpressionMode = mayModeData  ^? _Just . NodeMode._ExpressionMode
-        mayNodeNameMode   = mayModeData  ^? _Just . NodeMode._NodeNameMode
+    let mayNodesData      = mode         ^? Searcher._NodeSearcher
+        mayModeData       = mayNodesData ^? _Just . Searcher.modeData
+        maySearcherNl     = mayNodesData ^? _Just . Searcher.nodeLoc
+        mayExpressionMode = mayModeData  ^? _Just . Searcher._ExpressionMode
+        mayNodeNameMode   = mayModeData  ^? _Just . Searcher._NodeNameMode
         mayNewNodeData
-            = mayExpressionMode ^? _Just . NodeMode.newNode . _Just
-        mayNewNodePosition  = mayNewNodeData    ^? _Just . NodeMode.position
+            = mayExpressionMode ^? _Just . Searcher.newNodeData . _Just
+        mayNewNodePosition  = mayNewNodeData    ^? _Just . Searcher.position
         getNodeTop nl       = view Node.topPosition `fmap2` getExpressionNode nl
         mayNodeTopPositionM = maybe (pure Nothing) getNodeTop maySearcherNl
         mayWorkspaceSearcherBottomM = maybe
@@ -240,13 +248,13 @@ adjustCameraToSearcher mode = do
         (invertedTranslationMatrix delta)
         (translationMatrix delta)
 
-openWith :: Text -> Mode.Mode -> Command State ()
+openWith :: Text -> Searcher.Mode -> Command State ()
 openWith input mode = do
+    waitingForTc <- use Global.waitingForTc
     let action   = Searcher
         inputLen = Text.length input
-        searcher = Searcher.Searcher def False def def mode
+        searcher = Searcher.Searcher def mode def False False waitingForTc def
     begin action
-    s <- modifySearcher $ (: []) <$> use id
     adjustCameraToSearcher mode
     modifyNodeEditor $ NodeEditor.searcher ?= searcher
     modifyInput input inputLen inputLen action
@@ -257,12 +265,13 @@ openWith input mode = do
 
 updateInput :: Text -> Int -> Int -> Searcher -> Command State ()
 updateInput input selectionStart selectionEnd action = do
+    clearSearcherError
     let inputStream = evalDefLexer $ convert input
         searcherInput
-            = if selectionStart /= selectionEnd then Input.RawInput input
-            else if Text.null input             then Input.DividedInput def
+            = if selectionStart /= selectionEnd then Searcher.RawInput input
+            else if Text.null input             then Searcher.DividedInput def
             else Input.fromStream input inputStream selectionStart
-        inputDivided = has Input._DividedInput searcherInput
+        inputDivided = has Searcher._DividedInput searcherInput
         mayLambdaArgsAndEndPos = Input.findLambdaArgsAndEndOfLambdaArgs
             (convert input)
             inputStream
@@ -270,18 +279,18 @@ updateInput input selectionStart selectionEnd action = do
         mayLambdaEndPos = snd <$> mayLambdaArgsAndEndPos
     modifySearcher $ Searcher.input .= searcherInput
     mayMode <- view Searcher.mode `fmap2` getSearcher
-    if not $ has Input._DividedInput searcherInput then clearHints
-    else if has (_Just . Mode._Node) mayMode then do
+    if not $ has Searcher._DividedInput searcherInput    then clearHints action
+    else if has (_Just . Searcher._NodeSearcher) mayMode then do
         modifySearcher $ Searcher.mode
-            . Mode._Node . NodeMode.mode
-            . NodeMode._ExpressionMode . NodeMode.arguments .= lambdaArgs
+            . Searcher._NodeSearcher   . Searcher.modeData
+            . Searcher._ExpressionMode . Searcher.argumentsNames .= lambdaArgs
         maybe
-            updateHints
+            (updateHints action)
             (\endPos -> if selectionStart < endPos
-                then clearHints
-                else updateHints)
+                then clearHints action
+                else updateHints action)
             mayLambdaEndPos
-    else updateHints
+    else updateHints action
 
 modifyInput :: Text -> Int -> Int -> Searcher -> Command State ()
 modifyInput input selectionStart selectionEnd action = do
@@ -291,10 +300,16 @@ modifyInput input selectionStart selectionEnd action = do
     Searcher.setSelection selectionStart selectionEnd
     modifySearcher $ Searcher.replaceInput .= False
 
+updateHints :: Searcher -> Command State ()
+updateHints _ = localUpdateSearcherHints
+
+clearHints :: Searcher -> Command State ()
+clearHints _ = localClearSearcherHints
+
 handleTabPressed :: Searcher -> Command State ()
 handleTabPressed action = withJustM getSearcher $ \s ->
     if Text.null (s ^. Searcher.inputText)
-        && s ^. Searcher.selectedPosition == Nothing
+        && s ^. Searcher.selectedPosition == 0
             then close action
             else void $ updateInputWithSelectedHint action
 
@@ -304,7 +319,7 @@ updateInputWithSelectedHint action =
             let mayNextChar         = input ^? Input.suffix . ix 0
                 needsSpace c        = not $ elem c [' ', ')']
                 trailingSpaceNeeded = maybe True needsSpace mayNextChar
-                updatedQuery        = h ^. SearcherData.text
+                updatedQuery        = h ^. Searcher.name
                     <> if trailingSpaceNeeded then " " else mempty
                 updatedInput  = input & Input.query .~ updatedQuery
                 caretPosition
@@ -315,8 +330,8 @@ updateInputWithSelectedHint action =
                 caretPosition
                 action
     in withJustM getSearcher $ \s ->
-        withJust (s ^. Searcher.selectedResult) $ \h -> do
-            withJust (h ^? Result.hint . Hint._Node) includeImport
+        withJust (s ^. Searcher.selectedHint) $ \h -> do
+            withJust (h ^? Searcher._NodeHint) includeImport
             withJust
                 (s ^? Searcher.input . Input._DividedInput)
                 $ updateDividedInput h
@@ -328,22 +343,22 @@ accept scheduleEvent action = do
         let inputText = searcher ^. Searcher.inputText
             mode      = searcher ^. Searcher.mode
             commandSearcherAccept = execCommand action scheduleEvent inputText
-            nodeSearcherAccept nl (NodeMode.ExpressionMode sd) = maybe
+            nodeSearcherAccept nl (Searcher.ExpressionMode sd) = maybe
                 (setNodeExpression nl inputText)
                 (\pos -> createNode (nl ^. NodeLoc.path) pos inputText False)
-                $ sd ^? NodeMode.newNode . _Just . NodeMode.position
-            nodeSearcherAccept nl (NodeMode.NodeNameMode {})
+                $ sd ^? Searcher.newNodeData . _Just . Searcher.position
+            nodeSearcherAccept nl (Searcher.NodeNameMode {})
                 = renameNode nl inputText
-            nodeSearcherAccept nl (NodeMode.PortNameMode sd)
-                = renamePort (OutPortRef nl $ sd ^. NodeMode.portId) inputText
+            nodeSearcherAccept nl (Searcher.PortNameMode sd)
+                = renamePort (OutPortRef nl $ sd ^. Searcher.portId) inputText
         if Text.null inputText
-            then pure ()
+            then modifySearcher $ Searcher.searcherError ?= emptyInputError mode
             else case mode of
-                Mode.Command {} -> commandSearcherAccept
-                Mode.Node ns    -> do
+                Searcher.CommandSearcher {} -> commandSearcherAccept
+                Searcher.NodeSearcher ns    -> do
                     nodeSearcherAccept
-                        (ns ^. NodeMode.nodeLoc)
-                        (ns ^. NodeMode.mode)
+                        (ns ^. Searcher.nodeLoc)
+                        (ns ^. Searcher.modeData)
                     close action
 
 execCommand :: Searcher -> (Event -> IO ()) -> Text -> Command State ()
@@ -351,8 +366,14 @@ execCommand action scheduleEvent (convert -> input) =
     let fromCommand command = do
             liftIO $ scheduleEvent $ Shortcut $ Shortcut.Event command def
             close action
+        fromOtherCommands Searcher.AddNode = modifySearcher $ do
+            Searcher.selectedPosition .= def
+            Searcher.mode             %= Searcher.clearHints
+            Searcher.input            .= Searcher.RawInput def
+            Searcher.rollbackReady    .= False
     in do
         withJust (readMaybe input) fromCommand
+        withJust (readMaybe input) fromOtherCommands
 
 close :: Searcher -> Command State ()
 close _ = do
@@ -361,38 +382,37 @@ close _ = do
     App.focus
 
 selectNextHint :: Searcher -> Command State ()
-selectNextHint s = do
-    Basic.selectNextHint
+selectNextHint _ = do
+    modifySearcher $ do
+        hintsLength <- use $ Searcher.hints . to length
+        Searcher.selectedPosition %= min hintsLength . succ
     updateDocumentation
+    withJustM getSearcher $ \s -> when
+        (s ^. Searcher.selectedPosition > 0)
+        clearSearcherError
 
 selectPreviousHint :: Searcher -> Command State ()
-selectPreviousHint s = do
-    Basic.selectPreviousHint
+selectPreviousHint _ = do
+    withJustM getSearcher $ \s ->
+        when (s ^. Searcher.selectedPosition > 0) clearSearcherError
+    modifySearcher $ Searcher.selectedPosition %= max 0 . pred
     updateDocumentation
 
-withHint :: Int -> (Searcher -> Command State ()) -> Searcher
-         -> Command State ()
+withHint :: Int -> (Searcher -> Command State ()) -> Searcher -> Command State ()
 withHint entryNumber perform action = withJustM getSearcher $ \s ->
-    let selected    = case s ^. Searcher.selectedPosition of
-            Nothing -> 0
-            Just t  -> t + 1
+    let selected    = s ^. Searcher.selectedPosition
         hintNumber  = (entryNumber - 1) `mod` 10
         newSelected = max selected 1 + hintNumber
     in whenM (selectHint newSelected action) $ perform action
 
-includeImport :: NodeHint.Node -> Command State ()
-includeImport hint = let
-    lib        = hint ^. NodeHint.library
-    isImported = lib  ^. Library.imported
-    name       = lib  ^. Library.name
-    isLocal    = name == NodeHint.localFunctionsLibraryName
-    in unless (isImported || isLocal) $ addImport name
+includeImport :: Match Symbol -> Command State ()
+includeImport (view (Match.hint . Symbol.library) -> lib) =
+    unless (lib ^. Library.imported) $ addImport (lib ^. Library.name)
 
 selectHint :: Int -> Searcher -> Command State Bool
 selectHint i _ = do
-    let translated = if i == 0 then Nothing else Just $ i - 1
-    Basic.selectHint translated
+    Basic.selectHint i
     maybe
         False
-        (\s -> s ^. Searcher.selectedPosition == translated)
+        (\s -> s ^. Searcher.selectedPosition == i)
         <$> getSearcher

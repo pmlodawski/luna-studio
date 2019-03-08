@@ -1,11 +1,24 @@
-{-# LANGUAGE Strict #-}
-module NodeEditor.React.Model.Searcher.Mode.Node where
+module NodeEditor.React.Model.Searcher.Mode.Node
+    ( module NodeEditor.React.Model.Searcher.Mode.Node
+    , module X
+    ) where
 
 import Common.Prelude
-import Prologue       (unsafeFromJust)
+import LunaStudio.Data.Searcher.Node as X (ClassHints (ClassHints), ClassName,
+                                           LibrariesHintsMap,
+                                           LibraryHints (LibraryHints),
+                                           LibraryName, Match, Name,
+                                           NodeSearcherData (NodeSearcherData),
+                                           TypePreference (TypePreference),
+                                           getWeights, importedLibraries,
+                                           libraries, localFunctionsLibraryName,
+                                           missingLibraries,
+                                           mkLocalFunctionsLibrary,
+                                           notConnectedEmptyInputSearch, search,
+                                           wildcardMatch)
+import Prologue                      (unsafeFromJust)
 
-import qualified Data.UUID.Types                     as UUID
-import qualified LunaStudio.Data.Searcher.Hint.Class as Class
+import qualified Data.UUID.Types as UUID
 
 import LunaStudio.Data.NodeLoc              (NodeId, NodeLoc)
 import LunaStudio.Data.Port                 (OutPortId)
@@ -14,93 +27,53 @@ import LunaStudio.Data.Position             (Position)
 import NodeEditor.React.Model.Visualization (RunningVisualization)
 
 
-
------------------
--- === New === --
------------------
-
-
--- === Definition === --
-
-data New = New
+data NewNodeData = NewNodeData
     { _position         :: Position
     , _connectionSource :: Maybe OutPortRef
     } deriving (Eq, Generic, Show)
 
-makeLenses ''New
+makeLenses ''NewNodeData
 
-instance NFData New
-
-
-
-------------------------
--- === Expression === --
-------------------------
-
-
--- === Definition === --
-
-data Expression = Expression
-    { _newNode   :: Maybe New
-    , _parent    :: Maybe Class.Name
-    , _arguments :: [Text]
+data ExpressionData = ExpressionData
+    { _newNodeData    :: Maybe NewNodeData
+    , _className      :: Maybe ClassName
+    , _argumentsNames :: [Name]
     } deriving (Eq, Generic, Show)
 
-makeLenses ''Expression
+makeLenses ''ExpressionData
 
-instance NFData Expression
-
-
-
-----------------------
--- === PortName === --
-----------------------
-
-
--- === Definition === --
-
-data PortName = PortName
+data PortNameData = PortNameData
     { _portId :: OutPortId
     } deriving (Eq, Generic, Show)
 
-makeLenses ''PortName
+makeLenses ''PortNameData
 
-instance NFData PortName
-
-
-
-------------------
--- === Mode === --
-------------------
-
-
--- === Definition === --
-
-data Mode
-    = ExpressionMode Expression
+data NodeSearcherMode
+    = ExpressionMode ExpressionData
     | NodeNameMode
-    | PortNameMode   PortName
+    | PortNameMode   PortNameData
     deriving (Eq, Generic, Show)
 
-makePrisms ''Mode
+makePrisms ''NodeSearcherMode
 
-instance NFData Mode
-
-
-
-------------------
--- === Node === --
-------------------
-
-
--- === Definition === --
-
-data Node = Node
+data NodesData a = NodesData
     { _nodeLoc                    :: NodeLoc
+    , _nodes                      :: [Match a]
+    , _modeData                   :: NodeSearcherMode
     , _documentationVisualization :: Maybe RunningVisualization
-    , _mode                       :: Mode
     } deriving (Eq, Generic, Show)
 
-makeLenses ''Node
+makeLenses ''NodesData
 
-instance NFData Node
+--TODO[LJK]: Replace mockedSearcherNodId with:
+-- mockedSearcherNodeId = unsafePerformIO genNewID
+-- {-# NOINLINE mockedSearcherNodeId #-}
+
+mockedSearcherNodeId :: NodeId
+mockedSearcherNodeId = unsafeFromJust $ UUID.fromString nodeIdString where
+    nodeIdString = "094f9784-3f07-40a1-84df-f9cf08679a27"
+
+connectedPortRef :: Getter (NodesData a) (Maybe OutPortRef)
+connectedPortRef = to $ (^? modeData . _ExpressionMode
+    . newNodeData . _Just
+    . connectionSource . _Just)

@@ -1,91 +1,77 @@
-{-# LANGUAGE Strict #-}
-module NodeEditor.React.Model.Searcher where
+module NodeEditor.React.Model.Searcher
+    ( module NodeEditor.React.Model.Searcher
+    , module X
+    ) where
+
+import NodeEditor.React.Model.Searcher.Hint  as X
+import NodeEditor.React.Model.Searcher.Input as X (Input (DividedInput, RawInput),
+                                                   _DividedInput, _RawInput)
+import NodeEditor.React.Model.Searcher.Mode  as X hiding (connectedPortRef,
+                                                   documentationVisualization)
+import Searcher.Engine                       as X (IsMatch, Match, Range,
+                                                   SearcherData)
 
 import Common.Prelude
 
-import qualified LunaStudio.Data.NodeLoc                   as NodeLoc
-import qualified NodeEditor.React.Model.Searcher.Mode      as Mode
-import qualified NodeEditor.React.Model.Searcher.Mode.Node as Node
+import qualified Data.Text                            as Text
+import qualified Data.UUID.Types                      as UUID
+import qualified Data.Vector.Unboxed                  as Vector
+import qualified Luna.Syntax.Text.Lexer               as Lexer
+import qualified LunaStudio.Data.PortRef              as PortRef
+import qualified NodeEditor.Event.Shortcut            as Shortcut
+import qualified NodeEditor.React.Model.Searcher.Mode as Mode
 
-import LunaStudio.Data.NodeLoc               (NodeLoc)
-import NodeEditor.React.Model.Searcher.Hint  (Hint)
-import NodeEditor.React.Model.Searcher.Input (Input)
-import NodeEditor.React.Model.Searcher.Mode  (Mode)
-import NodeEditor.React.Model.Visualization  (RunningVisualization)
-import Searcher.Data.Result                  (Result)
+import Data.Text32                          (Text32)
+import LunaStudio.Data.NodeLoc              (NodeId, NodeLoc)
+import LunaStudio.Data.Port                 (AnyPortId)
+import LunaStudio.Data.PortRef              (OutPortRef)
+import LunaStudio.Data.Position             (Position)
+import NodeEditor.React.Model.Visualization (RunningVisualization)
 
-
-----------------------
--- === Searcher === --
-----------------------
-
-
--- === Definition === --
 
 data Searcher = Searcher
-    { _input            :: Input
-    , _replaceInput     :: Bool
-    , _results          :: [Result Hint]
-    , _selectedPosition :: Maybe Int
-    , _mode             :: Mode
+    { _selected      :: Int
+    , _searcherMode  :: Mode
+    , _input         :: Input
+    , _replaceInput  :: Bool
+    , _rollbackReady :: Bool
+    , _waitingForTc  :: Bool
+    , _searcherError :: Maybe Text
     } deriving (Eq, Generic, Show)
 
 makeLenses ''Searcher
 
-instance NFData Searcher
 
+class SearcherView s where
+    selectedPosition :: Lens' s Int
+    mode             :: Lens' s Mode
+    inputText        :: Getter s Text
+    hints            :: Getter s [Hint]
+    hints = to $ getHints . view mode
+    selectedHint     :: Getter s (Maybe Hint)
+    selectedHint = to $ \s ->
+        s ^? hints . ix (s ^. selectedPosition - 1)
+    connectedPortRef :: Getter s (Maybe OutPortRef)
+    connectedPortRef = to (^. mode . Mode.connectedPortRef)
+    documentationVisualization :: Lens' s (Maybe RunningVisualization)
+    documentationVisualization = mode . Mode.documentationVisualization
 
-selectedResult :: Getter Searcher (Maybe (Result Hint))
-selectedResult = to $ \s -> let
-    mayPosition = s ^. selectedPosition
-    atPosition  = \p -> s ^? results . ix p
-    in join $! atPosition <$> mayPosition
-{-# INLINE selectedResult #-}
+instance SearcherView Searcher where
+    selectedPosition = selected
+    mode             = searcherMode
+    inputText        = to $ convert . view input
 
-inputText :: Getter Searcher Text
-inputText = input . to convert
-{-# INLINE inputText #-}
+getHints :: Mode -> [Hint]
+getHints (CommandSearcher m) = CommandHint <$> m
+getHints (NodeSearcher    m) = NodeHint    <$> m ^. nodes
 
-documentationVisualization :: Traversal' Searcher RunningVisualization
-documentationVisualization = mode . Mode._Node . Node.documentationVisualization . _Just
+getHint :: Int -> Mode -> Maybe Hint
+getHint i m = m ^? to getHints . ix i
 
+takeHints :: Int -> Mode -> Mode
+takeHints limit (CommandSearcher cs) = CommandSearcher $ take limit cs
+takeHints limit (NodeSearcher    ns) = NodeSearcher $ ns & nodes %~ take limit
 
-------------------------
--- === Properties === --
-------------------------
-
-
--- === Definition === --
-
-data Properties = Properties
-    { _searcher              :: Searcher
-    , _visualizerLibraryPath :: FilePath
-    } deriving (Eq, Generic, Show)
-
-makeLenses ''Properties
-
-instance NFData Properties
-
-
--- === API === --
-
-visibleHintsNumber :: Int
-visibleHintsNumber = 10
-{-# INLINE visibleHintsNumber #-}
-
-mkProperties :: Searcher -> FilePath -> Properties
-mkProperties = \s vlp -> let
-    selected        = fromMaybe def $! s ^. selectedPosition
-    limitResults    = \r -> take visibleHintsNumber $! drop selected r
-    visibleSearcher = s & results %~ limitResults
-                        & selectedPosition %~ fmap (subtract selected)
-    in Properties visibleSearcher vlp
-{-# INLINE mkProperties #-}
-
-isRelated :: NodeLoc -> Properties -> Bool
-isRelated nl s = let
-    nlIdPath = NodeLoc.toNodeIdList nl
-    mayNl    = s ^? searcher . mode . Mode._Node . Node.nodeLoc
-    sIdPath  = maybe mempty NodeLoc.toNodeIdList mayNl
-    in isPrefixOf nlIdPath sIdPath
-{-# INLINE isRelated #-}
+dropHints :: Int -> Mode -> Mode
+dropHints offset (CommandSearcher cs) = CommandSearcher $ drop offset cs
+dropHints offset (NodeSearcher    ns) = NodeSearcher $ ns & nodes %~ drop offset
