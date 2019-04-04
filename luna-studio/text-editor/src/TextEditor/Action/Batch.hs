@@ -1,14 +1,17 @@
 module TextEditor.Action.Batch  where
 
-import           Common.Action.Command         (Command)
-import           Common.Prelude
-import           Data.UUID.Types               (UUID)
-import           LunaStudio.Data.GraphLocation (GraphLocation)
-import           LunaStudio.Data.Range         (Range)
-import           LunaStudio.Data.TextDiff      (TextDiff)
-import           TextEditor.Action.UUID        (registerRequest)
-import qualified TextEditor.Batch.Commands     as BatchCmd
-import           TextEditor.State.Global       (State, clientId)
+import Common.Prelude
+
+import qualified TextEditor.Batch.Commands as BatchCmd
+import qualified TextEditor.State.Global   as State
+
+import Common.Action.Command         (Command)
+import Data.UUID.Types               (UUID)
+import LunaStudio.Data.GraphLocation (GraphLocation)
+import LunaStudio.Data.Range         (Range)
+import LunaStudio.Data.TextDiff      (TextDiff)
+import TextEditor.Action.UUID        (registerRequest)
+import TextEditor.State.Global       (State, clientId)
 
 
 withUUID :: (UUID -> Maybe UUID -> IO ()) -> Command State ()
@@ -45,7 +48,11 @@ setProject :: FilePath -> Command State ()
 setProject = withUUID . BatchCmd.setProject
 
 substitute :: GraphLocation -> [TextDiff] -> Command State ()
-substitute = withUUID .: BatchCmd.substitute
+substitute location diffs = do
+    uuid  <- registerRequest
+    guiId <- use clientId
+    State.ignoreResponse uuid
+    liftIO $ BatchCmd.substitute location diffs uuid (Just guiId)
 
 copy :: FilePath -> [Range] -> Command State ()
 copy = withUUID .: BatchCmd.copy

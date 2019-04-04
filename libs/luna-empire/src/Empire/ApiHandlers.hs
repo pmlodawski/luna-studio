@@ -424,7 +424,6 @@ instance Modification Substitute.Request where
         withDiff location $ do
             Graph.substituteCodeFromPoints file diffs
             let cursor = asum $ map (view TextDiff.cursor) diffs
-            Graph.resendCodeWithCursor location cursor
             Graph.typecheckWithRecompute location
     buildInverse (Substitute.Request location diffs) = do
         code  <- Graph.withUnit (GraphLocation.top location) $ use Graph.code

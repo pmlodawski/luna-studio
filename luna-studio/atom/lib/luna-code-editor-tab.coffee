@@ -213,11 +213,14 @@ module.exports =
                 for {_newText: text, _range: range, _cursor: cursor} in diffs
                     @omitDiff(text)
                     if range?
-                        @setTextInBufferRange(range, text)
+                        fixedRange = [[range[0]._row, range[0]._column],
+                                      [range[1]._row, range[1]._column]]
+                        @setTextInBufferRange(fixedRange, text)
                     else
                         @setText(text)
                     if cursor?
-                        selections.push([[cursor._row, cursor._column], [cursor._row, cursor._column]])
+                        selections.push([[cursor._row, cursor._column],
+                                         [cursor._row, cursor._column]])
                 if selections.length > 0
                     @setSelectedBufferRanges(selections)
 
